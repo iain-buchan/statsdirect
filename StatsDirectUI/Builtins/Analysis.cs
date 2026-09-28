@@ -1488,67 +1488,21 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("prop_2", p2);
             outputParameters.AddOutput("prop_diff", p3);
 
+            // The exact test is of the pairs that differ: of the s + t of them the less of s and t are one way, and either way
+            // is as likely.  It is made for any number of pairs
             double nx = s + t;
-            double rx = s;
-            if (rx < 0 && rx >= nx)
-                return null;
-            if (rx > nx / 2)
-                rx = nx - rx;
-            double fl = Math.Pow(0.5, nx);
-
+            double rx = Math.Min(s, t);
             List<ParameterBag> exactList = new();
             outputParameters.AddOutput("*exact", exactList);
-            List<ParameterBag> approxList = new();
-            outputParameters.AddOutput("*approx", approxList);
-            if (fl > 0)
             {
                 ParameterBag exactParameters = new();
                 exactList.Add(exactParameters);
-                double pl = fl;
-                if (rx != 0)
-                {
-                    double i;
-                    for (i = 1; i <= rx; i++)
-                    {
-                        fl = fl * (nx - i + 1) / i;
-                        pl += fl;
-                    }
-                }
-
-                double p2L = 2.0 * pl;
-                double p = pl;
-                if (p2L > 1.0)
-                {
-                    p2L = 1.0;
-                }
-                p2 = p2L;
-                exactParameters.AddOutput("cum_2", p2);
-                exactParameters.AddOutput("cum_1", p);
-
+                PDF.BinomialTails(Convert.ToInt64(nx), 0.5, Convert.ToInt64(rx), out double pl, out double _, out double fl, out double _);
+                exactParameters.AddOutput("cum_2", Math.Min(1.0, 2.0 * pl));
+                exactParameters.AddOutput("cum_1", pl);
                 pl -= fl / 2.0;
-                p2L = 2.0 * pl;
-                p = pl;
-                if (p2L > 1.0)
-                    p2L = 1.0;
-                p2 = p2L;
-                exactParameters.AddOutput("cum_2_mid", p2);
-                exactParameters.AddOutput("cum_1_mid", p);
-            }
-            else
-            {
-                ParameterBag approxParameters = new();
-                approxList.Add(approxParameters);
-
-                double d = Math.Abs(nx / 2 - rx) - 0.5;
-                double z;
-                if (d < 0)
-                    z = 0;
-                else
-                    z = d / Math.Sqrt(nx / 4);
-                approxParameters.AddOutput("z", z);
-                double pz = 1.0 - PDF.alnorm(z);
-                approxParameters.AddOutput("p_1", pz);
-                approxParameters.AddOutput("p_2", Math.Min(1.0, 2.0 * pz));
+                exactParameters.AddOutput("cum_2_mid", Math.Min(1.0, 2.0 * pl));
+                exactParameters.AddOutput("cum_1_mid", pl);
             }
 
             // Following snippet is only used if calculating qcl according to commented-out code below.  PJC 2012/04/09.
@@ -1593,20 +1547,21 @@ namespace StatsDirect.Builtins
 
         public static StepOutput RptPropSingle(ParameterBag parameters)
         {
-            double n = parameters["n"].AsDouble;
-            double r = parameters["r"].AsDouble;
+            // counts that are not whole numbers are rounded, a half to the even number
+            double n = Math.Round(parameters["n"].AsDouble);
+            double r = Math.Round(parameters["r"].AsDouble);
             if (r > n)
                 throw new InvalidDataException("The number responding can not be more than the total number of observations");
 
             if (n <= 0)
                 throw new InvalidDataException();
+            if (r < 0)
+                throw new InvalidDataException("The number responding can not be below 0");
             double qpi = parameters["qpi"].AsDouble;
-            if (qpi <= 0)
-                qpi = 1.0E-28;
-            if (qpi >= 1)
-                qpi = 0.9999999;
-            if (r != Math.Floor(r) && n <= r)
-                return null;
+            if (qpi < 0)
+                qpi = 0;
+            if (qpi > 1)
+                qpi = 1;
             double cco = parameters["cco"].AsDouble;
             if (cco <= 0.0 || cco >= 1.0)
                 cco = 0.95;
@@ -1622,27 +1577,12 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("upper_exact", piu);
             outputParameters.AddOutput("warn_exact", warn);
 
-            // binomial exact P
-            string aprx = "Binomial";
-            double qpix = qpi == 1.0E-28 ? 0 : qpi;
-            outputParameters.AddOutput("null", qpix);
-            double p2;
-            double dp2;
-            double dp1;
-            if (n > 1000000)
-            {
-                aprx = "Normal";
-                p = 1.0 - PDF.alnorm((Math.Abs(r - n * qpi) - 0.5) / Math.Sqrt(n * qpi * (1.0 - qpi)));
-                if (p > 1.0 - p)
-                    p = 1.0 - p;
-                p2 = 2.0 * p;
-            }
-            else
-            {
-                PDF.bino2(Convert.ToInt32(n), qpi, Convert.ToInt32(r), out dp1, out dp2, out fault);
-                p = dp1;
-                p2 = dp2;
-            }
+            // binomial exact P: the less of the two tails, and the sum of the probabilities of the counts that are no more
+            // probable than the count observed
+            const string aprx = "Binomial";
+            outputParameters.AddOutput("null", qpi);
+            PDF.BinomialTails(Convert.ToInt64(n), qpi, Convert.ToInt64(r), out double lowerTail, out double upperTail, out double point, out double p2);
+            p = Math.Min(lowerTail, upperTail);
             if (fault != 0)
             {
                 p = Constant.MISSING;
@@ -1663,20 +1603,9 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("lower_approx", pil);
             outputParameters.AddOutput("upper_approx", piu);
 
-            // binomial mid P
-            if (n > 1000000)
-            {
-                p = 1.0 - PDF.alnorm((Math.Abs(r - n * qpi) - 0.5) / Math.Sqrt(n * qpi * (1.0 - qpi)));
-                if (p > 1.0 - p)
-                    p = 1.0 - p;
-                p2 = 2.0 * p;
-            }
-            else
-            {
-                PDF.binomid(Convert.ToInt32(n), qpi, Convert.ToInt32(r), out dp1, out dp2, out fault);
-                p = dp1;
-                p2 = dp2;
-            }
+            // binomial mid P: the tail less half the probability of the count observed, and twice that
+            p = Math.Min(lowerTail, upperTail) - point / 2.0;
+            p2 = Math.Min(1.0, 2.0 * p);
             if (fault != 0)
             {
                 p = Constant.MISSING;

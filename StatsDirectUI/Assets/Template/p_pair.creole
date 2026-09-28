@@ -13,12 +13,6 @@ Proportion difference = @{prop_diff:roundu}</p>
 <p><pval>Exact two sided mid @{cum_2_mid:pval}</pval><br />
 <pval>Exact one sided mid @{cum_1_mid:pval}</pval></p>
 </block>
-<block name="approx">
-<p><warn>Numbers too large for exact test</warn><br />
-Standard normal deviate z = @{z:roundu}<br />
-<pval>Approximate two sided @{p_2:pval}</pval><br />
-<pval>Approximate one sided @{p_1:pval}</pval></p>
-</block>
 
 <p><ci>@qcl @{pc:round2}% confidence interval for the proportion difference:</ci><br />
 <ci>@{lower:roundu} to @{upper:roundu}</ci></p>

@@ -942,135 +942,39 @@ namespace StatsDirect.Numerics
         }
 
         /// <summary>
-        ///     cumulative binomial distribution for two sided inference
+        /// The tails of a binomial count of n trials with the probability p of each: the probabilities of a count that is no
+        /// more than k, no less than k, and k itself; and, for two sided inference, the sum of the probabilities of the counts
+        /// that are no more probable than k (DiscreteTails.Sum).
         ///
         ///	updated 1/2/02 - Alan Gibbs 2 * p1 not acceptable if p &lt;> 0.5
         /// </summary>
-        public static void bino2(int n, double p, int k, out double p1, out double p2, out int ifault)
+        /// <remarks>
+        /// The probability of the count j + 1 over that of j is (n - j) / (j + 1) times p / (1 - p), and the most probable count
+        /// is the whole number of (n + 1) p.  If p is 0 the count can be nothing but 0, and if p is 1 nothing but n: the
+        /// probability of that count is 1, and that of any other is 0.
+        /// </remarks>
+        /// <param name="n">The number of trials.</param>
+        /// <param name="p">The probability of each; below 0 is taken as 0, and above 1 as 1.</param>
+        /// <param name="k">The count.</param>
+        /// <param name="lower">On return, the probability of a count that is no more than k.</param>
+        /// <param name="upper">On return, the probability of a count that is no less than k.</param>
+        /// <param name="point">On return, the probability of the count k.</param>
+        /// <param name="noMoreProbable">On return, the sum of the probabilities of the counts that are no more probable than k,
+        /// a count being taken as no more probable if its probability is within 1 part in 10^7 of that of k.</param>
+        public static void BinomialTails(long n, double p, long k, out double lower, out double upper, out double point, out double noMoreProbable)
         {
-            double xi, px;
-            int i;
-            double sml = Math.Log(Constant.DBL_MIN);
-            if (p < 0.0 | p > 1.0)
+            if (p <= 0.0 || p >= 1.0)
             {
-                ifault = 1;
-                p1 = Constant.MISSING;
-                p2 = Constant.MISSING;
+                long only = p <= 0.0 ? 0 : n;
+                point = k == only ? 1.0 : 0.0;
+                lower = k >= only ? 1.0 : 0.0;
+                upper = k <= only ? 1.0 : 0.0;
+                noMoreProbable = point;
                 return;
             }
-            if (n < k)
-            {
-                ifault = 2;
-                p1 = Constant.MISSING;
-                p2 = Constant.MISSING;
-                return;
-            }
-            ifault = 0;
-
-            if (p == 0.0)
-            {
-                p1 = 0.5;
-                p2 = 1.0;
-                return;
-            }
-            if (p == 1.0)
-            {
-                if (k == n)
-                {
-                    p1 = 0.5;
-                    p2 = 1.0;
-                }
-                else
-                {
-                    p1 = 0.0;
-                    p2 = 0.0;
-                }
-                return;
-            }
-            double xn = n;
-            double xn1 = xn + 1.0;
-            double[] pr = new double[n + 1];
-            for (i = 0; i <= n; i++)
-            {
-                xi = i;
-                double term = -Math.Log(xn1) - LogBeta(xi + 1.0, xn1 - xi) + xi * Math.Log(p) + (xn - xi) * Math.Log(1.0 - p);
-                pr[i] = term > sml ? Math.Exp(term) : 0.0;
-            }
-            // tails summed from the smallest terms
-            double plo = 0.0;
-            for (i = 0; i <= k; i++) plo += pr[i];
-            double phi = 0.0;
-            for (i = n; i >= k; i--) phi += pr[i];
-            p1 = phi < plo ? phi : plo;
-            // two sided P: total probability of the counts no more likely than the observed count (the relative tolerance keeps equal probabilities equal despite rounding)
-            double z = pr[k] * (1.0 + 1.0e-7);
-            p2 = 0.0;
-            for (i = 0; i <= n; i++)
-            {
-                px = pr[i];
-                if (px <= z) p2 += px;
-            }
-        }
-
-        /// <summary>
-        ///     cumulative binomial distribution for mid-point inference
-        /// </summary>
-        public static void binomid(int n, double p, int k, out double p1, out double p2, out int ifault)
-        {
-            int i;
-            double sml = Math.Log(Constant.DBL_MIN);
-            if (p < 0.0 | p > 1.0)
-            {
-                ifault = 1;
-                p1 = Constant.MISSING;
-                p2 = Constant.MISSING;
-                return;
-            }
-            if (n < k)
-            {
-                ifault = 2;
-                p1 = Constant.MISSING;
-                p2 = Constant.MISSING;
-                return;
-            }
-            ifault = 0;
-
-            if (p == 0.0)
-            {
-                p1 = 0.5;
-                p2 = 1.0;
-                return;
-            }
-            if (p == 1.0)
-            {
-                if (k == n)
-                {
-                    p1 = 0.5;
-                    p2 = 1.0;
-                }
-                else
-                {
-                    p1 = 0.0;
-                    p2 = 0.0;
-                }
-                return;
-            }
-            double xn = n;
-            double plo = 0.0;
-            double term = 0.0;
-            double xn1 = xn + 1.0;
-            for (i = 0; i <= k; i++)
-            {
-                double xi = i;
-                term = -Math.Log(xn1) - LogBeta(xi + 1.0, xn1 - xi) + xi * Math.Log(p) + (xn - xi) * Math.Log(1.0 - p);
-                if (term > sml) plo += Math.Exp(term);
-            }
-            if (term > sml) term = Math.Exp(term);
-            if (term < 0.0) term = 0.0;
-            double phi = 1.0 - plo + term;
-            p1 = phi < plo ? phi : plo;
-            p1 -= term / 2.0;
-            p2 = 2.0 * p1;
+            double odds = p / (1.0 - p);
+            long mode = (long)Math.Floor((n + 1.0) * p);
+            DiscreteTails.Sum(0, n, mode, k, j => (n - j) / (j + 1.0) * odds, j => j / (n - j + 1.0) / odds, out lower, out upper, out point, out noMoreProbable);
         }
 
         /// <summary>
