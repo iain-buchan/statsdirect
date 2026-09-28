@@ -5027,7 +5027,7 @@ namespace StatsDirect.Builtins
                                 Longpath(ircmax, nro2, irx, k1, icx, ref dsp[itp], fact, tol, iiwk1, iwk1, iwk2, iwk3, iwk4, iwk5, iiwk2, rwk2);
                                 dsp[itp] = Math.Min(0.0, dsp[itp] - dspt);
                                 //                                   use chi-squared approximation?
-                                if (Convert.ToDouble(irn[nrb] * ico[kb + 1]) / Convert.ToDouble(ntot) <= emn)
+                                if ((double)irn[nrb] * ico[kb + 1] / Convert.ToDouble(ntot) <= emn)
                                 {
                                     tm[itp] = Constant.MISSING;
                                 }
@@ -5038,7 +5038,7 @@ namespace StatsDirect.Builtins
                                     {
                                         for (j = 1; j <= k1; j++)
                                         {
-                                            if (irn[nrb + i - 1] * ico[kb + j] >= ntot * expect)
+                                            if ((double)irn[nrb + i - 1] * ico[kb + j] >= ntot * expect)
                                             {
                                                 ncell += 1;
                                             }
@@ -5526,7 +5526,7 @@ namespace StatsDirect.Builtins
             //                                   2 by 2 table
             if (nrow * ncol == 4)
             {
-                n11 = (irow[1] + 1) * (icol[1] + 1) / (mm + 2);
+                n11 = (int)((long)(irow[1] + 1) * (icol[1] + 1) / (mm + 2));
                 n12 = irow[1] - n11;
                 dlp = dlp - fact[n11] - fact[n12] - fact[icol[1] - n11] - fact[icol[2] - n12];
                 return;
@@ -5607,8 +5607,10 @@ namespace StatsDirect.Builtins
                 int nr1 = nro - 1;
                 int nrt = iro[irl];
                 int nct = ico[1];
-                lb[1] = Convert.ToInt32(Math.Floor(Convert.ToDouble((nrt + 1) * (nct + 1)) / Convert.ToDouble(nn + nr1 * nc1S + 1) - tol) - 1);
-                nu[1] = Convert.ToInt32(Math.Floor(Convert.ToDouble((nrt + nc1S) * (nct + nr1)) / Convert.ToDouble(nn + nr1 + nc1S)) - lb[1] + 1);
+                // the products as floating-point numbers: that of two totals may be above what a whole number of 32 bits holds.
+                // The upper bound is no more than what is left of the row and of the column
+                lb[1] = Convert.ToInt32(Math.Floor((nrt + 1.0) * (nct + 1.0) / Convert.ToDouble(nn + nr1 * nc1S + 1) - tol) - 1);
+                nu[1] = Math.Min(Convert.ToInt32(Math.Floor((double)(nrt + nc1S) * (nct + nr1) / Convert.ToDouble(nn + nr1 + nc1S))), Math.Min(nrt, nct)) - lb[1] + 1;
                 nr[1] = nrt - lb[1];
                 // inner
                 do
@@ -5723,8 +5725,8 @@ namespace StatsDirect.Builtins
                             lev += 1;
                             int nc1 = nco - lev;
                             nct = ico[lev];
-                            lb[lev] = (int)Math.Floor(Convert.ToDouble((nrt + 1) * (nct + 1)) / Convert.ToDouble(nn1 + nr1 * nc1 + 1) - tol);
-                            nu[lev] = Convert.ToInt32(Math.Floor(Convert.ToDouble((nrt + nc1) * (nct + nr1)) / Convert.ToDouble(nn1 + nr1 + nc1)) - lb[lev] + 1);
+                            lb[lev] = (int)Math.Floor((nrt + 1.0) * (nct + 1.0) / Convert.ToDouble(nn1 + nr1 * nc1 + 1) - tol);
+                            nu[lev] = Math.Min(Convert.ToInt32(Math.Floor((double)(nrt + nc1) * (nct + nr1) / Convert.ToDouble(nn1 + nr1 + nc1))), Math.Min(nrt, nct)) - lb[lev] + 1;
                             nr[lev] = nrt - lb[lev];
                         }
                         while (true);
@@ -5752,7 +5754,7 @@ namespace StatsDirect.Builtins
                             nn1 = nn - iro[irl] + 2;
                             int ic1 = ico[1] - lb[1];
                             int ic2 = ico[2] - lb[2];
-                            n11 = (iro[irl + 1] + 1) * (ic1 + 1) / nn1;
+                            n11 = (int)((long)(iro[irl + 1] + 1) * (ic1 + 1) / nn1);
                             n12 = iro[irl + 1] - n11;
                             v = v + fact[n11] + fact[n12] + fact[ic1 - n11] + fact[ic2 - n12];
                             if (v < vmn)
