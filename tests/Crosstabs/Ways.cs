@@ -3,6 +3,8 @@
 // of such a table are too many to be listed one by one.  They are gone through here by kinds: the columns that have the same
 // total are a group, a kind of column is the counts that a column of the group can have, and a table is known by the number of
 // columns of each kind.  The arithmetic is of whole numbers of any size, and nothing of the method of the program is in it.
+// The search for the greatest sum of the logarithms of the factorials of the cells keeps the parts of a table that it has reached:
+// the time that the test takes is checked, and the two bounds of the method for sets of totals with many columns.
 using System.Numerics;
 using StatsDirect.Templates;
 
@@ -40,8 +42,8 @@ internal static partial class Program
     // The P value of a table: the probability of the tables with its totals that are no more probable than it.  The probability of a
     // table is the product over its columns of the number of ways to put the subjects of the column into its counts, over the
     // number of ways to put all the subjects into the rows; the tables with a given number of columns of each kind are as many as
-    // the ways to choose the columns of each kind from those of its group
-    private static (double p, BigInteger tables) ByKinds(List<(int[] cells, int count)> kinds)
+    // the ways to choose the columns of each kind from those of its group.  The least and the greatest of the products are given too
+    private static (double p, BigInteger tables, BigInteger least, BigInteger greatest) ByKinds(List<(int[] cells, int count)> kinds)
     {
         int rows = kinds[0].cells.Length;
         int[] rowTotals = new int[rows];
@@ -60,12 +62,14 @@ internal static partial class Program
         }
         int[] left = groups.Select(g => g.columns).ToArray();
         int[] rowLeft = (int[])rowTotals.Clone();
-        BigInteger sum = 0, below = 0, tables = 0;
+        BigInteger sum = 0, below = 0, tables = 0, least = -1, greatest = -1;
         void Fill(int e, BigInteger ways, BigInteger weight)
         {
             if (e == entries.Count)
             {
                 if (rowLeft.Any(v => v != 0)) return;
+                if (least < 0 || weight < least) least = weight;
+                if (weight > greatest) greatest = weight;
                 tables += ways;
                 sum += ways * weight;
                 if (weight <= observed) below += ways * weight;
@@ -88,7 +92,7 @@ internal static partial class Program
         Fill(0, 1, 1);
         // the tables that were gone through are all the tables: their probabilities add to 1
         if (sum != all) throw new InvalidOperationException($"the tables do not add to all the ways of putting the subjects into the rows: {sum} and {all}");
-        return ((double)(below * BigInteger.Pow(10, 30) / all) / 1e30, tables);
+        return ((double)(below * BigInteger.Pow(10, 30) / all) / 1e30, tables, least, greatest);
     }
 
     private static void Ways()
@@ -122,7 +126,11 @@ internal static partial class Program
             "2 0 0 0:2;0 2 0 0:2;0 0 2 0:2;0 0 0 2:2;1 1 0 0:2;0 0 1 1:2;1 0 1 0:2;0 1 0 1:2", "2 0 0 0 0:2;0 2 0 0 0:2;0 0 2 0 0:2;0 0 0 2 0:2;0 0 0 0 2:2;1 1 0 0 0:2;0 0 1 1 0:2",
             "2 0 0 0 0 0:1;0 2 0 0 0 0:1;0 0 2 0 0 0:1;0 0 0 2 0 0:1;0 0 0 0 2 0:1;0 0 0 0 0 2:1;1 1 0 0 0 0:2;0 0 1 1 0 0:2;0 0 0 0 1 1:2",
             // 1 in each column: every table with the totals has the same probability, and the P value is 1
-            "1 0 0:8;0 1 0:7;0 0 1:7" })
+            "1 0 0:8;0 1 0:7;0 0 1:7", "1 0 0:14;0 1 0:13;0 0 1:13",
+            // 36 to 100 columns, which took minutes (2 by 36 took 3) before the search for the greatest sum kept what it had reached
+            "2 0:12;1 1:12;0 2:12", "2 0:13;1 1:14;0 2:13", "2 0:20;1 1:20;0 2:20", "2 0:34;1 1:32;0 2:34", "3 0:10;2 1:10;1 2:10;0 3:10", "1 0:15;0 1:15;2 0:10;1 1:10;0 2:10",
+            "2 0 0:8;0 2 0:8;0 0 2:8;1 1 0:2;1 0 1:2;0 1 1:2", "2 0 0 0:3;0 2 0 0:3;0 0 2 0:3;0 0 0 2:3;1 1 0 0:2;0 0 1 1:2;1 0 1 0:2;0 1 0 1:2",
+            "2 0 0 0 0:2;0 2 0 0 0:2;0 0 2 0 0:2;0 0 0 2 0:2;0 0 0 0 2:2;1 1 0 0 0:3;0 0 1 1 0:3" })
         {
             var kinds = Kinds(words);
             var reference = ByKinds(kinds);
@@ -152,6 +160,49 @@ internal static partial class Program
             Say(p is double given && Math.Abs(given - reference.p) <= 1e-9 * reference.p && report["lb"].AsString == "",
                 $"{t.GetLength(0)} by {t.GetLength(1)}, columns {words}: the report has P = {p} {report["lb"].AsString}, and the P value is {reference.p}");
         }
-        Console.WriteLine($"{(failures == before ? "ok  " : "FAIL")}  {compared} tests of tables of 12 to 34 columns or rows: the greatest difference is {worst:E1} of the P value; the test that takes longest takes {longest:F1} seconds");
+        // the time is not to rise with the number of ways of filling a table
+        Say(longest < 2, $"the test that takes longest takes {longest:F2} seconds");
+        Console.WriteLine($"{(failures == before ? "ok  " : "FAIL")}  {compared} tests of tables of 12 to 100 columns or rows: the greatest difference is {worst:E1} of the P value; the test that takes longest takes {longest:F2} seconds");
+
+        // The two bounds of the method, the least and the greatest sum of the logarithms of the factorials of the cells, for sets
+        // of totals with many columns: against the list of every table where the tables can be listed, and against the tables
+        // gone through by kinds of column where they cannot
+        before = failures;
+        int sets = 0;
+        System.Random draw = new(271828);
+        for (int trial = 0; trial < 30; trial++)
+        {
+            int rows = 2 + trial % 3, cols = rows == 2 ? draw.Next(10, 14) : rows == 3 ? draw.Next(7, 9) : 6;
+            int[] c = Enumerable.Range(0, cols).Select(_ => draw.Next(1, 3)).OrderBy(v => v).ToArray();
+            int n = c.Sum();
+            int[] r = Enumerable.Repeat(1, rows).ToArray();
+            for (int i = rows; i < n; i++) r[draw.Next(rows)]++;
+            Array.Sort(r);
+            var all = EveryTable(r, c, null);
+            var (least, greatest) = Bounds(r, c, all.least, all.greatest);
+            sets++;
+            Say(least == null && greatest == null, $"row totals {string.Join(",", r)}, column totals {string.Join(",", c)}: the least sum {all.least} and the greatest {all.greatest}, of {all.tables} tables; the routines give {least ?? "the same"} and {greatest ?? "the same"}");
+        }
+        foreach (string words in new[] { "2 0:10;1 1:10;0 2:10", "2 0:13;1 1:14;0 2:13", "2 0:34;1 1:32;0 2:34", "3 0:10;2 1:10;1 2:10;0 3:10", "1 0:15;0 1:15;2 0:10;1 1:10;0 2:10", "2 0:20;1 1:16;0 2:14",
+            "2 0 0:4;0 2 0:4;0 0 2:3;1 1 0:2;1 0 1:2;0 1 1:2", "2 0 0:8;0 2 0:8;0 0 2:8;1 1 0:2;1 0 1:2;0 1 1:2", "2 0 0:9;0 2 0:5;0 0 2:3;1 1 0:4;1 0 1:2;0 1 1:1;1 0 0:3;0 0 1:2",
+            "2 0 0 0:3;0 2 0 0:3;0 0 2 0:3;0 0 0 2:3;1 1 0 0:2;0 0 1 1:2;1 0 1 0:2;0 1 0 1:2", "3 0 0 0:2;0 3 0 0:1;0 0 2 1:3;1 1 1 0:3;0 0 0 3:2;1 0 0 0:4;0 1 0 0:3",
+            "2 0 0 0 0:2;0 2 0 0 0:2;0 0 2 0 0:2;0 0 0 2 0:2;0 0 0 0 2:2;1 1 0 0 0:3;0 0 1 1 0:3" })
+        {
+            var kinds = Kinds(words);
+            var reference = ByKinds(kinds);
+            int[,] t = OfKinds(kinds, false);
+            int[] r = Enumerable.Range(0, t.GetLength(0)).Select(i => Enumerable.Range(0, t.GetLength(1)).Sum(j => t[i, j])).OrderBy(v => v).ToArray();
+            int[] c = Enumerable.Range(0, t.GetLength(1)).Select(j => Enumerable.Range(0, t.GetLength(0)).Sum(i => t[i, j])).OrderBy(v => v).ToArray();
+            // the sum of a table is that of the logarithms of the factorials of its column totals, less the logarithm of its product
+            double[] lf = LogFactorials(c.Max());
+            double columns = c.Sum(v => lf[v]);
+            double leastOfAll = columns - BigInteger.Log(reference.greatest), greatestOfAll = columns - BigInteger.Log(reference.least);
+            System.Diagnostics.Stopwatch clock = System.Diagnostics.Stopwatch.StartNew();
+            var (least, greatest) = Bounds(r, c, leastOfAll, greatestOfAll);
+            double taken = clock.Elapsed.TotalSeconds;
+            sets++;
+            Say(least == null && greatest == null && taken < 2, $"{r.Length} rows, columns {words}: the least sum {leastOfAll} and the greatest {greatestOfAll}, of {reference.tables} tables; the routines give {least ?? "the same"} and {greatest ?? "the same"}, in {taken:F2} seconds");
+        }
+        Console.WriteLine($"{(failures == before ? "ok  " : "FAIL")}  the least and the greatest sum of {sets} sets of totals of 6 to 100 columns");
     }
 }
