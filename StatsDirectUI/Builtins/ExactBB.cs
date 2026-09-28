@@ -1081,7 +1081,8 @@ namespace StatsDirect.Builtins
             b = Math.Round(b);
             c = Math.Round(c);
             d = Math.Round(d);
-            if (a == 0 && b == 0 || c == 0 && d == 0)
+            // An empty row or an empty column: the table is the only one that its totals allow, and says nothing of the odds ratio
+            if (a == 0 && b == 0 || c == 0 && d == 0 || a == 0 && c == 0 || b == 0 && d == 0)
             {
                 ulf = double.PositiveInfinity;
                 llf = 0;
@@ -1139,11 +1140,18 @@ namespace StatsDirect.Builtins
             b = Math.Round(b);
             c = Math.Round(c);
             d = Math.Round(d);
-            if (a == 0 && b == 0 || c == 0 && d == 0)
+            // An empty row or an empty column: the table is the only one that its totals allow, and says nothing of the odds ratio
+            if (a == 0 && b == 0 || c == 0 && d == 0 || a == 0 && c == 0 || b == 0 && d == 0)
             {
                 ulf = double.PositiveInfinity;
                 llf = 0.0;
                 eor = 0.0;
+                ulm = double.PositiveInfinity;
+                llm = 0.0;
+                p1f = 1.0;
+                p2f = 1.0;
+                p1m = 0.5;
+                p2m = 1.0;
             }
             else
             {
