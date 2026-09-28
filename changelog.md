@@ -2,7 +2,9 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
-##[Unreleased]
+##[v5.0.12] 2026-09-28
+
+Version 5.0.12 follows a check of every function on the Survival Analysis, Meta-analysis, Crosstabs, Frequencies, Exact Tests on Counts, Chi-square Tests and Proportions menus against figures calculated from the definitions, one routine at a time, with the routines commented as they were checked. Among the corrections are exact and simulated P values that were wrong for some large or sparse tables (the Fisher-Freeman-Halton exact test, and the simulated exact P values of the chi-square tests), exact tests and limits that were approximate or not given for large samples (single and paired proportions, Fisher's exact test, odds ratios and rate ratios), and the confidence limits of the difference of two proportions. The median survival time of Kaplan-Meier and its confidence interval are now as R and SAS give them.
 
 ### Fixed
 - Meta-analysis, effect size: the non-central t confidence limits could collapse to the same incorrect value for large studies or effects because the probability calculation underflowed. The non-central t routine now integrates the defining normal/chi-square mixture at large parameters, and the interval search checks the probability at each returned limit. With 5,001 subjects per group, means 1 and 0 and both standard deviations 1, the 95% interval for g = 1 is [0.958404, 1.041551]; it had been [0.820286, 0.820286]. The shared probability calculation also serves the calculator and power calculations with whole degrees of freedom.
