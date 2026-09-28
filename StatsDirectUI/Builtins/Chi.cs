@@ -253,13 +253,14 @@ namespace StatsDirect.Builtins
         /// expected count, the expected count being the total of the row times the total of the column over the number of
         /// observations; it has k - 1 degrees of freedom.  The report warns of the cells whose expected count is below 5.
         /// Trend: with a_i successes and b_i failures in the n_i observations of group i, whose score is v_i, and with A
-        /// successes and B failures in all N, the sums are k1 = sum(v a), k2 = sum(v b) and k4 = sum(v^2 n).  The root of the
-        /// chi-square for trend is (k1 - k2 A / B) / root((k4 - (k1 + k2)^2 / N) A / B), which is above 0 if the proportion
-        /// rises with the score, and its square is
-        ///   [sum(v (a - n A / N))]^2 / ((A / N) (B / N) [sum(n v^2) - (sum(n v))^2 / N]),
-        /// with 1 degree of freedom: the variance of the scores is over N, where the test for trend of the r by c analysis
-        /// (Tables.SChi) has N - 1.  What is left of chi-square has k - 2 degrees of freedom, and tests the departure of the
-        /// proportions from the line; it is taken as nothing if it is below 1 part in 10^9 of chi-square.
+        /// successes and B failures in all N, the root of the chi-square for trend is
+        ///   sum(v (a - n A / N)) / root((A / N) (B / N) [sum(n v^2) - (sum(n v))^2 / N]),
+        /// which is above 0 if the proportion rises with the score; its square has 1 degree of freedom.  The variance of the
+        /// scores is over N, where the test for trend of the r by c analysis (Tables.SChi) has N - 1.  The scores that the
+        /// sums are made of are the scores less their mean over the observations (Centred): a number that all the scores have
+        /// in common then has no part in the sums, where it would take their figures from them.  What is left of chi-square
+        /// has k - 2 degrees of freedom, and tests the departure of the proportions from the line; it is taken as nothing if
+        /// it is below 1 part in 10^9 of chi-square.
         /// There is no chi-square if there are no successes or no failures, and no test for trend if the scores are all the
         /// same: the report says so.
         /// </remarks>
@@ -293,9 +294,6 @@ namespace StatsDirect.Builtins
             double[] s = new double[rows + 1];
 
             ParameterBag outputParameters = new();
-            double k4 = 0;
-            double k2 = 0;
-            double k1 = 0;
             double c = 0;
             double t = 0;
             double b = 0;
@@ -316,9 +314,6 @@ namespace StatsDirect.Builtins
                 a += a1;
                 b += b1;
                 t += t1;
-                k1 += s1 * a1;
-                k2 += s1 * b1;
-                k4 += s1 * s1 * (a1 + b1);
             }
             double n1 = 0;
             // chi-square is the sum over the cells of (observed - expected)^2 / expected; it has no value if a column has nothing
@@ -408,12 +403,20 @@ namespace StatsDirect.Builtins
             if (z != Chi2ByNTrend.WithoutTrend && !emptyColumn && !sameScores)
             {
                 c = x2;
-                double k8 = b / a;
-                double d = (k4 - Math.Pow(k1 + k2, 2.0) / t) / k8;
-                if (d < 0)
-                    d = 0;
-                d = Math.Sqrt(d);
-                double x1 = (k1 - k2 / k8) / d;
+                // the sums, of the scores less their mean: the products of the scores and what the successes are above their
+                // expectation, the squares of the scores, and the scores, which add to nothing but for their rounding
+                double[] v = Centred(s, h, rows);
+                double trend = 0.0;
+                double squares = 0.0;
+                double scores = 0.0;
+                for (int r = 1; r <= rows; r++)
+                {
+                    trend += v[r] * (f[r] - a * h[r] / t);
+                    squares += v[r] * v[r] * h[r];
+                    scores += v[r] * h[r];
+                }
+                double d = Math.Sqrt((squares - scores * scores / t) * (a / t) * (b / t));
+                double x1 = trend / d;
                 x2 = x1 * x1;
                 n2 = 1;
                 ParameterBag zParameters = new();
@@ -933,11 +936,12 @@ namespace StatsDirect.Builtins
         ///  <param name="ierror">return non-zero if fault (-1 if interrupted)</param>
         ///  <remarks>
         ///  With the totals of the rows and columns given, the chi-square for trend of a table is a constant times the square of
-        ///  T = sum(score x successes) - (successes of all the rows) x sum(score x total of the row) / (number of observations),
-        ///  and of T the first sum is the part of it that differs from table to table.  A table is counted if its T is as far from 0
-        ///  as that of the table observed, or short of that by less than the rounding of the sum could account for: 1 part in
-        ///  10^12 of the sum of the scores, each without its sign and times the total of its row.  Two tables that have the same
-        ///  chi-square have it from sums that are rounded differently, and are both to be counted.
+        ///  T = sum(score x successes), the scores being the scores less their mean over the observations (Centred): T is then
+        ///  what it is above its expectation, and a number that all the scores have in common has no part in it.  A table is
+        ///  counted if its T is as far from 0 as that of the table observed, or short of that by less than the rounding of the sum
+        ///  could account for: 1 part in 10^12 of the sum of the same products, each without its sign, of the table observed or of
+        ///  the table drawn, whichever is the greater.  Two tables that have the same chi-square have it from sums that are
+        ///  rounded differently, and are both to be counted.
         ///  </remarks>
         private static void Chi2TrendResample(IProgressBarHost host, int[,] x, double[] wt, int nrow, int ncol, int iter, out int r, out int actualIterations, int iseed, ref int ierror)
         {
@@ -971,26 +975,24 @@ namespace StatsDirect.Builtins
             double[] fact = new double[ncol + 1];
             int[] jwork = new int[ncol + 1];
 
-            // what the totals make of T, and the T of the table observed, which the tables drawn take the place of
-            double observations = 0.0;
-            double scored = 0.0;
-            double scale = 0.0;
+            // the scores less their mean over the observations; and the T of the table observed, which the tables drawn take the
+            // place of, without its sign, with the sum of its terms without theirs
+            double[] rowTotals = new double[nrow + 1];
             for (j = 1; j <= nrow; j++)
-            {
-                observations += nrowt[j];
-                scored += wt[j] * nrowt[j];
-                scale += Math.Abs(wt[j]) * nrowt[j];
-            }
-            double expected = ncolt[1] * scored / observations;
-            double FromExpected(int[,] table)
+                rowTotals[j] = nrowt[j];
+            double[] score = Centred(wt, rowTotals, nrow);
+            double FromExpected(int[,] table, out double terms)
             {
                 double sum = 0.0;
+                terms = 0.0;
                 for (int row = 1; row <= nrow; row++)
-                    sum += wt[row] * table[row, 1];
-                return Math.Abs(sum - expected);
+                {
+                    sum += score[row] * table[row, 1];
+                    terms += Math.Abs(score[row]) * table[row, 1];
+                }
+                return Math.Abs(sum);
             }
-            double observed = FromExpected(x);
-            double tol = 1.0E-12 * scale;
+            double observed = FromExpected(x, out double observedTerms);
 
             r = 0;
             for (i = 1; i <= iter; i++)
@@ -1006,7 +1008,8 @@ namespace StatsDirect.Builtins
                 Rcont2(1, nrow, ncol, nrowt, ncolt, ref primed, ref x, ref fact, ref ntotal, ref maxtot, ref jwork, out ierror, ref rng);
                 if (ierror != 0)
                     throw new InvalidDataException(NotDrawn(ierror));
-                if (FromExpected(x) >= observed - tol)
+                double drawn = FromExpected(x, out double drawnTerms);
+                if (drawn >= observed - 1.0E-12 * Math.Max(observedTerms, drawnTerms))
                     r += 1;
             }
             actualIterations = i - 1;
@@ -1030,11 +1033,15 @@ namespace StatsDirect.Builtins
         ///  <param name="iseed">RNG seed (0 for automatic)</param>
         ///  <param name="ierror">return non-zero if fault (-1 if interrupted)</param>
         ///  <remarks>
-        ///  The table observed is that of the counts, rounded if they are not whole numbers.  Of each statistic what is compared is
-        ///  the part of it that differs from table to table when the totals of the rows and columns are given (ChiRC), and a table
-        ///  is counted if that part is no less than that of the table observed, or short of it by less than the rounding of its sums
-        ///  could account for (1 part in 10^12): two tables that have the same statistic have it from sums that are rounded
-        ///  differently, and are both to be counted.
+        ///  The table observed is that of the counts, rounded if they are not whole numbers.  What is compared of each statistic
+        ///  (ChiRC) is a number that is nothing for a table that is what the totals expect, and that has nothing in it that is
+        ///  the same for every table: the scores are the scores less their means over the observations (Centred), and
+        ///  G-square is made of terms of which none is below 0.  A table is counted if its number is no less than that of the
+        ///  table observed, or short of it by less than the rounding of its sums could account for: 1 part in 10^12 of the
+        ///  statistic, for chi-square and G-square, and of the sum of its terms without their signs, for the two tests that have
+        ///  scores.  Two tables that have the same statistic have it from sums that are rounded differently, and are both to be
+        ///  counted; and a table whose statistic is less is not, however many subjects there are and whatever number the
+        ///  scores have in common.
         ///  </remarks>
         public static void ChiRCResample(IProgressBarHost host, double[,] o, double[] rowScore, double[] colScore, int nrow, int ncol, int iter, out int rx2, out int rx2Eq, out int rx2Trend, out int rg2, out int actualIterations, int iseed, ref int ierror)
         {
@@ -1078,34 +1085,22 @@ namespace StatsDirect.Builtins
             rx2Trend = 0;
             actualIterations = 0;
 
-            // the totals, which every table that is drawn has, and what they make of the sum of the products of the scores and the
-            // counts: its expectation, and the sum of the products without their signs, to which its rounding is in proportion
+            // the totals, which every table that is drawn has, and the scores less their means over the observations
             double[] rtot = new double[nrow + 1];
             double[] ctot = new double[ncol + 1];
             double gtot = 0.0;
-            double rowScored = 0.0;
-            double rowScale = 0.0;
             for (j = 1; j <= nrow; j++)
             {
                 rtot[j] = nrowt[j];
                 gtot += nrowt[j];
-                rowScored += rowScore[j] * nrowt[j];
-                rowScale += Math.Abs(rowScore[j]) * nrowt[j];
             }
-            double colScored = 0.0;
-            double colScale = 0.0;
             for (i = 1; i <= ncol; i++)
-            {
                 ctot[i] = ncolt[i];
-                colScored += colScore[i] * ncolt[i];
-                colScale += Math.Abs(colScore[i]) * ncolt[i];
-            }
-            double crossExpected = rowScored * colScored / gtot;
-            double crossTolerance = 1.0E-12 * rowScale * colScale / gtot;
+            double[] rowCentred = Centred(rowScore, rtot, nrow);
+            double[] colCentred = Centred(colScore, ctot, ncol);
 
             // the table observed, which the tables drawn take the place of
-            ChiRC(x, nrow, ncol, rowScore, colScore, rtot, ctot, gtot, out double x2, out double logs, out double cross, out double between);
-            double crossDistance = Math.Abs(cross - crossExpected);
+            ChiRC(x, nrow, ncol, rowCentred, colCentred, rtot, ctot, gtot, out double x2, out double g2, out double cross, out double crossTerms, out double between, out double betweenTerms);
 
             for (i = 1; i <= iter; i++)
             {
@@ -1120,15 +1115,15 @@ namespace StatsDirect.Builtins
                 Rcont2(1, nrow, ncol, nrowt, ncolt, ref primed, ref x, ref fact, ref ntotal, ref maxtot, ref jwork, out ierror, ref rng);
                 if (ierror != 0)
                     throw new InvalidDataException(NotDrawn(ierror));
-                ChiRC(x, nrow, ncol, rowScore, colScore, rtot, ctot, gtot, out double x2rep, out double logsRep, out double crossRep, out double betweenRep);
+                ChiRC(x, nrow, ncol, rowCentred, colCentred, rtot, ctot, gtot, out double x2rep, out double g2rep, out double crossRep, out double crossTermsRep, out double betweenRep, out double betweenTermsRep);
                 actualIterations++;
                 if (x2rep >= x2 - 1.0E-12 * x2)
                     rx2++;
-                if (logsRep >= logs - 1.0E-12 * Math.Max(1.0, logs))
+                if (g2rep >= g2 - 1.0E-12 * g2)
                     rg2++;
-                if (betweenRep >= between - 1.0E-12 * between)
+                if (betweenRep >= between - 1.0E-12 * Math.Max(betweenTerms, betweenTermsRep))
                     rx2Eq++;
-                if (Math.Abs(crossRep - crossExpected) >= crossDistance - crossTolerance)
+                if (Math.Abs(crossRep) >= Math.Abs(cross) - 1.0E-12 * Math.Max(crossTerms, crossTermsRep))
                     rx2Trend++;
             }
         }
@@ -1164,42 +1159,159 @@ namespace StatsDirect.Builtins
 
         /// <summary>
         /// What is compared of a table that is drawn in the simulation and of the table observed, for each of the four statistics
-        /// that Tables.SChi works out for the table observed: the part of it that differs from table to table when the totals of
-        /// the rows and columns are given.
+        /// that Tables.SChi works out for the table observed: a number that is nothing for a table that is what the totals of the
+        /// rows and columns expect, and that rises with the statistic.
         /// </summary>
         /// <param name="x">The table, from row 1 and column 1.</param>
+        /// <param name="rows">The number of rows.</param>
+        /// <param name="cols">The number of columns.</param>
+        /// <param name="rowscore">The scores of the rows, less their mean over the observations (Centred).</param>
+        /// <param name="colscore">The scores of the columns, less their mean over the observations.</param>
         /// <param name="rtot">The totals of the rows.</param>
         /// <param name="ctot">The totals of the columns.</param>
         /// <param name="gtot">The number of observations.</param>
         /// <param name="x2">On return, chi-square: the sum over the cells of (observed - expected)^2 / expected.</param>
-        /// <param name="logs">On return, the sum over the cells of x log(x).  G-square is twice this, less a constant.</param>
+        /// <param name="g2">On return, half of G-square: the sum over the cells of x log(x / expected) - (x - expected)
+        /// (Deviance), of which no term is below 0; what is taken from each term adds to nothing over the cells.</param>
         /// <param name="cross">On return, the sum over the cells of the row score times the column score times the count.  The
-        /// chi-square for trend is a constant times the square of this less its expectation.</param>
+        /// chi-square for trend is a constant times the square of this.</param>
+        /// <param name="crossTerms">On return, the same sum with each term without its sign, to which the rounding of cross is
+        /// in proportion.</param>
         /// <param name="between">On return, the sum over the columns of the square of the sum of the row scores of the
         /// observations of the column, over the total of the column.  The chi-square for the equality of the mean scores is a
-        /// constant times this, less a constant.</param>
-        private static void ChiRC(int[,] x, int rows, int cols, double[] rowscore, double[] colscore, double[] rtot, double[] ctot, double gtot, out double x2, out double logs, out double cross, out double between)
+        /// constant times this.</param>
+        /// <param name="betweenTerms">On return, the sum over the columns of the sum of the row scores of the column, without
+        /// its sign, times the same sum with each score without its sign, over the total of the column: the rounding of between
+        /// is in proportion to it.</param>
+        private static void ChiRC(int[,] x, int rows, int cols, double[] rowscore, double[] colscore, double[] rtot, double[] ctot, double gtot, out double x2, out double g2, out double cross, out double crossTerms, out double between, out double betweenTerms)
         {
             x2 = 0.0;
-            logs = 0.0;
+            g2 = 0.0;
             cross = 0.0;
+            crossTerms = 0.0;
             between = 0.0;
+            betweenTerms = 0.0;
             for (int c = 1; c <= cols; c++)
             {
                 double xi = 0.0;
+                double terms = 0.0;
                 for (int r = 1; r <= rows; r++)
                 {
                     xi += rowscore[r] * x[r, c];
-                    cross += x[r, c] * rowscore[r] * colscore[c];
+                    terms += Math.Abs(rowscore[r]) * x[r, c];
                     double ef = rtot[r] * ctot[c] / gtot;
                     if (ef != 0.0)
+                    {
                         x2 += Math.Pow(x[r, c] - ef, 2.0) / ef;
-                    if (x[r, c] != 0)
-                        logs += x[r, c] * Math.Log(x[r, c]);
+                        g2 += Deviance(x[r, c], ef);
+                    }
                 }
+                cross += xi * colscore[c];
+                crossTerms += terms * Math.Abs(colscore[c]);
                 if (ctot[c] != 0.0)
+                {
                     between += xi * xi / ctot[c];
+                    betweenTerms += Math.Abs(xi) * terms / ctot[c];
+                }
             }
+        }
+
+        /// <summary>
+        /// Scores less their mean over the observations, each score having the weight of the total of its row or column.
+        /// </summary>
+        /// <remarks>
+        /// A test that has scores is the same whatever number is added to all of them.  Its sums are made of the scores less
+        /// their mean, so that what the scores have in common is gone before anything is squared or added up: it would
+        /// take the figures of the sums from them, and it would make their rounding as great as what differs from table to
+        /// table.  The first score is taken from each score before the mean is worked out, for the same reason.
+        /// The scores are first made whole numbers, if they are decimal numbers (Whole): a test that has scores is the same
+        /// whatever number the scores are multiplied by, too.
+        /// </remarks>
+        /// <param name="score">The scores, from element 1.</param>
+        /// <param name="total">The totals of the rows or columns that the scores are of, from element 1.</param>
+        /// <param name="n">The number of scores.</param>
+        /// <returns>The scores, times a power of 10 if that makes whole numbers of them, less their mean; from element 1.  They
+        /// are not less their mean if there are no observations.</returns>
+        internal static double[] Centred(double[] score, double[] total, int n)
+        {
+            double[] whole = Whole(score, n);
+            double[] centred = new double[n + 1];
+            double sum = 0.0;
+            double observations = 0.0;
+            for (int i = 1; i <= n; i++)
+            {
+                sum += (whole[i] - whole[1]) * total[i];
+                observations += total[i];
+            }
+            double mean = observations > 0.0 ? sum / observations : -whole[1];
+            for (int i = 1; i <= n; i++)
+                centred[i] = whole[i] - whole[1] - mean;
+            return centred;
+        }
+
+        /// <summary>
+        /// Scores that are decimal numbers, as whole numbers: each times the least power of 10 that makes whole numbers of them
+        /// all.
+        /// </summary>
+        /// <remarks>
+        /// A score such as 0.7 or 1000000.7 is held as the number nearest to it that the computer has, which is not the score
+        /// to its last figure; and the differences of scores so held are not those of the scores, by a part that is the greater
+        /// the more the scores have in common.  Tables that have the same statistic with the scores as they were typed then
+        /// have statistics that differ.  A whole number is held as it is, up to 2^53.  A score is taken for a decimal number
+        /// of so many places if the whole number that it makes, over the power of 10, is held as the same number as the score:
+        /// that is the number that the score is held as when it is typed.
+        /// </remarks>
+        /// <param name="score">The scores, from element 1.</param>
+        /// <param name="n">The number of scores.</param>
+        /// <returns>The whole numbers, from element 1; or the scores as they are, if they are not decimal numbers of up to 15
+        /// places whose whole numbers are below 2^53.</returns>
+        private static double[] Whole(double[] score, int n)
+        {
+            const double most = 9007199254740992.0;
+            double power = 1.0;
+            for (int places = 0; places <= 15; places++)
+            {
+                double[] whole = new double[n + 1];
+                bool all = true;
+                for (int i = 1; i <= n && all; i++)
+                {
+                    whole[i] = Math.Round(score[i] * power);
+                    all = Math.Abs(whole[i]) < most && whole[i] / power == score[i];
+                }
+                if (all)
+                    return whole;
+                power *= 10.0;
+            }
+            return score;
+        }
+
+        /// <summary>
+        /// x log(x / e) - (x - e), for a count x whose expectation e is above 0: the part of half of G-square that is from a
+        /// cell.  It is 0 if x is e, and above 0 if it is not.
+        /// </summary>
+        /// <remarks>
+        /// If x is within a tenth of e the two parts are almost the same, and their difference would have few figures: it is
+        /// worked out from the series e (t^2 / 2 - t^3 / 6 + t^4 / 12 - ...), where t is (x - e) / e and the term of t^k is
+        /// over k (k - 1).
+        /// </remarks>
+        private static double Deviance(double x, double e)
+        {
+            if (x == 0.0)
+                return e;
+            double t = (x - e) / e;
+            if (Math.Abs(t) >= 0.1)
+                return x * Math.Log(x / e) - (x - e);
+            double sum = 0.0;
+            double power = -t;
+            for (int k = 2; k <= 60; k++)
+            {
+                power *= -t;
+                double term = power / (k * (k - 1.0));
+                sum += term;
+                if (Math.Abs(term) <= 1.0E-17 * Math.Abs(sum))
+                    break;
+            }
+            return e * sum;
         }
 
         ///  <remarks>

@@ -2879,7 +2879,6 @@ namespace StatsDirect.Builtins
                 }
             }
 
-            double sumWeighted = 0;
             for (int r = 1; r <= rows; r++)
             {
                 for (int c = 1; c <= cols; c++)
@@ -2889,19 +2888,31 @@ namespace StatsDirect.Builtins
                     gtot += o[r, c];
                     if (o[r, c] != Math.Floor(o[r, c]))
                         doExact = false;
-                    sumWeighted += o[r, c] * rowScore[r] * colScore[c];
                 }
             }
             if (gtot > 100000)
                 doExact = false;
+
+            // The sums of squares and of products of the scores are made of the scores less their means over the subjects
+            // (Chi.Centred): a number that all the scores of the rows, or of the columns, have in common then has no part in
+            // them, where it would take their figures from them.  The sums of the scores themselves, which are taken from the
+            // others below, are then nothing but for their rounding
+            double[] rowCentred = Chi.Centred(rowScore, rtot, rows);
+            double[] colCentred = Chi.Centred(colScore, ctot, cols);
+            double sumWeighted = 0;
+            for (int r = 1; r <= rows; r++)
+            {
+                for (int c = 1; c <= cols; c++)
+                    sumWeighted += o[r, c] * rowCentred[r] * colCentred[c];
+            }
 
             double sumWtCol = 0.0;
             double sumWtSqCol = 0.0;
             int nzCols = 0;
             for (int c = 1; c <= cols; c++)
             {
-                sumWtCol += ctot[c] * colScore[c];
-                sumWtSqCol += ctot[c] * colScore[c] * colScore[c];
+                sumWtCol += ctot[c] * colCentred[c];
+                sumWtSqCol += ctot[c] * colCentred[c] * colCentred[c];
                 if (ctot[c] > 0.0)
                     nzCols += 1;
             }
@@ -2911,8 +2922,8 @@ namespace StatsDirect.Builtins
             int nzRows = 0;
             for (int r = 1; r <= rows; r++)
             {
-                sumWtRow += rtot[r] * rowScore[r];
-                sumWtSqRow += rtot[r] * rowScore[r] * rowScore[r];
+                sumWtRow += rtot[r] * rowCentred[r];
+                sumWtSqRow += rtot[r] * rowCentred[r] * rowCentred[r];
                 if (rtot[r] > 0.0)
                     nzRows += 1;
             }
@@ -2922,7 +2933,7 @@ namespace StatsDirect.Builtins
             {
                 double xi = 0.0;
                 for (int r = 1; r <= rows; r++)
-                    xi += rowScore[r] * o[r, c];
+                    xi += rowCentred[r] * o[r, c];
                 if (ctot[c] != 0.0)
                     dsrs += xi * xi / ctot[c];
             }
