@@ -4742,6 +4742,7 @@ namespace StatsDirect.Builtins
                 int i;
                 int ldkey, ldstp;
                 int[] ifrq; int[] ipoin;
+                double[] frq;
                 int[] key; int[] key2;
                 double[] dlp; double[] dsp;
                 double[] stp; double[] tm;
@@ -4790,8 +4791,10 @@ namespace StatsDirect.Builtins
                     {
                         key = new int[2 * ldkey + 1];
                         ipoin = new int[2 * ldkey + 1];
-                        stp = new double[4 * ldstp + 1];
-                        ifrq = new int[6 * ldstp + 1];
+                        // the past values and the numbers of ways of two stages; and four pointers for each past value
+                        stp = new double[2 * ldstp + 1];
+                        frq = new double[2 * ldstp + 1];
+                        ifrq = new int[4 * ldstp + 1];
                         dlp = new double[4 * ldkey + 1];
                         dsp = new double[4 * ldkey + 1];
                         tm = new double[4 * ldkey + 1];
@@ -4805,7 +4808,7 @@ namespace StatsDirect.Builtins
                 }
                 while (true);
 
-                RcExactGo(progress, nrow, ncol, table, expect, percnt, emin, ref prt, out pre, ref fact, ref ico, ref iro, ref kyy, ref idif, ref irn, ref key, ref ldkey, ref ipoin, ref stp, ref ldstp, ref ifrq, ref dlp, ref dsp, ref tm, ref key2, ref ierr);
+                RcExactGo(progress, nrow, ncol, table, expect, percnt, emin, ref prt, out pre, ref fact, ref ico, ref iro, ref kyy, ref idif, ref irn, ref key, ref ldkey, ref ipoin, ref stp, ref frq, ref ldstp, ref ifrq, ref dlp, ref dsp, ref tm, ref key2, ref ierr);
             }
             //IEB 23 Dec 14: don't just catch overflow error so change from catch (OverflowException) to catch (Exception)
             catch (Exception)
@@ -4944,8 +4947,14 @@ namespace StatsDirect.Builtins
         /// chi-square distribution.  The parameters before fact are those of Rcexact, but for the first, which is the progress bar
         /// (or nothing); the others are work space, and ldkey and ldstp the numbers of keys and of past values that there is room
         /// for in each of two stages.  ierr is -1 on return if the user stopped the test.
+        /// The past values of the two stages are in stp, and the number of ways that give each is in frq at the same place.  The
+        /// numbers of ways are kept as doubles: they are whole numbers that can be greater than a whole number of 32 bits, or of
+        /// 64, can hold, and a double has them as they are up to 2^53 and to 16 figures beyond, which is what the probabilities
+        /// that they multiply have.  ifrq has the pointers of the past values: for each stage the past value that is next in the
+        /// list of its node, and for the stage that is being made the two branches of the tree in which the past values of a
+        /// node are kept in order.
         /// </remarks>
-        private static void RcExactGo(ExactProgress progress, int nrow, int ncol, double[,] table, double expect, double percnt, double emin, ref double prt, out double pre, ref double[] fact, ref int[] ico, ref int[] iro, ref int[] kyy, ref int[] idif, ref int[] irn, ref int[] key, ref int ldkey, ref int[] ipoin, ref double[] stp, ref int ldstp, ref int[] ifrq, ref double[] dlp, ref double[] dsp, ref double[] tm, ref int[] key2, ref int ierr)
+        private static void RcExactGo(ExactProgress progress, int nrow, int ncol, double[,] table, double expect, double percnt, double emin, ref double prt, out double pre, ref double[] fact, ref int[] ico, ref int[] iro, ref int[] kyy, ref int[] idif, ref int[] irn, ref int[] key, ref int ldkey, ref int[] ipoin, ref double[] stp, ref double[] frq, ref int ldstp, ref int[] ifrq, ref double[] dlp, ref double[] dsp, ref double[] tm, ref int[] key2, ref int ierr)
         {
             bool chisq = false;
             double tmp = 0;
@@ -5123,16 +5132,16 @@ namespace StatsDirect.Builtins
             int last = ldkey + 1;
             int jkey = ldkey + 1;
             int jstp = ldstp + 1;
-            int jstp2 = 3 * ldstp + 1;
-            int jstp3 = 4 * ldstp + 1;
-            int jstp4 = 5 * ldstp + 1;
+            int jstp2 = ldstp + 1;
+            int jstp3 = 2 * ldstp + 1;
+            int jstp4 = 3 * ldstp + 1;
             int ikkey = 0;
             int ikstp = 0;
-            int ikstp2 = 2 * ldstp;
+            int ikstp2 = 0;
             int ipo = 1;
             ipoin[1] = 1;
             stp[1] = 0.0;
-            ifrq[1] = 1;
+            frq[1] = 1.0;
             ifrq[ikstp2 + 1] = -1;
             progress?.Start(nco - 2);
             // the ways of filling a column that have been tried: the clock of the progress bar is looked at for one in 256 of them
@@ -5351,7 +5360,7 @@ namespace StatsDirect.Builtins
                         //                                   recover pastp
                         int ipn = ipoin[ipo + ikkey];
                         double pastp = stp[ipn + ikstp];
-                        int ifreq = ifrq[ipn + ikstp];
+                        double ifreq = frq[ipn + ikstp];
                         //                                   compute shortest and longest path
                         double df;
                         double obs2;
@@ -5452,7 +5461,7 @@ namespace StatsDirect.Builtins
                             if (pastp <= obs3)
                             {
                                 //                                   update pre
-                                pre += Convert.ToDouble(ifreq) * Math.Exp(pastp + drn);
+                                pre += ifreq * Math.Exp(pastp + drn);
 
                             }
                             else if (pastp < obs2)
@@ -5461,12 +5470,12 @@ namespace StatsDirect.Builtins
                                 {
                                     df = (nro2 - 1) * (k1 - 1);
                                     double pv = PDF.chivalp(Math.Max(0.0, tmp + 2.0 * (pastp + drn)), df);
-                                    pre += Convert.ToDouble(ifreq) * Math.Exp(pastp + drn) * pv;
+                                    pre += ifreq * Math.Exp(pastp + drn) * pv;
                                 }
                                 else
                                 {
                                     //                                   put daughter on queue
-                                    Pushnode(pastp + ddf, tol, kval, key, jkey, ldkey, ipoin, stp, jstp, ldstp, ifrq, jstp2, jstp3, jstp4, ifreq, ref itop, ipsh, ref itpx, ref ierr);
+                                    Pushnode(pastp + ddf, tol, kval, key, jkey, ldkey, ipoin, stp, frq, jstp, ldstp, ifrq, jstp2, jstp3, jstp4, ifreq, ref itop, ipsh, ref itpx, ref ierr);
                                     ipsh = false;
                                     if (ierr != 0)
                                     {
@@ -5480,7 +5489,7 @@ namespace StatsDirect.Builtins
                             if (ipn > 0)
                             {
                                 pastp = stp[ipn + ikstp];
-                                ifreq = ifrq[ipn + ikstp];
+                                ifreq = frq[ipn + ikstp];
                             }
                             else
                             {
@@ -5523,7 +5532,7 @@ namespace StatsDirect.Builtins
                     ikstp2 = jstp2 - 1;
                     jkey = ldkey - jkey + 2;
                     jstp = ldstp - jstp + 2;
-                    jstp2 = 2 * ldstp + jstp;
+                    jstp2 = jstp;
                     for (i = 1; i <= 2 * ldkey; i++)
                     {
                         key2[i] = -9999;
@@ -6543,11 +6552,12 @@ namespace StatsDirect.Builtins
         /// A node of the next stage, of key kval, reached with the past value pastp in ifreq ways.  If ipsh is set the key is looked
         /// for, and put in if it is not there.  The past values of a node are kept as a tree in order of size: if one within tol of
         /// pastp is there, ifreq is added to its number of ways; otherwise pastp is put in.  ifault is 1 on return if there is no
-        /// room for the key or for the past value.
+        /// room for the key or for the past value.  The numbers of ways are doubles (see RcExactGo): their sum is not to be a
+        /// whole number of 32 bits, which it can be too great for.
         /// </remarks>
-        private static void Pushnode(double pastp, double tol, int kval, int[] key, int jkey, int ldkey, int[] ipoin, double[] stp, int jstp, int ldstp, int[] ifrq, int jstp2, int jstp3, int jstp4, int ifreq, ref int itop, bool ipsh, ref int itp, ref int ifault)
+        private static void Pushnode(double pastp, double tol, int kval, int[] key, int jkey, int ldkey, int[] ipoin, double[] stp, double[] frq, int jstp, int ldstp, int[] ifrq, int jstp2, int jstp3, int jstp4, double ifreq, ref int itop, bool ipsh, ref int itp, ref int ifault)
         {
-            // offset into stp() and ifrq
+            // offsets: into stp and frq, and into ifrq for the three pointers
             int ix1 = jstp - 1;
             int ix2 = jstp2 - 1;
             int ix3 = jstp3 - 1;
@@ -6606,7 +6616,7 @@ namespace StatsDirect.Builtins
                     ifrq[ix3 + itop] = -1;
                     ifrq[ix4 + itop] = -1;
                     stp[ix1 + itop] = pastp;
-                    ifrq[ix1 + itop] = ifreq;
+                    frq[ix1 + itop] = ifreq;
                     return;
                 }
             }
@@ -6633,7 +6643,7 @@ namespace StatsDirect.Builtins
                 }
                 else
                 {
-                    ifrq[ix1 + ipn] = ifrq[ix1 + ipn] + ifreq;
+                    frq[ix1 + ipn] += ifreq;
                     return;
                 }
             }
@@ -6673,7 +6683,7 @@ namespace StatsDirect.Builtins
             ifrq[ix2 + itop] = ifrq[ix2 + itmp];
             ifrq[ix2 + itmp] = itop;
             stp[ix1 + itop] = pastp;
-            ifrq[ix1 + itop] = ifreq;
+            frq[ix1 + itop] = ifreq;
             ifrq[ix4 + itop] = -1;
             ifrq[ix3 + itop] = -1;
 
