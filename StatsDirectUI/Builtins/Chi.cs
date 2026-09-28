@@ -1105,7 +1105,7 @@ namespace StatsDirect.Builtins
                     int nlm;
                     do
                     {
-                        nlm = (int)Math.Floor(Convert.ToDouble(ia * id) / Convert.ToDouble(ie) + 0.5);
+                        nlm = (int)Math.Floor((double)ia * id / ie + 0.5);   // as floating-point numbers: the product of two totals may be above what a whole number of 32 bits holds
 
                         int iap = ia + 1;
                         int idp = id + 1;
@@ -1129,7 +1129,7 @@ namespace StatsDirect.Builtins
                         while (lsp == false)
                         {
 
-                            int j = (id - nlm) * (ia - nlm);
+                            double j = (double)(id - nlm) * (ia - nlm);
 
                             if (j == 0)
                                 lsp = true;
@@ -1137,7 +1137,7 @@ namespace StatsDirect.Builtins
                             {
 
                                 nlm += 1;
-                                x *= Convert.ToDouble(j) / Convert.ToDouble(nlm * (ii + nlm));
+                                x *= j / ((double)nlm * (ii + nlm));
                                 sumprb += x;
 
                                 if (r <= sumprb)
@@ -1155,7 +1155,7 @@ namespace StatsDirect.Builtins
 
                                 //   Decrement the entry in row L, column M.
 
-                                j = nll * (ii + nll);
+                                j = (double)nll * (ii + nll);
 
                                 if (j == 0)
                                 {
@@ -1164,7 +1164,7 @@ namespace StatsDirect.Builtins
                                 }
 
                                 nll -= 1;
-                                y *= Convert.ToDouble(j) / Convert.ToDouble((id - nll) * (ia - nll));
+                                y *= j / ((double)(id - nll) * (ia - nll));
                                 sumprb += y;
 
                                 if (r <= sumprb)
