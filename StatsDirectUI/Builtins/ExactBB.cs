@@ -1076,6 +1076,11 @@ namespace StatsDirect.Builtins
 
         public static void OddsRatioCI(IProgressBarHost host, double cco, double a, double b, double c, double d, out double eor, out double llf, out double ulf, out bool lerr, out bool uerr)
         {
+            // An exact method is of counts: those that are not whole numbers are rounded, a half to the even number
+            a = Math.Round(a);
+            b = Math.Round(b);
+            c = Math.Round(c);
+            d = Math.Round(d);
             if (a == 0 && b == 0 || c == 0 && d == 0)
             {
                 ulf = double.PositiveInfinity;
@@ -1129,6 +1134,11 @@ namespace StatsDirect.Builtins
             p1m = Constant.MISSING;
             p2m = Constant.MISSING;
             ierr = 0;
+            // An exact method is of counts: those that are not whole numbers are rounded, a half to the even number
+            a = Math.Round(a);
+            b = Math.Round(b);
+            c = Math.Round(c);
+            d = Math.Round(d);
             if (a == 0 && b == 0 || c == 0 && d == 0)
             {
                 ulf = double.PositiveInfinity;

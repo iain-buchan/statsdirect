@@ -431,10 +431,12 @@ namespace StatsDirect.Builtins
             if (cco <= 0.0 || cco >= 1.0)
                 cco = 0.95;
 
-            double a = parameters["a"].AsDouble;
-            double b = parameters["b"].AsDouble;
-            double c = parameters["c"].AsDouble;
-            double d = parameters["d"].AsDouble;
+            // The table that is analysed has whole numbers: counts that are not are rounded, a half to the even number, as they
+            // are for Fisher's exact test
+            double a = Math.Round(parameters["a"].AsDouble);
+            double b = Math.Round(parameters["b"].AsDouble);
+            double c = Math.Round(parameters["c"].AsDouble);
+            double d = Math.Round(parameters["d"].AsDouble);
 
             ParameterBag outputParameters = new();
             outputParameters.AddOutput("tab_a1", a);
