@@ -32,6 +32,15 @@ namespace StatsDirect.Builtins
 
         protected bool UseLogScale { get; set; }
 
+        /// <summary>The fault of a calculation that the user stopped.</summary>
+        protected const int Stopped = 7;
+
+        /// <summary>
+        /// Whether a coefficient of a polynomial on the ordinary scale is lost: it is too great to be held, or it is below the
+        /// least number that is held with all its figures.  Every coefficient is above 0, so that one that is 0 is lost.
+        /// </summary>
+        protected static bool Lost(double coefficient) => double.IsInfinity(coefficient) || double.IsNaN(coefficient) || coefficient < 2.2250738585072014E-308;
+
         /// <summary>
         /// get log(exp(a)+exp(b)) avoiding overflow due to exp(a) or exp(b)
         /// </summary>
@@ -82,7 +91,7 @@ namespace StatsDirect.Builtins
                         if (couldBeSlow)
                         {
                             if (progress.Update(i / (double)deg1))
-                                return (p3, resultDegree, 1);
+                                return (p3, resultDegree, Stopped);
                         }
                     }
                 }
@@ -95,13 +104,13 @@ namespace StatsDirect.Builtins
                         if (couldBeSlow)
                         {
                             if (progress.Update(i / (double)deg1))
-                                return (p3, resultDegree, 1);
+                                return (p3, resultDegree, Stopped);
                         }
                     }
 
-                    //  Test for overflow; if so, set an appropriate error value.
+                    //  Test for overflow, and for a coefficient that is lost; if so, set an appropriate error value.
                     for (int i = 0; i <= resultDegree; i++)
-                        if (double.IsInfinity(p3[i]) || double.IsNaN(p3[i]))
+                        if (Lost(p3[i]))
                             return (p3, resultDegree, 6); // Old VB6 code for an overflow
                 }
             }
@@ -427,7 +436,9 @@ namespace StatsDirect.Builtins
         /// which the observed sum or fewer has it; the mid-P limits take half the probability of the observed sum in the place of
         /// the whole of it.  If the observed sum is the least that it can be, the estimate and the lower limits are 0; if it is
         /// the greatest, the estimate and the upper limits are infinite.
-        /// The work is done on the ordinary scale, and again on the scale of logarithms if that overflows or fails.
+        /// The work is done on the ordinary scale, and the whole of it again on the scale of logarithms if any part of it
+        /// fails on the ordinary scale: the polynomial, of which a coefficient can be too great to be held or too small, the
+        /// estimate, a limit or the P values.  A calculation that the user stopped is not made again.
         /// </remarks>
         /// <param name="host">Where progress is shown.</param>
         /// <param name="lowerBound">The element of tables that has the first table.</param>
@@ -447,8 +458,8 @@ namespace StatsDirect.Builtins
         /// <param name="useLogScale">Whether to work on the scale of logarithms from the start; on return, whether the work was
         /// done on it.</param>
         /// <param name="ierr">On return, 0, or what went wrong: -1, the sum of the first counts can have more than a million
-        /// values; -2, it can have one value only; any other number, the calculation failed.  What is returned is then
-        /// missing.</param>
+        /// values; -2, it can have one value only; 7, the user stopped the calculation; any other number, the calculation
+        /// failed on both scales.  What is returned is then missing.</param>
         public void Exact22K(IProgressBarHost host, int lowerBound, int numTables, Exact22KDataType dataType, Rec2X2[] tables, double confLevel, out double cMLE, out double upFishLim, out double loFishLim, out double upMidPLim, out double loMidPLim, out double fishP1, out double fishP2, out double midP1, out double midP2, ref bool useLogScale, out int ierr)
         {
             //   Stratified case-control data, matched case-control data, and
@@ -530,45 +541,16 @@ namespace StatsDirect.Builtins
                 cMLE = Constant.MISSING;
                 return;
             }
-            //  Try on natural scale first then log scale if overflow
-            CalcPoly(dataType, lowerBound, numTables, tables, out ierr);
-            if (ierr == 7)
-            {
-                loFishLim = Constant.MISSING;
-                upFishLim = Constant.MISSING;
-                loMidPLim = Constant.MISSING;
-                upMidPLim = Constant.MISSING;
-                fishP1 = Constant.MISSING;
-                fishP2 = Constant.MISSING;
-                midP1 = Constant.MISSING;
-                midP2 = Constant.MISSING;
-                cMLE = Constant.MISSING;
-                return;
-            }
-            cMLE = Constant.MISSING; // definite assignment; replaced by the estimate below
-            if (ierr == 0)
-                cMLE = CalcCmle(1.0, ref ierr);
-            if (ierr != 0)
+            // On the ordinary scale first, unless the scale of logarithms is asked for; and the whole of the work again on the
+            // scale of logarithms if any part of it failed on the ordinary scale
+            ierr = Attempt(dataType, lowerBound, numTables, tables, confLevel, out cMLE, out upFishLim, out loFishLim, out upMidPLim, out loMidPLim, out fishP1, out fishP2, out midP1, out midP2);
+            if (ierr != 0 && ierr != Stopped && !UseLogScale)
             {
                 UseLogScale = true;
-                CalcPoly(dataType, lowerBound, numTables, tables, out ierr);
-                if (ierr == 0)
-                    cMLE = CalcCmle(1.0, ref ierr);
-                else
-                    cMLE = 0;
+                ierr = Attempt(dataType, lowerBound, numTables, tables, confLevel, out cMLE, out upFishLim, out loFishLim, out upMidPLim, out loMidPLim, out fishP1, out fishP2, out midP1, out midP2);
             }
-            if (ierr == 0)
-            {
-                //  cMLE keeps the conditional maximum likelihood estimate from CalcCmle above (it was
-                //  reset to 0 here in 2024, which zeroed the estimate printed by every caller)
-                upFishLim = CalcExactLim(false, true, cMLE, confLevel, ref ierr);
-                loFishLim = CalcExactLim(true, true, cMLE, confLevel, ref ierr);
-                upMidPLim = CalcExactLim(false, false, cMLE, confLevel, ref ierr);
-                loMidPLim = CalcExactLim(true, false, cMLE, confLevel, ref ierr);
-                CalcExactPVals(out fishP1, out fishP2, out midP1, out midP2, ref ierr);
-                useLogScale = UseLogScale;
-            }
-            else
+            useLogScale = UseLogScale;
+            if (ierr != 0)
             {
                 cMLE = Constant.MISSING;
                 upFishLim = Constant.MISSING;
@@ -580,6 +562,37 @@ namespace StatsDirect.Builtins
                 midP1 = Constant.MISSING;
                 midP2 = Constant.MISSING;
             }
+        }
+
+        /// <summary>
+        /// The polynomial, the estimate, the limits and the P values, on the scale that UseLogScale has.
+        /// </summary>
+        /// <returns>0, or the fault of the part of the work that failed.</returns>
+        private int Attempt(Exact22KDataType dataType, int lowerBound, int numTables, Rec2X2[] tables, double confLevel, out double cMLE, out double upFishLim, out double loFishLim, out double upMidPLim, out double loMidPLim, out double fishP1, out double fishP2, out double midP1, out double midP2)
+        {
+            cMLE = Constant.MISSING;
+            upFishLim = Constant.MISSING;
+            loFishLim = Constant.MISSING;
+            upMidPLim = Constant.MISSING;
+            loMidPLim = Constant.MISSING;
+            fishP1 = Constant.MISSING;
+            fishP2 = Constant.MISSING;
+            midP1 = Constant.MISSING;
+            midP2 = Constant.MISSING;
+            CalcPoly(dataType, lowerBound, numTables, tables, out int ierr);
+            if (ierr != 0)
+                return ierr;
+            cMLE = CalcCmle(1.0, ref ierr);
+            if (ierr != 0)
+                return ierr;
+            //  cMLE keeps the conditional maximum likelihood estimate from CalcCmle above (it was
+            //  reset to 0 here in 2024, which zeroed the estimate printed by every caller)
+            upFishLim = CalcExactLim(false, true, cMLE, confLevel, ref ierr);
+            loFishLim = CalcExactLim(true, true, cMLE, confLevel, ref ierr);
+            upMidPLim = CalcExactLim(false, false, cMLE, confLevel, ref ierr);
+            loMidPLim = CalcExactLim(true, false, cMLE, confLevel, ref ierr);
+            CalcExactPVals(out fishP1, out fishP2, out midP1, out midP2, ref ierr);
+            return ierr;
         }
 
         /// <summary>
@@ -707,10 +720,16 @@ namespace StatsDirect.Builtins
             else
             {
                 p[degP] = Math.Pow(c1, Convert.ToDouble(degP));
+                if (Lost(p[degP]))
+                {
+                    ierr = 6;
+                    return;
+                }
                 for (int i = degP - 1; i >= 0; i--)
                 {
                     p[i] = p[i + 1] * c0 * Convert.ToDouble(i + 1) / (c1 * Convert.ToDouble(degP - i));
-                    if (double.IsInfinity(p[i]) || double.IsNaN(p[i]))
+                    // a coefficient that is too great to be held, or that is lost because it is too small
+                    if (Lost(p[i]))
                     {
                         ierr = 6; //  Old VB6 code for overflow
                         return;
@@ -764,8 +783,8 @@ namespace StatsDirect.Builtins
                     {
                         double xi = Convert.ToDouble(i);
                         polyDi[i] = polyDi[i - 1] * ((bb - xi) / (aa + xi)) * ((cc - xi) / (dd + xi));
-                        //  Overflow test
-                        if (double.IsInfinity(polyDi[i]) || double.IsNaN(polyDi[i]))
+                        //  Overflow test, and a coefficient that is lost because it is too small
+                        if (Lost(polyDi[i]))
                         {
                             ierr = 6; //  Old VB6 code for overflow
                             return;
