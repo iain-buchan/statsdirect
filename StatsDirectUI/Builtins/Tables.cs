@@ -4861,7 +4861,7 @@ namespace StatsDirect.Builtins
                             for (i = 3; i <= nro; i++)
                                 kval += irn[i] * kyy[i];
                             //                                   get hash table entry
-                            i = kval % 2 * ldkey + 1;
+                            i = kval % (2 * ldkey) + 1;
                             //                                   search for unused location
                             bool found = false;
                             for (itp = i; itp <= 2 * ldkey; itp++)
