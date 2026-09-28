@@ -612,16 +612,22 @@ namespace StatsDirect.TemplateProcessing
             // Space/time trade-off: never reallocate g or gin, but they're large!
             double[] g = new double[v.Length]; // There will be at most v.Length groups
             int[] gin = new int[v.Length]; // There will be at most v.Length groups
+            // the place of the first value that is not missing
+            int first = -1;
             for (int j = 0; j < v.Length; j++)
             {
                 if (v.Data[j] != Constant.MISSING)
                 {
                     g[0] = v.Data[j];
                     gin[0] = 1;
+                    first = j;
                     break;
                 }
             }
-            for (int j = 1; j < v.Length; j++)
+            // no value that is not missing: no categories
+            if (first < 0)
+                ng = 0;
+            for (int j = first + 1; first >= 0 && j < v.Length; j++)
             {
                 bool newa = true;
                 int mg = 0;

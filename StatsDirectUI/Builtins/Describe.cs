@@ -241,7 +241,20 @@ namespace StatsDirect.Builtins
             for (int v = 0; v < data.VariableCount; v++)
             {
                 if (!(data.Variables[v] is ClassifierVariable))
-                    data.Variables[v] = TemplateProcessor.gidx_bins(data.Variables[v] as DoubleVariable);
+                {
+                    DoubleVariable numbers = data.Variables[v] as DoubleVariable;
+                    ClassifierVariable categories = TemplateProcessor.gidx_bins(numbers);
+                    //  The missing values are a category, as they are in a column that is read as categories
+                    int missing = 0;
+                    for (int i = 0; i < numbers.Length; i++)
+                    {
+                        if (numbers.Data[i] == Constant.MISSING)
+                            missing++;
+                    }
+                    if (missing > 0)
+                        categories.Groups.Add(new Group(Formatting.MISSINGLABEL, Constant.MISSING) { NBin = missing });
+                    data.Variables[v] = categories;
+                }
             }
 
             bool shouldSortByValue = "value".Equals(parameters["sortBy"].AsString);
