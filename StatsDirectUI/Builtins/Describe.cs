@@ -289,6 +289,18 @@ namespace StatsDirect.Builtins
                     }
                 }
 
+                //  How many of the records are missing, and how many are not, of which the percentages are: said in the report
+                //  after the total, where any are missing
+                List<ParameterBag> missingList = new();
+                variableParameters.AddOutput("*missing", missingList);
+                if (xtot < vc.Length)
+                {
+                    ParameterBag missingParameters = new();
+                    missingList.Add(missingParameters);
+                    missingParameters.AddOutput("k", vc.Length - xtot);
+                    missingParameters.AddOutput("m", xtot);
+                }
+
                 IComparer<Group> comparer;
                 if (shouldSortByValue)
                 {
