@@ -4928,7 +4928,6 @@ namespace StatsDirect.Builtins
                 if (iro[i - 1] + 1 <= j / kyy[i - 1])
                 {
                     kyy[i] = kyy[i - 1] * (iro[i - 1] + 1);
-                    j /= kyy[i - 1];
                 }
                 else
                 {
@@ -4937,7 +4936,7 @@ namespace StatsDirect.Builtins
                 }
             }
             //                                   maximum product
-            if (iro[nro - 1] + 1 <= j / kyy[nro - 1])
+            if (iro[nro] + 1 <= j / kyy[nro])
             {
                 kmax = (iro[nro] + 1) * kyy[nro - 1];
             }
