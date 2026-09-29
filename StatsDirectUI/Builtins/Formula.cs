@@ -309,7 +309,7 @@ namespace StatsDirect.Builtins
                 else
                 {
                     outputParameters.AddOutput("size", n);
-                    outputParameters.AddOutput("controls", Math.Ceiling(n * M));
+                    outputParameters.AddOutput("controls", x_controls(M, n));
                 }
                 List<ParameterBag> assumptionsList = new();
                 outputParameters.AddOutput("*assumptions", assumptionsList);
@@ -635,9 +635,10 @@ namespace StatsDirect.Builtins
                 else
                 {
                     outputParameters.AddOutput("case", N);
-                    outputParameters.AddOutput("controls", Math.Floor(M * N));
+                    // the controls are the next whole number, so that there are no fewer than the ratio asks for
+                    outputParameters.AddOutput("controls", x_controls(M, N));
                     outputParameters.AddOutput("case_corr", ncor);
-                    outputParameters.AddOutput("controls_corr", Math.Floor(M * ncor));
+                    outputParameters.AddOutput("controls_corr", x_controls(M, ncor));
                 }
                 double sigmaa = Math.Sqrt(p0 * (1.0 - p0) / M + p1 * (1.0 - p1));
                 double sigma0 = Math.Sqrt((1.0 + 1.0 / M) * pbar * (1.0 - pbar));
@@ -717,9 +718,10 @@ namespace StatsDirect.Builtins
                 else
                 {
                     outputParameters.AddOutput("case", N);
-                    outputParameters.AddOutput("controls", Math.Floor(M * N));
+                    // the controls are the next whole number, so that there are no fewer than the ratio asks for
+                    outputParameters.AddOutput("controls", x_controls(M, N));
                     outputParameters.AddOutput("case_corr", ncor);
-                    outputParameters.AddOutput("controls_corr", Math.Floor(M * ncor));
+                    outputParameters.AddOutput("controls_corr", x_controls(M, ncor));
                 }
                 double sigmaa = Math.Sqrt(P0 * (1.0 - P0) / M + P1 * (1.0 - P1));
                 double sigma0 = Math.Sqrt((1.0 + 1.0 / M) * pbar * (1.0 - pbar));
