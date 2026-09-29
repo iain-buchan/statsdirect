@@ -439,9 +439,8 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("to", mean[0] - mean[1] + cse * cit);
                 double statz = (mean[0] - mean[1]) / cse;
                 outputParameters.AddOutput("z", statz);
-                double P = 1.0 - PDF.alnorm(Math.Abs(statz));
-                if (P > 1 - P)
-                    P = 1 - P;
+                // the tail beyond the deviate, worked out as itself: as 1 less the other tail it was 0 beyond a deviate of 8.3
+                double P = PDF.alnorm(-Math.Abs(statz));
                 outputParameters.AddOutput("p_1", P);
                 outputParameters.AddOutput("p_2", P * 2);
                 if (tnx[0] < 30 || tnx[1] < 30)
@@ -487,9 +486,8 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("from", mean[0] - pm - cit * se);
                 outputParameters.AddOutput("to", mean[0] - pm + cit * se);
                 outputParameters.AddOutput("z", statz);
-                double P = 1.0 - PDF.alnorm(Math.Abs(statz));
-                if (P > 1 - P)
-                    P = 1 - P;
+                // the tail beyond the deviate, worked out as itself: as 1 less the other tail it was 0 beyond a deviate of 8.3
+                double P = PDF.alnorm(-Math.Abs(statz));
 
                 outputParameters.AddOutput("p_1", P);
                 outputParameters.AddOutput("p_2", P * 2);
