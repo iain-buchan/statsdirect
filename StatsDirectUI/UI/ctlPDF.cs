@@ -7,6 +7,22 @@ using StatsDirect.Utilities;
 
 namespace StatsDirect.UI
 {
+    /// <summary>
+    /// The calculator of the Distributions menu: the tail probabilities of a value, and the value that has a tail probability,
+    /// for the normal, Student's t, F, chi-square, studentized range, binomial, Poisson, Kendall's tau, Spearman's rho and
+    /// non-central t distributions.
+    /// </summary>
+    /// <remarks>
+    /// There is a box for the value (txtPdf), two for the parameters (txtDf and txtDf2) and three for probabilities: the
+    /// lower tail (txtLp), the upper tail (txtUp) and the two sided probability (txt2p). SetVisibility shows the boxes that
+    /// a distribution has, and names them. Calculate works out the probabilities of the value, and Invert the value of a
+    /// probability; which of them applies is known from the box that was entered last. The binomial and Poisson
+    /// distributions use the three boxes of probabilities for the probability of the number that was entered, of that number
+    /// or more, and of that number or fewer. The line that goes to the report is that of the last calculation.
+    /// A probability is shown to 15 decimal places, or to 15 figures if it is below 1e-15; the studentized range is shown
+    /// to 7 decimal places. For the normal, Student's t and non-central t distributions a small tail is worked out as
+    /// itself, never as 1 less the other tail.
+    /// </remarks>
     public partial class ctlPDF : IFillParameterBag
     {
         private enum TouchedValue
@@ -65,6 +81,7 @@ namespace StatsDirect.UI
             NoteHistory((TouchedValue)ctl.Tag);
         }
 
+        // The box that was entered last, and the one before it: by these Calculate and Invert know what is asked of them
         private void NoteHistory(TouchedValue tv)
         {
             if (tv != lastTouchedValue)
@@ -134,6 +151,8 @@ namespace StatsDirect.UI
             dirty = true;
         }
 
+        // The value for a confidence level, which is kept within 0.01 to 99.99 per cent: the upper tail is half of what the
+        // level leaves. (The panel that has the buttons of the confidence level is not shown.)
         private void BtnLclClick(object sender, EventArgs e)
         {
             try
@@ -154,6 +173,8 @@ namespace StatsDirect.UI
             }
         }
 
+        // As BtnLclClick, but the half of what the level leaves is put into the two sided box, of which the upper tail is
+        // again the half: the value is that of an upper tail of a quarter of what the level leaves
         private void BtnUclClick(object sender, EventArgs e)
         {
             try
@@ -181,6 +202,8 @@ namespace StatsDirect.UI
             Invert(false);
         }
 
+        // The probabilities of what was entered last, if that was the value or one of the two parameters. Nothing is done if a
+        // probability was entered last: Invert is for that.
         private void Calculate()
         {
             switch (lastTouchedValue)
@@ -203,11 +226,15 @@ namespace StatsDirect.UI
             }
         }
 
+        // The value of the probability that was entered last. (The argument is not used: a parameter that was changed is
+        // followed whatever it is.)
         private void Invert(bool invertIfDfChanged)
         {
             InvertOn(lastTouchedValue, true);
         }
 
+        // The value of the probability of the box tv. If tv is the box of the first parameter, the probability is that of the
+        // box that was entered before it, or the lower tail if that was the value.
         private void InvertOn(TouchedValue tv, bool invertIfDfChanged)
         {
             switch (tv)
@@ -236,6 +263,9 @@ namespace StatsDirect.UI
             }
         }
 
+        // From the two sided box. The probability is kept within 0 to 1; its half is the upper tail, of which the value is
+        // found, and the lower tail is 1 less that. For the Poisson distribution the box has the probability of the number of
+        // events or fewer, and the mean that gives it is found.
         private void Calculate2P()
         {
             try
@@ -265,6 +295,9 @@ namespace StatsDirect.UI
             }
         }
 
+        // From the box of the first parameter. For Kendall's tau and Spearman's rho with a tau or rho entered the probability
+        // is worked out at once. For the rest a parameter below 0 is made 0, and the probabilities are worked out unless the
+        // box of the second parameter is still to be filled.
         private void CalculateDf()
         {
             try
@@ -292,6 +325,8 @@ namespace StatsDirect.UI
             }
         }
 
+        // From the box of the second parameter, which is a whole number but for the mean of the Poisson distribution and the
+        // non-centrality of the non-central t
         private void CalculateDf2()
         {
             try
@@ -318,6 +353,10 @@ namespace StatsDirect.UI
             }
         }
 
+        // From the lower tail box. The probability is kept within 0 to 1; the upper tail is 1 less it, and the two sided
+        // probability twice the smaller of the two. XFromP is given the upper tail, and that the lower tail box is where the
+        // probability is from, so that the normal, Student's t, chi-square, studentized range and non-central t
+        // distributions take the lower tail as it was entered.
         private void CalculateLp()
         {
             try
@@ -347,6 +386,8 @@ namespace StatsDirect.UI
             }
         }
 
+        // From the box of the value: the probabilities are worked out unless the box of the first parameter is still to be
+        // filled
         private void CalculatePdf()
         {
             try
@@ -363,6 +404,9 @@ namespace StatsDirect.UI
             }
         }
 
+        // From the upper tail box. The probability is kept within 0 to 1; the lower tail is 1 less it, and the two sided
+        // probability twice the smaller of the two. For the Poisson distribution the box has the probability of the number of
+        // events or more, and the mean that gives it is found.
         private void CalculateUp()
         {
             try
@@ -389,6 +433,8 @@ namespace StatsDirect.UI
             }
         }
 
+        // Whether a probability of 0 can be shown. For Kendall's tau and Spearman's rho it cannot: every S or T that there can
+        // be has a chance, and a probability below 1e-15 is shown as "< 1E-15".
         private static bool AllowsZeroP(DistributionType dt)
         {
             return !(dt == DistributionType.Rho || dt == DistributionType.Kendall);
@@ -431,6 +477,8 @@ namespace StatsDirect.UI
             }
         }
 
+        // Non-central t: the probabilities that a value is t or less, and above t, with whole degrees of freedom and the
+        // non-centrality delta
         private void PFromNonCentralT()
         {
             double t = CdblTxt(txtPdf.Text);
@@ -461,6 +509,9 @@ namespace StatsDirect.UI
                                       " lower";
         }
 
+        // Spearman's rho: the upper tail probability, that of a rank correlation of rho or more, which is a Hotelling-Pabst T
+        // of the T entered or less. If rho is entered T is worked out from it, to the nearest whole number; if not, rho is
+        // worked out from T. An odd T, which no sample without ties has, has the probability of the even number below it.
         private void PFromRho()
         {
             int ix = 0;
@@ -499,6 +550,8 @@ namespace StatsDirect.UI
             lastCalculationAsString = "P(Hotelling T " + ix.ToString() + ", n " + nx.ToString() + ") = " + txtUp.Text.Trim() + " upper tail";
         }
 
+        // Kendall's tau: the upper tail probability, that of an S of the S entered or more. If tau is entered S is worked out
+        // from it, to the nearest whole number; if not, tau is worked out from S.
         private void PFromKendall()
         {
             int ix = 0;
@@ -537,6 +590,8 @@ namespace StatsDirect.UI
             lastCalculationAsString = "P(Kendall's T " + ix.ToString() + ", n " + nx.ToString() + ") = " + txtUp.Text.Trim() + " upper tail";
         }
 
+        // Poisson: the probabilities of the number of events, of that number or more and of that number or fewer, with the
+        // mean M. The number is to be whole and not below 0, and the mean not below 0.
         private void PFromPoisson()
         {
             double phi = 0;
@@ -570,6 +625,8 @@ namespace StatsDirect.UI
             lastCalculationAsString = "P(Poisson n " + txtDf.Text.Trim() + ", µ " + txtDf2.Text.Trim() + ") = " + txtLp.Text.Trim() + " for n events,  " + txtUp.Text.Trim() + " for n or more events,  " + txt2p.Text.Trim() + " for n or fewer events";
         }
 
+        // Binomial: the probabilities of r successes in n trials, of r or more and of r or fewer, with the probability pud of
+        // a success in a trial. There is to be a trial at least, and r is to be a whole number from 0 to n.
         private void PFromBinomial()
         {
             double dterm = 0;
@@ -606,6 +663,11 @@ namespace StatsDirect.UI
             lastCalculationAsString = "P(binomial p " + txtPdf.Text.Trim() + ", " + txtDf.Text.Trim() + " trials) = " + txtLp.Text.Trim() + " [" + txtDf2.Text.Trim() + " successes], " + txtUp.Text.Trim() + " [>=" + txtDf2.Text.Trim() + " successes], " + txt2p.Text.Trim() + " [<=" + txtDf2.Text.Trim() + " successes]";
         }
 
+        // Studentized range: the probabilities that the range of the means of a number of samples, divided by the standard
+        // error of a mean with df degrees of freedom, is Q or less, and above Q. They are shown to 7 decimal places. The
+        // routine is within 0.0000005 where it has a series (8 to 20000 degrees of freedom that are twice the number of
+        // samples or more), or within 0.000002 with more than 30 samples; it is within what is shown where it integrates
+        // or, for two samples, has Student's t.
         private void PFromQ()
         {
             double pu = PDF.probsr(CdblTxt(txtPdf.Text), CdblTxt(txtDf2.Text), CdblTxt(txtDf.Text));
@@ -622,6 +684,7 @@ namespace StatsDirect.UI
             lastCalculationAsString = "P(Q " + txtPdf.Text.Trim() + ", df " + txtDf.Text.Trim() + ", samples " + txtDf2.Text.Trim() + ") = " + txtUp.Text.Trim() + " upper,  " + txtLp.Text.Trim() + " lower";
         }
 
+        // Chi-square: the upper tail probability. (The two sided box is not shown for this distribution.)
         private void PFromChiSq()
         {
             double xtmp = PDF.chivalp(CdblTxt(txtPdf.Text), CdblTxt(txtDf.Text));
@@ -630,6 +693,7 @@ namespace StatsDirect.UI
             lastCalculationAsString = "P(chi-sq " + txtPdf.Text.Trim() + ", df " + txtDf.Text.Trim() + ") = " + txtUp.Text.Trim() + " upper tail";
         }
 
+        // F (variance ratio): the upper tail probability
         private void PFromF()
         {
             double pu = PDF.fvalp(CdblTxt(txtPdf.Text), CdblTxt(txtDf.Text), CdblTxt(txtDf2.Text));
@@ -637,6 +701,7 @@ namespace StatsDirect.UI
             lastCalculationAsString = "P(F " + txtPdf.Text.Trim() + ", dfn " + txtDf.Text.Trim() + ", dfd " + txtDf2.Text.Trim() + ") = " + txtUp.Text.Trim() + " upper";
         }
 
+        // Student's t: the upper and lower tails, and the two sided probability, which is twice the smaller tail
         private void PFromT()
         {
             double t = CdblTxt(txtPdf.Text);
@@ -653,6 +718,8 @@ namespace StatsDirect.UI
             lastCalculationAsString = "P(t " + txtPdf.Text.Trim() + ", df " + txtDf.Text.Trim() + ") = " + txtUp.Text.Trim() + " upper, " + txtLp.Text.Trim() + " lower, " + txt2p.Text.Trim() + " two sided";
         }
 
+        // Normal: the upper and lower tails of a standard normal deviate, and the two sided probability, which is twice the
+        // smaller tail
         private void PFromZ()
         {
             double z = CdblTxt(txtPdf.Text);
@@ -670,6 +737,9 @@ namespace StatsDirect.UI
             lastCalculationAsString = "P(z " + txtPdf.Text.Trim() + ") = " + Pval15(pu, true) + " upper,  " + Pval15(pl, true) + " lower,  " + Pval15(p2, true) + " two sided";
         }
 
+        // The boxes that the distribution has, and their names, and whether the value of a probability can be found (for the
+        // binomial distribution it cannot). The lower tail box of the Poisson distribution cannot be entered: it has the
+        // probability of the number of events.
         private void SetVisibility()
         {
             switch (selectedTest)
@@ -767,6 +837,8 @@ namespace StatsDirect.UI
             txt2p.ReadOnly = !inverseAvailable;
         }
 
+        // The value of a probability. P is the upper tail probability (for the Poisson distribution, the probability of the
+        // box), and idx the box that was entered: 1 the lower tail, 2 the upper tail, 3 the two sided box.
         private void XFromP(double P, int idx)
         {
             // degrees of freedom below 1 are taken as 1; the Poisson count of events can be 0
@@ -827,6 +899,8 @@ namespace StatsDirect.UI
             lastCalculationAsString = "non-central t(P " + Pval15(P, true) + ", df " + txtDf.Text.Trim() + ", delta " + txtDf2.Text.Trim() + ") = " + txtPdf.Text.Trim();
         }
 
+        // Spearman's rho of an upper tail P: the greatest T of which the probability is not above P, and its rho and
+        // probability
         private void RhoFromP(double P)
         {
             int nx = Parsing.Cint_Txt(txtDf.Text);
@@ -842,6 +916,8 @@ namespace StatsDirect.UI
             lastCalculationAsString = "Hotelling T (upper tail P " + Pval15(P, false) + ", n " + txtDf.Text.Trim() + ") = " + txtUp.Text.Trim();
         }
 
+        // Kendall's tau of an upper tail P: the greatest S of which the probability is not below P, and its tau and
+        // probability
         private void KendallFromP(double P)
         {
             int nx = Parsing.Cint_Txt(txtDf.Text);
@@ -857,6 +933,9 @@ namespace StatsDirect.UI
             lastCalculationAsString = "Kendall's T (upper tail P " + Pval15(P, false) + ", n " + txtDf.Text.Trim() + ") = " + txtUp.Text.Trim();
         }
 
+        // The studentized range of a probability. The routine takes the probability below the value, which is read from the
+        // lower tail box: the box has 1 - P to 15 places if the upper tail was entered, which is more than the 7 places of
+        // the value need.
         private void QFromP(double P)
         {
             double x = PDF.quantsr(CdblTxt(txtLp.Text), CdblTxt(txtDf2.Text), CdblTxt(txtDf.Text));
@@ -879,6 +958,7 @@ namespace StatsDirect.UI
                                       txtPdf.Text.Trim();
         }
 
+        // F of an upper tail P. (The routine has the denominator degrees of freedom first.)
         private void FFromP(double P)
         {
             double x = PDF.ffromp(CdblTxt(txtDf2.Text), CdblTxt(txtDf.Text), P);
@@ -915,6 +995,9 @@ namespace StatsDirect.UI
 
         /* Utilities */
 
+        // The mean of the Poisson distribution with which nl events or more (idx 2), or nl events or fewer (idx 3), have the
+        // probability P; the boxes are given the three probabilities of nl events with that mean. Above 100,000 events the
+        // user is asked first, as the search is long.
         private void InvPoisson(int idx, double P, int nl)
         {
             int ifault;
@@ -975,6 +1058,8 @@ namespace StatsDirect.UI
                 Xval15Into(txt, x);
         }
 
+        // A value is put into its box, unless the box shows it already to 1e-13: what was entered is then left as it was
+        // entered
         private static void Xval15Into(TextBox txt, double x)
         {
             bool shouldReplace = true;
@@ -992,11 +1077,14 @@ namespace StatsDirect.UI
                 txt.Text = Xval15(x);
         }
 
+        // What was entered in a box, as the calculator shows a value
         private static void Xval15Tidy(TextBox txt)
         {
             txt.Text = Xval15(CdblTxt(txt.Text));
         }
 
+        // A value as it is shown: in 15 figures, of which 15 at most are decimal places; in 7 figures and an exponent if it is
+        // above 1e15 or below 1e-15
         private static string Xval15(double x)
         {
             return Formatting.XRound(x, 15);
@@ -1024,6 +1112,8 @@ namespace StatsDirect.UI
                 txt.Text = fresh;
         }
 
+        // A probability as it is shown: to 15 decimal places; to 15 figures if it is below 1e-15, or as "< 1E-15" if a
+        // probability of 0 cannot be shown; as 1 from 0.999999999999999; as "error" if there is none
         private static string Pval15(double p, bool allowZero)
         {
             if (p == Constant.MISSING || double.IsNaN(p))
@@ -1038,6 +1128,7 @@ namespace StatsDirect.UI
             return Formatting.XRound(p, 15);
         }
 
+        // The number of a box. "< 1E-15" is read as 2.2e-16, and what cannot be read as a number as the missing value.
         private static double CdblTxt(string value)
         {
             return MINIMAL.Equals(value) ? Constant.EPSILON : Parsing.Cdbl_Txt(value);
@@ -1049,6 +1140,9 @@ namespace StatsDirect.UI
             SdApplication.WriteToBlackbox("Somewhere in ctlPdf", ex);
         }
 
+        /// <summary>
+        /// Gives the report the line of the last calculation ("gr"). If a box was changed since, the calculation is made first.
+        /// </summary>
         public Control Fill(ParameterBag outputParameters, bool doValidation)
         {
             if (dirty)

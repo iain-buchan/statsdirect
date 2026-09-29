@@ -476,6 +476,15 @@ namespace StatsDirect.Numerics
         //         If fault <> 0 Then fvalp = MISSING
         //     End Function
 
+        /// <summary>
+        /// Kendall's S of an upper tail probability: the greatest S, not below 0, of which the probability of that S or more is
+        /// P or more; the tau of that S is returned.
+        /// </summary>
+        /// <param name="P">Upper tail probability</param>
+        /// <param name="pu">The probability of ix or more, which is P or more</param>
+        /// <param name="ix">The S that was found</param>
+        /// <param name="nx">Number of observations</param>
+        /// <param name="ifault">Not 0 if there is no such S, which is so if P is above the probability of an S of 0 or more</param>
         public static double taufromp(double P, out double pu, out int ix, ref int nx, out int ifault)
         {
             double taufrompReturn = 0;
@@ -550,6 +559,22 @@ namespace StatsDirect.Numerics
             return result;
         }
 
+        /// <summary>
+        /// Upper tail probability of Kendall's S: that of an S of k or more with N observations that have no ties.
+        /// </summary>
+        /// <remarks>
+        /// Up to 50 observations the orders are counted: the numbers of orders of N things with each S are built up from those
+        /// of N - 1 things. An S that there cannot be (one that is odd where the number of pairs is even, or even where it is
+        /// odd) has the probability of the next S above it. Above 50 observations a series about the normal distribution is
+        /// used, with k less 1 for continuity. The series is within 0.0000005 of the counted probabilities with 51
+        /// observations, and within 0.00000003 with 100; in the far tail it is less good in proportion (with 60 observations
+        /// 1.39e-9 for 1.50e-9). The series does not look whether there can be an S of k: it is for the caller to see that
+        /// k is within the pairs.
+        /// </remarks>
+        /// <param name="k">S, the concordant pairs less the discordant</param>
+        /// <param name="N">Number of observations</param>
+        /// <param name="ifault">1 if N is below 2, 2 if there is no memory for the counts, 3 if k is beyond the number of pairs
+        /// (up to 50 observations); it is left as it was if there is no fault</param>
         public static double kendp(int k, int N, ref int ifault)
         {
             double kendpReturn = 0;
