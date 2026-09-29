@@ -272,21 +272,8 @@ namespace StatsDirect.UI
                 double df = CdblTxt(txtDf.Text);
                 if ((selectedTest == DistributionType.Rho || selectedTest == DistributionType.Kendall) && txtPdf.Text.Length > 0)
                 {
-                    bool bewareOfDf = Constant.MISSING == df || df < int.MinValue || df > int.MaxValue;
-
-                    int n;
-                    if (selectedTest == DistributionType.Rho)
-                    {
-                        n = (int)Math.Floor(df);
-                        double rh = CdblTxt(txtPdf.Text);
-                        if (bewareOfDf || n < 4 || rh < 0.0 || rh > 1.0)
-                            txtDf2.Text = Formatting.ERRR;
-                        else
-                            txtDf2.Text = Convert.ToInt32((1.0 - rh) * (n * (Math.Pow(n, 2) - 1)) / 6).ToString();
-                        PFromX();
-                    }
-                    else // Kendall: the range check and S are PFromKendall's, the same whichever box is filled
-                        PFromX();
+                    // the range checks, and T or S, are PFromRho's and PFromKendall's, the same whichever box is filled
+                    PFromX();
                 }
                 else // Not rho, not Kendall
                 {
@@ -312,8 +299,9 @@ namespace StatsDirect.UI
                 if (selectedTest != DistributionType.Poisson && selectedTest != DistributionType.NonCentralT)
                 {
                     int df = Parsing.Cint_Txt(txtDf2.Text);
-                    // degrees of freedom and a number of samples start at 1; a number of successes or Kendall's S can be 0, and S negative
-                    if (selectedTest != DistributionType.Binomial && selectedTest != DistributionType.Kendall)
+                    // degrees of freedom and a number of samples start at 1; a number of successes, the Hotelling-Pabst T or
+                    // Kendall's S can be 0, and S negative
+                    if (selectedTest != DistributionType.Binomial && selectedTest != DistributionType.Kendall && selectedTest != DistributionType.Rho)
                     {
                         if (df < 1)
                             df = 1;
@@ -475,16 +463,22 @@ namespace StatsDirect.UI
 
         private void PFromRho()
         {
-            double rh;
-            int fault;
-            int nx = Parsing.Cint_Txt(txtDf.Text);
             int ix = 0;
+            double pu = 0;
+            int fault = 0;
+            int nx = Parsing.Cint_Txt(txtDf.Text);
+            // The same range whichever box is filled: at least four pairs; T within 0 and the most that there can be,
+            // n(n^2 - 1)/3, so rho within -1 to 1. The most is formed as a double (as an int it overflowed above 1290 pairs),
+            // and is to be a number that the routine can take.
+            double most = (double)nx * ((double)nx * nx - 1.0) / 3.0;
+            bool inRange = nx >= 4 && most <= int.MaxValue - 4;
             if (txtPdf.Text.Length > 0)
             {
-                rh = CdblTxt(txtPdf.Text);
-                if (nx >= 4 & rh <= 1)
+                double rh = CdblTxt(txtPdf.Text);
+                inRange = inRange && rh >= -1.0 && rh <= 1.0;
+                if (inRange)
                 {
-                    ix = Convert.ToInt32((1.0 - rh) * (nx * (nx * nx - 1)) / 6);
+                    ix = Convert.ToInt32((1.0 - rh) * most / 2.0);
                     txtDf2.Text = ix.ToString();
                 }
                 else
@@ -492,12 +486,12 @@ namespace StatsDirect.UI
             }
             else
             {
-                ix = (int)CdblTxt(txtDf2.Text);
-                rh = 1.0 - ix / (nx * (nx * nx - 1) / 6.0);
-                Xval15Into(txtPdf, rh);
+                ix = Parsing.Cint_Txt(txtDf2.Text);
+                inRange = inRange && ix >= 0 && ix <= most;
+                if (inRange)
+                    Xval15Into(txtPdf, 1.0 - ix / (most / 2.0));
             }
-            double pu = 0;
-            if (txtDf2.Text == Formatting.ERRR || nx < 4)
+            if (!inRange)
                 fault = -1;
             else
                 pu = MathDbl.prhoUpper(nx, ix, out fault);
@@ -513,7 +507,8 @@ namespace StatsDirect.UI
             int nx = Parsing.Cint_Txt(txtDf.Text);
             // The same range whichever box is filled: at least two observations, so that there are pairs; S within the n(n - 1)/2
             // pairs, so tau within -1 to 1. The tau box used to test a variable that was never set, and an S below 1 became 1.
-            double pairs = nx * (nx - 1) / 2.0;
+            // (formed as a double: as an int the product overflowed above 46341 observations)
+            double pairs = (double)nx * (nx - 1) / 2.0;
             bool inRange = nx >= 2;
             if (txtPdf.Text.Length > 0)
             {

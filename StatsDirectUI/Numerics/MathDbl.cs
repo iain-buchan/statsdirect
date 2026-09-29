@@ -509,7 +509,7 @@ namespace StatsDirect.Numerics
                 // The score has the parity of n(n - 1)/2. Below 51 pairs kendp takes an impossible score as the next
                 // possible one, so this skip changes nothing; above 50 its Edgeworth series does not, and gave a score
                 // of 307 for the 2.5% point with 60 pairs, where the largest possible score is 306.
-                if ((ix + nx * (nx - 1) / 2) % 2 != 0)
+                if ((ix + (long)nx * (nx - 1) / 2) % 2 != 0)
                     continue;
                 ifault = 0;
                 pu = kendp(ix, nx, ref ifault);
@@ -674,12 +674,13 @@ namespace StatsDirect.Numerics
         /// </summary>
         /// <remarks>
         /// ExFortran.prho gives P(S &gt;= ix), including ix, and treats an odd ix as the next even number because S is always even.
-        /// The complement of P(S &lt;= ix) is therefore P(S &gt;= the next attainable score above that), as in RptSpearman.
+        /// The complement of P(S &lt;= ix) is therefore P(S &gt;= the next attainable score above ix): ix + 2 if ix is even, as in
+        /// RptSpearman, and ix + 1 if it is odd (it used to be ix + 3, so that an odd ix had the P of the score above it).
         /// </remarks>
         public static double prhoUpper(int nx, int ix, out int ifault)
         {
             //  Below the smallest score, or so far above the largest that the next score does not fit an int: prho is called only to validate nx
-            long next = (long)ix + (ix & 1) + 2;
+            long next = (long)ix + 2 - (ix & 1);
             if (ix < 0 || next > int.MaxValue)
             {
                 ExFortran.prho(nx, -1, out ifault);
