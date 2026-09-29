@@ -10,6 +10,8 @@ namespace StatsDirect.Builtins
 {
     public static class Parametric
     {
+        // The mean and the variance of the first nx values of an array that starts at 1: the variance is the sum of the squares
+        // of the differences from the mean over nx - 1, and is the missing value if that sum passes 1e300
         private static void Univariate(double[] arr1, int nx, out double sum, out double mean, out double var)
         {
             sum = 0;
@@ -32,6 +34,8 @@ namespace StatsDirect.Builtins
                 var = sumsqdev / (nx - 1);
         }
 
+        // For each column of a frame, of the values that are not missing: their number (tnx), mean, sum of squares about the
+        // mean (ss), variance (ss over the number less 1), standard deviation and standard error of the mean
         private static void Para(DataFrame frame, double[] mean, double[] ss, double[] var, double[] sd, double[] sem, int[] tnx)
         {
             for (int d = 0; d < frame.VariableCount; d++)
@@ -78,6 +82,18 @@ namespace StatsDirect.Builtins
         // have it; the report prints the level that is used
         private static double XLevel(double level) => level > 0.0 && level < 1.0 ? level : 0.95;
 
+        /// <summary>
+        /// F (variance ratio) test: whether two samples have the same variance.
+        /// </summary>
+        /// <remarks>
+        /// F is the greater of the two variances over the less, with the degrees of freedom of each, the number of values less
+        /// 1. The one sided P value is the probability of an F as great or greater; the two sided P value is twice the less of
+        /// that and 1 less it.
+        /// </remarks>
+        /// <param name="parameters">"data": the two samples, as columns.</param>
+        /// <returns>"title_0", "df_0", "var_0": the name, the degrees of freedom and the variance of the sample with the
+        /// greater variance; "title_1", "df_1", "var_1": those of the other; "f"; "p_1", "p_2": the one sided and the two sided
+        /// P value.</returns>
         public static StepOutput RptVarianceRatio(ParameterBag parameters)
         {
             int bot; int top;
@@ -117,6 +133,28 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// Reference range: the range that has a given part of a population in its middle, from a sample of 8 values or more:
+        /// for a normal distribution, for a log-normal distribution, and from the quantiles of the sample.
+        /// </summary>
+        /// <remarks>
+        /// For a normal distribution the ends are the mean less and plus z standard deviations, where z is the normal deviate
+        /// that leaves half of what the reference interval leaves above it. The standard error of an end is
+        /// sqrt(s^2 / n + z^2 s^2 / (2 n)), and its confidence limits are the end less and plus the normal deviate of the
+        /// confidence level times that. For a log-normal distribution the same is worked out of the logarithms and taken back;
+        /// it is given only if every value is above 0. The quantiles are those of Nonparametric.XQci, with their confidence
+        /// limits from the order of the sample.
+        /// </remarks>
+        /// <param name="parameters">"data": the sample, as a column; "reference-interval": the part of the population that the
+        /// range is to have, above 0 and below 1; "gamma": the confidence level, for which 0.95 is taken if it is not above 0
+        /// and below 1; "do_conservative": whether the limits of a quantile are to have the confidence level at
+        /// least.</param>
+        /// <returns>"name", "mean", "size", "sd": of the sample; "qrr", "pc": the reference interval and the confidence level as
+        /// percentages; "lrr", "urr": the ends of the range; "lx_l", "ux_l" and "lx_u", "ux_u": the limits of the lower and
+        /// of the upper end; "*lognormal": a row with the same of the log-normal distribution (names that end in
+        /// "_lognormal"), or nothing; "qx_any", "qxv_any", "from_any", "to_any", "co_any": the lower quantile, its value, its
+        /// limits and what they cover; "qx", "qxv", "from", "to", "co": the same of the upper quantile; "type": whether the
+        /// limits are conservative; "cap_...": marks of a limit that is the least or the greatest value.</returns>
         public static StepOutput RptReferenceRange(ParameterBag parameters)
         {
             double xq = 0;
@@ -282,6 +320,11 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        // The mean of nobs counts and its exact confidence limits for a Poisson distribution, at the level percent (two
+        // sided). With the total of the counts T, the lower limit is the mean with which a total of T or more has half of what
+        // the level leaves, and the upper limit the mean with which T or fewer has it: half the chi-square values of 2 T and of
+        // 2 T + 2 degrees of freedom, over nobs. With a total of 0 the lower limit is 0. fault is 1 without counts, 2 with a
+        // count below 0, 3 with a level that is not above 0 and below 100, or that of the chi-square value.
         private static void x_poisson(double[] x, int nobs, double percent, out double mean, out double tlower, out double tupper, ref int fault)
         {
             mean = Constant.MISSING;
@@ -339,6 +382,20 @@ namespace StatsDirect.Builtins
             }
         }
 
+        /// <summary>
+        /// Confidence interval of a Poisson mean: for each sample of counts, the mean with its exact limits, two sided and one
+        /// sided.
+        /// </summary>
+        /// <remarks>
+        /// The one sided limits at a level are the two sided limits at the level that leaves twice as much (x_poisson): a level
+        /// of a half or less has none. Counts that are not whole numbers are taken as they are, with a warning; with a count
+        /// below 0 nothing is worked out.
+        /// </remarks>
+        /// <param name="parameters">"data": the samples, as columns; "gamma": the confidence level, for which 0.95 is taken if it
+        /// is not above 0 and below 1.</param>
+        /// <returns>"*sample": for each sample "ti", its name; "warn", the warning; "n", the number of counts; "mean"; "pc2",
+        /// "lower2", "upper2": the level as a percentage and the two sided limits; "pc1", "lower1", "upper1": the same level,
+        /// and the one sided limits.</returns>
         public static StepOutput RptPoissonConfidenceInterval(ParameterBag parameters)
         {
             DataFrame data = parameters["data"].AsDataFrame;
@@ -411,6 +468,14 @@ namespace StatsDirect.Builtins
 
         public static StepOutput RptZUnpaired(ParameterBag parameters) => RptNormalZ(parameters, 2);
 
+        // The normal distribution (z) tests: of the mean of a sample against the mean of a population (mode 1), and of the means
+        // of two samples (mode 2). The deviate is the difference over its standard error: for one sample the standard deviation
+        // of the population, if it is given and above 0, or that of the sample, over the root of the number of values; for
+        // two samples the root of the sum of each variance over its number. The one sided P value is the normal probability
+        // beyond the deviate and the two sided twice that; the confidence limits are the difference less and plus the normal
+        // deviate of the confidence level times the standard error. For one sample the geometric mean and the reference range
+        // of log-normal data (the mean of the logarithms less and plus that deviate times their standard deviation, taken
+        // back) are given if every value is above 0. A row of "*warn" is given with fewer than 30 values in a sample.
         private static StepOutput RptNormalZ(ParameterBag parameters, int mode)
         {
             double[] mean = new double[1 + 1];
@@ -560,6 +625,18 @@ namespace StatsDirect.Builtins
             }
         }
 
+        /// <summary>
+        /// Tests of normality: for each sample the skewness and kurtosis with their tests and the test of both together, the
+        /// tests of Shapiro and Wilk and of Shapiro and Francia, and a normal plot.
+        /// </summary>
+        /// <param name="host">How numbers are shown.</param>
+        /// <param name="parameters">"data": the samples, as columns without missing values.</param>
+        /// <returns>"*variable": for each sample "sample", its name; "n", "mean", "sd"; "skewness", "kurtosis", with a comma
+        /// after them if their P values follow, "b1_p" and "b2_p"; "k2", "k2_p": the statistic of the test of both together
+        /// and its P value; "sw_w", "sw_v", "sw_p": W, V and P of Shapiro and Wilk; "sf_w", "sf_v", "sf_p": those of Shapiro
+        /// and Francia; "sw_p_warn", "sf_p_warn": warnings of samples that are too large for a test; "result": what the
+        /// tests say, from the less of the two P values of W and W'; "chart": the normal plot. In place of a statistic
+        /// that is not worked out are the words that say why.</returns>
         public static StepOutput RptNormality(IFormatting host, ParameterBag parameters)
         {
             // ASSUME: Data passed in was acquired with NumericSkipMissing and has no missing values.
@@ -1128,6 +1205,14 @@ namespace StatsDirect.Builtins
             p = PDF.alnorm(-z);
         }
 
+        /// <summary>
+        /// Unpaired t test from the number, mean and standard deviation of each of two samples.
+        /// </summary>
+        /// <remarks>As RptTUnpaired, which has the same from the values themselves.</remarks>
+        /// <param name="parameters">"nx1", "um1", "sd1": the number, mean and standard deviation of the first sample; "nx2",
+        /// "um2", "sd2": those of the second; "gamma": the confidence level, for which 0.95 is taken if it is not above 0 and
+        /// below 1.</param>
+        /// <returns>As RptTUnpaired.</returns>
         public static StepOutput RptTUnpairedSummary(ParameterBag parameters)
         {
             double GAMMA = XLevel(parameters["gamma"].AsDouble);
@@ -1216,6 +1301,13 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// Single sample t test from the number, mean and standard deviation of the sample.
+        /// </summary>
+        /// <remarks>As RptTSingle, which has the same from the values themselves.</remarks>
+        /// <param name="parameters">"nx", "mu", "sd1": the number, mean and standard deviation of the sample; "mu0": the mean of
+        /// the population; "gamma": the confidence level, for which 0.95 is taken if it is not above 0 and below 1.</param>
+        /// <returns>As RptTSingle.</returns>
         public static StepOutput RptTSingleSummary(ParameterBag parameters)
         {
 
@@ -1255,6 +1347,27 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// Unpaired (two sample) t test: whether two samples have the same mean, with equal variances assumed and without.
+        /// </summary>
+        /// <remarks>
+        /// With equal variances the variance is that of both samples together, the sum of the two sums of squares about the
+        /// means over n1 + n2 - 2, which are the degrees of freedom; the standard error of the difference of the means is the
+        /// root of that variance times 1/n1 + 1/n2. With unequal variances the standard error is the root of the sum of each
+        /// variance over its number, and the degrees of freedom are those of Welch and Satterthwaite, the square of that sum
+        /// over the sum of the squares of its two terms, each over its number less 1. t is the first mean less the second over
+        /// the standard error; the one sided P value is the probability beyond t and the two sided twice that; the confidence
+        /// limits are the difference less and plus the t value of the confidence level times the standard error. The power is
+        /// that of the two sided test at the level that the confidence level leaves, for the difference and the standard
+        /// deviations observed (Power.tstpower, Power.uvttpower). The F test of the two variances says which of the two
+        /// tests to take: it is significant if its one sided P value is below 0.025.
+        /// </remarks>
+        /// <param name="parameters">"data": the two samples, as columns; "gamma": the confidence level, for which 0.95 is taken
+        /// if it is not above 0 and below 1.</param>
+        /// <returns>"title_0", "mean_0", "n0" and "title_1", "mean_1", "n1": the name, mean and number of each sample; "error",
+        /// "df", "t", "p_1", "p_2", "pc", "from", "to", "pwr": the standard error, degrees of freedom, t, the P values, the
+        /// confidence level as a percentage, the confidence limits and the power with equal variances; the same with
+        /// "_unequal" after the name with unequal variances; "say1", "say2": what the F test says.</returns>
         public static StepOutput RptTUnpaired(ParameterBag parameters)
         {
             int bot; int top;
@@ -1351,6 +1464,18 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// Single sample t test: whether the mean of a sample is that of a population.
+        /// </summary>
+        /// <remarks>
+        /// t is the mean less the mean of the population over the standard error of the mean, with the number of values less 1
+        /// degrees of freedom. The confidence limits are of the mean less the mean of the population. The power is that of
+        /// the two sided test for the difference and the standard deviation observed (Power.ptpower).
+        /// </remarks>
+        /// <param name="parameters">"data": the sample, as a column; "population-mean"; "gamma": the confidence level, for which
+        /// 0.95 is taken if it is not above 0 and below 1.</param>
+        /// <returns>"name", "sam_mean", "size", "sd": of the sample; "pop_mean"; "pc": the confidence level as a percentage;
+        /// "for": what the limits are of; "from", "to": the limits; "df", "t", "p_1", "p_2", "pwr".</returns>
         public static StepOutput RptTSingle(ParameterBag parameters)
         {
             double[] mean = new double[1];
@@ -1391,6 +1516,23 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// Paired t test: whether the mean of the differences of pairs of values is 0.
+        /// </summary>
+        /// <remarks>
+        /// The differences are the first column less the second, of the rows that have both, or the one column if there is
+        /// one. t is their mean over its standard error, with the number of differences less 1 degrees of freedom. With two
+        /// columns, and if it is asked for, the limits of agreement are given, the mean difference less and plus the normal
+        /// deviate of the confidence level times the standard deviation of the differences, with a plot of the differences
+        /// against the means of the pairs.
+        /// </remarks>
+        /// <param name="parameters">"data": the two columns, or the one of differences; "gamma": the confidence level, for which
+        /// 0.95 is taken if it is not above 0 and below 1; "doAgreement", which need not be there: whether the limits of
+        /// agreement and the plot are asked for.</param>
+        /// <returns>"label": what the differences are; "mean", "n", "sd", "sem": of the differences; "pc": the confidence level
+        /// as a percentage; "from", "to": the confidence limits of the mean difference; "df", "t", "tail_1", "tail_2": the
+        /// one sided and the two sided P value; "pwr"; "*twosample": a row with "from2" and "to2", the limits of agreement,
+        /// if they are asked for; "*chart": a row with the plot, if there is one.</returns>
         public static StepOutput RptTPaired(ParameterBag parameters)
         {
             DataFrame Data = parameters["data"].AsDataFrame;
