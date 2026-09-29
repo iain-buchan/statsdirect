@@ -240,6 +240,31 @@ namespace StatsDirect.Builtins
                 throw new InvalidDataException("The counts come to more than 2,147,483,647, which is more than this analysis can take.");
         }
 
+        /// <summary>
+        /// Risk analysis of a retrospective (case-control) study: the odds ratio of a 2 by 2 table of cases and controls by
+        /// exposure, and the population attributable risk.
+        /// </summary>
+        /// <remarks>
+        /// The rows are the cases (a exposed, b not) and the controls (c exposed, d not). The odds ratio is a d / (b c), with
+        /// the limits of its logarithm from the standard error sqrt(1/a + 1/b + 1/c + 1/d) if no count is 0; the conditional
+        /// estimate, its exact limits and the exact P values are those of ExactBB.OddsRatioCMLE. The power is that of the
+        /// comparison of the exposure of cases and controls (Power.fishpower). The population attributable risk is given for
+        /// an odds ratio that is above 1 and finite: pe (OR - 1) / (1 + pe (OR - 1)), where pe is the part of the population
+        /// that is exposed. If pe is not entered it is that of the controls, c / (c + d): the risk is then 1 less the ratio of
+        /// the parts of cases and of controls that are not exposed, and its limits are from the variance of the logarithm of
+        /// that ratio, a / (b m1) + c / (d m2), where m1 and m2 are the numbers of cases and of controls. If pe is entered the
+        /// limits are those of the odds ratio taken through the formula.
+        /// </remarks>
+        /// <param name="host">Where progress is shown.</param>
+        /// <param name="parameters">"a", "b", "c", "d": the counts, which are rounded if they are not whole; "cco": the
+        /// confidence level, for which 0.95 is taken if it is not above 0 and below 1; "pe", which need not be there: the
+        /// part of the population that is exposed, from 0 to 1.</param>
+        /// <returns>"aa", "bb", "cc", "dd": the counts; "odds": the odds ratio; "pwr": the power, as the report has it;
+        /// "*power": a row with "ci", the confidence level as a percentage, and "ci_1" and "ci_2", the limits of the odds
+        /// ratio, if no count is 0; "eor", "llf", "ulf", "llm", "ulm", "p1f", "p2f", "p1m", "p2m": the conditional estimate,
+        /// its limits and the P values, of Fisher and mid-P; "pc": the confidence level as a percentage; "*risk": a row with
+        /// "pe" and "par", as percentages, "pe_note", where pe is from, and "from" and "to", the limits of the risk, if the
+        /// risk is given.</returns>
         public static StepOutput RptMiscRetroRisk(IProgressBarHost host, ParameterBag parameters)
         {
             double pe = Constant.MISSING;
@@ -386,6 +411,8 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        // A number needed to treat as a report has it: the number without its sign, and "_benefit" if it is above 0 or
+        // "_harm" if it is below. With roundup the number is rounded up to a whole number.
         private static string XBenHarm(IFormatting host, double x, bool roundup)
         {
             // An undefined NNT has no direction; an infinite one is printed as such on the rounded line too
@@ -406,6 +433,9 @@ namespace StatsDirect.Builtins
             return d != 0.0 ? 1.0 / d : double.PositiveInfinity;
         }
 
+        // The number needed to treat from an odds ratio and the risk brr that is expected without the treatment:
+        // (1 - brr (1 - OR)) / ((1 - brr) brr (1 - OR)). Infinite if the denominator is 0; none if the odds ratio is missing
+        // or infinite.
         private static double XNntFromOddsRatio(double brr, double oddsRatio)
         {
             if (oddsRatio == Constant.MISSING || !double.IsFinite(oddsRatio))
@@ -414,6 +444,9 @@ namespace StatsDirect.Builtins
             return d != 0.0 ? (1.0 - brr * (1.0 - oddsRatio)) / d : double.PositiveInfinity;
         }
 
+        // The two limits of a number needed to treat in the order in which a report has them: the less first if both are for
+        // benefit or both for harm (for harm, the one nearer to 0), and the one for harm first if one is for harm and the
+        // other for benefit: the interval then goes from harm through infinity to benefit.
         private static void XNnSwap(ref double nnl, ref double nnu)
         {
             if (nnl < 0.0 && nnu < 0.0)
@@ -436,6 +469,30 @@ namespace StatsDirect.Builtins
             }
         }
 
+        /// <summary>
+        /// Diagnostic test: the table of the results of a test by the presence of a disease, and what it says of the test.
+        /// </summary>
+        /// <remarks>
+        /// The rows are the positive results (a with the disease, b without) and the negative results (c with, d without).
+        /// The prevalence is (a + c) / n; the predictive value of a positive result a / (a + b), and of a negative result
+        /// d / (c + d); the sensitivity a / (a + c) and the specificity d / (b + d). Each has the confidence limits of a
+        /// proportion of Clopper and Pearson (MathDbl.binci). After each predictive value is its change from the likelihood
+        /// before the test, in points of a percentage: for a positive result from the prevalence, for a negative result from
+        /// the part without the disease. The likelihood ratio of a positive result is the sensitivity over 1 less the
+        /// specificity, and that of a negative result 1 less the sensitivity over the specificity; each is a ratio of two
+        /// proportions and has the score limits of such a ratio (MathDbl.lr_ci). The diagnostic odds ratio is a d / (b c);
+        /// its conditional estimate and exact limits are those of ExactBB.OddsRatioCMLE.
+        /// </remarks>
+        /// <param name="host">Where progress is shown.</param>
+        /// <param name="parameters">"a", "b", "c", "d": the counts, which are rounded if they are not whole; "cco": the
+        /// confidence level, for which 0.95 is taken if it is not above 0 and below 1.</param>
+        /// <returns>The counts and their totals ("aa" to "tot"); "pc": the confidence level as a percentage; for each of
+        /// "prevalence", "likely" (positive predictive value), "likely_negative" (negative predictive value),
+        /// "likely_despite" (1 less the negative predictive value), "sensitive" and "specific": the proportion, its limits
+        /// "_from" and "_to", what the report says of a one sided interval "_warn", and the three as percentages "_pc",
+        /// "_from_pc", "_to_pc"; for the three predictive values the change "_change"; "lr_pos", "lr_neg": the likelihood
+        /// ratios, with "_from" and "_to"; "odr": the odds ratio; "cmle", "cmle_from", "cmle_to": its conditional estimate
+        /// and limits.  A proportion of no subjects, and a ratio of 0 to 0, is the missing value.</returns>
         public static StepOutput RptMiscDiagnostic(IProgressBarHost host, ParameterBag parameters)
         {
             double a = parameters["a"].AsDouble;
@@ -664,6 +721,20 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// Screening test errors: the chance that a positive result is false, and that a negative result is false, in a
+        /// population in which 1 subject in n has the disease.
+        /// </summary>
+        /// <remarks>
+        /// With the sensitivity pt, the rate of false positive results pf (1 less the specificity) and the prevalence pd, the
+        /// chance of a positive result is pf + pd (pt - pf). Of the positive results the part pf (1 - pd) is of subjects
+        /// without the disease; of the negative results the part (1 - pt) pd is of subjects with it.
+        /// </remarks>
+        /// <param name="parameters">"pt": the sensitivity; "pf": 1 less the specificity; "pd": n, where 1 in n has the
+        /// disease.</param>
+        /// <returns>"population": the subjects with the disease in 10,000; "sensitive", "specific": the sensitivity and the
+        /// specificity as percentages; "positive": the chance that a positive result is false; "negative": the chance that
+        /// a negative result is false.  A chance of 0 to 0 is not a number.</returns>
         public static StepOutput RptMiscFalseResult(ParameterBag parameters)
         {
             // A sensitivity or false positive rate of exactly 0 or 1 is a legitimate (perfect or useless) test; only both 0 or both 1
@@ -880,6 +951,20 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// Likelihood ratios of a test with several results: for each result, how much more likely it is in subjects with a
+        /// feature than in subjects without it.
+        /// </summary>
+        /// <remarks>
+        /// The ratio of a result is the part of the subjects with the feature who have it over the part of the subjects
+        /// without the feature who have it, with the score limits of a ratio of two proportions (MathDbl.lr_ci). It is
+        /// without end if no subject without the feature has the result, and there is none if no subject at all has it.
+        /// </remarks>
+        /// <param name="parameters">"data": two columns, the counts of each result in subjects with the feature and without
+        /// it, which are rounded if they are not whole; "z1": the confidence level, for which 0.95 is taken if it is not
+        /// above 0 and below 1.</param>
+        /// <returns>"pc": the confidence level as a percentage; "*row": for each result "result", its number, "plusfeature"
+        /// and "minusfeature", the counts, "likely", the ratio, and "from" and "to", its limits.</returns>
         public static StepOutput RptMiscLikely(ParameterBag parameters)
         {
             DataFrame datFrame = parameters["data"].AsDataFrame;
@@ -944,6 +1029,34 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// Number needed to treat: the risks of an event in treated subjects and in controls, their ratio and difference,
+        /// and the number of subjects who are to be treated for one of them to be spared the event.
+        /// </summary>
+        /// <remarks>
+        /// The risks have the limits of Clopper and Pearson; the relative risks of the event and of no event the score limits
+        /// of a ratio of two proportions (MathDbl.lr_ci); the odds ratio its exact limits (ExactBB.OddsRatioCMLE); the
+        /// relative risk reduction is 1 less the relative risk. The risk difference is that of the controls less that of
+        /// the treated, with the score limits of a difference (MathDbl.uppci). The number needed to treat is 1 over the risk
+        /// difference, for benefit if the treated have the lower risk and for harm if they have the higher, and its limits
+        /// are 1 over the limits of the difference (XNnSwap has their order).
+        /// With a risk that is expected without the treatment, brr, numbers needed to treat are also worked out from the
+        /// relative risk reduction, 1 / (brr RRR); from the relative risk of no event, 1 / ((1 - brr) (RR - 1)); and from the
+        /// odds ratio (XNntFromOddsRatio). A brr of 1 to 100 is taken as a percentage; one that is not from 0 to 100 is put
+        /// back to the risk of the controls, and the report says so.
+        /// If the events of a group are more than its subjects, the two numbers are taken the other way about.
+        /// </remarks>
+        /// <param name="host">The preferences for the display of numbers, and where progress is shown.</param>
+        /// <param name="parameters">"nt", "xt": the treated subjects, and those of them with the event; "nc", "xc": the
+        /// controls, and those of them with the event; the counts are rounded if they are not whole; "cco": the confidence
+        /// level, for which 0.95 is taken if it is not above 0 and below 1; "brr", which need not be there.</param>
+        /// <returns>"pc": the confidence level as a percentage; "ce", "te", "cne", "tne": the risks of the event and of no
+        /// event in controls and treated, as text, with "_from" and "_to"; "rre", "rrne": the relative risks of the event and
+        /// of no event; "oor": the odds ratio; "rrr": the relative risk reduction; "rd": the risk difference; each with
+        /// "_from" and "_to"; "treat", "treat_from", "treat_to": the number needed to treat and its limits (XBenHarm), and
+        /// "treat_round" and so on the same rounded up; "*adjusted": with brr, a row with "type", what was done with brr,
+        /// "brr" as a percentage, and the numbers needed to treat "rd_treat", "rr_treat", "rrn_treat" and "or_treat", each
+        /// with its limits and the same rounded up.</returns>
         public static StepOutput RptMiscNumberNeededToTreat(IPreferencesAndProgressBar host, ParameterBag parameters)
         {
             double tmp;
@@ -1205,6 +1318,29 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// Risk analysis of a prospective (cohort) study: the relative risk and the risk difference of a 2 by 2 table of an
+        /// outcome by exposure, and the population attributable risk.
+        /// </summary>
+        /// <remarks>
+        /// The rows are the subjects with the outcome (a exposed, b not) and without it (c exposed, d not). The relative risk
+        /// is (a / (a + c)) / (b / (b + d)), with the score limits of a ratio of two proportions (MathDbl.lr_ci); it is
+        /// without end if no subject who was not exposed has the outcome. The risk difference has the score limits of a
+        /// difference (MathDbl.uppci). The power is that of the comparison of the two risks (Power.fishpower). The
+        /// population attributable risk is given for a relative risk that is above 1 and finite: pe (RR - 1) /
+        /// (1 + pe (RR - 1)), where pe is the part of the population that is exposed. If pe is not entered it is that of the
+        /// cohort, (a + c) / n: the risk is then 1 less b n / ((b + d)(a + b)), and its limits are from the variance of
+        /// that, which is of a sample of n subjects in the four cells. If pe is entered the limits are those of the relative
+        /// risk taken through the formula.
+        /// </remarks>
+        /// <param name="parameters">"a", "b", "c", "d": the counts, which are rounded if they are not whole; "cco": the
+        /// confidence level, for which 0.95 is taken if it is not above 0 and below 1; "pe", which need not be there: the
+        /// part of the population that is exposed, from 0 to 1.</param>
+        /// <returns>"a_out", "b_out", "c_out", "d_out": the counts; "ratio": the relative risk; "pc": the confidence level as
+        /// a percentage; "koopman_from", "koopman_to": the limits of the relative risk; "pwr": the power, as the report has
+        /// it; "dif", "miettinen_from", "miettinen_to": the risk difference and its limits; "*exposure": a row with "pe" and
+        /// "par", as percentages, "pe_note", whether pe was entered, "method", the name of the method of the limits, and
+        /// "walter_from" and "walter_to", the limits of the risk, if the risk is given.</returns>
         public static StepOutput RptMiscRelRisk(ParameterBag parameters)
         {
             double pe = Constant.MISSING;
