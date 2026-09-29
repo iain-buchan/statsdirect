@@ -189,12 +189,9 @@ namespace StatsDirect.Builtins
             double a = parameters["a"].AsDouble;
             double r0 = parameters["r0"].AsDouble;
             double r1 = parameters["r1"].AsDouble;
-            if (p >= 1.0 || p < 0.000001)
-                p = 0.8;
-            if (a >= 1.0 || a < 0.000001)
-                a = 0.05;
 
             const string caption = "Sample size for correlation study";
+            x_checkPowerAlpha(p, a, caption);
             // Fisher's z is infinite at a coefficient of 1
             if (r0 < 0.0 || r0 >= 1.0 || r1 <= 0.0 || r1 >= 1.0)
                 throw new TemplateOperationCancelledException("The correlation coefficient under the null hypothesis must be at least 0 and less than 1, and under the alternative hypothesis greater than 0 and less than 1.", caption);
@@ -270,10 +267,20 @@ namespace StatsDirect.Builtins
                     et = ct / hr;
                 }
             }
+            const string caption = "Sample size for comparing survival times";
+            x_checkPowerAlpha(power, alpha, caption);
+            if (!(ct > 0.0))
+                throw new TemplateOperationCancelledException("The median survival time of the control group must be greater than 0.", caption);
+            if (!(hr > 0.0) || double.IsInfinity(hr) || !(et > 0.0) || double.IsInfinity(et))
+                throw new TemplateOperationCancelledException("The median survival time of the experimental group, or the hazard ratio, must be greater than 0.", caption);
+            if (hr == 1.0)
+                throw new TemplateOperationCancelledException("The median survival times of the two groups must differ: a hazard ratio of 1 gives no effect to detect.", caption);
+            if (!(at >= 0.0) || !(fut >= 0.0) || !(at + fut > 0.0))
+                throw new TemplateOperationCancelledException("The accrual time and the additional follow-up time must not be below 0, and one of them must be greater than 0.", caption);
+            if (!(M > 0.0))
+                throw new TemplateOperationCancelledException("The number of controls per experimental subject must be greater than 0.", caption);
             if (ct > 0.0 && et > 0.0 && power > 0.0 && power < 1.0 && alpha > 0.0 && alpha < 1.0 && hr != 1.0 && hr > 0.0 && !double.IsInfinity(hr) && at >= 0.0 && fut >= 0.0 && at + fut > 0.0)
             {
-                if (M <= 0.0)
-                    M = 1;
                 double avt = (ct + et) / 2.0;
                 // with no accrual period every subject is followed for the whole study
                 double pa = at == 0.0 ? 1.0 : (1.0 - Math.Exp(-Math.Log(2.0) * at / avt)) / (Math.Log(2.0) * at / avt);
@@ -574,28 +581,27 @@ namespace StatsDirect.Builtins
             double power = parameters["p"].AsDouble;
             double alpha = parameters["a"].AsDouble;
             double beta = 1.0 - power;
+            const string caption = "Sample size for independent case-control study";
+            x_checkPowerAlpha(power, alpha, caption);
             double p0 = parameters["p0"].AsDouble;
-            if (p0 > 1.0)
-                p0 = 1.0;
-            if (p0 < 0.0)
-                p0 = 0.0;
+            if (!(p0 >= 0.0 && p0 <= 1.0))
+                throw new TemplateOperationCancelledException("The probability of exposure in controls must be from 0 to 1.", caption);
             bool hasP1 = "prop".Equals(parameters["prop-or-or"].AsString);
             double p1;
             if (hasP1)
             {
                 p1 = parameters["p1"].AsDouble;
+                if (!(p1 >= 0.0 && p1 <= 1.0))
+                    throw new TemplateOperationCancelledException("The probability of exposure in cases must be from 0 to 1.", caption);
             }
             else
             {
                 double r = parameters["r"].AsDouble;
+                if (!(r > 0.0) || double.IsInfinity(r))
+                    throw new TemplateOperationCancelledException("The odds ratio must be greater than 0.", caption);
                 p1 = p0 * r / (1.0 + p0 * (r - 1.0));
             }
-            if (p1 > 1.0)
-                p1 = 1.0;
-            if (p1 < 0.0)
-                p1 = 0.0;
             double M = parameters["m"].AsDouble;
-            const string caption = "Sample size for independent case-control study";
             if (M <= 0.0)
                 throw new TemplateOperationCancelledException("The number of controls per case must be greater than 0.", caption);
             if (p1 == p0)
@@ -661,27 +667,28 @@ namespace StatsDirect.Builtins
             double power = parameters["p"].AsDouble;
             double alpha = parameters["a"].AsDouble;
             double beta = 1.0 - power;
+            const string caption = "Sample size for independent cohort study";
+            x_checkPowerAlpha(power, alpha, caption);
             double P0 = parameters["p0"].AsDouble;
-            if (P0 > 1.0)
-                P0 = 1.0;
-            if (P0 < 0.0)
-                P0 = 0.0;
+            if (!(P0 >= 0.0 && P0 <= 1.0))
+                throw new TemplateOperationCancelledException("The probability of the event in controls must be from 0 to 1.", caption);
             bool hasP1 = "prop".Equals(parameters["prop-or-or"].AsString);
             if (hasP1)
             {
                 P1 = parameters["p1"].AsDouble;
+                if (!(P1 >= 0.0 && P1 <= 1.0))
+                    throw new TemplateOperationCancelledException("The probability of the event in experimental subjects must be from 0 to 1.", caption);
             }
             else
             {
                 double r = parameters["r"].AsDouble;
+                if (!(r > 0.0) || double.IsInfinity(r))
+                    throw new TemplateOperationCancelledException("The relative risk must be greater than 0.", caption);
                 P1 = P0 * r;
+                if (P1 > 1.0)
+                    throw new TemplateOperationCancelledException("The relative risk times the probability of the event in controls, which is the probability in experimental subjects, must not be above 1.", caption);
             }
-            if (P1 > 1.0)
-                P1 = 1.0;
-            if (P1 < 0.0)
-                P1 = 0.0;
             double M = parameters["m"].AsDouble;
-            const string caption = "Sample size for independent cohort study";
             if (M <= 0.0)
                 throw new TemplateOperationCancelledException("The number of controls per experimental subject must be greater than 0.", caption);
             if (P1 == P0)
@@ -746,6 +753,10 @@ namespace StatsDirect.Builtins
             double ps = parameters["ps"].AsDouble;
             double M = parameters["m"].AsDouble;
             const string caption = "Sample size for matched case-control study";
+            x_checkPowerAlpha(power, alpha, caption);
+            // the calculation is for sets of a case and m controls
+            if (M != Math.Floor(M))
+                throw new TemplateOperationCancelledException("The number of controls per case must be a whole number.", caption);
             if (M < 1.0)
                 throw new TemplateOperationCancelledException("There must be at least one control per case.", caption);
             if (M > 1000.0)
@@ -804,6 +815,7 @@ namespace StatsDirect.Builtins
             double power = parameters["p"].AsDouble;
             double alpha = parameters["a"].AsDouble;
             double BETA = 1.0 - power;
+            x_checkPowerAlpha(power, alpha, caption);
             double P0 = parameters["p0"].AsDouble;
             double ph = parameters["ph"].AsDouble;
             bool hasRr = "rr".Equals(parameters["er-or-rr"].AsString);
@@ -863,6 +875,18 @@ namespace StatsDirect.Builtins
             throw new InvalidDataException();
         }
 
+
+        /// <summary>
+        /// the power and the two sided significance level of a sample size are probabilities above 0 and below 1: the form
+        /// takes 0% and 100%, for which there is no sample size
+        /// </summary>
+        private static void x_checkPowerAlpha(double power, double alpha, string caption)
+        {
+            if (!(power > 0.0 && power < 1.0))
+                throw new TemplateOperationCancelledException("The power must be greater than 0% and less than 100%.", caption);
+            if (!(alpha > 0.0 && alpha < 1.0))
+                throw new TemplateOperationCancelledException("Alpha must be greater than 0% and less than 100%.", caption);
+        }
 
         private static double zcvalue(double alph) => -PDF.gauinv(alph);
 
@@ -965,10 +989,10 @@ namespace StatsDirect.Builtins
             double a = parameters["a"].AsDouble;
             double D = parameters["d"].AsDouble;
             double sd = parameters["sd"].AsDouble;
-            if (P >= 1.0 || P < 0.000001)
-                P = 0.8;
-            if (a >= 1.0 || a < 0.000001)
-                a = 0.05;
+            const string caption = "Sample size for a paired or 1 sample t test";
+            x_checkPowerAlpha(P, a, caption);
+            if (!(sd > 0.0))
+                throw new TemplateOperationCancelledException("The standard deviation must be greater than 0.", caption);
             double k = D / sd;
             bool ok = true;
             const double omega = 0.0001;
@@ -1012,23 +1036,22 @@ namespace StatsDirect.Builtins
             double P = parameters["p"].AsDouble;
             double xd = parameters["xd"].AsDouble;
             double cco = parameters["cco"].AsDouble;
-            if (cco <= 0.0 | cco >= 1.0)
-            {
-                cco = 0.95;
-            }
+            const string caption = "Sample size for a population survey";
+            if (!(cco > 0.0 && cco < 1.0))
+                throw new TemplateOperationCancelledException("The confidence level must be greater than 0% and less than 100%.", caption);
             double cit = PDF.gauinv(cco + (1.0 - cco) / 2.0, out int fault);
             if (fault == 0)
             {
                 double xza = cit;
                 // outside 0 to 100% the variance p(1 - p) is negative, and at 0% or 100% there is nothing to estimate
                 if (P <= 0.0 || P >= 100.0)
-                    throw new TemplateOperationCancelledException("The rate at which the characteristic occurs must be greater than 0% and less than 100%.", "Sample size for a population survey");
+                    throw new TemplateOperationCancelledException("The rate at which the characteristic occurs must be greater than 0% and less than 100%.", caption);
                 P /= 100.0;
                 xd /= 100.0;
-                if (xd <= 0.0 | ps <= 0.0)
-                {
-                    throw new InvalidDataException();
-                }
+                if (!(xd > 0.0))
+                    throw new TemplateOperationCancelledException("The acceptable deviation must be greater than 0%.", caption);
+                if (!(ps > 0.0))
+                    throw new TemplateOperationCancelledException("The size of the population must be greater than 0.", caption);
                 double sn = xza * xza * P * (1.0 - P) / (xd * xd);
                 sn /= (1.0 + sn / ps);
 
@@ -1053,10 +1076,12 @@ namespace StatsDirect.Builtins
             double D = parameters["d"].AsDouble;
             double sd = parameters["sd"].AsDouble;
             double M = parameters["m"].AsDouble;
-            if (P >= 1 || P < 0.000001)
-                P = 0.8;
-            if (a >= 1 || a < 0.000001)
-                a = 0.05;
+            const string caption = "Sample size for an unpaired t test";
+            x_checkPowerAlpha(P, a, caption);
+            if (!(sd > 0.0))
+                throw new TemplateOperationCancelledException("The standard deviation must be greater than 0.", caption);
+            if (!(M > 0.0))
+                throw new TemplateOperationCancelledException("The number of controls per experimental subject must be greater than 0.", caption);
 
             double k = D / sd;
             bool ok = true;
@@ -1067,8 +1092,6 @@ namespace StatsDirect.Builtins
                 ok = false;
             }
             double b = 1.0 - P;
-            if (M <= 0)
-                M = 1;
             x_tsample(a, b, k, M, 2, ref xn, out int fault);
             xn = x_start(xn, true, a, b, k, M);
             if (xn < Convert.ToDouble(int.MaxValue))
