@@ -1475,26 +1475,34 @@ namespace StatsDirect.Numerics
             bool guessed = ir[1] == 0 && ir[2] == 0 && ir[3] == 0 && guess > 0.0;
             if (!guessed)
                 guess = 10.0;
+            return BracketedRangeQuantile(q => SmallDfRangeCdf(q, k, df), p, guess, guessed);
+        }
+
+        //  The point at which a distribution function of the range is p, within a bracket, by the Illinois method. The
+        //  bracket is put about the guess, closely if the guess is a value that the series has given, and is widened until
+        //  the point is in it.
+        private static double BracketedRangeQuantile(Func<double, double> cdf, double p, double guess, bool guessed)
+        {
             double a = guessed ? 0.95 * guess : 0.5 * guess;
             double b = guessed ? 1.05 * guess : 2.0 * guess;
-            double fa = SmallDfRangeCdf(a, k, df) - p;
-            double fb = SmallDfRangeCdf(b, k, df) - p;
+            double fa = cdf(a) - p;
+            double fb = cdf(b) - p;
             while (fa > 0.0 && a > 1.0e-6)
             {
                 a *= 0.5;
-                fa = SmallDfRangeCdf(a, k, df) - p;
+                fa = cdf(a) - p;
             }
             while (fb < 0.0 && b < 1.0e6)
             {
                 b *= 2.0;
-                fb = SmallDfRangeCdf(b, k, df) - p;
+                fb = cdf(b) - p;
             }
             int side = 0;
             double c = a;
             for (int i = 0; i < 100 && Math.Abs(b - a) > 1.0e-11 * Math.Max(1.0, Math.Abs(b)); i++)
             {
                 c = (a * fb - b * fa) / (fb - fa);
-                double fc = SmallDfRangeCdf(c, k, df) - p;
+                double fc = cdf(c) - p;
                 if (Math.Abs(fc) < 1.0e-13)   //  within the integral's own accuracy: closing the bracket further gains nothing
                     break;
                 if (fc * fb > 0.0)
@@ -1535,11 +1543,17 @@ namespace StatsDirect.Numerics
                 return SmallDfRangeQuantile(p, (int)Math.Round(t), df);
             int[] ir = new int[4];
             double retval = cv(p, 1.0, t, df, ir);
-            for (int i = 1; i <= 3; i++)
-            {
-                if (0 != ir[i])
-                    return Constant.MISSING;
-            }
+            if (ir[1] == 0 && ir[2] == 0 && ir[3] == 0)
+                return retval;
+            //  The secant search of cv gets nowhere from a start at which the probability is flat, as it is for a
+            //  probability of a half or less with 20 means or more: it gave no value. The point is then looked for within
+            //  a bracket, and is given if it has the probability.
+            if (!(p > 0.0 && p < 1.0))
+                return Constant.MISSING;
+            int[] it = new int[3];
+            retval = BracketedRangeQuantile(q => qprob(q, 1.0, t, df, it), p, 10.0, false);
+            if (!double.IsFinite(retval) || !(Math.Abs(qprob(retval, 1.0, t, df, it) - p) <= 1.0e-7))
+                return Constant.MISSING;
             return retval;
         }
 
