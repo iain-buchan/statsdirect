@@ -2,6 +2,15 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
+##[Unreleased]
+
+### Fixed
+- Allocation by preference: with more places left than subjects, when some subjects could not be given any group that they preferred, the analysis stopped with "Index was outside the bounds of the array" (three subjects who all prefer a group of one place, with 50 places in another group, were enough). The subjects that are left are now given groups drawn in proportion to the places that the groups have left. Capacities that add up to more than 2,147,483,647 had been refused as fewer than the subjects; they are taken
+- Random allocation into two independent groups, and randomising a series: the report had no seed if the seed was left blank. The program then takes a seed from the clock, and the report had "Randomized with seed:" with nothing after it, so that the allocation could not be made again; the seed that was used is now printed. Block randomization: the treatments after the 26th, which had the characters that come after Z as their names, are named AA, AB and so on
+
+### Changed
+- Intervention-control pairs with balanced allocation, and allocation by preference: every arrangement is equally likely. The order had been made by three passes in which each place is exchanged with a place drawn from all the places, which leaves the arrangements with chances that differ a little (the six arrangements of 4 balanced pairs had chances of 0.16663 to 0.16670, where each is to have 0.16667; the orders of 8 candidates differed by up to 0.5%). The shuffle of the other functions of the Randomization menu is now used, which has no such difference. An allocation that was made with a seed in an earlier version is not given again by that seed
+
 ##[v5.0.13] 2026-09-29
 
 Version 5.0.13 follows a check of every function on the Rates menu against figures calculated from the definitions, one routine at a time, with the routines commented as they were checked. Among the corrections are the exact confidence limits of rate ratios and odds ratios with hundreds of thousands of events, an SMR analysis that stopped when very few deaths were expected, and rate ratios that were not given for strata without events in the population that is not exposed. The confidence interval of the difference of two crude rates is now as R and SAS give it, and direct standardization takes strata with more events than person-time.
