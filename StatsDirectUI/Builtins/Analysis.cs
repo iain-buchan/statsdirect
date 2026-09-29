@@ -466,7 +466,9 @@ namespace StatsDirect.Builtins
             {
                 ptld = a / (a + b);
                 temp1 = ptld * 100.0;
-                temp2 = Convert.ToInt64(ptld * 100.0) - Convert.ToInt64(prevel * 100.0);
+                // the change from the likelihood before the test, in points of a percentage: the difference itself, not that
+                // of the two percentages rounded to whole numbers
+                temp2 = 100.0 * (ptld - prevel);
             }
             else
             {
@@ -494,7 +496,7 @@ namespace StatsDirect.Builtins
             {
                 ptlng = d / (d + c);
                 temp1 = ptlng * 100.0;
-                temp2 = Convert.ToInt64(ptlng * 100.0) - Convert.ToInt64((b + d) / n * 100.0);
+                temp2 = 100.0 * (ptlng - (b + d) / n);
             }
             else
             {
@@ -521,7 +523,7 @@ namespace StatsDirect.Builtins
             {
                 ptlnd = 1.0 - d / (d + c);
                 temp1 = ptlnd * 100.0;
-                temp2 = Convert.ToInt64(ptlnd * 100.0) - Convert.ToInt64(prevel * 100.0);
+                temp2 = 100.0 * (ptlnd - prevel);
             }
             else
             {
