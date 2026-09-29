@@ -66,17 +66,11 @@ namespace StatsDirect.Builtins
             double p = 1.0 - (1.0 - gamma) / 2.0;
             double z = PDF.gauinv(p, out int fault);
 
-            double ird1, ird2;
-            if (xmh == 0)
-            {
-                ird1 = Constant.MISSING;
-                ird2 = Constant.MISSING;
-            }
-            else
-            {
-                ird1 = ird - z * Math.Sqrt(ird * ird / xmh);
-                ird2 = ird + z * Math.Sqrt(ird * ird / xmh);
-            }
+            // The standard error of the difference is the square root of the sum of the variances of the two rates, each that of
+            // a Poisson count over its person-time; R and SAS give the same limits
+            double seIrd = Math.Sqrt(a / (pt1 * pt1) + b / (pt2 * pt2));
+            double ird1 = ird - z * seIrd;
+            double ird2 = ird + z * seIrd;
 
             double irr0, irr1, irr2;
             if (a == 0.0)
