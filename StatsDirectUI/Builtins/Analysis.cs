@@ -1193,10 +1193,14 @@ namespace StatsDirect.Builtins
             if (gamma <= 0.0 || gamma >= 1.0)
                 gamma = 0.95;
 
-            if (a + c <= 0 || b + d <= 0 || b <= 0)
-                throw new InvalidDataException("Relative risk can not be calculated for these data.");
+            if (a + c <= 0 || b + d <= 0)
+                throw new InvalidDataException("Relative risk can not be calculated for these data: there must be subjects who were exposed and subjects who were not.");
+            if (a <= 0 && b <= 0)
+                throw new InvalidDataException("Relative risk can not be calculated for these data: no subject has the outcome.");
 
-            double rr = a / (a + c) / (b / (b + d));
+            // with no outcome among those who were not exposed the ratio is without end: it has a lower limit, and no
+            // population attributable risk is given
+            double rr = b > 0 ? a / (a + c) / (b / (b + d)) : double.PositiveInfinity;
             double p = 1.0 - (1.0 - gamma) / 2.0;
             double zp = PDF.gauinv(p, out int fault);
 
@@ -1215,7 +1219,7 @@ namespace StatsDirect.Builtins
             double parLl;
             double par;
             bool peEntered = false;
-            if (rr > 1.0)
+            if (rr > 1.0 && !double.IsInfinity(rr))
             {
                 if (parameters.ContainsKey("pe") && null != parameters["pe"] && parameters["pe"].HasData)
                     pe = parameters["pe"].AsDouble;
