@@ -183,6 +183,19 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// Sample size for a study of a correlation coefficient: the smallest number of pairs with which a test of the
+        /// coefficient r0 of the null hypothesis has the power asked if the coefficient is r1.
+        /// </summary>
+        /// <remarks>
+        /// Fisher's z of a coefficient, half the logarithm of (1 + r) / (1 - r), is taken as normal with the variance
+        /// 1 / (n - 3). The power with n pairs is that of both tails (x_rpower). The first estimate is the number at which one
+        /// tail has the power; the smallest number is looked for from it, a pair at a time, or by halving above the whole
+        /// numbers of 32 bits. The least that is given is 4 pairs.
+        /// </remarks>
+        /// <param name="parameters">"p": the power; "a": the two sided significance level; "r0": the coefficient of the null
+        /// hypothesis, from 0 to below 1; "r1": that of the alternative hypothesis, above 0 and below 1.</param>
+        /// <returns>"alpha", "power", "r0Fmt", "r1Fmt": what was entered; "size": the number of pairs.</returns>
         public static StepOutput RptSizeCorrelation(ParameterBag parameters)
         {
             double p = parameters["p"].AsDouble;
@@ -256,6 +269,24 @@ namespace StatsDirect.Builtins
             return PDF.alnorm(z - zsig) + PDF.alnorm(-z - zsig);
         }
 
+        /// <summary>
+        /// Sample size for a comparison of survival times by the log-rank test: the number of experimental subjects, and of
+        /// controls, with which a hazard ratio is detected with the power asked.
+        /// </summary>
+        /// <remarks>
+        /// The number of experimental subjects is (z(alpha/2) + z(beta))^2 (1 + 1/m) / (p ln(hr)^2), where p is the chance that
+        /// a subject is seen to die before the study ends. With exponential survival, subjects recruited evenly over the
+        /// accrual time and followed for the additional time after it, p = 1 - pa exp(-ln(2) F / t), pa = (1 - exp(-ln(2) A / t))
+        /// / (ln(2) A / t), where t is the mean of the two median survival times. The number is the whole part of the formula
+        /// and 1; the controls are the next whole number to m times it. The note on the power is given as x_disclaim says.
+        /// </remarks>
+        /// <param name="parameters">"p": the power; "a": the two sided significance level; "ct": the median survival time of
+        /// controls; "time-or-hr": "time" if "et", the median survival time of experimental subjects, is given, and if not
+        /// "hr", the hazard of experimental subjects relative to controls, which is ct / et; "at": the accrual time; "fut":
+        /// the additional follow-up time; "m": the controls per experimental subject.</param>
+        /// <returns>"ctFmt", "etFmt", "hrFmt", "atFmt", "futFmt", "alpha", "power": what was entered, with the median or the
+        /// hazard ratio that was worked out; "size": the experimental subjects; "controls": the controls; "*assumptions": a
+        /// row with the note on the power, if it is given.</returns>
         public static StepOutput RptSizeSurvival(ParameterBag parameters)
         {
             double hr = 0;
@@ -344,6 +375,9 @@ namespace StatsDirect.Builtins
             throw new InvalidDataException();
         }
 
+        // The equation of the approximate sample size of a t test, as what is to be 0: the number that the quantiles of
+        // Student's t give with the degrees of freedom of n, less n. f = 1: the paired test, with n - 1 degrees of freedom;
+        // f = 2: the unpaired test with M controls per subject, with n (M + 1) - 2. k is the difference in standard deviations.
         private static double x_f(int f, double n, double alpha, double beta, double k, double M)
         {
             double x_fReturn = 0;
@@ -385,6 +419,9 @@ namespace StatsDirect.Builtins
             return x_fReturn;
         }
 
+        // The approximate sample size of a t test (typ 1 paired, 2 unpaired): the root of x_f, looked for by the secant method
+        // from the number that the normal distribution gives. ifault is 0 if the root was found, 2 if it was not (xn is then
+        // where the search was), 1 if a normal deviate could not be found.
         private static void x_tsample(double aa, double bb, double kk, double mm, int typ, ref double xn, out int ifault)
         {
             double n0;
@@ -417,6 +454,8 @@ namespace StatsDirect.Builtins
                 ifault = 0;
         }
 
+        // The root of x_f by the secant method from x0 and x0 + 1: xn is the root when x_f is within eps of 0; er is 1 if it
+        // is not after 200 steps
         private static void x_zroot(int f, ref double x0, double eps, ref double xn, double alpha, double beta, double k, double m, ref int er)
         {
             const int imax = 200;
@@ -593,6 +632,23 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// Sample size for an independent case-control study: the number of cases, and of controls, with which a difference
+        /// of the probabilities of exposure of cases and of controls is detected with the power asked.
+        /// </summary>
+        /// <remarks>
+        /// The number of cases is (z(alpha/2) s0 + z(beta) sa)^2 / (p0 - p1)^2, where s0^2 = (1 + 1/m) pbar (1 - pbar), pbar =
+        /// (p1 + m p0) / (m + 1), and sa^2 = p0 (1 - p0) / m + p1 (1 - p1); for the chi-square test with the correction for
+        /// continuity, and Fisher's exact test, it is n/4 (1 + sqrt(1 + 2 (m + 1) / (n m |p0 - p1|)))^2. Each is the whole part
+        /// of its formula and 1; the controls are the next whole number to m times the cases. If the odds ratio is given, the
+        /// probability of exposure of cases is p0 r / (1 + p0 (r - 1)). The note on the power is given as x_disclaim says.
+        /// </remarks>
+        /// <param name="parameters">"p": the power; "a": the two sided significance level; "p0": the probability of exposure in
+        /// controls; "prop-or-or": "prop" if "p1", the probability of exposure in cases, is given, and if not "r", the odds
+        /// ratio; "m": the controls per case.</param>
+        /// <returns>"pc", "ps": the two probabilities; "cpc", "alpha", "power": what was entered; "case", "controls": the
+        /// cases and controls; "case_corr", "controls_corr": those of the corrected test; "*assumptions": a row with the note
+        /// on the power, if it is given.</returns>
         public static StepOutput RptSizeIndCase(ParameterBag parameters)
         {
             double power = parameters["p"].AsDouble;
@@ -675,6 +731,18 @@ namespace StatsDirect.Builtins
             throw new InvalidDataException();
         }
 
+        /// <summary>
+        /// Sample size for an independent cohort study: the number of experimental subjects, and of controls, with which a
+        /// difference of the probabilities of the event is detected with the power asked.
+        /// </summary>
+        /// <remarks>
+        /// The formulas are those of the independent case-control study (RptSizeIndCase). If the relative risk is given, the
+        /// probability of the event in experimental subjects is p0 r, which is not to be above 1.
+        /// </remarks>
+        /// <param name="parameters">"p": the power; "a": the two sided significance level; "p0": the probability of the event
+        /// in controls; "prop-or-or": "prop" if "p1", the probability in experimental subjects, is given, and if not "r", the
+        /// relative risk; "m": the controls per experimental subject.</param>
+        /// <returns>As RptSizeIndCase.</returns>
         public static StepOutput RptSizeIndProp(ParameterBag parameters)
         {
             double P1;
@@ -759,6 +827,17 @@ namespace StatsDirect.Builtins
             throw new InvalidDataException();
         }
 
+        /// <summary>
+        /// Sample size for a matched case-control study: the number of cases, each matched with m controls, with which an
+        /// odds ratio is detected with the power asked; and what part that number is of the number with one control.
+        /// </summary>
+        /// <param name="parameters">"p": the power; "a": the two sided significance level; "ph": the correlation of the
+        /// exposures of a case and its control; "p0": the probability of exposure in controls; "ps": the odds ratio; "m": the
+        /// controls per case, a whole number from 1 to 1000.</param>
+        /// <returns>"corr", "pc", "odds", "cpc", "alpha", "power": what was entered; "size": the cases; "*reduction": with more
+        /// than one control, a row with "controls" and "reduction", the number of cases as a part of that with one control;
+        /// "*lower": a row if the power is 20% or less; "*assumptions": a row with the note on the power, if it is
+        /// given.</returns>
         public static StepOutput RptSizeMatchCase(ParameterBag parameters)
         {
 
@@ -823,6 +902,22 @@ namespace StatsDirect.Builtins
             throw new InvalidDataException();
         }
 
+        /// <summary>
+        /// Sample size for a paired cohort study: the number of pairs of an experimental subject and a control with which a
+        /// difference of the event rates is detected with the power asked.
+        /// </summary>
+        /// <remarks>
+        /// With the correlation r of the events of the two subjects of a pair, the pairs of which only the experimental
+        /// subject has the event have the probability py = p1 (1 - p0) - r g, and those of which only the control has it
+        /// px = p0 (1 - p1) - r g, where g = sqrt(p1 (1 - p1) p0 (1 - p0)). With pa = py / (px + py) the number of pairs is
+        /// (z(alpha/2) / 2 + z(beta) sqrt(pa (1 - pa)))^2 / ((pa - 1/2)^2 (px + py)): the whole part of it and 1. The note on
+        /// the power is given as x_disclaim says.
+        /// </remarks>
+        /// <param name="parameters">"p": the power; "a": the two sided significance level; "p0": the event rate of controls;
+        /// "ph": the correlation; "er-or-rr": "rr" if "rr", the relative risk, is given, and if not "p1", the event rate of
+        /// experimental subjects.</param>
+        /// <returns>"pc", "ps": the two event rates; "r", "alpha", "power": what was entered; "size": the pairs;
+        /// "*assumptions": a row with the note on the power, if it is given.</returns>
         public static StepOutput RptSizeMatchProp(ParameterBag parameters)
         {
             double P1;
@@ -905,8 +1000,17 @@ namespace StatsDirect.Builtins
                 throw new TemplateOperationCancelledException("Alpha must be greater than 0% and less than 100%.", caption);
         }
 
+        // The normal deviate that has the probability alph above it
         private static double zcvalue(double alph) => -PDF.gauinv(alph);
 
+        // The number of cases of a matched case-control study with M controls per case. The probability of exposure of a case,
+        // P1, is the one with which the odds ratio of the pairs that differ is xspsi (MathDbl.pone); p01 and p00 are the
+        // probabilities of exposure of a control whose case is exposed, and whose case is not. t[i] is the probability that
+        // i of the case and its M controls are exposed. From these the mean and variance of the number of exposed cases in
+        // sets with i exposed are summed under the null hypothesis (E1, v1) and with the odds ratio (epsi, vpsi), and the
+        // number is (z(beta) sqrt(vpsi) + z(alpha/2) sqrt(v1))^2 / (epsi - E1)^2: the whole part of it and 1. The sums are
+        // made for M controls and then for 1, of which FM is the ratio. sigmar is sqrt(v1 / vpsi), which the note on the
+        // power needs. er is 2 if the odds ratio is not above 0, and 1 if there is no table of a pair with the correlation.
         private static void ssize(double salpha, double sBeta, double sr, double sp0, double M, double xspsi, out double N, out double FM, out double sigmar, out int er)
         {
             double n1 = 0;
@@ -997,6 +1101,19 @@ namespace StatsDirect.Builtins
         }
 
 
+        /// <summary>
+        /// Sample size for a paired or single sample t test: the smallest number of pairs with which a mean difference is
+        /// detected with the power asked.
+        /// </summary>
+        /// <remarks>
+        /// The number is the smallest at which the power of the two sided test, from the non-central t distribution and with
+        /// both tails, reaches what is asked (x_ncsize); the search starts from the solution of the approximate equation in
+        /// Student's t (x_tsample, x_start). A difference below a ten thousandth of the standard deviation is taken as a ten
+        /// thousandth of it: the number is then that of the approximate equation, and the report has a warning.
+        /// </remarks>
+        /// <param name="parameters">"p": the power; "a": the two sided significance level; "d": the mean difference; "sd": the
+        /// standard deviation of the differences.</param>
+        /// <returns>What x_tres gives; "*sample_size_warn": a row if the report is to have the warning.</returns>
         public static StepOutput RptSizePaired(ParameterBag parameters)
         {
             double N;
@@ -1046,6 +1163,18 @@ namespace StatsDirect.Builtins
         }
 
 
+        /// <summary>
+        /// Sample size for a survey of a population: the number of subjects with which a rate is estimated within a deviation,
+        /// with the confidence asked.
+        /// </summary>
+        /// <remarks>
+        /// For a population without end the number is sn = z^2 p (1 - p) / d^2, where z is the normal deviate of the two sided
+        /// confidence level; for a population of N it is sn / (1 + sn / N). The number is the whole part of that and 1.
+        /// </remarks>
+        /// <param name="parameters">"ps": the size of the population; "p": the rate, as a percentage; "xd": the deviation, as a
+        /// percentage; "cco": the confidence level.</param>
+        /// <returns>"estimate", "rate", "deviation", "level": what was entered, the level as a percentage; "size": the
+        /// number of subjects.</returns>
         public static StepOutput RptSizePopSurvey(ParameterBag parameters)
         {
             // double af = 2; 
@@ -1084,6 +1213,17 @@ namespace StatsDirect.Builtins
         }
 
 
+        /// <summary>
+        /// Sample size for an unpaired t test: the smallest number of experimental subjects, with m controls for each, with
+        /// which a difference of two means is detected with the power asked.
+        /// </summary>
+        /// <remarks>
+        /// As RptSizePaired. The controls are the next whole number to m times the experimental subjects, and the power is
+        /// that of the two numbers as they are reported.
+        /// </remarks>
+        /// <param name="parameters">"p": the power; "a": the two sided significance level; "d": the difference of the means;
+        /// "sd": the standard deviation within a group; "m": the controls per experimental subject.</param>
+        /// <returns>What x_tres gives; "*sample_size_warn": a row if the report is to have the warning.</returns>
         public static StepOutput RptSizeUnPaired(ParameterBag parameters)
         {
             double N; double xn = 0;
@@ -1149,6 +1289,12 @@ namespace StatsDirect.Builtins
             return Math.Abs(xn - nz) <= 100.0 ? xn : nz;
         }
 
+        // The note on the power of a sample size. The formulas take the power from the tail of the effect alone. The other
+        // tail, that of a significant result in the direction opposite to the effect, adds the normal probability beyond
+        // 2 (s0 / sa) z(alpha/2) + z(beta), where s0 and sa are the standard deviations under the null and the alternative
+        // hypothesis. The reports give the note if that deviate is 3.1 or less, which is a probability of 0.001 or more;
+        // the note has the power asked (ll), and the power asked and alpha / 2 (ul), as the least and the most that the
+        // true power is.
         private static ParameterBag x_disclaim(double ll, double ul, double N)
         {
             ParameterBag outputParameters = new();
@@ -1198,6 +1344,12 @@ namespace StatsDirect.Builtins
             return n0;
         }
 
+        // What the report of a t test is given: "alpha", "power", "delta", "sd": what was entered; "mean": the words for the
+        // difference; "size": the number of pairs or of experimental subjects; "df": the degrees of freedom of the test;
+        // "*controls": for the unpaired test a row with "con_per", the controls per subject; "*subjects": for the unpaired
+        // test a row with "con_tot", the controls; "*pairs": a row for the paired test; "*assumptions": a row with the note
+        // on the power, which is given if twice the quantile of Student's t for alpha / 2 and the quantile for half of beta
+        // come to 3.1 or less.
         private static void x_tres(ParameterBag outputParameters, bool unpaired, double alpha, double b, double power, double m, double n, double delta, double sd)
         {
             int ierr = 0;

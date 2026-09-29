@@ -3,10 +3,14 @@ using StatsDirect.Numerics;
 using System;
 namespace StatsDirect.Builtins
 {
+    // The power of tests, for the reports that print it: Student's t tests (from the non-central t distribution), and the
+    // comparison of two proportions by the chi-square test or Fisher's exact test (from the normal distribution).
     public static class Power  
     { 
         ///  <summary>
-        ///  power of a test for simple correlation
+        ///  power of a test for simple correlation, from Fisher's z with its corrections for bias (fisher_zmean) and the
+        ///  variance 1 / (N - 1). (It is not called by the program: the sample size for correlation has the power from
+        ///  Fisher's z itself, with the variance 1 / (N - 3).)
         ///  </summary>
         ///  <param name="r0">the null hypothesis correlation</param>
         ///  <param name="r1">the alternate hypothesis correlation</param>
@@ -26,6 +30,8 @@ namespace StatsDirect.Builtins
         } 
         
         
+        // Fisher's z of a correlation coefficient: half the logarithm of (1 + r) / (1 - r); the missing value if r is not
+        // within -1 to 1
         public static double fisher_z1( double r )
         {
             if ( Math.Abs( r ) >= 1.0 ) 
@@ -34,6 +40,7 @@ namespace StatsDirect.Builtins
         }
 
 
+        // Fisher's z with a correction for bias of the order 1 / N
         public static double fisher_z2( double r, double N )
         {
             if ( r < -1.0 || r > 1.0 || N <= 0.0 ) 
@@ -170,6 +177,9 @@ namespace StatsDirect.Builtins
         } 
         
         
+        // The beta between x1 and x2 at which fisherss is 0, by bisection to within 1e-10: the chance of missing the difference
+        // of P1 and P0 with the N subjects and M controls per subject that there are, by the test with the correction for
+        // continuity. The missing value if fisherss has one sign at both ends.
         private static double rootfish( ref double x1, ref double x2, ref double alpha, ref double P1, ref double P0, ref double N, ref double M ) 
         { 
             double rootfishReturn;
@@ -223,6 +233,11 @@ namespace StatsDirect.Builtins
         } 
         
         
+        // The power of the comparison of two proportions, a of n1 and b of n2, at the two sided level alpha: 1 less the normal
+        // probability between the two critical values of the difference, which is the power of the chi-square test without
+        // the correction for continuity, with both tails. If dofish is true the power is that of Fisher's exact test or the
+        // corrected chi-square test: 1 less the beta at which the sample size with the correction (fisherss) is the n1 that
+        // there is. If there is no such beta, dofish is made false and the power without the correction is returned.
         public static double fishpower( double alpha, double a, double b, double n1, double n2, ref bool dofish ) 
         {
 
