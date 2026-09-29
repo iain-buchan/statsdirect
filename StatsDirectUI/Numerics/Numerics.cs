@@ -1844,9 +1844,14 @@ namespace StatsDirect.Numerics
                 // end of interval i                                                   
                 retval += otsum;
             }
-            if (retval > eps)
+            // The sum of the quadrature passes 1 by the error of the quadrature where the probability is 1 to nine places or
+            // more (by 5.3e-7 at most, with 25000 degrees of freedom). That is a probability of 1. It used to be refused, as
+            // the most that was allowed was 1 itself: with 50 degrees of freedom and 3 means a range of 13.25 or more had no
+            // probability.
+            const double over = 1.0e-6;
+            if (retval > eps + over)
                 ir[2] = 1;
-            if (retval > 1.0 && retval <= eps)
+            if (retval > 1.0 && retval <= eps + over)
             {
                 retval = 1.0;
             }
@@ -2010,9 +2015,11 @@ namespace StatsDirect.Numerics
                 return 0.0;
             }
             retval = Math.Pow(retval, rr);
-            if (retval > eps)
+            // as in qprob: a sum that passes 1 by the error of the quadrature is a probability of 1
+            const double over = 1.0e-6;
+            if (retval > eps + over)
                 ir = 1;
-            if (retval > 1.0 && retval < eps)
+            if (retval > 1.0 && retval <= eps + over)
             {
                 return 1.0;
             }
