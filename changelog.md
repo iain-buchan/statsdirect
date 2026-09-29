@@ -2,7 +2,9 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
-##[Unreleased]
+##[v5.0.13] 2026-09-29
+
+Version 5.0.13 follows a check of every function on the Rates menu against figures calculated from the definitions, one routine at a time, with the routines commented as they were checked. Among the corrections are the exact confidence limits of rate ratios and odds ratios with hundreds of thousands of events, an SMR analysis that stopped when very few deaths were expected, and rate ratios that were not given for strata without events in the population that is not exposed. The confidence interval of the difference of two crude rates is now as R and SAS give it, and direct standardization takes strata with more events than person-time.
 
 ### Fixed
 - Exact confidence limits of a rate ratio and of an odds ratio: the last figures with hundreds of thousands of events (compare two crude rates, exact tests on counts, Mantel-Haenszel test, meta-analysis). With so many events the exact method works on the scale of logarithms, where it added up a term at a time and lost a little at each of hundreds of thousands of steps: a limit was out in its sixth or seventh figure. For 400,000 events against 380,000 in the same person-time the lower 99% limit of the rate ratio was 1.0465057, and is 1.0465048, as the limit from the F distribution in the same report was. The sums are now made of the terms over the greatest of them
