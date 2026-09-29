@@ -396,7 +396,9 @@ namespace StatsDirect.Builtins
                 }
                 sampleParameters.AddOutput("mean", that);
                 sampleParameters.AddOutput("pc2", Math.Round(percent2, 1));
-                sampleParameters.AddOutput("pc1", Math.Round(percent1, 1));
+                // the level of the one sided limits, which is the level that was asked for: each of them leaves all of what the
+                // level leaves on its side, and they are the ends of the two sided interval at the level percent1
+                sampleParameters.AddOutput("pc1", Math.Round(percent2, 1));
                 sampleParameters.AddOutput("lower2", tlower2);
                 sampleParameters.AddOutput("upper2", tupper2);
                 sampleParameters.AddOutput("lower1", tlower1);
