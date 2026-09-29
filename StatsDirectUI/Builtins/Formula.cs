@@ -14,7 +14,7 @@ namespace StatsDirect.Builtins
         /// <summary>
         /// Puts x[low] to x[high] inclusive into a random order in which every order is equally likely (a Fisher-Yates shuffle), taking random numbers from mt.
         /// </summary>
-        private static void Shuffle(MersenneTwister mt, int[] x, int low, int high)
+        internal static void Shuffle<T>(MersenneTwister mt, T[] x, int low, int high)
         {
             for (int j = high; j > low; j--)
             {
@@ -407,16 +407,10 @@ namespace StatsDirect.Builtins
                 bool[] rand = new bool[pairs + 1 /* VB to C# conversion */ ];
                 if (balance)
                 {
+                    // half of the pairs one way and half the other, in an order in which every arrangement is equally likely
                     for (int n = 1; n <= pairs; n++)
                         rand[n] = !rand[n - 1];
-                    for (int tn = 1; tn <= 3; tn++)
-                    {
-                        for (int n = 1; n <= pairs; n++)
-                        {
-                            int nrp = Convert.ToInt32(Math.Floor(pairs * mt.NextDouble()) + 1);
-                            (rand[nrp], rand[n]) = (rand[n], rand[nrp]);
-                        }
-                    }
+                    Shuffle(mt, rand, 1, pairs);
                 }
                 else
                 {

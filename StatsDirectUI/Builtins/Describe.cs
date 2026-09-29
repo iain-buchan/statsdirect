@@ -168,7 +168,7 @@ namespace StatsDirect.Builtins
                         // Allocate those who want this group to it; if it's over-subscribed, shuffle the candidates so that all have an equal chance to get their choice.
                         if (underConsideration > 0)
                         {
-                            Shuffle(mt, toConsider, 0, underConsideration - 1);
+                            Formula.Shuffle(mt, toConsider, 0, underConsideration - 1);
                             int space = groupCapacities[grp - 1] - allocatedSoFar[grp];
                             int successfulCandidates = Math.Min(space, underConsideration);
                             for (int toAllocate = 0; toAllocate < successfulCandidates; toAllocate++)
@@ -194,7 +194,7 @@ namespace StatsDirect.Builtins
                         for (int k = 1; k <= groupCapacities[grp - 1] - allocatedSoFar[grp]; k++)
                             toConsider[availableGroups++] = grp;
                 // ... and shuffle them so that they're filled in random order
-                Shuffle(mt, toConsider, 0, availableGroups - 1);
+                Formula.Shuffle(mt, toConsider, 0, availableGroups - 1);
 
                 // Find unallocated subjects and allocate one to a random group until we run out of subjects or groups.
                 int groupToUse = 0;
@@ -227,27 +227,6 @@ namespace StatsDirect.Builtins
                 groupsParameters.AddOutput("grp", allocatedGroup[i]);
             }
             return new StepOutput(outputParameters);
-        }
-
-        /// <summary>
-        /// Randomly change the order of items ary[lowerBound] to ary[upperBound] inclusive, taking random numbers from mt.
-        /// </summary>
-        private static void Shuffle(MersenneTwister mt, int[] ary, int lowerBound, int upperBound)
-        {
-            if (upperBound - lowerBound <= 0)
-                return;
-            {
-                for (int tn = 1; tn <= 3; tn++)
-                {
-                    for (int k = lowerBound; k <= upperBound; k++)
-                    {
-                        int nrp = (int)Math.Floor((upperBound - lowerBound + 1) * mt.NextDouble()) + lowerBound;
-                        int tp = ary[k];
-                        ary[k] = ary[nrp];
-                        ary[nrp] = tp;
-                    }
-                }
-            }
         }
 
         /// <summary>
