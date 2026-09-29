@@ -54,6 +54,32 @@ namespace StatsDirect.Builtins
         }
 
         /// <summary>
+        /// The logarithm of a sum of terms, from the logarithms of the terms: the greatest of them, and the logarithm of the sum
+        /// of the exponentials of the terms less the greatest.
+        /// </summary>
+        /// <remarks>
+        /// A sum that is made a term at a time, each step giving the logarithm of the sum so far (SumLog), loses at each step
+        /// what a number of the size of the logarithms is held to; with logarithms of hundreds of thousands and as many steps
+        /// that is 1 part in 10^7 of the sum.  Here no step has a large number in it.
+        /// </remarks>
+        /// <param name="count">The number of terms.</param>
+        /// <param name="term">The logarithm of the term of each number from 0; negative infinity, or a number below any that
+        /// a logarithm can be, for a term that is nothing.</param>
+        /// <returns>The logarithm of the sum; negative infinity if there are no terms, or none that is above nothing.</returns>
+        protected static double LogOfSum(int count, Func<int, double> term)
+        {
+            double greatest = double.NegativeInfinity;
+            for (int i = 0; i < count; i++)
+                greatest = Math.Max(greatest, term(i));
+            if (double.IsNegativeInfinity(greatest))
+                return greatest;
+            double sum = 0.0;
+            for (int i = 0; i < count; i++)
+                sum += Math.Exp(term(i) - greatest);
+            return greatest + Math.Log(sum);
+        }
+
+        /// <summary>
         /// This routine multiplies together two polynomials P1 and P2 to obtain the product polynomial P3.
         /// </summary>
         /// <param name="host"></param>
@@ -175,30 +201,17 @@ namespace StatsDirect.Builtins
             double y;
             if (logScale)
             {
+                // the logarithm of each term is its coefficient and its power times the logarithm of r; above 1 the power is
+                // what it is less than the degree, which is the polynomial over r to the degree
                 if (r == 0.0)
                 {
                     y = c[0];
                 }
-                else if (r <= 1.0)
-                {
-                    y = c[degC];
-                    if (r < 1)
-                    {
-                        for (int i = degC - 1; i >= 0; i--)
-                            y = SumLog(y + Math.Log(r), c[i]);
-                    }
-                    else
-                    {
-                        for (int i = degC - 1; i >= 0; i--)
-                            y = SumLog(y, c[i]);
-                    }
-                }
                 else
                 {
-                    y = c[0];
-                    double z = Math.Log(1.0 / r);
-                    for (int i = 1; i <= degC; i++)
-                        y = SumLog(y + z, c[i]);
+                    double z = Math.Log(r);
+                    int from = r <= 1.0 ? 0 : degC;
+                    y = LogOfSum(degC + 1, i => c[i] + (i - from) * z);
                 }
             }
             else
@@ -949,24 +962,16 @@ namespace StatsDirect.Builtins
 
             if (UseLogScale)
             {
-                for (int i = degDenominator - 1; i >= diff; i--)
-                {
-                    upTail = SumLog(upTail, polyDenominator[i]);
-                    if (polyDenominator[i] <= noMoreProbable)
-                        upZ = SumLog(upZ, polyDenominator[i]);
-                }
-                double denom = upTail;
-                for (int i = diff - 1; i >= 0; i--)
-                {
-                    denom = SumLog(denom, polyDenominator[i]);
-                    loTail = SumLog(loTail, polyDenominator[i]);
-                    if (polyDenominator[i] <= noMoreProbable)
-                        loZ = SumLog(loZ, polyDenominator[i]);
-                }
+                // each sum from the logarithms of its terms, over the greatest of them (LogOfSum)
+                double[] c = polyDenominator;
+                upTail = LogOfSum(degDenominator - diff + 1, i => c[diff + i]);
+                loTail = LogOfSum(diff + 1, i => c[i]);
+                double denom = LogOfSum(degDenominator + 1, i => c[i]);
+                double noMore = LogOfSum(degDenominator + 1, i => c[i] <= noMoreProbable ? c[i] : double.NegativeInfinity);
                 double upFishPVal = ZExp(upTail - denom, ref ierr);
                 double loFishPVal = ZExp(loTail - denom, ref ierr);
                 fishP1 = Math.Min(upFishPVal, loFishPVal);
-                fishP2 = ZExp((double.IsNegativeInfinity(loZ) ? upZ : SumLog(upZ, loZ)) - denom, ref ierr);
+                fishP2 = ZExp(noMore - denom, ref ierr);
                 double upMidPPVal = ZExp(SubLog(upTail, Math.Log(0.5) + polyDenominator[diff]) - denom, ref ierr);
                 double loMidPPVal = ZExp(SubLog(loTail, Math.Log(0.5) + polyDenominator[diff]) - denom, ref ierr);
                 midP1 = Math.Min(upMidPPVal, loMidPPVal);
