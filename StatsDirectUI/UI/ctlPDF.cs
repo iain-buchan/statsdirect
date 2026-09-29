@@ -579,7 +579,8 @@ namespace StatsDirect.UI
             double pud = CdblTxt(txtPdf.Text);
             int n = Parsing.Cint_Txt(txtDf.Text);
             int r = Parsing.Cint_Txt(txtDf2.Text);
-            if (pud < 0 || pud > 1.0 || n < 1 || r > n)
+            // (a number that is not whole is read as the least int, which is below 0)
+            if (pud < 0 || pud > 1.0 || n < 1 || r < 0 || r > n)
                 fault = -1;
             else
             {
@@ -655,6 +656,9 @@ namespace StatsDirect.UI
         private void PFromZ()
         {
             double z = CdblTxt(txtPdf.Text);
+            // what could not be read as a number is the missing value, the least double: it had the lower tail 0
+            if (z == Constant.MISSING)
+                z = double.NaN;
             double pl = PDF.alnorm(z);
             // the upper tail is the lower tail of -z: as 1 - pl it kept nothing of a tail below 1e-16 (z of 9 printed 0)
             double pu = PDF.alnorm(-z);
