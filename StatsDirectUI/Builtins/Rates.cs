@@ -203,14 +203,17 @@ namespace StatsDirect.Builtins
             double events = 0.0;
             double ntot = 0.0;
             double refntot = 0.0;
+            // whether the binomial model has a place for every stratum
+            bool binomial = true;
             for (int i = 1; i <= rows; i++)
             {
                 if (idxn[i] <= 0.0)
                     throw new InvalidDataException("Person-time must be greater than zero");
                 if (idxy[i] < 0.0 || refn[i] < 0.0)
                     throw new InvalidDataException("Events and reference group sizes must not be negative");
+                // more events than person-time are a rate above 1, which a Poisson count can have and a proportion can not
                 if (idxy[i] > idxn[i])
-                    throw new InvalidDataException("The number of events must not exceed the person-time (do not scale the person-time)");
+                    binomial = false;
                 events += idxy[i];
                 ntot += idxn[i];
                 refntot += refn[i];
@@ -278,12 +281,27 @@ namespace StatsDirect.Builtins
 
             // Binomial approx CI - see Armitage
             // A zero variance (no events, or every stratum rate 1) gives a zero standard error and limits equal to the rate
-            double ser = bino_var >= 0.0 ? Math.Sqrt(bino_var) : Constant.MISSING;
-            outputParameters.AddOutput("ser_any", nunit * ser);
-            xl = stdr - cit * ser;
-            xu = stdr + cit * ser;
-            outputParameters.AddOutput("from_any", nunit * xl);
-            outputParameters.AddOutput("to_any", nunit * xu);
+            double ser;
+            List<ParameterBag> noteList = new();
+            outputParameters.AddOutput("*note", noteList);
+            if (binomial && bino_var >= 0.0)
+            {
+                ser = Math.Sqrt(bino_var);
+                outputParameters.AddOutput("ser_any", nunit * ser);
+                xl = stdr - cit * ser;
+                xu = stdr + cit * ser;
+                outputParameters.AddOutput("from_any", nunit * xl);
+                outputParameters.AddOutput("to_any", nunit * xu);
+            }
+            else
+            {
+                outputParameters.AddOutput("ser_any", Constant.MISSING);
+                outputParameters.AddOutput("from_any", Constant.MISSING);
+                outputParameters.AddOutput("to_any", Constant.MISSING);
+                ParameterBag noteParameters = new();
+                noteList.Add(noteParameters);
+                noteParameters.AddOutput("note", "The binomial model is not given: a stratum has more events than person-time, which is a rate above 1. The binomial model needs the person-time as a number of persons, not scaled (not in thousands).");
+            }
 
             // Poisson approx CI
             ser = pois_var >= 0.0 ? Math.Sqrt(pois_var) : Constant.MISSING;

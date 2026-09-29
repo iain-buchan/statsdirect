@@ -22,6 +22,7 @@ Adjusted rate R = @{stdr:roundu}</p>
 <p><u>Any rates (binomial model)</u><br />
 Approximate standard error of R = @{ser_any:roundu}<br />
 <ci>Approximate @{pc:round2}% confidence interval = @{from_any:roundu} to @{to_any:roundu}</ci></p>
+<block name="note"><p><warn>@note</warn></p></block>
 
 <p>Small rates (Poisson model)<br />
 Approximate standard error of R = @{ser_small:roundu}<br />

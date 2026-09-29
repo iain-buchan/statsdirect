@@ -97,8 +97,8 @@ namespace StatsDirect.TemplateProcessing
 
         private static ValidationResult ValidatePersonTimeSize(DataFrame dataFrame)
         {
-            // Assumes no missing data, no data < 0
-            DoubleVariable datV0 = (DoubleVariable)dataFrame.Variables[0];
+            // Assumes no missing data, no data < 0.  More events than person-time are taken: the report then has the figures of
+            // the Poisson model, and says why it has not those of the binomial model
             DoubleVariable datV1 = (DoubleVariable)dataFrame.Variables[1];
             DoubleVariable datV2 = (DoubleVariable)dataFrame.Variables[2];
             int rows = dataFrame.MaxRows;
@@ -106,14 +106,11 @@ namespace StatsDirect.TemplateProcessing
             double refntot = 0.0;
             for (int j = 0; j < rows; j++)
             {
-                double xy = datV0.Data[j];
                 double xn = datV1.Data[j];
                 double rf = datV2.Data[j];
                 refntot += rf;
                 if (xn <= 0)
                     return ValidationResult.Invalid("Person-time must be greater than zero");
-                if (xy > xn)
-                    return ValidationResult.Invalid("The number of events must not exceed the person-time (do not scale the person-time)");
             }
 
             if (refntot <= 0.0)
