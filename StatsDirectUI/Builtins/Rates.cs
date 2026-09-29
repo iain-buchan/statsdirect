@@ -64,7 +64,7 @@ namespace StatsDirect.Builtins
         public static StepOutput RptRateSmr(ParameterBag parameters)
         {
             double cco = parameters["cco"].AsDouble;
-            if (cco > 1.0 || cco < 0.0)
+            if (cco >= 1.0 || cco <= 0.0)
                 cco = 0.95;
 
             DoubleVariable ratesVariable;
@@ -95,20 +95,28 @@ namespace StatsDirect.Builtins
             if (nunit <= 0.0)
                 nunit = 1.0;
             int rows = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0].Length - 1; /* 1-based */
+            if (rows < 1)
+                throw new InvalidDataException("There is no stratum that has both a reference rate and a person-time");
             for (int i = 1; i <= rows; i++)
+            {
+                if (asm[i] < 0.0 || spop[i] < 0.0)
+                    throw new InvalidDataException("Reference rates and person-times must not be negative");
                 asm[i] /= nunit;
+            }
 
             double etot = 0.0;
             for (int i = 1; i <= rows; i++)
                 etot += asm[i] * spop[i];
-            if (etot <= 0)
-                throw new InvalidDataException();
+            if (!(etot > 0.0))
+                throw new InvalidDataException("No deaths are expected: a stratum must have a reference rate and a person-time above zero");
 
             string[] title = Meta.MakeTitles(parameters, "strata", "stratum {0}", rawRows, out bool hasUserSuppliedLabels);
 
             title = Numerics.Utilities.CopyValidRows(title, copiesRemovingMissingRows.ValidRowsInOriginal, 0, rawRows, 1, rows);
 
             double dead = parameters["dead"].AsInt32;
+            if (dead < 0.0)
+                throw new InvalidDataException("The number of deaths observed must not be negative");
 
             ParameterBag outputParameters = new();
             List<ParameterBag> groupsList = new();
@@ -128,7 +136,9 @@ namespace StatsDirect.Builtins
             if (fault == 0)
             {
                 outputParameters.AddOutput("ratio", dead / etot);
-                outputParameters.AddOutput("smr", dead / etot * 100);
+                // the ratio and its limits times 100, as whole numbers: they are held as numbers with a fraction, which have room
+                // for a ratio of any size
+                outputParameters.AddOutput("smr", Math.Round(dead / etot * 100, MidpointRounding.AwayFromZero));
 
                 poisson_ci(1.0 - cco, dead, 1.0, out double xl, out double xu);
 
@@ -139,8 +149,8 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("pc", 100 * cco);
                 outputParameters.AddOutput("from", xl);
                 outputParameters.AddOutput("to", xu);
-                outputParameters.AddOutput("from100", Convert.ToInt32(100 * xl));
-                outputParameters.AddOutput("to100", Convert.ToInt32(100 * xu));
+                outputParameters.AddOutput("from100", xl == Constant.MISSING ? xl : Math.Round(100 * xl));
+                outputParameters.AddOutput("to100", xu == Constant.MISSING ? xu : Math.Round(100 * xu));
 
                 ExFortran.poisson(etot, Convert.ToInt32(dead), out double phi, out double plo, out double _, out fault);
                 if (fault != 0)
