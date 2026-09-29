@@ -219,6 +219,27 @@ namespace StatsDirect.Builtins
             return Math.Min(1.0, 2.0 * (Math.Min(lower, upper) - point / 2.0));
         }
 
+        /// <summary>
+        /// The four counts of a table that is typed in, as the analyses of the Clinical Epidemiology menu take them: whole numbers
+        /// that are not below 0. A count that is not a whole number is rounded, a half to the even number, as the exact methods
+        /// round it, so that every figure of a report is of the one table. Counts that come to more than a whole number of 32
+        /// bits holds are refused: the limits of a difference of proportions take whole numbers of 32 bits.
+        /// </summary>
+        private static void XCounts(ref double a, ref double b, ref double c, ref double d)
+        {
+            foreach (double count in new[] { a, b, c, d })
+            {
+                if (count == Constant.MISSING || double.IsNaN(count) || count < 0.0)
+                    throw new InvalidDataException("The counts must be numbers that are not below 0.");
+            }
+            a = Math.Round(a);
+            b = Math.Round(b);
+            c = Math.Round(c);
+            d = Math.Round(d);
+            if (a + b + c + d > int.MaxValue)
+                throw new InvalidDataException("The counts come to more than 2,147,483,647, which is more than this analysis can take.");
+        }
+
         public static StepOutput RptMiscRetroRisk(IProgressBarHost host, ParameterBag parameters)
         {
             double pe = Constant.MISSING;
@@ -228,6 +249,7 @@ namespace StatsDirect.Builtins
             double b = parameters["b"].AsDouble;
             double c = parameters["c"].AsDouble;
             double d = parameters["d"].AsDouble;
+            XCounts(ref a, ref b, ref c, ref d);
             double m1 = a + b;
             double m2 = c + d;
             double n1 = a + c;
@@ -420,13 +442,14 @@ namespace StatsDirect.Builtins
             double b = parameters["b"].AsDouble;
             double c = parameters["c"].AsDouble;
             double d = parameters["d"].AsDouble;
+            XCounts(ref a, ref b, ref c, ref d);
             double n = a + b + c + d;
             double cco = parameters["cco"].AsDouble;
             if (cco <= 0.0 || cco >= 1.0)
                 cco = 0.95;
 
             if (n <= 0.0)
-                throw new InvalidDataException();
+                throw new InvalidDataException("The table has no subjects.");
 
             ParameterBag outputParameters = new();
             outputParameters.AddOutput("aa", a);
@@ -875,6 +898,9 @@ namespace StatsDirect.Builtins
                 c2[i] = datV1.Data[i - 1];
                 if (c1[i] < 0 || c2[i] < 0 || c1[i] == Constant.MISSING || c2[i] == Constant.MISSING)
                     throw new InvalidDataException("All values must be >= 0");
+                // a count that is not a whole number is rounded, a half to the even number
+                c1[i] = Math.Round(c1[i]);
+                c2[i] = Math.Round(c2[i]);
 
                 c1Tot += c1[i];
                 c2Tot += c2[i];
@@ -925,6 +951,7 @@ namespace StatsDirect.Builtins
             double xt = parameters["xt"].AsDouble;
             double nc = parameters["nc"].AsDouble;
             double xc = parameters["xc"].AsDouble;
+            XCounts(ref nt, ref xt, ref nc, ref xc);
 
             if (nt < xt)
             {
@@ -945,7 +972,7 @@ namespace StatsDirect.Builtins
             double t4 = nc - xc;
 
             if (nc < 1.0 || nt < 1.0)
-                throw new InvalidDataException();
+                throw new InvalidDataException("There must be at least one treated subject and one control.");
 
             double zl = parameters["cco"].AsDouble;
             if (zl <= 0.0 || zl >= 1.0)
@@ -1186,6 +1213,7 @@ namespace StatsDirect.Builtins
             double b = parameters["b"].AsDouble;
             double c = parameters["c"].AsDouble;
             double d = parameters["d"].AsDouble;
+            XCounts(ref a, ref b, ref c, ref d);
             double m1 = a + b;
             double m2 = c + d;
             double n1 = a + c;
