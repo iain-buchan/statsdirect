@@ -445,8 +445,19 @@ namespace StatsDirect.UI
 
         private void PFromNonCentralT()
         {
-            double p = ExFortran.pnct(CdblTxt(txtPdf.Text), Parsing.Cint_Txt(txtDf.Text),
-                          CdblTxt(txtDf2.Text), out int flt);
+            double t = CdblTxt(txtPdf.Text);
+            int df = Parsing.Cint_Txt(txtDf.Text);
+            double delta = CdblTxt(txtDf2.Text);
+            double p = ExFortran.pnct(t, df, delta, out int flt);
+            // The smaller tail is worked out as itself and the larger is 1 less the smaller. The upper tail is the lower tail of
+            // -t with the non-centrality -delta: as 1 - p it kept nothing of a tail below 1e-16 (t of 60 with 9 degrees of
+            // freedom and a non-centrality of -3 printed 0).
+            double pu = 1.0 - p;
+            if (flt == 0 && p > 0.5)
+            {
+                pu = ExFortran.pnct(0.0 - t, df, 0.0 - delta, out flt);
+                p = 1.0 - pu;
+            }
             if (flt != 0)
             {
                 txtUp.Text = Formatting.ERRR;
@@ -455,7 +466,7 @@ namespace StatsDirect.UI
             else
             {
                 Pval15Into(txtLp, p, true);
-                Pval15Into(txtUp, 1.0 - p, true);
+                Pval15Into(txtUp, pu, true);
             }
             lastCalculationAsString = "P(non-central t < " + txtPdf.Text.Trim() + ", df " + txtDf.Text.Trim() + ", delta " +
                                       txtDf2.Text.Trim() + ") = " + txtUp.Text.Trim() + " upper, " + txtLp.Text.Trim() +
@@ -632,9 +643,13 @@ namespace StatsDirect.UI
 
         private void PFromT()
         {
-            double pu = PDF.tvalp(CdblTxt(txtPdf.Text), CdblTxt(txtDf.Text));
+            double t = CdblTxt(txtPdf.Text);
+            double df = CdblTxt(txtDf.Text);
+            double pu = PDF.tvalp(t, df);
             Pval15Into(txtUp, pu, true);
-            double pl = 1.0 - pu;
+            // the lower tail is the upper tail of -t: as 1 - pu it kept nothing of a tail below 1e-16 (t of -60 with 30 degrees
+            // of freedom printed 0)
+            double pl = double.IsNaN(pu) ? pu : PDF.tvalp(-t, df);
             Pval15Into(txtLp, pl, true);
             // twice the smaller tail itself, not twice the tail as displayed and read back
             double p2 = 2.0 * Math.Min(pu, pl);
@@ -765,7 +780,7 @@ namespace StatsDirect.UI
                     ZFromP(P, idx);
                     break;
                 case DistributionType.T:
-                    TFromP(P);
+                    TFromP(P, idx);
                     break;
                 case DistributionType.F:
                     FFromP(P);
@@ -787,14 +802,28 @@ namespace StatsDirect.UI
                     RhoFromP(P);
                     break;
                 case DistributionType.NonCentralT:
-                    NonCentralTFromP(P);
+                    NonCentralTFromP(P, idx);
                     break;
             }
         }
 
-        private void NonCentralTFromP(double P)
+        private void NonCentralTFromP(double P, int idx)
         {
-            double x = ExFortran.tnct(CdblTxt(txtLp.Text), Parsing.Cint_Txt(txtDf.Text), CdblTxt(txtDf2.Text), out int flt);
+            // tnct takes a lower tail area. An upper tail P is inverted by symmetry, as minus the value of its own area with
+            // the non-centrality -delta: through the lower tail box, which holds 1 - P to 15 places, a small P lost figures,
+            // and one below 1e-15 was refused.
+            int df = Parsing.Cint_Txt(txtDf.Text);
+            double delta = CdblTxt(txtDf2.Text);
+            double x;
+            int flt;
+            if (idx == 1)
+                x = ExFortran.tnct(CdblTxt(txtLp.Text), df, delta, out flt);
+            else
+            {
+                x = ExFortran.tnct(P, df, 0.0 - delta, out flt);
+                if (flt == 0)
+                    x = 0.0 - x;
+            }
             Xval15Into(txtPdf, x, flt != 0);
             lastCalculationAsString = "non-central t(P " + Pval15(P, true) + ", df " + txtDf.Text.Trim() + ", delta " + txtDf2.Text.Trim() + ") = " + txtPdf.Text.Trim();
         }
@@ -859,9 +888,13 @@ namespace StatsDirect.UI
                                       txtDf2.Text.Trim() + ") = " + txtPdf.Text.Trim();
         }
 
-        private void TFromP(double P)
+        private void TFromP(double P, int idx)
         {
-            double x = PDF.tfromp(P, CdblTxt(txtDf.Text));
+            // tfromp takes an upper tail area. A lower tail P is inverted by symmetry, as minus the value of its own area:
+            // through 1 - P formed in double precision a small P lost figures (1e-12 with 1 degree of freedom gave
+            // -318316927901.781 for -318309886183.791), and one below 1e-16 gave minus infinity.
+            double df = CdblTxt(txtDf.Text);
+            double x = idx == 1 ? 0.0 - PDF.tfromp(CdblTxt(txtLp.Text), df) : PDF.tfromp(P, df);
             Xval15Into(txtPdf, x);
             lastCalculationAsString = "t(upper P " + Pval15(P, true) + ", df " + txtDf.Text.Trim() + ") = " + txtPdf.Text.Trim();
         }
