@@ -219,7 +219,24 @@ namespace StatsDirect.Builtins
                     sn += 1.0;
             }
             else
-                sn = Math.Floor(sn) + 1;
+            {
+                // Above the whole numbers of 32 bits the number is looked for by halving, as a search of a pair at a time would
+                // be long: the first estimate has the power (it leaves out the second tail, which adds to the power), and 4
+                // pairs have not. Where a double no longer holds every whole number the halving stops at the nearest it holds.
+                double high = Math.Floor(sn) + 1;
+                double low = 4.0;
+                for (int i = 0; i < 200 && high - low > 1.0; i++)
+                {
+                    double mid = Math.Floor((low + high) / 2.0);
+                    if (mid <= low || mid >= high)
+                        break;
+                    if (x_rpower(dif, mid, zsig) >= p)
+                        high = mid;
+                    else
+                        low = mid;
+                }
+                sn = high;
+            }
 
             ParameterBag outputParameters = new();
             outputParameters.AddOutput("alpha", a);
