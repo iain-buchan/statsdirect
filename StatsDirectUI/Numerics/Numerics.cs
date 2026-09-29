@@ -1458,11 +1458,12 @@ namespace StatsDirect.Numerics
             double ylo = 0.5 * Math.Log(ppchi2(1.0e-12, df, out int _) / df);
             double yhi = 0.5 * Math.Log(ppchi2(1.0 - 1.0e-12, df, out int _) / df);
             double logConstant = 0.5 * df * Math.Log(df) - (0.5 * df - 1.0) * Math.Log(2.0) - alogam(0.5 * df);
-            return GaussLegendre(y =>
+            //  (the sum passes 1 by its own error where the probability is 1: by 1.4e-12 with 30 means, by 1.3e-9 with 100)
+            return Math.Min(1.0, GaussLegendre(y =>
             {
                 double s = Math.Exp(y);
                 return Math.Exp(logConstant + df * y - 0.5 * df * s * s) * RangeProbability(q * s, k);
-            }, ylo, yhi, 32);
+            }, ylo, yhi, 32));
         }
 
         private static double SmallDfRangeQuantile(double p, int k, double df)
@@ -1527,10 +1528,13 @@ namespace StatsDirect.Numerics
 
         //  Whether the direct integration is used in place of the series routine: below eight residual degrees of
         //  freedom, or below twice the number of means, where the series is not accurate to seven decimals in the far
-        //  tail (see SmallDfRangeCdf); the integration costs about a twentieth of a second an evaluation
+        //  tail (see SmallDfRangeCdf); and above 20000 degrees of freedom, where the quadrature of the series is off by
+        //  up to 0.0000005 and, above 25000, the series takes the degrees of freedom as without end (off by 0.0001 with
+        //  25001). A million degrees of freedom or more are left to the series: that is what a caller gives that means
+        //  degrees of freedom without end. The integration costs about a twentieth of a second an evaluation.
         private static bool UseRangeIntegration(double t, double df)
         {
-            return df < 8.0 || df < 2.0 * t;
+            return df < 8.0 || df < 2.0 * t || (df > 20000.0 && df < 1000000.0);
         }
 
         public static double quantsr(double p, double t, double df)
