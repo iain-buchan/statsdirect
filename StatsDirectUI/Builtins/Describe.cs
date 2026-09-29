@@ -96,8 +96,10 @@ namespace StatsDirect.Builtins
             DataFrame capacitiesFrame = parameters["capacities"].AsDataFrame;
             DoubleVariable capacitiesVariable = (DoubleVariable)capacitiesFrame.Variables[0];
             int groups = capacitiesVariable.Length;
-            int[] groupCapacities = new int[groups]; // 0-based
-            int capacity = 0;
+            // the places of each group, 0-based, and of all the groups: numbers with a fraction, which hold whole numbers of any
+            // size that a capacity can have
+            double[] places = new double[groups];
+            double capacity = 0.0;
             for (int i = 0; i < groups; i++)
             {
                 double value = capacitiesVariable.Data[i];
@@ -105,8 +107,8 @@ namespace StatsDirect.Builtins
                 {
                     throw new TemplateOperationCancelledException("capacity of group " + (i + 1) + " must be a whole number of places, zero or more", pg);
                 }
-                groupCapacities[i] = (int)value;
-                capacity += groupCapacities[i];
+                places[i] = value;
+                capacity += value;
             }
             DataFrame preferencesFrame = parameters["preferences"].AsDataFrame;
             int preferences = preferencesFrame.VariableCount;
@@ -132,7 +134,7 @@ namespace StatsDirect.Builtins
                         x[i, j] = (int)value;
                         if (x[i, j] < 1 || x[i, j] > groups)
                         {
-                            throw new TemplateOperationCancelledException("invalid preference in group " + i + " at row " + j, pg);
+                            throw new TemplateOperationCancelledException("preference " + i + " at row " + j + " is not the number of a group (1 to " + groups + ")", pg);
                         }
                     }
                 }
@@ -157,7 +159,7 @@ namespace StatsDirect.Builtins
                 for (int grp = 1; grp <= groups; grp++)
                 {
                     // If the group is already full, there's no point trying to assign any more at this preference
-                    if (allocatedSoFar[grp] < groupCapacities[grp - 1])
+                    if (allocatedSoFar[grp] < places[grp - 1])
                     {
                         // Gather all subjects who have expressed a preference here for group grp
                         int underConsideration = 0;
@@ -169,8 +171,8 @@ namespace StatsDirect.Builtins
                         if (underConsideration > 0)
                         {
                             Formula.Shuffle(mt, toConsider, 0, underConsideration - 1);
-                            int space = groupCapacities[grp - 1] - allocatedSoFar[grp];
-                            int successfulCandidates = Math.Min(space, underConsideration);
+                            double space = places[grp - 1] - allocatedSoFar[grp];
+                            int successfulCandidates = (int)Math.Min(space, underConsideration);
                             for (int toAllocate = 0; toAllocate < successfulCandidates; toAllocate++)
                             {
                                 int subject = toConsider[toAllocate];
@@ -184,32 +186,33 @@ namespace StatsDirect.Builtins
                 }
             }
 
-            // By now, we've assigned by preference wherever possible.  Allocate any remaining subjects randomly to groups that have space.
-            while (ok < subjects)
+            // By now, we've assigned by preference wherever possible.  Each subject that is left is given one of the places that are
+            // left, every such place being as likely as another: a group is drawn with a chance in proportion to the places that
+            // it has left.
+            for (int subject = 1; subject <= subjects && ok < subjects; subject++)
             {
-                // Put groups with remaining space into toConsider...
-                int availableGroups = 0;
+                if (done[subject])
+                    continue;
+                double left = 0.0;
                 for (int grp = 1; grp <= groups; grp++)
-                    if (allocatedSoFar[grp] < groupCapacities[grp - 1])
-                        for (int k = 1; k <= groupCapacities[grp - 1] - allocatedSoFar[grp]; k++)
-                            toConsider[availableGroups++] = grp;
-                // ... and shuffle them so that they're filled in random order
-                Formula.Shuffle(mt, toConsider, 0, availableGroups - 1);
-
-                // Find unallocated subjects and allocate one to a random group until we run out of subjects or groups.
-                int groupToUse = 0;
-                for (int k = 1; k <= subjects; k++)
+                    left += places[grp - 1] - allocatedSoFar[grp];
+                double drawn = Math.Floor(left * mt.NextDouble());
+                int chosen = 0;
+                for (int grp = 1; grp <= groups; grp++)
                 {
-                    if (!done[k])
-                    {
-                        allocatedGroup[k] = toConsider[groupToUse++];
-                        ok++;
-                    }
-
-                    // Go round again if we have more subjects than groups into which to place them in this pass
-                    if (groupToUse >= availableGroups)
+                    double free = places[grp - 1] - allocatedSoFar[grp];
+                    if (free <= 0.0)
+                        continue;
+                    // the last group with a place, if rounding has put the number drawn past all the places
+                    chosen = grp;
+                    if (drawn < free)
                         break;
+                    drawn -= free;
                 }
+                allocatedGroup[subject] = chosen;
+                allocatedSoFar[chosen]++;
+                done[subject] = true;
+                ok++;
             }
 
             ParameterBag outputParameters = new();
