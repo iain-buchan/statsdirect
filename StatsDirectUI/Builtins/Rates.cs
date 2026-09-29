@@ -61,6 +61,30 @@ namespace StatsDirect.Builtins
             }
         }
 
+        /// <summary>
+        /// Indirect standardization: the deaths observed in an index population against the deaths that the rates of a reference
+        /// population expect of it, as the standardized mortality ratio (SMR).
+        /// </summary>
+        /// <remarks>
+        /// Each stratum has a rate of the reference population and a person-time of the index population.  The deaths expected
+        /// of a stratum are its rate times its person-time, and the deaths expected of the population are the sum of those.
+        /// The ratio is the number of deaths observed over the number expected.
+        /// The number observed is taken to be a Poisson count, and the number expected to be known: the confidence limits of
+        /// the ratio are the limits of the mean of the count (poisson_ci) over the number expected.
+        /// The two P values are the probabilities, if the number expected is the mean of the count, of as many deaths as were
+        /// observed or more, and of as many or fewer.
+        /// A stratum of which the rate or the person-time is missing is left out.
+        /// </remarks>
+        /// <param name="parameters">"rates" and "times": the rates of the reference population and the person-times of the index
+        /// population, a column of a worksheet each; or "data": both, as the two columns of the grid of the screen form;
+        /// "strata", which need not be there: the labels of the strata; "nunit": the units of person-time that the rates are
+        /// given by (1, 1000, ...), for which 1 is taken if it is not a number above 0; "dead": the number of deaths observed;
+        /// "cco": the confidence level, for which 0.95 is taken if it is not between 0 and 1.</param>
+        /// <returns>"*groups": for each stratum "group", the rate by 1 unit of person-time, "observed", the person-time,
+        /// "expected", the deaths expected, and "lb", its label if labels were given; "total": the deaths expected; "ratio":
+        /// the ratio; "smr": the ratio times 100, as a whole number; "pc": the confidence level as a percentage; "from" and
+        /// "to": the limits of the ratio, and "from100" and "to100": the limits times 100, as whole numbers; "qty": the number
+        /// of deaths observed; "p_hi" and "p_lo": the probability of as many or more, and of as many or fewer.</returns>
         public static StepOutput RptRateSmr(ParameterBag parameters)
         {
             double cco = parameters["cco"].AsDouble;
@@ -104,6 +128,7 @@ namespace StatsDirect.Builtins
                 asm[i] /= nunit;
             }
 
+            // the deaths expected: the sum over the strata of the rate times the person-time
             double etot = 0.0;
             for (int i = 1; i <= rows; i++)
                 etot += asm[i] * spop[i];
@@ -140,6 +165,7 @@ namespace StatsDirect.Builtins
                 // for a ratio of any size
                 outputParameters.AddOutput("smr", Math.Round(dead / etot * 100, MidpointRounding.AwayFromZero));
 
+                // the limits of the mean of the count of the deaths, which over the deaths expected are the limits of the ratio
                 poisson_ci(1.0 - cco, dead, 1.0, out double xl, out double xu);
 
                 if (xl != Constant.MISSING)
@@ -152,6 +178,8 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("from100", xl == Constant.MISSING ? xl : Math.Round(100 * xl));
                 outputParameters.AddOutput("to100", xu == Constant.MISSING ? xu : Math.Round(100 * xu));
 
+                // the probabilities of as many deaths or more (phi), and of as many or fewer (plo), if the mean of the count is the
+                // number expected
                 ExFortran.poisson(etot, Convert.ToInt32(dead), out double phi, out double plo, out double _, out fault);
                 if (fault != 0)
                     phi = Constant.MISSING;
@@ -164,6 +192,14 @@ namespace StatsDirect.Builtins
         }
 
 
+        /// <summary>
+        /// Direct standardization, from columns of a worksheet: the strata that have all three numbers are handed to
+        /// DirectStandardization, with their labels.
+        /// </summary>
+        /// <param name="parameters">"idxn": the events of each stratum of the index population; "times": its person-time; "refn":
+        /// the size of the stratum in the reference population; "strata", which need not be there: the labels of the strata,
+        /// for which "stratum 1", "stratum 2" and so on are taken; "nunit" and "cco": see DirectStandardization.</param>
+        /// <returns>The figures of DirectStandardization.</returns>
         public static StepOutput RptRateDirect(ParameterBag parameters)
         {
             DataFrame idxnFrame = parameters["idxn"].AsDataFrame;
@@ -187,6 +223,42 @@ namespace StatsDirect.Builtins
             return DirectStandardization(parameters, idxy, idxn, refn, title, rows);
         }
 
+        /// <summary>
+        /// Direct standardization: the rate that the reference population would have if each of its strata had the rate of that
+        /// stratum of the index population.
+        /// </summary>
+        /// <remarks>
+        /// The rate of a stratum is its events over its person-time, r = y / n.  The weight of a stratum is its size in the
+        /// reference population over the size of the whole, w = N / sum of N, and the standardized rate is the sum of w r.
+        /// The variance of the standardized rate is the sum of the weights squared times the variances of the rates.  With the
+        /// Poisson model (small rates) the events of a stratum are a Poisson count, and the variance of its rate is y / n^2;
+        /// with the binomial model (any rates) the events are a count of n subjects, and the variance of its rate is
+        /// r (1 - r) / n.  The approximate limits are the standardized rate plus and minus the normal deviate of the confidence
+        /// level times the square root of the variance.
+        /// The improved limits ("from_dobson", "to_dobson") are from the limits of the mean of a Poisson count of all the events,
+        /// Y, which are put on the scale of the rate: a limit is the standardized rate plus root(v / Y) times what the limit of
+        /// the count is more than Y, where v is the variance with the Poisson model.  Without events they are not given.
+        /// The limits of the rate of a stratum are those of the mean of a Poisson count over the person-time (poisson_ci).
+        /// The adjusted number of events is the standardized rate times the person-time of the whole index population.
+        /// A stratum with more events than person-time has a rate above 1, which a Poisson count over its time can have and a
+        /// proportion can not: the figures of the Poisson model are given, and those of the binomial model are not, with a
+        /// note that says why.  The binomial model needs the person-time as a number of persons.
+        /// </remarks>
+        /// <param name="parameters">"cco": the confidence level, for which 0.95 is taken if it is not between 0 and 1; "nunit": the
+        /// units of person-time that the rates are given by (1, 1000, ...), for which 1 is taken if it is not a number above
+        /// 0.</param>
+        /// <param name="idxy">The events of each stratum of the index population, from the index 1.</param>
+        /// <param name="idxn">The person-time of each stratum of the index population.</param>
+        /// <param name="refn">The size of each stratum of the reference population.</param>
+        /// <param name="title">The labels of the strata, or nothing.</param>
+        /// <param name="rows">The number of strata.</param>
+        /// <returns>"units": the units of the rates, as text; "*inputs": for each stratum "idxy", "idxn" and "refn" as they were
+        /// given, "idxr", the rate, and "refw", the weight; "pc": the confidence level as a percentage; "*cis": for each
+        /// stratum "idxr", "from" and "to", the rate and its limits, and "label"; "events": the number of events; "stde": the
+        /// adjusted number of events; "crude": the rate of all strata together; "stdr": the standardized rate; "ser_any",
+        /// "from_any" and "to_any": its standard error and limits with the binomial model, and "*note": a row with "note",
+        /// what the report says if they are not given; "ser_small", "from_small" and "to_small": those with the Poisson
+        /// model; "from_dobson" and "to_dobson": the improved limits.  Every rate is times the units.</returns>
         internal static StepOutput DirectStandardization(ParameterBag parameters, double[] idxy, double[] idxn, double[] refn, string[] title, int rows)
         {
             double cco = parameters["cco"].AsDouble;
@@ -225,6 +297,8 @@ namespace StatsDirect.Builtins
             double[] refw = new double[rows + 1];
             for (int j = 1; j <= rows; j++)
                 refw[j] = refn[j] / refntot;
+            // the standardized rate and its variance with each model: the sums are made with the sizes of the strata, and are then
+            // divided by the size of the whole and by its square
             double stdr = 0.0;
             double pois_var = 0.0;
             double bino_var = 0.0;
@@ -313,6 +387,8 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("to_small", nunit * xu);
 
             // Dobson et al. improved approx Poisson CI - Stats in Medicine 1991 (10)457
+            // the limits of the count of all the events are put on the scale of the rate: a count that is c from the count observed
+            // is c root(v / Y) from the standardized rate
             poisson_ci(alpha, events, 1.0, out xl, out xu);
             if (xl != Constant.MISSING && pois_var >= 0.0 && events > 0.0)
                 xl = stdr + Math.Sqrt(pois_var / events) * (xl - events);
@@ -333,6 +409,10 @@ namespace StatsDirect.Builtins
         // what is left of 1; with the binomial model the limits of Koopman, z being the normal deviate of the confidence level.
         // With no events in the second population the ratio and its upper limit are infinite; with none in either population
         // nothing is given.
+        // The exact limits are of the events of the first population as a count of all the events, x of x + y: the odds that an
+        // event is of the first population are the ratio times t1 / t2.  The lower limit is the ratio with which x events or
+        // more have the probability 1 - p, and the upper limit the ratio with which x or fewer have it.  PDF.ffromp is given
+        // the degrees of freedom of the denominator first.
         private static void RateRatio(int model, double p, double z, double x, double t1, double y, double t2, out double ratio, out double lower, out double upper)
         {
             if (x + y <= 0.0)
@@ -372,6 +452,37 @@ namespace StatsDirect.Builtins
             }
         }
 
+        /// <summary>
+        /// Two populations standardized and compared: the rates of an exposed population and of one that is not exposed, each
+        /// standardized directly to the same reference population, and their ratio; with the ratio of the rates of each stratum.
+        /// </summary>
+        /// <remarks>
+        /// The standardized rate of a population is the sum over the strata of w x / t, x being the events and t the person-time
+        /// of the stratum, and w its size in the reference population over the size of the whole.  Its variance is the sum of
+        /// w^2 x / t^2 with the Poisson model, and of w^2 r (1 - r) / t, where r = x / t, with the binomial model; its limits
+        /// are the rate plus and minus the normal deviate of the confidence level times the square root of the variance.
+        /// The standardized rate ratio is the standardized rate of the exposed over that of the not exposed.  The variance of
+        /// its logarithm is taken as v1 / r1^2 + v2 / r2^2, from the two standardized rates r and their variances v, and the
+        /// limits are the exponentials of the logarithm of the ratio plus and minus the normal deviate times the square root of
+        /// that.  If one of the standardized rates is 0 the ratio is 0 or infinite, and has no limits.
+        /// The crude rate of a population is all its events over all its person-time; its limits are those of the mean of a
+        /// Poisson count over the person-time (poisson_ci), and with the binomial model those of a proportion (MathDbl.binci).
+        /// The ratio of the rates of a stratum, and that of the crude rates, have the limits of RateRatio.
+        /// A stratum that has a number missing is left out.
+        /// </remarks>
+        /// <param name="parameters">"a" and "pt1": the events and the person-time of each stratum of the exposed population; "b"
+        /// and "pt2": those of the population that is not exposed; "ref": the size of each stratum of the reference population;
+        /// "strata", which need not be there: the labels of the strata; "model": "poisson", or anything else for the binomial
+        /// model; "nunit": the units of person-time that the rates are given by, for which 1 is taken if it is not a number
+        /// above 0; "cco": the confidence level, for which 0.95 is taken if it is not between 0 and 1.</param>
+        /// <returns>"*strata": the numbers of each stratum as they were given ("st", "a", "pt1", "b", "pt2", "lb"); "pc": the
+        /// confidence level as a percentage; "method": the name of the limits of the ratios; "*rates": for each stratum, and
+        /// then for all strata together, "rr", "lci" and "uci", the ratio and its limits, and "wt", the weight; "model_out" and
+        /// "units": the model and the units, as text; "cre", "cre_from" and "cre_to": the crude rate of the exposed and its
+        /// limits, and "cre_warn", what the report says after them if the interval is one sided; "crne" and so on: those of
+        /// the not exposed; "sre" and "srne", with "_from" and "_to": the standardized rates and their limits; "srr",
+        /// "srr_from" and "srr_to": the standardized rate ratio and its limits; "*chart": the plot of the ratios.  Every rate
+        /// is times the units.</returns>
         public static StepOutput RptStdrr(ParameterBag parameters)
         {
             double cco = parameters["cco"].AsDouble;
@@ -477,6 +588,7 @@ namespace StatsDirect.Builtins
             rkw[k + 1] = 1.0;
             title[k + 1] = "All (crude)";
 
+            // the standardized rates of the exposed and of the not exposed, and their variances with each model
             double sre = 0.0;
             double srne = 0.0;
             double vsre = 0.0;
@@ -560,6 +672,7 @@ namespace StatsDirect.Builtins
             if (srne > 0.0 && sre > 0.0)
             {
                 srr = sre / srne;
+                // the variance of the logarithm of the ratio: the variance of each rate over the rate squared
                 double vsrr = vsre / (sre * sre) + vsrne / (srne * srne);
                 double vsrr_bino = vsre_bino / (sre * sre) + vsrne_bino / (srne * srne);
                 srrl = Math.Exp(Math.Log(srr) - cit * Math.Sqrt(vsrr));

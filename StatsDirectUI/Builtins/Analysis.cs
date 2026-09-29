@@ -11,6 +11,13 @@ namespace StatsDirect.Builtins
 {
     public static class Analysis
     {
+        /// <summary>
+        /// Direct standardization, from the grid of the screen form: the three columns of the grid are the events and the
+        /// person-time of each stratum of the index population and the size of the stratum in the reference population.  They
+        /// are handed to Rates.DirectStandardization, without labels.
+        /// </summary>
+        /// <param name="parameters">"data": the grid; "nunit" and "cco": see Rates.DirectStandardization.</param>
+        /// <returns>The figures of Rates.DirectStandardization.</returns>
         public static StepOutput RptRateDirectStd(ParameterBag parameters)
         {
             // The screen form gives the three columns in one grid: events, person-time, reference group size
@@ -33,6 +40,36 @@ namespace StatsDirect.Builtins
             return Rates.DirectStandardization(parameters, idxy, idxn, refn, null, rows);
         }
 
+        /// <summary>
+        /// Two crude rates compared: a cases in the person-time pt1 of an exposed group against b cases in the person-time pt2
+        /// of a group that is not exposed, by the difference and by the ratio of the two rates.
+        /// </summary>
+        /// <remarks>
+        /// The rates are a / pt1 and b / pt2.  The numbers of cases are taken to be Poisson counts, so that a rate has the
+        /// variance of its count over the person-time squared: the standard error of the difference of the rates is the square
+        /// root of a / pt1^2 + b / pt2^2, and the limits of the difference are the difference plus and minus the normal deviate
+        /// of the confidence level times it.
+        /// With the total of the cases given, m = a + b, the cases of the first group are a binomial count of m, and if the two
+        /// rates are the same the probability that a case is of the first group is pt1 / pt, where pt = pt1 + pt2.  Chi-square
+        /// is the square of a less what is expected of it, m pt1 / pt, over its variance, m pt1 pt2 / pt^2, and has 1 degree
+        /// of freedom.
+        /// The ratio of the rates has exact limits: the lower limit is the ratio with which a or more of the m cases have the
+        /// probability (1 - gamma) / 2 of being of the first group, and the upper limit the ratio with which a or fewer have
+        /// it; they are from quantiles of the F distribution.  With no cases in the first group the lower limit is 0, and
+        /// with none in the second the ratio and the upper limit are infinite.
+        /// The conditional analysis (ExactBB.Exact22K) has the same limits by another method, and the limits and P values in
+        /// which the number of cases observed has half its probability (mid-P).
+        /// </remarks>
+        /// <param name="host">What shows the progress of the conditional analysis, and is told if it fails.</param>
+        /// <param name="parameters">"a", "b": the cases of the two groups; "pt1", "pt2": their person-times; "gamma": the
+        /// confidence level, for which 0.95 is taken if it is not between 0 and 1; "do_cml": whether the conditional analysis
+        /// is made, which needs whole numbers of cases.</param>
+        /// <returns>"a_out", "b_out", "m", "pt1_out", "pt2_out", "pt": the numbers and their totals; "ir1", "ir2": the rates;
+        /// "ird", "ird_from", "ird_to": their difference and its limits; "pc": the confidence level as a percentage; "xmh" and
+        /// "p": chi-square and its P value; "irr", "irr_from", "irr_to": the ratio of the rates and its limits; "*exact": a row
+        /// of the conditional analysis, if it is made, with "eor", the estimate, "llf" and "ulf", the exact limits, "p1f" and
+        /// "p2f", the one sided and the two sided exact P value, and "llm", "ulm", "p1m" and "p2m", the same with
+        /// mid-P.</returns>
         public static StepOutput RptRateCompareTwo(ITemplateHost host, ParameterBag parameters)
         {
             double a = parameters["a"].AsDouble;
@@ -60,6 +97,7 @@ namespace StatsDirect.Builtins
             double ir1 = a / pt1;
             double ir2 = b / pt2;
             double ird = ir1 - ir2;
+            // the cases of the first group, of all the cases, against what the person-times expect of them
             double xmh = (a - m * pt1 / pt) * (a - m * pt1 / pt) / (m * pt1 * pt2 / (pt * pt));
             double pxmh = PDF.chivalp(xmh, 1.0);
 
@@ -72,6 +110,7 @@ namespace StatsDirect.Builtins
             double ird1 = ird - z * seIrd;
             double ird2 = ird + z * seIrd;
 
+            // the ratio and its exact limits; PDF.ffromp is given the degrees of freedom of the denominator first
             double irr0, irr1, irr2;
             if (a == 0.0)
             {
