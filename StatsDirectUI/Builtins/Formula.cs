@@ -980,6 +980,7 @@ namespace StatsDirect.Builtins
             double b = 1.0 - P;
             double M = 1.0;
             x_tsample(a, b, k, M, 1, ref xn, out int flt);
+            xn = x_start(xn, false, a, b, k, M);
             if (xn < Convert.ToDouble(int.MaxValue))
             {
                 N = Math.Floor(xn) + 1.0;
@@ -1069,6 +1070,7 @@ namespace StatsDirect.Builtins
             if (M <= 0)
                 M = 1;
             x_tsample(a, b, k, M, 2, ref xn, out int fault);
+            xn = x_start(xn, true, a, b, k, M);
             if (xn < Convert.ToDouble(int.MaxValue))
             {
                 N = Math.Floor(xn) + 1L;
@@ -1090,6 +1092,21 @@ namespace StatsDirect.Builtins
                 return new StepOutput(outputParameters);
             }
             throw new InvalidDataException();
+        }
+
+        /// <summary>
+        /// where the search for the smallest sample size of a t test starts: the solution xn of the approximate equation in
+        /// Student's t, or the normal approximation if the secant search for that solution has not come back with a number
+        /// within 100 of it. It does not where the number is small: the secant search then goes to numbers below 1, for
+        /// which Student's t has no degrees of freedom (a difference of 3 standard deviations with a power of 50% at the
+        /// 0.1% level gave 2,147,483,647 pairs for 6). The search gives the same number from any start.
+        /// </summary>
+        private static double x_start(double xn, bool unpaired, double alpha, double beta, double k, double m)
+        {
+            double nz = (unpaired ? 1.0 + 1.0 / m : 1.0) * Math.Pow(zcvalue(alpha / 2.0) + zcvalue(beta), 2.0) / (k * k);
+            if (double.IsNaN(nz) || double.IsInfinity(nz))
+                return xn;
+            return Math.Abs(xn - nz) <= 100.0 ? xn : nz;
         }
 
         private static ParameterBag x_disclaim(double ll, double ul, double N)
