@@ -310,10 +310,54 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        // The ratio of the rate of x events in the time t1 to that of y events in the time t2, and its confidence limits: with
+        // the Poisson model (1) the exact limits from quantiles of the F distribution, p being the confidence level and half of
+        // what is left of 1; with the binomial model the limits of Koopman, z being the normal deviate of the confidence level.
+        // With no events in the second population the ratio and its upper limit are infinite; with none in either population
+        // nothing is given.
+        private static void RateRatio(int model, double p, double z, double x, double t1, double y, double t2, out double ratio, out double lower, out double upper)
+        {
+            if (x + y <= 0.0)
+            {
+                ratio = Constant.MISSING;
+                lower = Constant.MISSING;
+                upper = Constant.MISSING;
+                return;
+            }
+            ratio = y == 0.0 ? double.PositiveInfinity : x / t1 / (y / t2);
+            if (model == 1)
+            {
+                // Poisson
+                if (x == 0.0)
+                {
+                    lower = 0.0;
+                }
+                else
+                {
+                    double f = PDF.ffromp(2.0 * x, 2.0 * (y + 1.0), 1.0 - p);
+                    lower = t2 / t1 * (x / (y + 1.0)) * (1.0 / f);
+                }
+                if (y == 0.0)
+                {
+                    upper = double.PositiveInfinity;
+                }
+                else
+                {
+                    double f = PDF.ffromp(2.0 * y, 2.0 * (x + 1.0), 1.0 - p);
+                    upper = t2 / t1 * ((x + 1.0) / y) * f;
+                }
+            }
+            else
+            {
+                // Binomial like relative risk
+                MathDbl.lr_ci(y, x, t2, t1, z, out lower, out upper);
+            }
+        }
+
         public static StepOutput RptStdrr(ParameterBag parameters)
         {
             double cco = parameters["cco"].AsDouble;
-            if (cco <= 0)
+            if (cco >= 1.0 || cco <= 0.0)
                 cco = 0.95;
             double cit = PDF.gauinv(1.0 - (1.0 - cco) / 2.0);
 
@@ -348,13 +392,22 @@ namespace StatsDirect.Builtins
             if (nunit <= 0.0)
                 nunit = 1.0;
 
+            if (k < 1)
+                throw new InvalidDataException("There is no stratum that has the events and the person-time of both populations and a reference group size");
+            for (int i = 1; i <= k; i++)
+            {
+                if (pt1[i] <= 0.0 || pt2[i] <= 0.0)
+                    throw new InvalidDataException("Person-time must be greater than zero");
+                if (a[i] < 0.0 || b[i] < 0.0 || refIdent[i] < 0.0)
+                    throw new InvalidDataException("Events and reference group sizes must not be negative");
+                if (model != 1 && (a[i] > pt1[i] || b[i] > pt2[i]))
+                    throw new InvalidDataException("With the binomial model the number of events must not exceed the person-time (do not scale the person-time)");
+            }
+
             double[] rkr = new double[k + 3];
             double[] rkw = new double[k + 3];
             double[] rkrl = new double[k + 3];
             double[] rkru = new double[k + 3];
-            bool[] lerr = new bool[k + 3];
-            bool[] uerr = new bool[k + 3];
-            // ierr = -1; 
 
             double refsum = 0.0;
             double asum = 0.0;
@@ -369,6 +422,8 @@ namespace StatsDirect.Builtins
                 pt1Sum += pt1[i];
                 pt2Sum += pt2[i];
             }
+            if (refsum <= 0.0)
+                throw new InvalidDataException("Total reference group size must be greater than zero");
 
             double alpha = 1.0 - cco;
             if (alpha <= 0.0 || alpha >= 1.0)
@@ -396,40 +451,7 @@ namespace StatsDirect.Builtins
                 MathDbl.binci(bsum, pt2Sum, out crnel, out crneu, cco, out warn2);
             }
 
-            double crr;
-            if (crne != 0.0)
-                crr = cre / crne;
-            else
-                crr = Constant.MISSING;
-            double crru; double f; double crrl;
-            if (model == 1)
-            {
-                // Poisson
-                if (asum == 0.0)
-                {
-                    crrl = 0.0;
-                }
-                else
-                {
-                    f = PDF.ffromp(2.0 * asum, 2.0 * (bsum + 1.0), 1.0 - p);
-                    crrl = pt2Sum / pt1Sum * (asum / (bsum + 1.0)) * (1.0 / f);
-                }
-                if (bsum == 0.0)
-                {
-                    crru = Constant.MISSING;
-                    crr = Constant.MISSING;
-                }
-                else
-                {
-                    f = PDF.ffromp(2.0 * bsum, 2.0 * (asum + 1.0), 1.0 - p);
-                    crru = pt2Sum / pt1Sum * ((asum + 1.0) / bsum) * f;
-                }
-            }
-            else
-            {
-                // Binomial like relative risk
-                MathDbl.lr_ci(bsum, asum, pt2Sum, pt1Sum, cit, out crrl, out crru);
-            }
+            RateRatio(model, p, cit, asum, pt1Sum, bsum, pt2Sum, out double crr, out double crrl, out double crru);
 
             rkr[k + 1] = crr;
             rkrl[k + 1] = crrl;
@@ -443,58 +465,12 @@ namespace StatsDirect.Builtins
             double vsrne = 0.0;
             double vsre_bino = 0.0;
             double vsrne_bino = 0.0;
-            int realk = 0;
 
             for (int i = 1; i <= k; i++)
             {
                 // rr and ci for stratum
-                if (a[i] + b[i] <= 0.0 || b[i] <= 0.0 || pt1[i] <= 0.0 || pt2[i] <= 0.0)
-                {
-                    rkr[i] = Constant.MISSING;
-                    rkw[i] = Constant.MISSING;
-                    rkrl[i] = Constant.MISSING;
-                    rkru[i] = Constant.MISSING;
-                    lerr[i] = true;
-                    uerr[i] = true;
-                }
-                else
-                {
-                    realk += 1;
-                    double ir1 = a[i] / pt1[i];
-                    double ir2 = b[i] / pt2[i];
-                    if (ir2 != 0.0)
-                        rkr[i] = ir1 / ir2;
-                    else
-                        rkr[i] = Constant.MISSING;
-                    if (model == 1)
-                    {
-                        // Poisson
-                        if (a[i] == 0.0)
-                        {
-                            rkrl[i] = 0.0;
-                        }
-                        else
-                        {
-                            f = PDF.ffromp(2.0 * a[i], 2.0 * (b[i] + 1.0), 1.0 - p);
-                            rkrl[i] = pt2[i] / pt1[i] * (a[i] / (b[i] + 1.0)) * (1.0 / f);
-                        }
-                        if (b[i] == 0.0)
-                        {
-                            rkru[i] = Constant.MISSING;
-                            rkr[i] = Constant.MISSING;
-                        }
-                        else
-                        {
-                            f = PDF.ffromp(2.0 * b[i], 2.0 * (a[i] + 1.0), 1.0 - p);
-                            rkru[i] = pt2[i] / pt1[i] * ((a[i] + 1.0) / b[i]) * f;
-                        }
-                    }
-                    else
-                    {
-                        // Binomial like relative risk
-                        MathDbl.lr_ci(b[i], a[i], pt2[i], pt1[i], cit, out rkrl[i], out rkru[i]);
-                    }
-                }
+                RateRatio(model, p, cit, a[i], pt1[i], b[i], pt2[i], out rkr[i], out rkrl[i], out rkru[i]);
+                rkw[i] = refIdent[i] / refsum;
                 // pooled
                 if (refIdent[i] != 0.0)
                 {
@@ -563,7 +539,7 @@ namespace StatsDirect.Builtins
             double srru_bino; double srrl_bino;
             double srru; double srrl;
             double srr;
-            if (srne != 0.0)
+            if (srne > 0.0 && sre > 0.0)
             {
                 srr = sre / srne;
                 double vsrr = vsre / (sre * sre) + vsrne / (srne * srne);
@@ -588,7 +564,9 @@ namespace StatsDirect.Builtins
             }
             else
             {
-                srr = Constant.MISSING;
+                // a standardized rate of nothing: the ratio is 0, or it is infinite, or with both rates nothing it is not known;
+                // the limits are from the logarithm of the ratio, which then has none to give
+                srr = srne > 0.0 ? 0.0 : sre > 0.0 ? double.PositiveInfinity : Constant.MISSING;
                 srrl = Constant.MISSING;
                 srru = Constant.MISSING;
                 srrl_bino = Constant.MISSING;
@@ -688,6 +666,18 @@ namespace StatsDirect.Builtins
             rkw[k + 2] = Constant.MISSING;
             rkw[k + 1] = Constant.MISSING;
             title[k + 2] = "Standardized";
+
+            // the plot has a scale of logarithms: a row with an infinite ratio, or a standardized ratio of 0, is left out of it,
+            // as a row without a ratio is
+            for (int i = 1; i <= k + 2; i++)
+            {
+                if (double.IsInfinity(rkr[i]) || i == k + 2 && rkr[i] == 0.0)
+                {
+                    rkr[i] = Constant.MISSING;
+                    rkrl[i] = Constant.MISSING;
+                    rkru[i] = Constant.MISSING;
+                }
+            }
 
             IList<ParameterBag> chartList = new List<ParameterBag>();
             outputParameters.AddOutput("*chart", chartList);
