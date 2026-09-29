@@ -46,8 +46,12 @@ namespace StatsDirect.Builtins
             if (gamma <= 0.0 || gamma >= 1.0)
                 gamma = 0.95;
 
-            if (a + b <= 0.0 || pt1 <= 0.0 || pt2 <= 0.0)
-                throw new InvalidDataException();
+            if (a < 0.0 || b < 0.0)
+                throw new InvalidDataException("The numbers of cases must not be negative");
+            if (pt1 <= 0.0 || pt2 <= 0.0)
+                throw new InvalidDataException("Person-time must be greater than zero");
+            if (a + b <= 0.0)
+                throw new InvalidDataException("There are no cases in either group: the two rates cannot be compared");
             // The conditional analysis is of whole numbers of cases; a fraction would be rounded there and the two parts of the report
             // would then describe different data
             if (doCml && (a != Math.Floor(a) || b != Math.Floor(b)))
