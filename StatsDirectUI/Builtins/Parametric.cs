@@ -74,6 +74,10 @@ namespace StatsDirect.Builtins
             }
         }
 
+        // The confidence level of a report: 0.95 if what is given is not above 0 and below 1, as the reports of the other menus
+        // have it; the report prints the level that is used
+        private static double XLevel(double level) => level > 0.0 && level < 1.0 ? level : 0.95;
+
         public static StepOutput RptVarianceRatio(ParameterBag parameters)
         {
             int bot; int top;
@@ -136,15 +140,15 @@ namespace StatsDirect.Builtins
                 throw new TemplateOperationCancelledException("Too few data for this method (minimum 8)", "Reference Range");
 
             bool do_conservative = parameters["do_conservative"].AsBoolean;
-            double GAMMA = parameters["gamma"].AsDouble;
+            double GAMMA = XLevel(parameters["gamma"].AsDouble);
             if (GAMMA <= 0.0 || GAMMA >= 1.0)
             {
                 GAMMA = 0.95;
             }
             double qrr = parameters["reference-interval"].AsDouble;
             double qrz = Math.Abs(PDF.gauinv((1.0 - qrr) / 2.0, out int fault));
-            if (fault != 0 || qrr < 0.0 || qrr > 1.0)
-                throw new TemplateOperationCancelledException("Coverage not possible.", "Reference Range");
+            if (fault != 0 || !(qrr > 0.0 && qrr < 1.0))
+                throw new TemplateOperationCancelledException("Coverage not possible: the reference interval must be greater than 0% and less than 100%.", "Reference Range");
 
             MathDbl.civ(0, out double z, GAMMA, out _);
             Para(data, mean, ss, var, sd, sem, tnx);
@@ -414,7 +418,7 @@ namespace StatsDirect.Builtins
             double[] sem = new double[1 + 1];
             int[] tnx = new int[1 + 1];
 
-            double GAMMA = parameters["gamma"].AsDouble;
+            double GAMMA = XLevel(parameters["gamma"].AsDouble);
             if (mode == 2)
             {
                 DataFrame Data = parameters["data"].AsDataFrame;
@@ -1124,7 +1128,7 @@ namespace StatsDirect.Builtins
 
         public static StepOutput RptTUnpairedSummary(ParameterBag parameters)
         {
-            double GAMMA = parameters["gamma"].AsDouble;
+            double GAMMA = XLevel(parameters["gamma"].AsDouble);
             int nx1 = parameters["nx1"].AsInt32;
             double um1 = parameters["um1"].AsDouble;
             double sd1 = parameters["sd1"].AsDouble;
@@ -1132,8 +1136,8 @@ namespace StatsDirect.Builtins
             double um2 = parameters["um2"].AsDouble;
             double sd2 = parameters["sd2"].AsDouble;
             int degf = nx1 + nx2 - 2;
-            if (nx1 < 2 || sd1 == 0 || nx2 < 2 || sd2 == 0)
-                throw new Exception("Insufficient data (must be at least two members in each sample with non-zero standard deviations)");
+            if (nx1 < 2 || !(sd1 > 0) || nx2 < 2 || !(sd2 > 0))
+                throw new Exception("Insufficient data (must be at least two members in each sample with standard deviations above zero)");
             double var1 = sd1 * sd1;
             double var2 = sd2 * sd2;
             MathDbl.civ(degf, out double cit, GAMMA, out double P0);
@@ -1213,15 +1217,15 @@ namespace StatsDirect.Builtins
         public static StepOutput RptTSingleSummary(ParameterBag parameters)
         {
 
-            double GAMMA = parameters["gamma"].AsDouble;
+            double GAMMA = XLevel(parameters["gamma"].AsDouble);
             int nx = parameters["nx"].AsInt32;
             double mu = parameters["mu"].AsDouble;
             double sd = parameters["sd1"].AsDouble;
             double mu0 = parameters["mu0"].AsDouble;
 
             int degf = nx - 1;
-            if (nx < 2 || sd == 0)
-                throw new Exception("Insufficient data (must be at least two members in the sample with non-zero standard deviation)");
+            if (nx < 2 || !(sd > 0))
+                throw new Exception("Insufficient data (must be at least two members in the sample with a standard deviation above zero)");
 
             double se = sd / Math.Sqrt(nx);
             MathDbl.civ(degf, out double cit, GAMMA, out double P0);
@@ -1259,7 +1263,7 @@ namespace StatsDirect.Builtins
             double[] sd = new double[1 + 1 /* VB to C# conversion */ ];
             double[] sem = new double[1 + 1 /* VB to C# conversion */ ];
             int[] tnx = new int[1 + 1 /* VB to C# conversion */];
-            double GAMMA = parameters["gamma"].AsDouble;
+            double GAMMA = XLevel(parameters["gamma"].AsDouble);
             DataFrame data = parameters["data"].AsDataFrame;
             Para(data, mean, ss, var, sd, sem, tnx);
             int degf = tnx[0] + tnx[1] - 2;
@@ -1327,9 +1331,9 @@ namespace StatsDirect.Builtins
             }
             double f = var[top] / var[bot];
             P = PDF.fvalp(f, tnx[top] - 1, tnx[bot] - 1);
-            if (double.IsNaN(f) || double.IsInfinity(f) || double.IsNaN(P))
+            if (double.IsNaN(f) || double.IsInfinity(f) || double.IsNaN(P) || var[top] == Constant.MISSING || var[bot] == Constant.MISSING)
             {
-                outputParameters.AddOutput("say1", "F test not calculated: a variance is zero or a sample has fewer than two values");
+                outputParameters.AddOutput("say1", "F test not calculated: a variance is zero or could not be calculated, or a sample has fewer than two values");
                 outputParameters.AddOutput("say2", string.Empty);
             }
             else if (P < 0.025)
@@ -1356,7 +1360,7 @@ namespace StatsDirect.Builtins
 
             DataFrame Data = parameters["data"].AsDataFrame;
             double mu0 = parameters["population-mean"].AsDouble;
-            double GAMMA = parameters["gamma"].AsDouble;
+            double GAMMA = XLevel(parameters["gamma"].AsDouble);
 
             Para(Data, mean, ss, var, sd, sem, tnx);
             int degf = tnx[0] - 1;
@@ -1388,7 +1392,7 @@ namespace StatsDirect.Builtins
         public static StepOutput RptTPaired(ParameterBag parameters)
         {
             DataFrame Data = parameters["data"].AsDataFrame;
-            double GAMMA = parameters["gamma"].AsDouble;
+            double GAMMA = XLevel(parameters["gamma"].AsDouble);
             bool DoAgree = Data.VariableCount > 1 && parameters.ContainsKey("doAgreement") && parameters["doAgreement"].AsBoolean;
 
             double[] arr1 = new double[Data.MaxRows + 1 ]; // New array to replace Arr2(0,n)
@@ -1410,7 +1414,8 @@ namespace StatsDirect.Builtins
             else
             {
                 DoubleVariable v1 = Data.Variables[1]as DoubleVariable;
-                for (int n = 0; n < v0.Length; n++)
+                // a row that one of the two columns does not have is without a pair
+                for (int n = 0; n < Math.Min(v0.Length, v1.Length); n++)
                 {
                     if (v0.Data[n] != Constant.MISSING && v1.Data[n] != Constant.MISSING)
                     {
@@ -1477,7 +1482,7 @@ namespace StatsDirect.Builtins
                 x[0] = Constant.MISSING;
                 y[0] = Constant.MISSING;
                 nx = 0;
-                for (int j = 0; j < v0.Length; j++)
+                for (int j = 0; j < Math.Min(v0.Length, v1.Length); j++)
                 {
                     if (v0.Data[j] != Constant.MISSING && v1.Data[j] != Constant.MISSING)
                     {
