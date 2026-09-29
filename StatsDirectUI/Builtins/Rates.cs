@@ -166,11 +166,6 @@ namespace StatsDirect.Builtins
 
         public static StepOutput RptRateDirect(ParameterBag parameters)
         {
-            double cco = parameters["cco"].AsDouble;
-            if (cco > 1.0 || cco < 0.0)
-                cco = 0.95;
-            double alpha = 1.0 - cco;
-
             DataFrame idxnFrame = parameters["idxn"].AsDataFrame;
             DoubleVariable idxnVariable = (DoubleVariable) idxnFrame.Variables[0];
             DataFrame timesFrame = parameters["times"].AsDataFrame;
@@ -179,7 +174,6 @@ namespace StatsDirect.Builtins
             DoubleVariable refnVariable = (DoubleVariable) refnFrame.Variables[0];
             int rawRows = idxnVariable.Length;
 
-
             DoubleArraysAndBooleans copiesRemovingMissingRows = Numerics.Utilities.RemoveMissingRows(new[] { idxnVariable.Data, timesVariable.Data, refnVariable.Data }, 0, rawRows, 1);
             double[] idxy = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0];
             double[] idxn = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[1];
@@ -187,28 +181,42 @@ namespace StatsDirect.Builtins
 
             int rows = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0].Length - 1; /* 1-based */
 
-            double events = 0.0;
-            for (int i = 1; i <= rows; i++)
-                events += idxy[i];
-            double ntot = 0.0;
-            for (int i = 1; i <= rows; i++)
-            {
-                ntot += idxn[i];
-                if (idxn[i] <= 0.0)
-                    throw new InvalidDataException("Person-time must be greater than zero");
-                if (idxy[i] > idxn[i])
-                    throw new InvalidDataException("The number of events must not exceed the person-time (do not scale the person-time)");
-            }
-            double refntot = 0.0;
-            for (int i = 1; i <= rows; i++)
-                refntot += refn[i];
-
             string[] title = Meta.MakeTitles(parameters, "strata", "stratum {0}", rawRows, out bool _);
             title = Numerics.Utilities.CopyValidRows(title, copiesRemovingMissingRows.ValidRowsInOriginal, 0, rawRows, 1, rows);
 
+            return DirectStandardization(parameters, idxy, idxn, refn, title, rows);
+        }
+
+        internal static StepOutput DirectStandardization(ParameterBag parameters, double[] idxy, double[] idxn, double[] refn, string[] title, int rows)
+        {
+            double cco = parameters["cco"].AsDouble;
+            if (cco >= 1.0 || cco <= 0.0)
+                cco = 0.95;
+            double alpha = 1.0 - cco;
+
             double nunit = Parsing.Cdbl_Txt(parameters["nunit"].AsString);
-            if (refntot <= 0.0 || ntot <= 0.0)
-                throw new InvalidDataException();
+            if (nunit <= 0.0)
+                nunit = 1.0;
+
+            if (rows < 1)
+                throw new InvalidDataException("There is no stratum that has events, a person-time and a reference group size");
+            double events = 0.0;
+            double ntot = 0.0;
+            double refntot = 0.0;
+            for (int i = 1; i <= rows; i++)
+            {
+                if (idxn[i] <= 0.0)
+                    throw new InvalidDataException("Person-time must be greater than zero");
+                if (idxy[i] < 0.0 || refn[i] < 0.0)
+                    throw new InvalidDataException("Events and reference group sizes must not be negative");
+                if (idxy[i] > idxn[i])
+                    throw new InvalidDataException("The number of events must not exceed the person-time (do not scale the person-time)");
+                events += idxy[i];
+                ntot += idxn[i];
+                refntot += refn[i];
+            }
+            if (refntot <= 0.0)
+                throw new InvalidDataException("Total reference group size must be greater than zero");
 
             ParameterBag outputParameters = new();
             double[] refw = new double[rows + 1];
@@ -257,7 +265,7 @@ namespace StatsDirect.Builtins
                 poisson_ci(alpha, idxy[j], idxn[j], out xl, out xu);
                 cisParameters.AddOutput("from", xl * nunit);
                 cisParameters.AddOutput("to", xu * nunit);
-                cisParameters.AddOutput("label", title[j]);
+                cisParameters.AddOutput("label", title == null ? string.Empty : title[j]);
             }
 
             // pooled

@@ -13,157 +13,24 @@ namespace StatsDirect.Builtins
     {
         public static StepOutput RptRateDirectStd(ParameterBag parameters)
         {
+            // The screen form gives the three columns in one grid: events, person-time, reference group size
             DataFrame datFrame = parameters["data"].AsDataFrame;
+            if (datFrame.VariableCount < 3)
+                throw new InvalidDataException("Enter the events, the person-time and the reference group size for every stratum");
             DoubleVariable datV0 = (DoubleVariable) datFrame.Variables[0];
             DoubleVariable datV1 = (DoubleVariable) datFrame.Variables[1];
             DoubleVariable datV2 = (DoubleVariable) datFrame.Variables[2];
             int rows = datFrame.MaxRows;
             double[] idxy = new double[rows + 1];
             double[] idxn = new double[rows + 1];
-            double[] idxr = new double[rows + 1];
             double[] refn = new double[rows + 1];
-            double[] refw = new double[rows + 1];
-
-            double cco = parameters["cco"].AsDouble;
-            if (cco > 1.0 || cco < 0.0)
-                cco = 0.95;
-            double alpha = 1.0 - cco;
-
-            double nunit = Parsing.Cdbl_Txt(parameters["nunit"].AsString);
-            if (nunit <= 0.0)
-                nunit = 1.0;
-
-            double refntot = 0.0;
-            double revents = 0.0;
-            double ntot = 0.0;
             for (int j = 1; j <= rows; j++)
             {
-                double xy = datV0.Data[j - 1];
-                idxy[j] = xy;
-                revents += xy;
-                double xn = datV1.Data[j - 1];
-                if (xn <= 0.0)
-                    throw new InvalidDataException();
-                idxn[j] = xn;
-                ntot += xn;
-                double rf = datV2.Data[j - 1];
-                refn[j] = rf;
-                refntot += rf;
-                if (xy > xn)
-                    throw new InvalidDataException("The number of events must not exceed the person-time (do not scale the person-time)");
+                idxy[j] = datV0.Data[j - 1];
+                idxn[j] = datV1.Data[j - 1];
+                refn[j] = datV2.Data[j - 1];
             }
-
-            if (refntot <= 0.0)
-                throw new InvalidDataException("Total reference group size must be greater than zero");
-
-            for (int j = 1; j <= rows; j++)
-                refw[j] = refn[j] / refntot;
-
-            double stdr = 0.0;
-            double poisVar = 0.0;
-            double binoVar = 0.0;
-            for (int j = 1; j <= rows; j++)
-            {
-                idxr[j] = idxy[j] / idxn[j];
-                stdr += idxr[j] * refn[j];
-                poisVar += refn[j] * refn[j] * idxr[j] / idxn[j];
-                binoVar += refn[j] * refn[j] * idxr[j] * (1.0 - idxr[j]) / idxn[j];
-            }
-            stdr /= refntot;
-            poisVar /= (refntot * refntot);
-            binoVar /= (refntot * refntot);
-
-            ParameterBag outputParameters = new();
-            if (nunit == 1.0)
-                outputParameters.AddOutput("units", "1 unit");
-            else
-                outputParameters.AddOutput("units", nunit.ToString("0") + " units");
-
-            List<ParameterBag> inputsList = new();
-            outputParameters.AddOutput("*inputs", inputsList);
-            for (int j = 1; j <= rows; j++)
-            {
-                ParameterBag inputsParameters = new();
-                inputsList.Add(inputsParameters);
-                inputsParameters.AddOutput("idxy", idxy[j]);
-                inputsParameters.AddOutput("idxn", idxn[j]);
-                inputsParameters.AddOutput("idxr", idxr[j] * nunit);
-                inputsParameters.AddOutput("refn", refn[j]);
-                inputsParameters.AddOutput("refw", refw[j]);
-            }
-
-            // CIs for the single Poisson parameter (stratum specific rate)
-            outputParameters.AddOutput("pc", cco * 100);
-            List<ParameterBag> cisList = new();
-            outputParameters.AddOutput("*cis", cisList);
-            double xu;
-            double xl;
-            for (int j = 1; j <= rows; j++)
-            {
-                ParameterBag cisParameters = new();
-                cisList.Add(cisParameters);
-                cisParameters.AddOutput("idxr", idxr[j] * nunit);
-                Rates.poisson_ci(alpha, idxy[j], idxn[j], out xl, out xu);
-                cisParameters.AddOutput("from", xl * nunit);
-                cisParameters.AddOutput("to", xu * nunit);
-                cisParameters.AddOutput("label", string.Empty);
-            }
-
-            // pooled
-            outputParameters.AddOutput("events", revents);
-            outputParameters.AddOutput("stde", stdr * ntot);
-
-            outputParameters.AddOutput("crude", revents * nunit / ntot);
-            outputParameters.AddOutput("stdr", stdr * nunit);
-            double cit = PDF.gauinv(cco + (1.0 - cco) / 2.0, out int fault);
-
-            // Binomial approx CI - see Armitage
-            // A zero variance (no events, or every stratum rate 1) gives a zero standard error and limits equal to the rate
-            double ser = binoVar >= 0.0 ? Math.Sqrt(binoVar) : Constant.MISSING;
-            outputParameters.AddOutput("ser_any", ser * nunit);
-
-            if (fault != 0)
-            {
-                xl = Constant.MISSING;
-                xu = Constant.MISSING;
-            }
-            else
-            {
-                xl = stdr - cit * ser;
-                xu = stdr + cit * ser;
-            }
-            outputParameters.AddOutput("from_any", xl * nunit);
-            outputParameters.AddOutput("to_any", xu * nunit);
-
-            // Poisson approx CI
-            ser = poisVar >= 0.0 ? Math.Sqrt(poisVar) : Constant.MISSING;
-            outputParameters.AddOutput("ser_small", ser * nunit);
-            if (fault != 0)
-            {
-                xl = Constant.MISSING;
-                xu = Constant.MISSING;
-            }
-            else
-            {
-                xl = stdr - cit * ser;
-                xu = stdr + cit * ser;
-            }
-            outputParameters.AddOutput("from_small", xl * nunit);
-            outputParameters.AddOutput("to_small", xu * nunit);
-
-            // Dobson improved approx Poisson CI - Stats in Medicine 1991 (10) 457-
-            Rates.poisson_ci(alpha, revents, 1.0, out xl, out xu);
-            if (xl != Constant.MISSING & poisVar >= 0.0 & revents > 0.0)
-                xl = stdr + Math.Sqrt(poisVar / revents) * (xl - revents);
-            else
-                xl = Constant.MISSING;
-            if (xu != Constant.MISSING & poisVar >= 0.0 & revents > 0.0)
-                xu = stdr + Math.Sqrt(poisVar / revents) * (xu - revents);
-            else
-                xu = Constant.MISSING;
-            outputParameters.AddOutput("from_dobson", xl == Constant.MISSING ? xl : xl * nunit);
-            outputParameters.AddOutput("to_dobson", xu == Constant.MISSING ? xu : xu * nunit);
-            return new StepOutput(outputParameters);
+            return Rates.DirectStandardization(parameters, idxy, idxn, refn, null, rows);
         }
 
         public static StepOutput RptRateCompareTwo(ITemplateHost host, ParameterBag parameters)
