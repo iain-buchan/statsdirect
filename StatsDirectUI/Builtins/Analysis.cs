@@ -903,8 +903,9 @@ namespace StatsDirect.Builtins
                 rowParameters.AddOutput("minusfeature", c2[i]);
 
                 double li;
+                // without end if no subject without the feature has the result, and none if no subject at all has it
                 if (c2[i] <= 0.0)
-                    li = Constant.MISSING;
+                    li = c1[i] > 0.0 ? double.PositiveInfinity : Constant.MISSING;
                 else
                     li = c1[i] / c1Tot / (c2[i] / c2Tot);
 
