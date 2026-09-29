@@ -36,6 +36,8 @@ namespace StatsDirect.Builtins
             return name;
         }
 
+        // The seed of a randomization: the one that was entered, or one from the clock if none was.  The report is given the
+        // seed that was used, so that the allocation can be made again.
         private static int AutoSeed(ParameterBag parameters)
         {
             if (parameters.ContainsKey("seed") && parameters["seed"] != null && parameters["seed"].IsInt32)
@@ -44,6 +46,24 @@ namespace StatsDirect.Builtins
             return Base.DefaultSeed();
         }
 
+        /// <summary>
+        /// Random allocation in blocks: n subjects are given t treatments, in blocks in each of which every treatment comes as
+        /// often as another, so that the numbers on the treatments are never far from one another.
+        /// </summary>
+        /// <remarks>
+        /// A block is the treatments in their order, as often as the block has room for them, put into a random order in which
+        /// every order is equally likely (Shuffle).  With a block size the blocks are of that size, and the last is of what is
+        /// left if the number of subjects is not divisible by the block size, which the report then says.  Without one each
+        /// block has 2, 3 or 4 times the number of treatments, each as likely; when fewer than 4 times the number of
+        /// treatments are left, they are the last block.  The number of subjects and the block size are to be divisible by the
+        /// number of treatments.
+        /// </remarks>
+        /// <param name="parameters">"n": the number of subjects; "b", which need not be there: the block size, for which a random
+        /// size is taken if it is 0 or below, and 2 if it is 1; "t": the number of treatments, for which 2 is taken if it is
+        /// below 2; "seed", which need not be there.</param>
+        /// <returns>"seed_out": the seed that was used; "n_out", "t_out": the numbers of subjects and of treatments; "b_out": the
+        /// block size, or what the report says of the random sizes; "*blockSizeWarn": a row with "warning" if the last block
+        /// is smaller; "*subjects": for each subject "id", its number, and "rx", the name of its treatment (A, B, ...).</returns>
         public static StepOutput RptRandomBlock(ParameterBag parameters)
         {
             int seed = AutoSeed(parameters);
@@ -402,6 +422,21 @@ namespace StatsDirect.Builtins
 
         private static double x_zvalc(double alpha, out int er) => -PDF.gauinv(alpha, out er);
 
+        /// <summary>
+        /// Randomization of intervention-control pairs: for each pair, which of the two comes first.
+        /// </summary>
+        /// <remarks>
+        /// Each pair has the control first if the number drawn for it is a half or more, and the intervention first if not.
+        /// With balanced allocation, which needs an even number of pairs, half of the pairs have the control first: the pairs
+        /// are given the two orders in turn, and are then put into a random order in which every arrangement is equally
+        /// likely (Shuffle).  If balance is asked for and the number of pairs is odd the pairs are allocated one by one, and
+        /// the report has the seed without the note.
+        /// </remarks>
+        /// <param name="parameters">"pairs": the number of pairs; "balance": whether balanced allocation is asked for; "seed",
+        /// which need not be there.</param>
+        /// <returns>"seedAndNote": the seed that was used, with ",  balanced allocation" if the allocation is balanced;
+        /// "*pairs": for each pair "index", its number as text, and "random", "Control - Intervention" or "Intervention -
+        /// Control".</returns>
         public static StepOutput RptRandomPairs(ParameterBag parameters)
         {
             int seed = AutoSeed(parameters);
@@ -445,6 +480,13 @@ namespace StatsDirect.Builtins
             throw new InvalidDataException("At least one pair is needed");
         }
 
+        /// <summary>
+        /// Random allocation to two independent groups of one size: the subjects 1 to "high", an even number, are put into a
+        /// random order, of which the first half are the intervention group and the second half the control group.
+        /// </summary>
+        /// <param name="parameters">"high": the number of subjects; "seed", which need not be there.</param>
+        /// <returns>"seed_out": the seed that was used; "*allocations": rows with "case" and "control", a subject of each group,
+        /// each group in the order of the numbers of its subjects.</returns>
         public static StepOutput RptRandomUnPaired(ParameterBag parameters)
         {
             int seed = AutoSeed(parameters);
@@ -487,6 +529,14 @@ namespace StatsDirect.Builtins
             throw new InvalidDataException("The number of subjects must be even, so that the two groups are of equal size");
         }
 
+        /// <summary>
+        /// A series of whole numbers in a random order: the numbers from "low" to "high", or from "high" to "low" if that is the
+        /// greater, in an order in which every order is equally likely (Shuffle).
+        /// </summary>
+        /// <param name="parameters">"low", "high": the ends of the series; "seed", which need not be there.</param>
+        /// <returns>"seed_out": the seed that was used; "*allocations": for each place of the series "index", the number that
+        /// the place has in the order of the numbers, as text, and "random", the number that it has in the random
+        /// order.</returns>
         public static StepOutput RptRandomXY(ParameterBag parameters)
         {
             int seed = AutoSeed(parameters);

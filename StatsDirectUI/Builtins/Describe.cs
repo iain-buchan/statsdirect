@@ -88,6 +88,26 @@ namespace StatsDirect.Builtins
             }
         }
 
+        /// <summary>
+        /// Allocation by preference: subjects are given places in groups of limited capacity, each the group that it prefers
+        /// most of those that have room when its turn comes, and by lot where more prefer a group than it has places.
+        /// </summary>
+        /// <remarks>
+        /// The first preferences of all the subjects are gone through before any second preference, and so on.  For each
+        /// preference, and for each group that has places left, the subjects without a group who have the group as that
+        /// preference are put into a random order in which every order is equally likely (Formula.Shuffle), and are given the
+        /// places that are left, as far as they go.  The chance that a subject has its first preference has nothing to do
+        /// with its other preferences.
+        /// A subject that is left when all the preferences have been gone through is given one of the places that are left,
+        /// each as likely as another: a group is drawn with a chance in proportion to the places that it has left.
+        /// A preference that is missing is taken as the first preference of the subject again; a subject without a first
+        /// preference has no preference of that rank.
+        /// </remarks>
+        /// <param name="parameters">"seed": the seed of the random numbers; "capacities": a column with the places of each group,
+        /// whole numbers that are not below 0, the first row being group 1; "preferences": a column for each rank of
+        /// preference, with the number of the group that each subject prefers at that rank.</param>
+        /// <returns>"groups": the number of groups; "capacity": the places of all the groups; "subjects": the number of
+        /// subjects; "*groups": for each subject "sub", its number, and "grp", the group that it is given.</returns>
         public static StepOutput RptPreferences(ParameterBag parameters)
         {
             const string pg = "Preference Groups";
