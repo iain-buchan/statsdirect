@@ -491,26 +491,39 @@ namespace StatsDirect.Builtins
 
                 outputParameters.AddOutput("p_1", P);
                 outputParameters.AddOutput("p_2", P * 2);
+                // The geometric mean and the reference range of log-normal data are of the logarithms of the values: they are
+                // given only if every value is above 0 (values that are not used to be left out without a word). The squares of
+                // the differences from the mean of the logarithms are summed: formed from the sum of the logarithms and the sum
+                // of their squares the sum of squares lost its figures when the values are far from 1 and near one another
+                // (values of about 1e8 that differ by 2 had the range 99999950.76 to 100000048.93 for 99999994.87 to
+                // 100000004.82).
                 int nx = 0;
+                bool positive = true;
                 double gsum = 0;
-                double gsumsq = 0;
                 foreach (double val in v0.Data)
                 {
-                    if (val != Constant.MISSING & val > 0)
+                    if (val == Constant.MISSING)
+                        continue;
+                    if (val > 0)
                     {
                         nx++;
-                        double logVal = Math.Log(val);
-                        gsum += logVal;
-                        gsumsq += logVal * logVal;
+                        gsum += Math.Log(val);
                     }
+                    else
+                        positive = false;
                 }
                 double urr;
                 double lrr;
                 double gmean;
-                if (nx > 1)
+                if (positive && nx > 1)
                 {
                     gmean = gsum / Convert.ToDouble(nx);
-                    double gss = gsumsq - gsum * gsum / nx;
+                    double gss = 0.0;
+                    foreach (double val in v0.Data)
+                    {
+                        if (val != Constant.MISSING)
+                            gss += (Math.Log(val) - gmean) * (Math.Log(val) - gmean);
+                    }
                     double gvar = gss / (nx - 1);
                     double gsd = Math.Sqrt(gvar);
                     lrr = gmean - gsd * cit;
