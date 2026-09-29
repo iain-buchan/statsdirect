@@ -1,7 +1,7 @@
 <report>
 <title>Random allocation of numbers in a series</title>
 
-<p>Randomized with seed: @seed</p>
+<p>Randomized with seed: @seed_out</p>
 
 <table>
 <block name="allocations"><tr><td><subtotal>@index</subtotal></td><td>@random</td></tr>

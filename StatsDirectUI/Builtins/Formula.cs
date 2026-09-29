@@ -23,6 +23,19 @@ namespace StatsDirect.Builtins
             }
         }
 
+        // The name of a treatment from its number: A to Z, then AA, AB and so on, as the columns of a worksheet are named
+        private static string TreatmentName(int number)
+        {
+            string name = string.Empty;
+            while (number > 0)
+            {
+                number--;
+                name = (char)('A' + number % 26) + name;
+                number /= 26;
+            }
+            return name;
+        }
+
         private static int AutoSeed(ParameterBag parameters)
         {
             if (parameters.ContainsKey("seed") && parameters["seed"] != null && parameters["seed"].IsInt32)
@@ -145,7 +158,7 @@ namespace StatsDirect.Builtins
                 ParameterBag subjectsParameters = new();
                 subjectsList.Add(subjectsParameters);
                 subjectsParameters.AddOutput("id", i);
-                subjectsParameters.AddOutput("rx", new string(Convert.ToChar(64 + rx[i]), 1));
+                subjectsParameters.AddOutput("rx", TreatmentName(rx[i]));
             }
             return new StepOutput(outputParameters);
         }
@@ -429,7 +442,7 @@ namespace StatsDirect.Builtins
                 }
                 return new StepOutput(outputParameters);
             }
-            throw new InvalidDataException();
+            throw new InvalidDataException("At least one pair is needed");
         }
 
         public static StepOutput RptRandomUnPaired(ParameterBag parameters)
@@ -458,7 +471,8 @@ namespace StatsDirect.Builtins
                 Array.Sort(brand, 1, halfHigh);
 
                 ParameterBag outputParameters = new();
-                // outputParameters.AddOutput("seed", seed); Not required as input seed is preserved in output
+                // the seed that was used, which is one from the clock if none was entered
+                outputParameters.AddOutput("seed_out", seed);
                 List<ParameterBag> allocationsList = new();
                 outputParameters.AddOutput("*allocations", allocationsList);
                 for (int N = 1; N <= halfHigh; N++)
@@ -491,7 +505,8 @@ namespace StatsDirect.Builtins
             Shuffle(mt, rand, 0, count - 1);
 
             ParameterBag outputParameters = new();
-            // outputParameters.AddOutput("seed", seed); Not required as input seed is preserved in output
+            // the seed that was used, which is one from the clock if none was entered
+            outputParameters.AddOutput("seed_out", seed);
             List<ParameterBag> allocationsList = new();
             outputParameters.AddOutput("*allocations", allocationsList);
             for (int i = 0; i < count; i++)
