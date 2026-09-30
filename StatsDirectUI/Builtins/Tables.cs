@@ -1806,6 +1806,16 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// The simulated exact P of the chi-square goodness of fit test that went before: the observed total is drawn again and
+        /// again from the categories with the probabilities of the expected column (scaled to add up to 1), the number of times
+        /// asked for, from the seed given (ResampleX2Gf), and P is the proportion of the draws whose chi-square is at least that
+        /// of the table observed, with a binomial confidence interval for it (binci) at the level asked for. The rows are those
+        /// the test used: a row with a missing cell is left out of both columns. The draws are of whole numbers: an observed
+        /// count that is not one is rounded, a half to the even number, the chi-square that the draws are compared with is that
+        /// of the counts as rounded, and the result says that counts were rounded. A run that the progress bar stops gives the
+        /// proportion of the draws made, and says how many.
+        /// </summary>
         public static StepOutput RptChiGfSimulateExactP(IPreferencesAndProgressBar host, ParameterBag parameters)
         {
             int iterations = parameters["iterations"].AsInt32;
@@ -1941,6 +1951,17 @@ namespace StatsDirect.Builtins
             return x2;
         }
 
+        /// <summary>
+        /// Chi-square goodness of fit test of the observed counts of k categories against an expected distribution: the
+        /// expected column may hold probabilities, percentages or expected counts, which are scaled to the observed total (a
+        /// column of counts that does not add up to the observed total is noted); a row with a missing cell is left out of
+        /// both columns, and a column of category names may be given. The statistic is the sum over the categories of
+        /// (observed - expected)^2 / expected, tested against chi-square on k - 1 degrees of freedom. The report warns of
+        /// expected frequencies below 5 and of a total below 20. Observed counts that are not whole numbers are taken as
+        /// entered, as the other chi-square tests take them; the simulated exact P that may follow rounds them. Fewer than
+        /// three categories, a negative observed count, an expected value of 0 or less, and columns of different lengths are
+        /// refused.
+        /// </summary>
         public static StepOutput RptChiSquareGoodnessOfFit(ParameterBag parameters)
         {
             const string cgft = "Chi-square goodness of fit test";
