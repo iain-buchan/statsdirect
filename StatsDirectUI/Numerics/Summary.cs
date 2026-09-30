@@ -273,15 +273,17 @@ namespace StatsDirect.Numerics
             // If we get here, there's no more than one row of valid data.
             if (ValidData == 1)
             {
+                // one value is its own median, quartiles and centiles, and its own geometric mean if it is above 0; it has
+                // no variance, and nothing that is made of the variance
                 Skewness = Constant.MISSING;
                 Kurtosis = Constant.MISSING;
-                LowerQuartile = Constant.MISSING;
-                InterquartileRange = Constant.MISSING;
-                UpperQuartile = Constant.MISSING;
-                UserCentileL = Constant.MISSING;
-                UserCentileU = Constant.MISSING;
-                GeometricMean = Constant.MISSING;
-                Median = Constant.MISSING;
+                LowerQuartile = xo[1];
+                InterquartileRange = 0.0;
+                UpperQuartile = xo[1];
+                UserCentileL = doUserCentL ? xo[1] : Constant.MISSING;
+                UserCentileU = doUserCentU ? xo[1] : Constant.MISSING;
+                GeometricMean = xo[1] > 0.0 ? xo[1] : Constant.MISSING;
+                Median = xo[1];
                 Variance = Constant.MISSING;
                 Maximum = xo[1];
                 Minimum = xo[1];
