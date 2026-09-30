@@ -144,10 +144,17 @@ Mean (SD) slope to maximum: @{meanSlopeToMax:roundx} (@{meanSlopeToMaxSD:roundx}
 </block>
 <subtitle>AUC distribution</subtitle>
 
+<block name="aucNormal">
 <p>@{aucNormalChart:chart}<br />
-R-square for AUC vs. normal scores: @{rSquareNormal:roundx}<br />
-@{aucLogNormalChart:chart}<br />
+R-square for AUC vs. normal scores: @{rSquareNormal:roundx}</p>
+</block>
+<block name="aucLogNormal">
+<p>@{aucLogNormalChart:chart}<br />
 R-square for log(AUC) vs. normal scores: @{rSquareLogNormal:roundx}</p>
+</block>
+<block name="aucNotPlotted">
+<p>@why</p>
+</block>
 <block name="groupComparison">
 <subtitle>Group comparison: @group1Title vs. @group2Title</subtitle>
 

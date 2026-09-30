@@ -887,7 +887,7 @@ namespace StatsDirect.Builtins
             ClassifierVariable groupsVariable = null;
             if (hasGroups)
                 groupsVariable = (ClassifierVariable)parameters["groups"].AsDataFrame.Variables[0];
-            double ci = parameters["ci"].AsDouble;
+            double ci = XLevel(parameters["ci"].AsDouble);
             bool addZeroObservationsAtZeroTime = parameters.ContainsKey("addZeroObservationAtZeroTime") && parameters["addZeroObservationAtZeroTime"] != null && parameters["addZeroObservationAtZeroTime"].IsBoolean && parameters["addZeroObservationAtZeroTime"].AsBoolean;
             //  The question is asked only when no observation time is zero; keep to that here too, so that a real time zero row is never overwritten or counted twice
             if (addZeroObservationsAtZeroTime)
@@ -924,6 +924,9 @@ namespace StatsDirect.Builtins
             // Pass 1: Allow the data structures to size themselves
             for (int row = 0; row < timesVariable.Length; row++)
             {
+                // a row without an observation is as if it were not there
+                if (row >= observationsVariable.Length || observationsVariable.Data[row] == Constant.MISSING || double.IsNaN(observationsVariable.Data[row]))
+                    continue;
                 int group = 0;
                 if (hasGroups)
                     group = (int)groupsVariable.Data[row];
@@ -934,6 +937,9 @@ namespace StatsDirect.Builtins
             // Pass 2: Allow the data structures to accumulate observations
             for (int row = 0; row < timesVariable.Length; row++)
             {
+                // a row without an observation is as if it were not there
+                if (row >= observationsVariable.Length || observationsVariable.Data[row] == Constant.MISSING || double.IsNaN(observationsVariable.Data[row]))
+                    continue;
                 int group = 0;
                 if (hasGroups)
                     group = (int)groupsVariable.Data[row];
@@ -981,11 +987,11 @@ namespace StatsDirect.Builtins
                 groupParameters.AddOutput("aucZLcl", group.ZLclAucBar);
                 groupParameters.AddOutput("aucZUcl", group.ZUclAucBar);
                 groupParameters.AddOutput("medianAuc", group.MedianAuc);
-                groupParameters.AddOutput("iqrAuc", group.UpperQuartileAuc - group.LowerQuartileAuc);
+                groupParameters.AddOutput("iqrAuc", XSpread(group.UpperQuartileAuc, group.LowerQuartileAuc));
                 groupParameters.AddOutput("medianTimeToMax", group.MedianTimeToMax);
-                groupParameters.AddOutput("iqrTimeToMax", group.UpperQuartileTimeToMax - group.LowerQuartileTimeToMax);
+                groupParameters.AddOutput("iqrTimeToMax", XSpread(group.UpperQuartileTimeToMax, group.LowerQuartileTimeToMax));
                 groupParameters.AddOutput("medianSlopeToMax", group.MedianSlopeToMax);
-                groupParameters.AddOutput("iqrSlopeToMax", group.UpperQuartileSlopeToMax - group.LowerQuartileSlopeToMax);
+                groupParameters.AddOutput("iqrSlopeToMax", XSpread(group.UpperQuartileSlopeToMax, group.LowerQuartileSlopeToMax));
                 groupParameters.AddOutput("meanSlopeToMax", group.MeanSlopeToMax);
                 groupParameters.AddOutput("meanSlopeToMaxSD", group.MeanSlopeToMaxSD);
 
@@ -1018,7 +1024,7 @@ namespace StatsDirect.Builtins
                     timeParameters.AddOutput("sd", time.Sd);
                     timeParameters.AddOutput("se", time.Se);
                     timeParameters.AddOutput("median", time.Median);
-                    timeParameters.AddOutput("iqr", time.UpperQuartile - time.LowerQuartile);
+                    timeParameters.AddOutput("iqr", XSpread(time.UpperQuartile, time.LowerQuartile));
                 }
 
                 // Bootstrap (if present)
@@ -1056,12 +1062,21 @@ namespace StatsDirect.Builtins
                 groupParameters.AddOutput("chart", cd);
             }
 
-            // Normal plots for AUC and log10(AUC) across all groups
+            // Normal plots for AUC and log10(AUC) across all groups.  A plot needs two areas or more that are not all the same,
+            // and the plot of the logarithms areas that are all above 0; a plot that cannot be drawn is left out, and the
+            // report says why
             List<double> values = new();
             foreach (TimeSeriesSummaryStore group in groups)
                 foreach (SubjectSummary subject in group.SubjectToSummaryMap.Values)
                     values.Add(subject.Auc);
             double[] points = values.ToArray();
+            List<ParameterBag> normalList = new();
+            outputParameters.AddOutput("*aucNormal", normalList);
+            List<ParameterBag> logNormalList = new();
+            outputParameters.AddOutput("*aucLogNormal", logNormalList);
+            List<ParameterBag> notPlottedList = new();
+            outputParameters.AddOutput("*aucNotPlotted", notPlottedList);
+            if (XCanPlot(points))
             {
                 ChartDefinition cd = new() { ChartType = ChartType.Normal };
                 cd.AddXSeries(points, "Area Under Curve");
@@ -1076,16 +1091,30 @@ namespace StatsDirect.Builtins
                 };
                 cd.ChartOptions = options;
                 ParameterBag results = ChartRendererFactory.PlotForResultsOnly(host, cd);
-                outputParameters.AddOutput("aucNormalChart", cd);
+                ParameterBag normalParameters = new();
+                normalList.Add(normalParameters);
+                normalParameters.AddOutput("aucNormalChart", cd);
                 //  The context holds the correlation coefficient r; the report prints R-square
                 double rNormal = ((SimpleLinearRegressionContext)results["context"].AsObject).R;
-                outputParameters.AddOutput("rSquareNormal", rNormal * rNormal);
+                normalParameters.AddOutput("rSquareNormal", rNormal * rNormal);
 
             }
+            else
+            {
+                ParameterBag notPlottedParameters = new();
+                notPlottedList.Add(notPlottedParameters);
+                notPlottedParameters.AddOutput("why", "Normal plot for AUC not drawn: it needs two areas or more that are not all the same.");
+            }
+            bool areasAboveZero = true;
+            for (int i = 0; i < points.Length; i++)
+            {
+                if (!(points[i] > 0.0))
+                    areasAboveZero = false;
+                points[i] = areasAboveZero ? Math.Log10(points[i]) : 0.0;
+            }
+            if (areasAboveZero && XCanPlot(points))
             {
                 ChartDefinition cd = new() { ChartType = ChartType.Normal };
-                for (int i = 0; i < points.Length; i++)
-                    points[i] = Math.Log10(points[i]);
                 cd.AddXSeries(points, "Log Area Under Curve");
                 NormalOptions options = new()
                 {
@@ -1097,9 +1126,19 @@ namespace StatsDirect.Builtins
                 };
                 cd.ChartOptions = options;
                 ParameterBag results = ChartRendererFactory.PlotForResultsOnly(host, cd);
-                outputParameters.AddOutput("aucLogNormalChart", cd);
+                ParameterBag logNormalParameters = new();
+                logNormalList.Add(logNormalParameters);
+                logNormalParameters.AddOutput("aucLogNormalChart", cd);
                 double rLogNormal = ((SimpleLinearRegressionContext)results["context"].AsObject).R;
-                outputParameters.AddOutput("rSquareLogNormal", rLogNormal * rLogNormal);
+                logNormalParameters.AddOutput("rSquareLogNormal", rLogNormal * rLogNormal);
+            }
+            else
+            {
+                ParameterBag notPlottedParameters = new();
+                notPlottedList.Add(notPlottedParameters);
+                notPlottedParameters.AddOutput("why", areasAboveZero
+                    ? "Normal plot for log(AUC) not drawn: it needs two areas or more that are not all the same."
+                    : "Normal plot for log(AUC) not drawn: an area is zero or below.");
             }
 
             // Compare mean AUCs by group with timepoint standard errors
@@ -1121,9 +1160,11 @@ namespace StatsDirect.Builtins
                     foreach (TimeSummary time in group.TimeToSummaryMap.Values)
                     {
                         MultiDoublePoint pt = new() { X = time.Time };
+                        // a time with one observation has no standard error: its mean is drawn without a bar
+                        double bar = time.Se != Constant.MISSING && double.IsFinite(time.Se) ? cit * time.Se : 0.0;
                         pt.set_Y(0, time.Mean);
-                        pt.set_Y(1, time.Mean - cit * time.Se);
-                        pt.set_Y(2, time.Mean + cit * time.Se);
+                        pt.set_Y(1, time.Mean - bar);
+                        pt.set_Y(2, time.Mean + bar);
                         s.Data[tIndex++] = pt;
                     }
                 }
@@ -1164,9 +1205,8 @@ namespace StatsDirect.Builtins
                 double aucDifference = groups[0].AucMean - groups[1].AucMean;
                 double se = Math.Sqrt(v1 + v2);
                 double t = aucDifference / se;
-                double p = PDF.tvalp(t, df);
-                if (p > 1.0 - p)
-                    p = 1.0 - p;
+                // the tail beyond t on its own side, which keeps its figures when it is small
+                double p = PDF.tvalp(Math.Abs(t), df);
 
                 groupComparisonParameters.AddOutput("t", t);
                 groupComparisonParameters.AddOutput("se", se);
@@ -1214,6 +1254,27 @@ namespace StatsDirect.Builtins
             }
 
             return new StepOutput(outputParameters);
+        }
+
+        // The difference of two quartiles, which is missing if one of them is
+        private static double XSpread(double upper, double lower) => upper == Constant.MISSING || lower == Constant.MISSING ? Constant.MISSING : upper - lower;
+
+        // Whether a normal plot can be drawn of the values: there are two or more, each of them a number, and they are not all
+        // the same
+        private static bool XCanPlot(double[] values)
+        {
+            if (values.Length < 2)
+                return false;
+            double least = double.MaxValue;
+            double most = double.MinValue;
+            foreach (double value in values)
+            {
+                if (!double.IsFinite(value) || value == Constant.MISSING)
+                    return false;
+                least = Math.Min(least, value);
+                most = Math.Max(most, value);
+            }
+            return most > least;
         }
 
         private class TimeSeriesSummaryStore
@@ -1306,7 +1367,12 @@ namespace StatsDirect.Builtins
                 int timeIndex = TimeToSummaryMap[time].Index;
                 int subjectIndex = SubjectToSummaryMap[subjectId].Index;
                 if (Observations[timeIndex, subjectIndex] != Constant.MISSING)
+                {
+                    // the same observation again is taken once
+                    if (Observations[timeIndex, subjectIndex] == observation)
+                        return;
                     throw new Exception("Your data contains multiple, non-identical observations for the same subject and time point; time series summary cannot interpret this. Please remove the duplicate(s).");
+                }
                 Observations[timeIndex, subjectIndex] = observation;
                 NObservations++;
             }
@@ -1365,7 +1431,8 @@ namespace StatsDirect.Builtins
                             if (observation != Constant.MISSING)
                                 summary.Variance += (observation - summary.Mean) * (observation - summary.Mean);
                         }
-                        summary.Variance /= summary.N - 1; // Sample variance
+                        // Sample variance, which one observation does not have
+                        summary.Variance = summary.N > 1 ? summary.Variance / (summary.N - 1) : Constant.MISSING;
                     }
                     summary.Sd = summary.Variance == Constant.MISSING ? Constant.MISSING : Math.Sqrt(summary.Variance);
                     summary.Se = summary.Sd == Constant.MISSING ? Constant.MISSING : summary.Sd / Math.Sqrt(summary.N);
@@ -1467,13 +1534,24 @@ namespace StatsDirect.Builtins
                 {
                     double gamma = 1.0 - (1.0 - ci) / 2.0;
                     CriticalT = Math.Abs(PDF.tfromp(gamma, Df));
-                    double td = Se * CriticalT;
-                    TLclAucBar = AucMean - td;
-                    TUclAucBar = AucMean + td;
                     double invGamma = PDF.gauinv(gamma);
-                    double zd = Se * invGamma;
-                    ZLclAucBar = AucMean - zd;
-                    ZUclAucBar = AucMean + zd;
+                    if (Se == Constant.MISSING)
+                    {
+                        // one subject: the mean area has no standard error, and no limits
+                        TLclAucBar = Constant.MISSING;
+                        TUclAucBar = Constant.MISSING;
+                        ZLclAucBar = Constant.MISSING;
+                        ZUclAucBar = Constant.MISSING;
+                    }
+                    else
+                    {
+                        double td = Se * CriticalT;
+                        TLclAucBar = AucMean - td;
+                        TUclAucBar = AucMean + td;
+                        double zd = Se * invGamma;
+                        ZLclAucBar = AucMean - zd;
+                        ZUclAucBar = AucMean + zd;
+                    }
                     MeanObservationsPerTimePoint = NObservations / (double)IndexToTimeMap.Length;
 
                     // AUC, time to max and slope to max medians and IQRs
