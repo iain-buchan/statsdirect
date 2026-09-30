@@ -2858,8 +2858,7 @@ namespace StatsDirect.Builtins
         /// XDokend.  Gamma is the score over the number of pairs that are concordant or discordant, tied pairs being left out of the count.
         /// Three sets of P values are given: from the score over its standard error taken as a normal deviate; from the same with the
         /// continuity correction; and those called exact, from the distribution of the score without ties (kendp: by counting the orderings
-        /// for 50 pairs or fewer, and by a series for more, which is within 0.0000004 of the count at 51 pairs), which takes no account of
-        /// ties if there are any.
+        /// for 1000 pairs or fewer, and by a series for more), which takes no account of ties if there are any.
         /// </remarks>
         public static StepOutput RptKendall(IProgressBarHost host, ParameterBag parameters)
         {

@@ -1,6 +1,7 @@
 // The distributions of Spearman's statistic (S, the sum of the squared differences between the ranks) and of Kendall's score, without ties:
 // the program's P values against the count of every ordering.  For Spearman's statistic the program takes every ordering in turn for 10 pairs
-// or fewer, and for Kendall's score it counts the orderings for 50 pairs or fewer; for more pairs each is from a series.
+// or fewer, and for Kendall's score it counts the orderings for 1000 pairs or fewer; for more pairs each is from a series (the
+// series for Kendall's score is checked in tests/Nonparametric).
 using StatsDirect.Numerics;
 
 internal static partial class Program
@@ -95,7 +96,7 @@ internal static partial class Program
                 worst = Math.Max(worst, double.IsNaN(given) ? double.PositiveInfinity : Math.Abs(given - exact));
                 if (exact < 0.05 && exact >= 0.001) worstTail = Math.Max(worstTail, double.IsNaN(given) ? double.PositiveInfinity : Math.Abs(given / exact - 1));
             }
-            if (n <= 50)
+            if (n <= 1000)
             {
                 Check($"Kendall's score, {n} pairs: P(S >= s) at every s, against the count of the orderings", worst, 1e-12);
                 Console.WriteLine($"ok    Kendall's score, {n} pairs: worst difference {worst:E2} from the count of the orderings");

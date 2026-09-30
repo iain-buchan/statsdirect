@@ -515,9 +515,10 @@ namespace StatsDirect.Numerics
                     ifault = 1;
                     break;
                 }
-                // The score has the parity of n(n - 1)/2. Below 51 pairs kendp takes an impossible score as the next
-                // possible one, so this skip changes nothing; above 50 its Edgeworth series does not, and gave a score
-                // of 307 for the 2.5% point with 60 pairs, where the largest possible score is 306.
+                // The score has the parity of n(n - 1)/2. Up to 1000 observations kendp takes an impossible score as the
+                // next possible one, so this skip changes nothing; above 1000 its Edgeworth series does not (when the series
+                // was used above 50 it gave a score of 307 for the 2.5% point with 60 observations, where the largest
+                // possible score is 306).
                 if ((ix + (long)nx * (nx - 1) / 2) % 2 != 0)
                     continue;
                 ifault = 0;
@@ -563,135 +564,122 @@ namespace StatsDirect.Numerics
         /// Upper tail probability of Kendall's S: that of an S of k or more with N observations that have no ties.
         /// </summary>
         /// <remarks>
-        /// Up to 50 observations the orders are counted: the numbers of orders of N things with each S are built up from those
-        /// of N - 1 things. An S that there cannot be (one that is odd where the number of pairs is even, or even where it is
-        /// odd) has the probability of the next S above it. Above 50 observations a series about the normal distribution is
-        /// used, with k less 1 for continuity. The series is within 0.0000005 of the counted probabilities with 51
-        /// observations, and within 0.00000003 with 100; in the far tail it is less good in proportion (with 60 observations
-        /// 1.39e-9 for 1.50e-9). The series does not look whether there can be an S of k: it is for the caller to see that
-        /// k is within the pairs.
+        /// Up to 1000 observations the orders are counted, as the proportion of the orders of N things with each number of
+        /// discordant pairs, built up from those of N - 1 things: the N-th thing is put in one of N places among the others,
+        /// each equally likely, and makes 0 to N - 1 new discordant pairs. An S that there cannot be (one that is odd where
+        /// the number of pairs is even, or even where it is odd) has the probability of the next S above it. The proportions
+        /// are kept for the last N, so that a search over S costs one count. Above 1000 observations a series about the
+        /// normal distribution is used, with k less 1 for continuity; it is within 0.0000005 of the counted probabilities
+        /// with 51 observations and within 0.00000003 with 100, and nearer with more, but in the far tail less good in
+        /// proportion (with 60 observations 1.39e-9 for 1.50e-9). The series does not look whether there can be an S of k:
+        /// it is for the caller to see that k is within the pairs. (The orders used to be counted up to 50 observations,
+        /// and the series used from 51.)
         /// </remarks>
         /// <param name="k">S, the concordant pairs less the discordant</param>
         /// <param name="N">Number of observations</param>
         /// <param name="ifault">1 if N is below 2, 2 if there is no memory for the counts, 3 if k is beyond the number of pairs
-        /// (up to 50 observations); it is left as it was if there is no fault</param>
+        /// (up to 1000 observations); it is left as it was if there is no fault</param>
         public static double kendp(int k, int N, ref int ifault)
         {
-            double kendpReturn = 0;
-            int i;
-            double y = 0;
-            double x = 0;
-            double[] wksp; double[] freq;
-            try
+            if (N <= 1)
             {
-                if (N > 50)
-                {
-                    //  Edgeworth series for n>50
-                    double[] h = new double[16];
-                    double dn = Convert.ToDouble(N);
-                    x = Convert.ToDouble(k - 1) / Math.Sqrt((6.0 + dn * (5.0 - dn * (3.0 + 2.0 * dn))) / -18.0);
-                    h[1] = x;
-                    h[2] = x * x - 1.0;
-                    for (i = 3; i <= 15; i++)
-                    {
-                        h[i] = x * h[i - 1] - Convert.ToDouble(i - 1) * h[i - 2];
-                    }
-                    double r = 1.0 / dn;
-                    double sc1 = h[3] * (-0.09 + r * (0.045 + r * (-0.5325 + r * 0.506)));
-                    double sc2 = h[5] * (0.036735 + r * (-0.036735 + r * 0.3214)) + h[7] * (0.00405 + r * (-0.023336 + r * 0.07787));
-                    double sc3 = h[9] * (-0.0033061 - r * 0.0065166) + h[11] * (-0.0001215 + r * 0.0025927) + r * (h[13] * 0.00014878 + h[15] * 0.0000027338);
-                    double sc = r * (sc1 + r * (sc2 + r * sc3));
-                    kendpReturn = 1.0 - PDF.alnorm(x) + sc * 0.398942 * Math.Exp(-0.5 * x * x);
-                    if (kendpReturn < 0.0)
-                    {
-                        kendpReturn = 0.0;
-                    }
-                    if (kendpReturn > 1.0)
-                    {
-                        kendpReturn = 1.0;
-                    }
-                    return kendpReturn;
-                }
-
-                //  If we get here, use exact permutation by summation and division
-                const int nmax = 55;
-                if (N <= 1 | N > nmax)
-                {
-                    ifault = 1;
-                    return kendpReturn;
-                }
-                //  In the following lines, CInt always works because one of N, N-1 or N-2 is always even, so the result is always integer.  PJC 21/11/2007
-                int nwk = Convert.ToInt32((N - 1) * (N - 2) / 2 + 1);
-                wksp = new double[2 * nwk]; //  Originally (2 ^ ((4 / 2) -1 )) * nwk
-                freq = new double[Convert.ToInt32(N * (N - 1) / 2 + 1) + 1];
+                ifault = 1;
+                return 0.0;
             }
-            catch (Exception)
+            if (N > KendallCountedTo)
             {
-                ifault = 2;
-                return kendpReturn;
+                //  Edgeworth series
+                double[] h = new double[16];
+                double dn = Convert.ToDouble(N);
+                double x = Convert.ToDouble(k - 1) / Math.Sqrt((6.0 + dn * (5.0 - dn * (3.0 + 2.0 * dn))) / -18.0);
+                h[1] = x;
+                h[2] = x * x - 1.0;
+                for (int i = 3; i <= 15; i++)
+                {
+                    h[i] = x * h[i - 1] - Convert.ToDouble(i - 1) * h[i - 2];
+                }
+                double r = 1.0 / dn;
+                double sc1 = h[3] * (-0.09 + r * (0.045 + r * (-0.5325 + r * 0.506)));
+                double sc2 = h[5] * (0.036735 + r * (-0.036735 + r * 0.3214)) + h[7] * (0.00405 + r * (-0.023336 + r * 0.07787));
+                double sc3 = h[9] * (-0.0033061 - r * 0.0065166) + h[11] * (-0.0001215 + r * 0.0025927) + r * (h[13] * 0.00014878 + h[15] * 0.0000027338);
+                double sc = r * (sc1 + r * (sc2 + r * sc3));
+                double series = 1.0 - PDF.alnorm(x) + sc * 0.398942 * Math.Exp(-0.5 * x * x);
+                return Math.Min(1.0, Math.Max(0.0, series));
             }
-            int kmax = Math.Abs(Convert.ToInt32(N * (N - 1) / 2));
-            if (Math.Abs(k) > kmax)
+            long pairs = (long)N * (N - 1) / 2;
+            if (Math.Abs((long)k) > pairs)
             {
                 ifault = 3;
-                return kendpReturn;
+                return 0.0;
             }
-            int ic = 2;
-            int kc = 1;
-            freq[1] = 1;
-            freq[2] = 1;
-            while (ic != N)
+            double[] atMost;
+            try
             {
-                ic += 1;
-                kc += ic;
-                int jc = (int)Math.Floor((double)(kc + 1) / 2);
-                int I1;
-                for (i = 1; i <= jc; i++)
+                atMost = KendallDiscordantAtMost(N);
+            }
+            catch (OutOfMemoryException)
+            {
+                ifault = 2;
+                return 0.0;
+            }
+            //  S = pairs - 2D: an S of k or more is D of (pairs - k) / 2 or fewer, rounded down (an S of the wrong parity has the
+            //  probability of the next S above it)
+            return atMost[(int)((pairs - k) / 2)];
+        }
+
+        //  the most observations for which the orders are counted; the series is used above it
+        private const int KendallCountedTo = 1000;
+        private static readonly object kendallLock = new();
+        private static int kendallCountedN;
+        private static double[] kendallAtMost;
+
+        /// <summary>
+        /// The proportion of the orders of N things that have d discordant pairs or fewer, for d from 0 to N (N - 1) / 2, kept
+        /// for the last N asked for.
+        /// </summary>
+        private static double[] KendallDiscordantAtMost(int N)
+        {
+            lock (kendallLock)
+            {
+                if (kendallCountedN == N)
+                    return kendallAtMost;
+                int pairs = N * (N - 1) / 2;
+                double[] p = new double[pairs + 1];   //  the proportion of orders with each number of discordant pairs
+                double[] next = new double[pairs + 1];
+                p[0] = 1.0;
+                int most = 0;   //  the most discordant pairs among the things placed so far
+                for (int j = 2; j <= N; j++)
                 {
+                    //  the j-th thing is put in one of j places among the j - 1 before it, each equally likely, and makes 0 to
+                    //  j - 1 new discordant pairs: the new proportions are sums of the old over a window of j, divided by j. The
+                    //  distribution is symmetric, so the lower half is summed (there each window sum is dominated by its latest
+                    //  term, which keeps the tail accurate) and mirrored
+                    int newMost = most + j - 1;
                     double sum = 0.0;
-                    wksp[i] = freq[i];
-                    int jst = i - ic + 1;
-                    if (jst < 1)
+                    for (int d = 0; d <= newMost / 2; d++)
                     {
-                        jst = 1;
+                        if (d <= most)
+                            sum += p[d];
+                        if (d >= j)
+                            sum -= p[d - j];
+                        next[d] = sum / j;
                     }
-                    for (I1 = jst; I1 <= i; I1++)
-                    {
-                        sum += wksp[I1];
-                    }
-                    freq[i] = sum;
+                    for (int d = 0; d <= newMost / 2; d++)
+                        next[newMost - d] = next[d];
+                    (p, next) = (next, p);
+                    most = newMost;
                 }
-                if (ic > 3)
+                double[] atMost = new double[pairs + 1];
+                double total = 0.0;
+                for (int d = 0; d <= pairs; d++)
                 {
-                    kc -= 1;
+                    total += p[d];
+                    atMost[d] = Math.Min(1.0, total);
                 }
-                int i2 = kc;
-                I1 = kc - jc;
-                for (i = 1; i <= I1; i++)
-                {
-                    freq[i2] = freq[i];
-                    i2 -= 1;
-                }
+                kendallCountedN = N;
+                kendallAtMost = atMost;
+                return atMost;
             }
-            ic = 1;
-            //  In the following line, CInt always works because one of N or N-1 is always even, so the result is always integer.  PJC 21/11/2007
-            int M = Convert.ToInt32(-N * (N - 1) * 0.5);
-            int L = -M + 1;
-            while (k > M)
-            {
-                M += 2;
-                ic += 1;
-            }
-            for (i = 1; i <= L; i++)
-            {
-                y += freq[i];
-            }
-            for (i = ic; i <= L; i++)
-            {
-                x += freq[i];
-            }
-            kendpReturn = x / y;
-            return kendpReturn;
         }
 
         /// <summary>
