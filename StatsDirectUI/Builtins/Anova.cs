@@ -1214,7 +1214,7 @@ namespace StatsDirect.Builtins
         public static StepOutput RptBonferroni(ParameterBag parameters)
         {
             DataFrame frame = parameters["data"].AsDataFrame;
-            double GAMMA = parameters["gamma"].AsDouble;
+            double GAMMA = XLevel(parameters["gamma"].AsDouble);
             int[] variables = (int[])parameters["variables"].AsObject;
             int z_va = variables[0];
             int z_vb = variables[1];
@@ -1261,7 +1261,7 @@ namespace StatsDirect.Builtins
         public static StepOutput RptTukey(ParameterBag parameters)
         {
             DataFrame frame = parameters["data"].AsDataFrame;
-            double gamma = parameters["gamma"].AsDouble;
+            double gamma = XLevel(parameters["gamma"].AsDouble);
             ParameterCarrier carrier = FindOrCalculateParameters(parameters);
             double[] tnx = carrier.Tnx;
             double[] mean = carrier.Mean;
@@ -1291,9 +1291,7 @@ namespace StatsDirect.Builtins
                 lam[i] = 1.0 / Math.Sqrt(2.0);
 
             double dalpha = 1.0 - gamma;
-            if (dalpha <= 0.0 || dalpha > 1.0)
-                dalpha = 0.05;
-            double cc = 1.0 - dalpha;
+            double cc = gamma;
 
             int ifault;
             double q = PDF.quantsr(cc, Convert.ToDouble(k + 1), Convert.ToDouble(nu));
@@ -1391,7 +1389,7 @@ namespace StatsDirect.Builtins
         public static StepOutput RptScheffe(ParameterBag parameters)
         {
             DataFrame frame = parameters["data"].AsDataFrame;
-            double gamma = parameters["gamma"].AsDouble;
+            double gamma = XLevel(parameters["gamma"].AsDouble);
             ParameterCarrier carrier = FindOrCalculateParameters(parameters);
             double[] tnx = carrier.Tnx;
             double[] mean = carrier.Mean;
@@ -1407,8 +1405,6 @@ namespace StatsDirect.Builtins
                 totn += tnx[n];
 
             double palpha = 1.0 - gamma;
-            if (palpha <= 0 || palpha >= 1)
-                palpha = 0.05;
 
             double dfn = kn - 1;
             double dfd = carrier.Dferr;   //  the residual degrees of freedom of the analysis these comparisons follow
@@ -1526,7 +1522,7 @@ namespace StatsDirect.Builtins
         public static StepOutput RptNewmanKeuls(ParameterBag parameters)
         {
             DataFrame frame = parameters["data"].AsDataFrame;
-            double gamma = parameters["gamma"].AsDouble;
+            double gamma = XLevel(parameters["gamma"].AsDouble);
             ParameterCarrier carrier = FindOrCalculateParameters(parameters);
             double[] tnx = carrier.Tnx;
             double[] mean = carrier.Mean;
@@ -1539,8 +1535,6 @@ namespace StatsDirect.Builtins
             Contraster[] hold = new Contraster[kn * (int)Math.Floor((kn - 1) / 2.0 + 0.5) + 1]; //  1-based
 
             double palpha = 1.0 - gamma;
-            if (palpha <= 0 || palpha >= 1)
-                palpha = 0.05;
 
             double qx = 0;
             for (int n = 0; n < frame.VariableCount; n++)
@@ -1644,7 +1638,7 @@ namespace StatsDirect.Builtins
         public static StepOutput RptDunnett(ParameterBag parameters)
         {
             DataFrame frame = parameters["data"].AsDataFrame;
-            double gamma = parameters["gamma"].AsDouble;
+            double gamma = XLevel(parameters["gamma"].AsDouble);
             int[] indexvariable = (int[])parameters["indexvariable"].AsObject;
             int ic = indexvariable[0];
             ParameterCarrier carrier = FindOrCalculateParameters(parameters);
@@ -1655,8 +1649,6 @@ namespace StatsDirect.Builtins
             int kn = frame.VariableCount;
 
             double dalpha = 1.0 - gamma;
-            if (dalpha <= 0 || dalpha >= 1)
-                dalpha = 0.05;
 
             int k = kn - 1;
             Contraster[] hold = new Contraster[kn + 2]; //  1-based
@@ -2129,9 +2121,7 @@ namespace StatsDirect.Builtins
             double corrector; double difsum1 = 0; double sumss1 = 0;
             double difsum2 = 0; double sumsum2 = 0;
 
-            double GAMMA = parameters["gamma"].AsDouble;
-            if (GAMMA <= 0)
-                throw new Exception("GAMMA must be greater than zero");
+            double GAMMA = XLevel(parameters["gamma"].AsDouble);
 
             // Group 1
             DataFrame group1DrugFrame = parameters["group1drug"].AsDataFrame;
@@ -2369,6 +2359,10 @@ namespace StatsDirect.Builtins
             }
             return carrier;
         }
+
+        //  A confidence level that is not above 0 and below 1 (0% or 100%, which the form allows) is taken as 95%, as the other
+        //  reports of the program take it; the level that is used is the one that is printed.
+        private static double XLevel(double level) => level > 0.0 && level < 1.0 ? level : 0.95;
 
         /// <summary>
         /// Whether two group sizes are the same: whole numbers compare exactly, equivalent sizes to within rounding.
