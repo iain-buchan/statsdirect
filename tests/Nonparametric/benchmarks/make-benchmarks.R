@@ -149,6 +149,12 @@ wilcoxon(c(2, 4, 6, 8, 10), c(1, 3, 5, 7, 9))                        # every dif
 wilcoxon(c(1, 2, 3), c(3, 2, 1))                                     # a zero difference and two that cancel
 wilcoxon(round(rnorm(250, 0.2, 1), 2))                               # more than 200: the normal approximation
 wilcoxon(pairs_x[[1]], pairs_y[[1]], 0); wilcoxon(pairs_x[[1]], pairs_y[[1]], 1)   # a level of 0% or 100%: 95% is taken
+# the same values at the scales of the smallest and the largest doubles, and between: the limits and the medians scale with
+# them (values below 1e-290 used to give limits of 0)
+for (s in c(1, 1e-300, 1e-150, 1e150, 1e300)) {
+  mann_whitney(c(1, 2, 4, 8, 16, 32, 64, 128) * s, c(0.5, 1.5, 2.5, 5, 9, 17, 33, 65) * s)
+  wilcoxon(c(1, 2, 4, 8, 16, 32, 64, 128) * s, c(0.5, 1.5, 2.5, 5, 9, 17, 33, 65) * s)
+}
 
 # ---- Kendall: the counts of pairs, the score S = C - D, its variance with the correction for ties, tau b, gamma, the
 # Samara-Randles limits, the P values from the normal deviate with and without the continuity correction, and the exact P
@@ -593,6 +599,8 @@ refused("RptChiSquareGoodnessOfFit", list(observed = "30,70,5", expected = "50,5
 refused("RptChiSquareGoodnessOfFit", list(observed = "30,-1,5", expected = "1,1,1"), "Observed counts cannot be negative.")
 refused("RptChiSquareGoodnessOfFit", list(observed = "30,70,5", expected = "0,0,0"), "The expected values must add up to more than zero.")
 refused("RptChiSquareGoodnessOfFit", list(observed = "30,70,5", expected = "1,1,1", names = "a,b"), "The column of category names must have the same number of rows as the observed counts.")
+# the simulated P of counts that all round to 0: nothing to draw (it used to be a P value of 0)
+refused("RptChiGfSimulateExactP", list(observed = "0.1,0.2,0.3", expected = "1,1,1", iterations = 2000, seed = 12345, ci = 0.95, after = "RptChiSquareGoodnessOfFit"), "The observed counts, rounded to whole numbers, add up to nothing: there are no tables to draw.")
 
 writeLines(cases, args[1]); writeLines(expected, args[2])
 cat(length(cases), "cases,", length(expected), "figures\n")
