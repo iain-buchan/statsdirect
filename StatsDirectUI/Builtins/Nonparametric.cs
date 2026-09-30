@@ -1116,39 +1116,17 @@ namespace StatsDirect.Builtins
                     sumnp3 += Math.Pow(np, 3.0);
                 }
                 double simvars = (4.0 * sumn * (sumn - 1.0) * (sumn - 2.0) * sumnp3 + 2.0 * sumn * (sumn - 1.0) * sumnp2 - 2.0 * sumn * (sumn - 1.0) * (2.0 * sumn - 3.0) * Math.Pow(sumnp2, 2.0)) / Math.Pow(sumn * (sumn - 1.0), 2.0);
-                double simvar = (sumnp3 - Math.Pow(sumnp2, 2.0)) / (0.25 * sumn);
-                double simcl;
-                double simcu;
-                double simse;
-                if (simvar < 0.0)
-                {
-                    simse = Constant.MISSING;
-                    simcl = Constant.MISSING;
-                    simcu = Constant.MISSING;
-                }
-                else
-                {
-                    simse = Math.Sqrt(simvar);
-                    simcl = simpson - cit * simse;
-                    simcu = simpson + cit * simse;
-                }
+                //  each large sample variance is a sum of squares about a mean, which is 0 with equal counts and can then come
+                //  out a little below 0 by rounding: it is taken as 0 (the standard error and the limits used to be asterisks)
+                double simvar = Math.Max(0.0, (sumnp3 - Math.Pow(sumnp2, 2.0)) / (0.25 * sumn));
+                double simse = Math.Sqrt(simvar);
+                double simcl = simpson - cit * simse;
+                double simcu = simpson + cit * simse;
                 double shanvars = (sumnlognsq - Math.Pow(sumnlogn, 2.0) / sumn) / Math.Pow(sumn, 2.0) + Convert.ToDouble(rx - 1) / (2.0 * Math.Pow(sumn, 2.0));
-                double shanvar = (sumnlognsq - Math.Pow(sumnlogn, 2.0) / sumn) / Math.Pow(sumn, 2.0);
-                double shancl;
-                double shancu;
-                double shanse;
-                if (shanvar < 0.0)
-                {
-                    shanse = Constant.MISSING;
-                    shancl = Constant.MISSING;
-                    shancu = Constant.MISSING;
-                }
-                else
-                {
-                    shanse = Math.Sqrt(shanvar);
-                    shancl = shannon - cit * shanse;
-                    shancu = shannon + cit * shanse;
-                }
+                double shanvar = Math.Max(0.0, (sumnlognsq - Math.Pow(sumnlogn, 2.0) / sumn) / Math.Pow(sumn, 2.0));
+                double shanse = Math.Sqrt(shanvar);
+                double shancl = shannon - cit * shanse;
+                double shancu = shannon + cit * shanse;
                 int gtot = Convert.ToInt32(sumn);
 
                 double[] rb = new double[rx + 1];
@@ -1509,7 +1487,7 @@ namespace StatsDirect.Builtins
                         simpson != 1.0
                             ? 1.0 / (1.0 - simpson)
                             : Constant.MISSING);
-                varParameters.AddOutput("se-simpson-largeSample", Base.SafeSqrt(simvar));
+                varParameters.AddOutput("se-simpson-largeSample", simse);
                 varParameters.AddOutput("ses-simpson", Base.SafeSqrt(simvars));
                 varParameters.AddOutput("from-simpson-largeSample", simcl);
                 varParameters.AddOutput("to-simpson-largeSample", simcu);
@@ -1522,7 +1500,7 @@ namespace StatsDirect.Builtins
                 varParameters.AddOutput("to-simpson-bootstrap-t", but);
 
                 varParameters.AddOutput("shannon", shannon);
-                varParameters.AddOutput("se-shannon-largeSample", Base.SafeSqrt(shanvar));
+                varParameters.AddOutput("se-shannon-largeSample", shanse);
                 varParameters.AddOutput("ses-shannon", Base.SafeSqrt(shanvars));
                 varParameters.AddOutput("from-shannon-largeSample", shancl);
                 varParameters.AddOutput("to-shannon-largeSample", shancu);
