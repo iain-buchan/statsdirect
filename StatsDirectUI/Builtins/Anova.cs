@@ -8,10 +8,24 @@ using StatsDirect.Utilities;
 
 namespace StatsDirect.Builtins
 {
+    /// <summary>
+    /// The reports of the Analysis of Variance menu: the one way, two way (randomized blocks), replicated two way, fully nested
+    /// and Latin square analyses, the crossover trial, the comparisons that follow an analysis (Bonferroni, Tukey, Scheffe,
+    /// Newman-Keuls and Dunnett), the equality of variance tests, and the means of a nested analysis; and the analysis of
+    /// agreement, which the Agreement menu shows. Most of the working arrays are used from element 1, as the comments of the
+    /// routines say. A confidence level that is not above 0 and below 1 is taken as 95% (XLevel).
+    /// </summary>
     public static class Anova
     {
         ///  <summary>
-        ///  TWO-WAY HIERARCHICAL ANOVA - OK FOR UNEQUAL SUBGROUPS
+        ///  The sums of squares of a fully nested analysis, whose subgroups may be of unequal sizes: y, from element 1, holds the
+        ///  observations subgroup after subgroup and group after group, nobs[1..L] the size of each subgroup, and the frame says
+        ///  how many subgroups each group has. ngp and gbar are the size and mean of each group, sgbar the mean of each subgroup,
+        ///  gm the grand mean; ss[1] is the sum of squares between the groups, the sum of n (gbar - gm)^2, ss[2] between the
+        ///  subgroups within the groups, the sum of n (sgbar - gbar)^2, ss[3] within the subgroups and ss[4] the total, with idf
+        ///  their degrees of freedom k - 1, L - k, N - L and N - 1; f[1] is the mean square of the groups over that of the
+        ///  residual and f[2] that of the subgroups over the residual, with their P values in fp. fault is true with fewer than
+        ///  two groups, a subgroup without observations, sizes that do not add up, a total of 0 or a residual of 0.
         ///  </summary>
         private static void XTwoHier(DataFrame2D frame, double[] y, int N, int[] nobs, int L, ref int[] ngp, ref double[] gbar, ref double[] sgbar, ref double gm, ref double[] ss, ref int[] idf, ref double[] f, ref double[] fp, out bool fault)
         {
@@ -159,6 +173,15 @@ namespace StatsDirect.Builtins
             fault = false;
         }
 
+        /// <summary>
+        /// The sums of squares of a two way table y[k, i, j] of nm repeats in nr rows and nc columns: between the rows,
+        /// nc nm times the sum of (row mean - grand mean)^2; between the columns, nr nm times the same for the columns; the
+        /// interaction, nm times the sum over the cells of (cell mean - row mean - column mean + grand mean)^2; the total,
+        /// the sum of (y - grand mean)^2; and the residual, which is the sum of squares within the cells when there are
+        /// repeats and the interaction when there are none (randomized blocks). The degrees of freedom go with them, and col
+        /// returns the column means from element 0, for the comparisons that follow. fault is 1 with fewer than two rows or
+        /// columns or no repeat, and 2 with a total of 0.
+        /// </summary>
         private static void XTwoWay(double[,,] y, out double[] col, int nr, int nc, int nm, out double ssrow, out double sscol, out double ssint, out double sstot, out double ssres, out int dfrow, out int dfcol, out int dfint, out int dftot, out int dfres, out int fault)
         {
             fault = 1;
@@ -738,6 +761,14 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// One way analysis of variance of the groups in the columns (a missing value is left out): the sum of squares between
+        /// the groups, the sum of n (group mean - grand mean)^2 on k - 1 degrees of freedom; within the groups, the sum of the
+        /// squared deviations about the group means on N - k; the total on N - 1; and F, the between mean square over the
+        /// within, tested against F on k - 1 and N - k degrees of freedom. The means, the sizes, the residual mean square and
+        /// its degrees of freedom are cached for the comparisons that follow. Fewer than two groups, a group without
+        /// observations, no residual degrees of freedom and observations that are all the same are refused.
+        /// </summary>
         public static StepOutput RptOneWay(ParameterBag parameters)
         {
             DataFrame frame = parameters["data"].AsDataFrame;
@@ -922,6 +953,14 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// Two way analysis of variance without replication (randomized blocks): the columns are the treatments and the rows
+        /// the blocks or subjects; a row with a missing value is left out and counted in the note. The sums of squares between
+        /// the rows, between the columns and the residual, which is the interaction, are from XTwoWay with one repeat, and the
+        /// variance ratios of the rows and of the columns are against the residual. The treatment means, the residual mean
+        /// square and its degrees of freedom are cached for the comparisons that follow. Fewer than two columns or complete
+        /// rows, observations that are all the same and a residual of 0 are refused.
+        /// </summary>
         ///  <remarks>Precondition: the frame passed in has equal-length columns.</remarks>
         public static StepOutput RptTwoWay(ParameterBag parameters)
         {
@@ -1017,6 +1056,15 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// Replicated two way analysis of variance: the frames of the two dimensional table are the blocks, the columns of
+        /// each frame the treatments, and the values of a column the repeats of that cell. A missing repeat is replaced by
+        /// the mean of the others in its cell and takes a residual degree of freedom, and a total one, away, with a warning
+        /// (see the comment at the equivalent sizes); a cell without observations is refused. The sums of squares between the
+        /// blocks, between the treatments, the interaction, the residual within the cells and the total are from XTwoWay,
+        /// each with its variance ratio against the residual. The treatment means, the residual mean square and degrees of
+        /// freedom, and the sizes (equivalent sizes when repeats were missing) are cached for the comparisons that follow.
+        /// </summary>
         public static StepOutput RptTwoMulti(ParameterBag parameters)
         {
             DataFrame2D frame = parameters["data2d"].AsDataFrame2D;
@@ -1172,6 +1220,14 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// Fully nested (hierarchical) analysis of variance: the frames of the two dimensional table are the groups and the
+        /// columns of each frame the subgroups, which may be of unequal sizes; a missing value is left out. The sums of
+        /// squares are from XTwoHier, with F for the groups against the residual (f_1), for the groups against the subgroups
+        /// (f_2) and for the subgroups against the residual (f_3). The group and subgroup means are cached for the report of
+        /// the means. Observations that are all the same, a residual of 0, fewer than two groups and a subgroup without
+        /// observations are refused.
+        /// </summary>
         public static StepOutput RptTwoNest(ParameterBag parameters)
         {
             DataFrame2D frame = parameters["data2d"].AsDataFrame2D;
@@ -1286,6 +1342,13 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// One comparison of two of the groups after an analysis of variance, from what the analysis cached, or worked out from
+        /// the data as a one way analysis (FindOrCalculateParameters): the difference of the two means with its standard
+        /// error sqrt(residual mean square times (1 / n_a + 1 / n_b)), t on the residual degrees of freedom with its two
+        /// sided P, the confidence interval of the difference at the level, and the interval adjusted for the number of
+        /// comparisons that are made, each at the level 1 - (1 - gamma) / k, with (1 - gamma) / k as the critical P.
+        /// </summary>
         public static StepOutput RptBonferroni(ParameterBag parameters)
         {
             DataFrame frame = parameters["data"].AsDataFrame;
@@ -1333,6 +1396,15 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// All pairwise comparisons after an analysis of variance by Tukey's method, Tukey-Kramer with unequal sizes. q is the
+        /// point of the studentized range of k means with the residual degrees of freedom at the level; the standard error of
+        /// a difference is sqrt(residual mean square / n), or with unequal sizes sqrt(residual mean square / 2 times
+        /// (1 / n_i + 1 / n_j)); each difference has the limits difference plus and minus q times that standard error, the
+        /// statistic |difference| over the standard error, and the P of the range beyond the statistic. The differences are
+        /// in descending order of the statistic and the first that is not significant is marked as where to stop (see the
+        /// comment at the statistic); the summary lists for each group the groups it differs from significantly.
+        /// </summary>
         public static StepOutput RptTukey(ParameterBag parameters)
         {
             DataFrame frame = parameters["data"].AsDataFrame;
@@ -1461,6 +1533,14 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// All pairwise comparisons after an analysis of variance by Scheffe's method: the critical value is sqrt((k - 1) F)
+        /// with F the point of F on k - 1 and the residual degrees of freedom at the level; each difference has its standard
+        /// error sqrt(residual mean square times (1 / n_i + 1 / n_j)), the limits difference plus and minus the critical value
+        /// times that standard error, the statistic |difference| over the standard error, and the P from F of the statistic
+        /// squared over k - 1. The differences are in descending order of the statistic, with the stop marker and the summary
+        /// as in RptTukey.
+        /// </summary>
         public static StepOutput RptScheffe(ParameterBag parameters)
         {
             DataFrame frame = parameters["data"].AsDataFrame;
@@ -1594,6 +1674,13 @@ namespace StatsDirect.Builtins
             return outputList;
         }
 
+        /// <summary>
+        /// All pairwise comparisons after an analysis of variance by the Newman-Keuls method, which needs equal sizes: the
+        /// statistic of a pair is |difference| over sqrt(residual mean square / n), and its P is the tail of the studentized
+        /// range of as many means as the pair spans among the ordered means (the two and those between them), with the
+        /// residual degrees of freedom. A pair inside a wider range that is not significant is not tested (see the comment at
+        /// the step-down). The differences are in descending order of their size, with the summary as in RptTukey.
+        /// </summary>
         public static StepOutput RptNewmanKeuls(ParameterBag parameters)
         {
             DataFrame frame = parameters["data"].AsDataFrame;
@@ -1710,6 +1797,14 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// Comparisons of each group with the control, the group named by indexvariable, by Dunnett's method. The k statistics
+        /// are the differences from the control over their standard errors, and their correlations are lambda_i lambda_j with
+        /// lambda_i = sqrt(n_i / (n_i + n_c)); d is the two sided critical value of the greatest of them at the level (dmcc).
+        /// Each difference has the limits difference plus and minus d times sqrt(residual mean square) times
+        /// sqrt(1 / n_c + 1 / n_i), and its P, the probability that the greatest statistic exceeds it (ppd2). The differences
+        /// are in descending order of their size. Fewer than two residual degrees of freedom are refused.
+        /// </summary>
         public static StepOutput RptDunnett(ParameterBag parameters)
         {
             DataFrame frame = parameters["data"].AsDataFrame;
@@ -1808,6 +1903,16 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// Tests of the equality of the variances of the groups in the columns. Levene's test on the absolute differences from
+        /// the group medians (the Brown-Forsythe form), which is the one way analysis of variance of those differences, on
+        /// k - 1 and N - k degrees of freedom. Bartlett's test M / C against chi-square on k - 1 degrees of freedom, with
+        /// M = (sum of (n - 1)) ln(pooled variance) - sum of (n - 1) ln(variance) over the groups and
+        /// C = 1 + (sum of 1 / (n - 1) - 1 / sum of (n - 1)) / (3 (k - 1)). Welch's analysis of variance for unequal
+        /// variances, with w = n / variance for each group and W their sum: F = (sum of w (mean - weighted grand mean)^2)
+        /// / (k - 1) over 1 + 2 (k - 2) / (k^2 - 1) times the sum of (1 - w / W)^2 / (n - 1), on k - 1 and
+        /// (k^2 - 1) / (3 times that sum) degrees of freedom. Each group needs two observations and a variance above 0.
+        /// </summary>
         public static StepOutput RptEqualityOfVariance(ParameterBag parameters)
         {
             DataFrame frame = parameters["data"].AsDataFrame;
@@ -2003,6 +2108,10 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// The means of the groups and of the subgroups of the nested analysis that went before, with their sizes and the
+        /// grand mean, from what that analysis cached.
+        /// </summary>
         public static StepOutput RptNestMeans(ParameterBag parameters)
         {
             if (parameters.ContainsKey("data2d") && parameters.ContainsKey("ctr") && parameters.ContainsKey("ngp") && parameters.ContainsKey("gbar") && parameters.ContainsKey("sgbar") && parameters.ContainsKey("gm") && parameters.ContainsKey("ctr"))
@@ -2051,6 +2160,14 @@ namespace StatsDirect.Builtins
             throw new Exception("Trying to call rptNestMeans without the prerequisites set");
         }
 
+        /// <summary>
+        /// Latin square analysis of variance: the observations with the codes of their row, column and treatment, which may be
+        /// any distinct values in any order (LatinSquareIndexes); there are to be n by n of them, each row and column met once
+        /// and each treatment once in every row and once in every column, which is checked. The sums of squares of the rows,
+        /// the columns and the treatments are each the sum of (total - grand total / n)^2 over n on n - 1 degrees of freedom,
+        /// the total is the sum of (observation - grand mean)^2, and the residual is the total less the other three on
+        /// (n - 1)(n - 2); each of the three has its variance ratio against the residual and its P.
+        /// </summary>
         public static StepOutput RptLatin(ParameterBag parameters)
         {
             //  Get observations into a temporary vector v - precondition: the number of observations is a square
@@ -2195,6 +2312,17 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// Two period crossover trial of a drug against a placebo: group 1 had the drug first and group 2 the placebo first,
+        /// so that the second group's drug column is its second period; a baseline, when given, is subtracted from both periods;
+        /// a subject with a missing value is left out with a warning. For each group the mean of each period and of the drug
+        /// less placebo differences. The relative effect is the mean of every subject's difference, the second group's with
+        /// the sign changed, as a paired t test on n1 + n2 - 1 degrees of freedom. The treatment effect is half the difference
+        /// between the two groups' mean differences, with its interval and t on n1 + n2 - 2 degrees of freedom from the pooled
+        /// variance of the differences; the period effect is the sum of the two mean differences over the same standard
+        /// error; and the treatment-period interaction compares the two groups' means of each subject's two periods added, by
+        /// t with the pooled variance of the sums.
+        /// </summary>
         public static StepOutput RptCrossover(ParameterBag parameters)
         {
             double dif; double sumsum1 = 0; double dsum = 0; double psum = 0;
@@ -2392,6 +2520,11 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// What the comparisons need from the analysis that went before: the residual degrees of freedom and mean square, the
+        /// group means and the sizes, which the analysis cached (equivalent sizes after a replicated two way analysis with
+        /// missing repeats), or worked out from the data as a one way analysis when nothing is cached.
+        /// </summary>
         private static ParameterCarrier FindOrCalculateParameters(ParameterBag parameters)
         {
             ParameterCarrier carrier = new();
