@@ -883,7 +883,8 @@ namespace StatsDirect.Builtins
         /// <remarks>
         /// The differences are not listed: findnext walks up them in order from the smallest, giving the next larger difference and
         /// how many pairs have it, so that the K-th and the middle are reached in the order of n1 n2 / 2 steps. The values are
-        /// taken in whole numbers of a scale that keeps 15 figures of the largest value, and the larger differences are the smaller
+        /// taken in whole numbers of up to 16 figures, each divided by the largest size among them and multiplied by 9e15, and
+        /// the larger differences are the smaller
         /// of the values with their signs changed. The progress bar can stop the count, which then gives asterisks. K of -99 is
         /// a sample too large for the count.
         /// </remarks>
@@ -921,22 +922,20 @@ namespace StatsDirect.Builtins
 
                 //  Find the largest value in size (both samples are sorted, so it is at an end of one of them)...
                 double bigx = Math.Max(Math.Max(Math.Abs(x[1]), Math.Abs(x[n1])), Math.Max(Math.Abs(x[n1 + 1]), Math.Abs(x[n1 + n2])));
-                //  ... and set a scale that keeps 15 figures of it, within which every difference of two values fits a long. (The
-                //  differences were in whole numbers of a hundred thousandth, so that limits of values of about 1 had 5 decimal
-                //  places; and only the largest value used to be looked at, not the largest in size, so negative values below
-                //  about -21,000 overflowed and the whole report was lost.)
-                double scaler = 1.0;
-                if (bigx > 0.0)
-                {
-                    while (bigx * scaler >= 9.0e15)
-                        scaler /= 10.0;
-                    while (bigx * scaler * 10.0 < 9.0e15 && scaler < 1.0e290)
-                        scaler *= 10.0;
-                }
+                //  ... and turn the values into whole numbers of up to 16 figures, within which every difference of two values
+                //  fits a long: each value is divided by the largest size (a quotient from -1 to 1, whatever the scale of the
+                //  values, down to the smallest doubles) and multiplied by 9e15, and a result is taken back through the same
+                //  steps. (The differences were in whole numbers of a hundred thousandth, so that limits of values of about 1
+                //  had 5 decimal places; only the largest value used to be looked at, not the largest in size, so negative
+                //  values below about -21,000 overflowed and the whole report was lost; and a multiplier in place of the
+                //  quotient could not go above 1e290, so that values below about 1e-290 gave limits of 0.)
+                double unit = bigx > 0.0 ? bigx : 1.0;
+                const double whole = 9.0e15;
+                double Unscaled(long c) => c / whole * unit;
                 for (int j = 1; j <= n1; j++)
-                    xx[j] = Convert.ToInt64(x[j] * scaler);
+                    xx[j] = Convert.ToInt64(x[j] / unit * whole);
                 for (int j = 1; j <= n2; j++)
-                    yy[j] = Convert.ToInt64(x[n1 + j] * scaler);
+                    yy[j] = Convert.ToInt64(x[n1 + j] / unit * whole);
                 bool domed = true;
                 bool dokl = true;
                 int goal = midu + k;
@@ -958,7 +957,7 @@ namespace StatsDirect.Builtins
                         if (dokl)
                         {
                             dokl = false;
-                            kl = c / (double)scaler;
+                            kl = Unscaled(c);
                         }
                     }
                     if (i >= midl)
@@ -966,12 +965,12 @@ namespace StatsDirect.Builtins
                         if (domed)
                         {
                             domed = false;
-                            median = c / (double)scaler;
+                            median = Unscaled(c);
                         }
                     }
                 }
                 if (midu != midl)
-                    median = domed ? c / (double)scaler : (median + c / (double)scaler) / 2;
+                    median = domed ? Unscaled(c) : (median + Unscaled(c)) / 2;
                 for (int j = 1; j <= n1; j++)
                     xx[j] = -xx[j];
                 for (int j = 1; j <= n2; j++)
@@ -992,7 +991,7 @@ namespace StatsDirect.Builtins
                         return outputParameters;
                     }
                 }
-                double ku = -c / (double)scaler;
+                double ku = -Unscaled(c);
                 outputParameters.AddOutput("median", median);
                 outputParameters.AddOutput("from", kl);
                 outputParameters.AddOutput("to", ku);
@@ -2771,7 +2770,8 @@ namespace StatsDirect.Builtins
         /// <remarks>
         /// The averages are not listed: pairnext walks up the sums of two differences in order from the smallest, giving the next
         /// larger sum and how many pairs have it, so that the K-th and the middle are reached in the order of n^2 / 4 steps. The
-        /// differences are taken in whole numbers of a scale that keeps 15 figures of the largest, and the larger sums are the
+        /// differences are taken in whole numbers of up to 16 figures, each divided by the largest size among them and multiplied
+        /// by 9e15, and the larger sums are the
         /// smaller of the differences with their signs changed. The progress bar can stop the count, which then gives asterisks;
         /// more averages than a 32-bit count holds are refused with a message.
         /// </remarks>
@@ -2802,21 +2802,19 @@ namespace StatsDirect.Builtins
                 // large negative values overflowed)
                 for (int j = 1; j <= size; j++)
                     bigx = Math.Max(bigx, Math.Max(Math.Max(Math.Abs(x[j]), Math.Abs(y[j])), Math.Abs(x[j] - y[j])));
-                // a scale that keeps 15 figures of the largest value, within which every sum of two values fits a long (the
+                // the differences are turned into whole numbers of up to 16 figures, within which every sum of two of them fits a
+                // long: each is divided by the largest size (a quotient from -1 to 1, whatever the scale of the values, down to
+                // the smallest doubles) and multiplied by 9e15, and a result is taken back through the same steps (the
                 // differences were in whole numbers of a hundred thousandth, so that limits of values of about 1 had 5 decimal
-                // places; and very small values used to give limits of 0, because the scale could not go above 100000)
-                double scaler = 1.0;
-                if (bigx > 0.0)
-                {
-                    while (bigx * scaler >= 9.0e15)
-                        scaler /= 10.0;
-                    while (bigx * scaler * 10.0 < 9.0e15 && scaler < 1.0e290)
-                        scaler *= 10.0;
-                }
+                // places; very small values used to give limits of 0, because the scale could not go above 100000, and later
+                // because a multiplier in place of the quotient could not go above 1e290)
+                double unit = bigx > 0.0 ? bigx : 1.0;
+                const double whole = 9.0e15;
+                double Unscaled(long c) => c / whole * unit;
 
                 long[] xx = new long[size + 1];
                 for (int j = 1; j <= size; j++)
-                    xx[j] = Convert.ToInt64((x[j] - y[j]) * scaler);
+                    xx[j] = Convert.ToInt64((x[j] - y[j]) / unit * whole);
                 Array.Sort(xx, 1, size);
                 int midu, midl;
                 if (limit % 2 == 0)
@@ -2852,7 +2850,7 @@ namespace StatsDirect.Builtins
                         if (dokl)
                         {
                             dokl = false;
-                            kl = c / scaler / 2.0;
+                            kl = Unscaled(c) / 2.0;
                         }
                     }
                     if (i >= midl)
@@ -2860,16 +2858,16 @@ namespace StatsDirect.Builtins
                         if (domed)
                         {
                             domed = false;
-                            median = c / scaler / 2.0;
+                            median = Unscaled(c) / 2.0;
                         }
                     }
                 }
                 if (midu != midl)
                 {
                     if (domed)
-                        median = c / scaler / 2.0;
+                        median = Unscaled(c) / 2.0;
                     else
-                        median = (median + c / scaler / 2.0) / 2.0;
+                        median = (median + Unscaled(c) / 2.0) / 2.0;
                 }
                 for (int j = 1; j <= size; j++)
                     xx[j] = -xx[j];
@@ -2888,7 +2886,7 @@ namespace StatsDirect.Builtins
                         return outputParameters;
                     }
                 }
-                double ku = -c / scaler / 2.0;
+                double ku = -Unscaled(c) / 2.0;
                 outputParameters.AddOutput("from", kl);
                 outputParameters.AddOutput("to", ku);
                 outputParameters.AddOutput("med_diff", median);
