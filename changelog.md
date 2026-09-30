@@ -2,7 +2,9 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
-##[Unreleased]
+##[v5.0.14] 2026-09-30
+
+Version 5.0.14 follows checks of every function on the Randomization, Sample Size, Distributions, Clinical Epidemiology, Descriptive, Parametric Methods, Nonparametric and Analysis of Variance menus against figures calculated from the definitions, one routine at a time, with the routines commented as they were checked; this completes that pass over the Analysis menu. Among the corrections are the studentized range, whose refusal of a probability of 1 made the Newman-Keuls comparisons of 5.0.13 report no difference with some numbers of degrees of freedom; P values below 1e-16 that were given as 0; confidence levels of 0% or 100% that were taken as they are; counts that are not whole numbers; and sums of squares and confidence limits that lost figures with values that are very large or very small. The bootstraps of the Gini coefficient, the diversity indices and the method comparison regression take a seed, so that a run can be repeated, and the allocations and simulated P values that shuffle draw every arrangement with the same chance.
 
 ### Fixed
 - Allocation by preference: with more places left than subjects, when some subjects could not be given any group that they preferred, the analysis stopped with "Index was outside the bounds of the array" (three subjects who all prefer a group of one place, with 50 places in another group, were enough). The subjects that are left are now given groups drawn in proportion to the places that the groups have left. Capacities that add up to more than 2,147,483,647 had been refused as fewer than the subjects; they are taken
