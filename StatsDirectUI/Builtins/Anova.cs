@@ -769,6 +769,11 @@ namespace StatsDirect.Builtins
                     tlist += ", ";
                 tlist += v.Title;
             }
+            //  what the analysis cannot be made of (it used to give asterisks)
+            if (frame.VariableCount < 2 || Array.Exists(tnx, n => n == 0))
+                throw new TemplateOperationCancelledException("The one way ANOVA needs at least two groups, each with at least one observation.", "One Way ANOVA");
+            if (ntot - frame.VariableCount < 1)
+                throw new TemplateOperationCancelledException("There are no residual degrees of freedom: at least one group needs two observations or more.", "One Way ANOVA");
 
             double gm = sumtot / ntot;
             double sstot = 0;
@@ -779,6 +784,8 @@ namespace StatsDirect.Builtins
                     if (val != Constant.MISSING)
                         sstot += (val - gm) * (val - gm);
             }
+            if (sstot <= 0.0)
+                throw new TemplateOperationCancelledException("The analysis cannot be calculated when all of the observations are the same.", "One Way ANOVA");
 
             double ssgroup = 0;
             for (int d = 0; d < frame.VariableCount; d++)
@@ -957,8 +964,13 @@ namespace StatsDirect.Builtins
 
             XTwoWay(y, out double[] mean, nr, nc, 1, out double ssrow, out double sscol, out double scrap, out double sstot, out double ssres, out int dfrow, out int dfcol, out int iscrap, out int dftot, out int dfres, out int fault);
 
+            //  what the analysis cannot be made of (it used to stop with "Invalid calculation", or give an infinite ratio)
+            if (fault == 1)
+                throw new TemplateOperationCancelledException("The two way ANOVA needs at least two columns and at least two rows with a value in every column.", "Two Way ANOVA");
             if (fault != 0)
-                throw new Exception("Invalid calculation");
+                throw new TemplateOperationCancelledException("The analysis cannot be calculated when all of the observations are the same.", "Two Way ANOVA");
+            if (ssres <= 0.0)
+                throw new TemplateOperationCancelledException("The analysis cannot be calculated when the residual sum of squares is 0: the values are exactly the sums of row and column effects.", "Two Way ANOVA");
 
             string tlist = string.Empty;
             for (int d = 0; d < frame.VariableCount; d++)
@@ -1078,8 +1090,13 @@ namespace StatsDirect.Builtins
                     tlist = tlist + ", " + outputFrame.Variables[d].Title;
             }
 
+            //  what the analysis cannot be made of (it used to stop with "Invalid calculation")
+            if (fault == 1)
+                throw new TemplateOperationCancelledException("The replicated two way ANOVA needs at least two blocks and two treatments, each cell with at least one observation.", "Replicated Two Way ANOVA");
             if (fault != 0)
-                throw new Exception("Invalid calculation");
+                throw new TemplateOperationCancelledException("The analysis cannot be calculated when all of the observations are the same.", "Replicated Two Way ANOVA");
+            if (ssres <= 0.0)
+                throw new TemplateOperationCancelledException("The analysis cannot be calculated when the residual sum of squares is 0: the repeats of every cell are the same.", "Replicated Two Way ANOVA");
 
             if (absconders > 0)
             {
@@ -1210,7 +1227,19 @@ namespace StatsDirect.Builtins
             int[] ngp = null;
             double[] gbar = null;
             double gm = 0;
+            //  observations that are all the same have no analysis (they used to be refused with the message about the subgroups)
+            bool allTheSame = ctr >= 2;
+            for (int i = 2; i <= ctr && allTheSame; i++)
+                if (y[i] != y[1])
+                    allTheSame = false;
+            if (allTheSame)
+                throw new TemplateOperationCancelledException("The analysis cannot be calculated when all of the observations are the same.", "Nested ANOVA");
+
             XTwoHier(frame, y, ctr, nobs, ivar, ref ngp, ref gbar, ref sgbar, ref gm, ref ss, ref idf, ref f, ref fp, out bool fault);
+
+            //  a residual sum of squares of 0, with a total above 0, is the other fault after the sums are worked out
+            if (fault && ss[4] > 0.0 && ss[3] <= 0.0)
+                throw new TemplateOperationCancelledException("The analysis cannot be calculated when the residual sum of squares is 0: the observations of every subgroup are the same.", "Nested ANOVA");
 
             ParameterBag outputParameters = new();
             if (!fault)
@@ -1818,6 +1847,9 @@ namespace StatsDirect.Builtins
                 }
             }
 
+            if (frame.VariableCount < 2)
+                throw new TemplateOperationCancelledException("The equality of variance tests need at least two groups.", "Homogeneity of Variance");
+
             double[] sums = new double[frame.VariableCount];
             double[] sum2 = new double[frame.VariableCount];
             long[] tnx = new long[frame.VariableCount];
@@ -1898,6 +1930,9 @@ namespace StatsDirect.Builtins
                 sum2MdnDiffTot += sum2MdnDiff;
                 variances[d] = sqMeanDiffTot / (tnx[d] - 1.0);
             }
+            //  Bartlett's test takes the logarithm of each variance, and Welch's test divides by it (the tests used to give asterisks)
+            if (Array.Exists(variances, v => v <= 0.0))
+                throw new TemplateOperationCancelledException("The equality of variance tests cannot be calculated when all of the observations of a group are the same.", "Homogeneity of Variance");
             //  Bartlett's test from the variances about the group means: a sum of squares less the square of the sum
             //  loses figures when the values are large compared with their spread
             for (int d = 0; d < frame.VariableCount; d++)
