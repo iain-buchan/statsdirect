@@ -4,6 +4,11 @@ using System;
 using System.Collections.Generic;
 namespace StatsDirect.Numerics
 {
+    /// <summary>
+    /// The summary statistics of one sample, with weights or without: the number of values, their sum, mean, variance and what
+    /// is made of it, the geometric mean, the skewness and the kurtosis, and the quantiles. A statistic that cannot be worked
+    /// out is Constant.MISSING.
+    /// </summary>
     public class Summary
     {
         public int ValidData { get; set; }
@@ -37,14 +42,18 @@ namespace StatsDirect.Numerics
         public string UserCentileUCaption { get; set; }
         public string Title { get; set; }
 
+        // The definition of the quantiles: 2 for the value at the place p (n + 1) of the values in order, anything else for
+        // the definition that has weights (GetCentile)
         public int CentileType;
 
+        // A value with its weight, as the weights are after they have been made to sum to the number of values
         public struct VarAndWeight
         {
             public double Data;
             public double Weight;
         }
 
+        // The order of the values with their weights: by the value, the less first
         private class VarAndWeightByData : IComparer<VarAndWeight>
         {
             private int Compare(VarAndWeight x, VarAndWeight y)
@@ -66,19 +75,31 @@ namespace StatsDirect.Numerics
 
         }
 
+        // With n values x and weights w that sum to n: the sum is that of w x, and the mean is the sum over n. The variance is
+        // the sum of w (x - mean)^2 over n - 1, the standard error of the mean is the standard deviation over the root of n,
+        // and the confidence limits are the mean less and plus the standard error times the value of Student's t with n - 1
+        // degrees of freedom that leaves half of what the level leaves above it. The variance coefficient is the standard
+        // deviation over the mean. The geometric mean is the exponential of the sum of w ln(x) over n, if every value is above
+        // 0. With the moments m2, m3 and m4, the sums of w (x - mean)^2, ^3 and ^4 over n, the skewness is m3 / m2^1.5 and the
+        // kurtosis m4 / m2^2 (3 for a normal distribution); they need more than 3 values that are not all the same.
+        // SumOfWeights is the sum of the weights as they are given. One value is its own mean, median, quartiles and centiles
+        // and has no variance.
         ///  <summary>
         ///  Univariate summary statistics with optional analytical weights
         ///  </summary>
-        ///  <param name="x"></param>
-        ///  <param name="v"></param>
+        ///  <param name="x">The values; one that is Constant.MISSING or not a number is left out with its weight</param>
+        ///  <param name="v">The weights, 1 for each value if there are none; a value without a weight is left out</param>
         ///  <param name="start">Index of the first valid row in x and v</param>
         ///  <param name="rows">Number of valid rows</param>
-        ///  <param name="userCL"></param>
-        ///  <param name="userCentL"></param>
-        ///  <param name="userCentU"></param>
-        ///  <param name="nvSum"></param>
+        ///  <param name="userCL">The confidence level of the limits of the mean, for which 0.95 is taken if it is not above 0 and
+        ///  below 1</param>
+        ///  <param name="userCentL">A percentage from 0 to 100 of which the centile is wanted (UserCentileL); outside that, none
+        ///  is given</param>
+        ///  <param name="userCentU">The same for a second centile (UserCentileU)</param>
+        ///  <param name="nvSum">What the weights are multiplied by; if it is Constant.MISSING, by the number of values over
+        ///  the sum of the weights, so that they sum to the number of values</param>
         ///  <param name="xs">1-based array of VarAndWeight</param>
-        ///  <returns></returns>
+        ///  <returns>Whether there is a value at all</returns>
         ///  <remarks>see Gleason JR. Univariate summaries with boxplots. Stata Technical Bulletin sg67, 1997 and sg67.1, 1999.</remarks>
         public bool FullSummary(double[] x, double[] v, int start, int rows, double userCL, double userCentL, double userCentU, double nvSum, out VarAndWeight[] xs)
         {
@@ -325,8 +346,14 @@ namespace StatsDirect.Numerics
             return false;
         }
 
+        // Centile type 2: the value at the place m = centile (n + 1), held to 1 and n: between the values at the whole number
+        // below m and the next, in proportion to the part of m that is beyond the whole number. It takes no weights.
+        // Otherwise (centile type 1): the first value at which the sum of the weights so far is above centile n; if the sum
+        // before that value is centile n, the mean of that value and the one before it. With weights of 1 this is the value
+        // at the place above centile n, or the mean of two values if centile n is a whole number.
         ///  <summary>
-        ///  
+        ///  The quantile at the part centile (0 to 1) of n values in order with their weights: the least value at 0 and the
+        ///  greatest at 1.
         ///  </summary>
         ///  <param name="x">An array from 1 to n with all elements valid</param>
         ///  <param name="n"></param>
@@ -377,6 +404,8 @@ namespace StatsDirect.Numerics
             return x[i].Data;
         }
 
+        // The summary of column k of a table of which the rows start at 1, with the weights of the same column of the table wt;
+        // the quantiles are of centile type 1, which has weights. The title has the name of the weights
         public bool WeightedSummaryFromXK(int k, double[,] x, int rows, string ti, double userCL, double userCentL, double userCentU, double[,] wt, string wti, double nvSum)
         {
             Title = ti + " (weight: " + wti + ")";
@@ -391,6 +420,8 @@ namespace StatsDirect.Numerics
             return FullSummary(z, v, 0, rows, userCL, userCentL, userCentU, nvSum, out VarAndWeight[] _);
         }
 
+        // The summary of the values of an array that starts at 1, without weights, and the values that are not missing in
+        // order (xSorted, from 1)
         public bool FullSummaryFromXSort(double[] x, out double[] xSorted, int rows, string ti, double userCL, double userCentL, double userCentU, int centileDef)
         {
             int i;
@@ -407,6 +438,7 @@ namespace StatsDirect.Numerics
             return fullSummaryFromXSortReturn;
         }
 
+        // The summary of the first values of an array that starts at 0, without weights
         public bool FullSummaryFromX(double[] x, int rows, string ti, double UserCL, double UserCentL, double UserCentU, int CentileDef)
         {
             Title = ti;
@@ -417,6 +449,7 @@ namespace StatsDirect.Numerics
             return FullSummary(x, v, 0, rows, UserCL, UserCentL, UserCentU, Constant.MISSING, out VarAndWeight[] _);
         }
 
+        // The summary of column k of a table of which the rows start at 1, without weights
         public bool FullSummaryFromXK(int k, double[,] x, int rows, string ti, double userCL, double userCentL, double userCentU, int centileDef)
         {
             Title = ti;

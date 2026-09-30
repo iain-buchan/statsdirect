@@ -387,6 +387,17 @@ namespace StatsDirect.Builtins
         // the report prints the level that is used
         private static double XLevel(double level) => level > 0.0 && level < 1.0 ? level : 0.95;
 
+        /// <summary>
+        /// Quick univariate summary: the statistics of one column, as lines of text that the program shows in a window.
+        /// </summary>
+        /// <remarks>
+        /// The statistics are those of the univariate summary (Summary.FullSummary), with the quantiles of centile type 1 and
+        /// the 5th and 95th centiles; the figures have 6 decimal places.
+        /// </remarks>
+        /// <param name="host">What shows the text.</param>
+        /// <param name="parameters">"data": the column; "gamma": the confidence level of the limits of the mean, for which 0.95
+        /// is taken if it is not above 0 and below 1.</param>
+        /// <returns>Nothing: the text is given to the host.</returns>
         public static StepOutput QuickSummary(IUserInterface host, ParameterBag parameters)
         {
             double GAMMA = XLevel(parameters["gamma"].AsDouble);
@@ -426,16 +437,25 @@ namespace StatsDirect.Builtins
             return StepOutput.Empty();
         }
 
+        /// <summary>
+        /// Univariate summary: the summary statistics of each of the columns that are selected (RptDescriptive).
+        /// </summary>
         public static StepOutput RptUnivariateSummary(ParameterBag parameters)
         {
             return RptDescriptive(parameters, false);
         }
 
+        /// <summary>
+        /// Weighted univariate summary: the summary statistics of each of the columns that are selected, with the weights of
+        /// one column for all of them (RptDescriptive).
+        /// </summary>
         public static StepOutput RptWeightedUnivariateSummary(ParameterBag parameters)
         {
             return RptDescriptive(parameters, true);
         }
 
+        // The statistics of the summary, in the order of the rows of the report; the numbers are the places of their names
+        // in the list of RptDescriptive. Udc1 is the second of the user defined centiles and Udc2 the first
         private enum SummaryType
         {
             ValidData = 0,
@@ -462,6 +482,23 @@ namespace StatsDirect.Builtins
             Udc2 = 21
         }
 
+        /// <summary>
+        /// The summary statistics of each column of a table, with weights or without, for the report and for the worksheet.
+        /// </summary>
+        /// <remarks>
+        /// With weights, a row of which the weight is missing or 0 is left out of every column, and a weight below 0 is
+        /// refused; the weights that are left are made to sum to the number of values of each column (Summary.FullSummary), the
+        /// quantiles are of centile type 1, and the row of the sum has the sum of the weights as they are given.
+        /// </remarks>
+        /// <param name="parameters">"data": the columns; "weights": the column of the weights, if there are weights; "gamma": the
+        /// confidence level of the limits of the mean, for which 0.95 is taken if it is not above 0 and below 1;
+        /// "report-valid-data" and the other names that start with "report-": whether each statistic is wanted;
+        /// "report-udca", "report-udcb": the parts, from 0 to 1, of the two user defined centiles; "report-centile-type": 1 or
+        /// 2 (Summary.GetCentile); "output-to-frame": whether a table for the worksheet is wanted, which it is if the name is
+        /// not there.</param>
+        /// <returns>"*titles": for each column "title", its name; "*fields": for each statistic that is wanted "title", its
+        /// name, and "*results" with a "result" for each column; "output": the table for the worksheet, with a row for each
+        /// statistic if there is one column, and a row for each column if there are more.</returns>
         private static StepOutput RptDescriptive(ParameterBag parameters, bool isWeighted)
         {
             double nsumwt = 0;
@@ -661,6 +698,8 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        // Of the elements that are not missing, in order: the middle one, or the mean of the two in the middle. With one
+        // element or none the median is Constant.MISSING.
         ///  <summary>
         ///  Return the median of the elements of x from ia to iz inclusive.
         ///  </summary>
@@ -699,6 +738,8 @@ namespace StatsDirect.Builtins
             return Constant.MISSING;
         }
 
+        // The name of a statistic: that of the list, or for a user defined centile the name that the summary has made of its
+        // percentage
         private static string Caption(SummaryType summaryType, Summary sx, string[] titles)
         {
             switch (summaryType)
@@ -712,6 +753,7 @@ namespace StatsDirect.Builtins
             }
         }
 
+        // A statistic of a summary, for the table of the worksheet
         private static double Value(SummaryType summaryType, Summary sx, bool isWeighted)
         {
             switch (summaryType)
@@ -766,6 +808,7 @@ namespace StatsDirect.Builtins
             }
         }
 
+        // A column of the table of the worksheet: a statistic of each of the columns that are summarised, under its name
         private static DoubleVariable FillCell(SummaryType summaryType, Summary[] sx, int cols, string[] titles, bool isWeighted)
         {
             DoubleVariable v = new();
@@ -776,6 +819,8 @@ namespace StatsDirect.Builtins
             return v;
         }
 
+        // A row of the report: the name of a statistic ("title") and its value for each of the columns that are summarised
+        // ("*results", each with "result")
         private static ParameterBag FillField(SummaryType opt, Summary[] sx, int cols, bool optChecked, string optTitle, bool isWeighted)
         {
             ParameterBag fieldParameters = new();
@@ -877,6 +922,39 @@ namespace StatsDirect.Builtins
             return fieldParameters;
         }
 
+        /// <summary>
+        /// Time series summary: observations of subjects at times, summarised by the area under the curve of each subject, for
+        /// one group or more, with a comparison of the mean areas if there are two groups.
+        /// </summary>
+        /// <remarks>
+        /// A row without an observation is left out. For each group, and each time that it has: the number of observations,
+        /// their mean, standard deviation, standard error, median and interquartile range. For each subject: the observation
+        /// at the first time of the group (baseline), the least and the greatest observation, the time of the greatest, the
+        /// slope of the least squares line of the observations on time up to the greatest, and the area under the curve by
+        /// the trapezium rule over the observations that the subject has. For the group: the mean of the areas, their
+        /// standard deviation, the standard error (the standard deviation over the root of the number of subjects), and the
+        /// limits of the mean from Student's t with the number of subjects less 1 degrees of freedom, from the normal
+        /// distribution, and from the bootstrap if it is wanted (BootstrappingTimeSeriesSummaryStore). The quantiles are of
+        /// centile type 1. Two groups are compared by the t test for unequal variances (Welch) of the areas: t is the
+        /// difference of the means over the root of the sum of v1 and v2, the variances of the two means, with
+        /// (v1 + v2)^2 / (v1^2 / (n1 - 1) + v2^2 / (n2 - 1)) degrees of freedom.
+        /// The areas of all the groups, and their logarithms to base 10, are plotted against normal scores, with the square of
+        /// the correlation; a plot that cannot be drawn is left out, and the report says why.
+        /// </remarks>
+        /// <param name="host">The preferences and the progress bar.</param>
+        /// <param name="parameters">"times", "observations", "subjectIds", and "groups" if there are groups: a column each, of
+        /// the same length; "addZeroObservationAtZeroTime": whether each subject is to have an observation of 0 at time 0,
+        /// which is taken only if no time is 0; "ci": the confidence level, for which 0.95 is taken if it is not above 0 and
+        /// below 1; "doExactP": whether the bootstrap is wanted, with "iterations" and "seed".</param>
+        /// <returns>"ciOutput": the level as a percentage; "*group": for each group "groupName", "subjects",
+        /// "totalObservations", "meanObservationsPerTimePoint", "aucMean", "aucSd", "aucSe", "aucTLcl", "aucTUcl", "aucZLcl",
+        /// "aucZUcl", the medians and interquartile ranges "medianAuc", "iqrAuc", "medianTimeToMax", "iqrTimeToMax",
+        /// "medianSlopeToMax", "iqrSlopeToMax", "meanSlopeToMax", "meanSlopeToMaxSD", "*subject" and "*time" with the rows of
+        /// the subjects and of the times, "*bootstrap" with the limits of the bootstrap, and "chart"; "*aucNormal",
+        /// "*aucLogNormal": the normal plots with the squares of their correlations, each a row or nothing; "*aucNotPlotted":
+        /// why a plot is not there; "meanAucChart": the means of the groups at each time with their confidence limits;
+        /// "*groupComparison": with two groups "t", "se", "df", "p2", "aucDifference" and its limits, and "*bootstrap" with
+        /// the P value and the limits of the bootstrap.</returns>
         public static StepOutput RptTimeSeriesSummary(/* TODO: IPreferencesAndProgressBar */ ITemplateHost host, ParameterBag parameters)
         {
             // Extract our variables from the input
@@ -1277,6 +1355,9 @@ namespace StatsDirect.Builtins
             return most > least;
         }
 
+        // The observations of one group, as a table of times by subjects, and what is worked out of them. The rows of the data
+        // are gone through twice: first for the times and the subjects that there are (NoteRowPass1), then for the
+        // observations (NoteRowPass2)
         private class TimeSeriesSummaryStore
         {
             public Group Group { get; set; }
@@ -1328,6 +1409,7 @@ namespace StatsDirect.Builtins
 
             public int N => SortedSubjectIds.Count;
 
+            // A row of the data, in the first pass: its time and its subject are noted
             internal void NoteRowPass1(double time, double subjectId)
             {
                 SortedSubjectIds.Add(subjectId);
@@ -1362,6 +1444,8 @@ namespace StatsDirect.Builtins
                 AreasUnderCurve = new double[IndexToTimeMap.Length, SortedSubjectIds.Count];
             }
 
+            // A row of the data, in the second pass: its observation is put into the table. A second observation of a subject
+            // at a time is refused, unless it is the same as the first
             internal void NoteRowPass2(double time, double observation, double subjectId)
             {
                 int timeIndex = TimeToSummaryMap[time].Index;
@@ -1397,9 +1481,10 @@ namespace StatsDirect.Builtins
             }
 
             /// <summary>
-            /// 
+            /// The summary of each time, the area under the curve of each subject, and the mean of the areas with its standard
+            /// error and confidence limits.
             /// </summary>
-            /// <param name="ci"></param>
+            /// <param name="ci">The confidence level</param>
             /// <param name="isBootstrap">If true, this is a calculation for bootstrapping and therefore we can elide much of the calculation.</param>
             internal void Calculate(double ci, bool isBootstrap)
             {
@@ -1589,6 +1674,7 @@ namespace StatsDirect.Builtins
                 }
             }
 
+            // The least squares line of the first values of y on those of x, of the pairs of which neither is missing
             private static SimpleLinearRegressionContext GetProcessedContext(double[] y, double[] x, int length)
             {
                 DoubleArraysAndBooleans copiesRemovingMissingRows = Numerics.Utilities.RemoveMissingRows(new[] { y, x }, 0, length, 0);
@@ -1598,6 +1684,11 @@ namespace StatsDirect.Builtins
             }
         }
 
+        // The bootstrap of the mean area under the curve of a group. Whole subjects are drawn with replacement, as many as the
+        // group has; of each draw the mean area and its standard error are worked out, and t* = (the mean area of the group
+        // less that of the draw) over the standard error of the draw is kept. The limits of the mean area are the mean plus
+        // the standard error of the group times the centiles of t* that leave half of what the confidence level leaves
+        // below and above them (TLcl, TUcl)
         private class BootstrappingTimeSeriesSummaryStore
         {
             private readonly TimeSeriesSummaryStore original;
@@ -1613,6 +1704,8 @@ namespace StatsDirect.Builtins
                 this.original = original;
             }
 
+            // The draws are made, as many as iterations, or as many as there are when the user stops them. With keepAucs the
+            // mean area of each draw and the variance of that mean are kept, for the comparison of two groups
             public void Bootstrap(IProgressBarHost host, int iterations, MersenneTwister mt, double ci, bool keepAucs)
             {
                 if (keepAucs)
