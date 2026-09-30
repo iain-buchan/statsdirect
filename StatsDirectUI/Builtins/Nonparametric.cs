@@ -852,30 +852,33 @@ namespace StatsDirect.Builtins
             }
             using (IProgressBar progress = host.StartProgress("Calculating Confidence Interval", true))
             {
-                int[] xx = new int[n1 + 1];
-                int[] yy = new int[n2 + 1];
+                long[] xx = new long[n1 + 1];
+                long[] yy = new long[n2 + 1];
                 Array.Sort(x, n1 + 1, n2);
                 Array.Sort(x, 1, n1);
 
                 //  Find the largest value in size (both samples are sorted, so it is at an end of one of them)...
                 double bigx = Math.Max(Math.Max(Math.Abs(x[1]), Math.Abs(x[n1])), Math.Max(Math.Abs(x[n1 + 1]), Math.Abs(x[n1 + n2])));
-                //  ... and set a scale so that every value fits within the range of an Integer. Only the largest value used to be
-                //  looked at, not the largest in size, so negative values below about -21,000 overflowed and the whole report was
-                //  lost; the scale could not go below 1, so values above about 2e8 gave no interval; and it could not go above
-                //  100000, so very small values gave limits of 0.
-                double scaler = 100000.0;
-                while (bigx * scaler >= int.MaxValue / 10.0)
-                    scaler /= 10.0;
-                while (bigx > 0.0 && bigx * scaler < 1000.0 && scaler < 1e300)
-                    scaler *= 10.0;
+                //  ... and set a scale that keeps 15 figures of it, within which every difference of two values fits a long. (The
+                //  differences were in whole numbers of a hundred thousandth, so that limits of values of about 1 had 5 decimal
+                //  places; and only the largest value used to be looked at, not the largest in size, so negative values below
+                //  about -21,000 overflowed and the whole report was lost.)
+                double scaler = 1.0;
+                if (bigx > 0.0)
+                {
+                    while (bigx * scaler >= 9.0e15)
+                        scaler /= 10.0;
+                    while (bigx * scaler * 10.0 < 9.0e15 && scaler < 1.0e290)
+                        scaler *= 10.0;
+                }
                 for (int j = 1; j <= n1; j++)
-                    xx[j] = Convert.ToInt32(x[j] * scaler);
+                    xx[j] = Convert.ToInt64(x[j] * scaler);
                 for (int j = 1; j <= n2; j++)
-                    yy[j] = Convert.ToInt32(x[n1 + j] * scaler);
+                    yy[j] = Convert.ToInt64(x[n1 + j] * scaler);
                 bool domed = true;
                 bool dokl = true;
                 int goal = midu + k;
-                int c = xx[1] - yy[n2] - 1;
+                long c = xx[1] - yy[n2] - 1;
                 int i = 0;
                 while (i < midu)
                 {
@@ -939,35 +942,17 @@ namespace StatsDirect.Builtins
         //  reports of the program take it; the level that is used is the one that is printed.
         private static double XLevel(double level) => level > 0.0 && level < 1.0 ? level : 0.95;
 
-        private static double XXmdn(double[] x, int nx, int n1, int n2)
+        //  The median of the n values of x from x[first]: the middle value in order, or the mean of the two middle values. A
+        //  sample of one value is its own median, and a sample of none has none. (The second sample used to be given the median
+        //  of the first when it has one value, and a sample of one value the median 0.)
+        private static double XXmdn(double[] x, int first, int n)
         {
-            int n;
-            double[] ax;
-
-            if (n2 == 1)
-            {
-                ax = new double[n1 + 1];
-                for (int j = 1; j <= n1; j++)
-                    ax[j] = x[j];
-                n = n1;
-            }
-            else
-            {
-                ax = new double[n2 + 1];
-                for (int j = n1 + 1; j <= nx; j++)
-                    ax[j - n1] = x[j];
-                n = n2;
-            }
-            if (n >= 2)
-            {
-                Array.Sort(ax, 1, n);
-                double mdn = 0.5 * (n + 1);
-                if (mdn - Math.Floor(mdn) != 0)
-                    return (ax[Convert.ToInt32(mdn - 0.5)] + ax[Convert.ToInt32(mdn + 0.5)]) / 2.0;
-                else
-                    return ax[Convert.ToInt32(mdn)];
-            }
-            return 0;
+            if (n < 1)
+                return Constant.MISSING;
+            double[] ax = new double[n];
+            Array.Copy(x, first, ax, 0, n);
+            Array.Sort(ax);
+            return n % 2 == 1 ? ax[n / 2] : (ax[n / 2 - 1] + ax[n / 2]) / 2.0;
         }
 
         public static StepOutput RptCuzick(ParameterBag parameters)
@@ -1589,12 +1574,12 @@ namespace StatsDirect.Builtins
 
             outputParameters.AddOutput("sample_1", v0.Title);
             outputParameters.AddOutput("obs_1", n1);
-            outputParameters.AddOutput("median_1", XXmdn(x, n, n1, 1));
+            outputParameters.AddOutput("median_1", XXmdn(x, 1, n1));
             outputParameters.AddOutput("ranksum", r1);
 
             outputParameters.AddOutput("sample_2", v1.Title);
             outputParameters.AddOutput("obs_2", n2);
-            outputParameters.AddOutput("median_2", XXmdn(x, n, n1, n2));
+            outputParameters.AddOutput("median_2", XXmdn(x, n1 + 1, n2));
 
             outputParameters.AddOutput("u", u);
             outputParameters.AddOutput("u_prime", uprime);
@@ -2689,17 +2674,17 @@ namespace StatsDirect.Builtins
                 // large negative values overflowed)
                 for (int j = 1; j <= size; j++)
                     bigx = Math.Max(bigx, Math.Max(Math.Max(Math.Abs(x[j]), Math.Abs(y[j])), Math.Abs(x[j] - y[j])));
-                double scaler = 100000;
-                do
+                // a scale that keeps 15 figures of the largest value, within which every sum of two values fits a long (the
+                // differences were in whole numbers of a hundred thousandth, so that limits of values of about 1 had 5 decimal
+                // places; and very small values used to give limits of 0, because the scale could not go above 100000)
+                double scaler = 1.0;
+                if (bigx > 0.0)
                 {
-                    if (bigx * scaler < Convert.ToDouble(long.MaxValue) / 10.0)
-                        break;
-                    scaler /= 10;
+                    while (bigx * scaler >= 9.0e15)
+                        scaler /= 10.0;
+                    while (bigx * scaler * 10.0 < 9.0e15 && scaler < 1.0e290)
+                        scaler *= 10.0;
                 }
-                while (true);
-                // very small values used to give limits of 0, because the scale could not go above 100000
-                while (bigx > 0.0 && bigx * scaler < 1000.0 && scaler < 1e300)
-                    scaler *= 10;
 
                 long[] xx = new long[size + 1];
                 for (int j = 1; j <= size; j++)

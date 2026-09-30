@@ -85,7 +85,7 @@ namespace StatsDirect.Numerics
         }
 
 
-        public static int findnext(out int occ, int c, int[] x, int lenx, int[] y, int leny)
+        public static long findnext(out int occ, long c, long[] x, int lenx, long[] y, int leny)
         {
             int yii = 1;
             int xii = 1;
