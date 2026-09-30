@@ -56,6 +56,13 @@
           <minimum-value>0</minimum-value>
           <default-value>1</default-value>
         </double>
+        <integer>
+          <name>seed</name>
+          <prompt>Seed</prompt>
+          <default-value>=Base.DefaultSeed()</default-value>
+          <force-default>true</force-default>
+          <must-request>true</must-request>
+        </integer>
         <multiple-options>
           <name>desired-charts</name>
           <prompt>Charts</prompt>
@@ -213,6 +220,9 @@ once <- function(sd.method.name, x, xname, y, yname, human.readable.name) {
     method.ci <- "nestedbootstrap"
   }
   
+  # The bootstrap intervals are of random re-samples: each regression starts from the seed given, so that a run can be repeated
+  # and a method gives the same interval whichever other methods are asked for with it
+  set.seed(seed)
   model <- mcreg(x, y, error.ratio=error.ratio, alpha=alpha, method.reg=method.reg, method.ci=method.ci, method.bootstrap.ci = method.bootstrap.ci, mref.name = xname, mtest.name = yname, na.rm=TRUE)
   if (exists("returning.to.statsdirect")) {
     retval <- list()
@@ -298,7 +308,8 @@ if (exists("returning.to.statsdirect")) {
 <p>Test method: @yname<br />
 Reference method: @xname<br />
 Sample size: @{samples:roundx}<br />
-Error ratio: @{error-ratio:roundx}</p>
+Error ratio: @{error-ratio:roundx}<br />
+Seed for bootstrap intervals: @seed</p>
 <block name="methodResults">
 <subtitle>@title:</subtitle>
 
