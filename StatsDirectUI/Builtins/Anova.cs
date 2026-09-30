@@ -70,6 +70,33 @@ namespace StatsDirect.Builtins
             }
 
             gm = ydd / Convert.ToDouble(N);
+            //  each mean is corrected by the mean of the deviations from it, which is the rounding of the first pass when the
+            //  values are large beside their spread (values of about a million that differ by units had the sums of squares
+            //  between the groups and between the subgroups off by a part in ten thousand million)
+            double left = 0.0;
+            for (int i = 1; i <= N; i++)
+                left += y[i] - gm;
+            gm += left / Convert.ToDouble(N);
+            nlo = 1;
+            nsub = 0;
+            for (int i = 0; i < frame.VariableCount; i++)
+            {
+                int gfirst = nlo;
+                for (int j = 0; j < frame.Variables[i].Count; j++)
+                {
+                    nsub += 1;
+                    int nij = nobs[nsub];
+                    double sleft = 0.0;
+                    for (int M = nlo; M <= nlo + nij - 1; M++)
+                        sleft += y[M] - sgbar[nsub];
+                    sgbar[nsub] += sleft / Convert.ToDouble(nij);
+                    nlo += nij;
+                }
+                double gleft = 0.0;
+                for (int M = gfirst; M < nlo; M++)
+                    gleft += y[M] - gbar[i + 1];
+                gbar[i + 1] += gleft / Convert.ToDouble(ngp[i + 1]);
+            }
             for (int i = 1; i <= N; i++)
             {
                 double z = y[i] - gm;
@@ -97,9 +124,22 @@ namespace StatsDirect.Builtins
                 }
             }
 
+            //  the residual from the deviations about the subgroup means (it was the total less the other sums of squares, which
+            //  loses figures when the values are large beside their spread)
+            double S3 = 0.0;
+            nlo = 1;
+            for (int i = 1; i <= L; i++)
+            {
+                for (int M = nlo; M <= nlo + nobs[i] - 1; M++)
+                {
+                    double z = y[M] - sgbar[i];
+                    S3 += z * z;
+                }
+                nlo += nobs[i];
+            }
             ss[1] = S1;
             ss[2] = S2;
-            ss[3] = s4 - S2 - S1;
+            ss[3] = S3;
             ss[4] = s4;
 
             idf[1] = frame.VariableCount - 1;
@@ -175,6 +215,7 @@ namespace StatsDirect.Builtins
                 col[j] = yt / dnr;
                 sscol += (col[j] - gm) * (col[j] - gm);
             }
+            double within = 0.0;   //  the sum of squares within the cells, from the deviations about the cell means
             for (int i = 1; i <= nr; i++)
             {
                 ssrow += (row[i] - gm) * (row[i] - gm);
@@ -182,7 +223,10 @@ namespace StatsDirect.Builtins
                 {
                     ssint += (cell[i, j] - (row[i] - gm) - col[j]) * (cell[i, j] - (row[i] - gm) - col[j]);
                     for (int k = 1; k <= nm; k++)
+                    {
                         sstot += (y[k, i, j] - gm) * (y[k, i, j] - gm);
+                        within += (y[k, i, j] - cell[i, j]) * (y[k, i, j] - cell[i, j]);
+                    }
                 }
             }
             fault = 2;
@@ -204,7 +248,9 @@ namespace StatsDirect.Builtins
             sscol = dnr * dnm * sscol;
             ssint = dnm * ssint;
             // sstot = sstot; 
-            ssres = nm == 1 ? ssint : Math.Max(0.0, sstot - ssrow - sscol - ssint);
+            //  with repeats the residual is the sum of squares within the cells (it was the total less the other sums of squares,
+            //  which loses figures when the values are large beside their spread); without repeats it is the interaction
+            ssres = nm == 1 ? ssint : within;
             dfrow = nr - 1;
             dfcol = nc - 1;
             dfint = (nr - 1) * (nc - 1);
@@ -2116,9 +2162,8 @@ namespace StatsDirect.Builtins
 
         public static StepOutput RptCrossover(ParameterBag parameters)
         {
-            double dif; double difss1 = 0; double sumsum1 = 0; double dsum = 0; double psum = 0;
-            double sumss2 = 0; double difss2 = 0;
-            double corrector; double difsum1 = 0; double sumss1 = 0;
+            double dif; double sumsum1 = 0; double dsum = 0; double psum = 0;
+            double corrector; double difsum1 = 0;
             double difsum2 = 0; double sumsum2 = 0;
 
             double GAMMA = XLevel(parameters["gamma"].AsDouble);
@@ -2193,9 +2238,7 @@ namespace StatsDirect.Builtins
             {
                 dif = x1d[j] - x1p[j];
                 difsum1 += dif;
-                difss1 += dif * dif;
                 sumsum1 = sumsum1 + x1d[j] + x1p[j];
-                sumss1 += (x1d[j] + x1p[j]) * (x1d[j] + x1p[j]);
                 dsum += x1d[j];
                 psum += x1p[j];
             }
@@ -2204,23 +2247,27 @@ namespace StatsDirect.Builtins
             double dbar1 = dsum / ng1;
             double pbar1 = psum / ng1;
             double tdsum = difsum1;
-            double tdsum2 = difss1;
             dsum = 0.0;
             psum = 0.0;
             for (int j = 1; j <= ng2; j++)
             {
                 dif = x2d[j] - x2p[j];
                 difsum2 += dif;
-                difss2 += dif * dif;
                 tdsum -= dif;
-                tdsum2 += dif * dif;
                 sumsum2 = sumsum2 + x2d[j] + x2p[j];
-                sumss2 += (x2d[j] + x2p[j]) * (x2d[j] + x2p[j]);
                 dsum += x2d[j];
                 psum += x2p[j];
             }
             double totdifbar = tdsum / (ng1 + ng2);
-            double totdifvar = (tdsum2 - tdsum * tdsum / (ng1 + ng2)) / Convert.ToDouble(ng1 + ng2 - 1);
+            //  the variances are from the deviations about the means (they were sums of squares less the squares of the sums,
+            //  which lose figures when the values are large beside their spread): here of the drug less placebo differences of
+            //  every subject, those of the second group with their signs changed, as the mean above has them
+            double totdifss = 0.0;
+            for (int j = 1; j <= ng1; j++)
+                totdifss += (x1d[j] - x1p[j] - totdifbar) * (x1d[j] - x1p[j] - totdifbar);
+            for (int j = 1; j <= ng2; j++)
+                totdifss += (x2p[j] - x2d[j] - totdifbar) * (x2p[j] - x2d[j] - totdifbar);
+            double totdifvar = totdifss / Convert.ToDouble(ng1 + ng2 - 1);
             double difbar2 = difsum2 / ng2;
             double sumbar2 = sumsum2 / ng2;
             double dbar2 = dsum / ng2;
@@ -2256,8 +2303,12 @@ namespace StatsDirect.Builtins
             if (p > 1.0 - p)
                 p = 1.0 - p;
             outputParameters.AddOutput("relative_p", p * 2.0);
-            double var1 = difss1 - difsum1 * difsum1 / ng1;
-            double var2 = difss2 - difsum2 * difsum2 / ng2;
+            double var1 = 0.0;
+            for (int j = 1; j <= ng1; j++)
+                var1 += (x1d[j] - x1p[j] - difbar1) * (x1d[j] - x1p[j] - difbar1);
+            double var2 = 0.0;
+            for (int j = 1; j <= ng2; j++)
+                var2 += (x2d[j] - x2p[j] - difbar2) * (x2d[j] - x2p[j] - difbar2);
             double var = (var1 + var2) / (ng1 + ng2 - 2L);
             se = Math.Sqrt(var * (1.0 / ng2 + 1.0 / ng1));
             df = ng1 + ng2 - 2L;
@@ -2286,8 +2337,12 @@ namespace StatsDirect.Builtins
             if (p > 1.0 - p)
                 p = 1.0 - p;
             outputParameters.AddOutput("period_p", p * 2.0);
-            var1 = sumss1 - sumsum1 * sumsum1 / ng1;
-            var2 = sumss2 - sumsum2 * sumsum2 / ng2;
+            var1 = 0.0;
+            for (int j = 1; j <= ng1; j++)
+                var1 += (x1d[j] + x1p[j] - sumbar1) * (x1d[j] + x1p[j] - sumbar1);
+            var2 = 0.0;
+            for (int j = 1; j <= ng2; j++)
+                var2 += (x2d[j] + x2p[j] - sumbar2) * (x2d[j] + x2p[j] - sumbar2);
             var = (var1 + var2) / (ng1 + ng2 - 2L);
             se = Math.Sqrt(var * (1.0 / ng2 + 1.0 / ng1));
             t = (sumbar1 - sumbar2) / se;
