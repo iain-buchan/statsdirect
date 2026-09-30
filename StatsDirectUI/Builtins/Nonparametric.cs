@@ -3076,7 +3076,8 @@ namespace StatsDirect.Builtins
         }
 
         ///  <summary>
-        ///  Randomly move values in each row of x between columns.  Values will never be moved between rows.
+        ///  Puts the values of each row of x into a random order among the columns, in which every order is equally likely (a
+        ///  Fisher-Yates shuffle, as Formula.Shuffle makes it).  Values are never moved between rows.
         ///  </summary>
         ///  <param name="x">The (1,1)-based array whose values are to be shuffled</param>
         ///  <param name="rnd">The random number generator from which to take values</param>
@@ -3084,21 +3085,20 @@ namespace StatsDirect.Builtins
         /// <param name="rows"></param>
         public static void ShuffleValuesWithinRows(double[,] x, MersenneTwister rnd, int cols, int rows)
         {
+            //  from the last column to the second, a column is exchanged with one drawn from the columns up to it (it used to
+            //  exchange each column with one drawn from all the columns, which leaves the orders with chances that differ)
             for (int row = 1; row <= rows; row++)
             {
-                //  TODO: Is there a "better" shuffle than this?
-                for (int col = 1; col <= cols; col++)
+                for (int col = cols; col > 1; col--)
                 {
-                    int from = rnd.NextInteger(1, cols);
-                    double tmp = x[col, row];
-                    x[col, row] = x[from, row];
-                    x[from, row] = tmp;
+                    int from = 1 + (int)Math.Floor(col * rnd.NextDouble());
+                    (x[col, row], x[from, row]) = (x[from, row], x[col, row]);
                 }
             }
         }
 
         ///  <summary>
-        ///  Randomly shuffle values between lowerBound and upperBound in x.
+        ///  Puts x[lowerBound] to x[upperBound] into a random order in which every order is equally likely (Formula.Shuffle).
         ///  </summary>
         ///  <param name="x">The lowerBound-based array whose values are to be shuffled</param>
         ///  <param name="rnd">The random number generator from which to take values</param>
@@ -3106,13 +3106,7 @@ namespace StatsDirect.Builtins
         /// <param name="upperBound"></param>
         public static void ShuffleValuesWithinArray(double[] x, MersenneTwister rnd, int lowerBound, int upperBound)
         {
-            for (int i = lowerBound; i <= upperBound; i++)
-            {
-                int from = rnd.NextInteger(lowerBound, upperBound);
-                double tmp = x[i];
-                x[i] = x[from];
-                x[from] = tmp;
-            }
+            Formula.Shuffle(rnd, x, lowerBound, upperBound);
         }
 
         public static StepOutput RptFriedman(ParameterBag parameters)
