@@ -1811,7 +1811,6 @@ namespace StatsDirect.Builtins
             int iterations = parameters["iterations"].AsInt32;
             int seed = parameters["seed"].AsInt32;
             double ci = parameters["ci"].AsDouble;
-            double x2 = parameters["x2"].AsDouble;
             DataFrame observedFrame = parameters["observed"].AsDataFrame;
             DoubleVariable observed = (DoubleVariable)observedFrame.Variables[0];
             DataFrame expectedFrame = parameters["expected"].AsDataFrame;
@@ -1830,17 +1829,26 @@ namespace StatsDirect.Builtins
 
             int nx = observedData.Length;
 
+            // The counts that are drawn are whole numbers: an observed count that is not is rounded, a half to the even number, and
+            // the chi-square that the draws are compared with is that of the counts as rounded (it used to be that of the counts as
+            // entered, which the test takes as they are, so that the P value of such counts was of neither table); the result says
+            // when a count was rounded
             int[] xn = new int[nx + 1];
             double[] p = new double[nx + 1];
+            bool rounded = false;
             double expectedTotal = 0.0;
             for (int n = 0; n < nx; n++)
                 expectedTotal += expectedData[n];
             expectedTotal = Math.Round(expectedTotal, 12);
             for (int n = 0; n < nx; n++)
             {
-                xn[n + 1] = Convert.ToInt32(observedData[n]);
+                double whole = Math.Round(observedData[n]);
+                if (whole != observedData[n])
+                    rounded = true;
+                xn[n + 1] = Convert.ToInt32(whole);
                 p[n + 1] = expectedData[n] / expectedTotal;
             }
+            double x2 = X2Gf(xn, p, nx);
 
             ResampleX2Gf(host, xn, p, nx, x2, out int r, iterations, seed, out int actualIterations);
 
@@ -1854,6 +1862,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("ul", ul);
             outputParameters.AddOutput("warn", warn);
             outputParameters.AddOutput("k", actualIterations);
+            outputParameters.AddOutput("rounded", rounded ? "; counts that are not whole numbers were rounded" : string.Empty);
 
             return new StepOutput(outputParameters);
         }
@@ -2064,9 +2073,6 @@ namespace StatsDirect.Builtins
             {
                 outputParameters.AddOutput("*warn", null);
             }
-
-            //  Remember a few values in case the user then wants to simulate exact P
-            outputParameters.AddInput("x2", x2);
 
             return new StepOutput(outputParameters);
         }

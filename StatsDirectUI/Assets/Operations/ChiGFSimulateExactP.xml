@@ -28,6 +28,6 @@
         </confidence-interval>
       </parameters>
 		<builtin function-name="rptChiGFSimulateExactP" />
-    <report type="application/x-statsdirect-creole" filename="simulatedExactP.creole" />
+    <report type="application/x-statsdirect-creole" filename="chiGfSimulatedExactP.creole" />
   </steps>
 </operation>
