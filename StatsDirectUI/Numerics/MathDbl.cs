@@ -805,24 +805,20 @@ namespace StatsDirect.Numerics
         /// (p1 (1 - p1) / M + p2 (1 - p2) / N) (M + N) / (M + N - 1).  It is 0 at the difference observed and without limit at
         /// -1 and at 1, and each limit is found by halving the range between, until it has all its figures.
         /// </remarks>
-        /// <param name="ia">The number responding in the first sample.</param>
-        /// <param name="im">The size of the first sample.</param>
-        /// <param name="ib">The number responding in the second sample.</param>
-        /// <param name="z_in">The size of the second sample.</param>
+        /// <param name="a">The number responding in the first sample; the numbers need not be whole.</param>
+        /// <param name="M">The size of the first sample.</param>
+        /// <param name="b">The number responding in the second sample.</param>
+        /// <param name="N">The size of the second sample.</param>
         /// <param name="xl">On return, the lower limit; missing if the numbers are not those of two samples.</param>
         /// <param name="xu">On return, the upper limit; missing if the numbers are not those of two samples.</param>
         /// <param name="z">The normal deviate of the confidence level.</param>
         /// <param name="Conf">The confidence level, of which no use is made.</param>
-        public static void uppci(int ia, int im, int ib, int z_in, out double xl, out double xu, double z, double Conf)
+        public static void uppci(double a, double M, double b, double N, out double xl, out double xu, double z, double Conf)
         {
             xl = Constant.MISSING;
             xu = Constant.MISSING;
-            if (ia < 0 | ib < 0 | im - ia < 0 | z_in - ib < 0 | im <= 0 | z_in <= 0)
+            if (a < 0 | b < 0 | M - a < 0 | N - b < 0 | M <= 0 | N <= 0)
                 return;
-            double a = ia;
-            double M = im;
-            double b = ib;
-            double N = z_in;
             double observed = a / M - b / N;
 
             // the score statistic at the difference d, less what it is to be at a limit

@@ -222,20 +222,24 @@ namespace StatsDirect.Builtins
         /// <summary>
         /// The four counts of a table that is typed in, as the analyses of the Clinical Epidemiology menu take them: whole numbers
         /// that are not below 0. A count that is not a whole number is rounded, a half to the even number, as the exact methods
-        /// round it, so that every figure of a report is of the one table. Counts that come to more than a whole number of 32
-        /// bits holds are refused: the limits of a difference of proportions take whole numbers of 32 bits.
+        /// round it, so that every figure of a report is of the one table; unless the counts are to be taken as entered, as the
+        /// 2 by 2 chi-square test takes them, every figure of whose report is of the frequencies as entered. Counts that come to
+        /// more than a whole number of 32 bits holds are refused.
         /// </summary>
-        private static void XCounts(ref double a, ref double b, ref double c, ref double d)
+        private static void XCounts(ref double a, ref double b, ref double c, ref double d, bool asEntered = false)
         {
             foreach (double count in new[] { a, b, c, d })
             {
                 if (count == Constant.MISSING || double.IsNaN(count) || count < 0.0)
                     throw new InvalidDataException("The counts must be numbers that are not below 0.");
             }
-            a = Math.Round(a);
-            b = Math.Round(b);
-            c = Math.Round(c);
-            d = Math.Round(d);
+            if (!asEntered)
+            {
+                a = Math.Round(a);
+                b = Math.Round(b);
+                c = Math.Round(c);
+                d = Math.Round(d);
+            }
             if (a + b + c + d > int.MaxValue)
                 throw new InvalidDataException("The counts come to more than 2,147,483,647, which is more than this analysis can take.");
         }
@@ -1341,7 +1345,16 @@ namespace StatsDirect.Builtins
         /// it; "dif", "miettinen_from", "miettinen_to": the risk difference and its limits; "*exposure": a row with "pe" and
         /// "par", as percentages, "pe_note", whether pe was entered, "method", the name of the method of the limits, and
         /// "walter_from" and "walter_to", the limits of the risk, if the risk is given.</returns>
-        public static StepOutput RptMiscRelRisk(ParameterBag parameters)
+        public static StepOutput RptMiscRelRisk(ParameterBag parameters) => XRelRisk(parameters, false);
+
+        /// <summary>
+        /// The risk analysis of a prospective study (RptMiscRelRisk), for the 2 by 2 chi-square test of a cohort study too.
+        /// </summary>
+        /// <param name="parameters">As for RptMiscRelRisk.</param>
+        /// <param name="asEntered">Whether counts that are not whole numbers are taken as they are: the 2 by 2 chi-square test
+        /// asks for that, as every figure of its report is of the frequencies as entered.</param>
+        /// <returns>As for RptMiscRelRisk.</returns>
+        internal static StepOutput XRelRisk(ParameterBag parameters, bool asEntered)
         {
             double pe = Constant.MISSING;
 
@@ -1349,7 +1362,7 @@ namespace StatsDirect.Builtins
             double b = parameters["b"].AsDouble;
             double c = parameters["c"].AsDouble;
             double d = parameters["d"].AsDouble;
-            XCounts(ref a, ref b, ref c, ref d);
+            XCounts(ref a, ref b, ref c, ref d, asEntered);
             double m1 = a + b;
             double m2 = c + d;
             double n1 = a + c;
@@ -1374,7 +1387,7 @@ namespace StatsDirect.Builtins
             double p1 = a / n1;
             double p2 = b / n2;
             double dif = p1 - p2;
-            MathDbl.uppci(Convert.ToInt32(a), Convert.ToInt32(n1), Convert.ToInt32(b), Convert.ToInt32(n2), out double difLl, out double difUl, zp, 100.0 * (1.0 - gamma));
+            MathDbl.uppci(a, n1, b, n2, out double difLl, out double difUl, zp, 100.0 * (1.0 - gamma));
 
             bool dofish = true;
             double power = Power.fishpower(1.0 - gamma, a, b, n1, n2, ref dofish);

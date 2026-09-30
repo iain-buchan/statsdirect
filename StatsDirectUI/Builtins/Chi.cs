@@ -31,8 +31,8 @@ namespace StatsDirect.Builtins
         /// less and plus the normal deviate times the root of 1 / a + 1 / b + 1 / c + 1 / d; with an empty cell they are not
         /// worked out, and the limit at the end at which the odds ratio is (0, or infinity) is given alone.  The exact limits and
         /// P values are those of ExactBB.OddsRatioCMLE, which rounds counts that are not whole numbers.
-        /// Cohort study: the risk ratio and what goes with it are those of Analysis.RptMiscRelRisk; there is no risk ratio if b
-        /// is 0, and the report says so.
+        /// Cohort study: the risk ratio and what goes with it are those of Analysis.RptMiscRelRisk, of the frequencies as
+        /// entered (that analysis rounds them for its own report); there is no risk ratio if b is 0, and the report says so.
         /// Fisher's exact test (Exact.RptExactFisher) is added if n is below 20 or an expected count is below 5, if it is asked
         /// for, and if the exact method of the odds ratio, which has its P values, could not be used; but not if that method
         /// was used.
@@ -210,7 +210,10 @@ namespace StatsDirect.Builtins
                 // The risk ratio has no value if none of those without the characteristic has the outcome: the tests are given all
                 // the same
                 if (b > 0)
-                    relRiskList.Add(Analysis.RptMiscRelRisk(parameters).ParameterBag);
+                {
+                    // the table is of the frequencies as entered, whole numbers or not, as the chi-square is
+                    relRiskList.Add(Analysis.XRelRisk(parameters, true).ParameterBag);
+                }
                 else
                     Note("The risk ratio is not given: none of those without the characteristic has the outcome.");
             }
