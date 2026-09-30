@@ -15957,6 +15957,10 @@ chi22|chi22485|relrisk.rows	1e+00
 chi22|chi22485|note.rows	0e+00
 chi22|chi22485|relrisk.1|ratio	1.02e+00
 chi22|chi22485|relrisk.1|dif	9.80392156862742e-03
+chi22|chi22485|relrisk.1|koopman_from	4.1416724992161e-01
+chi22|chi22485|relrisk.1|koopman_to	2.50936727002324e+00
+chi22|chi22485|relrisk.1|miettinen_from	-4.00107527804321e-01
+chi22|chi22485|relrisk.1|miettinen_to	4.16485984970762e-01
 chi22|chi22485|relrisk.1|exposure.rows	1e+00
 chi22|chi22485|relrisk.1|exposure.1|pe	4.95049504950495e+01
 chi22|chi22485|relrisk.1|exposure.1|par	9.80392156862742e-01
@@ -17924,6 +17928,10 @@ chi22|chi22560|relrisk.rows	1e+00
 chi22|chi22560|note.rows	0e+00
 chi22|chi22560|relrisk.1|ratio	9.18367346938776e-01
 chi22|chi22560|relrisk.1|dif	-3.17460317460317e-02
+chi22|chi22560|relrisk.1|koopman_from	1.77768766397812e-01
+chi22|chi22560|relrisk.1|koopman_to	4.29258485105957e+00
+chi22|chi22560|relrisk.1|miettinen_from	-5.64211546184874e-01
+chi22|chi22560|relrisk.1|miettinen_to	5.35658419973842e-01
 chi22|chi22560|relrisk.1|exposure.rows	0e+00
 chi22|chi22560|fisher.rows	1e+00
 chi22|chi22560|fisher.1|tab3_a1	2e+00
@@ -18024,6 +18032,10 @@ chi22|chi22563|relrisk.rows	1e+00
 chi22|chi22563|note.rows	0e+00
 chi22|chi22563|relrisk.1|ratio	2.64103535353535e+00
 chi22|chi22563|relrisk.1|dif	3.67167636589638e-01
+chi22|chi22563|relrisk.1|koopman_from	1.23621781888075e+00
+chi22|chi22563|relrisk.1|koopman_to	6.18547302582059e+00
+chi22|chi22563|relrisk.1|miettinen_from	8.52622077566434e-02
+chi22|chi22563|relrisk.1|miettinen_to	5.94128264635392e-01
 chi22|chi22563|relrisk.1|exposure.rows	1e+00
 chi22|chi22563|relrisk.1|exposure.1|pe	5.22410210745028e+01
 chi22|chi22563|relrisk.1|exposure.1|par	4.61582171712688e+01
@@ -18119,6 +18131,10 @@ chi22|chi22566|relrisk.rows	1e+00
 chi22|chi22566|note.rows	0e+00
 chi22|chi22566|relrisk.1|ratio	6.625e-02
 chi22|chi22566|relrisk.1|dif	-8.80896226415094e-01
+chi22|chi22566|relrisk.1|koopman_from	5.75835292561032e-03
+chi22|chi22566|relrisk.1|koopman_to	5.09361384456043e-01
+chi22|chi22566|relrisk.1|miettinen_from	-9.8479526875528e-01
+chi22|chi22566|relrisk.1|miettinen_to	-3.09003677403315e-01
 chi22|chi22566|relrisk.1|exposure.rows	0e+00
 chi22|chi22566|fisher.rows	1e+00
 chi22|chi22566|fisher.1|tab3_a1	0e+00

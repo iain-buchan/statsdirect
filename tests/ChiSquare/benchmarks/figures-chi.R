@@ -139,12 +139,11 @@ chi22 <- function(key, t, level, study, asked) {
     k <- paste0(key, "|relrisk.1")
     put(paste0(k, "|ratio"), (a / r) / (b / s))
     put(paste0(k, "|dif"), a / r - b / s)
-    if (a == round(a) && b == round(b) && c == round(c) && d == round(d)) {
-      l <- if (c > 0 && d > 0) try(koopman(a, r, b, s, level), silent = TRUE) else NULL
-      if (!is.null(l) && !inherits(l, "try-error")) { put(paste0(k, "|koopman_from"), l[1]); put(paste0(k, "|koopman_to"), l[2]) }
-      l <- try(miettinen(a, r, b, s, level), silent = TRUE)
-      if (!inherits(l, "try-error")) { put(paste0(k, "|miettinen_from"), l[1]); put(paste0(k, "|miettinen_to"), l[2]) }
-    }
+    # the limits are of the counts as entered, whole numbers or not, as the risk ratio and the difference are
+    l <- if (c > 0 && d > 0) try(koopman(a, r, b, s, level), silent = TRUE) else NULL
+    if (!is.null(l) && !inherits(l, "try-error")) { put(paste0(k, "|koopman_from"), l[1]); put(paste0(k, "|koopman_to"), l[2]) }
+    l <- try(miettinen(a, r, b, s, level), silent = TRUE)
+    if (!inherits(l, "try-error")) { put(paste0(k, "|miettinen_from"), l[1]); put(paste0(k, "|miettinen_to"), l[2]) }
     rr <- (a / r) / (b / s)
     put(paste0(k, "|exposure.rows"), as.numeric(rr > 1))
     if (rr > 1) {
