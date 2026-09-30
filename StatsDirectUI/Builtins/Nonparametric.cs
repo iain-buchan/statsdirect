@@ -3042,6 +3042,7 @@ namespace StatsDirect.Builtins
             double nd = 0;
             double[] w2 = new double[treatments + 1];
             CalcFriedman(x, w2, n, treatments, ref a2, ref b2, ref t1, ref t2, ref nd);
+            XCheckFriedman(n, treatments, a2, "Friedman");
             double actualT = allAreBinary ? t1 : t2;
 
             int q = 0;
@@ -3124,6 +3125,7 @@ namespace StatsDirect.Builtins
             double t2 = 0;
             double nd = 0;
             CalcFriedman(frame, out double[] w2, out int n, ref a2, ref b2, ref t1, ref t2, ref nd, out bool allAreBinary, out bool numbersAreSmall);
+            XCheckFriedman(n, frame.VariableCount, a2, "Friedman");
 
             string tlist = string.Empty; string rlist = string.Empty;
             for (int d = 0; d < frame.VariableCount; d++)
@@ -3179,7 +3181,7 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("*message", null);
             }
 
-            if (p <= 0.05)
+            if (numbersAreSmall)
             {
                 ParameterBag warnParameters = new();
                 warnParameters.AddOutput("warning", "Numbers are small: use simulated exact probability instead.");
@@ -3206,7 +3208,7 @@ namespace StatsDirect.Builtins
             x = new double[frame.VariableCount + 1, frame.Variables[0].Length + 1];
             allAreBinary = true;
             int qty = 0;
-            int positiveCellCount = 0;
+            int blocksWithAPositive = 0;
             for (int j = 0; j < frame.Variables[0].Length; j++)
             {
                 bool skip = false;
@@ -3218,21 +3220,37 @@ namespace StatsDirect.Builtins
                 if (!skip)
                 {
                     qty += 1;
+                    bool positive = false;
                     for (int d = 0; d < frame.VariableCount; d++)
                     {
                         double dat = ((DoubleVariable)frame.Variables[d]).Data[j];
                         x[d + 1, qty] = dat;
                         if (dat > 0)
-                            positiveCellCount += 1;
+                            positive = true;
                         if (allAreBinary && !(dat == 1.0 || dat == 0.0))
                             allAreBinary = false;
                     }
+                    if (positive)
+                        blocksWithAPositive += 1;
                 }
             }
 
             n = qty;
             treatments = frame.VariableCount;
-            numbersAreSmall = positiveCellCount < 25;
+            //  the numbers are small with fewer than 25 blocks, or, with values of 0 and 1 only (Cochran's Q), fewer than 25
+            //  blocks that have a 1, a block of 0s adding nothing to Q
+            numbersAreSmall = (allAreBinary ? blocksWithAPositive : n) < 25;
+        }
+
+        //  What the Friedman test cannot be made of: fewer than two blocks, and observations that are the same within every
+        //  block, for which the sum of the squared ranks is that of ranks that are all the mean rank, and the statistic 0 over 0
+        private static void XCheckFriedman(int n, int treatments, double a2, string function)
+        {
+            if (n < 2)
+                throw new TemplateOperationCancelledException("Too few blocks: at least two rows with a value in every column are needed.", function);
+            double kd = treatments;
+            if (a2 == n * kd * (kd + 1.0) * (kd + 1.0) / 4.0)
+                throw new TemplateOperationCancelledException("The test cannot be calculated when the observations within every block are the same.", function);
         }
 
         ///  <summary>
@@ -3349,6 +3367,7 @@ namespace StatsDirect.Builtins
 
                 CalcFriedman(frame, out w2, out n, ref a2, ref b2, ref t1, ref t2, ref nd, out bool allAreBinary, out bool numbersAreSmall);
             }
+            XCheckFriedman(n, frame.VariableCount, a2, "Friedman");
 
             ParameterBag outputParameters = new();
             double dfq = (n - 1) * (frame.VariableCount - 1);
