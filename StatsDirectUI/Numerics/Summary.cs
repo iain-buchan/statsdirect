@@ -175,7 +175,6 @@ namespace StatsDirect.Numerics
                 // basic sums
                 Sum = 0.0;
                 double slog = 0.0;
-                double sumsqdev = 0.0;
                 bool geometricMeanOk = true;
                 for (int i = 1; i <= ValidData; i++)
                 {
@@ -187,22 +186,38 @@ namespace StatsDirect.Numerics
                         geometricMeanOk = false;
                 }
                 Mean = Sum / nnx;
+                // the sum is rounded as it is formed, and the mean with it: the mean of the differences from the mean is what
+                // the rounding has left, and is added to it
+                double left = 0.0;
+                for (int i = 1; i <= ValidData; i++)
+                    left += (xo[i] - Mean) * w[i];
+                if (double.IsFinite(Mean + left / nnx))
+                    Mean += left / nnx;
+                // the mean now has all the figures that a number holds; what is then left of the mean of the differences is
+                // taken off the differences themselves
+                double rest = 0.0;
+                for (int i = 1; i <= ValidData; i++)
+                    rest += (xo[i] - Mean) * w[i];
+                rest = double.IsFinite(rest / nnx) ? rest / nnx : 0.0;
 
-                // deviations from the mean
+                // deviations from the mean, in units of the power of two at or below the greatest of them: their powers then
+                // neither pass the greatest number that there is nor are lost below the least, and to divide by a power of
+                // two changes no figure
+                double most = 0.0;
+                for (int i = 1; i <= ValidData; i++)
+                    most = Math.Max(most, Math.Abs(xo[i] - Mean - rest));
+                double unit = most > 0.0 && double.IsFinite(most) ? Math.ScaleB(1.0, Math.ILogB(most)) : 1.0;
+                double sumsqdev = 0.0;
                 for (int i = 1; i <= ValidData; i++)
                 {
-                    if (Math.Abs(sumsqdev) > 1.0E+300)
-                    {
-                        sumsqdev = Constant.MISSING;
-                        break;
-                    }
-                    sumsqdev += (xo[i] - Mean) * (xo[i] - Mean) * w[i];
+                    double xd = (xo[i] - Mean - rest) / unit;
+                    sumsqdev += xd * xd * w[i];
                 }
-                if (sumsqdev == Constant.MISSING)
+                SD = double.IsFinite(sumsqdev) && sumsqdev >= 0.0 ? Math.Sqrt(sumsqdev / (ValidData - 1)) * unit : Constant.MISSING;
+                // a variance beyond the greatest number that there is has no figure, though its root has
+                Variance = SD == Constant.MISSING ? Constant.MISSING : sumsqdev / (ValidData - 1) * unit * unit;
+                if (!double.IsFinite(Variance))
                     Variance = Constant.MISSING;
-                else
-                    Variance = sumsqdev / (ValidData - 1);
-                SD = Variance < 0.0 ? Constant.MISSING : Math.Sqrt(Variance);
                 if (ValidData <= 0 || SD == Constant.MISSING)
                 {
                     SEM = Constant.MISSING;
@@ -227,38 +242,24 @@ namespace StatsDirect.Numerics
                 }
 
                 // moments
-                if (Variance != Constant.MISSING & Variance != 0 & ValidData > 3)
+                if (SD != Constant.MISSING & sumsqdev != 0 & ValidData > 3)
                 {
                     double m2 = 0.0;
                     double m3 = 0.0;
                     double m4 = 0.0;
-                    bool toobig = false;
                     for (int i = 1; i <= ValidData; i++)
                     {
-                        double xd = xo[i] - Mean;
+                        double xd = (xo[i] - Mean - rest) / unit;
                         m2 += Math.Pow(xd, 2.0) * w[i];
                         m3 += Math.Pow(xd, 3.0) * w[i];
                         m4 += Math.Pow(xd, 4.0) * w[i];
-                        if (m4 > 1.0E+300)
-                        {
-                            toobig = true;
-                            break;
-                        }
                     }
-                    if (toobig)
-                    {
-                        Skewness = Constant.MISSING;
-                        Kurtosis = Constant.MISSING;
-                    }
-                    else
-                    {
-                        m2 /= nnx;
-                        m3 /= nnx;
-                        m4 /= nnx;
-                        // Numerically consistent with R but not Stata
-                        Skewness = m3 * Math.Pow(m2, -1.5);
-                        Kurtosis = m4 * Math.Pow(m2, -2.0);
-                    }
+                    m2 /= nnx;
+                    m3 /= nnx;
+                    m4 /= nnx;
+                    // Numerically consistent with R but not Stata
+                    Skewness = m3 * Math.Pow(m2, -1.5);
+                    Kurtosis = m4 * Math.Pow(m2, -2.0);
                 }
                 else
                 {
