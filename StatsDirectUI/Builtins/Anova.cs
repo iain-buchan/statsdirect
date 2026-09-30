@@ -180,7 +180,8 @@ namespace StatsDirect.Builtins
         /// the sum of (y - grand mean)^2; and the residual, which is the sum of squares within the cells when there are
         /// repeats and the interaction when there are none (randomized blocks). The degrees of freedom go with them, and col
         /// returns the column means from element 0, for the comparisons that follow. fault is 1 with fewer than two rows or
-        /// columns or no repeat, and 2 with a total of 0.
+        /// columns or no repeat, and 2 with a total of 0. The means and sums of squares are of the values less the first value,
+        /// about which they are the same, so that values that are large beside their spread keep their figures.
         /// </summary>
         private static void XTwoWay(double[,,] y, out double[] col, int nr, int nc, int nm, out double ssrow, out double sscol, out double ssint, out double sstot, out double ssres, out int dfrow, out int dfcol, out int dfint, out int dftot, out int dfres, out int fault)
         {
@@ -203,6 +204,10 @@ namespace StatsDirect.Builtins
             double dnr = Convert.ToDouble(nr);
             double dnc = Convert.ToDouble(nc);
             double dnm = Convert.ToDouble(nm);
+            // The means and the sums of squares are of the values less the first value: the sums of squares are the same about
+            // any centre, and values that are large beside their spread (1e12 differing by units) keep their figures, which the
+            // sums of the values as they are lost; the column means are put back at the end
+            double shift = y[1, 1, 1];
             double yt = 0.0;
             double[,] cell = new double[nr + 1, nc + 1];
             double[] row = new double[nr + 1];
@@ -215,9 +220,10 @@ namespace StatsDirect.Builtins
                     double yc = 0.0;
                     for (int k = 1; k <= nm; k++)
                     {
-                        yt += y[k, i, j];
-                        yr += y[k, i, j];
-                        yc += y[k, i, j];
+                        double v = y[k, i, j] - shift;
+                        yt += v;
+                        yr += v;
+                        yc += v;
                     }
                     cell[i, j] = yc / dnm;
                 }
@@ -247,8 +253,9 @@ namespace StatsDirect.Builtins
                     ssint += (cell[i, j] - (row[i] - gm) - col[j]) * (cell[i, j] - (row[i] - gm) - col[j]);
                     for (int k = 1; k <= nm; k++)
                     {
-                        sstot += (y[k, i, j] - gm) * (y[k, i, j] - gm);
-                        within += (y[k, i, j] - cell[i, j]) * (y[k, i, j] - cell[i, j]);
+                        double v = y[k, i, j] - shift;
+                        sstot += (v - gm) * (v - gm);
+                        within += (v - cell[i, j]) * (v - cell[i, j]);
                     }
                 }
             }
@@ -284,7 +291,7 @@ namespace StatsDirect.Builtins
                 dfres = dfint;
             }
             for (int j = 1; j <= nc; j++)
-                col[j - 1] = col[j];
+                col[j - 1] = col[j] + shift;
             fault = 0;
         }
 
