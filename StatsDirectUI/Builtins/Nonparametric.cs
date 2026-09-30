@@ -935,6 +935,10 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
+        //  A confidence level that is not above 0 and below 1 (0% or 100%, which the form allows) is taken as 95%, as the other
+        //  reports of the program take it; the level that is used is the one that is printed.
+        private static double XLevel(double level) => level > 0.0 && level < 1.0 ? level : 0.95;
+
         private static double XXmdn(double[] x, int nx, int n1, int n2)
         {
             int n;
@@ -1077,11 +1081,9 @@ namespace StatsDirect.Builtins
             double thetase = 0; double thetasex = 0;
 
             DataFrame frame = parameters["data"].AsDataFrame;
-            double gamma = parameters["gamma"].AsDouble;
+            double gamma = XLevel(parameters["gamma"].AsDouble);
             int boots = parameters["boots"].AsInt32;
             int bootsDivisor = Math.Max(1, boots / 1000);
-            if (gamma <= 0)
-                throw new TemplateOperationCancelledException();
 
             MathDbl.civ(0, out double cit, gamma, out _);
             MersenneTwister rnd = new(); //  Self-seeded
@@ -1555,9 +1557,7 @@ namespace StatsDirect.Builtins
 
         public static StepOutput RptMannWhitney(ITemplateHost host, ParameterBag parameters)
         {
-            double gamma = parameters["gamma"].AsDouble;
-            if (gamma <= 0)
-                return StepOutput.Empty();
+            double gamma = XLevel(parameters["gamma"].AsDouble);
 
             DataFrame frame = parameters["data"].AsDataFrame;
             DoubleVariable v0 = (DoubleVariable)frame.Variables[0];
@@ -1815,9 +1815,7 @@ namespace StatsDirect.Builtins
         /// </remarks>
         public static StepOutput RptSpearman(ParameterBag parameters)
         {
-            double gamma = parameters["gamma"].AsDouble;
-            if (gamma <= 0)
-                throw new Exception("Gamma must be greater than zero");
+            double gamma = XLevel(parameters["gamma"].AsDouble);
 
             DataFrame frame = parameters["data"].AsDataFrame;
             DoubleVariable v0 = (DoubleVariable)frame.Variables[0];
@@ -2006,9 +2004,7 @@ namespace StatsDirect.Builtins
             string taulab;
 
 
-            double gamma = parameters["gamma"].AsDouble;
-            if (gamma <= 0.0)
-                gamma = 0.95;
+            double gamma = XLevel(parameters["gamma"].AsDouble);
             double cit = PDF.gauinv(1.0 - (1.0 - gamma) / 2.0, out int ifault);
 
             DataFrame outcomeFrame = parameters["outcome"].AsDataFrame;
@@ -2227,9 +2223,7 @@ namespace StatsDirect.Builtins
 
         public static StepOutput RptWilcoxon(ITemplateHost host, ParameterBag parameters)
         {
-            double gamma = parameters["gamma"].AsDouble;
-            if (gamma <= 0)
-                throw new Exception("Gamma must be greater than zero");
+            double gamma = XLevel(parameters["gamma"].AsDouble);
 
             DataFrame frame = parameters["data"].AsDataFrame;
             DoubleVariable v0 = (DoubleVariable)frame.Variables[0];
@@ -2852,7 +2846,7 @@ namespace StatsDirect.Builtins
         public static StepOutput RptQuantile(ParameterBag parameters)
         {
             bool doConservative = parameters["conservative-ci"].AsBoolean;
-            double gamma = parameters["gamma"].AsDouble;
+            double gamma = XLevel(parameters["gamma"].AsDouble);
             double qc = parameters["quantile"].AsDouble;
             if (qc >= 1 || qc <= 0)
                 qc = 0.5;
@@ -2917,9 +2911,7 @@ namespace StatsDirect.Builtins
             double ps;
             double gam; double tauUl = 0; double tauLl = 0; double tau = 0;
             double varf = 0; double hn = 0; double s = 0;
-            double gamma = parameters["gamma"].AsDouble;
-            if (gamma <= 0.0)
-                gamma = 0.95;
+            double gamma = XLevel(parameters["gamma"].AsDouble);
             double cit = PDF.gauinv(1.0 - (1.0 - gamma) / 2.0, out int ifault);
 
             DataFrame frame = parameters["data"].AsDataFrame;
@@ -3341,7 +3333,7 @@ namespace StatsDirect.Builtins
         public static StepOutput RptFrMultiple(ParameterBag parameters)
         {
             DataFrame frame = parameters["data"].AsDataFrame;
-            double confidence = parameters["confidence"].AsDouble;
+            double confidence = XLevel(parameters["confidence"].AsDouble);
 
             double[] w2;
             int n;
@@ -3664,7 +3656,7 @@ namespace StatsDirect.Builtins
             double[] x;
 
             DataFrame frame = parameters["data"].AsDataFrame;
-            double confidence = parameters["confidence"].AsDouble;
+            double confidence = XLevel(parameters["confidence"].AsDouble);
 
            ParameterBag outputParameters = new();
 
@@ -3731,9 +3723,11 @@ namespace StatsDirect.Builtins
             // Steel-Dwass-Critchlow-Fligner method
             if (sided != 1)
             {
-                if (p == 0)
-                    p = 0.95;
-                double qval = PDF.quantsr(p, k, 1000000.0);
+                //  the point of the range at the level: a confidence of 0.05 is a 5% test, as it is for the Conover-Iman
+                //  comparisons below (it used to give the 5% point of the range, at which every pair was significant)
+                if (p > 1.0 - p)
+                    p = 1.0 - p;
+                double qval = PDF.quantsr(1.0 - p, k, 1000000.0);
 
                 outputParameters.AddOutput("q", qval);
 
@@ -3902,7 +3896,7 @@ namespace StatsDirect.Builtins
 
             DataFrame frame = parameters["data"].AsDataFrame;
 
-            double confidence = parameters["confidence"].AsDouble;
+            double confidence = XLevel(parameters["confidence"].AsDouble);
 
             double[] mean = new double[frame.VariableCount];
             int[] l = new int[frame.VariableCount];
@@ -4059,9 +4053,7 @@ namespace StatsDirect.Builtins
         {
             DataFrame dataFrame = parameters["data"].AsDataFrame;
             DataFrame weightsFrame = parameters.ContainsKey("weights") ? parameters["weights"].AsDataFrame : null;
-            double gamma = parameters["gamma"].AsDouble;
-            if (gamma <= 0)
-                throw new TemplateOperationCancelledException();
+            double gamma = XLevel(parameters["gamma"].AsDouble);
             int boots = parameters["boots"].AsInt32;
             int bootsDivisor = Math.Max(1, boots / 1000);
 
