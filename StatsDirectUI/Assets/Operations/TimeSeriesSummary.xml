@@ -142,6 +142,9 @@ Mean (SD) slope to maximum: @{meanSlopeToMax:roundx} (@{meanSlopeToMaxSD:roundx}
 
 <p>@{chart:chart}</p>
 </block>
+<block name="groupLeftOut">
+<p>@why</p>
+</block>
 <subtitle>AUC distribution</subtitle>
 
 <block name="aucNormal">
@@ -167,6 +170,9 @@ DF (Satterthwaite): @{df:roundx}<br />
 <pval>Two sided bootstrap @{pBootstrap:pval}</pval><br />
 <ci>@ciOutput% bootstrap-t interval: @{tBootstrapLcl:roundx} to @{tBootstrapUcl:roundx}</ci></p>
 </block>
+</block>
+<block name="noComparison">
+<p>@why</p>
 </block>
 <p>@{meanAucChart:chart}</p>
 </report>

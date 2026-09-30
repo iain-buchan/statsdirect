@@ -950,7 +950,8 @@ namespace StatsDirect.Builtins
         /// "totalObservations", "meanObservationsPerTimePoint", "aucMean", "aucSd", "aucSe", "aucTLcl", "aucTUcl", "aucZLcl",
         /// "aucZUcl", the medians and interquartile ranges "medianAuc", "iqrAuc", "medianTimeToMax", "iqrTimeToMax",
         /// "medianSlopeToMax", "iqrSlopeToMax", "meanSlopeToMax", "meanSlopeToMaxSD", "*subject" and "*time" with the rows of
-        /// the subjects and of the times, "*bootstrap" with the limits of the bootstrap, and "chart"; "*aucNormal",
+        /// the subjects and of the times, "*bootstrap" with the limits of the bootstrap, and "chart"; "*groupLeftOut": why a
+        /// group is not there; "*noComparison": why two groups are not compared; "*aucNormal",
         /// "*aucLogNormal": the normal plots with the squares of their correlations, each a row or nothing; "*aucNotPlotted":
         /// why a plot is not there; "meanAucChart": the means of the groups at each time with their confidence limits;
         /// "*groupComparison": with two groups "t", "se", "df", "p2", "aucDifference" and its limits, and "*bootstrap" with
@@ -1025,6 +1026,16 @@ namespace StatsDirect.Builtins
             }
             foreach (TimeSeriesSummaryStore store in groups)
                 store.NoteEndOfPass2();
+            // a group without an observation has nothing to summarise: it is left out, and the report says so
+            List<string> groupsLeftOut = new();
+            for (int g = groups.Count - 1; g >= 0; g--)
+            {
+                if (groups[g].N == 0)
+                {
+                    groupsLeftOut.Insert(0, groups[g].Group?.Label ?? string.Empty);
+                    groups.RemoveAt(g);
+                }
+            }
 
             // Allow the summaries to claculate their values
             foreach (TimeSeriesSummaryStore store in groups)
@@ -1034,8 +1045,11 @@ namespace StatsDirect.Builtins
                 {
                     BootstrappingTimeSeriesSummaryStore bst = new(store);
                     bst.Bootstrap(host, iterations, mt, ci, groups.Count == 2);
-                    store.TLclAucBarBootstrap = store.AucMean + bst.TLcl * store.Se;
-                    store.TUclAucBarBootstrap = store.AucMean + bst.TUcl * store.Se;
+                    // the limits need a standard error that is a number above 0: one subject has none, and areas that are
+                    // all the same have 0
+                    bool usable = store.Se != Constant.MISSING && double.IsFinite(store.Se) && store.Se > 0.0 && bst.TLcl != Constant.MISSING && bst.TUcl != Constant.MISSING;
+                    store.TLclAucBarBootstrap = usable ? store.AucMean + bst.TLcl * store.Se : Constant.MISSING;
+                    store.TUclAucBarBootstrap = usable ? store.AucMean + bst.TUcl * store.Se : Constant.MISSING;
                     store.CompletedIterations = bst.CompletedIterations;
                     store.AucMeans = bst.AucMeans;
                     store.VarAucMeans = bst.VarAucMeans;
@@ -1047,6 +1061,14 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("ciOutput", ci * 100);
             List<ParameterBag> groupList = new();
             outputParameters.AddOutput("*group", groupList);
+            List<ParameterBag> leftOutList = new();
+            outputParameters.AddOutput("*groupLeftOut", leftOutList);
+            foreach (string label in groupsLeftOut)
+            {
+                ParameterBag leftOutParameters = new();
+                leftOutList.Add(leftOutParameters);
+                leftOutParameters.AddOutput("why", "Group " + label + " has no observations and is left out.");
+            }
             for (int groupIndex = 0; groupIndex < groups.Count; groupIndex++)
             {
                 TimeSeriesSummaryStore group = groups[groupIndex];
@@ -1263,8 +1285,20 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("meanAucChart", cd);
             }
 
-            // Group comparison (if two groups)
-            if (groups.Count == 2)
+            // Group comparison (if two groups): it needs two subjects or more in each group, and areas that are not all the
+            // same, so that the difference of the means has a standard error above 0
+            bool comparable = groups.Count == 2 && groups[0].N >= 2 && groups[1].N >= 2
+                && groups[0].VarAucMean != Constant.MISSING && groups[1].VarAucMean != Constant.MISSING
+                && double.IsFinite(groups[0].VarAucMean + groups[1].VarAucMean) && groups[0].VarAucMean + groups[1].VarAucMean > 0.0;
+            List<ParameterBag> noComparisonList = new();
+            outputParameters.AddOutput("*noComparison", noComparisonList);
+            if (groups.Count == 2 && !comparable)
+            {
+                ParameterBag noComparisonParameters = new();
+                noComparisonList.Add(noComparisonParameters);
+                noComparisonParameters.AddOutput("why", "Group comparison not made: it needs two subjects or more in each group, with areas under the curve that are not all the same.");
+            }
+            if (comparable)
             {
                 List<ParameterBag> groupComparisonList = new();
                 outputParameters.AddOutput("*groupComparison", groupComparisonList);
@@ -1301,30 +1335,36 @@ namespace StatsDirect.Builtins
                     int bothBoots = (int)Math.Min(groups[0].CompletedIterations, groups[1].CompletedIterations);
                     double[] tBootstraps = new double[bothBoots];
                     int k = 0;
+                    int usable = 0;
                     for (int i = 0; i < bothBoots; i++)
                     {
                         double aucDifferenceBootstrap = aucDifference - (groups[0].AucMeans[i] - groups[1].AucMeans[i]);
                         double seBootstrap = Math.Sqrt(groups[0].VarAucMeans[i] + groups[1].VarAucMeans[i]);
+                        // a draw in which the areas are all the same in both groups and the means are as far apart as in the
+                        // data has no t (0 over 0), and is left out; one with a standard error of 0 alone has a t without end,
+                        // which is beyond t
                         double tBootstrap = aucDifferenceBootstrap / seBootstrap;
-                        tBootstraps[i] = tBootstrap;
+                        if (double.IsNaN(tBootstrap))
+                            continue;
+                        tBootstraps[usable++] = tBootstrap;
                         if (Math.Abs(tBootstrap) >= Math.Abs(t))
                             k++;
                     }
-                    // 2-sided p-value
-                    double pBootstrap = (k + 1) / (double)(bothBoots + 1);
+                    // 2-sided p-value, from the draws that have a t
+                    double pBootstrap = usable > 0 ? (k + 1) / (double)(usable + 1) : Constant.MISSING;
 
                     Summary s = new();
                     double edge = (1.0 - ci) / 2.0;
-                    s.FullSummaryFromX(tBootstraps, bothBoots, null, ci, edge * 100.0, (1.0 - edge) * 100.0, 1);
-                    double tBootstrapLcl = aucDifference + s.UserCentileL * se;
-                    double tBootstrapUcl = aucDifference + s.UserCentileU * se;
+                    s.FullSummaryFromX(tBootstraps, usable, null, ci, edge * 100.0, (1.0 - edge) * 100.0, 1);
+                    double tBootstrapLcl = usable > 0 && s.UserCentileL != Constant.MISSING ? aucDifference + s.UserCentileL * se : Constant.MISSING;
+                    double tBootstrapUcl = usable > 0 && s.UserCentileU != Constant.MISSING ? aucDifference + s.UserCentileU * se : Constant.MISSING;
 
                     List<ParameterBag> bootstrapList = new();
                     groupComparisonParameters.AddOutput("*bootstrap", bootstrapList);
                     ParameterBag bootstrapParameters = new();
                     bootstrapList.Add(bootstrapParameters);
                     bootstrapParameters.AddOutput("pBootstrap", pBootstrap);
-                    bootstrapParameters.AddOutput("iterations", bothBoots);
+                    bootstrapParameters.AddOutput("iterations", usable);
                     bootstrapParameters.AddOutput("tBootstrapLcl", tBootstrapLcl);
                     bootstrapParameters.AddOutput("tBootstrapUcl", tBootstrapUcl);
                 }
