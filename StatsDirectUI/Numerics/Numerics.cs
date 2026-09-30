@@ -1439,7 +1439,10 @@ namespace StatsDirect.Numerics
             if (w <= 0.0)
                 return 0.0;
             double root2pi = Math.Sqrt(2.0 * Constant.PI);
-            return k * GaussLegendre(z => Math.Exp(-0.5 * z * z) / root2pi * Math.Pow(alnorm(z + w) - alnorm(z), k - 1), -9.0, 9.0, 8);
+            //  the integrand is of the order of the normal density to the power k, and so narrows as k grows: the panels are in
+            //  proportion to the root of k
+            int panels = (int)Math.Min(64.0, 8.0 * Math.Ceiling(Math.Sqrt(k / 8.0)));
+            return k * GaussLegendre(z => Math.Exp(-0.5 * z * z) / root2pi * Math.Pow(alnorm(z + w) - alnorm(z), k - 1), -9.0, 9.0, panels);
         }
 
         //  The Studentized range distribution for few residual degrees of freedom, by direct integration over the
@@ -1454,16 +1457,17 @@ namespace StatsDirect.Numerics
             if (q <= 0.0)
                 return 0.0;
             //  Integrate over y = log S, which spreads the small values of S where, for many means and a large q, the
-            //  range probability rises from 0 to 1 within a narrow band; the limits are the chi-square points at 1e-12
-            double ylo = 0.5 * Math.Log(ppchi2(1.0e-12, df, out int _) / df);
-            double yhi = 0.5 * Math.Log(ppchi2(1.0 - 1.0e-12, df, out int _) / df);
+            //  range probability rises from 0 to 1 within a narrow band; the limits are the chi-square points with 1e-25
+            //  below and above them, so that a small lower tail, which is from the large values of S, is whole
+            double ylo = 0.5 * Math.Log(ppchi2(1.0e-25, df, out int _) / df);
+            double yhi = 0.5 * Math.Log(ppchi2(1.0e-25, df, true, out int _) / df);
             double logConstant = 0.5 * df * Math.Log(df) - (0.5 * df - 1.0) * Math.Log(2.0) - alogam(0.5 * df);
             //  (the sum passes 1 by its own error where the probability is 1: by 1.4e-12 with 30 means, by 1.3e-9 with 100)
             return Math.Min(1.0, GaussLegendre(y =>
             {
                 double s = Math.Exp(y);
                 return Math.Exp(logConstant + df * y - 0.5 * df * s * s) * RangeProbability(q * s, k);
-            }, ylo, yhi, 32));
+            }, ylo, yhi, 48));
         }
 
         private static double SmallDfRangeQuantile(double p, int k, double df)
@@ -1474,18 +1478,43 @@ namespace StatsDirect.Numerics
             int[] ir = new int[4];
             double guess = cv(p, 1.0, k, df, ir);
             bool guessed = ir[1] == 0 && ir[2] == 0 && ir[3] == 0 && guess > 0.0;
+            double spread = guessed ? 1.05 : 2.0;
             if (!guessed)
+            {
+                //  for a small tail the series gives no value: the point of the range of normal variates alone, which the
+                //  value is near when there are many degrees of freedom, is found by bisection (cheap) and is the guess
                 guess = 10.0;
-            return BracketedRangeQuantile(q => SmallDfRangeCdf(q, k, df), p, guess, guessed);
+                if (p < 0.01)
+                {
+                    double lo = 1.0e-6, hi = 20.0;
+                    for (int i = 0; i < 60 && hi - lo > 1.0e-9 * hi; i++)
+                    {
+                        double mid = 0.5 * (lo + hi);
+                        if (RangeProbability(mid, k) < p)
+                            lo = mid;
+                        else
+                            hi = mid;
+                    }
+                    guess = 0.5 * (lo + hi);
+                    //  the value is within a few per cent of the guess with 200 degrees of freedom or more, within a third
+                    //  with 20 or more, and may be far below it with fewer
+                    spread = df >= 200.0 ? 1.05 : df >= 20.0 ? 1.3 : 2.0;
+                }
+            }
+            double point = BracketedRangeQuantile(q => SmallDfRangeCdf(q, k, df), p, guess, spread);
+            //  the value is given only if its probability is within a part in a million of the one asked for
+            if (!double.IsFinite(point) || !(Math.Abs(SmallDfRangeCdf(point, k, df) - p) <= 1.0e-6 * Math.Min(p, 1.0 - p)))
+                return Constant.MISSING;
+            return point;
         }
 
         //  The point at which a distribution function of the range is p, within a bracket, by the Illinois method. The
-        //  bracket is put about the guess, closely if the guess is a value that the series has given, and is widened until
-        //  the point is in it.
-        private static double BracketedRangeQuantile(Func<double, double> cdf, double p, double guess, bool guessed)
+        //  bracket is put about the guess, from the guess over the spread to the guess times it (closely, 1.05, if the guess
+        //  is a value that the series has given), and is widened until the point is in it.
+        private static double BracketedRangeQuantile(Func<double, double> cdf, double p, double guess, double spread)
         {
-            double a = guessed ? 0.95 * guess : 0.5 * guess;
-            double b = guessed ? 1.05 * guess : 2.0 * guess;
+            double a = guess / spread;
+            double b = guess * spread;
             double fa = cdf(a) - p;
             double fb = cdf(b) - p;
             while (fa > 0.0 && a > 1.0e-6)
@@ -1504,7 +1533,8 @@ namespace StatsDirect.Numerics
             {
                 c = (a * fb - b * fa) / (fb - fa);
                 double fc = cdf(c) - p;
-                if (Math.Abs(fc) < 1.0e-13)   //  within the integral's own accuracy: closing the bracket further gains nothing
+                //  within a part in ten thousand million of the smaller tail: closing the bracket further gains nothing
+                if (Math.Abs(fc) <= 1.0e-10 * Math.Min(p, 1.0 - p))
                     break;
                 if (fc * fb > 0.0)
                 {
@@ -1543,7 +1573,9 @@ namespace StatsDirect.Numerics
                 return Constant.MISSING;
             if (t == 2.0)   //  two means: the range is root 2 times |t|, so the point comes exactly from Student's t
                 return Math.Sqrt(2.0) * tfromp2(1.0 - p, df);
-            if (UseRangeIntegration(t, df))
+            //  a lower tail below 0.01 is found by the integration too: the series is not accurate to a small tail, and the
+            //  search of cv stops at an absolute difference of probabilities, which for a small tail is no test
+            if (UseRangeIntegration(t, df) || p < 0.01)
                 return SmallDfRangeQuantile(p, (int)Math.Round(t), df);
             int[] ir = new int[4];
             double retval = cv(p, 1.0, t, df, ir);
@@ -1555,7 +1587,7 @@ namespace StatsDirect.Numerics
             if (!(p > 0.0 && p < 1.0))
                 return Constant.MISSING;
             int[] it = new int[3];
-            retval = BracketedRangeQuantile(q => qprob(q, 1.0, t, df, it), p, 10.0, false);
+            retval = BracketedRangeQuantile(q => qprob(q, 1.0, t, df, it), p, 10.0, 2.0);
             if (!double.IsFinite(retval) || !(Math.Abs(qprob(retval, 1.0, t, df, it) - p) <= 1.0e-7))
                 return Constant.MISSING;
             return retval;
@@ -1576,6 +1608,9 @@ namespace StatsDirect.Numerics
                 if (0 != ir[i])
                     return Constant.MISSING;
             }
+            //  a small lower tail is not within the accuracy of the series: it is found by the integration, as its value is
+            if (retval < 0.01)
+                return SmallDfRangeCdf(q, (int)Math.Round(t), df);
             return retval;
         }
 
