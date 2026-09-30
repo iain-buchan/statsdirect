@@ -559,5 +559,40 @@ diversity(c(30, 12, 8, 5, 3, 2, 1, 1, 1)); diversity(c(30, 12, 8, 5, 3, 2, 1, 1,
 diversity(rpois(40, 6) + 1)
 diversity(c(30, 12, 8, 5, 3, 2, 1, 1, 1), 0); diversity(c(30, 12, 8, 5, 3, 2, 1, 1, 1), 1)   # a level of 0% or 100%: 95% is taken
 
+# ---- chi-square goodness of fit: the expected column may be probabilities, percentages or counts, which are scaled to the
+# observed total; a row with a missing value is left out of both columns; the statistic is the sum of (O - E)^2 / E on k - 1
+# degrees of freedom
+goodness <- function(observed, expected, names = NULL, .more = list()) {
+  keep <- !is.na(observed) & !is.na(expected); o <- observed[keep]; e <- expected[keep]; k <- length(o)   # counts as entered, whole numbers or not
+  et <- sum(e); prob <- et <= 1 || abs(et - 100) < 1e-6
+  xe <- e / et * sum(o); x2 <- sum((o - xe)^2 / xe)
+  want <- list(n = sum(o), chi2 = x2, df = k - 1, p = pchisq(x2, k - 1, lower.tail = FALSE), `*frequencies.rows` = k)
+  for (i in 1:k) { want[[sprintf("*frequencies[%d].x", i)]] <- if (is.null(names)) as.character(i) else names[keep][i]; want[[sprintf("*frequencies[%d].o", i)]] <- o[i]; want[[sprintf("*frequencies[%d].e", i)]] <- xe[i] }
+  want[["*warn.rows"]] <- if (sum(xe < 5) > 0 || sum(o) < 20 || (!prob && abs(et - sum(o)) >= 0.5)) 1 else 0
+  want[names(.more)] <- .more
+  inputs <- list(observed = frame(observed), expected = frame(expected)); if (!is.null(names)) inputs$names <- paste(names, collapse = ",")
+  case("RptChiSquareGoodnessOfFit", inputs, want)
+}
+blood <- c(67, 83, 29, 8)
+goodness(blood, c(44, 45, 8, 3), c("O", "A", "B", "AB"))                           # the example of the help: percentages
+goodness(blood, c(0.44, 0.45, 0.08, 0.03))                                          # proportions
+goodness(blood, c(82.28, 84.15, 14.96, 5.61), c("O", "A", "B", "AB"))               # expected counts
+goodness(blood, c(80, 80, 20, 7))                                                   # counts that do not add up to the total: a warning
+goodness(c(67, 83, NA, 29, 8), c(0.44, 0.45, 0.1, 0.08, 0.03), c("O", "A", "X", "B", "AB"))   # a row with a missing value is left out
+goodness(c(3, 1, 0, 2), c(1, 1, 1, 1))                                              # small numbers
+goodness(c(120, 30, 30, 20), c(1, 1, 1, 1))                                         # a chi-square of 132: a P of 1e-28
+goodness(c(440000, 450000, 80000, 30000), c(44, 45, 8, 3))                          # exactly the expected distribution: P = 1
+goodness(c(440100, 449900, 80050, 29950), c(44, 45, 8, 3))                          # large counts
+goodness(round(rmultinom(1, 500, c(0.2, 0.3, 0.1, 0.25, 0.15))[, 1]), c(0.2, 0.3, 0.1, 0.25, 0.15))
+goodness(c(66.5, 83.5, 29.2, 7.8), c(44, 45, 8, 3))                                 # counts that are not whole numbers are taken as entered (the simulated P rounds them)
+refused <- function(report, inputs, text) case(report, inputs, list(refused = paste0("TemplateOperationCancelledException: ", text)))
+refused("RptChiSquareGoodnessOfFit", list(observed = "30,70,5", expected = "50,50"), "The observed and expected columns must have the same number of rows.")
+refused("RptChiSquareGoodnessOfFit", list(observed = "30,70", expected = "50,50"), "Only two categories, use binomial methods such as the single proportion test.")
+refused("RptChiSquareGoodnessOfFit", list(observed = "30", expected = "50"), "Too few categories, use at least three for the chi-square goodness of fit test.")
+refused("RptChiSquareGoodnessOfFit", list(observed = "30,70,5", expected = "50,50,0"), "Cannot have an expected value of zero or less.")
+refused("RptChiSquareGoodnessOfFit", list(observed = "30,-1,5", expected = "1,1,1"), "Observed counts cannot be negative.")
+refused("RptChiSquareGoodnessOfFit", list(observed = "30,70,5", expected = "0,0,0"), "The expected values must add up to more than zero.")
+refused("RptChiSquareGoodnessOfFit", list(observed = "30,70,5", expected = "1,1,1", names = "a,b"), "The column of category names must have the same number of rows as the observed counts.")
+
 writeLines(cases, args[1]); writeLines(expected, args[2])
 cat(length(cases), "cases,", length(expected), "figures\n")

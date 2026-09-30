@@ -129,27 +129,55 @@ internal static class Program
 
     // ---- a report of the menu with the inputs of a case (key=value, with semicolons between them): everything that it gives
     // the report, and a refusal as "refused"
-    private static Dictionary<string, string> Report(string name, string inputs)
+    // the inputs of a case (key=value, with semicolons between them); "after" names the report that this one follows; "names"
+    // is a column of text
+    private static ParameterBag Inputs(string inputs, out string after)
     {
-        Dictionary<string, string> given = new();
+        after = null;
         ParameterBag p = new();
         foreach (string pair in inputs.Split(';', StringSplitOptions.RemoveEmptyEntries))
         {
             int eq = pair.IndexOf('=');
             string key = pair.Substring(0, eq), value = pair.Substring(eq + 1);
-            if (key is "data" or "weights" or "outcome" or "predictor" or "scores") p.AddInput(key, Numbers(value, key == "data" ? "c" : key));
+            if (key == "after") after = value;
+            else if (key is "data" or "weights" or "outcome" or "predictor" or "scores" or "observed" or "expected") p.AddInput(key, Numbers(value, key == "data" ? "c" : key));
+            else if (key == "names") { DataFrame frame = new(); frame.Variables.Add(new StringVariable(value.Split(','), "names")); p.AddInput(key, frame); }
             else if (key is "seed" or "iterations" or "boots") p.AddInput(key, int.Parse(value, inv));
             else if (key == "sided") p.AddInput(key, value);
             else if (value is "true" or "false") p.AddInput(key, value == "true");
             else if (double.TryParse(value, NumberStyles.Float, inv, out double number)) p.AddInput(key, number);
             else p.AddInput(key, value);
         }
+        return p;
+    }
+
+    // a report of the menu: most are in Nonparametric, the chi-square goodness of fit and its simulated P in Tables
+    private static StepOutput Run(string name, ParameterBag p)
+    {
+        MethodInfo report = typeof(Nonparametric).GetMethod(name, BindingFlags.Public | BindingFlags.Static) ?? typeof(Tables).GetMethod(name, BindingFlags.Public | BindingFlags.Static);
+        object[] arguments = report.GetParameters().Length == 2 ? new object[] { host, p } : new object[] { p };
+        return (StepOutput)report.Invoke(null, arguments);
+    }
+
+    private static Dictionary<string, string> Report(string name, string inputs)
+    {
+        Dictionary<string, string> given = new();
         NonparametricHost.Messages.Clear();
         try
         {
-            MethodInfo report = typeof(Nonparametric).GetMethod(name, BindingFlags.Public | BindingFlags.Static);
-            object[] arguments = report.GetParameters().Length == 2 ? new object[] { host, p } : new object[] { p };
-            StepOutput step = (StepOutput)report.Invoke(null, arguments);
+            ParameterBag p = Inputs(inputs, out string after);
+            if (after != null)
+            {
+                // the report that this one follows: what it caches for the reports after it is given to this one
+                StepOutput first = Run(after, Inputs(inputs, out _));
+                foreach (string k in first.ParameterBag.Keys)
+                {
+                    object o;
+                    try { o = first.ParameterBag[k].AsObject; } catch { continue; }
+                    if (!p.ContainsKey(k)) p.AddInput(k, o);
+                }
+            }
+            StepOutput step = Run(name, p);
             if (step == null) { given["refused"] = "no report"; return given; }
             if (step.ParameterBag != null) Collect("", step.ParameterBag, given);
         }
@@ -288,7 +316,8 @@ internal static class Program
 
     // ---- the simulated exact P values against the exact P by the count of every arrangement: the Kruskal-Wallis test with
     // groups of 3, 2 and 4 values (1,260 ways of choosing which values are in which group), the Friedman test with 4 blocks of
-    // 3 treatments (1,296 orders within the blocks), and Cochran's Q with 6 blocks of 3 (46,656).  The program's P, from
+    // 3 treatments (1,296 orders within the blocks), Cochran's Q with 6 blocks of 3 (46,656), and the chi-square goodness of
+    // fit with 30 counts in 4 categories (the multinomial probabilities of 5,456 sets of counts).  The program's P, from
     // 200,000 draws with a seed, is to be within 4.5 standard errors of the exact P, the standard error being that of a
     // proportion of 200,000 draws.  The statistics are worked out here from their definitions.
     private static double[] MidRanks(double[] values)
@@ -385,6 +414,36 @@ internal static class Program
         return (double)reached / ways;
     }
 
+    // the exact P of the chi-square goodness of fit: the sum of the multinomial probabilities of every set of counts of the
+    // total over the categories whose chi-square is at least the observed
+    private static double GoodnessExact(int[] counts, double[] p, out double observed)
+    {
+        int n = counts.Sum(), k = counts.Length;
+        double X2(int[] c) { double s = 0; for (int i = 0; i < k; i++) { double e = n * p[i]; s += (c[i] - e) * (c[i] - e) / e; } return s; }
+        observed = X2(counts);
+        double bound = observed - 1e-9, total = 0;
+        double[] logFactorial = new double[n + 1];
+        for (int i = 1; i <= n; i++) logFactorial[i] = logFactorial[i - 1] + Math.Log(i);
+        int[] c = new int[k];
+        void Fill(int i, int left)
+        {
+            if (i == k - 1)
+            {
+                c[i] = left;
+                if (X2(c) >= bound)
+                {
+                    double lp = logFactorial[n];
+                    for (int j = 0; j < k; j++) lp += c[j] * Math.Log(p[j]) - logFactorial[c[j]];
+                    total += Math.Exp(lp);
+                }
+                return;
+            }
+            for (int v = 0; v <= left; v++) { c[i] = v; Fill(i + 1, left - v); }
+        }
+        Fill(0, n);
+        return total;
+    }
+
     private static void CheckSimulated(string what, Dictionary<string, string> given, double exact, int iterations)
     {
         bool ok = given.ContainsKey("p") && Number(given["p"], out double p);
@@ -412,6 +471,18 @@ internal static class Program
         double[][] binary = { new[] { 1.0, 0, 0 }, new[] { 1.0, 1, 0 }, new[] { 0.0, 0, 0 }, new[] { 1.0, 0, 1 }, new[] { 1.0, 1, 0 }, new[] { 1.0, 1, 1 } };
         exact = FriedmanExact(binary, true, out double q);
         CheckSimulated("Cochran's Q, 6 blocks of 3", Report("RptFriedmanSimulateExactP", "data=1,1,0,1,1,1|0,1,0,0,1,1|0,0,0,1,0,1;iterations=200000;seed=5;ci=0.99"), exact, 200000);
+        // the goodness of fit: 30 counts in 4 categories, 5,456 sets of counts; the simulated P follows the test
+        exact = GoodnessExact(new[] { 18, 6, 4, 2 }, new[] { 0.4, 0.3, 0.2, 0.1 }, out double x2);
+        var whole = Report("RptChiGfSimulateExactP", "observed=18,6,4,2;expected=0.4,0.3,0.2,0.1;iterations=200000;seed=9;ci=0.99;after=RptChiSquareGoodnessOfFit");
+        CheckSimulated("Chi-square goodness of fit, 30 counts in 4 categories", whole, exact, 200000);
+        Say(whole.GetValueOrDefault("rounded", "absent") == "", $"the result of whole counts says nothing of rounding: \"{whole.GetValueOrDefault("rounded", "absent")}\"");
+        // the same counts with fractions: the simulation rounds them (18.4, 5.6, 4.2 and 1.8 to 18, 6, 4 and 2), draws the same
+        // tables from the same seed and compares them with the chi-square of the rounded counts, so that its P is the same, and
+        // it says that the counts were rounded
+        var fractions = Report("RptChiGfSimulateExactP", "observed=18.4,5.6,4.2,1.8;expected=0.4,0.3,0.2,0.1;iterations=200000;seed=9;ci=0.99;after=RptChiSquareGoodnessOfFit");
+        CheckSimulated("Chi-square goodness of fit, counts that are not whole numbers", fractions, exact, 200000);
+        Say(fractions.GetValueOrDefault("p", "absent") == whole.GetValueOrDefault("p", "?"), $"the simulated P of the counts with fractions, {fractions.GetValueOrDefault("p", "absent")}, is that of the counts as rounded, {whole.GetValueOrDefault("p", "?")}");
+        Say(fractions.GetValueOrDefault("rounded", "absent") == "; counts that are not whole numbers were rounded", $"the result says that the counts were rounded: \"{fractions.GetValueOrDefault("rounded", "absent")}\"");
         Console.WriteLine($"{(failures == before ? "ok  " : "FAIL")}  the simulated exact P values");
     }
 
