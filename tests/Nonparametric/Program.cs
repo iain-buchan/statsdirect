@@ -1,9 +1,9 @@
 // The Nonparametric menu: checks by calculation.  Each report of the menu is given the inputs of a case, and what it gives the
 // report is compared with figures that are worked out from the definitions of the statistics (in the folder benchmarks, with
 // the script that made them).  The shuffles of the simulated exact P values are checked for every order being equally likely,
-// the simulated P values against the exact P by the count of every arrangement, and the distribution of Kendall's score at the
-// most observations for which the program counts the orders, and just above it, where it uses a series, against a count made
-// here.
+// the simulated P values against the exact P by the count of every arrangement, the bootstraps of the Gini coefficient and the
+// diversity indices against bootstraps made in R, and the distribution of Kendall's score at the most observations for which
+// the program counts the orders, and just above it, where it uses a series, against a count made here.
 using System.Globalization;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -479,11 +479,68 @@ internal static class Program
         Console.WriteLine($"{(failures == before ? "ok  " : "FAIL")}  the distribution of Kendall's score");
     }
 
+    // ---- the bootstraps of the Gini coefficient and the diversity indices.  The benchmark is a bootstrap that was made 10 times
+    // with other random numbers: a figure of the program is to be within 4.5 standard deviations of the 10 of their mean, the
+    // standard deviation being that of the difference of one bootstrap from the mean of 10; where the 10 are the same the
+    // figure is to be theirs.  The program is given a seed, so that its figures are the same in every run.
+    private static void Bootstrap(string folder)
+    {
+        int before = failures;
+        Console.WriteLine("The bootstraps of the Gini coefficient and the diversity indices");
+        Dictionary<string, List<(string output, double centre, double spread)>> expected = new();
+        foreach (string line in File.ReadAllLines(Path.Combine(folder, "bootstrap-expected.txt")))
+        {
+            string[] f = line.Split('\t');
+            if (f.Length < 3) continue;
+            string[] k = f[0].Split('|', 3);
+            string key = k[0] + "|" + k[1];
+            if (!expected.ContainsKey(key)) expected[key] = new();
+            expected[key].Add((k[2], double.Parse(f[1], inv), double.Parse(f[2], inv)));
+        }
+        int compared = 0, cases = 0;
+        double longest = 0, furthest = 0;
+        foreach (string line in File.ReadAllLines(Path.Combine(folder, "bootstrap-cases.txt")))
+        {
+            string[] f = line.Split('\t');
+            if (f.Length < 3) continue;
+            cases++;
+            System.Diagnostics.Stopwatch clock = System.Diagnostics.Stopwatch.StartNew();
+            Dictionary<string, string> given = Report(f[0], f[2]);
+            longest = Math.Max(longest, clock.Elapsed.TotalSeconds);
+            int bad = 0; string what = "";
+            foreach ((string output, double centre, double spread) in expected[f[0] + "|" + f[1]])
+            {
+                compared++;
+                bool ok = given.ContainsKey(output) && Number(given[output], out double x) && double.IsFinite(x);
+                if (ok)
+                {
+                    Number(given[output], out x);
+                    double by = spread > 0 ? Math.Abs(x - centre) / (spread * Math.Sqrt(1.1)) : 0;
+                    ok = x == centre || Math.Abs(x - centre) <= 1e-9 * Math.Abs(centre) || (spread > 0 && by <= 4.5);
+                    if (spread > 0) furthest = Math.Max(furthest, by);
+                }
+                if (!ok)
+                {
+                    bad++;
+                    if (what.Length == 0) what = $"{output} is {(given.ContainsKey(output) ? given[output] : given.ContainsKey("refused") ? "refused, " + given["refused"] : "absent")}, expected {centre.ToString("R", inv)} (standard deviation {spread.ToString("R", inv)})";
+                }
+            }
+            // the seed given is to be the one printed
+            string seed = f[2].Substring(f[2].IndexOf("seed=", StringComparison.Ordinal) + 5).Split(';')[0];
+            string shown = given.GetValueOrDefault(f[0] == "RptGini" ? "*data[1].seed" : "*var[1].seed", "absent");
+            if (shown != seed) { bad++; if (what.Length == 0) what = $"the seed printed is {shown}, expected {seed}"; }
+            Say(bad == 0, $"bootstrap, {f[1]}: {bad} figures are not within the chance of the draws of their benchmarks; the first is {what}");
+        }
+        Say(longest < 30, $"the bootstrap that takes longest takes {longest:F1} seconds");
+        Console.WriteLine($"{(failures == before ? "ok  " : "FAIL")}  the bootstraps: {cases} cases, {compared} figures compared; the furthest is {furthest:F2} standard deviations from its benchmark; the case that takes longest takes {longest:F2} seconds");
+    }
+
     private static int Main(string[] args)
     {
         string folder = Path.Combine(AppContext.BaseDirectory, "benchmarks");
         HashSet<string> parts = new(args);
         if (parts.Count == 0 || parts.Contains("benchmarks")) Benchmarks(folder);
+        if (parts.Count == 0 || parts.Contains("bootstrap")) Bootstrap(folder);
         if (parts.Count == 0 || parts.Contains("shuffles")) Shuffles();
         if (parts.Count == 0 || parts.Contains("simulated")) Simulated();
         if (parts.Count == 0 || parts.Contains("series")) Series();
