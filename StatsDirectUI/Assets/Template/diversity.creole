@@ -4,7 +4,8 @@
 <subtitle>Analysis for @ti:</subtitle>
 
 <p>Total number of counts = @n  <warn>@msg</warn><br />
-Number of classes observed (richness) = @s</p>
+Number of classes observed (richness) = @s<br />
+Re-samples = @boots, seed = @seed</p>
 
 <p><b>Estimated total number of classes = @stotal</b><br />
 Standard error (large sample) = @{se-largeSample:roundu}<br />

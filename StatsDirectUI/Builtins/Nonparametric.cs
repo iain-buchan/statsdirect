@@ -1142,8 +1142,8 @@ namespace StatsDirect.Builtins
         /// log-normal interval (see the comment there).
         /// </summary>
         /// <remarks>
-        /// The random numbers are seeded from the clock, so that the bootstrap figures differ from run to run. Fewer than three
-        /// classes are refused.
+        /// The random numbers are from the seed given, or from the clock if none is, and the report gives the seed, so that the
+        /// same re-samples can be drawn again. Fewer than three classes are refused.
         /// </remarks>
         public static StepOutput RptDiversity(IPreferencesAndProgressBar host, ParameterBag parameters)
         {
@@ -1156,7 +1156,8 @@ namespace StatsDirect.Builtins
             int bootsDivisor = Math.Max(1, boots / 1000);
 
             MathDbl.civ(0, out double cit, gamma, out _);
-            MersenneTwister rnd = new(); //  Self-seeded
+            int seed = Formula.AutoSeed(parameters);   //  the seed given, or one from the clock; the report gives it
+            MersenneTwister rnd = new(seed);
             double[] r = new double[frame.MaxRows + 1];
 
             ParameterBag outputParameters = new();
@@ -1580,6 +1581,7 @@ namespace StatsDirect.Builtins
                 varParameters.AddOutput("from-simpson-largeSample", simcl);
                 varParameters.AddOutput("to-simpson-largeSample", simcu);
                 varParameters.AddOutput("boots", boots);
+                varParameters.AddOutput("seed", seed);
                 varParameters.AddOutput("bias-simpson", bias);
                 varParameters.AddOutput("se-simpson-bootstrap", thetase);
                 varParameters.AddOutput("from-simpson-bootstrap", nbcl);
@@ -4240,7 +4242,8 @@ namespace StatsDirect.Builtins
         /// chart.
         /// </summary>
         /// <remarks>
-        /// The random numbers are seeded from the clock, so that the bootstrap figures differ from run to run.
+        /// The random numbers are from the seed given, or from the clock if none is, and the report gives the seed, so that the
+        /// same re-samples can be drawn again.
         /// </remarks>
         public static StepOutput RptGini(IProgressBarHost host, ParameterBag parameters)
         {
@@ -4256,7 +4259,8 @@ namespace StatsDirect.Builtins
             List<ParameterBag> outputList = new();
             outputParameters.AddOutput("*data", outputList);
 
-            MersenneTwister rng = new(); // Seeds itself
+            int seed = Formula.AutoSeed(parameters);   //  the seed given, or one from the clock; the report gives it
+            MersenneTwister rng = new(seed);
             for (int k = 0; k < dataFrame.VariableCount; k++)
             {
                 DoubleVariable v = (DoubleVariable)dataFrame.Variables[k];
@@ -4468,6 +4472,7 @@ namespace StatsDirect.Builtins
                     varParameters.AddOutput("msg", bcaNote.TrimStart());
                 varParameters.AddOutput("cv", cv);
                 varParameters.AddOutput("boots", boots);
+                varParameters.AddOutput("seed", seed);
                 varParameters.AddOutput("bias", bias);
                 varParameters.AddOutput("se", thetase);
 

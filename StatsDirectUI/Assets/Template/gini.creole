@@ -6,7 +6,7 @@
 <p>Positive non-zero observations = @n  <warn>@msg</warn><br />
 Variance coefficient = @{cv:roundu}</p>
 
-<p>Re-samples = @boots<br />
+<p>Re-samples = @boots, seed = @seed<br />
 Bias = @{bias:roundu}<br />
 Standard error (bootstrap) = @{se:roundu}</p>
 

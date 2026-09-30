@@ -50,6 +50,13 @@
         <minimum-value>1</minimum-value>
         <default-value>100000</default-value>
       </integer>
+      <integer>
+        <name>seed</name>
+        <prompt>Seed</prompt>
+        <default-value>=Base.DefaultSeed()</default-value>
+        <force-default>true</force-default>
+        <must-request>true</must-request>
+      </integer>
     </parameters>
     <builtin function-name="rptGini" />
     <test>

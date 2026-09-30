@@ -36,9 +36,9 @@ namespace StatsDirect.Builtins
             return name;
         }
 
-        // The seed of a randomization: the one that was entered, or one from the clock if none was.  The report is given the
-        // seed that was used, so that the allocation can be made again.
-        private static int AutoSeed(ParameterBag parameters)
+        // The seed of a randomization, or of the bootstraps of the Nonparametric menu: the one that was entered, or one from
+        // the clock if none was.  The report is given the seed that was used, so that the allocation can be made again.
+        internal static int AutoSeed(ParameterBag parameters)
         {
             if (parameters.ContainsKey("seed") && parameters["seed"] != null && parameters["seed"].IsInt32)
                 return parameters["seed"].AsInt32;
