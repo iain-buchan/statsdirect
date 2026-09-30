@@ -84,10 +84,12 @@ namespace StatsDirect.Numerics
         {
             // preparatory counting and feeder arrays
             bool doUserCentL;
-            if (userCentL > 0.0 && userCentL < 100.0)
+            // a centile of 0 is the minimum and one of 100 the maximum; the name has the percentage without the figures that
+            // its product with 100 has beyond what was entered (7.000000000000001 for 7)
+            if (userCentL >= 0.0 && userCentL <= 100.0)
             {
                 doUserCentL = true;
-                UserCentileLCaption = "Centile " + userCentL.ToString();
+                UserCentileLCaption = "Centile " + Formatting.XRound(userCentL, 6);
             }
             else
             {
@@ -95,10 +97,10 @@ namespace StatsDirect.Numerics
                 UserCentileLCaption = string.Empty;
             }
             bool doUserCentU;
-            if (userCentU > 0.0 && userCentU < 100.0)
+            if (userCentU >= 0.0 && userCentU <= 100.0)
             {
                 doUserCentU = true;
-                UserCentileUCaption = "Centile " + userCentU.ToString();
+                UserCentileUCaption = "Centile " + Formatting.XRound(userCentU, 6);
             }
             else
             {

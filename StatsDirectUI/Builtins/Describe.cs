@@ -383,9 +383,13 @@ namespace StatsDirect.Builtins
         }
 
 
+        // The confidence level of a report: 0.95 if what is given is not above 0 and below 1, as the summary itself takes it;
+        // the report prints the level that is used
+        private static double XLevel(double level) => level > 0.0 && level < 1.0 ? level : 0.95;
+
         public static StepOutput QuickSummary(IUserInterface host, ParameterBag parameters)
         {
-            double GAMMA = parameters["gamma"].AsDouble;
+            double GAMMA = XLevel(parameters["gamma"].AsDouble);
             DataFrame data = parameters["data"].AsDataFrame;
             DoubleVariable v0 = (DoubleVariable)data.Variables[0];
             Summary sx = new();
@@ -533,7 +537,7 @@ namespace StatsDirect.Builtins
             }
 
             // get options
-            double gamma = parameters["gamma"].AsDouble;
+            double gamma = XLevel(parameters["gamma"].AsDouble);
             string qxcl = " " + Formatting.XRound(gamma * 100, 1) + "% CL of mean";
             string sumTitle = isWeighted ? "Sum of weights" : "Sum";
             string[] titles = { "Valid data", "Missing data", sumTitle, "Mean", "Variance", "Standard deviation", "Variance coefficient", "Standard error of mean", "Upper" + qxcl, "Lower" + qxcl, "Geometric mean", "Skewness", "Kurtosis", "Maximum", "Upper quartile", "Median", "Lower quartile", "Interquartile range", "Minimum", "Range", "User defined centiles", null };
