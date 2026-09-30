@@ -1048,9 +1048,8 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("et", et);
             outputParameters.AddOutput("vart", vart);
             outputParameters.AddOutput("z", stat);
-            double p = 1.0 - PDF.alnorm(Math.Abs(stat));
-            if (p > 1.0 - p)
-                p = 1.0 - p;
+            //  the tail beyond |z|, worked out as itself: 1 less the other tail is 0 below 1e-16 (a z of 8.6 gave P = 0)
+            double p = PDF.alnorm(-Math.Abs(stat));
             outputParameters.AddOutput("p_1", p);
             outputParameters.AddOutput("p_2", p * 2.0);
             if (tie != 0)
@@ -1062,9 +1061,7 @@ namespace StatsDirect.Builtins
                 stat = (st - et) / Math.Sqrt(vart);
                 tiesParameters.AddOutput("varttie", vart);
                 tiesParameters.AddOutput("ztie", stat);
-                p = 1.0 - PDF.alnorm(Math.Abs(stat));
-                if (p > 1.0 - p)
-                    p = 1.0 - p;
+                p = PDF.alnorm(-Math.Abs(stat));
                 tiesParameters.AddOutput("p_1tie", p);
                 tiesParameters.AddOutput("p_2tie", p * 2.0);
             }
@@ -1613,13 +1610,12 @@ namespace StatsDirect.Builtins
                 if (n1 > 100 && n2 > 100 || xf != 0 && dimlim > 1000000 || xf == 0 && n1 * ((int)Math.Floor((double)n2 / 2) + 1) > 1000000)
                 {
                     outputParameters.AddOutput("stats", "Normalised statistic = " + host.RoundU(z) + adj);
+                    //  each tail is worked out as itself: 1 less the other tail is 0 below 1e-16
                     pl = PDF.alnorm(z);
-                    if (pl > 1.0 - pl)
-                        p = 1.0 - pl;
-                    else
-                        p = pl;
+                    double pu = PDF.alnorm(-z);
+                    p = Math.Min(pl, pu);
                     outputParameters.AddOutput("p_l", pl);
-                    outputParameters.AddOutput("p_u", 1.0 - pl);
+                    outputParameters.AddOutput("p_u", pu);
                     outputParameters.AddOutput("p_2", p * 2.0);
                 }
                 else
@@ -2100,10 +2096,7 @@ namespace StatsDirect.Builtins
                 double kz = s < 0
                     ? (s + 1.0) / Math.Sqrt(varf)
                     : s > 0 ? (s - 1.0) / Math.Sqrt(varf) : 0.0;
-                double pl = PDF.alnorm(kz);
-                ptau = pl < 1.0 - pl
-                    ? pl * 2.0
-                    : (1.0 - pl) * 2.0;
+                ptau = 2.0 * PDF.alnorm(-Math.Abs(kz));   //  twice the tail beyond |z|, worked out as itself
             }
 
             string ciNote = string.Empty;
@@ -2974,12 +2967,10 @@ namespace StatsDirect.Builtins
             // pl is the lower tail of the normal deviate, and ps the smaller of the two tails
             double kz = s / Math.Sqrt(varf);
             double pl = PDF.alnorm(kz);
-            if (pl < 1.0 - pl)
-                ps = pl;
-            else
-                ps = 1.0 - pl;
+            double pu = PDF.alnorm(-kz);   //  each tail as itself: 1 less the other tail is 0 below 1e-16
+            ps = Math.Min(pl, pu);
             outputParameters.AddOutput("kz", kz);
-            outputParameters.AddOutput("p_u", 1.0 - pl);
+            outputParameters.AddOutput("p_u", pu);
             outputParameters.AddOutput("p_l", pl);
             outputParameters.AddOutput("p_2", ps * 2.0);
             // the continuity correction moves the score one step towards zero, and leaves a score of zero where it is (it used to
@@ -2991,12 +2982,10 @@ namespace StatsDirect.Builtins
             else
                 kz = 0.0;
             pl = PDF.alnorm(kz);
-            if (pl < 1.0 - pl)
-                ps = pl;
-            else
-                ps = 1.0 - pl;
+            pu = PDF.alnorm(-kz);
+            ps = Math.Min(pl, pu);
             outputParameters.AddOutput("kzcc", kz);
-            outputParameters.AddOutput("p_ucc", 1.0 - pl);
+            outputParameters.AddOutput("p_ucc", pu);
             outputParameters.AddOutput("p_lcc", pl);
             outputParameters.AddOutput("p_2cc", ps * 2.0);
 
@@ -4040,9 +4029,8 @@ namespace StatsDirect.Builtins
                 double t1 = (ru - l[0] * sbar) / Math.Sqrt(Convert.ToDouble(nm) / Convert.ToDouble(nx * (nx - 1)) * r4 - nm / (nx - 1.0) * sbar * sbar);
                 double z = t1;
                 outputParameters.AddOutput("z", z);
-                double p = 1.0 - PDF.alnorm(Math.Abs(z));
-                if (p > 1 - p)
-                    p = 1 - p;
+                //  the tail beyond |z|, worked out as itself: 1 less the other tail is 0 below 1e-16
+                double p = PDF.alnorm(-Math.Abs(z));
                 outputParameters.AddOutput("p2", p * 2);
                 outputParameters.AddOutput("p1", p);
             }
