@@ -207,6 +207,27 @@ internal static class Program
         Console.WriteLine($"{(failures == before ? "ok  " : "FAIL")}  the Newman-Keuls comparisons");
     }
 
+    // ---- the value of the studentized range at a small lower tail probability: the value given for the probability has
+    // the probability given back within a part in a hundred million, and the values of two cases are those of an independent
+    // adaptive integration of the distribution (the range of normal variates mixed over the residual standard deviation)
+    private static void Tails()
+    {
+        int before = failures;
+        Console.WriteLine("The studentized range in a small lower tail");
+        foreach ((double k, double df, double p, double value) in new[] { (30.0, 60.0, 1e-12, 0.8669439305), (30.0, 25000.0, 1e-16, 0.6769738494), (30.0, 60.0, 1e-6, 1.5306595381), (10.0, 20.0, 1e-8, 0.2649127683),
+                                                                           (5.0, 10.0, 0.001, 0.0), (50.0, 100.0, 1e-9, 0.0), (4.0, 1000.0, 1e-7, 0.0), (30.0, 1e6, 1e-12, 0.0), (12.0, 40.0, 0.009, 0.0) })
+        {
+            System.Diagnostics.Stopwatch clock = System.Diagnostics.Stopwatch.StartNew();
+            double q = PDF.quantsr(p, k, df);
+            double back = q == Constant.MISSING ? double.NaN : PDF.probsr(q, k, df);
+            string what = $"{k} means, {df} degrees of freedom, lower tail {p}: value {q.ToString("R", inv)}, whose lower tail is {back.ToString("R", inv)}, in {clock.Elapsed.TotalSeconds:F1} seconds";
+            Say(q != Constant.MISSING && Math.Abs(back - p) <= 1e-8 * p, what);
+            if (value > 0)
+                Say(Math.Abs(q - value) <= 1e-9 * value, $"{what}; the integration gives {value}");
+        }
+        Console.WriteLine($"{(failures == before ? "ok  " : "FAIL")}  the small lower tails");
+    }
+
     [STAThread]
     private static int Main(string[] args)
     {
@@ -215,6 +236,7 @@ internal static class Program
         if (which is "all" or "benchmarks") Benchmarks(folder);
         if (which is "all" or "range") Range();
         if (which is "all" or "comparisons") Comparisons();
+        if (which is "all" or "tails") Tails();
         Console.WriteLine();
         Console.WriteLine(failures == 0 ? $"ALL {checks} CHECKS PASS" : $"{failures} OF {checks} CHECKS FAILED");
         return failures == 0 ? 0 : 1;

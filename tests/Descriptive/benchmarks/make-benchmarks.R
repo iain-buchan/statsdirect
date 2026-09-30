@@ -205,19 +205,23 @@ quick(c(130, 125, 140, 118, 149, 132, 121, 128, 137, 126, 133, 129, 141, 116, 13
 # ---- the time series summary
 # least squares slope of y on x, of the pairs that are there
 slope <- function(x, y) { k <- !is.na(y); x <- x[k]; y <- y[k]; if (length(x) < 2) NA else sum((x - mean(x)) * (y - mean(y))) / sum((x - mean(x))^2) }
-series <- function(time, obs, id, group = NULL, level = 0.95, zero = NULL, .more = list()) {
+series <- function(time, obs, id, group = NULL, level = 0.95, zero = NULL, .more = list(), boot = FALSE, iterations = 2000, seed = 12345) {
   l <- if (level > 0 && level < 1) level else 0.95
   g <- if (is.null(group)) rep("all", length(time)) else group
   add <- !is.null(zero) && zero && !any(time == 0)
   inputs <- c(list(times = frame(time), observations = frame(obs), subjectIds = labels(id)), if (!is.null(group)) list(groups = labels(group)),
-              if (!is.null(zero)) list(addZeroObservationAtZeroTime = zero), list(ci = level, doExactP = FALSE))
+              if (!is.null(zero)) list(addZeroObservationAtZeroTime = zero), list(ci = level, doExactP = boot), if (boot) list(iterations = iterations, seed = seed))
   # a row without an observation is as if it were not there, and the same observation again is taken once; the subjects are in
   # the order of the first places of their labels in the whole column
   all_ids <- unique(id); all_groups <- unique(g)
   there <- !is.na(obs) & !duplicated(data.frame(time, obs, id, g))
   time <- time[there]; obs <- obs[there]; id <- id[there]; g <- g[there]
   want <- list(ciOutput = 100 * l)
-  names_g <- all_groups
+  # a group without an observation is left out, and the report says so
+  left <- all_groups[!(all_groups %in% unique(g))]
+  names_g <- all_groups[all_groups %in% unique(g)]
+  want[["*groupLeftOut.rows"]] <- length(left)
+  for (i in seq_along(left)) want[[sprintf("*groupLeftOut[%d].why", i)]] <- paste0("Group ", left[i], " has no observations and is left out.")
   aucs <- list()
   for (gi in seq_along(names_g)) {
     k <- g == names_g[gi]
@@ -285,7 +289,9 @@ series <- function(time, obs, id, group = NULL, level = 0.95, zero = NULL, .more
   else { want[["*aucLogNormal.rows"]] <- 0; not <- c(not, if (all(all_auc > 0)) "Normal plot for log(AUC) not drawn: it needs two areas or more that are not all the same." else "Normal plot for log(AUC) not drawn: an area is zero or below.") }
   want[["*aucNotPlotted.rows"]] <- length(not)
   for (i in seq_along(not)) want[[sprintf("*aucNotPlotted[%d].why", i)]] <- not[i]
-  if (length(names_g) == 2) {
+  comparable <- length(names_g) == 2 && length(aucs[[1]]) >= 2 && length(aucs[[2]]) >= 2 && isTRUE(var(aucs[[1]]) / length(aucs[[1]]) + var(aucs[[2]]) / length(aucs[[2]]) > 0)
+  if (length(names_g) == 2 && !comparable) { want[["*noComparison.rows"]] <- 1; want[["*noComparison[1].why"]] <- "Group comparison not made: it needs two subjects or more in each group, with areas under the curve that are not all the same." }
+  if (comparable) {
     a1 <- aucs[[1]]; a2 <- aucs[[2]]; v1 <- var(a1) / length(a1); v2 <- var(a2) / length(a2)
     df <- (v1 + v2)^2 / (v1^2 / (length(a1) - 1) + v2^2 / (length(a2) - 1)); se <- sqrt(v1 + v2); d <- mean(a1) - mean(a2); t <- d / se
     tq <- qt((1 - l) / 2, df, lower.tail = FALSE)
@@ -381,6 +387,14 @@ series(c(0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3), c(1, 5, NA, 2, 2, 6, NA, 1, 1, 4, 
 series(c(0, 1, 2, 2, 0, 1, 2, 0, 1, 2), c(1, 5, 2, 2, 2, 6, 3, 1, 4, 3), c("a", "a", "a", "a", "b", "b", "b", "c", "c", "c"))
 case("RptTimeSeriesSummary", list(times = frame(c(0, 1, 2, 2, 0, 1, 2)), observations = frame(c(1, 5, 2, 2.5, 2, 6, 3)), subjectIds = labels(c("a", "a", "a", "a", "b", "b", "b")), ci = 0.95, doExactP = FALSE),
      list(refused = "Exception: Your data contains multiple, non-identical observations for the same subject and time point; time series summary cannot interpret this. Please remove the duplicate(s)."))
+# two groups whose areas are all the same (every subject 2 at time 0 and 3 at time 1), with the bootstrap; a group of which every
+# observation is missing; one subject in each group; a group of one subject beside a group of three
+series(rep(c(0, 1), 6), rep(c(2, 3), 6), rep(paste0("s", 1:6), each = 2), rep(c("one", "two"), each = 6), boot = TRUE)
+series(rep(c(0, 1), 6), rep(c(2, 3), 6), rep(paste0("s", 1:6), each = 2), rep(c("one", "two"), each = 6))
+series(c(0, 1, 0, 1), c(2, 3, NA, NA), c("a", "a", "b", "b"), c("one", "one", "two", "two"), boot = TRUE, iterations = 100)
+series(c(0, 1, 0, 1), c(2, 3, 1, 5), c("a", "a", "b", "b"), c("one", "one", "two", "two"))
+series(c(0, 1, 0, 1, 0, 1, 0, 1), c(2, 3, 1, 5, 2, 6, 3, 4), c("a", "a", "b", "b", "c", "c", "d", "d"), c("one", "one", "two", "two", "two", "two", "two", "two"), boot = TRUE, iterations = 500)
+series(c(0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2), c(1, 4, 2, 2, 5, 3, 1, 3, 2, 1, 6, 2, 3, 5, 4, 2, 7, 1), rep(paste0("s", 1:6), each = 3), rep(c("one", "two"), each = 9), boot = TRUE, iterations = 3000)
 # two groups far apart, of which the first has the smaller areas and of which it has the greater: the P value is small
 for (first in c("low", "high")) {
   time <- rep(c(0, 1, 2, 4), 16); id <- rep(paste0("s", 1:16), each = 4); low <- rep(c(TRUE, FALSE), each = 32)
