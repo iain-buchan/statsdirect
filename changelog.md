@@ -49,6 +49,7 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
 ### Added
 - Gini coefficient and diversity indices: a seed for the random numbers of the bootstrap. The box is filled with a seed from the clock, which can be changed, and the report gives the seed that was used, so that the same re-samples can be drawn again; the bootstrap figures used to differ from run to run, with no way to repeat a run.
+- Method comparison regression: a seed for the bootstrap confidence intervals (Deming bootstrap, Passing-Bablok bootstrap and the nested bootstraps), which are of random re-samples drawn in R and differed from run to run; the seed is asked for, as it is for the Gini and diversity bootstraps, each regression starts from it, and the report shows it.
 
 ##[v5.0.13] 2026-09-29
 
