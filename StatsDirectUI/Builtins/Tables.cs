@@ -1813,8 +1813,8 @@ namespace StatsDirect.Builtins
         /// of the table observed, with a binomial confidence interval for it (binci) at the level asked for. The rows are those
         /// the test used: a row with a missing cell is left out of both columns. The draws are of whole numbers: an observed
         /// count that is not one is rounded, a half to the even number, the chi-square that the draws are compared with is that
-        /// of the counts as rounded, and the result says that counts were rounded. A run that the progress bar stops gives the
-        /// proportion of the draws made, and says how many.
+        /// of the counts as rounded, and the result says that counts were rounded; counts that all round to 0 are refused. A run
+        /// that the progress bar stops gives the proportion of the draws made, and says how many.
         /// </summary>
         public static StepOutput RptChiGfSimulateExactP(IPreferencesAndProgressBar host, ParameterBag parameters)
         {
@@ -1858,6 +1858,13 @@ namespace StatsDirect.Builtins
                 xn[n + 1] = Convert.ToInt32(whole);
                 p[n + 1] = expectedData[n] / expectedTotal;
             }
+            // the tables drawn have the total of the counts as rounded: with none there is nothing to draw, and the chi-square of
+            // no counts is not a number (such counts used to give a P value of 0)
+            int total = 0;
+            for (int n = 1; n <= nx; n++)
+                total += xn[n];
+            if (total <= 0)
+                throw new TemplateOperationCancelledException("The observed counts, rounded to whole numbers, add up to nothing: there are no tables to draw.", "Chi-square goodness of fit test");
             double x2 = X2Gf(xn, p, nx);
 
             ResampleX2Gf(host, xn, p, nx, x2, out int r, iterations, seed, out int actualIterations);
