@@ -68,8 +68,9 @@ one_way(list(c(-3.5, -2.1, -4.4, -1.9), c(2.2, 1.8, 3.1, 2.7)))                 
 one_way(list(rnorm(30, 10, 2), rnorm(25, 11, 2), rnorm(40, 10.5, 3), rnorm(12, 9, 1), rnorm(18, 12, 2)))
 
 # ---- two way (randomized blocks): the columns are the treatments and the rows the blocks; a row with a missing value is left out
-two_way <- function(cols, .more = list()) {
+two_way <- function(cols, .more = list(), .offset = 0) {   # .offset is added to the values given to the program: the figures are of the values as given here, which the sums of squares are the same about
   m <- do.call(cbind, cols); keep <- complete.cases(m); m <- m[keep, , drop = FALSE]; nr <- nrow(m); nc <- ncol(m)
+  m <- m - m[1, 1]   # about the first value, which is exact for values near each other: the sums of squares are the same about any centre
   r <- rowMeans(m); cm <- colMeans(m); gm <- mean(m)
   ssrow <- nc * sum((r - gm)^2); sscol <- nr * sum((cm - gm)^2); sstot <- sum((m - gm)^2)
   ssres <- sum((m - outer(r, rep(1, nc)) - outer(rep(1, nr), cm) + gm)^2)
@@ -79,7 +80,7 @@ two_way <- function(cols, .more = list()) {
                sub_vr = (ssrow / dfrow) / (ssres / dfres), sub_p = pf((ssrow / dfrow) / (ssres / dfres), dfrow, dfres, lower.tail = FALSE),
                grp_vr = (sscol / dfcol) / (ssres / dfres), grp_p = pf((sscol / dfcol) / (ssres / dfres), dfcol, dfres, lower.tail = FALSE))
   want[names(.more)] <- .more
-  case("RptTwoWay", list(data = frame_of(cols)), want)
+  case("RptTwoWay", list(data = frame_of(lapply(cols, function(v) v + .offset))), want)
 }
 grass <- list(c(8.4, 12.8, 9.6, 9.8, 8.4, 8.6, 8.9, 7.9), c(9.4, 15.2, 9.1, 8.8, 8.2, 9.9, 9, 8.1), c(9.8, 12.9, 11.2, 9.9, 8.5, 9.8, 9.2, 8.2), c(12.2, 14.4, 9.8, 12, 8.5, 10.9, 10.4, 10))
 two_way(grass)
@@ -89,10 +90,11 @@ two_way(list(c(1, 2, 3), c(2, 4, 4)))                                           
 
 # ---- replicated two way: the frames are the blocks, the columns of each the treatments, the values the repeats; a missing
 # repeat is replaced by the mean of its cell and takes a residual and a total degree of freedom away
-two_multi <- function(blocks, .more = list()) {
+two_multi <- function(blocks, .more = list(), .offset = 0) {   # .offset as for two_way
   nr <- length(blocks); nc <- length(blocks[[1]]); nm <- length(blocks[[1]][[1]]); missing <- 0
   y <- array(NA, c(nm, nr, nc)); sumrecip <- numeric(nc)
   for (i in 1:nr) for (j in 1:nc) { v <- blocks[[i]][[j]]; present <- v[!is.na(v)]; missing <- missing + sum(is.na(v)); v[is.na(v)] <- mean(present); y[, i, j] <- v }
+  y <- y - y[1, 1, 1]   # about the first value, as for two_way
   cell <- apply(y, c(2, 3), mean); r <- rowMeans(cell); cm <- colMeans(cell); gm <- mean(y)
   ssrow <- nc * nm * sum((r - gm)^2); sscol <- nr * nm * sum((cm - gm)^2); sstot <- sum((y - gm)^2)
   ssint <- nm * sum((cell - outer(r, rep(1, nc)) - outer(rep(1, nr), cm) + gm)^2)
@@ -105,13 +107,20 @@ two_multi <- function(blocks, .more = list()) {
                grp_vr = sscol / dfcol / msres, grp_p = pf(sscol / dfcol / msres, dfcol, dfres, lower.tail = FALSE),
                int_vr = ssint / dfint / msres, int_p = pf(ssint / dfint / msres, dfint, dfres, lower.tail = FALSE), `*warn.rows` = if (missing > 0) 1 else 0)
   want[names(.more)] <- .more
-  case("RptTwoMulti", list(data2d = frame2d(blocks)), want)
+  case("RptTwoMulti", list(data2d = frame2d(lapply(blocks, function(b) lapply(b, function(v) v + .offset)))), want)
 }
 rep_blocks <- list(list(c(9.8, 10.1, 9.8), c(9.9, 9.5, 10), c(11.3, 10.7, 10.7)), list(c(9.2, 8.6, 9.2), c(9.1, 9.1, 9.4), c(10.3, 10.7, 10.2)), list(c(8.4, 7.9, 8), c(8.6, 8, 8), c(9.8, 10.1, 10.1)))
 two_multi(rep_blocks)
 two_multi(list(list(c(9.8, 10.1, NA), c(9.9, 9.5, 10), c(11.3, 10.7, 10.7)), list(c(9.2, 8.6, 9.2), c(NA, 9.1, 9.4), c(10.3, 10.7, 10.2)), list(c(8.4, 7.9, 8), c(8.6, 8, 8), c(9.8, 10.1, 10.1))))
 two_multi(list(list(c(1, 2), c(3, 5)), list(c(2, 2), c(6, 7))))                                    # two by two with two repeats
 two_multi(lapply(1:4, function(i) lapply(1:3, function(j) 1e6 + rnorm(4, i + j, 0.3))))          # values far from 0
+# values that are large beside their spread: quarters about 1e12 and 1e15, which doubles hold exactly (the sums of squares are the
+# same about any centre; means formed from the values as they are lost their figures: a treatment F of 0.171206 for 0.171218)
+quarters <- list(list(c(-4.25, -5.75, -4.75), c(3.25, 3.5, 3.5), c(2.5, 9.5, 0.75)), list(c(-4.5, 9.75, 3.75), c(-2.5, -4.5, -9.5), c(-9.5, -1.75, -2.5)),
+                 list(c(-9.5, 2.25, -7), c(-4, -3.25, 5.25), c(-10, -3.75, 2.25)))
+two_multi(quarters); two_multi(quarters, .offset = 1e12); two_multi(quarters, .offset = 1e15)
+blocks_q <- list(c(1, 2.25, 3.5, 0.75), c(2, 4.75, 4.25, 1.5), c(0.5, 3, 5.75, 2.25))
+two_way(blocks_q); two_way(blocks_q, .offset = 1e12); two_way(blocks_q, .offset = 1e15)
 
 # ---- fully nested: the frames are the groups, the columns of each the subgroups
 two_nest <- function(groups, .more = list()) {
