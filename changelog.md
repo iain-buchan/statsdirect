@@ -2,6 +2,13 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
+##[Unreleased]
+
+### Fixed
+- Groups by identifier: a row whose identifier cell is blank was left out of the identifiers, so that they were fewer than the rows selected, the data had to be cut to their number ("all columns selected must be the same length"), and the values after the blank were then paired with the wrong groups without a warning. Such a row now keeps its place, and a row that has a value but no identifier is refused by its row number. An identifier that is the label of a missing value, "* (missing)", is a missing identifier too, not a group.
+- Groups by identifier: a group whose values are all missing (the box and whisker plot, the Mann-Whitney test, the spread plot and grouped linearity, which leave missing values out) gave the analysis a variable of no values, and it stopped with an error of the program; the selection is refused with a message that names the group.
+- Frequencies, and the bar or column chart of frequencies: with the preference to select groups by identifier these two commands took the data as numbers, so that a column of text categories was refused as not numeric and the chart stopped with an error of the program; they no longer offer groups by identifier, and their columns are selected as they are.
+
 ##[v5.0.14] 2026-09-30
 
 Version 5.0.14 follows checks of every function on the Randomization, Sample Size, Distributions, Clinical Epidemiology, Descriptive, Parametric Methods, Nonparametric and Analysis of Variance menus against figures calculated from the definitions, one routine at a time, with the routines commented as they were checked; this completes that pass over the Analysis menu. Among the corrections are the studentized range, whose refusal of a probability of 1 made the Newman-Keuls comparisons of 5.0.13 report no difference with some numbers of degrees of freedom; P values below 1e-16 that were given as 0; confidence levels of 0% or 100% that were taken as they are; counts that are not whole numbers; and sums of squares and confidence limits that lost figures with values that are very large or very small. The bootstraps of the Gini coefficient, the diversity indices and the method comparison regression take a seed, so that a run can be repeated, and the allocations and simulated P values that shuffle draw every arrangement with the same chance.
