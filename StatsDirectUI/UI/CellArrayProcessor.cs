@@ -505,9 +505,9 @@ namespace StatsDirect.UI
                 StringBuilder patternBuilder = new();
                 for (int c = 0; c < totCols; c++)
                 {
-                    if (null == hold[r, c] || hold[r, c].Length == 0 || "*".Equals(hold[r, c]))
+                    if (null == hold[r, c] || hold[r, c].Length == 0 || "*".Equals(hold[r, c]) || Formatting.MISSINGLABEL.Equals(hold[r, c]))
                     {
-                        // Make the row pattern empty if any data are missing
+                        // Make the row pattern empty if any data are missing (the label of a missing value is missing too)
                         patternBuilder.Length = 0;
                         break;
                     }
@@ -518,8 +518,17 @@ namespace StatsDirect.UI
                 }
                 string pattern = patternBuilder.ToString();
 
+                // A row without an identifier keeps its place as a missing identifier, so that the variable is as long as the range
+                // and the data selected beside it stay beside their rows (such rows used to be left out, so that the identifiers
+                // were fewer than the rows, and a data selection cut to their number was paired with the wrong rows)
+                if (pattern.Length == 0)
+                {
+                    size++;
+                    variable.EnsureLength(size);
+                    variable.Data[size - 1] = Constant.MISSING;
+                }
                 // Enumerate categories and put results in variable
-                if (pattern.Length > 0)
+                else
                 {
                     bool wasFound = false;
                     for (int i = 0; i < found; i++)
@@ -529,7 +538,7 @@ namespace StatsDirect.UI
                             wasFound = true;
                             size++;
                             variable.EnsureLength(size);
-                            variable.Data[size - 1] = pattern.Contains(Formatting.MISSINGLABEL) ? Constant.MISSING : i;
+                            variable.Data[size - 1] = i;
                             nbin[i]++;
                             break;
                         }
@@ -540,7 +549,7 @@ namespace StatsDirect.UI
                         foundwhat[found] = pattern;
                         size++;
                         variable.EnsureLength(size);
-                        variable.Data[size - 1] = pattern.Contains(Formatting.MISSINGLABEL) ? Constant.MISSING : found;
+                        variable.Data[size - 1] = found;
                         found++;
                     }
                 }

@@ -662,7 +662,21 @@ namespace StatsDirect.UI
 
                 DoubleVariable dataVariable = (DoubleVariable)dataFrame.Variables[0];
 
+                // a row that has a value but no identifier cannot be placed in a group: the selection is refused by the row, rather
+                // than the value being left out in silence
+                int unplaced = -1;
+                for (int j = 0; j < groupIdVariable.Length && unplaced < 0; j++)
+                    if (groupIdVariable.Data[j] == Constant.MISSING && dataVariable.Data[j] != Constant.MISSING)
+                        unplaced = j;
+                if (unplaced >= 0)
+                {
+                    SdApplication.SoleInstance.MsgboxX(Formatting.ERRCOLON + "row " + (unplaced + 1).ToString() + " of the data selected has a value but no group identifier.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "Worksheet Data Selection", true);
+                    ClearSelection();
+                    continue;
+                }
+
                 DataFrame outputFrame = new();
+                string emptyGroup = null;   // a group whose values are all missing, which the analysis cannot take
                 for (int i = 0; i < groupIdVariable.GroupCount; i++)
                 {
                     double thisGroupId = groupIdVariable.Groups[i].Id;
@@ -690,10 +704,19 @@ namespace StatsDirect.UI
                         }
                     }
                     v.TruncateDataToLength(cnt);
+                    if (cnt == 0 && null == emptyGroup)
+                        emptyGroup = groupIdVariable.Groups[i].Label;
                     if (groupIdVariable.GroupCount > 1)
                         v.Title = dataVariable.Title + "_" + groupIdVariable.Title + "_" + groupIdVariable.Groups[i].Label;
                     else
                         v.Title = dataVariable.Title;
+                }
+                if (null != emptyGroup)
+                {
+                    // a variable of no values stopped the analysis with an error of the program
+                    SdApplication.SoleInstance.MsgboxX(Formatting.ERRCOLON + "group " + emptyGroup + " has no numeric observations.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "Worksheet Data Selection", true);
+                    ClearSelection();
+                    continue;
                 }
                 return outputFrame;
             }
