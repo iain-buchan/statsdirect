@@ -76,10 +76,9 @@
     <PackageReference Include="SpreadsheetGear.Windows" Version="9.3.84" />
   </ItemGroup>
   <ItemGroup>
-    <!-- Assets/WebHelp is a superseded copy of the web help that nothing in the program opens (Help uses STATSDIRECT.chm), and the mapping workbook is a
-         note for whoever maintains the help; neither belongs on users' machines. Nor do the build records that MadCap Flare leaves beside STATSDIRECT.chm
-         when it publishes the help here (Data/*.output, *.log.zip), or the retired Excel link. -->
-    <ContentWithTargetPath Include="Assets/**" Exclude="Assets/WebHelp/**;Assets/Excel/**;Assets/SD Help ID to File Name Mapping.xlsx;Assets/Data/*.output;Assets/*.log.zip">
+    <!-- The mapping workbook is a note for whoever maintains the help and does not belong on users' machines. Nor do the build records that
+         MadCap Flare leaves beside STATSDIRECT.chm when it publishes the help here (Data/*.output, *.log.zip), or the retired Excel link. -->
+    <ContentWithTargetPath Include="Assets/**" Exclude="Assets/Excel/**;Assets/SD Help ID to File Name Mapping.xlsx;Assets/Data/*.output;Assets/*.log.zip">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <TargetPath>%(RecursiveDir)\%(Filename)%(Extension)</TargetPath>
     </ContentWithTargetPath>
