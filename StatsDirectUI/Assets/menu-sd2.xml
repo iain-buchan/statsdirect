@@ -23,7 +23,6 @@
           <sub-items>
             <menu-item label="&amp;Manipulate Worksheet" operation="SortInPlace" />
             <menu-item label="&amp;Create Sorted Columns" operation="Sort" />
-            <menu-item label="&amp;Sort by Expression" operation="SortByExpression" />
           </sub-items>
         </menu-item>
         <menu-item label="&amp;Random Numbers">
@@ -277,9 +276,7 @@
           <help chm-id="1005" />
           <sub-items>
             <menu-item label="&amp;One Way..." operation="OneWay" />
-            <!-- <menu-item label="One Way Grouped by a Classifier..." operation="GroupedOneWay" /> -->
             <menu-item label="&amp;Two Way..." operation="TwoWay" />
-            <!-- <menu-item label="Two Way Grouped by a Classifier..." operation="GroupedTwoWay" /> -->
             <menu-item label="&amp;Replicate Two Way..." operation="ReplicateTwoWay" />
             <menu-item label="&amp;Fully Nested..." operation="TwoWayNested" />
             <menu-item label="&amp;Latin Square..." operation="LatinSquare" />
@@ -381,7 +378,6 @@
         <!--
         <menu-item label="&amp;Chart Explorer">
           <sub-items>
-            <menu-item label="&amp;Explore Continuous Distributions" operation="ExploreContinuousDistributions" />
             <menu-item label="&amp;Compare Several Continuous Variables" operation="CompareSeveralContinuousVariables" />
           </sub-items>
         </menu-item> -->
@@ -401,8 +397,6 @@
         <menu-item label="&amp;Scatter" operation="ScatterPlot" />
         <menu-item label="Sca&amp;tter (Text)" operation="ScatterPlotText" />
         <menu-item label="S&amp;pread" operation="SpreadPlot" />
-        <!-- <menu-item label="S&amp;tacked Bar" operation="StackedBarPlot" /> -->
-        <!-- <menu-item label="&amp;100% Stacked Bar" operation="StackedBar100PercentPlot" /> -->
         <menu-item label="S&amp;urvival" operation="SurvivalPlot" />
         <menu-item label="-" />
         <menu-item label="&amp;Options..." operation="GraphicsOptions" />

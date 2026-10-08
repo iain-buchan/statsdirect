@@ -14,7 +14,6 @@ namespace StatsDirect.Builtins
             List<IBuiltin> functionRegistry = new()
             {
                 new Builtin("chartCompareSeveralContinuousVariables", ChartExplorer.CompareSeveralContinuousVariables),
-                new Builtin("chartExploreContinuousDistributions", ChartExplorer.ExploreContinuousDistributions),
                 new PureBuiltin("calcSimpleLinearRegressionCI", Regress.CalcSimpleLinearRegressionCi),
                 new Builtin("convertUnits", Sheet.ConvertUnits),
                 new Builtin("distBinomial", Distribution.DistBinomial),
@@ -90,8 +89,6 @@ namespace StatsDirect.Builtins
                 new PureBuiltin("rptGroupedCovariance", RegressRpt.RptGroupedCovariance),
                 new PureBuiltin("rptGroupedCovariancePreprocess", RegressRpt.RptGroupedCovariancePreprocess),
                 new PureBuiltin("rptGroupedLinearity", RegressRpt.RptGroupedLinearity),
-                new PureBuiltin("rptGroupedOneWay", Anova.RptGroupedOneWay),
-                new PureBuiltin("rptGroupedTwoWay", Anova.RptGroupedTwoWay),
                 new PureBuiltin("rptInterpolateXY", Regress.RptInterpolateXY),
                 new PureBuiltin("rptInterpolateYX", Regress.RptInterpolateYX),
                 new SafeBuiltin("rptKaplanMeier", Survival.RptKaplan),
@@ -257,7 +254,6 @@ namespace StatsDirect.Builtins
                 new PureBuiltin("shtRndUniformAB", Sheet.ShtRndUniformAB),
                 new PureBuiltin("shtRndWeibull", Sheet.ShtRndWeibull),
                 new PureBuiltin("shtSort", Sheet.ShtSort),
-                new PureBuiltin("shtSortByExpression", Sheet.ShtSortByExpression),
                 new Builtin("shtSortInPlace", Sheet.ShtSortInPlace),
                 new PureBuiltin("shtStandardize", Sheet.ShtStandardize),
                 new PureBuiltin("shtTabulate", Tables.ShtTabulate),
@@ -269,7 +265,6 @@ namespace StatsDirect.Builtins
                 new PureBuiltin("shtTransformLog10", Sheet.ShtTransformLog10),
                 new PureBuiltin("shtTransformLogit", Sheet.ShtTransformLogit),
                 new PureBuiltin("shtTransformProbit", Sheet.ShtTransformProbit),
-                new PureBuiltin("shtTransformZECDF", Sheet.ShtTransformZecdf),
                 new PureBuiltin("shtTransformZSD", Sheet.ShtTransformZsd),
                 new PureBuiltin("valuesToFrequencies", Sheet.ValuesToFrequencies)
             };

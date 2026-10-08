@@ -2155,43 +2155,6 @@ namespace StatsDirect.Builtins
             return WrapFrame("output", outputFrame);
         }
 
-        public static StepOutput ShtSortByExpression(ParameterBag parameters)
-        {
-            DataFrame data = parameters["data"].AsDataFrame;
-            string expression = parameters["expression"].AsString;
-
-            int rows = data.MaxRows;
-            int cols = data.VariableCount;
-
-            // Work through the rows
-            DataType[] dataTypes = new DataType[cols];
-            for (int col = 0; col < cols; col++)
-                dataTypes[col] = DataType.Double;
-            Calcit clc = new(expression, dataTypes, false);
-
-            double[] x = new double[cols];
-            SortPair[] sortArray = new SortPair[rows];
-            for (int row = 0; row < rows; row++)
-            {
-                for (int col = 0; col < cols; col++)
-                    x[col] = ((DoubleVariable)data.Variables[col]).Data[row];
-                sortArray[row] = new SortPair(XSpr(clc.Evaluate<double>(x)), row);
-            }
-            Array.Sort(sortArray);
-
-            DataFrame outputFrame = new();
-            foreach (IVariable v in data.Variables)
-                outputFrame.Variables.Add(new DoubleVariable(rows, "Sort(" + expression + "): " + v.Title));
-            for (int col = 0; col < cols; col++)
-            {
-                double[] src = ((DoubleVariable)data.Variables[col]).Data;
-                double[] target = ((DoubleVariable)outputFrame.Variables[col]).Data;
-                for (int row = 0; row < rows; row++)
-                    target[row] = src[sortArray[row].Row];
-            }
-            return WrapFrame("output", outputFrame);
-        }
-
         public static StepOutput ShtSortInPlace(ITemplateHost host, ParameterBag parameters)
         {
             //  A gross hack - this just hands off to the UI.
@@ -2245,12 +2208,6 @@ namespace StatsDirect.Builtins
         public static StepOutput ShtTransformZsd(ParameterBag parameters)
         {
             return ShtTransforms(parameters, 7);
-        }
-
-
-        public static StepOutput ShtTransformZecdf(ParameterBag parameters)
-        {
-            return ShtTransforms(parameters, 8);
         }
 
 
@@ -2438,14 +2395,6 @@ namespace StatsDirect.Builtins
                 MathDbl.zscore(inputData, ref fn, false, out int err);
                 if (err == 0)
                     return WrapDoubleVariable(fn, "Z: " + inputVariable.Title);
-                throw new ArgumentException("Insufficient data");
-            }
-            if (index == 8)
-            {
-                double[] fn = new double[inputData.Length];
-                MathDbl.zscore(inputData, ref fn, true, out int err);
-                if (err == 0)
-                    return WrapDoubleVariable(fn, "Z score (ECDF): " + inputVariable.Title);
                 throw new ArgumentException("Insufficient data");
             }
             throw new ArgumentException("Unknown index");
