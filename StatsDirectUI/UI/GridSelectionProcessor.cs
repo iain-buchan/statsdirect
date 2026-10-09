@@ -664,13 +664,10 @@ namespace StatsDirect.UI
 
                 // a row that has a value but no identifier cannot be placed in a group: the selection is refused by the row, rather
                 // than the value being left out in silence
-                int unplaced = -1;
-                for (int j = 0; j < groupIdVariable.Length && unplaced < 0; j++)
-                    if (groupIdVariable.Data[j] == Constant.MISSING && dataVariable.Data[j] != Constant.MISSING)
-                        unplaced = j;
-                if (unplaced >= 0)
+                int unplaced = RowWithoutIdentifier(groupIdVariable.Data, dataVariable.Data, groupIdVariable.Length);
+                if (unplaced > 0)
                 {
-                    SdApplication.SoleInstance.MsgboxX(Formatting.ERRCOLON + "row " + (unplaced + 1).ToString() + " of the data selected has a value but no group identifier.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "Worksheet Data Selection", true);
+                    SdApplication.SoleInstance.MsgboxX(Formatting.ERRCOLON + "row " + unplaced.ToString() + " of the data selected has a value but no group identifier.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "Worksheet Data Selection", true);
                     ClearSelection();
                     continue;
                 }
@@ -720,6 +717,19 @@ namespace StatsDirect.UI
                 }
                 return outputFrame;
             }
+        }
+
+        /// <summary>
+        /// The first row, counted from 1, at which the data has a value but the identifiers have none, or 0 when every value has
+        /// an identifier.  Such a value cannot be placed in a group: the selections by identifier refuse it by its row, rather than
+        /// leaving it out in silence.
+        /// </summary>
+        internal static int RowWithoutIdentifier(double[] identifiers, double[] values, int rows)
+        {
+            for (int j = 0; j < rows; j++)
+                if (identifiers[j] == Constant.MISSING && values[j] != Constant.MISSING)
+                    return j + 1;
+            return 0;
         }
 
         /// <summary>
@@ -1164,12 +1174,12 @@ namespace StatsDirect.UI
             const int min = 2;
             const int max = 200;
 
-            bool wasPivoted = true;
-            while (wasPivoted)
+            // asked again after a refusal (too few or too many groups, a value without an identifier), as the one way selection is
+            while (true)
             {
                 // call for group ID
                 ClearSelection();
-                DataFrame groupIdentifiers = grid.GetCellArray(0, DataAcquisitionMode.CategoryCombineAllColumns, 1, 10, "Select GROUP/SERIES IDENTIFIERS", null, true, false, out bool cancelled, out wasPivoted, 0);
+                DataFrame groupIdentifiers = grid.GetCellArray(0, DataAcquisitionMode.CategoryCombineAllColumns, 1, 10, "Select GROUP/SERIES IDENTIFIERS", null, true, false, out bool cancelled, out bool wasPivoted, 0);
                 if (cancelled)
                     break;
                 if (wasPivoted)
@@ -1253,6 +1263,18 @@ namespace StatsDirect.UI
                     break;
 
                 nrep = replicatesFrame.VariableCount;
+
+                // a row that has a value but no identifier cannot be placed in a group: the selection is refused by the row, rather
+                // than the value being left out in silence (each replicate column in turn here, and the x column below)
+                int unplaced = 0;
+                for (int k = 1; k <= nrep && unplaced == 0; k++)
+                    unplaced = RowWithoutIdentifier(groupIdentifierVariable.Data, ((DoubleVariable)replicatesFrame.Variables[k - 1]).Data, rows);
+                if (unplaced > 0)
+                {
+                    SdApplication.SoleInstance.MsgboxX(Formatting.ERRCOLON + "row " + unplaced.ToString() + " of the Y data selected has a value but no group identifier.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "Worksheet Data Selection", true);
+                    ClearSelection();
+                    continue;
+                }
                 y = new double[ng + 1, maxgn + 1, nrep + 1];
                 for (int k = 1; k <= nrep; k++)
                 {
@@ -1287,6 +1309,13 @@ namespace StatsDirect.UI
                 if (cancelled || wasPivoted)
                     break;
                 DoubleVariable xVariable = (DoubleVariable)xFrame.Variables[0];
+                unplaced = RowWithoutIdentifier(groupIdentifierVariable.Data, xVariable.Data, rows);
+                if (unplaced > 0)
+                {
+                    SdApplication.SoleInstance.MsgboxX(Formatting.ERRCOLON + "row " + unplaced.ToString() + " of the X data selected has a value but no group identifier.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "Worksheet Data Selection", true);
+                    ClearSelection();
+                    continue;
+                }
                 xlab = xVariable.Title;
                 x = new double[ng + 1, maxgn + 1];
                 cd = new ColumnData[ng + 1];
