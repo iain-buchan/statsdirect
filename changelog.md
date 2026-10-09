@@ -13,6 +13,7 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
 ### Removed
 - Seven operations that no menu reached and no help topic described, defined since StatsDirect 3 in 2012 for a second menu layout that the program never loads: the one way and two way analyses of variance grouped by a classifier (the analyses themselves take groups by identifier), sort by expression, the stacked bar plots, the explorer of continuous distributions, and the z score transform based on the empirical cumulative distribution.
+- The second menu layout, menu-sd2.xml, which the program never loaded: the setting that names the menu file has always been menu.xml, and the seven operations that only this layout reached were retired in the change before.
 
 ##[v5.0.14] 2026-09-30
 
