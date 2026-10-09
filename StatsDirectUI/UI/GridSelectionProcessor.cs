@@ -312,7 +312,7 @@ namespace StatsDirect.UI
                 double[,] xt;
                 if (SdApplication.SoleInstance.Preferences.SelectGroupsByIdentifier)
                 {
-                    bool ok = Gidxyr(out xt, ref y, ref k, ref maxr, ref maxreps, ref cx, ref xlab, ref minMax);
+                    bool ok = Gidxyr(out xt, ref y, ref k, ref maxr, ref maxreps, ref cx, ref xlab, ref minMax, out int[,] ny);
                     if (ok)
                     {
                         double[] b = new double[k + 1];
@@ -322,15 +322,8 @@ namespace StatsDirect.UI
                         double[] xmean = new double[k + 1];
                         double[] ymean = new double[k + 1];
                         int[] nxi = new int[k + 1];
-                        int[,] ny = new int[k + 1, maxr + 1];
                         for (int g = 1; g <= k; g++)
-                        {
-                            nxi[g] = cx[g].Rows;
-                            for (int i = 1; i <= nxi[g]; i++)
-                            {
-                                ny[g, i] = maxreps;
-                            }
-                        }
+                            nxi[g] = cx[g].Rows;   // the levels of each group; the replicates present at each level are counted by the placing
                         ITemplateHost host = SdApplication.SoleInstance;
                         ConfidenceIntervalParameter ciParam = new() { CanDefault = true, Name = "ci" };
                         ParameterBag filledCi = host.FillParameter(processor, ciParam, new ParameterBag(), false);
@@ -730,6 +723,54 @@ namespace StatsDirect.UI
                 if (identifiers[j] == Constant.MISSING && values[j] != Constant.MISSING)
                     return j + 1;
             return 0;
+        }
+
+        /// <summary>
+        /// The rows of a long layout placed in their groups for the analysis of covariance, as the selection by separate columns has them
+        /// once the missing values are left out of each series: for each group, in the order of the rows, each row whose identifier is the
+        /// group's and whose x is present is a level, with the replicates of y that are present; a row whose x is missing is left out of its
+        /// group, and a replicate of y that is missing is left out of its level (a level whose replicates are all missing has none).  The
+        /// arrays are 1-based, as the analysis takes them.
+        /// </summary>
+        /// <param name="identifiers">the identifier of each row (Constant.MISSING for none)</param>
+        /// <param name="groups">the identifiers of the groups, groups[1] to groups[groupCount]</param>
+        /// <param name="groupCount">the groups</param>
+        /// <param name="rows">the rows</param>
+        /// <param name="maxRows">the most rows that any group has</param>
+        /// <param name="x">x of each row</param>
+        /// <param name="y">the replicates of y, each a value for every row</param>
+        /// <param name="xByGroup">x of each level of each group</param>
+        /// <param name="yByGroup">the replicates of y present at each level of each group</param>
+        /// <param name="replicates">how many replicates are present at each level of each group</param>
+        /// <param name="levels">how many levels each group has</param>
+        /// <param name="sums">the sum of x over the levels of each group</param>
+        internal static void PlaceByGroup(double[] identifiers, double[] groups, int groupCount, int rows, int maxRows, double[] x, double[][] y,
+                                          out double[,] xByGroup, out double[,,] yByGroup, out int[,] replicates, out int[] levels, out double[] sums)
+        {
+            int nrep = y.Length;
+            xByGroup = new double[groupCount + 1, maxRows + 1];
+            yByGroup = new double[groupCount + 1, maxRows + 1, nrep + 1];
+            replicates = new int[groupCount + 1, maxRows + 1];
+            levels = new int[groupCount + 1];
+            sums = new double[groupCount + 1];
+            for (int i = 1; i <= groupCount; i++)
+            {
+                int cnt = 0;
+                for (int j = 0; j < rows; j++)
+                {
+                    if (identifiers[j] != groups[i] || x[j] == Constant.MISSING)
+                        continue;
+                    cnt++;
+                    xByGroup[i, cnt] = x[j];
+                    sums[i] += x[j];
+                    int present = 0;
+                    for (int r = 0; r < nrep; r++)
+                        if (y[r][j] != Constant.MISSING)
+                            yByGroup[i, cnt, ++present] = y[r][j];
+                    replicates[i, cnt] = present;
+                }
+                levels[i] = cnt;
+            }
         }
 
         /// <summary>
@@ -1166,7 +1207,7 @@ namespace StatsDirect.UI
                 }
         */
 
-        private bool Gidxyr(out double[,] x, ref double[,,] y, ref int ng, ref int maxgn, ref int nrep, ref ColumnData[] cd, ref string xlab, ref MinMax minMax)
+        private bool Gidxyr(out double[,] x, ref double[,,] y, ref int ng, ref int maxgn, ref int nrep, ref ColumnData[] cd, ref string xlab, ref MinMax minMax, out int[,] ny)
         {
             const string msgTi = "StatsDirect Data Selection";
             const string labd = "Select DATA";
@@ -1275,31 +1316,6 @@ namespace StatsDirect.UI
                     ClearSelection();
                     continue;
                 }
-                y = new double[ng + 1, maxgn + 1, nrep + 1];
-                for (int k = 1; k <= nrep; k++)
-                {
-                    DoubleVariable v = (DoubleVariable)replicatesFrame.Variables[k - 1];
-                    for (int i = 1; i <= ng; i++)
-                    {
-                        int cnt = 0;
-                        for (int j = 1; j <= rows; j++)
-                        {
-                            if (gid[j] == g[i])
-                            {
-                                cnt++;
-                                double yz = v.Data[j - 1];
-                                y[i, cnt, k] = yz;
-                                if (yz != Constant.MISSING)
-                                {
-                                    if (yz > minMax.MaxY)
-                                        minMax.MaxY = yz;
-                                    if (yz < minMax.MinY)
-                                        minMax.MinY = yz;
-                                }
-                            }
-                        }
-                    }
-                }
 
                 // Call for x data
                 minMax.MinX = double.MaxValue;
@@ -1317,40 +1333,43 @@ namespace StatsDirect.UI
                     continue;
                 }
                 xlab = xVariable.Title;
-                x = new double[ng + 1, maxgn + 1];
+
+                // The rows placed in their groups with the missing values left out, as the selection by separate columns leaves them out of
+                // each series: a row whose x is missing is left out of its group, and a replicate of y that is missing is left out of its
+                // level (such values were taken into the sums of the analysis as numbers)
+                double[][] replicates = new double[nrep][];
+                for (int k = 1; k <= nrep; k++)
+                    replicates[k - 1] = ((DoubleVariable)replicatesFrame.Variables[k - 1]).Data;
+                PlaceByGroup(groupIdentifierVariable.Data, g, ng, rows, maxgn, xVariable.Data, replicates, out x, out y, out ny, out int[] levels, out double[] sums);
                 cd = new ColumnData[ng + 1];
                 for (int i = 1; i <= ng; i++)
                 {
-                    int cnt = 0;
-                    cd[i] = new ColumnData { Sum = 0 };
-                    for (int j = 1; j <= rows; j++)
-                    {
-                        if (gid[j] == g[i])
-                        {
-                            cnt++;
-                            double xz = xVariable.Data[j - 1];
-                            x[i, cnt] = xz;
-                            if (xz != Constant.MISSING)
-                            {
-                                cd[i].Sum += xz;
-                                if (xz > minMax.MaxX)
-                                    minMax.MaxX = xz;
-                                if (xz < minMax.MinX)
-                                    minMax.MinX = xz;
-                            }
-                        }
-                    }
-                    cd[i].Rows = cnt;
+                    cd[i] = new ColumnData { Sum = sums[i], Rows = levels[i] };
                     if (ng > 1)
                         cd[i].Title = catlab + "_" + gcat[i];
                     else
                         cd[i].Title = catlab;
+                    for (int j = 1; j <= levels[i]; j++)
+                    {
+                        if (x[i, j] > minMax.MaxX)
+                            minMax.MaxX = x[i, j];
+                        if (x[i, j] < minMax.MinX)
+                            minMax.MinX = x[i, j];
+                        for (int r = 1; r <= ny[i, j]; r++)
+                        {
+                            if (y[i, j, r] > minMax.MaxY)
+                                minMax.MaxY = y[i, j, r];
+                            if (y[i, j, r] < minMax.MinY)
+                                minMax.MinY = y[i, j, r];
+                        }
+                    }
                 }
                 return true;
             }
 
             // If we get here, the user cancelled
             x = null;
+            ny = null;
             return false;
         }
 
