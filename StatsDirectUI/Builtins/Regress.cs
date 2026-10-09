@@ -2193,7 +2193,9 @@ namespace StatsDirect.Builtins
         /// </remarks>
         public static StepOutput RptLinearizedEstimates(ParameterBag parameters)
         {
-            SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext(parameters);
+            // always from the data: each model transforms the x and y of the context in place and the fit is made once, so the context
+            // that a run leaves for its follow-ons (stripped of its data, and fitted) cannot serve another model, as "Select model" asks
+            SimpleLinearRegressionContext context = GetSimpleLinearRegressionContextWithData(parameters);
             int model = 0;
             if (parameters.ContainsKey("model"))
                 model = Parsing.Cint_Txt(parameters["model"].AsString);
