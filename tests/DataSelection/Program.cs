@@ -70,6 +70,20 @@ static class Program
         Say(ok, what + ": " + Shown(v) + (ok ? "" : $" (expected length {length}, groups {groups})"));
     }
 
+    // The rule that the selections by identifier share (GridSelectionProcessor.RowWithoutIdentifier): the first row, counted from
+    // 1 among the rows selected, that has a value but no identifier, or 0 when there is none
+    private static void CheckRow(string what, double[] ids, double[] values, int expected)
+    {
+        MethodInfo method = typeof(CellSelection).Assembly.GetType("StatsDirect.UI.GridSelectionProcessor")?.GetMethod("RowWithoutIdentifier", BindingFlags.NonPublic | BindingFlags.Static);
+        if (method == null)
+        {
+            Say(false, what + ": the program has no RowWithoutIdentifier");
+            return;
+        }
+        int row = (int)method.Invoke(null, new object[] { ids, values, ids.Length });
+        Say(row == expected, what + ": row " + row + (row == expected ? "" : $" (expected {expected})"));
+    }
+
     private static int Main()
     {
         double m = Constant.MISSING;
@@ -80,6 +94,12 @@ static class Program
         Check("the label of a missing value is a missing identifier, not a group", Combined(new[] { "a", "* (missing)", "b", "a" }), 4, new[] { 0, m, 1, 0 }, "a:2 b:1");
         Check("two identifier columns: a blank in either makes the row's identifier missing", Combined(new[] { "a", "a", "", "b" }, new[] { "x", "y", "x", "" }), 4, new[] { 0, 1, m, m }, "a, x:1 a, y:1");
         Check("blank rows at the end keep the length of the range", Combined(new[] { "a", "b", "", "" }), 4, new[] { 0, 1, m, m }, "a:1 b:1");
+        Console.WriteLine("A value beside a blank identifier, refused by its row");
+        CheckRow("identifiers a,a,blank,b,b,b against 10,11,12,20,21,22: the third row", new[] { 0, 0, m, 1, 1, 1 }, new[] { 10, 11, 12, 20, 21, 22.0 }, 3);
+        CheckRow("a blank identifier beside a missing value is no fault", new[] { 0, 0, m, 1, 1, 1 }, new[] { 10, 11, m, 20, 21, 22 }, 0);
+        CheckRow("no blank identifier", new[] { 0, 0, 1, 1.0 }, new[] { 10, 11, 20, 21.0 }, 0);
+        CheckRow("the first row with a value and no identifier is named, not the first blank identifier", new[] { m, 0, m, 1 }, new[] { m, 11, 20, 21 }, 3);
+        CheckRow("a value with no identifier in the last row", new[] { 0, 1, m }, new[] { 10, 20, 30.0 }, 3);
         Console.WriteLine(failures == 0 ? "ALL CHECKS PASS" : $"{failures} CHECKS FAILED");
         return failures == 0 ? 0 : 1;
     }
