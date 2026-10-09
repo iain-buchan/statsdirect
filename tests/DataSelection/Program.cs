@@ -1,5 +1,7 @@
 using System.Reflection;
+using StatsDirect.Builtins;
 using StatsDirect.Data;
+using StatsDirect.Templates;
 using StatsDirect.Numerics;
 using StatsDirect.UI;
 using StatsDirect.Utilities;
@@ -84,6 +86,41 @@ static class Program
         Say(row == expected, what + ": row " + row + (row == expected ? "" : $" (expected {expected})"));
     }
 
+    // The rows of the long layout placed in their groups for the analysis of covariance (GridSelectionProcessor.PlaceByGroup): x and the
+    // replicates of y at each level of each group, the replicates present at each level, the levels of each group and the sums of x
+    private static readonly MethodInfo placeByGroup = typeof(CellSelection).Assembly.GetType("StatsDirect.UI.GridSelectionProcessor")?.GetMethod("PlaceByGroup", BindingFlags.NonPublic | BindingFlags.Static);
+
+    private static (double[,] x, double[,,] y, int[,] ny, int[] levels, double[] sums) Placed(double[] ids, double[] groups, int maxRows, double[] x, double[][] y)
+    {
+        object[] args = { ids, groups, groups.Length - 1, ids.Length, maxRows, x, y, null, null, null, null, null };
+        placeByGroup.Invoke(null, args);
+        return ((double[,])args[7], (double[,,])args[8], (int[,])args[9], (int[])args[10], (double[])args[11]);
+    }
+
+    // The analysis of covariance of groups placed so, as the operation runs it
+    private static ParameterBag Covariance(double[,] x, double[,,] y, int[,] ny, int[] levels, double[] sums, int maxRows, int maxReplicates)
+    {
+        int k = levels.Length - 1;
+        ColumnData[] cx = new ColumnData[k + 1];
+        for (int g = 1; g <= k; g++)
+            cx[g] = new ColumnData { Title = "group " + g, Rows = levels[g], Sum = sums[g] };
+        GroupedCovarianceData gcd = new()
+        {
+            a = new double[k + 1], b = new double[k + 1], bnam = new string[k + 1], cx = cx, GAMMA = 0.95, k = k, maxr = maxRows, maxreps = maxReplicates,
+            minMax = new MinMax(), nxi = levels, ny = ny, rssx = new double[k + 1], xlab = "x", xmean = new double[k + 1], xt = x, y = y, ymean = new double[k + 1]
+        };
+        ParameterBag bag = new();
+        bag.AddInput("gcd", gcd);
+        bag.AddInput("mx0-prompted", 2.6);
+        return RegressRpt.RptGroupedCovariance(bag).ParameterBag;
+    }
+
+    private static void CheckFigure(string what, double got, double expected)
+    {
+        bool ok = Math.Abs(got - expected) <= 1e-9 * Math.Max(1.0, Math.Abs(expected));
+        Say(ok, what + ": " + got + (ok ? "" : $" (expected {expected})"));
+    }
+
     private static int Main()
     {
         double m = Constant.MISSING;
@@ -100,6 +137,46 @@ static class Program
         CheckRow("no blank identifier", new[] { 0, 0, 1, 1.0 }, new[] { 10, 11, 20, 21.0 }, 0);
         CheckRow("the first row with a value and no identifier is named, not the first blank identifier", new[] { m, 0, m, 1 }, new[] { m, 11, 20, 21 }, 3);
         CheckRow("a value with no identifier in the last row", new[] { 0, 1, m }, new[] { 10, 20, 30.0 }, 3);
+        Console.WriteLine("Analysis of covariance by identifier: the rows placed in their groups with missing values left out");
+        if (placeByGroup == null)
+            Say(false, "the program has no PlaceByGroup");
+        else
+        {
+            // x 1, 2, 3 against y 2, 3, 5 in group a and x 2, 3, 4 against y 3, 6, 8 in group b, in rows; the y of the second row blank
+            double[] ids = { 0, 0, 0, 1, 1, 1 };
+            double[] groups = { 0, 0, 1 };
+            var p = Placed(ids, groups, 3, new[] { 1, 2, 3, 2, 3, 4.0 }, new[] { new[] { 2, m, 5, 3, 6, 8 } });
+            Say(p.levels[1] == 3 && p.levels[2] == 3 && p.ny[1, 1] == 1 && p.ny[1, 2] == 0 && p.ny[1, 3] == 1 && p.ny[2, 2] == 1 && p.x[1, 2] == 2 && p.y[1, 1, 1] == 2 && p.y[1, 3, 1] == 5 && p.y[2, 3, 1] == 8 && p.sums[1] == 6 && p.sums[2] == 9,
+                "a blank replicate of y is left out of its level: group a keeps three levels, the second with no replicate");
+            var q = Placed(ids, groups, 3, new[] { 1, 2, m, 2, 3, 4 }, new[] { new[] { 2, 3, 5, 3, 6, 8.0 } });
+            Say(q.levels[1] == 2 && q.levels[2] == 3 && q.x[1, 1] == 1 && q.x[1, 2] == 2 && q.ny[1, 2] == 1 && q.y[1, 2, 1] == 3 && q.sums[1] == 3,
+                "a row whose x is blank is left out of its group: group a keeps two levels");
+            var two = Placed(ids, groups, 3, new[] { 1, 2, 3, 2, 3, 4.0 }, new[] { new[] { 2, m, 5, 3, 6, 8 }, new[] { m, 4, m, 3, 7, 9 } });
+            Say(two.ny[1, 1] == 1 && two.ny[1, 2] == 1 && two.ny[1, 3] == 1 && two.ny[2, 1] == 2 && two.y[1, 2, 1] == 4 && two.y[2, 1, 2] == 3,
+                "with two replicate columns the replicates present are counted at each level");
+            // the figures from the definition, by hand: group a has (1, 2) and (3, 5), group b (2, 3), (3, 6) and (4, 8); the sums of squares of
+            // x, of y and of their products about the group means are 2, 9/2, 3 and 2, 38/3, 5, so the slopes are 1.5 and 2.5, the common
+            // slope 8/4 = 2 with its sum of squares 64/4 = 16, the separate slopes account for 9/2 + 25/2 = 17 and so for 1 beyond it, and
+            // (9/2 - 9/2) + (38/3 - 25/2) = 1/6 is left on 5 - 4 = 1 degree of freedom
+            ParameterBag o = Covariance(p.x, p.y, p.ny, p.levels, p.sums, 3, 1);
+            CheckFigure("common slope: sum of squares", o["com_ssq"].AsDouble, 16);
+            CheckFigure("between slopes: sum of squares", o["bet_ssq"].AsDouble, 1);
+            CheckFigure("residual sum of squares", o["res_ssq"].AsDouble, 1.0 / 6);
+            CheckFigure("residual degrees of freedom", o["res_df"].AsDouble, 1);
+            ParameterBag slope = ((System.Collections.IEnumerable)o["*slope"].AsObject).Cast<ParameterBag>().First();
+            CheckFigure("slope of group a", slope["res1"].AsDouble, 1.5);
+            CheckFigure("slope of group b", slope["res2"].AsDouble, 2.5);
+            // the same figures, number for number, as the layout in separate columns gives, built by hand as that selection builds it: the
+            // x series of each group, and at each level the replicates of y that are present (none at the second level of group a)
+            double[,] cx = { { 0, 0, 0, 0 }, { 0, 1, 2, 3 }, { 0, 2, 3, 4 } };
+            double[,,] cy = new double[3, 4, 2];
+            cy[1, 1, 1] = 2; cy[1, 3, 1] = 5; cy[2, 1, 1] = 3; cy[2, 2, 1] = 6; cy[2, 3, 1] = 8;
+            int[,] cny = { { 0, 0, 0, 0 }, { 0, 1, 0, 1 }, { 0, 1, 1, 1 } };
+            ParameterBag c = Covariance(cx, cy, cny, new[] { 0, 3, 3 }, new[] { 0, 6, 9.0 }, 3, 1);
+            string[] keys = { "com_ssq", "com_vr", "com_p", "bet_ssq", "bet_vr", "bet_p", "res_ssq", "res_msq", "grp_ssq", "uc_bet_yy", "uc_bet_xy", "uc_bet_xx", "uc_with_yy", "uc_with_xy", "uc_with_xx", "uc_tot_yy", "uc_tot_xy", "uc_tot_xx" };
+            string differ = string.Join(" ", keys.Where(key => o[key].AsDouble != c[key].AsDouble));
+            Say(differ.Length == 0, "the long layout and the layout in separate columns give the same figures" + (differ.Length == 0 ? " (" + keys.Length + " compared)" : ": differ at " + differ));
+        }
         Console.WriteLine(failures == 0 ? "ALL CHECKS PASS" : $"{failures} CHECKS FAILED");
         return failures == 0 ? 0 : 1;
     }
