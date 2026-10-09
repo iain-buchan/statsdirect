@@ -285,6 +285,54 @@ internal static partial class Program
         Check(title + ": residual mean square", Math.Abs(context.MS - ms) / Math.Max(ms, 1e-300), 1e-6);
     }
 
+    // Simple linearized estimates regression: the three models through the program's routine against the definitions (the least squares of
+    // the transformed values: log y on x, log y on log x, 1/y on 1/x), and the "Select model" follow-on, which carries the context that the
+    // first run left (stripped of its data and already fitted) as the window does, giving the figures of a fresh run of the model chosen
+    private static void Linearized(string title, double[] x, double[] y)
+    {
+        ParameterBag Bag(string model)
+        {
+            ParameterBag bag = new();
+            bag.AddInput("y", new DataFrame(new DoubleVariable((double[])y.Clone(), "Y")));
+            bag.AddInput("x", new DataFrame(new DoubleVariable((double[])x.Clone(), "X")));
+            bag.AddInput("model", model);
+            return bag;
+        }
+        (double a, double b, double r) Definition(int model)
+        {
+            int n = x.Length;
+            double[] u = new double[n], v = new double[n];
+            for (int i = 0; i < n; i++)
+            {
+                u[i] = model == 0 ? x[i] : model == 1 ? Math.Log(x[i]) : 1 / x[i];
+                v[i] = model == 2 ? 1 / y[i] : Math.Log(y[i]);
+            }
+            double mu = u.Average(), mv = v.Average(), suu = 0, svv = 0, suv = 0;
+            for (int i = 0; i < n; i++) { suu += (u[i] - mu) * (u[i] - mu); svv += (v[i] - mv) * (v[i] - mv); suv += (u[i] - mu) * (v[i] - mv); }
+            double slope = suv / suu, intercept = mv - slope * mu, r = suv / Math.Sqrt(suu * svv);
+            return model == 2 ? (slope, intercept, r) : (Math.Exp(intercept), slope, r);
+        }
+        try
+        {
+            ParameterBag first = Regress.RptLinearizedEstimates(Bag("0")).ParameterBag;
+            foreach (int model in new[] { 1, 2, 0 })
+            {
+                ParameterBag fresh = Regress.RptLinearizedEstimates(Bag(model.ToString())).ParameterBag;
+                (double a, double b, double r) = Definition(model);
+                double worst = Math.Max(Math.Abs(fresh["a"].AsDouble - a) / Math.Abs(a), Math.Max(Math.Abs(fresh["b"].AsDouble - b) / Math.Abs(b), Math.Abs(fresh["r"].AsDouble - r)));
+                Check($"{title}: model {model} against the definition", worst, 1e-9);
+                ParameterBag carried = Bag(model.ToString());
+                carried.AddInput("context", first["context"].AsObject);
+                ParameterBag again = Regress.RptLinearizedEstimates(carried).ParameterBag;
+                worst = 0;
+                foreach (string key in new[] { "a", "b", "r", "ste" })
+                    worst = Math.Max(worst, Math.Abs(again[key].AsDouble - fresh[key].AsDouble) / Math.Max(1, Math.Abs(fresh[key].AsDouble)));
+                Check($"{title}: Select model {model} after the exponential fit, as a fresh run", worst, 1e-12);
+            }
+        }
+        catch (Exception ex) { checks++; failures++; Console.WriteLine("FAIL  " + title + ": " + Message(ex)); }
+    }
+
     private static int Main()
     {
         System.Random random = new(17);
@@ -329,6 +377,21 @@ internal static partial class Program
         Console.WriteLine($"least squares: {checks - before} checks, {failures - failed} failed");
         SpearmanDistribution();
         KendallDistribution();
+        before = checks; failed = failures;
+        double[] Curve(int n, out double[] y)
+        {
+            double[] x = new double[n];
+            y = new double[n];
+            for (int i = 0; i < n; i++)
+            {
+                x[i] = 1 + i + Math.Round(random.NextDouble(), 3);
+                y[i] = Math.Round(2.5 * Math.Exp(0.2 * x[i]) * (1 + random.NextDouble() / 5), 4);
+            }
+            return x;
+        }
+        Linearized("linearized estimates, 12 pairs", Curve(12, out double[] y7), y7);
+        Linearized("linearized estimates, 30 pairs", Curve(30, out double[] y8), y8);
+        Console.WriteLine($"linearized estimates: {checks - before} checks, {failures - failed} failed");
 
         Console.WriteLine(failures == 0 ? $"ALL {checks} CHECKS PASS" : $"{failures} OF {checks} CHECKS FAILED");
         return failures == 0 ? 0 : 1;
