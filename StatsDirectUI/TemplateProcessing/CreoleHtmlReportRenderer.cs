@@ -109,14 +109,24 @@ namespace StatsDirect.TemplateProcessing
                 object value = FindValue(victim.Path);
                 if (null == value)
                     return string.Empty;
+                if (value is IRenderable renderable)
+                    return new HtmlRenderer(host).Render(renderable);
+                // the text of a value is encoded as the text of the template is: a P value below the display threshold is written
+                // "P < 0.0001", and a title may have an ampersand or an angle bracket (such text used to go into the HTML as it was)
+                return WebUtility.HtmlEncode(Text(value, victim.Format));
+            }
+
+            /// <summary>
+            /// The text of a value substituted into the report, formatted as its format asks.
+            /// </summary>
+            private string Text(object value, string format)
+            {
                 if (value is string stringValue)
                     return stringValue;
                 if (value is int intValue)
                     return intValue.ToString(CultureInfo.CurrentUICulture);
-                if (value is IRenderable renderable)
-                    return new HtmlRenderer(host).Render(renderable);
                 if (value is double doubleValue)
-                    switch (victim.Format)
+                    switch (format)
                     {
                         case "pval":
                             return host.pval(doubleValue);
