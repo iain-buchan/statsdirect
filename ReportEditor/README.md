@@ -18,7 +18,7 @@ PDF and DOCX are exports; they do not change the editable document's path or mar
 
 ## Shared Mac component
 
-Pinned source: **iain-buchan/statsdirect-mac**, commit **0930c81a0afbd45644f1291378ec1b72b18165e4**, “Report editor: Ctrl+Y redo, loads forget earlier results, reveal and indent fixes”.
+Pinned source: **iain-buchan/statsdirect-mac**, commit **5c7a98648ceb0349d4f388ad40794a49811ec7ed**, “Report editor: a revealed result goes to the toolbar unless the report fits the window”.
 
 - `upstream/Report` contains the original source, locked dependency manifest and JavaScript tests; `upstream/Tests/Fixtures/Reports` contains their fixtures.
 - `upstream/LICENSE` retains the Mac repository licence.
