@@ -66,5 +66,9 @@ export function windowsExportStyle(source) {
     'img.width=Math.round(width);img.height=Math.round(height);');
   replace('img.width=Math.round(displayWidth*.75);img.height=Math.round(displayHeight*.75);',
     'img.width=Math.round(displayWidth);img.height=Math.round(displayHeight);');
+  // Word showed the line breaks reserved after a chart for Excel as empty lines, and hiding them for Word only makes it keep them as
+  // hidden text. Windows Excel places the next text on the row below the picture without them (measured with a 640 by 400 chart), so
+  // none are sent.
+  replace("for(let n=0;n<Math.ceil(img.height*.25/12)+2;n++)holder.append(document.createElement('br'));", "");
   return source;
 }
