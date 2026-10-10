@@ -34,6 +34,7 @@ internal static partial class Program
             CheckStop();
             CheckLoessChart();
             CheckMethodComparisonCharts();
+            CheckInverseRecipes();
             Console.WriteLine($"PASS {checks} Continue in R checks");
             return 0;
         }
