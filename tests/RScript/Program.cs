@@ -33,6 +33,7 @@ internal static partial class Program
             CheckRecipesAgainstHelp();
             CheckStop();
             CheckLoessChart();
+            CheckMethodComparisonCharts();
             Console.WriteLine($"PASS {checks} Continue in R checks");
             return 0;
         }
@@ -101,6 +102,14 @@ internal sealed class Host : ITemplateHost, IProgressBar
     public ParameterBag FillParameter(ITemplateProcessor processor, Parameter parameter, ParameterBag context, bool shouldCombine)
     {
         if (!answers.TryGetValue(parameter.Name, out object value)) throw new Exception($"the operation asked for {parameter.Name}, which these checks do not answer");
+        if (parameter is OptionsParameter options && value is Dictionary<string, bool> chosen)
+        {
+            // as the program's dialog fills a set of options: one boolean input per option, under the option's name
+            ParameterBag ticks = new();
+            foreach (OptionsOption option in options.Options)
+                ticks.AddInput(option.Name, chosen.TryGetValue(option.Name, out bool on) && on);
+            return ticks;
+        }
         if (parameter is Double2By2Parameter table && value is double[] counts)
         {
             // as the program's dialog fills a 2 by 2 table: four named counts, nothing under the table's own name
