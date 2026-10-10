@@ -1,4 +1,5 @@
 using StatsDirect.Configuration;
+using StatsDirect.R;
 using StatsDirect.TemplateProcessing;
 using StatsDirect.Templates;
 using StatsDirect.UI.WebReports;
@@ -6,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -31,6 +33,7 @@ internal sealed class frmReportWebView : StatsDirectForm, IReport
         view.Changed += () => { if (allowClosing) CancelParentClose(); Dirty = true; status.Text = "Unsaved changes"; };
         view.Notice += text => status.Text = text;
         view.TopicRequested += ShowTopic;
+        view.RRequested += id => _ = Guard(() => ContinueInRAsync(id));
         view.CommandRequested += command => _ = Guard(async () =>
         {
             if (command == "open") await OpenDialogAsync();
@@ -95,18 +98,40 @@ internal sealed class frmReportWebView : StatsDirectForm, IReport
         string html = new HtmlRenderer(SdApplication.SoleInstance).Render(renderable);
         if (allowClosing) CancelParentClose();
         Dirty = true;
+        string record = (run as OperationRun)?.Record;   // the record of the run, kept with the item for the R script of the result
         if (run != null && run == lastRun && lastItem != null)
         {
             // another output of the same run, a chart after its analysis: into that item, at whose start the window stays
             Task<string> item = lastItem;
-            _ = Guard(async () => await view.ExtendAsync(await item, html));
+            _ = Guard(async () => await view.ExtendAsync(await item, html, record));
         }
         else
         {
             lastRun = run;
-            lastItem = view.AppendAsync(html, operation?.FriendlyName ?? "Analysis", operation?.Name ?? "", helpContextId);
+            lastItem = view.AppendAsync(html, operation?.FriendlyName ?? "Analysis", operation?.Name ?? "", helpContextId, record);
             _ = Guard(() => lastItem);
         }
+    }
+
+    /// <summary>
+    /// The result the user chose to continue in R: its script, written from the record of its run and the workbook the record points
+    /// to, opens in a script window set to R, where Run runs it with the installed R and Save As keeps it as an R file.
+    /// </summary>
+    private async Task ContinueInRAsync(string id)
+    {
+        JsonElement entry = await view.RecordAsync(id);
+        JsonElement record = entry.ValueKind == JsonValueKind.Object && entry.TryGetProperty("record", out JsonElement r) ? r : default;
+        if (record.ValueKind != JsonValueKind.Object)
+        {
+            status.Text = "This result has no record of its run, so there is nothing to continue in R.";
+            return;
+        }
+        string title = entry.TryGetProperty("title", out JsonElement t) && t.ValueKind == JsonValueKind.String ? t.GetString() : "Analysis";
+        RScript script = RScriptWriter.Write(record, title, FrameReader.Read);
+        if (SdApplication.SoleInstance.CreateScriptWindow() is frmScript window)
+            window.ShowR(script.Text, "R: " + title);
+        status.Text = script.DataUnavailable ? "R script opened, but its data could not be read from the workbook: see the head of the script"
+                    : script.HasRecipe ? "R script of the analysis opened" : "R script with the data and settings opened";
     }
 
     public override IList<Pane> AvailablePanes => new List<Pane> { SelectedPane };

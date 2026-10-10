@@ -159,6 +159,12 @@ namespace StatsDirect.UI
             return MainWindow.OpenFile(path, removeFromRecentFilesIfNotFound);
         }
 
+        /// <summary>The grid that has the file open, or the file opened in a new grid if it is still there; null for an unsaved workbook that is not open.</summary>
+        internal StatsDirectForm FindOrOpenGrid(string filename) => MainWindow.FindOrOpenGrid(filename);
+
+        /// <summary>A new script window, added to the main window.</summary>
+        internal StatsDirectForm CreateScriptWindow() => MainWindow.CreateScriptWindow();
+
         internal frmMain CreateMainWindow()
         {
             MainWindow = new frmMain();

@@ -205,12 +205,30 @@ namespace StatsDirect.UI
 
         void IGrid.Refill(List<IVariable> variables)
         {
+            List<WorksheetOrigin> origins = new();
+            foreach (IVariable variable in variables)
+                origins.Add((WorksheetOrigin)variable.Origin);
+            DataFrame refilledFrame = ReadColumns(origins, true);
+            if (null == refilledFrame)
+                throw new Exception("Cannot refill frame; have you deleted some variables?");
+            if (refilledFrame.VariableCount != variables.Count)
+                throw new Exception("Cannot refill frame as the number of variables present in the workbook \"" + origins[0].WorkbookPath + "\" appears to differ now.");
+            for (int i = 0; i < refilledFrame.VariableCount; i++)
+                variables[i].StealDataFrom(refilledFrame.Variables[i]);
+        }
+
+        DataFrame IGrid.ReadColumns(IList<WorksheetOrigin> origins) => ReadColumns(origins, false);
+
+        /// <summary>
+        /// The columns at the given origins, read as the analysis read them (the first origin's mode and title setting).  For a refill a
+        /// selection that has grown is taken whole; for the R script of a result the recorded rows are taken exactly.
+        /// </summary>
+        private DataFrame ReadColumns(IList<WorksheetOrigin> origins, bool expand)
+        {
             CellSelection revisedCellSelection = new();
 
-            foreach (IVariable variable in variables)
+            foreach (WorksheetOrigin worksheetOrigin in origins)
             {
-                WorksheetOrigin worksheetOrigin = (WorksheetOrigin)variable.Origin;
-
                 // Set the active worksheet
                 workbookView.ActiveWorkbookSet.WithLock(() =>
                 {
@@ -223,18 +241,13 @@ namespace StatsDirect.UI
                 });
 
                 CellColumnSelection cellColumnSelection = new(this) { ColumnIndex = worksheetOrigin.Column, RowCount = worksheetOrigin.Rows, RowIndex = worksheetOrigin.TopRow };
-                MaybeExpandCellColumnSelection(cellColumnSelection);
+                if (expand)
+                    MaybeExpandCellColumnSelection(cellColumnSelection);
                 revisedCellSelection.ColumnSelections.Add(cellColumnSelection);
                 revisedCellSelection.LongestRowCount = cellColumnSelection.RowCount;
             }
-            WorksheetOrigin firstWorksheetOrigin = (WorksheetOrigin)variables[0].Origin;
-            DataFrame refilledFrame = CellArrayProcessor.ProcessCellArray(revisedCellSelection, firstWorksheetOrigin.Mode, 0, true, firstWorksheetOrigin.HasTitle, firstWorksheetOrigin.OriginGroup, ((WindowInformation)Tag).FriendlyName);
-            if (null == refilledFrame)
-                throw new Exception("Cannot refill frame; have you deleted some variables?");
-            if (refilledFrame.VariableCount != variables.Count)
-                throw new Exception("Cannot refill frame as the number of variables present in the workbook \"" + firstWorksheetOrigin.WorkbookPath + "\" appears to differ now.");
-            for (int i = 0; i < refilledFrame.VariableCount; i++)
-                variables[i].StealDataFrom(refilledFrame.Variables[i]);
+            WorksheetOrigin firstWorksheetOrigin = origins[0];
+            return CellArrayProcessor.ProcessCellArray(revisedCellSelection, firstWorksheetOrigin.Mode, 0, true, firstWorksheetOrigin.HasTitle, firstWorksheetOrigin.OriginGroup, ((WindowInformation)Tag).FriendlyName);
         }
 
         /// <summary>

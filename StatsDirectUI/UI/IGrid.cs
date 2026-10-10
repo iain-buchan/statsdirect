@@ -98,5 +98,11 @@ namespace StatsDirect.UI
         }
 
         void Refill(List<IVariable> variable);
+
+        /// <summary>
+        /// The columns at the given origins, read as the analysis read them (the first origin's mode and title setting), the recorded
+        /// rows exactly: for the R script of a result, from the record of its run.
+        /// </summary>
+        DataFrame ReadColumns(IList<WorksheetOrigin> origins);
     }
 }

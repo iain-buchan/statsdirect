@@ -14,7 +14,10 @@ function append(e){entries.push(e);document.getElementById('results').insertAdja
 function reveal(id){const node=document.getElementById('result-'+id);if(!node)return;const bar=document.querySelector('.report-toolbar');const gap=(bar?bar.getBoundingClientRect().height:0)+8;const room=Math.max(0,window.innerHeight-gap-node.getBoundingClientRect().height-16);document.documentElement.style.setProperty('--reveal-room',room+'px');window.scrollTo({top:Math.max(0,node.getBoundingClientRect().top+window.scrollY-gap)});}
 function replace(e){StatsDirectReportEditor.replace(e.id,entryHTML(e));}
 // More of a result into an item (a chart after its analysis): the item's current markup, then the more, and the window stays at the item's start
-function extend(id,html){const e=entries.find(v=>v.id===id);if(!e)throw Error('No such result.');const body=document.querySelector('#result-'+id+' .report-body');if(body)e.html=StatsDirectReportEditor.serialize(body);e.html+=html;replace(e);history();reveal(id);}
+function extend(id,html,record){const e=entries.find(v=>v.id===id);if(!e)throw Error('No such result.');const body=document.querySelector('#result-'+id+' .report-body');if(body)e.html=StatsDirectReportEditor.serialize(body);e.html+=html;if(isRecord(record))e.record=record;replace(e);history();reveal(id);}
+// The record of a result's run (its operation, data file, inputs as pointers, settings and results, as RunRecord writes it) travels with
+// the entry: appended with it, kept through edits, undo and the saved report, and given back for the R script of the result
+const isRecord=r=>!!r&&typeof r==='object'&&!Array.isArray(r);
 function discardEntry(id){const node=document.getElementById('result-'+id);if(node){StatsDirectReportEditor.detach(node);node.remove();}const i=entries.findIndex(e=>e.id===id);if(i>=0)entries.splice(i,1);}
 function edits(values,typing=false,removeIDs=[]){
   if(!Array.isArray(values)||values.length>entries.length||new Set(values.map(v=>v.id)).size!==values.length)return;
@@ -59,7 +62,7 @@ function snapshot(){for(const e of entries){const body=document.querySelector(`#
 document.addEventListener('click',e=>{const h=e.target.closest('[data-help]');if(h)post({action:'help',context:Number(h.dataset.help)});});
 // The target of a right-click, for the context menu that C# shows: the result under the pointer and its help topic, whether text is selected, and whether the place is editable
 let contextTarget={};
-document.addEventListener('contextmenu',e=>{const entry=e.target.closest?.('.report-entry'),id=entry?entry.id.slice(7):null,sel=getSelection();contextTarget={resultId:id,helpContextId:id?(entries.find(v=>v.id===id)?.helpContextId??0):0,hasSelection:!!sel&&sel.rangeCount>0&&!sel.isCollapsed,editable:editing&&!!e.target.closest?.('.report-body')};});
+document.addEventListener('contextmenu',e=>{const entry=e.target.closest?.('.report-entry'),id=entry?entry.id.slice(7):null,sel=getSelection(),result=id?entries.find(v=>v.id===id):null;contextTarget={resultId:id,helpContextId:result?.helpContextId??0,operation:result?.operation??'',hasRecord:isRecord(result?.record),hasSelection:!!sel&&sel.rangeCount>0&&!sel.isCollapsed,editable:editing&&!!e.target.closest?.('.report-body')};});
 // A result selected as a click on its heading selects it; all of them as Ctrl+A does. The result's body takes the focus first, so that
 // a key that follows (Delete, Ctrl+C) reaches the editor's handling of the results
 function selectResult(id){document.querySelector('#result-'+id+' .report-body')?.focus();document.querySelector('#result-'+id+' [data-select-result]')?.click();}
@@ -74,10 +77,11 @@ document.addEventListener('focusin',e=>{const body=e.target.closest('.report-bod
 window.WindowsReport={async run(request){
   try {let value;
     switch(request.method){
-      case 'append':append(request.args);changed();value=true;break;
-      case 'extend':extend(request.args.id,request.args.html);changed();value=true;break;
+      case 'append':{if(!isRecord(request.args.record))delete request.args.record;append(request.args);changed();value=true;break;}
+      case 'extend':extend(request.args.id,request.args.html,request.args.record);changed();value=true;break;
       case 'snapshot':value=snapshot();break;
       case 'contextTarget':value=contextTarget;break;
+      case 'record':{const e=entries.find(v=>v.id===request.args.id);if(!e)throw Error('No such result.');value={title:e.title,operation:e.operation,record:isRecord(e.record)?e.record:null};break;}
       case 'selectResult':selectResult(request.args.id);value=true;break;
       case 'selectAll':selectAll();value=true;break;
       case 'preview':StatsDirectReportEditor.setEditing(false);document.body.classList.add('chart-preview');value=true;break;
@@ -87,7 +91,7 @@ window.WindowsReport={async run(request){
         if(!Array.isArray(incoming)||incoming.length>1000)throw Error('Invalid report entries.');
         const clean=[];
         // No imported markup enters the editor until EVERY section is sanitized.
-        for(const e of incoming){const converted=JSON.parse(await StatsDirectReportImport.convert({html:e.html}));clean.push({id:crypto.randomUUID(),title:String(e.title??'Report'),operation:String(e.operation??''),helpContextId:Number.isSafeInteger(e.helpContextId)?e.helpContextId:0,html:converted.html});}
+        for(const e of incoming){const converted=JSON.parse(await StatsDirectReportImport.convert({html:e.html}));const entry={id:crypto.randomUUID(),title:String(e.title??'Report'),operation:String(e.operation??''),helpContextId:Number.isSafeInteger(e.helpContextId)?e.helpContextId:0,html:converted.html};if(isRecord(e.record))entry.record=e.record;clean.push(entry);}
         entries.splice(0,entries.length,...clean);undo.length=redo.length=0;render();StatsDirectReportEditor.setEditing(true);revision=0;value=snapshot();break;
       }
       case 'export':{

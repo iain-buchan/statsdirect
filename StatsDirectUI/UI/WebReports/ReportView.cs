@@ -26,6 +26,8 @@ internal sealed class ReportView : UserControl
     internal event Action<int> TopicRequested;
     internal event Action<string> Notice;
     internal event Action<string> CommandRequested;
+    /// <summary>The result (by its id) the user asked to continue in R from the context menu.</summary>
+    internal event Action<string> RRequested;
     internal int HelpContext { get; private set; }
     internal Task Ready => ready.Task;
     internal long Revision { get; private set; }
@@ -136,13 +138,14 @@ internal sealed class ReportView : UserControl
         finally { requests.Remove(id); }
     }
 
-    internal Task<string> AppendAsync(string html, string title, string operation, int helpContextId)
+    /// <param name="record">The JSON record of the run that made the result (RunRecord), kept with the item, or null.</param>
+    internal Task<string> AppendAsync(string html, string title, string operation, int helpContextId, string record = null)
     {
         async Task<string> AppendAfter(Task prior)
         {
             await prior;
             string id = Guid.NewGuid().ToString("D");
-            await CallAsync("append", new { id, html, title, operation, helpContextId });
+            await CallAsync("append", new { id, html, title, operation, helpContextId, record = Record(record) });
             return id;
         }
         Task<string> appended = AppendAfter(mutations);
@@ -151,17 +154,23 @@ internal sealed class ReportView : UserControl
     }
 
     /// <summary>
-    /// More of a result into the item appended for the same run: a chart after its analysis.
+    /// More of a result into the item appended for the same run: a chart after its analysis.  The record of the run, as it stands
+    /// after this output, replaces the item's.
     /// </summary>
-    internal Task ExtendAsync(string id, string html)
+    internal Task ExtendAsync(string id, string html, string record = null)
     {
         async Task ExtendAfter(Task prior)
         {
             await prior;
-            await CallAsync("extend", new { id, html });
+            await CallAsync("extend", new { id, html, record = Record(record) });
         }
         return mutations = ExtendAfter(mutations);
     }
+
+    private static JsonElement? Record(string json) => json == null ? null : JsonSerializer.Deserialize<JsonElement>(json);
+
+    /// <summary>A result's title, operation and the record of its run (null when it has none), for the R script of the result.</summary>
+    internal Task<JsonElement> RecordAsync(string id) => CallAsync("record", new { id });
 
     internal async Task OpenHtmlAsync(string html, string title)
     {
@@ -260,6 +269,8 @@ internal sealed class ReportView : UserControl
             bool editable = target.ValueKind == JsonValueKind.Object && target.TryGetProperty("editable", out var ed) && ed.ValueKind == JsonValueKind.True;
             string resultId = target.ValueKind == JsonValueKind.Object && target.TryGetProperty("resultId", out var r) && r.ValueKind == JsonValueKind.String ? r.GetString() : null;
             int help = target.ValueKind == JsonValueKind.Object && target.TryGetProperty("helpContextId", out var h) && h.ValueKind == JsonValueKind.Number ? h.GetInt32() : 0;
+            bool hasRecord = target.ValueKind == JsonValueKind.Object && target.TryGetProperty("hasRecord", out var hr) && hr.ValueKind == JsonValueKind.True;
+            string operation = target.ValueKind == JsonValueKind.Object && target.TryGetProperty("operation", out var op) && op.ValueKind == JsonValueKind.String ? op.GetString() : "";
             // the menu lives until the next right-click: an item's click is handled after the menu has closed
             contextMenu?.Dispose();
             var menu = contextMenu = new ContextMenuStrip();
@@ -273,6 +284,8 @@ internal sealed class ReportView : UserControl
             menu.Items.Add(new ToolStripMenuItem("Select &all", null, (_, _) => Run(() => CallAsync("selectAll"))) { ShortcutKeyDisplayString = "Ctrl+A" });
             menu.Items.Add(new ToolStripSeparator());
             menu.Items.Add(new ToolStripMenuItem("&Help", null, (_, _) => Try(() => TopicRequested?.Invoke(help))) { Enabled = help > 0, ShortcutKeyDisplayString = "F1" });
+            // the result in R: its script from the record of its run, with the recipe of its operation when there is one
+            menu.Items.Add(new ToolStripMenuItem(StatsDirect.R.RRecipes.Has(operation) ? "Continue in &R" : "Open data and settings in &R", null, (_, _) => Try(() => RRequested?.Invoke(resultId))) { Enabled = hasRecord && resultId != null });
             menu.Show(Cursor.Position);
         }
         catch (Exception ex) { Notice?.Invoke(ex.Message); }
