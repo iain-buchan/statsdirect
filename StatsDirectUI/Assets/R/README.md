@@ -25,3 +25,15 @@ what was asked of them as `asked` (`calculate`, or `invert-lower`, `invert-upper
 prints the probabilities of the value, or the value of the probability, as the help's illustration does. The t tests on summary
 figures rebuild R's tests from the sizes, means and standard deviations, printed as R prints them, since R's own functions take the
 observations.
+
+A data item may bind an input of the run by its name: `name = input` takes the first column of the input of that name, and
+`name... = input` all of its columns as a named list. When the run has no such input the variable is set to `NULL`, so that a recipe
+can test for an optional frame (stratum labels, weights, a group identifier) and supply a default. Items without `= input` take the
+columns in order, as before. Example: `# data: time = times, event = deaths, group = groups`.
+
+Most recipes are generated from the help's R sections by a script kept with the maintainer's tooling, from a table of bindings per
+operation; the generated files are written whole and must not be edited by hand. Those marked `# hand-edited` are written by hand
+(the calculators, the summary t tests, the random number generators, and the two rank correlation calculators) and are kept as they
+are. The checks in `tests/RScript` compare every recipe's figures with the help's script on the help's example, except the few whose
+example file says `nocompare` (the random number generators, whose output has no fixed figures, and the rank correlation calculators,
+whose help works from two rankings); those must run and print figures, and the calculators' figures are checked in `Inverse.cs`.
