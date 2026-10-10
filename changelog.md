@@ -13,12 +13,13 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
 ### Added
 - A right-click in a report shows a menu with Cut, Copy, Paste, Select result, Select all and Help for the result under the pointer.
-- Continue in R: the right-click menu of a result offers a short R script of its data, its settings and the analysis as the help's R code gives it, to run, edit or take to R or RStudio; the data are read from the workbook by the pointers kept with the result; 28 analyses have such a script, and for the others "Open data and settings in R" gives the data and settings. The script opens in a script window, runs at once in the installed R and shows what R prints below it, with the files it wrote, charts among them, listed as links to open; Run in R on the toolbar runs it again after edits, and Output folder opens the folder R writes to.
+- Continue in R: the right-click menu of a result offers a short R script of its data, its settings and the analysis as the help's R code gives it, to run, edit or take to R or RStudio; the data are read from the workbook by the pointers kept with the result; 28 analyses have such a script, and for the others "Open data and settings in R" gives the data and settings. The script opens in a script window, runs at once in the installed R and shows what R prints below it, with the files it wrote, charts among them, listed as links to open; Run in R on the toolbar runs it again after edits, and Output folder opens the folder R writes to. Run in R while R is still running the script as it was stops that run and runs the script as edited; Clear output clears what R printed.
 - A result keeps a record of its run in the report: the workbook, sheet, columns and rows of each input, with a hash of each column to tell whether the data have changed, the settings and the scalar results; the values themselves only when the run has few. The Mac version keeps the same record, so that a report moves between the two.
 - A right-click on a chart in a report offers Save chart as SVG or as PNG: the SVG file is the chart itself, the PNG is drawn from it at twice its size on the page.
 
 ### Changed
 - The panes in the body of a report are gone: the name and Help button above each result, and the width and Fit controls of each chart. Help is in the ribbon and the right-click menu, which also selects a result or all of them.
+- The question whether to save a report's changes when it closes is asked in the program's message banner at the top of the main window, as a workbook or a script asks it, and in the same words; it came in a floating Windows message box of its own.
 
 ##[v5.1.0] 2026-10-10
 
