@@ -74,14 +74,15 @@ leaving the active worksheet/report and data selection intact. During a modal
 dialog, visible help temporarily floats so it stays interactive, then returns
 to the user's chosen presentation when the dialog closes.
 
-To update the bundle, build the `SWHelp` target in the `statisticalhelp` Flare
+To update the bundle, build the `DesktopHelp` target in the `statisticalhelp` Flare
 project (`C:/Develop/SD3Help/StatsDirect/StatsDirect.flprj` on this PC). Its local
 destination publishes directly to this checkout's `StatsDirectUI/Assets/Help`;
 adjust that destination when using another checkout. The target includes
 software-help content, uses a compact desktop stylesheet/master without web
 analytics, and generates all navigation, search, images and R dropdowns. Commit
 the entire published bundle, excluding Flare build logs/metadata (gitignored).
-Do not replace it with a partial copy of topics or the public web target.
+Do not replace it with a partial copy of topics or either public web target
+(`GitHub` for GitHub Pages and `Website` for statsdirect.com/help).
 
 Numeric context IDs retain their historical `chm-id` XML name for compatibility
 with existing operations and the Mac host. They resolve through the generated
