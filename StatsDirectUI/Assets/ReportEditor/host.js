@@ -7,7 +7,11 @@ const post=m=>chrome.webview.postMessage(m);
 const changed=()=>{revision++;post({action:'changed',revision});};
 const entryHTML=e=>`<article class="report-entry" id="result-${e.id}"><header class="report-controls" data-select-result="${e.id}" tabindex="0" aria-label="Select result: ${encode(e.title)}" title="Select this result; Delete removes it when editing"><h2>${encode(e.title)}</h2><button data-help="${e.helpContextId}">Help</button></header><div class="report-body" data-result-id="${e.id}" role="textbox" aria-label="${encode(e.title)}">${e.html}</div></article>`;
 function history(){StatsDirectReportEditor.history(undo.length>0,redo.length>0);document.getElementById('empty').hidden=entries.length>0;}
-function append(e){entries.push(e);document.getElementById('results').insertAdjacentHTML('beforeend',entryHTML(e));StatsDirectReportEditor.replace(e.id,entryHTML(e));history();}
+function append(e){entries.push(e);document.getElementById('results').insertAdjacentHTML('beforeend',entryHTML(e));StatsDirectReportEditor.replace(e.id,entryHTML(e));history();reveal(e.id);}
+// The new result is what the user wants to see next: the window scrolls so that its top is just below the sticky toolbar. A result at
+// the end of the page can reach the top only with room below it, so the page is given that room (a variable the stylesheet applies
+// to the results; the saved report and the printed page do not carry it).
+function reveal(id){const node=document.getElementById('result-'+id);if(!node)return;const bar=document.querySelector('.report-toolbar');const gap=(bar?bar.getBoundingClientRect().height:0)+8;const room=Math.max(0,window.innerHeight-gap-node.getBoundingClientRect().height-16);document.documentElement.style.setProperty('--reveal-room',room+'px');window.scrollTo({top:Math.max(0,node.getBoundingClientRect().top+window.scrollY-gap)});}
 function replace(e){StatsDirectReportEditor.replace(e.id,entryHTML(e));}
 function discardEntry(id){const node=document.getElementById('result-'+id);if(node){StatsDirectReportEditor.detach(node);node.remove();}const i=entries.findIndex(e=>e.id===id);if(i>=0)entries.splice(i,1);}
 function edits(values,typing=false,removeIDs=[]){

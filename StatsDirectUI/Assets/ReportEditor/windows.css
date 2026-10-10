@@ -57,6 +57,9 @@ body.engine-report pre { font-family: "Courier New", monospace; font-size: 10pt;
 .report-entry { padding-top: 8px; }
 .report-entry + .report-entry { margin-top: 20px; padding-top: 12px; }
 .report-body { min-height: 20px; }
+/* room below the last result, so that a result just added can be scrolled to the top of the window (set by host.js) */
+#results { padding-bottom: var(--reveal-room, 0px); }
+@media print { #results { padding-bottom: 0 !important; } }
 body.engine-report .report-body svg, body.engine-report .report-media > img {
   width: auto;
   max-width: 100%;
