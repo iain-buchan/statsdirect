@@ -113,10 +113,11 @@ statsdirect.image <- setClass("statsdirect.image", representation(path="characte
 # Use a closure to hide the count variable in the plotter
 make.statsdirect.plot <- function() {
   tempfilecount <- 0
-  statsdirect.plot <- function(plotter) {
+  statsdirect.plot <- function(plotter, square=FALSE) {
     filename <- paste ("metafile",tempfilecount,".svg", sep="")
     path<-file.path(getwd(),filename)
-    svg(path, width=6, height=4)
+    # the test vs. reference plot is square, with equal axes, so that the line of equality runs at 45 degrees; the others are wider
+    svg(path, width=6, height=if (square) 6 else 4)
     plotter()
     suppressWarnings(dev.off())
     tempfilecount <<- tempfilecount + 1
@@ -237,7 +238,7 @@ once <- function(sd.method.name, x, xname, y, yname, human.readable.name) {
     retval$interceptuci <- model@para[1,4]
     retval$samples <- length(model@data[[1]])
     if (plot.testvsreference) {
-      retval$testvsreference <- statsdirect.plot(function() { plot(model,x.lab=xname,y.lab=yname) } )
+      retval$testvsreference <- statsdirect.plot(function() { plot(model,x.lab=xname,y.lab=yname,equal.axis=TRUE) }, square=TRUE)
     }
     if (plot.bland.altman) {
       retval$difference <- statsdirect.plot(function() { plotDifference(model) } )
@@ -253,7 +254,7 @@ once <- function(sd.method.name, x, xname, y, yname, human.readable.name) {
     printSummary(model)
     getCoefficients(model)
     if (plot.testvsreference) {
-      plot(model,x.lab=xname,y.lab=yname)
+      plot(model,x.lab=xname,y.lab=yname,equal.axis=TRUE)
     }
     if (plot.bland.altman) {
       plotDifference(model)
