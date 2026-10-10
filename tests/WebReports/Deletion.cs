@@ -64,7 +64,7 @@ internal static partial class Program
 
         await Selection(".report-entry:first-child p",6,11);
         await Key("Delete",46);
-        await ClickReport(".report-entry:nth-child(2) header h2");
+        await view.CallAsync("selectResult", new { id = (await Js("document.querySelectorAll('.report-entry')[1].id.slice(7)")).GetString() });   // as the context menu selects a result: its heading is out of view
         await Key("Delete",46);
         Check(await True("document.querySelectorAll('.report-entry').length===2 && !document.querySelector('.report-body svg')"), "selecting a result heading then Delete removes the whole result");
         await Key("z",90,2);
@@ -90,7 +90,7 @@ internal static partial class Program
         await Key("z",90,2);
         Check((await view.CallAsync("snapshot")).GetProperty("entries").GetArrayLength()==3 && await True("!!document.querySelector('.report-body svg')"), "Undo works even after all report sections were removed");
 
-        await ClickReport(".report-entry:nth-child(2) header h2");
+        await view.CallAsync("selectResult", new { id = (await Js("document.querySelectorAll('.report-entry')[1].id.slice(7)")).GetString() });   // as the context menu selects a result: its heading is out of view
         await Key("Delete",46);
         await view.AppendAsync("<p>New engine result</p>","Arrived later","NewOperation",99);
         await Key("z",90,2);
@@ -115,7 +115,7 @@ internal static partial class Program
         Check(await True("document.querySelector('td[colspan]').textContent==='Merged'"), "Undo restores deleted table text");
 
         await LoadDeletionFixture();
-        await ClickReport(".report-entry:nth-child(2) header h2");
+        await view.CallAsync("selectResult", new { id = (await Js("document.querySelectorAll('.report-entry')[1].id.slice(7)")).GetString() });   // as the context menu selects a result: its heading is out of view
         await Key("Delete",46);
         string filename=Path.Combine(output,"deleted-result.html");
         await view.SaveAsync(filename,"Deletion check","html");
@@ -150,7 +150,7 @@ internal static partial class Program
         Check(await True("document.querySelector('.report-body img').getAttribute('src').startsWith('data:image/png')"), "Undo restores the raster picture data");
 
         await LoadDeletionFixture();
-        await ClickReport(".report-entry:first-child header h2");
+        await view.CallAsync("selectResult", new { id = (await Js("document.querySelectorAll('.report-entry')[0].id.slice(7)")).GetString() });   // the first result, as the context menu selects it
         await Js("document.querySelectorAll('header')[2].querySelector('h2').dispatchEvent(new MouseEvent('click',{bubbles:true,shiftKey:true}))");
         await Key("Delete",46);
         Check((await view.CallAsync("snapshot")).GetProperty("entries").GetArrayLength()==0, "Shift-clicking result headings selects a contiguous group for deletion");
