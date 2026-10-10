@@ -1,154 +1,114 @@
 {
-  "TPaired": {
-    "file": "paired.R",
-    "detail": "Paired t test, matched missing-value handling, selected confidence level and optional agreement plot (vector PDF)."
-  },
-  "TSingle": {
-    "file": "t-tests.R",
-    "detail": "Student t test; the independent-samples script reports both pooled-variance and Welch results."
-  },
-  "TUnpaired": {
-    "file": "t-tests.R",
-    "detail": "Student t test; the independent-samples script reports both pooled-variance and Welch results."
-  },
-  "TSingleSummary": {
-    "file": "t-summary.R",
-    "detail": "Student t statistics and confidence intervals from the recorded summary inputs; both pooled and Welch for two groups."
-  },
-  "TUnpairedSummary": {
-    "file": "t-summary.R",
-    "detail": "Student t statistics and confidence intervals from the recorded summary inputs; both pooled and Welch for two groups."
-  },
-  "ExactSign": {
-    "file": "binomial.R",
-    "detail": "Exact binomial test and confidence interval. Additional mid-P, approximation and two-sided conventions can differ."
-  },
-  "PropSingle": {
-    "file": "binomial.R",
-    "detail": "Exact binomial test and confidence interval. Additional mid-P, approximation and two-sided conventions can differ."
-  },
-  "RatePoissonCI": {
-    "file": "poisson.R",
-    "detail": "Exact Poisson rate estimate and confidence interval."
-  },
   "Chi2by2": {
-    "file": "contingency.R",
-    "detail": "Pearson/G tests and requested Fisher or Monte Carlo tests. Trend, mid-P and additional risk estimates are not reproduced; simulation streams differ."
-  },
-  "ExactFisher": {
-    "file": "contingency.R",
-    "detail": "Pearson/G tests and requested Fisher or Monte Carlo tests. Trend, mid-P and additional risk estimates are not reproduced; simulation streams differ."
-  },
-  "ExactFisherX": {
-    "file": "contingency.R",
-    "detail": "Pearson/G tests and requested Fisher or Monte Carlo tests. Trend, mid-P and additional risk estimates are not reproduced; simulation streams differ."
-  },
-  "ExactORCML": {
-    "file": "contingency.R",
-    "detail": "Pearson/G tests and requested Fisher or Monte Carlo tests. Trend, mid-P and additional risk estimates are not reproduced; simulation streams differ."
-  },
-  "ExactFisherRbyC": {
-    "file": "contingency.R",
-    "detail": "Pearson/G tests and requested Fisher or Monte Carlo tests. Trend, mid-P and additional risk estimates are not reproduced; simulation streams differ."
+    "file": "chi-square-2-by-2.R",
+    "detail": "2 by 2 chi-square test with and without the continuity correction, as the help shows it in R."
   },
   "ExactChiRbyC": {
-    "file": "contingency.R",
-    "detail": "Pearson/G tests and requested Fisher or Monte Carlo tests. Trend, mid-P and additional risk estimates are not reproduced; simulation streams differ."
+    "file": "r-by-c.R",
+    "detail": "Exact and chi-square tests of an r by c table of counts, as the help shows them in R."
   },
   "ExactChiRbyCScreen": {
-    "file": "contingency.R",
-    "detail": "Pearson/G tests and requested Fisher or Monte Carlo tests. Trend, mid-P and additional risk estimates are not reproduced; simulation streams differ."
+    "file": "r-by-c.R",
+    "detail": "Exact and chi-square tests of an r by c table of counts, as the help shows them in R."
+  },
+  "ExactFisher": {
+    "file": "fisher-exact.R",
+    "detail": "Fisher exact test of a 2 by 2 table, as the help shows it in R."
+  },
+  "ExactFisherRbyC": {
+    "file": "r-by-c.R",
+    "detail": "Exact and chi-square tests of an r by c table of counts, as the help shows them in R."
+  },
+  "ExactFisherX": {
+    "file": "fisher-exact-extended.R",
+    "detail": "Fisher exact test of a 2 by 2 table with its one and two sided probabilities, as the help shows it in R."
   },
   "ExactMcNamar": {
     "file": "mcnemar.R",
-    "detail": "McNemar tests with and without continuity correction and exact discordant-pair binomial test."
+    "detail": "McNemar test of a paired 2 by 2 table with its exact probabilities, as the help shows it in R."
   },
   "ExactMcNamarChi": {
     "file": "mcnemar.R",
-    "detail": "McNemar tests with and without continuity correction and exact discordant-pair binomial test."
+    "detail": "McNemar test of a paired 2 by 2 table with its exact probabilities, as the help shows it in R."
   },
-  "Spearman": {
-    "file": "correlation.R",
-    "detail": "Rank correlation. R exact/asymptotic calculations and treatment of ties can give different P values."
+  "ExactORCML": {
+    "file": "odds-ratio-exact.R",
+    "detail": "Conditional maximum likelihood odds ratio of a 2 by 2 table with exact limits, as the help shows it in R."
+  },
+  "ExactSign": {
+    "file": "sign.R",
+    "detail": "Sign test with its exact binomial probabilities, as the help shows it in R."
   },
   "Kendall": {
-    "file": "correlation.R",
-    "detail": "Rank correlation. R exact/asymptotic calculations and treatment of ties can give different P values."
-  },
-  "Wilcoxon": {
-    "file": "rank-tests.R",
-    "detail": "Corresponding base-R rank/distribution test. Exact algorithms, ties and continuity corrections may differ."
-  },
-  "MannWhitney": {
-    "file": "rank-tests.R",
-    "detail": "Corresponding base-R rank/distribution test. Exact algorithms, ties and continuity corrections may differ."
-  },
-  "Smirnov": {
-    "file": "rank-tests.R",
-    "detail": "Corresponding base-R rank/distribution test. Exact algorithms, ties and continuity corrections may differ."
+    "file": "kendall.R",
+    "detail": "Kendall rank correlation with its exact probabilities, as the help shows it in R."
   },
   "Kruskal": {
-    "file": "rank-tests.R",
-    "detail": "Corresponding base-R rank/distribution test. Exact algorithms, ties and continuity corrections may differ."
+    "file": "kruskal-wallis.R",
+    "detail": "Kruskal-Wallis test with its adjustment for ties, as the help shows it in R."
   },
-  "OneWay": {
-    "file": "one-way.R",
-    "detail": "One-way ANOVA main test. Supplementary comparisons are left for explicit selection in R."
-  },
-  "SimpleLinearRegression": {
-    "file": "linear.R",
-    "detail": "Simple linear regression, coefficient confidence intervals and an editable lm model."
-  },
-  "VarianceRatio": {
-    "file": "variance.R",
-    "detail": "F variance-ratio test, placing the larger variance in the numerator as StatsDirect does."
-  },
-  "UnivariateSummary": {
-    "file": "summary.R",
-    "detail": "Core descriptive statistics and mean confidence intervals. R type-7 quantiles are explicit; additional StatsDirect summaries are not reproduced."
-  },
-  "QuickSummary": {
-    "file": "summary.R",
-    "detail": "Core descriptive statistics and mean confidence intervals. R type-7 quantiles are explicit; additional StatsDirect summaries are not reproduced."
-  },
-  "UnivariateSummaryToWorksheetOnly": {
-    "file": "summary.R",
-    "detail": "Core descriptive statistics and mean confidence intervals. R type-7 quantiles are explicit; additional StatsDirect summaries are not reproduced."
+  "MannWhitney": {
+    "file": "mann-whitney.R",
+    "detail": "Mann-Whitney U test with theta, its exact probabilities and the limits of the difference, as the help shows it in R."
   },
   "Normality": {
     "file": "normality.R",
-    "detail": "Shapiro-Wilk test. Other normality diagnostics in the report are not reproduced; R accepts 3 to 5000 observations."
+    "detail": "Tests of normality, as the help shows them in R."
   },
-  "DistributionNormal": {
-    "file": "distribution.R",
-    "detail": "Corresponding base-R distribution probabilities using the recorded form values."
+  "OneWay": {
+    "file": "one-way-anova.R",
+    "detail": "One way analysis of variance, as the help shows it in R."
   },
-  "DistributionT": {
-    "file": "distribution.R",
-    "detail": "Corresponding base-R distribution probabilities using the recorded form values."
+  "PropSingle": {
+    "file": "single-proportion.R",
+    "detail": "Single proportion with its exact and approximate limits, as the help shows it in R."
   },
-  "DistributionF": {
-    "file": "distribution.R",
-    "detail": "Corresponding base-R distribution probabilities using the recorded form values."
+  "QuickSummary": {
+    "file": "quick-summary.R",
+    "detail": "Quick descriptive statistics of a column, as the help shows them in R."
   },
-  "DistributionChiSquare": {
-    "file": "distribution.R",
-    "detail": "Corresponding base-R distribution probabilities using the recorded form values."
+  "RatePoissonCI": {
+    "file": "poisson-rate.R",
+    "detail": "Poisson rate with its exact confidence interval, as the help shows it in R."
   },
-  "DistributionQ": {
-    "file": "distribution.R",
-    "detail": "Corresponding base-R distribution probabilities using the recorded form values."
+  "SimpleLinearRegression": {
+    "file": "simple-linear-regression.R",
+    "detail": "Simple linear regression with its limits, as the help shows it in R."
   },
-  "DistributionNonCentralT": {
-    "file": "distribution.R",
-    "detail": "Corresponding base-R distribution probabilities using the recorded form values."
+  "Smirnov": {
+    "file": "smirnov.R",
+    "detail": "Two sample Smirnov test, as the help shows it in R."
   },
-  "DistributionBinomial": {
-    "file": "distribution.R",
-    "detail": "Corresponding base-R distribution probabilities using the recorded form values."
+  "Spearman": {
+    "file": "spearman.R",
+    "detail": "Spearman rank correlation with its exact probabilities, as the help shows it in R."
   },
-  "DistributionPoisson": {
-    "file": "distribution.R",
-    "detail": "Corresponding base-R distribution probabilities using the recorded form values."
+  "TPaired": {
+    "file": "paired-t.R",
+    "detail": "Paired t test with its agreement analysis, as the help shows it in R."
+  },
+  "TSingle": {
+    "file": "single-sample-t.R",
+    "detail": "Single sample t test against a population mean, as the help shows it in R."
+  },
+  "TUnpaired": {
+    "file": "unpaired-t.R",
+    "detail": "Unpaired t test, with equal and unequal variances, as the help shows it in R."
+  },
+  "UnivariateSummary": {
+    "file": "univariate-summary.R",
+    "detail": "Descriptive statistics of a column, as the help shows them in R."
+  },
+  "UnivariateSummaryToWorksheetOnly": {
+    "file": "univariate-summary.R",
+    "detail": "Descriptive statistics of a column, as the help shows them in R."
+  },
+  "VarianceRatio": {
+    "file": "variance-ratio.R",
+    "detail": "F test of two variances, as the help shows it in R."
+  },
+  "Wilcoxon": {
+    "file": "wilcoxon-signed-ranks.R",
+    "detail": "Wilcoxon signed ranks test with its exact probabilities and limits, as the help shows it in R."
   }
 }
