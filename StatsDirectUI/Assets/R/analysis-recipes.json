@@ -3,6 +3,38 @@
     "file": "chi-square-2-by-2.R",
     "detail": "2 by 2 chi-square test with and without the continuity correction, as the help shows it in R."
   },
+  "DistributionBinomial": {
+    "file": "distribution-binomial.R",
+    "detail": "Binomial distribution: the probabilities of exactly, at least and at most r successes in n trials, as the help shows them in R."
+  },
+  "DistributionChiSquare": {
+    "file": "distribution-chi-square.R",
+    "detail": "Chi-square distribution: the upper tail probability of a chi-square statistic, or the statistic of an upper tail, as the help shows them in R."
+  },
+  "DistributionF": {
+    "file": "distribution-f.R",
+    "detail": "F (variance ratio) distribution: the upper tail probability of F on its degrees of freedom, or the F of an upper tail, as the help shows them in R."
+  },
+  "DistributionNonCentralT": {
+    "file": "distribution-non-central-t.R",
+    "detail": "Non-central t distribution: the tail probabilities of t on its degrees of freedom and non-centrality, or the t of a tail probability, as the help shows them in R."
+  },
+  "DistributionNormal": {
+    "file": "distribution-normal.R",
+    "detail": "Normal distribution: the tail areas of a deviate, or the deviate of a tail area, as the help shows them in R."
+  },
+  "DistributionPoisson": {
+    "file": "distribution-poisson.R",
+    "detail": "Poisson distribution: the probabilities of exactly, at least and at most n events for a mean, or the mean of a probability, as the help shows them in R."
+  },
+  "DistributionQ": {
+    "file": "distribution-studentized-range.R",
+    "detail": "Studentized range (Q) distribution: the tail probabilities of Q for a number of samples and residual degrees of freedom, or the Q of an upper tail, as the help shows them in R."
+  },
+  "DistributionT": {
+    "file": "distribution-t.R",
+    "detail": "Student's t distribution: the tail areas of t on its degrees of freedom, or the t of a tail area, as the help shows them in R."
+  },
   "ExactChiRbyC": {
     "file": "r-by-c.R",
     "detail": "Exact and chi-square tests of an r by c table of counts, as the help shows them in R."
@@ -91,9 +123,17 @@
     "file": "single-sample-t.R",
     "detail": "Single sample t test against a population mean, as the help shows it in R."
   },
+  "TSingleSummary": {
+    "file": "single-sample-t-summary.R",
+    "detail": "Single sample t test from its summary figures (n, mean and standard deviation) against a population mean, as the help shows the test in R."
+  },
   "TUnpaired": {
     "file": "unpaired-t.R",
     "detail": "Unpaired t test, with equal and unequal variances, as the help shows it in R."
+  },
+  "TUnpairedSummary": {
+    "file": "unpaired-t-summary.R",
+    "detail": "Unpaired t test from the two samples' summary figures (sizes, means and standard deviations), with equal and unequal variances, as the help shows the test in R."
   },
   "UnivariateSummary": {
     "file": "univariate-summary.R",

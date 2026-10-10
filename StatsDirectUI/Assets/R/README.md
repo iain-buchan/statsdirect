@@ -18,3 +18,10 @@ and settings taken out and the confidence level taken from the run; files marked
 checks in `tests/RScript` run every recipe on the help's own example, through a run's record, and compare its output with the help's
 script, and run the paired t test and the 2 by 2 chi-square against the engine. The files are shared with the Mac version of
 StatsDirect, which keeps them the same.
+
+Two kinds of recipe are written by hand rather than generated, and are marked `# hand-edited`. The Distributions calculator has no
+columns: it records the boxes of its last calculation as settings named `value`, `df`, `df2`, `lower`, `upper` and `two_sided`, and
+what was asked of them as `asked` (`calculate`, or `invert-lower`, `invert-upper` or `invert-two-sided`); each distribution's recipe
+prints the probabilities of the value, or the value of the probability, as the help's illustration does. The t tests on summary
+figures rebuild R's tests from the sizes, means and standard deviations, printed as R prints them, since R's own functions take the
+observations.
