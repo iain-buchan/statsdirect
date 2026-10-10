@@ -18,7 +18,7 @@ PDF and DOCX are exports; they do not change the editable document's path or mar
 
 ## Shared Mac component
 
-Pinned source: **iain-buchan/statsdirect-mac**, commit **5c7a98648ceb0349d4f388ad40794a49811ec7ed**, “Report editor: a revealed result goes to the toolbar unless the report fits the window”.
+Pinned source: **iain-buchan/statsdirect-mac**, commit **730ea9b60c1bd6bcd6c5cc667f5b3f523f3234f1**, “Report editor: the corner marker for resizing a chart is back”.
 
 - `upstream/Report` contains the original source, locked dependency manifest and JavaScript tests; `upstream/Tests/Fixtures/Reports` contains their fixtures.
 - `upstream/LICENSE` retains the Mac repository licence.

@@ -39,14 +39,32 @@ function edits(values,typing=false,removeIDs=[]){
   changed();history();
 }
 // The target of a right-click, for the context menu that C# shows: the result under the pointer and its help topic, whether text is
-// selected, whether the place is editable, and whether a chart is there (the editor records it as the menu opens)
-let contextTarget={};
+// selected, whether the place is editable, and whether a chart is there (the editor records it as the menu opens). The chart itself
+// (the outermost svg, or a raster picture) is kept by the host for Save chart as SVG or PNG: this listener is registered before the
+// editor's, so the chart is known when the editor's context message arrives.
+let contextTarget={},contextChart=null;
+document.addEventListener('contextmenu',e=>{let chart=e.target.closest?.('svg,img')??null;while(chart&&chart.parentElement?.closest('svg'))chart=chart.parentElement.closest('svg');contextChart=chart&&chart.closest('#results')?chart:null;});
+// The chart under the pointer as a file: its own markup for an SVG file (the xmlns ensured), or a PNG drawn from it on a canvas at the
+// given scale of its size on the page (a raster picture gives its own data as it is)
+async function chartImage(format,scale){
+  const el=contextChart;if(!el||!el.isConnected)throw Error('No chart is under the pointer.');
+  if(el.tagName.toLowerCase()==='img'){if(format==='svg')throw Error('This picture is not a vector chart.');return el.src;}
+  const svg=el.cloneNode(true);if(!svg.getAttribute('xmlns'))svg.setAttribute('xmlns','http://www.w3.org/2000/svg');
+  if(format==='svg')return new XMLSerializer().serializeToString(svg);
+  const box=el.getBoundingClientRect(),w=Math.max(1,Math.round(box.width)),h=Math.max(1,Math.round(box.height));
+  svg.setAttribute('width',w);svg.setAttribute('height',h);
+  const img=new Image();
+  await new Promise((ok,bad)=>{img.onload=ok;img.onerror=()=>bad(Error('The chart could not be drawn.'));img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(new XMLSerializer().serializeToString(svg));});
+  const k=Math.max(1,Number(scale)||1),canvas=document.createElement('canvas');canvas.width=w*k;canvas.height=h*k;
+  const ctx=canvas.getContext('2d');ctx.fillStyle='white';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.scale(k,k);ctx.drawImage(img,0,0,w,h);
+  return canvas.toDataURL('image/png');
+}
 window.statsDirectReportHost={post(m){
   switch(m.action){
     case 'editing':editing=!!m.value;break;
     case 'editBody':edits([{id:m.resultID,html:m.html}],m.typing);break;
     case 'editBodies':edits(m.edits,false,m.remove??[]);break;
-    case 'context':{const result=entryOf(m.resultId);contextTarget={resultId:m.resultId??null,helpContextId:result?.helpContextId??0,operation:result?.operation??'',hasRecord:isRecord(result?.record),hasSelection:!!m.hasSelection,editable:!!m.editable,picture:!!m.picture,pictureWidth:m.pictureWidth??null};break;}
+    case 'context':{const result=entryOf(m.resultId),chart=contextChart;contextTarget={resultId:m.resultId??null,helpContextId:result?.helpContextId??0,operation:result?.operation??'',hasRecord:isRecord(result?.record),chart:!!chart,chartKind:chart?(chart.tagName.toLowerCase()==='img'?'png':'svg'):null,hasSelection:!!m.hasSelection,editable:!!m.editable,picture:!!m.picture,pictureWidth:m.pictureWidth??null};break;}
     case 'addText':append({id:crypto.randomUUID(),title:'Text',operation:'',helpContextId:0,html:'<p>Enter your text here.</p>'});StatsDirectReportEditor.setEditing(true);changed();break;
     case 'undoText':case 'redoText':{
       const back=m.action==='undoText',t=(back?undo:redo).pop();if(!t)break;
@@ -76,6 +94,7 @@ window.WindowsReport={async run(request){
       case 'append':{if(!isRecord(request.args.record))delete request.args.record;append(request.args);changed();value=true;break;}
       case 'extend':extend(request.args.id,request.args.html,request.args.record);changed();value=true;break;
       case 'record':{const e=entryOf(request.args.id);if(!e)throw Error('No such result.');value={title:e.title,operation:e.operation,record:isRecord(e.record)?e.record:null};break;}
+      case 'chartImage':value=await chartImage(request.args.format,request.args.scale);break;
       case 'snapshot':value=snapshot();break;
       case 'contextTarget':value=contextTarget;break;
       case 'selectResult':StatsDirectReportEditor.selectResult(request.args.id);value=true;break;
