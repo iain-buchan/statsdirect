@@ -1,0 +1,86 @@
+/* Windows host for the pinned Mac editor. Document state and multi-section undo
+ * stay together; C# owns files, clipboard, printing, window lifetime and help. */
+const entries=[],undo=[],redo=[];
+let revision=0,editing=true;
+const encode=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const post=m=>chrome.webview.postMessage(m);
+const changed=()=>{revision++;post({action:'changed',revision});};
+const entryHTML=e=>`<article class="report-entry" id="result-${e.id}"><header class="report-controls" data-select-result="${e.id}" tabindex="0" aria-label="Select result: ${encode(e.title)}" title="Select this result; Delete removes it when editing"><h2>${encode(e.title)}</h2><button data-help="${e.helpContextId}">Help</button></header><div class="report-body" data-result-id="${e.id}" role="textbox" aria-label="${encode(e.title)}">${e.html}</div></article>`;
+function history(){StatsDirectReportEditor.history(undo.length>0,redo.length>0);document.getElementById('empty').hidden=entries.length>0;}
+function append(e){entries.push(e);document.getElementById('results').insertAdjacentHTML('beforeend',entryHTML(e));StatsDirectReportEditor.replace(e.id,entryHTML(e));history();}
+function replace(e){StatsDirectReportEditor.replace(e.id,entryHTML(e));}
+function discardEntry(id){const node=document.getElementById('result-'+id);if(node){StatsDirectReportEditor.detach(node);node.remove();}const i=entries.findIndex(e=>e.id===id);if(i>=0)entries.splice(i,1);}
+function edits(values,typing=false,removeIDs=[]){
+  if(!Array.isArray(values)||values.length>entries.length||new Set(values.map(v=>v.id)).size!==values.length)return;
+  if(!Array.isArray(removeIDs)||new Set(removeIDs).size!==removeIDs.length||removeIDs.some(id=>!entries.some(e=>e.id===id)||values.some(v=>v.id===id)))return;
+  const changes=[];
+  for(const v of values){const e=entries.find(x=>x.id===v.id);if(!e||typeof v.html!=='string'||v.html.length>30_000_000)return;if(e.html!==v.html)changes.push({id:e.id,before:e.html,after:v.html});}
+  const deletions=entries.flatMap((entry,index)=>removeIDs.includes(entry.id)?[{entry:structuredClone(entry),index}]:[]);
+  if(!changes.length&&!deletions.length)return;
+  const last=undo.at(-1),now=Date.now();
+  if(typing&&!deletions.length&&last?.typing&&!last.deletions.length&&changes.length===1&&last.changes.length===1&&last.changes[0].id===changes[0].id&&now-last.time<1000&&!redo.length){last.changes[0].after=changes[0].after;last.time=now;}
+  else undo.push({changes,deletions,typing,time:now});
+  while(undo.length>50||(undo.length>1&&undo.reduce((n,t)=>n+t.changes.reduce((m,c)=>m+c.before.length+c.after.length,0)+t.deletions.reduce((m,d)=>m+d.entry.html.length,0),0)>30_000_000))undo.shift();
+  redo.length=0;for(const c of changes)entries.find(e=>e.id===c.id).html=c.after;
+  for(const d of deletions)discardEntry(d.entry.id);
+  changed();history();
+}
+window.statsDirectReportHost={post(m){
+  switch(m.action){
+    case 'editing':editing=!!m.value;break;
+    case 'editBody':edits([{id:m.resultID,html:m.html}],m.typing);break;
+    case 'editBodies':edits(m.edits);break;
+    case 'deleteSelection':edits(m.edits,false,m.removeIDs);break;
+    case 'addText':append({id:crypto.randomUUID(),title:'Text',operation:'',helpContextId:0,html:'<p>Enter your text here.</p>'});StatsDirectReportEditor.setEditing(true);changed();break;
+    case 'undoText':case 'redoText':{
+      const back=m.action==='undoText',t=(back?undo:redo).pop();if(!t)break;
+      (back?redo:undo).push(t);
+      if(back)for(const d of t.deletions){
+        const at=Math.min(d.index,entries.length),e=structuredClone(d.entry),next=entries[at];entries.splice(at,0,e);
+        const template=document.createElement('template');template.innerHTML=entryHTML(e);
+        document.getElementById('results').insertBefore(template.content, next?document.getElementById('result-'+next.id):null);replace(e);
+      }
+      else for(const d of t.deletions)discardEntry(d.entry.id);
+      for(const c of t.changes){const e=entries.find(e=>e.id===c.id);if(e){e.html=back?c.before:c.after;replace(e);}}
+      if(t.deletions.length){const id=back?t.deletions[0].entry.id:entries[Math.min(t.deletions[0].index,entries.length-1)]?.id;(document.getElementById('result-'+id)?.querySelector('header')??document.getElementById('results')).focus({preventScroll:true});}
+      changed();history();break;
+    }
+    case 'clipboard':case 'transferNotice':post(m);break;
+  }
+}};
+function render(){StatsDirectReportEditor.detach(document.getElementById('results'));document.getElementById('results').innerHTML=entries.map(entryHTML).join('');for(const e of entries)replace(e);history();}
+function snapshot(){for(const e of entries){const body=document.querySelector(`#result-${e.id} .report-body`);if(body)e.html=StatsDirectReportEditor.serialize(body);}return {version:1,entries:structuredClone(entries),revision};}
+document.addEventListener('click',e=>{const h=e.target.closest('[data-help]');if(h)post({action:'help',context:Number(h.dataset.help)});});
+document.addEventListener('focusin',e=>{const body=e.target.closest('.report-body');if(body){const entry=entries.find(v=>v.id===body.dataset.resultId);post({action:'context',context:entry?.helpContextId??0});}});
+window.WindowsReport={async run(request){
+  try {let value;
+    switch(request.method){
+      case 'append':append(request.args);changed();value=true;break;
+      case 'snapshot':value=snapshot();break;
+      case 'preview':StatsDirectReportEditor.setEditing(false);document.body.classList.add('chart-preview');value=true;break;
+      case 'command':StatsDirectReportEditor.command(request.args.name,request.args.value);value=true;break;
+      case 'load':{
+        const incoming=request.args.entries??[{id:crypto.randomUUID(),title:request.args.title,operation:'',helpContextId:0,html:request.args.html}];
+        if(!Array.isArray(incoming)||incoming.length>1000)throw Error('Invalid report entries.');
+        const clean=[];
+        // No imported markup enters the editor until EVERY section is sanitized.
+        for(const e of incoming){const converted=JSON.parse(await StatsDirectReportImport.convert({html:e.html}));clean.push({id:crypto.randomUUID(),title:String(e.title??'Report'),operation:String(e.operation??''),helpContextId:Number.isSafeInteger(e.helpContextId)?e.helpContextId:0,html:converted.html});}
+        entries.splice(0,entries.length,...clean);undo.length=redo.length=0;render();StatsDirectReportEditor.setEditing(true);revision=0;value=snapshot();break;
+      }
+      case 'export':{
+        const state=snapshot();value=await StatsDirectReportExport.capture({format:request.args.format,title:request.args.title});
+        if(request.args.format==='html'){
+          const metadata=JSON.stringify(state).replaceAll('<','\\u003c');
+          value=value.replace('<head>','<head><meta name="statsdirect-report-format" content="1">').replace('</body>',`<script type="application/json" id="statsdirect-report-data">${metadata}</script></body>`);
+        }value={content:value,revision:state.revision};break;
+      }
+      case 'prepareClipboard':value=StatsDirectReportEditor.prepareClipboard(!!request.args.cut);break;
+      case 'officeClipboard':value=await StatsDirectReportExport.clipboard({fragment:request.args.html});break;
+      case 'cut':value=StatsDirectReportEditor.cutPrepared(request.args.token);break;
+      case 'preparePaste':value=StatsDirectReportEditor.preparePaste();break;
+      case 'paste':value=StatsDirectReportEditor.pastePrepared(request.args.token,request.args.payload);break;
+      default:throw Error('Unknown report command.');
+    }
+    post({action:'reply',id:request.id,value:value??null});
+  }catch(error){post({action:'reply',id:request.id,error:String(error.message??error)});}
+}};

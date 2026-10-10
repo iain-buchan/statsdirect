@@ -39,6 +39,14 @@ namespace StatsDirect.TemplateProcessing
             builder.Append(html);
         }
 
+        void IRenderableVisitor.Visit(ReportPicture victim)
+        {
+            builder.Append("<img alt=\"R chart\" width=\"").Append(victim.Width)
+                .Append("\" height=\"").Append(victim.Height)
+                .Append("\" src=\"data:image/png;base64,").Append(Convert.ToBase64String(victim.Png))
+                .Append("\" />");
+        }
+
         private ReportRenderer GetReportRenderer(string mimeType)
         {
             if ("application/x-statsdirect-creole".Equals(mimeType))

@@ -17,14 +17,17 @@ namespace StatsDirect.TemplateProcessing
                 using IChartRenderer ch = ChartRendererFactory.ChartRendererFor(cd, CANVAS_FACTORY);
                 ParameterBag results = ch.Plot(host, false);
                 if (cd.IsAscii)
-                    html = ch.GetAscii().Replace(Environment.NewLine, "<br />");
+                    html = "<pre>" + System.Net.WebUtility.HtmlEncode(ch.GetAscii()) + "</pre>";
                 else
-                    html = new StreamReader(ch.Canvas.DetachAndReturnImageStream(), Encoding.UTF8).ReadToEnd();
+                    {
+                    using var reader = new StreamReader(ch.Canvas.DetachAndReturnImageStream(), Encoding.UTF8);
+                    html = reader.ReadToEnd();
+                }
                 return results;
             }
             catch (Exception ex) when (ex is not StatsDirect.Utilities.TemplateOperationCancelledException && ex is not OutOfMemoryException)
             {
-                // as in RtfImageRenderer: keep the report and say why the chart is missing
+                // Keep the report and say why the chart is missing
                 html = "<p>(Chart not drawn: " + System.Net.WebUtility.HtmlEncode(ex.Message) + ")</p>";
                 return new ParameterBag();
             }

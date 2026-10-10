@@ -635,7 +635,7 @@ namespace StatsDirect.Builtins
                 titlesList.Add(titlesParameters);
                 string val = sx[i].Title;
                 if ((i + 1) % 3 == 0 && data.VariableCount > 3)
-                    val += Formatting.RTFCRLF;
+                    val += Environment.NewLine;
                 titlesParameters.AddOutput("title", val);
             }
             List<ParameterBag> fieldsList = new();

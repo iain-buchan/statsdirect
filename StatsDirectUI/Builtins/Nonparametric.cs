@@ -1,5 +1,3 @@
-using DevExpress.Drawing.Internal.Fonts.Interop;
-using DevExpress.XtraRichEdit.Layout;
 using Microsoft.CodeAnalysis.VisualBasic.Syntax;
 using StatsDirect.Data;
 using StatsDirect.Numerics;

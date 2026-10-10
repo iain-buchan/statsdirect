@@ -2,7 +2,7 @@
 
 This is the source code for www.statsdirect.com statistical software.
 
-It is a 100% C# project targeting .Net and has two Microsoft Windows specific components: [SpreadsheetGear](https://www.spreadsheetgear.com) for data management, and [DevExpress RichEdit](https://www.devexpress.com) for report editing. The classes that wrap these components are designed to swap alternatives in/out.
+It is a 100% C# project targeting .Net and uses [SpreadsheetGear](https://www.spreadsheetgear.com) for data management and [Microsoft WebView2](https://developer.microsoft.com/en-us/microsoft-edge/webview2/) to edit HTML reports with SVG charts. The classes that wrap these components are designed to swap alternatives in/out.
 
 The code is evolving toward a cross-platform application with generative AI interaction. The history of the code is described at <https://www.statsdirect.com/technology.aspx>.
 

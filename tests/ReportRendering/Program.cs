@@ -4,7 +4,7 @@ using StatsDirect.TemplateProcessing;
 using StatsDirect.Templates;
 
 // Checks of the rendering of reports as HTML (StatsDirectUI/TemplateProcessing/CreoleHtmlReportRenderer.cs), which the Mac version
-// shows and the Windows report window does not (it uses rich text): the text of a substituted value is to be encoded as the text
+// and Windows report windows both show: the text of a substituted value is to be encoded as the text
 // of the template is, so that a P value below the display threshold, "P < 0.0001", and a title with an ampersand or an angle
 // bracket give HTML that is well formed.  Run with: dotnet run -c Release
 

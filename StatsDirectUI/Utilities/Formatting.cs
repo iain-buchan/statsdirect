@@ -15,7 +15,6 @@ namespace StatsDirect.Utilities
         public const string ASTERISK = "*";
         public const string WRNCOLON = "Warning: ";
         public const string ERRCOLON = "Error: ";
-        public const string RTFCRLF = @"\par ";
 
         private static string DecimalSeparator => CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
 

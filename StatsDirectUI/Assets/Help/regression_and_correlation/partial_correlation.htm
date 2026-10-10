@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd" lang="en-gb" xml:lang="en-gb" class="_Skins_SD_Web_Skin" data-mc-search-type="Stem" data-mc-help-system-file-name="index.xml" data-mc-path-to-help-system="../" data-mc-has-content-body="True" data-mc-toc-path="Regression and correlation" data-mc-target-type="WebHelp2" data-mc-runtime-file-type="Topic;Default" data-mc-preload-images="false" data-mc-in-preview-mode="false">
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta charset="utf-8" />
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" /><title>Partial Correlation - StatsDirect</title>
+        <link rel="shortcut icon" href="../resources/images/sd3.ico" />
+        <link href="../Skins/Default/Stylesheets/Slideshow.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../Skins/Default/Stylesheets/TextEffects.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../Skins/Default/Stylesheets/Topic.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../Skins/Default/Stylesheets/Components/Styles.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../Skins/Default/Stylesheets/Components/Tablet.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../Skins/Default/Stylesheets/Components/Mobile.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../Skins/Default/Stylesheets/Components/Print.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../Skins/Fluid/stylesheets/foundation.6.2.3.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../Skins/Fluid/stylesheets/styles.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../Skins/Fluid/stylesheets/tablet.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../Skins/Fluid/stylesheets/mobile.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../Skins/Fluid/stylesheets/print.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../resources/stylesheets/desktop.css" rel="stylesheet" type="text/css" />
+        <script src="../resources/Scripts/jquery.min.js" type="text/javascript">
+        </script>
+        <script src="../resources/Scripts/purify.min.js" type="text/javascript" defer="defer">
+        </script>
+        <script src="../resources/Scripts/require.min.js" type="text/javascript" defer="defer">
+        </script>
+        <script src="../resources/Scripts/require.config.js" type="text/javascript" defer="defer">
+        </script>
+        <script src="../resources/Scripts/foundation.6.2.3_custom.js" type="text/javascript" defer="defer">
+        </script>
+        <script src="../resources/Scripts/plugins.min.js" type="text/javascript" defer="defer">
+        </script>
+        <script src="../resources/Scripts/MadCapAll.js" type="text/javascript" defer="defer">
+        </script>
+    </head>
+    <body>
+        <div class="foundation-wrap off-canvas-wrapper">
+            <div class="off-canvas-wrapper-inner" data-off-canvas-wrapper="">
+                <aside class="off-canvas position-right" role="complementary" id="offCanvas" data-off-canvas="" data-position="right" data-mc-ignore="true">
+                    <ul class="off-canvas-accordion vertical menu off-canvas-list" data-accordion-menu="" data-mc-back-link="Back" data-mc-css-tree-node-expanded="is-accordion-submenu-parent" data-mc-css-tree-node-collapsed="is-accordion-submenu-parent" data-mc-css-sub-menu="vertical menu is-accordion-submenu nested" data-mc-include-indicator="False" data-mc-include-icon="False" data-mc-include-parent-link="True" data-mc-include-back="False" data-mc-defer-expand-event="True" data-mc-expanded-event="down.zf.accordionMenu up.zf.accordionMenu" data-mc-expand-event="click.zf.accordionMenu" data-mc-toc="True">
+                    </ul>
+                </aside>
+                <div class="off-canvas-content inner-wrap" data-off-canvas-content="">
+                    <div data-sticky-container="" class="title-bar-container">
+                        <nav class="title-bar tab-bar sticky" aria-label="Main navigation and search" data-sticky="" data-options="marginTop:0" style="width:100%" data-sticky-on="only screen and (max-width: 1279px)" data-mc-ignore="true"><a class="skip-to-content fluid-skip showOnFocus" href="#">Skip To Main Content</a>
+                            <div class="middle title-bar-section outer-row clearfix">
+                                <div class="menu-icon-container relative clearfix">
+                                    <div class="central-account-wrapper">
+                                        <div class="central-dropdown"><a class="central-account-drop"><span class="central-account-image"></span><span class="central-account-text">Account</span></a>
+                                            <div class="central-dropdown-content"><a class="MCCentralLink central-dropdown-content-settings">Settings</a>
+                                                <hr class="central-separator" /><a class="MCCentralLink central-dropdown-content-logout">Logout</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button class="menu-icon" aria-label="Show Navigation Panel" data-toggle="offCanvas"><span></span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="title-bar-layout outer-row">
+                                <div class="logo-wrapper"><a class="logo" href="../contents.htm" alt="Logo"></a>
+                                </div>
+                                <div class="navigation-wrapper nocontent">
+                                    <ul class="navigation clearfix" data-mc-css-tree-node-has-children="has-children" data-mc-css-sub-menu="sub-menu" data-mc-expand-event="mouseenter" data-mc-top-nav-menu="True" data-mc-max-depth="3" data-mc-include-icon="False" data-mc-include-indicator="False" data-mc-include-children="True" data-mc-include-siblings="True" data-mc-include-parent="True" data-mc-toc="True">
+                                        <li class="placeholder" style="visibility:hidden"><a>placeholder</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="central-account-wrapper">
+                                    <div class="central-dropdown"><a class="central-account-drop"><span class="central-account-image"></span><span class="central-account-text">Account</span></a>
+                                        <div class="central-dropdown-content"><a class="MCCentralLink central-dropdown-content-settings">Settings</a>
+                                            <hr class="central-separator" /><a class="MCCentralLink central-dropdown-content-logout">Logout</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="nav-search-wrapper">
+                                    <div class="nav-search row">
+                                        <form class="search" action="#">
+                                            <div class="search-bar search-bar-container needs-pie">
+                                                <input class="search-field needs-pie" type="search" aria-label="Search Field" placeholder="Search" />
+                                                <div class="search-filter-wrapper"><span class="invisible-label" id="search-filters-label">Filter: </span>
+                                                    <div class="search-filter" aria-haspopup="true" aria-controls="sf-content" aria-expanded="false" aria-label="Search Filter" title="All Files" role="button" tabindex="0">
+                                                    </div>
+                                                    <div class="search-filter-content" id="sf-content">
+                                                        <ul>
+                                                            <li>
+                                                                <button class="mc-dropdown-item" aria-labelledby="search-filters-label filterSelectorLabel-00001"><span id="filterSelectorLabel-00001">All Files</span>
+                                                                </button>
+                                                            </li>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                                <div class="search-submit-wrapper" dir="ltr">
+                                                    <div class="search-submit" title="Search" role="button" tabindex="0"><span class="invisible-label">Submit Search</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </nav>
+                    </div>
+                    <div class="main-section">
+                        <div class="row outer-row sidenav-layout">
+                            <nav class="sidenav-wrapper">
+                                <div class="sidenav-container">
+                                    <ul class="off-canvas-accordion vertical menu sidenav" data-accordion-menu="" data-mc-css-tree-node-expanded="is-accordion-submenu-parent" data-mc-css-tree-node-collapsed="is-accordion-submenu-parent" data-mc-css-sub-menu="vertical menu accordion-menu is-accordion-submenu nested" data-mc-include-indicator="False" data-mc-include-icon="False" data-mc-include-parent-link="False" data-mc-include-back="False" data-mc-defer-expand-event="True" data-mc-expanded-event="down.zf.accordionMenu up.zf.accordionMenu" data-mc-expand-event="click.zf.accordionMenu" data-mc-toc="True" data-mc-side-nav-menu="True">
+                                    </ul>
+                                </div>
+                            </nav>
+                            <div class="body-container">
+                                <div data-mc-content-body="True">
+                                    <div role="main" id="mc-main-content">
+                                        <h1><a name="kanchor205"></a>Partial Correlation</h1>
+                                        <p>&#160;</p>
+                                        <p>Partial correlation is a method used to describe the relationship between two variables whilst taking away the effects of another variable, or several other variables, on this relationship.</p>
+                                        <p>&#160;</p>
+                                        <p>Partial correlation is best thought of in terms of multiple regression; StatsDirect shows the partial correlation coefficient r with its main results from <a href="multiple_linear.htm">multiple linear regression</a>.</p>
+                                        <p>&#160;</p>
+                                        <p>A different way to calculate partial correlation coefficients, which does not require a full multiple regression, is show below for the sake of further explanation of the principles:</p>
+                                        <p>&#160;</p>
+                                        <p>Consider a correlation matrix for variables A, B and C (note that the multiple linear regression function in StatsDirect will output correlation matrices for you as one of its options):</p>
+                                        <p>&#160;</p>
+                                        <table>
+                                            <col />
+                                            <col />
+                                            <col />
+                                            <col />
+                                            <tr>
+                                                <td>&#160;</td>
+                                                <td width="58" style="text-decoration: underline;">A</td>
+                                                <td width="58" style="text-decoration: underline;">B</td>
+                                                <td width="58" style="text-decoration: underline;">C</td>
+                                            </tr>
+                                            <tr>
+                                                <td>A:</td>
+                                                <td width="58">*</td>
+                                                <td width="58">&#160;</td>
+                                                <td width="58">&#160;</td>
+                                            </tr>
+                                            <tr>
+                                                <td>B:</td>
+                                                <td width="58">r(AB)</td>
+                                                <td width="58">*</td>
+                                                <td width="58">&#160;</td>
+                                            </tr>
+                                            <tr>
+                                                <td>C:</td>
+                                                <td width="58">r(AC)</td>
+                                                <td width="58">r(BC)</td>
+                                                <td width="58">*</td>
+                                            </tr>
+                                        </table>
+                                        <p>&#160;</p>
+                                        <p>The partial correlation of A and B adjusted for C is:</p>
+                                        <p>
+                                            <img src="../generatedimages/equations/equation187.svg" alt="" class="mcReset" />
+                                        </p>
+                                        <p>&#160;</p>
+                                        <p>The same can be done using Spearman's rank correlation co-efficient.</p>
+                                        <p>&#160;</p>
+                                        <p>The hypothesis test for the partial correlation co-efficient is performed in the same way as for the usual correlation co-efficient but it is based upon n-3 degrees of freedom.</p>
+                                        <p>&#160;</p>
+                                        <p>Please note that this sort of relationship between three or more variables is more usefully investigated using the multiple regression itself (<a href="../references/reference_list.htm#ref-altman-1991">Altman, 1991</a>).</p>
+                                        <p>&#160;</p>
+                                        <p>The general form of partial correlation from a multiple regression is as follows:</p>
+                                        <p>
+                                            <img src="../generatedimages/equations/equation188.svg" alt="" class="mcReset" />
+                                        </p>
+                                        <p>- where t<sub>k</sub> is the Student t statistic for the kth term in the linear model.</p>
+                                        <p>&#160;</p>
+                                        <p><u>Example</u>
+                                        </p>
+                                        <p>For the <a href="multiple_linear.htm">multiple linear regression</a> example (<a href="../references/reference_list.htm#ref-armitage-1994">Armitage and Berry, 1994</a>: recovery time YY after a hypotensive drug against the log dose X1 and the mean blood pressure X2 of 53 patients) the multiple regression report gives the partial correlation of each predictor with the outcome, adjusted for the other predictor, beside its coefficient:</p>
+                                        <p>&#160;</p>
+                                        <p>X1: r = 0.438695, t = 3.45194, P = 0.0011</p>
+                                        <p>X2: r = -0.317915, t = -2.371006, P = 0.0216</p>
+                                        <p>&#160;</p>
+                                        <p>The first formula above gives the same values from the three pairwise correlations of YY, X1 and X2, and the second gives them from the t statistics with the 50 residual degrees of freedom.</p>
+                                        <p>&#160;</p>
+                                        <div class="MCDropDown MCDropDown_Closed dropDown dropDownrcode"><span class="MCDropDownHead dropDownHead dropDownHeadrcode"><a class="MCDropDownHotSpot dropDownHotspot dropDownHotspotrcode MCDropDownHotSpot_ MCDropDownHotSpot_rcode rcode MCHotSpotImage" href="#" aria-expanded="false"><img class="MCDropDown_Image_Icon" src="../Skins/Default/Stylesheets/Images/transparent.gif" height="11" width="16" alt="Closed" data-mc-alt2="Open" /><img class="rlogo" src="../resources/images/rcode/r-logo.png" alt="R" title="R code for this example" style="width: 26px;height: 20px;" /> R code</a></span>
+                                            <div class="MCDropDownBody dropDownBody">
+                                                <p class="rcodenote">This R code reproduces the illustration above. It needs no packages and was checked with R 4.6.1. Paste it into R, or save it as a script and run it.</p><pre class="rcode" xml:space="preserve"># Partial correlation: the multiple linear regression topic's example (Armitage and
+# Berry 1994, recovery time YY after a hypotensive drug against the log dose X1 and
+# the mean blood pressure X2 of 53 patients) in R
+yy &lt;- c(7, 10, 18, 4, 10, 13, 21, 12, 9, 65, 20, 31, 23, 22, 13, 9, 50, 12, 11, 8, 26,
+        16, 23, 7, 11, 8, 14, 39, 28, 12, 60, 10, 60, 22, 21, 14, 4, 27, 26, 28, 15, 8,
+        46, 24, 12, 25, 45, 72, 25, 28, 10, 25, 44)
+x1 &lt;- c(2.26, 1.81, 1.78, 1.54, 2.06, 1.74, 2.56, 2.29, 1.80, 2.32, 2.04, 1.88, 1.18,
+        2.08, 1.70, 1.74, 1.90, 1.79, 2.11, 1.72, 1.74, 1.60, 2.15, 2.26, 1.65, 1.63,
+        2.40, 2.70, 1.90, 2.78, 2.27, 1.74, 2.62, 1.80, 1.81, 1.58, 2.41, 1.65, 2.24,
+        1.70, 2.45, 1.72, 2.37, 2.23, 1.92, 1.99, 1.99, 2.35, 1.80, 2.36, 1.59, 2.10,
+        1.80)
+x2 &lt;- c(66, 52, 72, 67, 69, 71, 88, 68, 59, 73, 68, 58, 61, 68, 69, 55, 67, 67, 68, 59,
+        68, 63, 65, 72, 58, 69, 70, 73, 56, 83, 67, 84, 68, 64, 60, 62, 76, 60, 60, 59,
+        84, 66, 68, 65, 69, 72, 63, 56, 70, 69, 60, 51, 61)
+
+# From the correlation matrix, as the topic's first formula: the partial
+# correlation of YY and X1 adjusted for X2
+r &lt;- cor(cbind(yy, x1, x2))
+partial &lt;- function(ab, ac, bc) (ab - ac * bc) / sqrt((1 - ac^2) * (1 - bc^2))
+six &lt;- function(x) formatC(x, digits = 6, format = "f", drop0trailing = TRUE)
+cat("r(YY, X1 | X2) =", six(partial(r["yy", "x1"], r["yy", "x2"], r["x1", "x2"])), "\n")
+cat("r(YY, X2 | X1) =", six(partial(r["yy", "x2"], r["yy", "x1"], r["x1", "x2"])), "\n")
+
+# From the multiple regression, as the topic's second formula: t over root(t squared
+# plus the residual degrees of freedom), the r the report prints beside each term
+fit &lt;- lm(yy ~ x1 + x2)
+t &lt;- summary(fit)$coefficients[, "t value"]
+df &lt;- fit$df.residual
+cat("From the regression: X1 r =", six(t["x1"] / sqrt(t["x1"]^2 + df)), " X2 r =",
+    six(t["x2"] / sqrt(t["x2"]^2 + df)), "\n")
+
+# The test of a partial correlation has n - 3 degrees of freedom here (one
+# adjusting variable); its P is the t test of the term in the regression
+pv &lt;- function(p) {
+  if (p &lt; 0.0001) "P &lt; 0.0001" else
+    paste("P =", formatC(p, digits = 4, format = "f", drop0trailing = TRUE))
+}
+for (term in c("x1", "x2")) {
+  cat(toupper(term), ": t =", six(t[term]), "on", df, "DF, two sided",
+      pv(2 * pt(-abs(t[term]), df)), "\n")
+}</pre>
+                                            </div>
+                                        </div>
+                                        <p>&#160;</p>
+                                    </div>
+                                    <MadCap:pageFooter>
+                                        <p style="font-family:Arial,sans-serif;font-size:8pt;margin-top:20pt;">Copyright © 1987-2026 Iain E. Buchan. <a href="https://www.statsdirect.com/" target="_blank">StatsDirect website</a>.</p>
+                                    </MadCap:pageFooter>
+                                </div>
+                            </div>
+                        </div>
+                    </div><a data-close="true"></a>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

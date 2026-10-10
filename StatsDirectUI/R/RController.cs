@@ -72,10 +72,10 @@ namespace StatsDirect.R
         }
 
         /// <param name="scriptBody"></param>
-        /// <param name="rtfScriptBody">A version of the script body that contains everything necessary to run the script, suitable for emitting into an RTF report window.</param>
+        /// <param name="reportScriptBody">A version of the script body that contains everything necessary to run the script, as plain text for the HTML report renderer.</param>
         /// <param name="host"></param>
         /// <returns> <code>true</code> if the script appears to have been run successfully, <code>false</code> otherwise.</returns>
-        public static Process RunScriptAndQuit(ITemplateHost host, string scriptBody, out string rtfScriptBody)
+        public static Process RunScriptAndQuit(ITemplateHost host, string scriptBody, out string reportScriptBody)
         {
             string rFolder = SDConfiguration.MyStatsDirectRFolder;
             // Just in case this is the first time the user has run an R script.  TODO: Is there a more sensible place for this?
@@ -87,11 +87,7 @@ namespace StatsDirect.R
             string repairedScriptBody = scriptBody
                 .Replace("\r", string.Empty)
                 .Replace("\n", "\r\n");
-            rtfScriptBody = (string.Format(SCRIPT_HEAD, rFolder.Replace(@"\", @"\\")) + "\r\n" + repairedScriptBody)
-                .Replace(@"\", @"\\")
-                .Replace("{", @"\{")
-                .Replace("}", @"\}")
-                .Replace("\n", "\n\\par ");
+            reportScriptBody = string.Format(SCRIPT_HEAD, rFolder.Replace(@"\", @"\\")) + "\r\n" + repairedScriptBody;
 
             using (TextWriter tw = new StreamWriter(scriptPath, false, new UTF8Encoding(false)))
             {

@@ -95,10 +95,6 @@ namespace StatsDirect.UI
                 StatsDirect.Setup.ExcelAddInRetirer.RunCurrentUser();
                 SetupInitialFiles();
 
-                // Preload a report, to ensure all the report libraries are ready to go.
-                if (!SdApplication.IsRunningOnMono)
-                    PreloadReport();
-
                 // Perform any UI hooks we need to...
                 SetupUserInterface();
 
@@ -113,29 +109,6 @@ namespace StatsDirect.UI
                 if ("FileOpen".Equals(args[0]) && null != args[1])
                     SdApplication.SoleInstance.OpenFile(args[1], true);
             SdApplication.SoleInstance.Run();
-        }
-
-        /// <summary>
-        /// Cause the report libraries to pre-load, for perceived faster first report startup.
-        /// </summary>
-        /// <remarks>Requires frmReportRichEditDummy to close itself once it has shown itself.</remarks>
-        private static void PreloadReport()
-        {
-            using frmReportRichEditDummy f = new();
-            // Ensure the form loads off the visible area on any screen - it'll load just to the right of the furthest-right screen.
-            int largestVisibleX = int.MinValue;
-            int smallestVisibleY = int.MaxValue;
-            foreach (Screen screen in Screen.AllScreens)
-            {
-                if (screen.Bounds.Right > largestVisibleX)
-                    largestVisibleX = screen.Bounds.Right;
-                if (screen.Bounds.Top < smallestVisibleY)
-                    smallestVisibleY = screen.Bounds.Top;
-            }
-            f.Left = largestVisibleX + 10;
-            f.Top = smallestVisibleY;
-            f.ShowDialog();
-            // f will auto-close itself once it's shown itself
         }
 
         private static void SetupUserInterface()

@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd" lang="en-gb" xml:lang="en-gb" class="_Skins_SD_Web_Skin" data-mc-search-type="Stem" data-mc-help-system-file-name="index.xml" data-mc-path-to-help-system="../" data-mc-has-content-body="True" data-mc-toc-path="Probability distributions" data-mc-target-type="WebHelp2" data-mc-runtime-file-type="Topic;Default" data-mc-preload-images="false" data-mc-in-preview-mode="false">
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta charset="utf-8" />
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" /><title>Kendall's tau Distribution - StatsDirect</title>
+        <link rel="shortcut icon" href="../resources/images/sd3.ico" />
+        <link href="../Skins/Default/Stylesheets/Slideshow.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../Skins/Default/Stylesheets/TextEffects.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../Skins/Default/Stylesheets/Topic.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../Skins/Default/Stylesheets/Components/Styles.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../Skins/Default/Stylesheets/Components/Tablet.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../Skins/Default/Stylesheets/Components/Mobile.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../Skins/Default/Stylesheets/Components/Print.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../Skins/Fluid/stylesheets/foundation.6.2.3.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../Skins/Fluid/stylesheets/styles.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../Skins/Fluid/stylesheets/tablet.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../Skins/Fluid/stylesheets/mobile.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../Skins/Fluid/stylesheets/print.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../resources/stylesheets/desktop.css" rel="stylesheet" type="text/css" />
+        <script src="../resources/Scripts/jquery.min.js" type="text/javascript">
+        </script>
+        <script src="../resources/Scripts/purify.min.js" type="text/javascript" defer="defer">
+        </script>
+        <script src="../resources/Scripts/require.min.js" type="text/javascript" defer="defer">
+        </script>
+        <script src="../resources/Scripts/require.config.js" type="text/javascript" defer="defer">
+        </script>
+        <script src="../resources/Scripts/foundation.6.2.3_custom.js" type="text/javascript" defer="defer">
+        </script>
+        <script src="../resources/Scripts/plugins.min.js" type="text/javascript" defer="defer">
+        </script>
+        <script src="../resources/Scripts/MadCapAll.js" type="text/javascript" defer="defer">
+        </script>
+    </head>
+    <body>
+        <div class="foundation-wrap off-canvas-wrapper">
+            <div class="off-canvas-wrapper-inner" data-off-canvas-wrapper="">
+                <aside class="off-canvas position-right" role="complementary" id="offCanvas" data-off-canvas="" data-position="right" data-mc-ignore="true">
+                    <ul class="off-canvas-accordion vertical menu off-canvas-list" data-accordion-menu="" data-mc-back-link="Back" data-mc-css-tree-node-expanded="is-accordion-submenu-parent" data-mc-css-tree-node-collapsed="is-accordion-submenu-parent" data-mc-css-sub-menu="vertical menu is-accordion-submenu nested" data-mc-include-indicator="False" data-mc-include-icon="False" data-mc-include-parent-link="True" data-mc-include-back="False" data-mc-defer-expand-event="True" data-mc-expanded-event="down.zf.accordionMenu up.zf.accordionMenu" data-mc-expand-event="click.zf.accordionMenu" data-mc-toc="True">
+                    </ul>
+                </aside>
+                <div class="off-canvas-content inner-wrap" data-off-canvas-content="">
+                    <div data-sticky-container="" class="title-bar-container">
+                        <nav class="title-bar tab-bar sticky" aria-label="Main navigation and search" data-sticky="" data-options="marginTop:0" style="width:100%" data-sticky-on="only screen and (max-width: 1279px)" data-mc-ignore="true"><a class="skip-to-content fluid-skip showOnFocus" href="#">Skip To Main Content</a>
+                            <div class="middle title-bar-section outer-row clearfix">
+                                <div class="menu-icon-container relative clearfix">
+                                    <div class="central-account-wrapper">
+                                        <div class="central-dropdown"><a class="central-account-drop"><span class="central-account-image"></span><span class="central-account-text">Account</span></a>
+                                            <div class="central-dropdown-content"><a class="MCCentralLink central-dropdown-content-settings">Settings</a>
+                                                <hr class="central-separator" /><a class="MCCentralLink central-dropdown-content-logout">Logout</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button class="menu-icon" aria-label="Show Navigation Panel" data-toggle="offCanvas"><span></span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="title-bar-layout outer-row">
+                                <div class="logo-wrapper"><a class="logo" href="../contents.htm" alt="Logo"></a>
+                                </div>
+                                <div class="navigation-wrapper nocontent">
+                                    <ul class="navigation clearfix" data-mc-css-tree-node-has-children="has-children" data-mc-css-sub-menu="sub-menu" data-mc-expand-event="mouseenter" data-mc-top-nav-menu="True" data-mc-max-depth="3" data-mc-include-icon="False" data-mc-include-indicator="False" data-mc-include-children="True" data-mc-include-siblings="True" data-mc-include-parent="True" data-mc-toc="True">
+                                        <li class="placeholder" style="visibility:hidden"><a>placeholder</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="central-account-wrapper">
+                                    <div class="central-dropdown"><a class="central-account-drop"><span class="central-account-image"></span><span class="central-account-text">Account</span></a>
+                                        <div class="central-dropdown-content"><a class="MCCentralLink central-dropdown-content-settings">Settings</a>
+                                            <hr class="central-separator" /><a class="MCCentralLink central-dropdown-content-logout">Logout</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="nav-search-wrapper">
+                                    <div class="nav-search row">
+                                        <form class="search" action="#">
+                                            <div class="search-bar search-bar-container needs-pie">
+                                                <input class="search-field needs-pie" type="search" aria-label="Search Field" placeholder="Search" />
+                                                <div class="search-filter-wrapper"><span class="invisible-label" id="search-filters-label">Filter: </span>
+                                                    <div class="search-filter" aria-haspopup="true" aria-controls="sf-content" aria-expanded="false" aria-label="Search Filter" title="All Files" role="button" tabindex="0">
+                                                    </div>
+                                                    <div class="search-filter-content" id="sf-content">
+                                                        <ul>
+                                                            <li>
+                                                                <button class="mc-dropdown-item" aria-labelledby="search-filters-label filterSelectorLabel-00001"><span id="filterSelectorLabel-00001">All Files</span>
+                                                                </button>
+                                                            </li>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                                <div class="search-submit-wrapper" dir="ltr">
+                                                    <div class="search-submit" title="Search" role="button" tabindex="0"><span class="invisible-label">Submit Search</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </nav>
+                    </div>
+                    <div class="main-section">
+                        <div class="row outer-row sidenav-layout">
+                            <nav class="sidenav-wrapper">
+                                <div class="sidenav-container">
+                                    <ul class="off-canvas-accordion vertical menu sidenav" data-accordion-menu="" data-mc-css-tree-node-expanded="is-accordion-submenu-parent" data-mc-css-tree-node-collapsed="is-accordion-submenu-parent" data-mc-css-sub-menu="vertical menu accordion-menu is-accordion-submenu nested" data-mc-include-indicator="False" data-mc-include-icon="False" data-mc-include-parent-link="False" data-mc-include-back="False" data-mc-defer-expand-event="True" data-mc-expanded-event="down.zf.accordionMenu up.zf.accordionMenu" data-mc-expand-event="click.zf.accordionMenu" data-mc-toc="True" data-mc-side-nav-menu="True">
+                                    </ul>
+                                </div>
+                            </nav>
+                            <div class="body-container">
+                                <div data-mc-content-body="True">
+                                    <div role="main" id="mc-main-content">
+                                        <h1><a name="kanchor19"></a>Kendall's Tau Distribution</h1>
+                                        <p>&#160;</p>
+                                        <p>Menu location: <b>Analysis_Distributions_Kendall's tau</b>.</p>
+                                        <p>&#160;</p>
+                                        <p>Given a value for the test statistic (S) associated with <a href="../nonparametric_methods/kendall_correlation.htm">Kendall's tau (t)</a> this function calculates the probability of obtaining a value greater than or equal to S for a given sample size.</p>
+                                        <p>&#160;</p>
+                                        <p>Consider two samples, x and y, each of size n. The total number of possible pairings of x with y observations is n(n-1)/2. Now consider ordering the pairs by the x values and then by the y values. If x3 &gt; y3 when ordered on both x and y then the third pair is concordant, otherwise the third pair is discordant. S is the difference between the number of concordant (ordered in the same way, n<sub>c</sub>) and discordant (ordered differently, n<sub>d</sub>) pairs.</p>
+                                        <p>&#160;</p>
+                                        <p>Tau (τ) is related to S by:</p>
+                                        <p>
+                                            <img src="../generatedimages/equations/equation115.svg" alt="" class="mcReset" />
+                                        </p>
+                                        <p>&#160;</p>
+                                        <p>If there are tied (same value) observations then τ<sub>b</sub> is used:</p>
+                                        <p>
+                                            <img src="../generatedimages/equations/equation116.svg" alt="" class="mcReset" />
+                                        </p>
+                                        <p>- where t<sub>i</sub> is the number of observations tied at a particular rank of x and u is the number tied at a rank of y. When there are no ties τ<sub>b</sub> =  τ.</p>
+                                        <p>&#160;</p>
+                                        <p>This function does not calculate probabilities for τ<sub>b</sub>.</p>
+                                        <p>&#160;</p>
+                                        <p><u>Technical Validation</u>
+                                        </p>
+                                        <p>Probabilities are calculated by summation across all permutations when n ≤ 50 and by an Edgeworth series approximation when n &gt; 50 (<a href="../references/reference_list.htm#ref-best-1974">Best and Gipps, 1974</a>). The series is within 0.0000005 of the exact probability at n = 51 and within 0.00000003 by n = 100; in the far tail it is less good in proportion to the probability. The two samples are assumed to have been ranked without ties.</p>
+                                        <p>&#160;</p>
+                                        <p>The inverse is calculated by finding the largest value of S that gives a calculated upper tail probability (using the method above) closest to but not less than the P value entered. Please note that the results may differ slightly from tables in textbooks because StatsDirect calculates the inverse of Kendall's statistic more accurately than the routines used to calculate Best's widely quoted 1974 table.</p>
+                                        <p>&#160;</p>
+                                        <p><u>Illustration</u>
+                                        </p>
+                                        <p>Consider the ten pairs of rankings in the <a href="../nonparametric_methods/kendall_correlation.htm">Kendall rank correlation</a> example, a tutor's rankings of ten students for suitability to their career and for knowledge of psychology. There are 34 concordant and 11 discordant pairs, so S = 23 and τ = 23/45 = 0.511111. To calculate the probability of an S at least this large when the two rankings are independent, select Kendall's tau from the Distributions section of the Analysis menu, enter 10 as the sample size and 23 as S (or enter 0.511111 as tau, from which StatsDirect calculates S) and click Calculate. StatsDirect shows the upper tail probability and reports it as:</p>
+                                        <p>&#160;</p>
+                                        <p>P(Kendall's T 23, n 10) = 0.023311287477954 upper tail</p>
+                                        <p>&#160;</p>
+                                        <p>Of the 10! = 3,628,800 equally likely orderings of one ranking against the other, 84,592 give an S of 23 or more. This is the upper side P of the exact test in the Kendall rank correlation report (P = 0.0233); the distribution of S is symmetrical about zero, so the two sided P is twice it (P = 0.0466).</p>
+                                        <p>&#160;</p>
+                                        <p>For the inverse, enter 10 as the sample size and 0.05 as the upper tail P and click Invert. StatsDirect finds the largest S whose upper tail probability is not less than 0.05, shows it with its tau (S = 19, τ = 0.422222 to six places) and reports the probability that it cuts off:</p>
+                                        <p>&#160;</p>
+                                        <p>Kendall's T (upper tail P 0.05, n 10) = 0.054156746031746</p>
+                                        <p>&#160;</p>
+                                        <p>So with ten pairs an S of 19 does not quite reach the one sided 5% level. The next possible value, S = 21 (τ = 0.466667), is the smallest that does, with an upper tail probability of 0.036275077160494: with so few pairs the attainable significance levels are coarse.</p>
+                                        <p>&#160;</p>
+                                        <p>StatsDirect displays the probabilities in this illustration to 15 decimal places; the R code below reproduces them.</p>
+                                        <div class="MCDropDown MCDropDown_Closed dropDown dropDownrcode"><span class="MCDropDownHead dropDownHead dropDownHeadrcode"><a class="MCDropDownHotSpot dropDownHotspot dropDownHotspotrcode MCDropDownHotSpot_ MCDropDownHotSpot_rcode rcode MCHotSpotImage" href="#" aria-expanded="false"><img class="MCDropDown_Image_Icon" src="../Skins/Default/Stylesheets/Images/transparent.gif" height="11" width="16" alt="Closed" data-mc-alt2="Open" /><img class="rlogo" src="../resources/images/rcode/r-logo.png" alt="R" title="R code for this example" style="width: 26px;height: 20px;" /> R code</a></span>
+                                            <div class="MCDropDownBody dropDownBody">
+                                                <p class="rcodenote">This R code reproduces the illustration above. It needs no packages and was checked with R 4.6.1. Paste it into R, or save it as a script and run it.</p><pre class="rcode" xml:space="preserve"># Kendall's tau distribution: the StatsDirect help illustration (S = 23 for the 10 pairs
+# of rankings of the Kendall rank correlation example, Armitage and Berry 1994, p. 466,
+# the test workbook's Nonparametric worksheet columns Career and Psychology; and the S
+# that cuts off an upper tail of 0.05) in R
+career &lt;- c(4, 10, 3, 1, 9, 2, 6, 7, 8, 5)
+psychology &lt;- c(5, 8, 6, 2, 10, 3, 9, 4, 7, 1)
+n &lt;- length(career)                       # 10 pairs
+
+# For each pair of students, +1 if the two rankings order them the same way (a
+# concordant pair), -1 if they order them differently (discordant); S is the sum
+q &lt;- sign(outer(career, career, "-")) * sign(outer(psychology, psychology, "-"))
+concordant &lt;- sum(q[upper.tri(q)] &gt; 0)
+discordant &lt;- sum(q[upper.tri(q)] &lt; 0)
+S &lt;- concordant - discordant
+cat(concordant, "concordant and", discordant, "discordant pairs, so S =", S, "\n")
+
+# The distribution of S for n pairs ranked without ties when the two rankings are
+# independent: each of the n! orderings of one ranking against the other is equally
+# likely. For n = 5 all 120 orderings can be listed and S counted for each
+perms &lt;- function(m) {
+  if (m == 1) return(matrix(1))
+  p &lt;- perms(m - 1)
+  do.call(rbind, lapply(1:m, function(i) cbind(i, p + (p &gt;= i))))
+}
+score &lt;- function(y) {
+  q &lt;- sign(outer(seq_along(y), seq_along(y), "-")) * sign(outer(y, y, "-"))
+  sum(q[upper.tri(q)])
+}
+print(table(apply(perms(5), 1, score)))   # S takes the values -10, -8, ..., 10
+
+# Listing the orderings is impractical for larger n (10! is 3,628,800), but the
+# counts follow from a recurrence: adding the mth item to an ordering of m - 1 items
+# adds 0 to m - 1 discordant pairs, each equally often, so the counts of orderings
+# by their number of discordant pairs (0 to n(n-1)/2) are the coefficients of the
+# product of the polynomials 1 + x + ... + x^(m-1) for m = 2 to n. S is the number
+# of concordant pairs less the number discordant: n(n-1)/2 - 2 * discordant
+discordant_counts &lt;- function(n) {
+  f &lt;- 1
+  for (m in 2:n) {
+    g &lt;- numeric(length(f) + m - 1)
+    for (j in 1:m) g[j:(j + length(f) - 1)] &lt;- g[j:(j + length(f) - 1)] + f
+    f &lt;- g
+  }
+  f
+}
+stopifnot(all(rev(discordant_counts(5)) == table(apply(perms(5), 1, score))))
+upper &lt;- function(k, n) {                 # P(S &gt;= k), the upper tail probability
+  f &lt;- discordant_counts(n)
+  s &lt;- n * (n - 1) / 2 - 2 * (seq_along(f) - 1)
+  sum(f[s &gt;= k]) / sum(f)
+}
+f &lt;- discordant_counts(n)
+at_least_S &lt;- sum(f[n * (n - 1) / 2 - 2 * (seq_along(f) - 1) &gt;= S])
+cat(format(at_least_S, big.mark = ","), "of the", format(sum(f), big.mark = ","),
+    "orderings give S of", S, "or more\n")
+
+fifteen &lt;- function(x) formatC(x, digits = 15, format = "f", drop0trailing = TRUE)
+six &lt;- function(x) formatC(x, digits = 6, format = "f", drop0trailing = TRUE)
+pv &lt;- function(p) {
+  if (p &lt; 0.0001) "P &lt; 0.0001" else paste("P =", formatC(p, digits = 4, format = "f"))
+}
+
+# The line the StatsDirect dialog reports for S = 23 with 10 pairs, to 15 decimal
+# places, with the tau it shows (S divided by the n(n-1)/2 pairs)
+cat("Kendall's tau =", fifteen(S / (n * (n - 1) / 2)), "\n")
+cat("P(Kendall's T ", S, ", n ", n, ") = ", fifteen(upper(S, n)), " upper tail\n",
+    sep = "")
+cat("Upper tail", pv(upper(S, n)), "\n")
+# The distribution is symmetrical about 0, so the two sided P is twice the upper tail
+cat("Two sided", pv(2 * upper(S, n)), "\n")
+
+# cor.test gives the same upper tail P from the two rankings themselves: without
+# ties and with fewer than 50 pairs its P for Kendall's tau is exact. (StatsDirect
+# sums the exact distribution up to 50 pairs and uses an Edgeworth series above
+# that, where cor.test uses a normal approximation, so the two then differ a little.)
+print(cor.test(career, psychology, method = "kendall", alternative = "greater"))
+
+# The inverse: the largest S whose upper tail probability is not less than the P
+# entered, here 0.05 for 10 pairs. StatsDirect shows that S and its tau, and reports
+# the probability it actually cuts off
+critical &lt;- function(P, n) {
+  f &lt;- discordant_counts(n)
+  s &lt;- n * (n - 1) / 2 - 2 * (seq_along(f) - 1)
+  tail &lt;- cumsum(f) / sum(f)              # P(S &gt;= s) for each possible s
+  max(s[tail &gt;= P])
+}
+k &lt;- critical(0.05, n)
+cat("S =", k, "  Kendall's tau =", fifteen(k / (n * (n - 1) / 2)), "\n")
+cat("Kendall's T (upper tail P 0.05, n ", n, ") = ", fifteen(upper(k, n)), "\n",
+    sep = "")
+# The next larger possible S cuts off less than 0.05: the smallest S that is
+# significant at the one sided 5% level
+cat("S = ", k + 2, " (tau = ", six((k + 2) / (n * (n - 1) / 2)), "): P(Kendall's T ",
+    k + 2, ", n ", n, ") = ", fifteen(upper(k + 2, n)), " upper tail\n", sep = "")</pre>
+                                            </div>
+                                        </div>
+                                        <p>&#160;</p>
+                                    </div>
+                                    <MadCap:pageFooter>
+                                        <p style="font-family:Arial,sans-serif;font-size:8pt;margin-top:20pt;">Copyright © 1987-2026 Iain E. Buchan. <a href="https://www.statsdirect.com/" target="_blank">StatsDirect website</a>.</p>
+                                    </MadCap:pageFooter>
+                                </div>
+                            </div>
+                        </div>
+                    </div><a data-close="true"></a>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

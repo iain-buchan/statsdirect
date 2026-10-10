@@ -8,7 +8,7 @@ You will need:
 * A Windows 10 or 11 system on which to build - the StatsDirect UI is WinForms-only, and does not (yet!) run on Linux or Mac.
 * A recent release of the [.Net 10 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/10.0)
 * A trial or purchased license for [SpreadsheetGear for Windows](https://www.spreadsheetgear.com/) that allows you to use Hotfix 9.3.84, the version this project references, or later. Versions before 9.3.56 are not compatible with .Net 10.
-* A trial or purchased license for [DevExpress Components for WinForms](https://www.devexpress.com/products/net/controls/winforms/).
+* The [Microsoft Edge WebView2 Evergreen Runtime](https://developer.microsoft.com/en-us/microsoft-edge/webview2/) for reports, and its x64 standalone installer in `DownloadedBinaries` when building setup.
 * [A current installer executable for the .Net 10 Windows Desktop runtime](DownloadedBinaries/README.md), to be included in the bundled executable installer.
 
 You may want:
@@ -22,7 +22,7 @@ You may want:
 * Install the .Net SDK.
 * If you wish, install your IDE.
 * If you wish, install HeatWave.
-* Download and install the DevExpress Components for Windows, or follow DevExpress instructions to set up your NuGet package sources to include your subscription feed.
+* Install the WebView2 Evergreen Runtime if it is not already present. No DevExpress subscription or package feed is needed.
 * Follow the instructions on the SpreadsheetGear web site to obtain a license **string** from your license **key**.  Record that string.
 * Clone this repository. In these instructions, we use `<repository-root>` to refer to the top of the cloned repository.
   * Keep `<repository-root>` short, such as `C:\src\statsdirect`. Unless Windows long paths are enabled, the installer build fails with `WIX0103: Cannot find the file ...` once the path to a file in the build output passes 260 characters, which happens when the repository root is longer than about 125 characters (a clone inside a deep OneDrive or Temp folder, for example).
@@ -58,6 +58,37 @@ ReleaseWithSigning
 ### Output locations
 
 The build process copies generated installers to `<repository-root>/ReleaseBuild`.
+
+### Desktop HTML5 help
+
+The complete offline help bundle is checked in at `StatsDirectUI/Assets/Help`.
+An ordinary application or installer build copies it into `Help` beside the
+executable; Flare is not required to build StatsDirect. WebView2 displays it in
+a resizable pane on the right of the MDI workspace. **Pop out** moves the same
+browser into a companion window; **Dock** returns it. The browser is reparented,
+not reloaded, so navigation history, expanded R examples and reading position
+survive. The divider changes the pane width, and Close restores the workspace.
+The user's mode and width are retained for the current application session.
+F1, analysis/report help links and message-box Help buttons use the same viewer,
+leaving the active worksheet/report and data selection intact. During a modal
+dialog, visible help temporarily floats so it stays interactive, then returns
+to the user's chosen presentation when the dialog closes.
+
+To update the bundle, build the `SWHelp` target in the `statisticalhelp` Flare
+project (`C:/Develop/SD3Help/StatsDirect/StatsDirect.flprj` on this PC). Its local
+destination publishes directly to this checkout's `StatsDirectUI/Assets/Help`;
+adjust that destination when using another checkout. The target includes
+software-help content, uses a compact desktop stylesheet/master without web
+analytics, and generates all navigation, search, images and R dropdowns. Commit
+the entire published bundle, excluding Flare build logs/metadata (gitignored).
+Do not replace it with a partial copy of topics or the public web target.
+
+Numeric context IDs retain their historical `chm-id` XML name for compatibility
+with existing operations and the Mac host. They resolve through the generated
+`Help/Data/Alias.xml`; no CHM viewer or compiled help is used. The installer
+excludes CHM/CHW files and removes the old `StatsDirect.chm`/`StatsDirect.chw`
+during upgrades. `tests/HtmlHelp` covers the browser and context map; also test
+an upgrade on a clean Windows VM before release.
 
 ### Visual Studio 2026
 

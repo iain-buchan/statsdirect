@@ -2061,7 +2061,7 @@ namespace StatsDirect.Builtins
                 warn += "total number < 20";
             }
             if (warn.Length > 0)
-                warn += Formatting.RTFCRLF + Formatting.WRNCOLON;
+                warn += Environment.NewLine + Formatting.WRNCOLON;
             if (observedTotal < 20 || (Convert.ToDouble(expectedsBelow5) / Convert.ToDouble(nx) > 0.2))
                 warn += "TEST MAY NOT BE RELIABLE";
             if (w2.Length > 0)

@@ -6,5 +6,6 @@ namespace StatsDirect.Templates
     {
         void Visit(ReportTemplateAndParameters victim);
         void Visit(ChartDefinition victim);
+        void Visit(ReportPicture victim);
     }
 }

@@ -1,0 +1,107 @@
+/* Match the standard RTF report: Arial 10pt and the Creole result palette
+   in PrincipledCreoleRtfReportRenderer. Imported and user-applied inline
+   formatting can still override these defaults. */
+body.engine-report {
+  font-family: Arial, sans-serif;
+  font-size: 10pt;
+  line-height: 1.2;
+  color: #000;
+  margin: 0;
+  padding: 12px 24px;
+  max-width: none;
+}
+body.engine-report h1, body.engine-report h2 {
+  font-size: 10pt;
+  font-weight: bold;
+  letter-spacing: normal;
+  text-decoration: underline;
+  margin: 1em 0;
+}
+body.engine-report h2 { font-weight: normal; }
+body.engine-report p { margin: 0; }
+/* Creole tables use the RTF renderer's plain, left-aligned cells and
+   underlined (not bold or shaded) headers. Do not inherit workspace styling. */
+body.engine-report table {
+  width: auto;
+  font: inherit;
+  color: inherit;
+  margin: 1em 0;
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+body.engine-report td, body.engine-report th {
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  vertical-align: top;
+  padding: 0 9px;
+  border: 0;
+  background: transparent;
+}
+body.engine-report th { text-decoration: underline; }
+body.engine-report thead { background: transparent; }
+body.engine-report thead th { font-weight: normal; }
+/* Also apply in the importer's temporary container, before it safely inlines
+   presentation and removes classes on HTML reopening. */
+body.engine-report .ci { color: #0000ff; }
+body.engine-report .pval { color: #007f00; }
+body.engine-report .score { color: #007f7f; }
+body.engine-report .warn { color: #ff0000; }
+body.engine-report .subtotal { color: #7f0000; }
+body.engine-report .model, body.engine-report .grandtotal { color: #00007f; }
+body.engine-report pre { font-family: "Courier New", monospace; font-size: 10pt; margin: 0; }
+
+.report-toolbar, .report-controls,
+.report-toolbar button, .report-toolbar select, .report-toolbar input,
+.report-controls button, .report-controls input { font-family: Arial, sans-serif; }
+.report-entry { padding-top: 8px; }
+.report-entry + .report-entry { margin-top: 20px; padding-top: 12px; }
+.report-body { min-height: 20px; }
+body.engine-report .report-body svg, body.engine-report .report-media > img {
+  width: auto;
+  max-width: 100%;
+  margin: 16px 0;
+}
+.report-entry > header { display: flex; justify-content: flex-start; }
+.report-entry > header h2 { margin: 4px 12px 4px 0; font: 12px Arial, sans-serif; text-decoration: none; }
+.report-body:focus { outline: 1px solid #99bbb6; }
+/* Keep picture sizing controls out of reading mode. */
+body:not(.report-editing) .report-chart > .report-controls,
+body:not(.report-editing) .report-media > .report-controls,
+#empty[hidden] { display: none; }
+.report-editing [data-select-result] { cursor: pointer; }
+.report-editing [data-select-result]:focus-visible,
+.report-editing .report-result-selected > .report-body,
+.report-editing .report-media:focus { outline: 2px solid #278a7c; outline-offset: 3px; }
+.report-toolbar {
+  border: 0;
+  border-bottom: 1px solid #d7e6e2;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 4px 0 8px;
+}
+/* Toolbar symbols are SVG, not charts. Keep chart layout rules from stretching
+   them; the browser rasterizes these vectors at the display's native scale. */
+.report-toolbar button, .report-toolbar select, .report-toolbar input { height: 32px; }
+.report-toolbar .report-icon-button { width: 32px; padding: 5px; font-size: 16px; }
+.report-toolbar .report-icon-button svg {
+  display: block;
+  width: 20px;
+  height: 20px;
+  max-width: none;
+  margin: 0;
+  background: transparent;
+  flex-shrink: 0;
+  stroke-width: 2;
+}
+@media print {
+  .report-result-selected > .report-body, [data-select-result], .report-media { outline: none !important; }
+  #report-toolbar, .report-controls { display: none !important; }
+  body.engine-report { padding: 0; max-width: none; }
+  .report-entry { break-before: auto; }
+  tr, svg, img { break-inside: avoid; }
+  thead { display: table-header-group; }
+}
+
+/* The chart-options preview uses the same SVG renderer without editing controls. */
+body.chart-preview .report-controls { display:none !important; }

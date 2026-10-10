@@ -116,8 +116,6 @@ namespace StatsDirect.UI
             this.toolStripSeparator7 = new System.Windows.Forms.ToolStripSeparator();
             this.lblActiveReport = new System.Windows.Forms.ToolStripLabel();
             this.cboActiveReport = new System.Windows.Forms.ToolStripComboBox();
-            this.toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
-            this.cboRecentOperations = new System.Windows.Forms.ToolStripComboBox();
             this.pnlTop = new System.Windows.Forms.Panel();
             this.pnlModalMessage = new System.Windows.Forms.Panel();
             this.picModalMessageIcon = new System.Windows.Forms.PictureBox();
@@ -864,9 +862,7 @@ namespace StatsDirect.UI
             this.helpToolStripButton,
             this.toolStripSeparator7,
             this.lblActiveReport,
-            this.cboActiveReport,
-            this.toolStripLabel1,
-            this.cboRecentOperations});
+            this.cboActiveReport});
             this.toolStrip.Location = new System.Drawing.Point(0, 31);
             this.toolStrip.MinimumSize = new System.Drawing.Size(0, 27);
             this.toolStrip.Name = "toolStrip";
@@ -982,22 +978,6 @@ namespace StatsDirect.UI
             this.cboActiveReport.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.cboActiveReport.Name = "cboActiveReport";
             this.cboActiveReport.Size = new System.Drawing.Size(121, 21);
-            // 
-            // toolStripLabel1
-            // 
-            this.toolStripLabel1.Name = "toolStripLabel1";
-            this.toolStripLabel1.Size = new System.Drawing.Size(97, 24);
-            this.toolStripLabel1.Text = "Recent operations:";
-            // 
-            // cboRecentOperations
-            // 
-            this.cboRecentOperations.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cboRecentOperations.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cboRecentOperations.Items.AddRange(new object[] {
-            "(none)"});
-            this.cboRecentOperations.Name = "cboRecentOperations";
-            this.cboRecentOperations.Size = new System.Drawing.Size(300, 27);
-            this.cboRecentOperations.SelectedIndexChanged += new System.EventHandler(this.cboRecentOperations_SelectedIndexChanged);
             // 
             // pnlTop
             // 
@@ -1455,9 +1435,7 @@ namespace StatsDirect.UI
             // openFileDialog
             // 
             this.openFileDialog.DefaultExt = "xlsx";
-            this.openFileDialog.Filter = "Data or reports|*.xls;*.xlsx;*.csv;*.rtf;*.sdw|HTML files (*.htm, *.html, *.mht, " +
-    "*.mhtml)|*.htm*;*.mht*|Script files (*.cs, *.vb, *.r)|*.cs;*.vb;*.r|All files|*." +
-    "*";
+            this.openFileDialog.Filter = "Data or reports|*.xls;*.xlsx;*.csv;*.html;*.htm;*.txt;*.sdw|HTML reports (*.htm, *.html)|*.htm;*.html|Text files (*.txt)|*.txt|Script files (*.cs, *.vb, *.r)|*.cs;*.vb;*.r|All files|*.*";
             // 
             // postTabTimer
             // 
@@ -1649,8 +1627,6 @@ namespace StatsDirect.UI
         private System.Windows.Forms.Button cmdModalMessage2;
         private System.Windows.Forms.PictureBox picModalMessageIcon;
         private System.Windows.Forms.Label lblGroupsBy;
-        private System.Windows.Forms.ToolStripComboBox cboRecentOperations;
-        private System.Windows.Forms.ToolStripLabel toolStripLabel1;
         private System.Windows.Forms.ToolTip tipBatch;
         private System.Windows.Forms.PictureBox picLinkArrow;
         private System.Windows.Forms.PictureBox picArrowAcross;

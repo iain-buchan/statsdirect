@@ -80,6 +80,15 @@
       Platform="x64"
       Version="10.0.0"/>
     <Launch Condition="Installed OR DOTNETDESKTOP10RUNTIMECHECK=&quot;0&quot;" Message="[ProductName] requires the .NET 10 Desktop Runtime (x64). Install it from https://dotnet.microsoft.com/en-us/download/dotnet/10.0 and run this installer again, or use StatsDirectSetup.exe, which installs it for you." />
+    <!-- The bundle supplies this shared runtime. A standalone MSI must not
+         install an application that cannot display its reports for other users. -->
+    <Property Id="WEBVIEW2VERSION">
+      <RegistrySearch Id="WebView2MachineSearch" Root="HKLM" Bitness="always32"
+        Key="SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}"
+        Name="pv" Type="raw" />
+    </Property>
+    <Launch Condition="Installed OR (WEBVIEW2VERSION AND WEBVIEW2VERSION &lt;&gt; &quot;0.0.0.0&quot;)"
+      Message="[ProductName] requires the Microsoft Edge WebView2 Runtime installed for all users. Run StatsDirectSetup.exe to install it, or have your administrator install the Evergreen WebView2 Runtime before running this MSI." />
     <!-- Installation conditions: At least Windows 10, no upper limit on OS version-->
 <!--
     <Launch Condition="Installed OR (VersionNT &gt;= 603)" Message="StatsDirect is not supported on this version of Windows. It is supported on Windows 10, 11 and Server 2016-2022." />
@@ -101,6 +110,13 @@
     <StandardDirectory Id="ProgramFiles64Folder">
       <Directory Id="INSTALLLOCATION" Name="StatsDirect" FileSource="$(var.StatsDirectUI.TargetDir)">
         <Component Id="ProductComponent" Guid="CE038078-F78B-42b0-A547-8509996AA427">
+          <!-- The old MSI removes its registered components during an upgrade;
+               also remove leftover copies from earlier manual installations. -->
+          <RemoveFile Id="RetiredDevExpressDlls" Name="DevExpress*.dll" On="install" />
+          <RemoveFile Id="RetiredDevExpressSymbols" Name="DevExpress*.pdb" On="install" />
+          <RemoveFile Id="RetiredDevExpressDocumentation" Name="DevExpress*.xml" On="install" />
+          <RemoveFile Id="RetiredCompiledHelp" Name="StatsDirect.chm" On="install" />
+          <RemoveFile Id="RetiredHelpIndex" Name="StatsDirect.chw" On="install" />
           <File Id="statsdirectexe" KeyPath="yes" Name="StatsDirect.exe" Checksum="yes">
             <Shortcut Id="StatsDirectExeDesktopShortcut" Directory="DesktopFolder" Name="StatsDirect" Description="StatsDirect Statistical Package" Icon="statsdirect.ico" WorkingDirectory="INSTALLLOCATION" Advertise="yes" />
           </File>
@@ -113,6 +129,11 @@
           <Exclude Files="$(var.StatsDirectUI.TargetDir)\**\*.pdb" />
           <!-- The retired Excel link add-in, should an output folder from an earlier build still hold it. -->
           <Exclude Files="$(var.StatsDirectUI.TargetDir)\**\StatsDirect*ExcelLink.xl*" />
+          <!-- Never harvest obsolete files left by an incremental build. -->
+          <Exclude Files="$(var.StatsDirectUI.TargetDir)\**\DevExpress*" />
+          <Exclude Files="$(var.StatsDirectUI.TargetDir)\Template\blank.rtf" />
+          <Exclude Files="$(var.StatsDirectUI.TargetDir)\**\*.chm" />
+          <Exclude Files="$(var.StatsDirectUI.TargetDir)\**\*.chw" />
         </Files>
       </Directory>
     </StandardDirectory>

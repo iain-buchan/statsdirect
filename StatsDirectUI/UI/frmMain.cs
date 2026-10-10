@@ -47,10 +47,6 @@ namespace StatsDirect.UI
         /// </summary>
         private const string OPERATION_MEMORY_NAME = "statsdirect-operation-list";
         /// <summary>
-        /// Maximum length of the recent operations list
-        /// </summary>
-        private const int MAX_RECENT_OPERATIONS = 10;
-        /// <summary>
         /// True if a child window is presently being activated via a tab click - in which case we don't try to set the active tab when the window notification comes in
         /// </summary>
         private bool activatingViaTab /* = false */;
@@ -100,7 +96,6 @@ namespace StatsDirect.UI
 
         private Operation mostRecentOperation;
         private bool settingUpSubOperations /* = false */;
-        private bool settingUpRecentOperations /* = false */;
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         internal bool InsideSubformClose { get; set; }
@@ -151,6 +146,11 @@ namespace StatsDirect.UI
         {
             currentScaleFactor = new SizeF(1f, 1f);
             InitializeComponent();
+            toolStrip.Renderer = new SharpToolbarRenderer();
+            // ImageScalingSize is in device pixels, unlike the icon design grid.
+            void SizeToolbarIcons() => toolStrip.ImageScalingSize = toolStrip.LogicalToDeviceUnits(new Size(20, 20));
+            SizeToolbarIcons();
+            toolStrip.DpiChangedAfterParent += (_, _) => SizeToolbarIcons();
             tipBatch.SetToolTip(chkBatchMode, "Run this function again automatically");
             panelTypeStack = new Stack<PanelType>();
             ShowPanel(PanelType.Default, false);
@@ -158,7 +158,6 @@ namespace StatsDirect.UI
             UpdateToolsMenu();
             cboActiveReport.Items.Add(new ComboFormAdapter(null));
             cboActiveReport.SelectedIndex = 0;
-            cboRecentOperations.SelectedIndex = 0;
         }
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
@@ -544,8 +543,7 @@ namespace StatsDirect.UI
             // Make and add the child window
             using (new WaitCursor())
             {
-                StatsDirectForm child = new frmReportRichEdit();
-                // StatsDirectForm child = new frmReportDotNetBrowser();
+                StatsDirectForm child = new frmReportWebView();
                 string childName = child.Text + " " + SdApplication.SoleInstance.GetReportNumber();
                 child.Text = childName;
                 SetUpForm(child);
@@ -806,8 +804,40 @@ namespace StatsDirect.UI
             return (WindowInformation) ActiveMdiChild?.Tag;
         }
 
-        private void frmMain_FormClosing(object sender, FormClosingEventArgs e)
+        private bool awaitingWebReportsClose;
+        private async void frmMain_FormClosing(object sender, FormClosingEventArgs e)
         {
+            // WebView2 must return pending edits/export replies on the UI thread.
+            // Await those children without blocking the native message pump.
+            var webReports = new List<System.Threading.Tasks.Task<bool>>();
+            foreach (Form child in MdiChildren)
+                if (child is frmReportWebView web && web.PendingClose != null) webReports.Add(web.PendingClose);
+            if (webReports.Count > 0 && !awaitingWebReportsClose)
+            {
+                e.Cancel = true;
+                awaitingWebReportsClose = true;
+                bool accepted = true;
+                foreach (var pending in webReports) accepted &= await pending;
+                foreach (Form child in MdiChildren)
+                    if (child is StatsDirectForm form && child is not frmReportWebView && !form.SafeToClose) accepted = false;
+                awaitingWebReportsClose = false;
+                if (accepted)
+                {
+                    // Also handle an already-completed preparation (for example
+                    // an empty editor whose browser failed to initialise). The
+                    // first close was cancelled by the child and still needs a
+                    // retry; clear its pending marker to avoid repeating forever.
+                    foreach (Form child in MdiChildren)
+                        if (child is frmReportWebView web) web.CompleteParentClosePreparation();
+                    BeginInvoke(new Action(Close));
+                }
+                else
+                    foreach (Form child in MdiChildren)
+                        if (child is frmReportWebView web) web.CancelParentClose();
+                        else (child as StatsDirectForm)?.NoteNonClosure();
+                return;
+            }
+            if (awaitingWebReportsClose) { e.Cancel = true; return; }
             try
             {
                 // Each child form will have been given the opportunity to save its data and close.
@@ -1239,7 +1269,12 @@ namespace StatsDirect.UI
                     CreateGrid(path, isTempFile, null);
                     return true;
                 }
-                if (".rtf".Equals(extension) || ".htm".Equals(extension) || ".html".Equals(extension) || ".mht".Equals(extension) || ".mhtml".Equals(extension) || ".txt".Equals(extension))
+                if (extension is ".rtf" or ".mht" or ".mhtml" or ".docx")
+                {
+                    SdApplication.SoleInstance.MsgboxX("This report format is no longer edited in StatsDirect. Open it in Word or another compatible editor and save it as HTML, then open the HTML file here. The original file has not been changed.", MessageBoxButtons.OK, MessageBoxIcon.Information, "Open legacy report", true);
+                    return false;
+                }
+                if (extension is ".htm" or ".html" or ".txt")
                 {
                     CreateReport(path, isTempFile);
                     return true;
@@ -1253,7 +1288,7 @@ namespace StatsDirect.UI
                 {
                     return OpenSdwOrPrompt(path);
                 }
-                SdApplication.SoleInstance.MsgboxX("Could not open '" + path + "'.  StatsDirect can only open Excel, rich text, HTML and script files.", MessageBoxButtons.OK, MessageBoxIcon.Error, "StatsDirect", true);
+                SdApplication.SoleInstance.MsgboxX("Could not open '" + path + "'.  StatsDirect can open Excel workbooks, HTML reports, plain text and script files.", MessageBoxButtons.OK, MessageBoxIcon.Error, "StatsDirect", true);
                 SdApplication.SoleInstance.NoteRecentFile(path, false);
                 return false;
             }
@@ -1749,7 +1784,6 @@ namespace StatsDirect.UI
             using (new WaitCursor())
             {
                 mostRecentOperation = operation;
-                NoteRecentOperation(operation);
 
                 // Set help
                 if (null != operation.HelpContext)
@@ -2091,6 +2125,8 @@ namespace StatsDirect.UI
 
         private void frmMain_HelpRequested(object sender, HelpEventArgs hlpevent)
         {
+            if (hlpevent.Handled) return;
+            hlpevent.Handled = true;
             try
             {
                 ShowHelp();
@@ -2136,8 +2172,7 @@ namespace StatsDirect.UI
         {
             try
             {
-                SdApplication.SoleInstance.ActiveHelpTopic = 0;
-                SdApplication.SoleInstance.ShowHelp(this);
+                SdApplication.SoleInstance.ShowHelp(this, "1000");
             }
             catch (Exception ex)
             {
@@ -3805,7 +3840,7 @@ namespace StatsDirect.UI
         private int mostRecentModalMessageButtonPressed;
         private bool waitingForModalMessage;
 
-        internal DialogResult ShowModalMessage(string text, string caption, MessageBoxButtons buttons, MessageBoxIcon icon, MessageBoxDefaultButton defaultButton, string helpFile, HelpNavigator helpNavigator, string helpTopic)
+        internal DialogResult ShowModalMessage(string text, string caption, MessageBoxButtons buttons, MessageBoxIcon icon, MessageBoxDefaultButton defaultButton)
         {
             // Sometimes a multiple click results in a second call before the dialog is fully set up.  If so, ignore the multiple clicks.  TODO: Speed up the presentation of the dialog box to reduce the chance of this happening.
             if (waitingForModalMessage)
@@ -4122,80 +4157,6 @@ namespace StatsDirect.UI
                 waitingForModalMessage = false;
             }
             return found;
-        }
-
-        private void cboRecentOperations_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            try
-            {
-                // If we're merely setting up the list, we still get events.  However, they're not user-triggered and should be ignored.
-                if (settingUpRecentOperations)
-                    return;
-
-                // If we've just selected the topmost item on the list - a (none) or (select) item - give up now
-                if (0 == cboRecentOperations.SelectedIndex)
-                    return;
-
-                SDListItem selectedItem = (SDListItem)cboRecentOperations.SelectedItem;
-                Operation operation = TemplateFactory.Operations[selectedItem.Operation];
-                // If it's a grid operation, ensure the most recently used one is visible (#696)
-                if (operation.RequiresGrid)
-                {
-                    if (null != SdApplication.SoleInstance && null != SdApplication.SoleInstance.ActiveGrid && SdApplication.SoleInstance.ActiveGrid.HasWindow)
-                    {
-                        ((IGrid)SdApplication.SoleInstance.ActiveGrid.Window).ClearSelection();
-                        ActivateMdiChild(SdApplication.SoleInstance.ActiveGrid.Window);
-                        Application.DoEvents();
-                    }
-                }
-                DoOperationOnceOrUntilCancelled(operation, new ParameterBag());
-            }
-            catch (Exception ex)
-            {
-                PuntThroughEventLoop(ex);
-            }
-        }
-
-        private void NoteRecentOperation(Operation operation)
-        {
-            // We're not willing to add operations with prereqs to the recent operations list, as we can't guarantee the prereq has been run at the instant the operation is invoked.
-            if (operation.HasPrerequisites)
-                return;
-
-            // Prevent rogue calls from modifying the list
-            settingUpRecentOperations = true;
-
-            // If we previously had no operations, we now have some and can select from them
-            if (cboRecentOperations.Items.Count <= 1)
-            {
-                cboRecentOperations.Items.Clear();
-                cboRecentOperations.Items.Add("(select)");
-            }
-
-            // Insert the new candidate at the top, removing it if it was further down the list.
-            SDListItem candidate = new(operation.FriendlyName, operation.Name);
-            if (cboRecentOperations.Items.Contains(candidate))
-                cboRecentOperations.Items.Remove(candidate);
-            cboRecentOperations.Items.Insert(1, candidate);
-
-            // Trim the recent operation list by removing least recently used
-            while (cboRecentOperations.Items.Count > MAX_RECENT_OPERATIONS)
-                cboRecentOperations.Items.RemoveAt(cboRecentOperations.Items.Count - 1);
-
-            // Ensure the (select) is visible
-            cboRecentOperations.SelectedIndex = 0;
-            int maxLength = 0;
-            using (Graphics g = cboRecentOperations.ComboBox.CreateGraphics())
-            {
-                foreach (var item in cboRecentOperations.Items)
-                {
-                    // Append the item name to the string
-                    maxLength = Math.Max(maxLength, TextRenderer.MeasureText(g, item.ToString(), cboRecentOperations.Font).Width);
-                }
-            }
-            cboRecentOperations.Width = (maxLength + 20);
-            cboRecentOperations.DropDownWidth = (maxLength + 20);
-            settingUpRecentOperations = false;
         }
 
         internal void NoteASubformCloseIsStarting()

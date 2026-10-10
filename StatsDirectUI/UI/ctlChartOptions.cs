@@ -613,35 +613,9 @@ namespace StatsDirect.UI
         {
             ChartOptionProcessor.PostProcessFilledChartOptions(definition);
             definition.IsAscii = PreviewAsAscii;
-            // We're in Windows Forms land, so we know we can use EMF.
-            using IChartRenderer renderer = ChartRendererFactory.ChartRendererFor(definition, new EmfCanvasFactory());
-            if (PreviewAsAscii)
-            {
-                ParameterBag outputParameters = renderer.Plot(SdApplication.SoleInstance, false);
-                if (null == outputParameters)
-                {
-                    // Plot failed
-                    return;
-                }
-                using frmTextPreview textPreview = new();
-                string rtf = "{\\rtf1\\ansi " + renderer.GetAscii().Replace(Environment.NewLine, Formatting.RTFCRLF) + "}";
-                textPreview.Rtf = rtf;
-                textPreview.ShowDialog(SdApplication.SoleInstance.DialogOwner);
-            }
-            else
-            {
-                ParameterBag outputParameters = renderer.Plot(SdApplication.SoleInstance, false);
-                if (null == outputParameters)
-                {
-                    // Plot failed
-                    return;
-                }
-                Stream imageStream = ((EmfCanvas)renderer.Canvas).DetachAndReturnImageStream();
-                Image metaImage = Image.FromStream(imageStream);
-                using frmImagePreview imagePreview = new();
-                imagePreview.Image = metaImage;
-                imagePreview.ShowDialog(SdApplication.SoleInstance.DialogOwner);
-            }
+            TemplateProcessing.HtmlImageRenderer.PlotAndReturnHtml(SdApplication.SoleInstance, definition, out string html);
+            using frmChartPreview preview = new(html);
+            preview.ShowDialog(SdApplication.SoleInstance.DialogOwner);
         }
 
         private void rdoMonochrome_CheckedChanged(object sender, EventArgs e)

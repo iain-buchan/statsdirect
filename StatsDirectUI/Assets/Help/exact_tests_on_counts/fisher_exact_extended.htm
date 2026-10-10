@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd" lang="en-gb" xml:lang="en-gb" class="_Skins_SD_Web_Skin" data-mc-search-type="Stem" data-mc-help-system-file-name="index.xml" data-mc-path-to-help-system="../" data-mc-has-content-body="True" data-mc-toc-path="Exact tests on counts" data-mc-target-type="WebHelp2" data-mc-runtime-file-type="Topic;Default" data-mc-preload-images="false" data-mc-in-preview-mode="false">
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta charset="utf-8" />
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" /><title>Fisher Exact Test (Expanded) - StatsDirect</title>
+        <link rel="shortcut icon" href="../resources/images/sd3.ico" />
+        <link href="../Skins/Default/Stylesheets/Slideshow.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../Skins/Default/Stylesheets/TextEffects.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../Skins/Default/Stylesheets/Topic.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../Skins/Default/Stylesheets/Components/Styles.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../Skins/Default/Stylesheets/Components/Tablet.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../Skins/Default/Stylesheets/Components/Mobile.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../Skins/Default/Stylesheets/Components/Print.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../Skins/Fluid/stylesheets/foundation.6.2.3.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../Skins/Fluid/stylesheets/styles.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../Skins/Fluid/stylesheets/tablet.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../Skins/Fluid/stylesheets/mobile.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../Skins/Fluid/stylesheets/print.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../resources/stylesheets/desktop.css" rel="stylesheet" type="text/css" />
+        <script src="../resources/Scripts/jquery.min.js" type="text/javascript">
+        </script>
+        <script src="../resources/Scripts/purify.min.js" type="text/javascript" defer="defer">
+        </script>
+        <script src="../resources/Scripts/require.min.js" type="text/javascript" defer="defer">
+        </script>
+        <script src="../resources/Scripts/require.config.js" type="text/javascript" defer="defer">
+        </script>
+        <script src="../resources/Scripts/foundation.6.2.3_custom.js" type="text/javascript" defer="defer">
+        </script>
+        <script src="../resources/Scripts/plugins.min.js" type="text/javascript" defer="defer">
+        </script>
+        <script src="../resources/Scripts/MadCapAll.js" type="text/javascript" defer="defer">
+        </script>
+    </head>
+    <body>
+        <div class="foundation-wrap off-canvas-wrapper">
+            <div class="off-canvas-wrapper-inner" data-off-canvas-wrapper="">
+                <aside class="off-canvas position-right" role="complementary" id="offCanvas" data-off-canvas="" data-position="right" data-mc-ignore="true">
+                    <ul class="off-canvas-accordion vertical menu off-canvas-list" data-accordion-menu="" data-mc-back-link="Back" data-mc-css-tree-node-expanded="is-accordion-submenu-parent" data-mc-css-tree-node-collapsed="is-accordion-submenu-parent" data-mc-css-sub-menu="vertical menu is-accordion-submenu nested" data-mc-include-indicator="False" data-mc-include-icon="False" data-mc-include-parent-link="True" data-mc-include-back="False" data-mc-defer-expand-event="True" data-mc-expanded-event="down.zf.accordionMenu up.zf.accordionMenu" data-mc-expand-event="click.zf.accordionMenu" data-mc-toc="True">
+                    </ul>
+                </aside>
+                <div class="off-canvas-content inner-wrap" data-off-canvas-content="">
+                    <div data-sticky-container="" class="title-bar-container">
+                        <nav class="title-bar tab-bar sticky" aria-label="Main navigation and search" data-sticky="" data-options="marginTop:0" style="width:100%" data-sticky-on="only screen and (max-width: 1279px)" data-mc-ignore="true"><a class="skip-to-content fluid-skip showOnFocus" href="#">Skip To Main Content</a>
+                            <div class="middle title-bar-section outer-row clearfix">
+                                <div class="menu-icon-container relative clearfix">
+                                    <div class="central-account-wrapper">
+                                        <div class="central-dropdown"><a class="central-account-drop"><span class="central-account-image"></span><span class="central-account-text">Account</span></a>
+                                            <div class="central-dropdown-content"><a class="MCCentralLink central-dropdown-content-settings">Settings</a>
+                                                <hr class="central-separator" /><a class="MCCentralLink central-dropdown-content-logout">Logout</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button class="menu-icon" aria-label="Show Navigation Panel" data-toggle="offCanvas"><span></span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="title-bar-layout outer-row">
+                                <div class="logo-wrapper"><a class="logo" href="../contents.htm" alt="Logo"></a>
+                                </div>
+                                <div class="navigation-wrapper nocontent">
+                                    <ul class="navigation clearfix" data-mc-css-tree-node-has-children="has-children" data-mc-css-sub-menu="sub-menu" data-mc-expand-event="mouseenter" data-mc-top-nav-menu="True" data-mc-max-depth="3" data-mc-include-icon="False" data-mc-include-indicator="False" data-mc-include-children="True" data-mc-include-siblings="True" data-mc-include-parent="True" data-mc-toc="True">
+                                        <li class="placeholder" style="visibility:hidden"><a>placeholder</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="central-account-wrapper">
+                                    <div class="central-dropdown"><a class="central-account-drop"><span class="central-account-image"></span><span class="central-account-text">Account</span></a>
+                                        <div class="central-dropdown-content"><a class="MCCentralLink central-dropdown-content-settings">Settings</a>
+                                            <hr class="central-separator" /><a class="MCCentralLink central-dropdown-content-logout">Logout</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="nav-search-wrapper">
+                                    <div class="nav-search row">
+                                        <form class="search" action="#">
+                                            <div class="search-bar search-bar-container needs-pie">
+                                                <input class="search-field needs-pie" type="search" aria-label="Search Field" placeholder="Search" />
+                                                <div class="search-filter-wrapper"><span class="invisible-label" id="search-filters-label">Filter: </span>
+                                                    <div class="search-filter" aria-haspopup="true" aria-controls="sf-content" aria-expanded="false" aria-label="Search Filter" title="All Files" role="button" tabindex="0">
+                                                    </div>
+                                                    <div class="search-filter-content" id="sf-content">
+                                                        <ul>
+                                                            <li>
+                                                                <button class="mc-dropdown-item" aria-labelledby="search-filters-label filterSelectorLabel-00001"><span id="filterSelectorLabel-00001">All Files</span>
+                                                                </button>
+                                                            </li>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                                <div class="search-submit-wrapper" dir="ltr">
+                                                    <div class="search-submit" title="Search" role="button" tabindex="0"><span class="invisible-label">Submit Search</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </nav>
+                    </div>
+                    <div class="main-section">
+                        <div class="row outer-row sidenav-layout">
+                            <nav class="sidenav-wrapper">
+                                <div class="sidenav-container">
+                                    <ul class="off-canvas-accordion vertical menu sidenav" data-accordion-menu="" data-mc-css-tree-node-expanded="is-accordion-submenu-parent" data-mc-css-tree-node-collapsed="is-accordion-submenu-parent" data-mc-css-sub-menu="vertical menu accordion-menu is-accordion-submenu nested" data-mc-include-indicator="False" data-mc-include-icon="False" data-mc-include-parent-link="False" data-mc-include-back="False" data-mc-defer-expand-event="True" data-mc-expanded-event="down.zf.accordionMenu up.zf.accordionMenu" data-mc-expand-event="click.zf.accordionMenu" data-mc-toc="True" data-mc-side-nav-menu="True">
+                                    </ul>
+                                </div>
+                            </nav>
+                            <div class="body-container">
+                                <div data-mc-content-body="True">
+                                    <div role="main" id="mc-main-content">
+                                        <h1><a name="kanchor16"></a>Fisher's Exact Test (Expanded)</h1>
+                                        <p>&#160;</p>
+                                        <p>Menu location: <b>Analysis_Exact_Expanded Fisher</b>.</p>
+                                        <p>&#160;</p>
+                                        <p>This allows you to see a conventional Fisher's exact (Fisher-Irwin) test in more detail, including mid-P values. The complete conditional distribution for the observed marginal totals is displayed (<a href="../references/reference_list.htm#ref-bailey-1977">Bailey, 1977</a>); a probability below 0.0000001 is shown as a power of ten, for example 2.6773527659E-015.</p>
+                                        <p>&#160;</p>
+                                        <p>Like the chi-square test for fourfold (2 by 2) tables, Fisher's exact test examines the relationship between the two dimensions of the table (classification into rows vs. classification into columns). The null hypothesis is that these two classifications are not different.</p>
+                                        <p>&#160;</p>
+                                        <p>The P values in this test are computed by considering all possible tables that could give the row and column totals observed. A mathematical short cut relates these permutations to factorials; a form shown in many textbooks. StatsDirect uses the hypergeometric distribution for the calculation (<a href="../references/reference_list.htm#ref-conover-1999">Conover 1999</a>). The test statistic that is hypergeometrically distributed is the first count A; its expectation is shown.</p>
+                                        <p>&#160;</p>
+                                        <p>This exact treatment of the fourfold table should be used instead of the chi-square test when any expected frequency is less than 1 or 20% of expected frequencies are less than or equal to 5. With StatsDirect, it is reasonable to use Fisher's exact test by default because the computational method used can cope with large numbers.</p>
+                                        <p>&#160;</p>
+                                        <p>StatsDirect uses the definition of a 2 sided P value described by <a href="../references/reference_list.htm#ref-bailey-1977">Bailey (1977)</a> (P values for all possible tables with P less than or equal to that for the observed table are summed). Many authors prefer to simply double the 1 sided P value (Armitage and Berry, 1994; Bland, 2000).</p>
+                                        <p>&#160;</p>
+                                        <p>Consider using <a href="../proportions/mid_p.htm">mid-P</a> values and intervals when you have several similar studies within an overall investigation (<a href="../references/reference_list.htm#ref-armitage-1994">Armitage and Berry, 1994</a>; <a href="../references/reference_list.htm#ref-barnard-1989">Barnard, 1989</a>).</p>
+                                        <p>&#160;</p>
+                                        <p>Assumptions:</p>
+                                        <p>·&#160;&#160;&#160;each observation is classified into exactly one cell</p>
+                                        <p>·&#160;&#160;&#160;the row and column totals are fixed, not random</p>
+                                        <p>&#160;</p>
+                                        <p>The assumption of fixed marginal (row/column) totals is controversial and causes disagreements such as the best approach to two sided inference from this test.</p>
+                                        <p>&#160;</p>
+                                        <p>DATA INPUT:</p>
+                                        <p>Observed frequencies should be entered as a standard fourfold table. The frequencies should be whole numbers; one that is not is rounded to the nearest whole number. A table with an empty row or an empty column cannot be analysed.</p>
+                                        <p>&#160;</p>
+                                        <table>
+                                            <col />
+                                            <col />
+                                            <col />
+                                            <tr>
+                                                <td style="text-align: right;">&#160;</td>
+                                                <td style="text-decoration: underline;text-align: right;">feature present</td>
+                                                <td style="text-decoration: underline;text-align: right;">feature absent</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="text-align: right;">outcome positive:</td>
+                                                <td style="text-align: right;">a</td>
+                                                <td style="text-align: right;">b</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="text-align: right;">outcome negative:</td>
+                                                <td style="text-align: right;">c</td>
+                                                <td style="text-align: right;">d</td>
+                                            </tr>
+                                        </table>
+                                        <p>&#160;</p>
+                                        <p><u>Example</u>
+                                        </p>
+                                        <p>From <a href="../references/reference_list.htm#ref-armitage-1994">Armitage and Berry (1994, p. 138)</a>.</p>
+                                        <p>&#160;</p>
+                                        <p>The following data compare malocclusion of teeth with type of feeding received by infants.</p>
+                                        <p>&#160;</p>
+                                        <table>
+                                            <col />
+                                            <col />
+                                            <col />
+                                            <tr>
+                                                <td style="text-align: right;">&#160;</td>
+                                                <td style="text-decoration: underline;text-align: right;">Normal teeth</td>
+                                                <td style="text-decoration: underline;text-align: right;">Malocclusion</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="text-align: right;">Breast fed:</td>
+                                                <td style="text-align: right;">4</td>
+                                                <td style="text-align: right;">16</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="text-align: right;">Bottle fed:</td>
+                                                <td style="text-align: right;">1</td>
+                                                <td style="text-align: right;">21</td>
+                                            </tr>
+                                        </table>
+                                        <p>&#160;</p>
+                                        <p>To analyse these data in StatsDirect you must select the expanded Fisher's exact test function from the exact tests section of the analysis menu. Enter the frequencies into the contingency table on screen as shown above.</p>
+                                        <p>&#160;</p>
+                                        <p>For this example:</p>
+                                        <p>&#160;</p>
+                                        <p>Arranged table and totals:</p>
+                                        <table>
+                                            <col />
+                                            <col />
+                                            <col />
+                                            <tr>
+                                                <td style="text-align: right;">4</td>
+                                                <td style="text-align: right;">1</td>
+                                                <td style="font-weight: bold;text-align: right;">5</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="text-align: right;">&#160;</td>
+                                                <td style="text-align: right;">&#160;</td>
+                                                <td style="font-weight: bold;text-align: right;">&#160;</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="text-align: right;">16</td>
+                                                <td style="text-align: right;">21</td>
+                                                <td style="font-weight: bold;text-align: right;">37</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="text-align: right;">&#160;</td>
+                                                <td style="text-align: right;">&#160;</td>
+                                                <td style="text-align: right;">&#160;</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="font-weight: bold;text-align: right;">20</td>
+                                                <td style="font-weight: bold;text-align: right;">22</td>
+                                                <td style="font-weight: bold;text-align: right;">42</td>
+                                            </tr>
+                                        </table>
+                                        <p>&#160;</p>
+                                        <p>Expectation of A = 2.380952</p>
+                                        <p>&#160;</p>
+                                        <table>
+                                            <col />
+                                            <col />
+                                            <col />
+                                            <col />
+                                            <tr>
+                                                <td style="text-decoration: underline;">A</td>
+                                                <td style="text-decoration: underline;">Lower Tail</td>
+                                                <td style="text-decoration: underline;">Individual P</td>
+                                                <td style="text-decoration: underline;">Upper Tail</td>
+                                            </tr>
+                                            <tr>
+                                                <td>0</td>
+                                                <td>0.03095684803002</td>
+                                                <td>0.03095684803002</td>
+                                                <td>1.00000000000000</td>
+                                            </tr>
+                                            <tr>
+                                                <td>1</td>
+                                                <td>0.20293933708568</td>
+                                                <td>0.17198248905566</td>
+                                                <td>0.96904315196998</td>
+                                            </tr>
+                                            <tr>
+                                                <td>2</td>
+                                                <td>0.54690431519700</td>
+                                                <td>0.34396497811132</td>
+                                                <td>0.79706066291432</td>
+                                            </tr>
+                                            <tr>
+                                                <td>3</td>
+                                                <td>0.85647279549719</td>
+                                                <td>0.30956848030019</td>
+                                                <td>0.45309568480300</td>
+                                            </tr>
+                                            <tr>
+                                                <td>4</td>
+                                                <td>0.98177432323774</td>
+                                                <td>0.12530152774055</td>
+                                                <td>0.14352720450281</td>
+                                            </tr>
+                                            <tr>
+                                                <td>5</td>
+                                                <td>1.00000000000000</td>
+                                                <td>0.01822567676226</td>
+                                                <td>0.01822567676226</td>
+                                            </tr>
+                                        </table>
+                                        <p>&#160;</p>
+                                        <p>One sided (upper tail) P = 0.1435 (doubled: P = 0.2871)</p>
+                                        <p>Two sided (by summation) P = 0.1745</p>
+                                        <p>&#160;</p>
+                                        <p>One sided mid-P = 0.0809</p>
+                                        <p>Two sided mid-P = 0.1618</p>
+                                        <p>&#160;</p>
+                                        <p>Here we cannot reject the null hypothesis that there is no association between these two classifications, i.e. between feeding mode and malocclusion.</p>
+                                        <p>&#160;</p>
+                                        <div class="MCDropDown MCDropDown_Closed dropDown dropDownrcode"><span class="MCDropDownHead dropDownHead dropDownHeadrcode"><a class="MCDropDownHotSpot dropDownHotspot dropDownHotspotrcode MCDropDownHotSpot_ MCDropDownHotSpot_rcode rcode MCHotSpotImage" href="#" aria-expanded="false"><img class="MCDropDown_Image_Icon" src="../Skins/Default/Stylesheets/Images/transparent.gif" height="11" width="16" alt="Closed" data-mc-alt2="Open" /><img class="rlogo" src="../resources/images/rcode/r-logo.png" alt="R" title="R code for this example" style="width: 26px;height: 20px;" /> R code</a></span>
+                                            <div class="MCDropDownBody dropDownBody">
+                                                <p class="rcodenote">This R code reproduces the example above. It needs no packages and was checked with R 4.6.1. Paste it into R, or save it as a script and run it.</p><pre class="rcode" xml:space="preserve"># Fisher's exact test (expanded): the StatsDirect help example (Armitage and Berry 1994,
+# p. 138, malocclusion of the teeth by the type of feeding received by infants) in R
+teeth &lt;- matrix(c(4, 16, 1, 21), 2, byrow = TRUE,
+                dimnames = list(fed = c("breast", "bottle"),
+                                teeth = c("normal", "malocclusion")))
+print(addmargins(teeth))
+
+# R's standard test. Its two sided P sums the probabilities of every table with the
+# observed margins that is no more probable than the observed table (0.1745), the
+# definition of Bailey (1977) that the report uses. With alternative = "greater" the P
+# value is the probability of the observed count of breast-fed infants with normal
+# teeth (the top left cell, A) or of a larger one: the upper tail of A (0.1435).
+# fisher.test also gives a conditional odds ratio and its confidence interval, which
+# the expanded report leaves out.
+print(fisher.test(teeth))
+print(fisher.test(teeth, alternative = "greater"))
+
+six &lt;- function(x) formatC(x, digits = 6, format = "f", drop0trailing = TRUE)
+pv &lt;- function(p) {
+  if (p &lt; 0.0001) "P &lt; 0.0001" else
+    paste("P =", formatC(p, digits = 4, format = "f", drop0trailing = TRUE))
+}
+
+# Given the margins, A is hypergeometric: the k = 20 breast-fed infants are a sample of
+# the 42, of whom m = 5 have normal teeth and n = 37 malocclusion, and A counts the
+# normal teeth in the sample
+a &lt;- teeth[1, 1]
+m &lt;- sum(teeth[, 1])
+n &lt;- sum(teeth[, 2])
+k &lt;- sum(teeth[1, ])
+cat("Expectation of A =", six(k * m / (m + n)), "\n")
+
+# The whole conditional distribution to 14 places, as the report tabulates it: for each
+# possible A the probability of that value (individual P, dhyper), of that value or a
+# smaller one (lower tail, phyper) and of that value or a larger one (upper tail: the
+# probability above A - 1, which phyper gives with lower.tail = FALSE). Each individual
+# probability is a ratio of counts of tables, choose(m, A) * choose(n, k - A) divided
+# by choose(m + n, k).
+A &lt;- max(0, k - n):min(k, m)
+prob &lt;- dhyper(A, m, n, k)
+lower &lt;- phyper(A, m, n, k)
+upper &lt;- phyper(A - 1, m, n, k, lower.tail = FALSE)
+fourteen &lt;- function(x) formatC(x, digits = 14, format = "f")
+cat("A  Lower Tail  Individual P  Upper Tail\n")
+for (i in seq_along(A)) {
+  cat(A[i], fourteen(lower[i]), fourteen(prob[i]), fourteen(upper[i]), "\n")
+}
+
+# One sided P: the tail that holds the observed A, the upper tail here as A = 4 is
+# above its expectation; doubling it is the other common two sided P. The two sided P
+# by summation adds up every value of A that is no more probable than the observed one
+# (a tolerance of one part in ten million allows for rounding in the probabilities).
+p_obs &lt;- prob[A == a]
+if (a &gt; k * m / (m + n)) {
+  tail &lt;- "(upper tail)"
+  p1 &lt;- upper[A == a]
+} else {
+  tail &lt;- "(lower tail)"
+  p1 &lt;- lower[A == a]
+}
+p2 &lt;- sum(prob[prob &lt;= p_obs * (1 + 1e-7)])
+cat("One sided ", tail, " ", pv(p1), "   (doubled: ", pv(min(1, 2 * p1)), ")\n",
+    sep = "")
+cat("Two sided (by summation)", pv(p2), "\n")
+
+# Mid-P: the one sided P less half the probability of the observed table (Armitage and
+# Berry 1994), and twice that, at most 1, for the two sided mid-P
+mid_p &lt;- p1 - p_obs / 2
+cat("One sided mid-", pv(mid_p), "\n", sep = "")
+cat("Two sided mid-", pv(min(1, 2 * mid_p)), "\n", sep = "")</pre>
+                                            </div>
+                                        </div>
+                                        <p>&#160;</p>
+                                        <p><a href="../basics/p_values.htm">P values</a>
+                                        </p>
+                                        <p><a href="../basics/confidence_interval.htm">confidence intervals</a>
+                                        </p>
+                                    </div>
+                                    <MadCap:pageFooter>
+                                        <p style="font-family:Arial,sans-serif;font-size:8pt;margin-top:20pt;">Copyright © 1987-2026 Iain E. Buchan. <a href="https://www.statsdirect.com/" target="_blank">StatsDirect website</a>.</p>
+                                    </MadCap:pageFooter>
+                                </div>
+                            </div>
+                        </div>
+                    </div><a data-close="true"></a>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

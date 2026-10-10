@@ -365,7 +365,7 @@ namespace StatsDirect.Charting
         {
             StringBuilder sb = new();
             sb.AppendFormat("stroke:{0};", ToCss(p.Color));
-            //  As EmfCanvas does: without these, every line was one pixel wide and solid whatever the pen said
+            //  Without these, every line was one pixel wide and solid whatever the pen said
             if (p.LineThickness > 0.0 && p.LineThickness != 1.0)
                 sb.AppendFormat(CultureInfo.InvariantCulture, "stroke-width:{0};", p.LineThickness);
             string dashes = ToDashArray(p);

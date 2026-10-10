@@ -135,7 +135,7 @@ namespace StatsDirect.Charting.Renderer
             {
                 ChartPreferences.InitFirstFonts();
                 if (!ReconstituteFonts())
-                    throw new Exception("Cannot find the fonts that StatsDirect uses for charting. If Calibri is not installed on your system, you can download it from https://www.microsoft.com/typography/fonts/font.aspx?FMID=1710");
+                    throw new Exception("Cannot create the fonts used for charting, including the Arial default. Select an installed font in Graphics > Options.");
             }
 
             AxisPen = new PenDescriptor(GrAxis, 1) { CapStyle = CapStyle.Square };

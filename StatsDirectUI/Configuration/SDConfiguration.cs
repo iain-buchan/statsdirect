@@ -10,10 +10,9 @@ namespace StatsDirect.Configuration
         private const string STATSDIRECT_FOLDER_NAME = "StatsDirect";
         private const string R_FOLDER_NAME = "R";
         public const string PERSISTENT_VALUE_FILE_NAME = "session.ser";
-        private const string HELP_FILE_NAME = "statsdirect.chm";
         private const string SETTINGS_FILE_NAME = "statsdirect.json";
 
-        public static string HelpFilePath => Path.Combine(InstallationDirectory, HELP_FILE_NAME);
+        public static string HelpDirectory => Path.Combine(InstallationDirectory, "Help");
 
         public static string TemplatePath => Path.Combine(InstallationDirectory, Settings.Default.TemplateDirectory);
 

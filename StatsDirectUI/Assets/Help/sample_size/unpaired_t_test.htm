@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd" lang="en-gb" xml:lang="en-gb" class="_Skins_SD_Web_Skin" data-mc-search-type="Stem" data-mc-help-system-file-name="index.xml" data-mc-path-to-help-system="../" data-mc-has-content-body="True" data-mc-toc-path="Sample size estimation" data-mc-target-type="WebHelp2" data-mc-runtime-file-type="Topic;Default" data-mc-preload-images="false" data-mc-in-preview-mode="false">
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta charset="utf-8" />
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" /><title>Sample Size for Unpaired t Test - StatsDirect</title>
+        <link rel="shortcut icon" href="../resources/images/sd3.ico" />
+        <link href="../Skins/Default/Stylesheets/Slideshow.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../Skins/Default/Stylesheets/TextEffects.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../Skins/Default/Stylesheets/Topic.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../Skins/Default/Stylesheets/Components/Styles.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../Skins/Default/Stylesheets/Components/Tablet.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../Skins/Default/Stylesheets/Components/Mobile.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../Skins/Default/Stylesheets/Components/Print.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../Skins/Fluid/stylesheets/foundation.6.2.3.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../Skins/Fluid/stylesheets/styles.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../Skins/Fluid/stylesheets/tablet.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../Skins/Fluid/stylesheets/mobile.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../Skins/Fluid/stylesheets/print.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../resources/stylesheets/desktop.css" rel="stylesheet" type="text/css" />
+        <script src="../resources/Scripts/jquery.min.js" type="text/javascript">
+        </script>
+        <script src="../resources/Scripts/purify.min.js" type="text/javascript" defer="defer">
+        </script>
+        <script src="../resources/Scripts/require.min.js" type="text/javascript" defer="defer">
+        </script>
+        <script src="../resources/Scripts/require.config.js" type="text/javascript" defer="defer">
+        </script>
+        <script src="../resources/Scripts/foundation.6.2.3_custom.js" type="text/javascript" defer="defer">
+        </script>
+        <script src="../resources/Scripts/plugins.min.js" type="text/javascript" defer="defer">
+        </script>
+        <script src="../resources/Scripts/MadCapAll.js" type="text/javascript" defer="defer">
+        </script>
+    </head>
+    <body>
+        <div class="foundation-wrap off-canvas-wrapper">
+            <div class="off-canvas-wrapper-inner" data-off-canvas-wrapper="">
+                <aside class="off-canvas position-right" role="complementary" id="offCanvas" data-off-canvas="" data-position="right" data-mc-ignore="true">
+                    <ul class="off-canvas-accordion vertical menu off-canvas-list" data-accordion-menu="" data-mc-back-link="Back" data-mc-css-tree-node-expanded="is-accordion-submenu-parent" data-mc-css-tree-node-collapsed="is-accordion-submenu-parent" data-mc-css-sub-menu="vertical menu is-accordion-submenu nested" data-mc-include-indicator="False" data-mc-include-icon="False" data-mc-include-parent-link="True" data-mc-include-back="False" data-mc-defer-expand-event="True" data-mc-expanded-event="down.zf.accordionMenu up.zf.accordionMenu" data-mc-expand-event="click.zf.accordionMenu" data-mc-toc="True">
+                    </ul>
+                </aside>
+                <div class="off-canvas-content inner-wrap" data-off-canvas-content="">
+                    <div data-sticky-container="" class="title-bar-container">
+                        <nav class="title-bar tab-bar sticky" aria-label="Main navigation and search" data-sticky="" data-options="marginTop:0" style="width:100%" data-sticky-on="only screen and (max-width: 1279px)" data-mc-ignore="true"><a class="skip-to-content fluid-skip showOnFocus" href="#">Skip To Main Content</a>
+                            <div class="middle title-bar-section outer-row clearfix">
+                                <div class="menu-icon-container relative clearfix">
+                                    <div class="central-account-wrapper">
+                                        <div class="central-dropdown"><a class="central-account-drop"><span class="central-account-image"></span><span class="central-account-text">Account</span></a>
+                                            <div class="central-dropdown-content"><a class="MCCentralLink central-dropdown-content-settings">Settings</a>
+                                                <hr class="central-separator" /><a class="MCCentralLink central-dropdown-content-logout">Logout</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button class="menu-icon" aria-label="Show Navigation Panel" data-toggle="offCanvas"><span></span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="title-bar-layout outer-row">
+                                <div class="logo-wrapper"><a class="logo" href="../contents.htm" alt="Logo"></a>
+                                </div>
+                                <div class="navigation-wrapper nocontent">
+                                    <ul class="navigation clearfix" data-mc-css-tree-node-has-children="has-children" data-mc-css-sub-menu="sub-menu" data-mc-expand-event="mouseenter" data-mc-top-nav-menu="True" data-mc-max-depth="3" data-mc-include-icon="False" data-mc-include-indicator="False" data-mc-include-children="True" data-mc-include-siblings="True" data-mc-include-parent="True" data-mc-toc="True">
+                                        <li class="placeholder" style="visibility:hidden"><a>placeholder</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="central-account-wrapper">
+                                    <div class="central-dropdown"><a class="central-account-drop"><span class="central-account-image"></span><span class="central-account-text">Account</span></a>
+                                        <div class="central-dropdown-content"><a class="MCCentralLink central-dropdown-content-settings">Settings</a>
+                                            <hr class="central-separator" /><a class="MCCentralLink central-dropdown-content-logout">Logout</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="nav-search-wrapper">
+                                    <div class="nav-search row">
+                                        <form class="search" action="#">
+                                            <div class="search-bar search-bar-container needs-pie">
+                                                <input class="search-field needs-pie" type="search" aria-label="Search Field" placeholder="Search" />
+                                                <div class="search-filter-wrapper"><span class="invisible-label" id="search-filters-label">Filter: </span>
+                                                    <div class="search-filter" aria-haspopup="true" aria-controls="sf-content" aria-expanded="false" aria-label="Search Filter" title="All Files" role="button" tabindex="0">
+                                                    </div>
+                                                    <div class="search-filter-content" id="sf-content">
+                                                        <ul>
+                                                            <li>
+                                                                <button class="mc-dropdown-item" aria-labelledby="search-filters-label filterSelectorLabel-00001"><span id="filterSelectorLabel-00001">All Files</span>
+                                                                </button>
+                                                            </li>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                                <div class="search-submit-wrapper" dir="ltr">
+                                                    <div class="search-submit" title="Search" role="button" tabindex="0"><span class="invisible-label">Submit Search</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </nav>
+                    </div>
+                    <div class="main-section">
+                        <div class="row outer-row sidenav-layout">
+                            <nav class="sidenav-wrapper">
+                                <div class="sidenav-container">
+                                    <ul class="off-canvas-accordion vertical menu sidenav" data-accordion-menu="" data-mc-css-tree-node-expanded="is-accordion-submenu-parent" data-mc-css-tree-node-collapsed="is-accordion-submenu-parent" data-mc-css-sub-menu="vertical menu accordion-menu is-accordion-submenu nested" data-mc-include-indicator="False" data-mc-include-icon="False" data-mc-include-parent-link="False" data-mc-include-back="False" data-mc-defer-expand-event="True" data-mc-expanded-event="down.zf.accordionMenu up.zf.accordionMenu" data-mc-expand-event="click.zf.accordionMenu" data-mc-toc="True" data-mc-side-nav-menu="True">
+                                    </ul>
+                                </div>
+                            </nav>
+                            <div class="body-container">
+                                <div data-mc-content-body="True">
+                                    <div role="main" id="mc-main-content">
+                                        <h1><a name="kanchor119"></a>
+            Sample Size for Unpaired t Test</h1>
+                                        <p>&#160;</p>
+                                        <p>Menu location: <b>Analysis_Sample Size_Unpaired t</b>.</p>
+                                        <p>&#160;</p>
+                                        <p>This function gives you the minimum number of experimental subjects needed to detect a true difference DELTA in population means with power POWER and two sided type I error probability ALPHA (<a href="../references/reference_list.htm#ref-dupont-1990">Dupont, 1990</a>; <a href="../references/reference_list.htm#ref-pearson-1970">Pearson and Hartley, 1970</a>).</p>
+                                        <p>&#160;</p>
+                                        <p><u>Information required</u>
+                                        </p>
+                                        <ul>
+                                            <li>POWER: probability of detecting a true effect.</li>
+                                            <li>ALPHA: probability of detecting a false effect (<a href="../basics/p_values.htm">two sided</a>: double this if you need <a href="../basics/p_values.htm">one sided</a>).</li>
+                                            <li>DELTA: difference in population means.</li>
+                                            <li>SD: estimated standard deviation for within group differences.</li>
+                                            <li>M: number of control subjects per experimental subject.</li>
+                                        </ul>
+                                        <p>&#160;</p>
+                                        <p><u>Practical issues</u>
+                                        </p>
+                                        <ul>
+                                            <li>Usual values for POWER are 80%, 85% and 90%; try several in order to explore/scope.</li>
+                                            <li>5% is the usual choice for ALPHA.</li>
+                                            <li>SD is usually estimated from previous studies.</li>
+                                            <li>If possible, choose a range of differences between means that you want to have the statistical power to detect.</li>
+                                        </ul>
+                                        <p>&#160;</p>
+                                        <p><u>Technical validation</u>
+                                        </p>
+                                        <p>The estimated sample size n is calculated as the solution of:</p>
+                                        <p>
+                                            <img src="../generatedimages/equations/equation215.svg" alt="" class="mcReset" />
+                                        </p>
+                                        <p>- where d = delta/sd, α = alpha, β = 1 - power, m is the number of control subjects per experimental subject, and t<sub>v,p</sub> is a Student t quantile with v degrees of freedom and probability p. n is rounded up to the closest integer, then adjusted if necessary to the smallest n for which the power calculated from the non-central t distribution reaches POWER.</p>
+                                        <p>&#160;</p>
+                                        <p><u>Example</u>
+                                        </p>
+                                        <p>Suppose you plan a trial in which a new treatment is compared with placebo and the outcome is systolic blood pressure at the end of treatment. A reduction of 5 mmHg would be worth detecting, and from earlier studies the standard deviation of systolic blood pressure among such patients is about 12 mmHg. You want 90% power at a two sided significance level of 5%, with one control for each treated patient. The figures are invented for this illustration.</p>
+                                        <p>&#160;</p>
+                                        <p>To run this in StatsDirect select Unpaired t from the Sample Size section of the Analysis menu. Enter 5 as the difference in population means, 12 as the estimate of population SD, 1 as the number of controls per experimental subject, 90% as the power and 5% as alpha.</p>
+                                        <p>&#160;</p>
+                                        <p>For this example:</p>
+                                        <p>&#160;</p>
+                                        <p><u>Sample size for an unpaired two sample Student t test</u>
+                                        </p>
+                                        <p>&#160;</p>
+                                        <p>Alpha = 0.05</p>
+                                        <p>Power = 0.9</p>
+                                        <p>Difference between means = 5</p>
+                                        <p>Standard deviation = 12</p>
+                                        <p>Controls per experimental subject 1</p>
+                                        <p>&#160;</p>
+                                        <p>Estimated minimum sample size = 123 experimental subjects and 123 controls.</p>
+                                        <p>&#160;</p>
+                                        <p>Degrees of freedom = 244</p>
+                                        <p>&#160;</p>
+                                        <p>So 123 patients would be needed in each group, 246 in all; the power with these numbers is just over 90%. If two controls were recruited for each treated patient, entering 2 as the number of controls per experimental subject would give:</p>
+                                        <p>&#160;</p>
+                                        <p>Controls per experimental subject 2</p>
+                                        <p>&#160;</p>
+                                        <p>Estimated minimum sample size = 92 experimental subjects and 184 controls.</p>
+                                        <p>&#160;</p>
+                                        <p>Degrees of freedom = 274</p>
+                                        <p>&#160;</p>
+                                        <p>Fewer treated patients would then be needed (92 rather than 123) but more patients in all (276 rather than 246): for a given total, groups of unequal size have less power, so an unequal ratio is usually chosen only when experimental subjects are scarce or costly.</p>
+                                        <div class="MCDropDown MCDropDown_Closed dropDown dropDownrcode"><span class="MCDropDownHead dropDownHead dropDownHeadrcode"><a class="MCDropDownHotSpot dropDownHotspot dropDownHotspotrcode MCDropDownHotSpot_ MCDropDownHotSpot_rcode rcode MCHotSpotImage" href="#" aria-expanded="false"><img class="MCDropDown_Image_Icon" src="../Skins/Default/Stylesheets/Images/transparent.gif" height="11" width="16" alt="Closed" data-mc-alt2="Open" /><img class="rlogo" src="../resources/images/rcode/r-logo.png" alt="R" title="R code for this example" style="width: 26px;height: 20px;" /> R code</a></span>
+                                            <div class="MCDropDownBody dropDownBody">
+                                                <p class="rcodenote">This R code reproduces the example above. It needs no packages and was checked with R 4.6.1. Paste it into R, or save it as a script and run it.</p><pre class="rcode" xml:space="preserve"># Sample size for an unpaired t test: the StatsDirect help example (a planned trial
+# of a treatment expected to lower systolic blood pressure by 5 mmHg, SD 12 mmHg,
+# made up for the help) in R
+delta &lt;- 5          # difference in population means worth detecting
+sd &lt;- 12            # estimated standard deviation within each group
+power &lt;- 0.9
+alpha &lt;- 0.05       # two sided
+m &lt;- 1              # controls per experimental subject
+
+# power.t.test solves the same two sided non-central t power equation as the report,
+# but only for two groups of the same size (m = 1). Its n is per group and is not a
+# whole number: the report gives the next whole number, the smallest n whose power
+# reaches the target. strict = TRUE counts a rejection in either tail as power, as
+# the report does; here the lower tail adds almost nothing.
+print(power.t.test(delta = delta, sd = sd, sig.level = alpha, power = power,
+                   type = "two.sample", alternative = "two.sided", strict = TRUE))
+
+# For m controls per experimental subject the power of the unpaired t test with n
+# experimental subjects (n(m + 1) - 2 degrees of freedom) comes from the non-central
+# t distribution, and the report gives the smallest whole n whose power reaches the
+# target. The search starts from n = 2, or from the smallest n giving at least one
+# degree of freedom when m is below 0.5.
+six &lt;- function(x) formatC(x, digits = 6, format = "f", drop0trailing = TRUE)
+size_unpaired &lt;- function(delta, sd, m, power, alpha) {
+  stopifnot(delta != 0, m &gt; 0)  # a zero difference or ratio has no finite answer
+  power_of &lt;- function(n) {
+    df &lt;- n * (m + 1) - 2
+    ncp &lt;- abs(delta) / (sd * sqrt((1 + 1 / m) / n))
+    tcrit &lt;- qt(1 - alpha / 2, df)
+    pt(tcrit, df, ncp, lower.tail = FALSE) + pt(-tcrit, df, ncp)
+  }
+  n &lt;- max(2, ceiling(3 / (m + 1)))
+  while (power_of(n) &lt; power) n &lt;- n + 1
+  cat("Alpha =", six(alpha), "\n")
+  cat("Power =", six(power), "\n")
+  cat("Difference between means =", six(delta), "\n")
+  cat("Standard deviation =", six(sd), "\n")
+  cat("Controls per experimental subject", six(m), "\n")
+  # the report rounds the control count down; the power uses m n controls exactly
+  cat("Estimated minimum sample size =", n, "experimental subjects and",
+      floor(m * n), "controls.\n")
+  cat("Degrees of freedom =", six(n * (m + 1) - 2), "\n")
+  cat("Power at this sample size =", six(power_of(n)), "\n\n")
+}
+size_unpaired(delta, sd, m, power, alpha)
+
+# The same trial with two controls for each experimental subject: fewer experimental
+# subjects are needed, but more subjects in all
+size_unpaired(delta, sd, m = 2, power, alpha)</pre>
+                                            </div>
+                                        </div>
+                                        <p>&#160;</p>
+                                    </div>
+                                    <MadCap:pageFooter>
+                                        <p style="font-family:Arial,sans-serif;font-size:8pt;margin-top:20pt;">Copyright © 1987-2026 Iain E. Buchan. <a href="https://www.statsdirect.com/" target="_blank">StatsDirect website</a>.</p>
+                                    </MadCap:pageFooter>
+                                </div>
+                            </div>
+                        </div>
+                    </div><a data-close="true"></a>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

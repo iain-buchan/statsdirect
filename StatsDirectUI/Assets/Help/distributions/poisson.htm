@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd" lang="en-gb" xml:lang="en-gb" class="_Skins_SD_Web_Skin" data-mc-search-type="Stem" data-mc-help-system-file-name="index.xml" data-mc-path-to-help-system="../" data-mc-has-content-body="True" data-mc-toc-path="Probability distributions" data-mc-target-type="WebHelp2" data-mc-runtime-file-type="Topic;Default" data-mc-preload-images="false" data-mc-in-preview-mode="false">
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta charset="utf-8" />
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" /><title>Poisson Distribution - StatsDirect</title>
+        <link rel="shortcut icon" href="../resources/images/sd3.ico" />
+        <link href="../Skins/Default/Stylesheets/Slideshow.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../Skins/Default/Stylesheets/TextEffects.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../Skins/Default/Stylesheets/Topic.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../Skins/Default/Stylesheets/Components/Styles.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../Skins/Default/Stylesheets/Components/Tablet.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../Skins/Default/Stylesheets/Components/Mobile.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../Skins/Default/Stylesheets/Components/Print.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../Skins/Fluid/stylesheets/foundation.6.2.3.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../Skins/Fluid/stylesheets/styles.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../Skins/Fluid/stylesheets/tablet.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../Skins/Fluid/stylesheets/mobile.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../Skins/Fluid/stylesheets/print.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../resources/stylesheets/desktop.css" rel="stylesheet" type="text/css" />
+        <script src="../resources/Scripts/jquery.min.js" type="text/javascript">
+        </script>
+        <script src="../resources/Scripts/purify.min.js" type="text/javascript" defer="defer">
+        </script>
+        <script src="../resources/Scripts/require.min.js" type="text/javascript" defer="defer">
+        </script>
+        <script src="../resources/Scripts/require.config.js" type="text/javascript" defer="defer">
+        </script>
+        <script src="../resources/Scripts/foundation.6.2.3_custom.js" type="text/javascript" defer="defer">
+        </script>
+        <script src="../resources/Scripts/plugins.min.js" type="text/javascript" defer="defer">
+        </script>
+        <script src="../resources/Scripts/MadCapAll.js" type="text/javascript" defer="defer">
+        </script>
+    </head>
+    <body>
+        <div class="foundation-wrap off-canvas-wrapper">
+            <div class="off-canvas-wrapper-inner" data-off-canvas-wrapper="">
+                <aside class="off-canvas position-right" role="complementary" id="offCanvas" data-off-canvas="" data-position="right" data-mc-ignore="true">
+                    <ul class="off-canvas-accordion vertical menu off-canvas-list" data-accordion-menu="" data-mc-back-link="Back" data-mc-css-tree-node-expanded="is-accordion-submenu-parent" data-mc-css-tree-node-collapsed="is-accordion-submenu-parent" data-mc-css-sub-menu="vertical menu is-accordion-submenu nested" data-mc-include-indicator="False" data-mc-include-icon="False" data-mc-include-parent-link="True" data-mc-include-back="False" data-mc-defer-expand-event="True" data-mc-expanded-event="down.zf.accordionMenu up.zf.accordionMenu" data-mc-expand-event="click.zf.accordionMenu" data-mc-toc="True">
+                    </ul>
+                </aside>
+                <div class="off-canvas-content inner-wrap" data-off-canvas-content="">
+                    <div data-sticky-container="" class="title-bar-container">
+                        <nav class="title-bar tab-bar sticky" aria-label="Main navigation and search" data-sticky="" data-options="marginTop:0" style="width:100%" data-sticky-on="only screen and (max-width: 1279px)" data-mc-ignore="true"><a class="skip-to-content fluid-skip showOnFocus" href="#">Skip To Main Content</a>
+                            <div class="middle title-bar-section outer-row clearfix">
+                                <div class="menu-icon-container relative clearfix">
+                                    <div class="central-account-wrapper">
+                                        <div class="central-dropdown"><a class="central-account-drop"><span class="central-account-image"></span><span class="central-account-text">Account</span></a>
+                                            <div class="central-dropdown-content"><a class="MCCentralLink central-dropdown-content-settings">Settings</a>
+                                                <hr class="central-separator" /><a class="MCCentralLink central-dropdown-content-logout">Logout</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button class="menu-icon" aria-label="Show Navigation Panel" data-toggle="offCanvas"><span></span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="title-bar-layout outer-row">
+                                <div class="logo-wrapper"><a class="logo" href="../contents.htm" alt="Logo"></a>
+                                </div>
+                                <div class="navigation-wrapper nocontent">
+                                    <ul class="navigation clearfix" data-mc-css-tree-node-has-children="has-children" data-mc-css-sub-menu="sub-menu" data-mc-expand-event="mouseenter" data-mc-top-nav-menu="True" data-mc-max-depth="3" data-mc-include-icon="False" data-mc-include-indicator="False" data-mc-include-children="True" data-mc-include-siblings="True" data-mc-include-parent="True" data-mc-toc="True">
+                                        <li class="placeholder" style="visibility:hidden"><a>placeholder</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="central-account-wrapper">
+                                    <div class="central-dropdown"><a class="central-account-drop"><span class="central-account-image"></span><span class="central-account-text">Account</span></a>
+                                        <div class="central-dropdown-content"><a class="MCCentralLink central-dropdown-content-settings">Settings</a>
+                                            <hr class="central-separator" /><a class="MCCentralLink central-dropdown-content-logout">Logout</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="nav-search-wrapper">
+                                    <div class="nav-search row">
+                                        <form class="search" action="#">
+                                            <div class="search-bar search-bar-container needs-pie">
+                                                <input class="search-field needs-pie" type="search" aria-label="Search Field" placeholder="Search" />
+                                                <div class="search-filter-wrapper"><span class="invisible-label" id="search-filters-label">Filter: </span>
+                                                    <div class="search-filter" aria-haspopup="true" aria-controls="sf-content" aria-expanded="false" aria-label="Search Filter" title="All Files" role="button" tabindex="0">
+                                                    </div>
+                                                    <div class="search-filter-content" id="sf-content">
+                                                        <ul>
+                                                            <li>
+                                                                <button class="mc-dropdown-item" aria-labelledby="search-filters-label filterSelectorLabel-00001"><span id="filterSelectorLabel-00001">All Files</span>
+                                                                </button>
+                                                            </li>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                                <div class="search-submit-wrapper" dir="ltr">
+                                                    <div class="search-submit" title="Search" role="button" tabindex="0"><span class="invisible-label">Submit Search</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </nav>
+                    </div>
+                    <div class="main-section">
+                        <div class="row outer-row sidenav-layout">
+                            <nav class="sidenav-wrapper">
+                                <div class="sidenav-container">
+                                    <ul class="off-canvas-accordion vertical menu sidenav" data-accordion-menu="" data-mc-css-tree-node-expanded="is-accordion-submenu-parent" data-mc-css-tree-node-collapsed="is-accordion-submenu-parent" data-mc-css-sub-menu="vertical menu accordion-menu is-accordion-submenu nested" data-mc-include-indicator="False" data-mc-include-icon="False" data-mc-include-parent-link="False" data-mc-include-back="False" data-mc-defer-expand-event="True" data-mc-expanded-event="down.zf.accordionMenu up.zf.accordionMenu" data-mc-expand-event="click.zf.accordionMenu" data-mc-toc="True" data-mc-side-nav-menu="True">
+                                    </ul>
+                                </div>
+                            </nav>
+                            <div class="body-container">
+                                <div data-mc-content-body="True">
+                                    <div role="main" id="mc-main-content">
+                                        <h1><a name="kanchor28"></a>Poisson Distribution</h1>
+                                        <p>&#160;</p>
+                                        <p>Menu location: <b>Analysis_Distributions_Poisson</b>.</p>
+                                        <p>&#160;</p>
+                                        <p>A Poisson distribution is the distribution of the number of events in a fixed time interval, provided that the events occur at random, independently in time and at a constant rate.</p>
+                                        <p>&#160;</p>
+                                        <p>The event rate, µ, is the number of events per unit time. When µ is large, the shape of a Poisson distribution is very similar to that of the <a href="normal.htm">standard normal distribution</a>. The change in shape of a Poisson distribution with increasing n is very similar to the equivalent <a href="binomial.htm">binomial distribution</a>. Convergence of distributions in this way can be explained by the <a href="normal.htm">central limit theorem</a>.</p>
+                                        <p>&#160;</p>
+                                        <p>Consider a time interval divided into many sub-intervals of equal length such that the probability of an event in a sub-interval is small and the probability of more than one event is negligible. If the probability of an event in each sub-interval is the same as and independent of that probability for other sub-intervals then n sub-intervals can be thought of as n independent trials. This is why Poisson distributions are closely related to binomial distributions.</p>
+                                        <p>&#160;</p>
+                                        <p>Both the mean and variance of a Poisson distribution are equal to µ. The probability of r events happening in unit time with an event rate of µ is:</p>
+                                        <p>
+                                            <img src="../generatedimages/equations/equation121.svg" alt="" class="mcReset" />
+                                        </p>
+                                        <p>&#160;</p>
+                                        <p>The summation of this Poisson frequency function from zero to r will always be equal to one as:</p>
+                                        <p>
+                                            <img src="../generatedimages/equations/equation122.svg" alt="" class="mcReset" />
+                                        </p>
+                                        <p>&#160;</p>
+                                        <p>Analysis of mortality statistics often employs Poisson distributions on the assumption that deaths from most diseases occur independently and at random in populations (see <a href="../rates/poisson_rate_ci.htm">Poisson rate confidence interval</a>). Other common uses of Poisson are in Physics to model radioactive particle emission and in insurance companies to model accident rates.</p>
+                                        <p>&#160;</p>
+                                        <p><u>Technical Validation</u>
+                                        </p>
+                                        <p>StatsDirect calculates cumulative probabilities that (≤,≥,=) r random events are contained in an interval when the average number of such events per interval is μ. The gamma function is a generalised factorial function and it is used to calculate each Poisson probability (<a href="../references/reference_list.htm#ref-knusel-1986">Knusel, 1986</a>). The core algorithm evaluates the logarithm of the gamma function (<a href="../references/reference_list.htm#ref-cody-1967">Cody and Hillstrom, 1967</a>; <a href="../references/reference_list.htm#ref-abramowitz-1972">Abramowitz and Stegun 1972</a>; <a href="../references/reference_list.htm#ref-macleod-1989">Macleod, 1989</a>) to the limit of 64-bit precision. The inverse is found using a bisection algorithm to one order of magnitude larger than the limit of 64-bit precision.</p>
+                                        <p>&#160;</p>
+                                        <p>Γ(*) is the gamma function:</p>
+                                        <p>
+                                            <img src="../generatedimages/equations/equation123.svg" alt="" class="mcReset" />
+                                        </p>
+                                        <p>Γ(1)=1</p>
+                                        <p>Γ(x+1)=xΓ(x)</p>
+                                        <p>Γ(n)=(n-1)!</p>
+                                        <p>&#160;</p>
+                                        <p><u>Example</u>
+                                        </p>
+                                        <p>An illustration with invented figures. Suppose that deaths from a cause in a district have averaged 8 a year, and that 14 were recorded in the latest year. If the deaths occur independently and at random at a constant rate, the number in a year follows a Poisson distribution with mean 8.</p>
+                                        <p>&#160;</p>
+                                        <p>To calculate the probabilities in StatsDirect select Poisson from the Distributions section of the Analysis menu, enter 14 as the number of random events and 8 as the mean, then click Calculate.</p>
+                                        <p>&#160;</p>
+                                        <p>For this example StatsDirect shows the probability of exactly 14 events, of 14 or more and of 14 or fewer, and reports the three on one line:</p>
+                                        <p>&#160;</p>
+                                        <p>P(Poisson n 14, µ 8) = 0.016923711395853 for n events,  0.034180701793819 for n or more events,  0.982743009602034 for n or fewer events</p>
+                                        <p>&#160;</p>
+                                        <p>These are the exact values to 15 decimal places.</p>
+                                        <p>&#160;</p>
+                                        <p>So 14 or more deaths would be seen in about 3.4% of years if the underlying rate had not changed: unusual, but not so rare that a rise in the rate can be inferred from one year alone.</p>
+                                        <p>&#160;</p>
+                                        <p>The function also works in reverse: enter a probability in the "or more" or the "or fewer" box and click Invert, and StatsDirect finds the mean that gives that probability for the number of events entered. The Lower CL and Upper CL buttons do this for the two tail probabilities of the confidence level in the box beside them. With 14 events and 95%, the mean at which 14 or more events has probability 0.025 is shown as 7.6539302763006 and the mean at which 14 or fewer events has probability 0.025 as 23.4896211218356 (a mean is shown to 15 significant figures); these are the exact 95% confidence limits for a Poisson count of 14 (see <a href="../rates/poisson_rate_ci.htm">Poisson rate confidence interval</a>).</p>
+                                        <p>&#160;</p>
+                                        <p>With a mean of 3 the probability of no events is 0.049787068367864, which is e<sup>-3</sup>, as the formula above gives for r = 0.</p>
+                                        <p>&#160;</p>
+                                        <p>StatsDirect shows a probability to 15 decimal places and a mean to 15 significant figures; the R code below calculates the same figures.</p>
+                                        <div class="MCDropDown MCDropDown_Closed dropDown dropDownrcode"><span class="MCDropDownHead dropDownHead dropDownHeadrcode"><a class="MCDropDownHotSpot dropDownHotspot dropDownHotspotrcode MCDropDownHotSpot_ MCDropDownHotSpot_rcode rcode MCHotSpotImage" href="#" aria-expanded="false"><img class="MCDropDown_Image_Icon" src="../Skins/Default/Stylesheets/Images/transparent.gif" height="11" width="16" alt="Closed" data-mc-alt2="Open" /><img class="rlogo" src="../resources/images/rcode/r-logo.png" alt="R" title="R code for this example" style="width: 26px;height: 20px;" /> R code</a></span>
+                                            <div class="MCDropDownBody dropDownBody">
+                                                <p class="rcodenote">This R code reproduces the illustration above. It needs no packages and was checked with R 4.6.1. Paste it into R, or save it as a script and run it.</p><pre class="rcode" xml:space="preserve"># Poisson distribution: the StatsDirect help illustration (probabilities for a count of
+# events with a given mean, and the mean that gives a chosen tail probability) in R
+
+# StatsDirect shows the probabilities of exactly n, of n or more and of n or fewer
+# events to 15 decimal places, and a mean to 15 significant figures; these helpers
+# print R's values the same way.
+p15 &lt;- function(x) formatC(x, digits = 15, format = "f", drop0trailing = TRUE)
+s15 &lt;- function(x) trimws(formatC(x, digits = 15, format = "fg", drop0trailing = TRUE))
+
+# 14 events when the mean is 8. dpois(n, mean) is the probability of exactly n events
+# and ppois(n, mean) that of n or fewer; with lower.tail = FALSE ppois gives the
+# probability of MORE than n events, so the probability of n or more events is
+# ppois(n - 1, mean, lower.tail = FALSE)
+n &lt;- 14
+mu &lt;- 8
+cat("Probability of", n, "events =", p15(dpois(n, mu)), "\n")
+cat("Probability of", n, "or more events =", p15(ppois(n - 1, mu, lower.tail = FALSE)),
+    "\n")
+cat("Probability of", n, "or fewer events =", p15(ppois(n, mu)), "\n")
+
+# The inverse: the mean at which n or more events has probability 0.025 and the mean at
+# which n or fewer events has probability 0.025 (StatsDirect's Lower CL and Upper CL
+# buttons with 95 in the confidence box, found by bisection on the cumulative
+# probability). In R they come from the gamma distribution: n or more events with mean
+# m has the same probability as the n-th event of a unit-rate process occurring by time
+# m, so P(n or more) = pgamma(m, n) and P(n or fewer) = 1 - pgamma(m, n + 1).
+lower &lt;- qgamma(0.025, n)
+upper &lt;- qgamma(0.975, n + 1)
+cat("Mean at which", n, "or more events has probability 0.025 =", s15(lower), "\n")
+cat("Mean at which", n, "or fewer events has probability 0.025 =", s15(upper), "\n")
+# a check against ppois; these are also the exact 95% limits for a Poisson count of n
+cat("  check:", p15(ppois(n - 1, lower, lower.tail = FALSE)), p15(ppois(n, upper)),
+    "\n")
+cat("  exact 95% confidence interval for a Poisson count of", n, "=", s15(lower), "to",
+    s15(upper), "\n")
+
+# No events when the mean is 3: P(0) = exp(-mean)
+cat("Probability of 0 events with mean 3 =", p15(dpois(0, 3)), "\n")
+cat("  which is exp(-3) =", p15(exp(-3)), "\n")
+
+# R's qpois inverts the other way, for the count: the smallest number of events whose
+# probability of that many or fewer is at least the probability given
+cat("Smallest count with probability at least 0.95 of that many or fewer, mean 8 =",
+    qpois(0.95, mu), "\n")</pre>
+                                            </div>
+                                        </div>
+                                        <p>&#160;</p>
+                                    </div>
+                                    <MadCap:pageFooter>
+                                        <p style="font-family:Arial,sans-serif;font-size:8pt;margin-top:20pt;">Copyright © 1987-2026 Iain E. Buchan. <a href="https://www.statsdirect.com/" target="_blank">StatsDirect website</a>.</p>
+                                    </MadCap:pageFooter>
+                                </div>
+                            </div>
+                        </div>
+                    </div><a data-close="true"></a>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

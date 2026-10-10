@@ -317,7 +317,7 @@ namespace StatsDirect.UI
                     if (!windowName.StartsWith("Report "))
                         continue;
 
-                    // We don't want to load Report 1.rtf and create Report 1 again (#673).  Strip any suffix before comparison.
+                    // We don't want to load Report 1.html and create Report 1 again (#673).  Strip any suffix before comparison.
                     if (Path.HasExtension(windowName))
                         windowName = Path.GetFileNameWithoutExtension(windowName);
                     string windowNumberAsString = windowName[7..].Trim();
@@ -433,9 +433,13 @@ namespace StatsDirect.UI
             }
         }
 
+        private readonly HtmlHelp.HelpService htmlHelp = new();
+        private string messageHelpTopic;
+
         internal void ShowHelp(Form Parent, string Topic)
         {
-            Help.ShowHelp(Parent, HelpFilePath, HelpNavigator.TopicId, Topic);
+            try { htmlHelp.Show(Parent ?? MainWindow, messageHelpTopic ?? Topic, SDConfiguration.HelpDirectory); }
+            catch (Exception ex) { MessageBox.Show(Parent, ex.Message, "StatsDirect Help", MessageBoxButtons.OK, MessageBoxIcon.Information); }
         }
 
         internal void ShowHelp(Form Parent)
@@ -443,12 +447,12 @@ namespace StatsDirect.UI
             if (null != ActiveHelpUrl)
             {
                 // Show the URL
-                Help.ShowHelp(Parent, ActiveHelpUrl);
+                ShowHelp(Parent, ActiveHelpUrl);
             }
             else if (0 != ActiveHelpTopic)
             {
                 // Specific help - show it.
-                Help.ShowHelp(Parent, HelpFilePath, HelpNavigator.TopicId, ActiveHelpTopic.ToString());
+                ShowHelp(Parent, ActiveHelpTopic.ToString());
             }
             else
             {
@@ -456,16 +460,14 @@ namespace StatsDirect.UI
                 if (SoleInstance?.ActiveWindow != null && SoleInstance.ActiveWindow.HasWindow && SoleInstance.ActiveWindow.Window is IGrid)
                 {
                     // Grid - show the worksheet help, which is 1040.
-                    Help.ShowHelp(Parent, HelpFilePath, HelpNavigator.TopicId, "1040");
+                    ShowHelp(Parent, "1040");
                 }
                 else
                 {
-                    Help.ShowHelp(Parent, HelpFilePath, HelpNavigator.TableOfContents);
+                    ShowHelp(Parent, "1000");
                 }
             }
         }
-
-        internal string HelpFilePath => SDConfiguration.HelpFilePath;
 
         internal int ActiveHelpTopic
         {
@@ -622,7 +624,7 @@ namespace StatsDirect.UI
         /// <summary>
         /// Append the report to a new or existing user-selected report window.
         /// </summary>
-        /// <param name="rtf">The RTF to append</param>
+        /// <param name="renderable">The template or chart to append</param>
         /// <param name="operation"></param>
         /// <param name="redoInformation"></param>
         /// <param name="preferredOutputLocation"></param>
@@ -867,7 +869,7 @@ namespace StatsDirect.UI
                 // Use a Windows message box if our own interface isn't visible; use our own if it is.
                 if (null == MainWindow || !MainWindow.Visible || MainWindow.WindowState == FormWindowState.Minimized || ModalDialogShowing())
                     return MessageBox.Show(MainWindow, text, caption, buttons, icon, defaultButton, 0);
-                return MainWindow.ShowModalMessage(text, caption, buttons, icon, defaultButton, null, HelpNavigator.TableOfContents, null);
+                return MainWindow.ShowModalMessage(text, caption, buttons, icon, defaultButton);
             }
         }
 
@@ -876,8 +878,8 @@ namespace StatsDirect.UI
         private static bool ModalDialogShowing(Form f)
         {
             // Approximate by detecting child forms of the main window and any MDI children.  Most are modal; this will therefore fail safe and occasionally show a dialog box when it could have presented in the main window.
-            if (f.OwnedForms.Length > 0)
-                return true;
+            foreach (Form owned in f.OwnedForms)
+                if (owned is not HtmlHelp.HelpWindow) return true;
             foreach (Form child in f.MdiChildren)
                 if (ModalDialogShowing(child))
                     return true;
@@ -886,9 +888,22 @@ namespace StatsDirect.UI
 
         public DialogResult MsgboxX(string text, MessageBoxButtons buttons, MessageBoxIcon icon, string caption, int helpTopic, MessageBoxDefaultButton defaultButton = MessageBoxDefaultButton.Button1)
         {
-            if (null == MainWindow || !MainWindow.Visible || MainWindow.WindowState == FormWindowState.Minimized || ModalDialogShowing())
-                return MessageBox.Show(MainWindow, text, caption, buttons, icon, defaultButton, 0, HelpFilePath, HelpNavigator.TopicId, helpTopic.ToString());
-            return MainWindow.ShowModalMessage(text, caption, buttons, icon, defaultButton, HelpFilePath, HelpNavigator.TopicId, helpTopic.ToString());
+            // The native Help button raises HelpRequested on the active form.
+            // Keep the topic scoped to this message, including its owner's F1 handler.
+            Form owner = HtmlHelp.HelpService.FindOwner(MainWindow);
+            string previous = messageHelpTopic;
+            messageHelpTopic = helpTopic.ToString();
+            HelpEventHandler handler = (_, e) => { ShowHelp(owner, messageHelpTopic); e.Handled = true; };
+            try
+            {
+                if (owner != null) { owner.HelpRequested += handler; owner.Activate(); }
+                return MessageBox.Show(text, caption, buttons, icon, defaultButton, 0, owner != null);
+            }
+            finally
+            {
+                if (owner != null) owner.HelpRequested -= handler;
+                messageHelpTopic = previous;
+            }
         }
 
         public bool GetBoolean(string prompt, string caption, bool defaultValue, out bool cancelled)
@@ -1194,7 +1209,6 @@ namespace StatsDirect.UI
 
         ParameterBag ISession.SessionParametersAcrossOperations => sessionParametersAcrossOperations ??= new ParameterBag();
 
-        public string TemplateFileForNewReports => Path.Combine(SDConfiguration.TemplatePath, "blank.rtf");
 
         internal void ClearBatchMode()
         {

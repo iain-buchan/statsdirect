@@ -1,4 +1,4 @@
-﻿using StatsDirect.TemplateProcessing;
+﻿using StatsDirect.Templates;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -10,15 +10,10 @@ namespace StatsDirect.R
     {
         private object PathToChart(string path)
         {
-            int width;
-            int height;
-            using (Image i = Metafile.FromFile(path))
-            {
-                width = i.Width;
-                height = i.Height;
-            }
-            using Stream s = File.OpenRead(path);
-            return RtfImageConverter.MetastreamToRtf(s, width, height);
+            using Image image = Image.FromFile(path);
+            using var output = new MemoryStream();
+            image.Save(output, ImageFormat.Png);
+            return new ReportPicture(output.ToArray(), image.Width, image.Height);
         }
 
         private static string PathToName(string path)

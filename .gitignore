@@ -8,6 +8,7 @@ ReleaseBuild/*.exe
 ReleaseBuild/*.wixpdb
 *.csproj.user
 *.bak
+ReportEditor/upstream/Report/node_modules/
 
 # gvim backups (Rachel has a nasty habit of using gvim for bulk edits)
 *~
@@ -23,6 +24,9 @@ ReleaseBuild/*.wixpdb
 /Key/sign.txt
 /DownloadedBinaries/*.exe
 
-# Left beside STATSDIRECT.chm by MadCap Flare when it publishes the help there
+# Build metadata left by MadCap Flare, not part of the shipped help
 /StatsDirectUI/Assets/Data/*.output
 /StatsDirectUI/Assets/*.log.zip
+/StatsDirectUI/Assets/Help/**/*.output
+/StatsDirectUI/Assets/Help/**/*.log.zip
+/StatsDirectUI/Assets/Help/**/*.mclog

@@ -52,22 +52,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="UI\frmReportDNBTest.cs" />
-    <Compile Remove="UI\frmReportDNBTest.Designer.cs" />
-    <Compile Remove="UI\frmReportDotNetBrowser.cs" />
-    <Compile Remove="UI\frmReportDotNetBrowser.Designer.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Remove="UI\frmReportDNBTest.resx" />
-    <EmbeddedResource Remove="UI\frmReportDotNetBrowser.resx" />
-  </ItemGroup>
-  <ItemGroup>
     <PackageReference Include="Antlr4" Version="4.6.6">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Antlr4.Runtime" Version="4.6.6" />
-    <PackageReference Include="DevExpress.Win.RichEdit" Version="26.1.5" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4258.31" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.9.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.VisualBasic" Version="5.9.0" />
     <PackageReference Include="OpenMcdf" Version="3.3.0" />
@@ -77,8 +67,8 @@
   </ItemGroup>
   <ItemGroup>
     <!-- The mapping workbook is a note for whoever maintains the help and does not belong on users' machines. Nor do the build records that
-         MadCap Flare leaves beside STATSDIRECT.chm when it publishes the help here (Data/*.output, *.log.zip), or the retired Excel link. -->
-    <ContentWithTargetPath Include="Assets/**" Exclude="Assets/Excel/**;Assets/SD Help ID to File Name Mapping.xlsx;Assets/Data/*.output;Assets/*.log.zip">
+         MadCap Flare leaves when it publishes the HTML help (Data/*.output, *.log.zip), the retired CHM, or the retired Excel link. -->
+    <ContentWithTargetPath Include="Assets/**" Exclude="Assets/Excel/**;Assets/SD Help ID to File Name Mapping.xlsx;Assets/Data/*.output;Assets/*.log.zip;Assets/**/*.chm;Assets/**/*.chw;Assets/Help/**/*.output;Assets/Help/**/*.mclog;Assets/Help/**/*.log.zip">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <TargetPath>%(RecursiveDir)\%(Filename)%(Extension)</TargetPath>
     </ContentWithTargetPath>
@@ -101,6 +91,11 @@
   </Target>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
   </PropertyGroup>
+  <!-- WebView2's package adds both UI wrappers. This application uses WinForms;
+       keeping its unused WPF wrapper introduces conflicting desktop references. -->
+  <Target Name="RemoveUnusedWebView2WpfReference" BeforeTargets="ResolveAssemblyReferences">
+    <ItemGroup><Reference Remove="@(Reference)" Condition="'%(Reference.Filename)' == 'Microsoft.Web.WebView2.Wpf'" /></ItemGroup>
+  </Target>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseWithSigning|AnyCPU'">
@@ -109,5 +104,13 @@
     <DefineConstants>$(DefineConstants);WATCH_EXCEPTIONS</DefineConstants>
   </PropertyGroup>
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+  </Target>
+  <!-- Incremental builds can retain dependencies removed from the project. Do
+       not leave the retired editor next to the new application or in publish. -->
+  <Target Name="RemoveRetiredReportArtifacts" AfterTargets="CopyFilesToOutputDirectory">
+    <ItemGroup>
+      <_RetiredReportArtifact Include="$(OutDir)**/DevExpress*;$(OutDir)Template/blank.rtf;$(OutDir)**/*.chm;$(OutDir)**/*.chw" />
+    </ItemGroup>
+    <Delete Files="@(_RetiredReportArtifact)" />
   </Target>
 </Project>

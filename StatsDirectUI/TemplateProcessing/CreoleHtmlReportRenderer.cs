@@ -18,7 +18,7 @@ namespace StatsDirect.TemplateProcessing
 
         private class InnerHtmlReportRenderer : ICreoleVisitor<string>
         {
-            private static readonly Dictionary<string, IWrapper> rtfFormatting = new()
+            private static readonly Dictionary<string, IWrapper> htmlFormatting = new()
             {
                 { "b", new TagRenderer("b") },
                 { "ci", new SpanRenderer("ci") },
@@ -82,7 +82,7 @@ namespace StatsDirect.TemplateProcessing
 
             string ICreoleVisitor<string>.Visit(CreoleFormatting<string> victim)
             {
-                IWrapper wrapper = rtfFormatting[victim.Format];
+                IWrapper wrapper = htmlFormatting[victim.Format];
                 return wrapper.Open
                     + MaybeAccept(victim.Contents)
                     + wrapper.Close;
@@ -113,7 +113,7 @@ namespace StatsDirect.TemplateProcessing
                     return new HtmlRenderer(host).Render(renderable);
                 // the text of a value is encoded as the text of the template is: a P value below the display threshold is written
                 // "P < 0.0001", and a title may have an ampersand or an angle bracket (such text used to go into the HTML as it was)
-                return WebUtility.HtmlEncode(Text(value, victim.Format));
+                return WebUtility.HtmlEncode(Text(value, victim.Format)).Replace("\r\n", "\n").Replace("\r", "\n").Replace("\n", "<br />");
             }
 
             /// <summary>

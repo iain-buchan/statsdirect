@@ -1,6 +1,7 @@
 ﻿<Wix
   xmlns="http://wixtoolset.org/schemas/v4/wxs"
   xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal"
+  xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util"
   xmlns:netfx="http://wixtoolset.org/schemas/v4/wxs/netfx">
   <!-- The .Net Windows Desktop runtime bundled into the setup executable. To move to a newer one, change this version and download the matching installer: see DownloadedBinaries/README.md. -->
   <?define DotNetDesktopRuntimeVersion = "10.0.12" ?>
@@ -29,6 +30,7 @@
     </BootstrapperApplication>
     <Chain>
       <PackageGroupRef Id="DotNetDesktopRedist" />
+      <PackageGroupRef Id="WebView2Redist" />
       <MsiPackage
         Id="StatsDirectMsi"
         Compressed="yes"
@@ -38,6 +40,21 @@
   </Bundle>
 
   <Fragment>
+    <!-- StatsDirect installs per machine: require a machine-wide runtime so all
+         users, including those other than the installing administrator, can report. -->
+    <util:RegistrySearch Id="WebView2MachineSearch" Variable="WEBVIEW2VERSION" Root="HKLM"
+      Key="SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}"
+      Value="pv" Bitness="always32" Result="value" />
+    <PackageGroup Id="WebView2Redist">
+      <!-- A shared Microsoft runtime; never uninstall it with StatsDirect.
+           The standalone installer also works without an internet connection. -->
+      <ExePackage Id="WebView2Runtime" DisplayName="Microsoft Edge WebView2 Runtime"
+        PerMachine="yes" Permanent="yes" Cache="remove"
+        DetectCondition="WEBVIEW2VERSION &gt; v0.0.0.0" InstallArguments="/silent /install">
+        <ExePackagePayload Name="MicrosoftEdgeWebView2RuntimeInstallerX64.exe" Compressed="yes"
+          SourceFile="..\DownloadedBinaries\MicrosoftEdgeWebView2RuntimeInstallerX64.exe" />
+      </ExePackage>
+    </PackageGroup>
     <netfx:DotNetCoreSearch RuntimeType="desktop" MajorVersion="10" Platform="x64" Variable="DOTNETDESKTOPVERSION" />
     <PackageGroup Id="DotNetDesktopRedist">
       <!-- Permanent: the runtime is a shared Microsoft component, so StatsDirect installs it when it is missing but never removes it.  Without this, Burn

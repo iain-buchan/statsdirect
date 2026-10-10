@@ -118,11 +118,11 @@ namespace StatsDirect.Charting
         internal static void InitFirstFonts()
         {
             //  Default fonts, in case there are no preferences
-            DefaultAxisLabelFont = new FontDescriptor("Calibri", 0, 15);
-            DefaultAxisTitleFont = new FontDescriptor("Calibri", 1, 15);
-            DefaultLabelFont = new FontDescriptor("Calibri", 0, 15);
-            DefaultLegendFont = new FontDescriptor("Calibri", 0, 15);
-            DefaultTitleFont = new FontDescriptor("Calibri", 1, 22);
+            DefaultAxisLabelFont = new FontDescriptor("Arial", 0, 15);
+            DefaultAxisTitleFont = new FontDescriptor("Arial", 1, 15);
+            DefaultLabelFont = new FontDescriptor("Arial", 0, 15);
+            DefaultLegendFont = new FontDescriptor("Arial", 0, 15);
+            DefaultTitleFont = new FontDescriptor("Arial", 1, 22);
             SaveFonts();
         }
 
@@ -327,7 +327,8 @@ namespace StatsDirect.Charting
             {
                 DefaultTitleFont = savedTitleFontDescriptor;
                 string savedLabelFont = Settings.Default.LabelFont;
-                FontDescriptor.TryParse(savedLabelFont, out FontDescriptor savedLabelFontDescriptor);
+                if (!FontDescriptor.TryParse(savedLabelFont, out FontDescriptor savedLabelFontDescriptor))
+                    savedLabelFontDescriptor = new FontDescriptor("Arial", 0, 15);
                 DefaultAxisLabelFont = savedLabelFontDescriptor;
                 DefaultAxisTitleFont = savedLabelFontDescriptor;
                 DefaultLabelFont = savedLabelFontDescriptor;
