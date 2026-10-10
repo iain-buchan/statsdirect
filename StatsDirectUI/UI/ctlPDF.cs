@@ -49,6 +49,11 @@ namespace StatsDirect.UI
         /// </summary>
         private TouchedValue priorTouchedValue = TouchedValue.NotSet;
         private TouchedValue lastTouchedValue = TouchedValue.NotSet;
+        /// <summary>
+        /// What the last calculation did, for the record a report keeps of the run: "calculate" (the probabilities of the value) or
+        /// "invert-lower", "invert-upper" or "invert-two-sided" (the value of the probability in that box).
+        /// </summary>
+        private string lastAsked;
 
         public ctlPDF(DistributionOptions options)
         {
@@ -442,6 +447,7 @@ namespace StatsDirect.UI
 
         private void PFromX()
         {
+            lastAsked = "calculate";
             switch (selectedTest)
             {
                 case DistributionType.Z:
@@ -841,6 +847,7 @@ namespace StatsDirect.UI
         // box), and idx the box that was entered: 1 the lower tail, 2 the upper tail, 3 the two sided box.
         private void XFromP(double P, int idx)
         {
+            lastAsked = idx == 1 ? "invert-lower" : idx == 2 ? "invert-upper" : "invert-two-sided";
             // degrees of freedom below 1 are taken as 1; the Poisson count of events can be 0
             if (pnlDf.Visible && selectedTest != DistributionType.Poisson && CdblTxt(txtDf.Text) < 1)
                 txtDf.Text = "1";
@@ -1148,7 +1155,28 @@ namespace StatsDirect.UI
             if (dirty)
                 CalculateOrInvert();
             outputParameters.AddOutput("gr", lastCalculationAsString);
+            // the calculation's inputs, for the record a report keeps of the run and the R script written from it: the boxes as they
+            // stand, under one set of names for every distribution, and what was asked of them
+            Box(outputParameters, "value", pnlPdf, txtPdf);
+            Box(outputParameters, "df", pnlDf, txtDf);
+            Box(outputParameters, "df2", pnlDf2, txtDf2);
+            Box(outputParameters, "lower", pnlLp, txtLp);
+            Box(outputParameters, "upper", pnlUp, txtUp);
+            Box(outputParameters, "two_sided", pnl2p, txt2p);
+            if (lastAsked != null)
+                outputParameters.AddInput("asked", lastAsked);
             return null;
+        }
+
+        /// <summary>The number in a box that is shown and holds one, as an input of the run.</summary>
+        private static void Box(ParameterBag bag, string name, Control panel, TextBox box)
+        {
+            string text = box.Text.Trim();
+            if (!panel.Visible || text.Length == 0 || Formatting.ERRR.Equals(text))
+                return;
+            double value = CdblTxt(text);
+            if (value != Constant.MISSING && !double.IsNaN(value))
+                bag.AddInput(name, value);
         }
 
         private void cmdInvert_Click(object sender, EventArgs e)
