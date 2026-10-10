@@ -21,6 +21,7 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 - The panes in the body of a report are gone: the name and Help button above each result, and the width and Fit controls of each chart. Help is in the ribbon and the right-click menu, which also selects a result or all of them.
 - The question whether to save a report's changes when it closes is asked in the program's message banner at the top of the main window, as a workbook or a script asks it, and in the same words; it came in a floating Windows message box of its own.
 - The LOESS chart is drawn square, 6 by 6 inches; it was 6 by 4.
+- The method comparison regression draws its test against reference plot square, with equal axes, so that the line of equality runs at 45 degrees; the difference, residual and bias plots stay 6 by 4.
 
 ##[v5.1.0] 2026-10-10
 
