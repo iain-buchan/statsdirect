@@ -2,7 +2,9 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
-##[Unreleased]
+##[v5.0.15] 2026-10-10
+
+Version 5.0.15 follows the port of the engine to the Mac, whose checks of the shared code and replay of the help examples found faults on Windows too. The selection of data by group identifiers left out a row whose identifier cell was blank, so that the values after it were paired with the wrong groups without a warning, and the analysis of covariance by identifier took blank cells into its sums; such rows are now refused or left out, as the layout in separate columns has always left them out. The "Select model" follow-on of the linearized estimates regression and LOESS curve fitting with two or more predictors stopped with internal errors. Seven operations that no menu has reached since 2012, and the second menu layout that defined them, are removed.
 
 ### Fixed
 - Groups by identifier: a row whose identifier cell is blank was left out of the identifiers, so that they were fewer than the rows selected, the data had to be cut to their number ("all columns selected must be the same length"), and the values after the blank were then paired with the wrong groups without a warning. Such a row now keeps its place, and a row that has a value but no identifier is refused by its row number. An identifier that is the label of a missing value, "* (missing)", is a missing identifier too, not a group.
@@ -13,6 +15,7 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 - Reports rendered as HTML (not the report window of Windows, which uses rich text): the text of a value was put into the HTML as it was, so that a P value below the display threshold, "P < 0.0001", and a title with an ampersand or an angle bracket gave HTML that was not well formed. The text is now encoded, as the rest of the report is.
 - Simple linearized estimates regression: "Select model" from the follow-on box, to fit another model to the same data, stopped with an error of the program, because the follow-on took the fit of the first model rather than the data; each model is now fitted from the data.
 - LOESS curve fitting with two or more predictors stopped before the fit with "Internal error: Cannot find parameter 'plotFitsAndCi'", because the confidence level was asked for on a condition that only the layout with one predictor sets.
+- Example workbook: the heading GMTA of a column on the Nonparametric sheet, which the help calls GMAT, corrected; a workbook already copied to a Documents folder keeps its old heading.
 
 ### Removed
 - Seven operations that no menu reached and no help topic described, defined since StatsDirect 3 in 2012 for a second menu layout that the program never loads: the one way and two way analyses of variance grouped by a classifier (the analyses themselves take groups by identifier), sort by expression, the stacked bar plots, the explorer of continuous distributions, and the z score transform based on the empirical cumulative distribution.
