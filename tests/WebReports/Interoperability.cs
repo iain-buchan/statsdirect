@@ -51,6 +51,7 @@ internal static partial class Program
         Check(await True("(()=>{const cells=[...officeFixture.querySelectorAll('td')],cell=t=>cells.find(c=>c.textContent===t);return cell('12.50').getAttribute('x:num')==='12.5'&&cell('-2.5').getAttribute('x:num')==='-2.5'&&cell('1.2e-7').hasAttribute('x:num')&&cell('95%').getAttribute('x:num')==='0.95';})()"), "Office clipboard carries decimal, negative, exponential and percentage numbers");
         Check(await True("(()=>{const cells=[...officeFixture.querySelectorAll('td')];return ['00123','=1+1','1234567890123456','<0.001'].every(t=>{const c=cells.find(c=>c.textContent===t);return !c.hasAttribute('x:num')&&c.getAttribute('style').includes('mso-number-format');});})()"), "identifiers and formula-like labels retain Office text hints");
         Check(await True("officeFixture.querySelector('th').colSpan===2&&!!officeFixture.querySelector('img[src^=\"data:image/png\"]')"), "Office clipboard retains merged cells and a PNG chart fallback");
+        Check(await True("!officeFixture.querySelector('img[src^=\"data:image/png\"]').parentElement.querySelector('br')"), "no line break follows a chart in the Office clipboard");
         // Selection itself changes the chart's selection adornment. Start the
         // export invariant after preparing the selection/clipboard.
         string before = (await Js(presentation)).GetRawText();
