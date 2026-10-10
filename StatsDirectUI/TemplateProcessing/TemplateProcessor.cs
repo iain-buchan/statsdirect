@@ -23,7 +23,7 @@ namespace StatsDirect.TemplateProcessing
         private const string STATSDIRECT_REPORT_PANE = "statsdirect-report-pane";
 
         // The run of an operation under way: its outputs to the report (the text of an analysis, then its chart) make one item there
-        private object currentRun;
+        private OperationRun currentRun;   // the run of the operation: the report keeps its record with each item the run puts there
 
         public TemplateProcessor(ITemplateHost host)
         {
@@ -39,7 +39,7 @@ namespace StatsDirect.TemplateProcessing
         StepOutput ITemplateProcessor.Execute(Operation operation, ParameterBag startingParameters)
         {
             host.Operation = operation;
-            currentRun = new object();
+            currentRun = new OperationRun(operation);
             ParameterBag filledParameters = startingParameters ?? new ParameterBag();
 
             // Check preconditions; fail if any fail.
@@ -321,7 +321,7 @@ namespace StatsDirect.TemplateProcessing
                             if (null == outstandingFilledParameters)
                                 throw new TemplateOperationCancelledException();
                             foreach (Parameter outstandingParameter in outstandingParameters)
-                                MaybeRemember(outstandingParameter, outstandingFilledParameters);
+                                { MaybeRemember(outstandingParameter, outstandingFilledParameters); NoteInput(outstandingParameter, parmsAndFilledParameters); }
                             foreach (KeyValuePair<string, FilledParameter> pair in outstandingFilledParameters.Pairs)
                             {
                                 // Handle removal of explicit blanks
@@ -363,6 +363,7 @@ namespace StatsDirect.TemplateProcessing
                     else
                     {
                         MaybeRemember(parameter, newFilledParameters);
+                        NoteInput(parameter, parmsAndFilledParameters);
                         if (null != newFilledParameters)
                             foreach (KeyValuePair<string, FilledParameter> pair in newFilledParameters.Pairs)
                                 filledParameters.Add(pair.Key, pair.Value);
@@ -389,7 +390,7 @@ namespace StatsDirect.TemplateProcessing
                     if (null == outstandingFilledParameters)
                         throw new TemplateOperationCancelledException();
                     foreach (Parameter outstandingParameter in outstandingParameters)
-                        MaybeRemember(outstandingParameter, outstandingFilledParameters);
+                        { MaybeRemember(outstandingParameter, outstandingFilledParameters); NoteInput(outstandingParameter, parmsAndFilledParameters); }
                     foreach (KeyValuePair<string, FilledParameter> pair in outstandingFilledParameters.Pairs)
                         filledParameters[pair.Key] = pair.Value;
                     outstandingParameters.Clear();
@@ -417,6 +418,19 @@ namespace StatsDirect.TemplateProcessing
         /// <param name="bag1"></param>
         /// <param name="bag2"></param>
         /// <returns></returns>
+        /// <summary>
+        /// The run's note of a parameter as it was asked, with the prompt the user saw: the record of the run lists the inputs in this order.
+        /// </summary>
+        private void NoteInput(Parameter parameter, ParameterBag context)
+        {
+            if (null == currentRun || null == parameter)
+                return;
+            string prompt;
+            try { prompt = parameter.Prompt(this, context, parameter.Title ?? parameter.Name); }
+            catch (Exception) { prompt = parameter.Title ?? parameter.Name; }
+            currentRun.Note(parameter, prompt);
+        }
+
         private static ParameterBag CombinePreferringLater(ParameterBag bag1, ParameterBag bag2)
         {
             ParameterBag combinedParameters = new();
@@ -554,6 +568,10 @@ namespace StatsDirect.TemplateProcessing
             if (parameters.ContainsKey(STATSDIRECT_REPORT_PANE)
                 && null != parameters[STATSDIRECT_REPORT_PANE])
                 preferredPane = parameters[STATSDIRECT_REPORT_PANE].AsPane;
+            // the record of the run as it stands, kept by the report with the item this report makes or joins; a fault in it must not stop the analysis
+            if (null != currentRun)
+                try { currentRun.Record = RunRecord.Write(currentRun, parameters); }
+                catch (Exception) { }
             preferredPane = host.OutputReport(filledTemplate, reportStep.Operation, preferredPane, currentRun);
 
             // Log the ID of the report that was actually used
