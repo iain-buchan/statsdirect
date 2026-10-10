@@ -64,6 +64,12 @@ document.addEventListener('contextmenu',e=>{const entry=e.target.closest?.('.rep
 // a key that follows (Delete, Ctrl+C) reaches the editor's handling of the results
 function selectResult(id){document.querySelector('#result-'+id+' .report-body')?.focus();document.querySelector('#result-'+id+' [data-select-result]')?.click();}
 function selectAll(){document.querySelector('.report-body')?.focus();document.getElementById('results').dispatchEvent(new KeyboardEvent('keydown',{key:'a',ctrlKey:true,bubbles:true,cancelable:true}));}
+// A selection that spills outside the results (Ctrl+A on the page takes the toolbar too) is one the editor would leave to the browser,
+// whose copy gives Word raw markup; it becomes the selection of all results
+function clampSelection(){const sel=getSelection();if(!sel||!sel.rangeCount||sel.isCollapsed)return;const results=document.getElementById('results'),r=sel.getRangeAt(0);if(results.contains(r.startContainer)&&results.contains(r.endContainer))return;if(!r.intersectsNode(results))return;selectAll();}
+const field=t=>!!(t?.closest?.('input,textarea,select,[contenteditable="true"]:not(.report-body)'));
+document.addEventListener('keydown',e=>{if(!editing||e.isComposing||!(e.ctrlKey||e.metaKey)||e.key.toLowerCase()!=='a')return;const t=e.target instanceof Element?e.target:null;if(field(t)||t?.closest('#results'))return;e.preventDefault();e.stopImmediatePropagation();selectAll();},true);
+for(const kind of ['copy','cut'])document.addEventListener(kind,()=>clampSelection(),true);
 document.addEventListener('focusin',e=>{const body=e.target.closest('.report-body');if(body){const entry=entries.find(v=>v.id===body.dataset.resultId);post({action:'context',context:entry?.helpContextId??0});}});
 window.WindowsReport={async run(request){
   try {let value;
@@ -98,7 +104,7 @@ window.WindowsReport={async run(request){
           value=value.replace('<head>','<head><meta name="statsdirect-report-format" content="1">').replace('</body>',`<script type="application/json" id="statsdirect-report-data">${metadata}</script></body>`);
         }value={content:value,revision:state.revision};break;
       }
-      case 'prepareClipboard':value=StatsDirectReportEditor.prepareClipboard(!!request.args.cut);break;
+      case 'prepareClipboard':clampSelection();value=StatsDirectReportEditor.prepareClipboard(!!request.args.cut);break;
       case 'officeClipboard':value=await StatsDirectReportExport.clipboard({fragment:request.args.html});break;
       case 'cut':value=StatsDirectReportEditor.cutPrepared(request.args.token);break;
       case 'preparePaste':value=StatsDirectReportEditor.preparePaste();break;
