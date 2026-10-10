@@ -47,6 +47,12 @@ namespace StatsDirect.TemplateProcessing
                 .Append("\" />");
         }
 
+        void IRenderableVisitor.Visit(ReportVectorPicture victim)
+        {
+            // inline, as the engine's own charts are: the report editors take an svg element as a vector chart
+            builder.Append(victim.Svg);
+        }
+
         private ReportRenderer GetReportRenderer(string mimeType)
         {
             if ("application/x-statsdirect-creole".Equals(mimeType))

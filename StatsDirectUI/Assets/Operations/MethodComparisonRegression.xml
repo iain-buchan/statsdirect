@@ -114,9 +114,9 @@ statsdirect.image <- setClass("statsdirect.image", representation(path="characte
 make.statsdirect.plot <- function() {
   tempfilecount <- 0
   statsdirect.plot <- function(plotter) {
-    filename <- paste ("metafile",tempfilecount,".png", sep="")
+    filename <- paste ("metafile",tempfilecount,".svg", sep="")
     path<-file.path(getwd(),filename)
-    png(path, width=864, height=576, res=144)
+    svg(path, width=6, height=4)
     plotter()
     suppressWarnings(dev.off())
     tempfilecount <<- tempfilecount + 1

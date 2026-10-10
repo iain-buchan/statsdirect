@@ -114,8 +114,8 @@ padded <- function(v) { out <- rep(NA_real_, length(used)); out[used] <- v; out 
 shouldPlot <- ncol(predictors) == 1 # Plots are only valid if there is a single predictor
 if (shouldPlot) {
   if (exists("returning.to.statsdirect")) {
-    gr1<-file.path(getwd(),"metafile1.png")
-    png(gr1, width=864, height=576, res=144)
+    gr1<-file.path(getwd(),"metafile1.svg")
+    svg(gr1, width=6, height=4)
   }
   plot(predictors[[1]],outcome[[1]],main=title,ylab=ylab,xlab=xlab)
   x <- m$x[,1] # the x values that were fitted, which are the ones p$fit belongs to (not the worksheet column, which may hold rows loess left out)
