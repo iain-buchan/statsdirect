@@ -30,6 +30,7 @@ internal static partial class Program
             CheckRecipes();
             CheckScript();
             CheckTable();
+            CheckRecipesAgainstHelp();
             Console.WriteLine($"PASS {checks} Continue in R checks");
             return 0;
         }

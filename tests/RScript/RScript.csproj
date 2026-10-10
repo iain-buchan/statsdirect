@@ -9,6 +9,7 @@
     <StatsDirectBin Condition="'$(StatsDirectBin)' == ''">../../StatsDirectUI/bin/Debug/net10.0-windows10.0.17763.0</StatsDirectBin>
     <Operations>../../StatsDirectUI/Assets/Operations</Operations>
     <Recipes>../../StatsDirectUI/Assets/R</Recipes>
+    <Examples>examples</Examples>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="StatsDirect">
@@ -24,6 +25,10 @@
     <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
       <_Parameter1>Recipes</_Parameter1>
       <_Parameter2>$([System.IO.Path]::GetFullPath('$(Recipes)', '$(MSBuildProjectDirectory)'))</_Parameter2>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>Examples</_Parameter1>
+      <_Parameter2>$([System.IO.Path]::GetFullPath('$(Examples)', '$(MSBuildProjectDirectory)'))</_Parameter2>
     </AssemblyAttribute>
   </ItemGroup>
 </Project>

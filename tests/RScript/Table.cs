@@ -38,8 +38,8 @@ internal static partial class Program
         Check(!r.GetProperty("inputs").EnumerateArray().Any(i => i.GetProperty("name").GetString() == "a") && r.GetProperty("parameters").GetProperty("a").GetDouble() == 10,
               "the four named counts stay among the settings and are not listed as inputs of their own");
         RScript script = RScriptWriter.Write(r, null, null);
-        Check(script.HasRecipe && script.Text.Contains("data_frames[[\"scrap\"]] <- setNames(list(c(10, 3),\n  c(5, 12)), c(\"Present\", \"Absent\"))") && script.Text.Contains("\"counts\""),
-              "the script writes the table as columns and as rows of counts");
+        Check(script.HasRecipe && script.Text.Contains("counts <- matrix(c(10, 5, 3, 12), 2, byrow = TRUE,\n  dimnames = list(\"Outcome\" = c(\"Present\", \"Absent\"), \"Characteristic\" = c(\"Present\", \"Absent\")))\n") && script.Text.Contains("confidence <- 0.95\n"),
+              "the script writes the table as a matrix of counts with the labels and the names of its rows and columns");
         string output = RunR(script.Text, Path.Combine(Path.GetTempPath(), "statsdirect-rscript-checks"));
         double chi = Figure(output, "X-squared = ([0-9.eE+-]+), df = 1"), expected = PearsonChiSquare(10, 5, 3, 12);
         Console.WriteLine($"      R: X-squared = {chi}; from the definition {expected.ToString("R", inv)}");
