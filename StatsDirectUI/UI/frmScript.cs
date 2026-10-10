@@ -66,6 +66,8 @@ namespace StatsDirect.UI
                     return;
                 }
                 SdApplication.SoleInstance.NoteFormClosing(this, e);
+                if (runningR)
+                    rRun.Cancel();   // R still running the script: it goes with the window
                 Visible = false;
                 MdiParent = null;
             }, "Couldn't close form");
@@ -349,10 +351,12 @@ namespace StatsDirect.UI
             Text = title;
             if (!rTools)
             {
-                // the toolbar of an R script: run it again after editing, and open the folder R writes to; the files a run writes are listed as links
+                // the toolbar of an R script: run it again after editing, clear what earlier runs printed, and open the folder R writes to; the
+                // files a run writes are listed as links
                 rTools = true;
                 ToolStrip1.Items.Add(new ToolStripSeparator());
                 ToolStrip1.Items.Add(new ToolStripButton("▶ Run in R", null, (_, _) => RunR()) { DisplayStyle = ToolStripItemDisplayStyle.Text, ToolTipText = "Run the script with the installed R; what it prints appears below" });
+                ToolStrip1.Items.Add(new ToolStripButton("Clear output", null, (_, _) => rtbOutput.Clear()) { DisplayStyle = ToolStripItemDisplayStyle.Text, ToolTipText = "Clear what R has printed below" });
                 ToolStrip1.Items.Add(new ToolStripButton("Output folder", null, (_, _) => OpenRFolder()) { DisplayStyle = ToolStripItemDisplayStyle.Text, ToolTipText = "Open the folder the script writes its files to" });
                 rtbOutput.DetectUrls = true;
                 rtbOutput.LinkClicked += (_, e) => OpenLink(e.LinkText);
@@ -361,6 +365,8 @@ namespace StatsDirect.UI
         }
 
         private bool rTools, runningR;
+        private System.Threading.CancellationTokenSource rRun;   // stops the R process of the run in progress
+        private int rGeneration;                                   // counts the runs, so that a stopped run's output is dropped
 
         private static void OpenRFolder()
         {
@@ -400,12 +406,11 @@ namespace StatsDirect.UI
         /// <summary>
         /// Runs the script with the installed R on a background thread, the window staying responsive, and shows what R printed in the
         /// output pane: at once when a result is continued in R, and on Run after edits.  Finding R, which may ask the user to install it,
-        /// happens here on the interface thread.
+        /// happens here on the interface thread.  Run while R is still running the script as it was (the first run, before an edit) stops
+        /// that run, drops its output and runs the script as it is now.
         /// </summary>
         private void RunR()
         {
-            if (runningR)
-                return;
             RVersion version = RController.PreferredRVersion();
             while (null == version)
             {
@@ -413,19 +418,27 @@ namespace StatsDirect.UI
                     return;
                 version = RController.PreferredRVersion();
             }
+            if (runningR)
+            {
+                rRun.Cancel();
+                rtbOutput.AppendText("(stopped: the script runs again as it is now)\n");
+            }
             string script = rtbDoc.Text;
             DateTime started = DateTime.Now;
             runningR = true;
+            int generation = ++rGeneration;
+            System.Threading.CancellationTokenSource run = rRun = new();
             rtbOutput.AppendText("\n======== Running in R ========\n");
             System.Threading.Tasks.Task.Run(() =>
             {
-                try { return RController.RunScriptCapturingOutput(script, version); }
+                try { return RController.RunScriptCapturingOutput(script, version, run.Token); }
                 catch (Exception ex) { return "Error: " + ex.Message; }
             }).ContinueWith(t =>
             {
+                run.Dispose();
+                if (generation != rGeneration || IsDisposed)
+                    return;   // stopped by a later run, whose output follows, or by the window closing
                 runningR = false;
-                if (IsDisposed)
-                    return;
                 rtbOutput.AppendText(t.Result);
                 rtbOutput.AppendText(FilesWritten(started));
                 rtbOutput.AppendText("\n======== End of run ========\n");

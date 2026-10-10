@@ -154,8 +154,9 @@ namespace StatsDirect.R
 
         /// <summary>
         /// The same with the R to use already found, so that the run can go on a background thread: finding R may ask the user to install it.
+        /// A stop asked for through the token ends the R process; the run then returns "(stopped)" with whatever R had printed.
         /// </summary>
-        public static string RunScriptCapturingOutput(string scriptBody, RVersion preferredVersion)
+        public static string RunScriptCapturingOutput(string scriptBody, RVersion preferredVersion, System.Threading.CancellationToken stop = default)
         {
             string rFolder = SDConfiguration.MyStatsDirectRFolder;
             if (!Directory.Exists(rFolder))
@@ -181,9 +182,13 @@ namespace StatsDirect.R
                 StandardErrorEncoding = Encoding.UTF8
             };
             using Process p = Process.Start(startInfo);
+            // a stop kills R and waits for it to go, so that a run started next can write the script file afresh
+            using System.Threading.CancellationTokenRegistration stopping = stop.Register(() => { try { p.Kill(true); p.WaitForExit(3000); } catch (Exception) { } });
             System.Threading.Tasks.Task<string> errors = p.StandardError.ReadToEndAsync();
             string output = p.StandardOutput.ReadToEnd();
             p.WaitForExit();
+            if (stop.IsCancellationRequested)
+                return output + "\n(stopped)";
             StringBuilder result = new(output);
             if (errors.Result.Length > 0)
                 result.Append('\n').Append(errors.Result);
