@@ -15,7 +15,7 @@ namespace StatsDirect.UI;
 internal sealed class frmReportWebView : StatsDirectForm, IReport
 {
     private readonly ReportView view;
-    private readonly Label status = new() { Dock = DockStyle.Bottom, AutoSize = false, Height = 28, Padding = new Padding(6), Text = "Loading the report editor…" };
+    private readonly Label status = new() { Dock = DockStyle.Bottom, AutoSize = true, Text = "Loading the report editor…" };   // sized by its text: a fixed height cut it off at a display scaling above 100%
     private bool allowClosing, saving, opening;
     private static readonly System.Threading.SemaphoreSlim closePrompts = new(1, 1);
     internal Task<bool> PendingClose { get; private set; }
@@ -26,6 +26,7 @@ internal sealed class frmReportWebView : StatsDirectForm, IReport
         Width = 1000; Height = 750;
         view = new ReportView(System.IO.Path.Combine(SDConfiguration.InstallationDirectory, "ReportEditor")) { Dock = DockStyle.Fill };
         Controls.Add(view); Controls.Add(status);
+        status.Padding = new Padding((int)Math.Round(6 * DeviceDpi / 96.0));   // the padding scaled with the display
         CreateFileMenu();
         view.Changed += () => { if (allowClosing) CancelParentClose(); Dirty = true; status.Text = "Unsaved changes"; };
         view.Notice += text => status.Text = text;
