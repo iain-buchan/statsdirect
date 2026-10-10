@@ -164,6 +164,7 @@ internal static partial class Program
         await CheckTemplateStyles(real);
         await CheckDeletion();
         await CheckRetirement();
+        await CheckScrolling();
     }
 
     private static async Task CheckStandardPresentation(string real)
