@@ -22,6 +22,9 @@ namespace StatsDirect.TemplateProcessing
         private const string STATSDIRECT_FRAME_PANE = "statsdirect-frame-pane";
         private const string STATSDIRECT_REPORT_PANE = "statsdirect-report-pane";
 
+        // The run of an operation under way: its outputs to the report (the text of an analysis, then its chart) make one item there
+        private object currentRun;
+
         public TemplateProcessor(ITemplateHost host)
         {
             this.host = host;
@@ -36,6 +39,7 @@ namespace StatsDirect.TemplateProcessing
         StepOutput ITemplateProcessor.Execute(Operation operation, ParameterBag startingParameters)
         {
             host.Operation = operation;
+            currentRun = new object();
             ParameterBag filledParameters = startingParameters ?? new ParameterBag();
 
             // Check preconditions; fail if any fail.
@@ -550,7 +554,7 @@ namespace StatsDirect.TemplateProcessing
             if (parameters.ContainsKey(STATSDIRECT_REPORT_PANE)
                 && null != parameters[STATSDIRECT_REPORT_PANE])
                 preferredPane = parameters[STATSDIRECT_REPORT_PANE].AsPane;
-            preferredPane = host.OutputReport(filledTemplate, reportStep.Operation, preferredPane);
+            preferredPane = host.OutputReport(filledTemplate, reportStep.Operation, preferredPane, currentRun);
 
             // Log the ID of the report that was actually used
             ParameterBag outputParameters = new();

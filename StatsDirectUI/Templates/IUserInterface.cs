@@ -17,7 +17,7 @@ namespace StatsDirect.Templates
         /// <param name="operation"></param>
         /// <param name="preferredOutputLocation">If non-null, indicates a possible host-controlled place to put the output</param>
         /// <returns>The host-assigned identity of the report that was used, or null if the report was not output at all.</returns>
-        object OutputReport(IRenderable renderable, Operation operation, object preferredOutputLocation);
+        object OutputReport(IRenderable renderable, Operation operation, object preferredOutputLocation, object run);   // run: the run of the operation, whose outputs make one item of the report
 
         /// <summary>
         /// The user (or similar decision-maker) should be allowed to amend whatever is deemed appropriate of the options.

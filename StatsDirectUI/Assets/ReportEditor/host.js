@@ -13,6 +13,8 @@ function append(e){entries.push(e);document.getElementById('results').insertAdja
 // to the results; the saved report and the printed page do not carry it).
 function reveal(id){const node=document.getElementById('result-'+id);if(!node)return;const bar=document.querySelector('.report-toolbar');const gap=(bar?bar.getBoundingClientRect().height:0)+8;const room=Math.max(0,window.innerHeight-gap-node.getBoundingClientRect().height-16);document.documentElement.style.setProperty('--reveal-room',room+'px');window.scrollTo({top:Math.max(0,node.getBoundingClientRect().top+window.scrollY-gap)});}
 function replace(e){StatsDirectReportEditor.replace(e.id,entryHTML(e));}
+// More of a result into an item (a chart after its analysis): the item's current markup, then the more, and the window stays at the item's start
+function extend(id,html){const e=entries.find(v=>v.id===id);if(!e)throw Error('No such result.');const body=document.querySelector('#result-'+id+' .report-body');if(body)e.html=StatsDirectReportEditor.serialize(body);e.html+=html;replace(e);history();reveal(id);}
 function discardEntry(id){const node=document.getElementById('result-'+id);if(node){StatsDirectReportEditor.detach(node);node.remove();}const i=entries.findIndex(e=>e.id===id);if(i>=0)entries.splice(i,1);}
 function edits(values,typing=false,removeIDs=[]){
   if(!Array.isArray(values)||values.length>entries.length||new Set(values.map(v=>v.id)).size!==values.length)return;
@@ -67,6 +69,7 @@ window.WindowsReport={async run(request){
   try {let value;
     switch(request.method){
       case 'append':append(request.args);changed();value=true;break;
+      case 'extend':extend(request.args.id,request.args.html);changed();value=true;break;
       case 'snapshot':value=snapshot();break;
       case 'contextTarget':value=contextTarget;break;
       case 'selectResult':selectResult(request.args.id);value=true;break;

@@ -87,12 +87,26 @@ internal sealed class frmReportWebView : StatsDirectForm, IReport
         catch (Exception ex) { status.Text = ex.Message; SdApplication.SoleInstance.FriendlyError("The Web Report command could not be completed", ex, false); }
     }
 
-    void IReport.AppendRenderable(IRenderable renderable, int helpContextId, Operation operation)
+    private object lastRun;            // the run of the operation whose item was appended last
+    private Task<string> lastItem;     // that item's id, once appended
+
+    void IReport.AppendRenderable(IRenderable renderable, int helpContextId, Operation operation, object run)
     {
         string html = new HtmlRenderer(SdApplication.SoleInstance).Render(renderable);
         if (allowClosing) CancelParentClose();
         Dirty = true;
-        _ = Guard(() => view.AppendAsync(html, operation?.FriendlyName ?? "Analysis", operation?.Name ?? "", helpContextId));
+        if (run != null && run == lastRun && lastItem != null)
+        {
+            // another output of the same run, a chart after its analysis: into that item, at whose start the window stays
+            Task<string> item = lastItem;
+            _ = Guard(async () => await view.ExtendAsync(await item, html));
+        }
+        else
+        {
+            lastRun = run;
+            lastItem = view.AppendAsync(html, operation?.FriendlyName ?? "Analysis", operation?.Name ?? "", helpContextId);
+            _ = Guard(() => lastItem);
+        }
     }
 
     public override IList<Pane> AvailablePanes => new List<Pane> { SelectedPane };

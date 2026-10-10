@@ -633,7 +633,7 @@ namespace StatsDirect.UI
         /// <param name="operation"></param>
         /// <param name="redoInformation"></param>
         /// <param name="preferredOutputLocation"></param>
-        object IUserInterface.OutputReport(IRenderable renderable, Operation operation, object preferredOutputLocation)
+        object IUserInterface.OutputReport(IRenderable renderable, Operation operation, object preferredOutputLocation, object run)
         {
             // Locate the existing report window if it still exists
             IReport report;
@@ -648,7 +648,7 @@ namespace StatsDirect.UI
             }
             if (null == report)
                 throw new TemplateOperationCancelledException();
-            report.AppendRenderable(renderable, ActiveHelpTopic, operation);
+            report.AppendRenderable(renderable, ActiveHelpTopic, operation, run);
             report.EnsureActive();
             return report.SelectedPane;
         }

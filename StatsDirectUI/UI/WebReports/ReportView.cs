@@ -136,14 +136,31 @@ internal sealed class ReportView : UserControl
         finally { requests.Remove(id); }
     }
 
-    internal Task AppendAsync(string html, string title, string operation, int helpContextId)
+    internal Task<string> AppendAsync(string html, string title, string operation, int helpContextId)
     {
-        async Task AppendAfter(Task prior)
+        async Task<string> AppendAfter(Task prior)
         {
             await prior;
-            await CallAsync("append", new { id = Guid.NewGuid().ToString("D"), html, title, operation, helpContextId });
+            string id = Guid.NewGuid().ToString("D");
+            await CallAsync("append", new { id, html, title, operation, helpContextId });
+            return id;
         }
-        return mutations = AppendAfter(mutations);
+        Task<string> appended = AppendAfter(mutations);
+        mutations = appended;
+        return appended;
+    }
+
+    /// <summary>
+    /// More of a result into the item appended for the same run: a chart after its analysis.
+    /// </summary>
+    internal Task ExtendAsync(string id, string html)
+    {
+        async Task ExtendAfter(Task prior)
+        {
+            await prior;
+            await CallAsync("extend", new { id, html });
+        }
+        return mutations = ExtendAfter(mutations);
     }
 
     internal async Task OpenHtmlAsync(string html, string title)
