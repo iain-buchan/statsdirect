@@ -1,11 +1,14 @@
+using StatsDirect.Configuration;
 using StatsDirect.R;
 using StatsDirect.TemplateProcessing;
 using StatsDirect.Templates;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace StatsDirect.UI
@@ -340,9 +343,95 @@ namespace StatsDirect.UI
             rtbDoc.Text = script;
             rtbDoc.SelectionStart = 0;
             rtbDoc.SelectionLength = 0;
-            rtbDoc.Modified = true;
+            rtbDoc.Modified = false;   // written from the report, not an unsaved document: closing the program must not wait on it
+            Dirty = false;             // (setting the text marked the form changed)
             cboLanguage.SelectedIndex = 1;
             Text = title;
+            if (!rTools)
+            {
+                // the toolbar of an R script: run it again after editing, and open the folder R writes to; the files a run writes are listed as links
+                rTools = true;
+                ToolStrip1.Items.Add(new ToolStripSeparator());
+                ToolStrip1.Items.Add(new ToolStripButton("▶ Run in R", null, (_, _) => RunR()) { DisplayStyle = ToolStripItemDisplayStyle.Text, ToolTipText = "Run the script with the installed R; what it prints appears below" });
+                ToolStrip1.Items.Add(new ToolStripButton("Output folder", null, (_, _) => OpenRFolder()) { DisplayStyle = ToolStripItemDisplayStyle.Text, ToolTipText = "Open the folder the script writes its files to" });
+                rtbOutput.DetectUrls = true;
+                rtbOutput.LinkClicked += (_, e) => OpenLink(e.LinkText);
+            }
+            RunR();
+        }
+
+        private bool rTools, runningR;
+
+        private static void OpenRFolder()
+        {
+            string folder = SDConfiguration.MyStatsDirectRFolder;
+            Directory.CreateDirectory(folder);
+            Process.Start(new ProcessStartInfo(folder) { UseShellExecute = true });
+        }
+
+        /// <summary>A link in the output: a file the script wrote, opened with its own program, or a web address.</summary>
+        private void OpenLink(string link)
+        {
+            try
+            {
+                string target = link.StartsWith("file:", StringComparison.OrdinalIgnoreCase) ? new Uri(link).LocalPath : link;
+                Process.Start(new ProcessStartInfo(target) { UseShellExecute = true });
+            }
+            catch (Exception ex) { rtbOutput.AppendText("Could not open " + link + ": " + ex.Message + "\n"); }
+        }
+
+        /// <summary>The files a run wrote to the R folder, charts among them, as links the user can open.</summary>
+        private static string FilesWritten(DateTime started)
+        {
+            string folder = SDConfiguration.MyStatsDirectRFolder;
+            if (!Directory.Exists(folder))
+                return string.Empty;
+            List<FileInfo> files = new DirectoryInfo(folder).GetFiles()
+                .Where(f => f.LastWriteTime >= started.AddSeconds(-1) && !f.Name.Equals("continue.r", StringComparison.OrdinalIgnoreCase))
+                .OrderBy(f => f.Name, StringComparer.OrdinalIgnoreCase).ToList();
+            if (files.Count == 0)
+                return string.Empty;
+            System.Text.StringBuilder s = new("\nFiles written, to open with a click:\n");
+            foreach (FileInfo f in files)
+                s.Append(new Uri(f.FullName).AbsoluteUri).Append('\n');
+            return s.ToString();
+        }
+
+        /// <summary>
+        /// Runs the script with the installed R on a background thread, the window staying responsive, and shows what R printed in the
+        /// output pane: at once when a result is continued in R, and on Run after edits.  Finding R, which may ask the user to install it,
+        /// happens here on the interface thread.
+        /// </summary>
+        private void RunR()
+        {
+            if (runningR)
+                return;
+            RVersion version = RController.PreferredRVersion();
+            while (null == version)
+            {
+                if (!RController.UserMightHaveInstalledR())
+                    return;
+                version = RController.PreferredRVersion();
+            }
+            string script = rtbDoc.Text;
+            DateTime started = DateTime.Now;
+            runningR = true;
+            rtbOutput.AppendText("\n======== Running in R ========\n");
+            System.Threading.Tasks.Task.Run(() =>
+            {
+                try { return RController.RunScriptCapturingOutput(script, version); }
+                catch (Exception ex) { return "Error: " + ex.Message; }
+            }).ContinueWith(t =>
+            {
+                runningR = false;
+                if (IsDisposed)
+                    return;
+                rtbOutput.AppendText(t.Result);
+                rtbOutput.AppendText(FilesWritten(started));
+                rtbOutput.AppendText("\n======== End of run ========\n");
+                rtbOutput.SelectionStart = rtbOutput.TextLength;
+                rtbOutput.ScrollToCaret();
+            }, System.Threading.Tasks.TaskScheduler.FromCurrentSynchronizationContext());
         }
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
@@ -389,18 +478,16 @@ namespace StatsDirect.UI
         {
             DoOrWarn(() =>
             {
+                if (cboLanguage.SelectedIndex == 1)
+                {
+                    // R: the installed R runs the script and what it prints is shown below, as for a result continued in R; files it writes go to the R folder
+                    RunR();
+                    return;
+                }
                 rtbOutput.AppendText("\n======== Start of run ========\n");
                 try
                 {
                     string script = rtbDoc.Text;
-                    if (cboLanguage.SelectedIndex == 1)
-                    {
-                        // R: the installed R runs the script and what it prints is shown here, as for a result continued in R; files it writes go to the R folder
-                        using (new WaitCursor())
-                            rtbOutput.AppendText(RController.RunScriptCapturingOutput(script));
-                        rtbOutput.AppendText("\n======== End of run ========\n");
-                        return;
-                    }
                     IScriptEngine engine = new ScriptEngine();
                     string Language = ScriptLanguageForScript();
                     object output = engine.Run(Language, script, ScriptType.Method, SdApplication.SoleInstance, null, null, null);

@@ -142,6 +142,21 @@ namespace StatsDirect.R
         /// </summary>
         public static string RunScriptCapturingOutput(string scriptBody)
         {
+            RVersion preferredVersion = PreferredRVersion();
+            while (null == preferredVersion)
+            {
+                if (!UserMightHaveInstalledR())
+                    throw new TemplateOperationCancelledException();
+                preferredVersion = PreferredRVersion();
+            }
+            return RunScriptCapturingOutput(scriptBody, preferredVersion);
+        }
+
+        /// <summary>
+        /// The same with the R to use already found, so that the run can go on a background thread: finding R may ask the user to install it.
+        /// </summary>
+        public static string RunScriptCapturingOutput(string scriptBody, RVersion preferredVersion)
+        {
             string rFolder = SDConfiguration.MyStatsDirectRFolder;
             if (!Directory.Exists(rFolder))
                 Directory.CreateDirectory(rFolder);
@@ -152,13 +167,6 @@ namespace StatsDirect.R
                 tw.Write(SCRIPT_HEAD, rFolder.Replace(@"\", @"\\"));
                 tw.WriteLine();
                 tw.WriteLine(repairedScriptBody);
-            }
-            RVersion preferredVersion = PreferredRVersion();
-            while (null == preferredVersion)
-            {
-                if (!UserMightHaveInstalledR())
-                    throw new TemplateOperationCancelledException();
-                preferredVersion = PreferredRVersion();
             }
             ProcessStartInfo startInfo = new()
             {
