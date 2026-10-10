@@ -62,7 +62,23 @@ function snapshot(){for(const e of entries){const body=document.querySelector(`#
 document.addEventListener('click',e=>{const h=e.target.closest('[data-help]');if(h)post({action:'help',context:Number(h.dataset.help)});});
 // The target of a right-click, for the context menu that C# shows: the result under the pointer and its help topic, whether text is selected, and whether the place is editable
 let contextTarget={};
-document.addEventListener('contextmenu',e=>{const entry=e.target.closest?.('.report-entry'),id=entry?entry.id.slice(7):null,sel=getSelection(),result=id?entries.find(v=>v.id===id):null;contextTarget={resultId:id,helpContextId:result?.helpContextId??0,operation:result?.operation??'',hasRecord:isRecord(result?.record),hasSelection:!!sel&&sel.rangeCount>0&&!sel.isCollapsed,editable:editing&&!!e.target.closest?.('.report-body')};});
+let contextChart=null;   // the chart under the pointer at the last right-click: the outermost svg, or a raster picture
+document.addEventListener('contextmenu',e=>{const entry=e.target.closest?.('.report-entry'),id=entry?entry.id.slice(7):null,sel=getSelection(),result=id?entries.find(v=>v.id===id):null;let chart=e.target.closest?.('svg,img')??null;while(chart&&chart.parentElement?.closest('svg'))chart=chart.parentElement.closest('svg');contextChart=chart;contextTarget={resultId:id,helpContextId:result?.helpContextId??0,operation:result?.operation??'',hasRecord:isRecord(result?.record),chart:!!chart,chartKind:chart?(chart.tagName.toLowerCase()==='img'?'png':'svg'):null,hasSelection:!!sel&&sel.rangeCount>0&&!sel.isCollapsed,editable:editing&&!!e.target.closest?.('.report-body')};});
+// The chart under the pointer as a file: its own markup for an SVG file (the xmlns ensured), or a PNG drawn from it on a canvas at the
+// given scale of its size on the page (a raster picture gives its own data as it is)
+async function chartImage(format,scale){
+  const el=contextChart;if(!el||!el.isConnected)throw Error('No chart is under the pointer.');
+  if(el.tagName.toLowerCase()==='img'){if(format==='svg')throw Error('This picture is not a vector chart.');return el.src;}
+  const svg=el.cloneNode(true);if(!svg.getAttribute('xmlns'))svg.setAttribute('xmlns','http://www.w3.org/2000/svg');
+  if(format==='svg')return new XMLSerializer().serializeToString(svg);
+  const box=el.getBoundingClientRect(),w=Math.max(1,Math.round(box.width)),h=Math.max(1,Math.round(box.height));
+  svg.setAttribute('width',w);svg.setAttribute('height',h);
+  const img=new Image();
+  await new Promise((ok,bad)=>{img.onload=ok;img.onerror=()=>bad(Error('The chart could not be drawn.'));img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(new XMLSerializer().serializeToString(svg));});
+  const k=Math.max(1,Number(scale)||1),canvas=document.createElement('canvas');canvas.width=w*k;canvas.height=h*k;
+  const ctx=canvas.getContext('2d');ctx.fillStyle='white';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.scale(k,k);ctx.drawImage(img,0,0,w,h);
+  return canvas.toDataURL('image/png');
+}
 // A result selected as a click on its heading selects it; all of them as Ctrl+A does. The result's body takes the focus first, so that
 // a key that follows (Delete, Ctrl+C) reaches the editor's handling of the results
 function selectResult(id){document.querySelector('#result-'+id+' .report-body')?.focus();document.querySelector('#result-'+id+' [data-select-result]')?.click();}
@@ -82,6 +98,7 @@ window.WindowsReport={async run(request){
       case 'snapshot':value=snapshot();break;
       case 'contextTarget':value=contextTarget;break;
       case 'record':{const e=entries.find(v=>v.id===request.args.id);if(!e)throw Error('No such result.');value={title:e.title,operation:e.operation,record:isRecord(e.record)?e.record:null};break;}
+      case 'chartImage':value=await chartImage(request.args.format,request.args.scale);break;
       case 'selectResult':selectResult(request.args.id);value=true;break;
       case 'selectAll':selectAll();value=true;break;
       case 'preview':StatsDirectReportEditor.setEditing(false);document.body.classList.add('chart-preview');value=true;break;

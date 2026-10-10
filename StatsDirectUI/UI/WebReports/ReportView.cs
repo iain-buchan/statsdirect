@@ -28,6 +28,8 @@ internal sealed class ReportView : UserControl
     internal event Action<string> CommandRequested;
     /// <summary>The result (by its id) the user asked to continue in R from the context menu.</summary>
     internal event Action<string> RRequested;
+    /// <summary>The chart under the pointer is to be saved as a file of the given format, "svg" or "png".</summary>
+    internal event Action<string> ChartSaveRequested;
     internal int HelpContext { get; private set; }
     internal Task Ready => ready.Task;
     internal long Revision { get; private set; }
@@ -271,6 +273,8 @@ internal sealed class ReportView : UserControl
             int help = target.ValueKind == JsonValueKind.Object && target.TryGetProperty("helpContextId", out var h) && h.ValueKind == JsonValueKind.Number ? h.GetInt32() : 0;
             bool hasRecord = target.ValueKind == JsonValueKind.Object && target.TryGetProperty("hasRecord", out var hr) && hr.ValueKind == JsonValueKind.True;
             string operation = target.ValueKind == JsonValueKind.Object && target.TryGetProperty("operation", out var op) && op.ValueKind == JsonValueKind.String ? op.GetString() : "";
+            bool chart = target.ValueKind == JsonValueKind.Object && target.TryGetProperty("chart", out var ch) && ch.ValueKind == JsonValueKind.True;
+            bool vector = chart && target.TryGetProperty("chartKind", out var ck) && ck.ValueKind == JsonValueKind.String && ck.GetString() == "svg";
             // the menu lives until the next right-click: an item's click is handled after the menu has closed
             contextMenu?.Dispose();
             var menu = contextMenu = new ContextMenuStrip();
@@ -286,6 +290,13 @@ internal sealed class ReportView : UserControl
             menu.Items.Add(new ToolStripMenuItem("&Help", null, (_, _) => Try(() => TopicRequested?.Invoke(help))) { Enabled = help > 0, ShortcutKeyDisplayString = "F1" });
             // the result in R: its script from the record of its run, with the recipe of its operation when there is one
             menu.Items.Add(new ToolStripMenuItem(StatsDirect.R.RRecipes.Has(operation) ? "Continue in &R" : "Open data and settings in &R", null, (_, _) => Try(() => RRequested?.Invoke(resultId))) { Enabled = hasRecord && resultId != null });
+            if (chart)
+            {
+                // the chart under the pointer as a file: its own markup, or a picture drawn from it
+                menu.Items.Add(new ToolStripSeparator());
+                menu.Items.Add(new ToolStripMenuItem("Save chart as &SVG…", null, (_, _) => Try(() => ChartSaveRequested?.Invoke("svg"))) { Enabled = vector });
+                menu.Items.Add(new ToolStripMenuItem("Save chart as &PNG…", null, (_, _) => Try(() => ChartSaveRequested?.Invoke("png"))));
+            }
             menu.Show(Cursor.Position);
         }
         catch (Exception ex) { Notice?.Invoke(ex.Message); }

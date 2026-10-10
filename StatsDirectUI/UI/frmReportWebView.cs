@@ -34,6 +34,7 @@ internal sealed class frmReportWebView : StatsDirectForm, IReport
         view.Notice += text => status.Text = text;
         view.TopicRequested += ShowTopic;
         view.RRequested += id => _ = Guard(() => ContinueInRAsync(id));
+        view.ChartSaveRequested += format => _ = Guard(() => SaveChartAsync(format));
         view.CommandRequested += command => _ = Guard(async () =>
         {
             if (command == "open") await OpenDialogAsync();
@@ -111,6 +112,38 @@ internal sealed class frmReportWebView : StatsDirectForm, IReport
             lastItem = view.AppendAsync(html, operation?.FriendlyName ?? "Analysis", operation?.Name ?? "", helpContextId, record);
             _ = Guard(() => lastItem);
         }
+    }
+
+    /// <summary>
+    /// The chart under the pointer saved as a file: an SVG file of its own markup, or a PNG drawn from it at twice its size on the page.
+    /// </summary>
+    private async Task SaveChartAsync(string format)
+    {
+        bool png = format == "png";
+        using SaveFileDialog dialog = new()
+        {
+            Title = png ? "Save chart as PNG" : "Save chart as SVG",
+            Filter = png ? "PNG picture|*.png|All files|*.*" : "SVG picture|*.svg|All files|*.*",
+            DefaultExt = png ? "png" : "svg",
+            FileName = png ? "chart.png" : "chart.svg",
+            AddExtension = true
+        };
+        if (dialog.ShowDialog(this) != DialogResult.OK)
+            return;
+        JsonElement image = await view.CallAsync("chartImage", new { format, scale = 2 });
+        string data = image.ValueKind == JsonValueKind.String ? image.GetString() : null;
+        if (string.IsNullOrEmpty(data))
+            throw new InvalidOperationException("The chart gave no picture.");
+        if (png)
+        {
+            int comma = data.IndexOf(',');
+            if (!data.StartsWith("data:image/png;base64,", StringComparison.Ordinal) || comma < 0)
+                throw new InvalidOperationException("The picture is not a PNG.");
+            await File.WriteAllBytesAsync(dialog.FileName, Convert.FromBase64String(data[(comma + 1)..]));
+        }
+        else
+            await File.WriteAllTextAsync(dialog.FileName, data, new System.Text.UTF8Encoding(false));
+        status.Text = "Chart saved as " + dialog.FileName;
     }
 
     /// <summary>
