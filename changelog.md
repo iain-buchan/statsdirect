@@ -2,6 +2,21 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
+##[Unreleased]
+
+### Fixed
+- Copying results with charts into Word: the empty lines after each chart, which were reserved for Excel, are gone; Excel places the next result below the picture without them.
+- The status line at the bottom of the report window, which shows "Unsaved changes" and the file saved, was cut off at a display scaling above 100%.
+- A result added to a report scrolls into view, its top just below the toolbar; the window stayed where it was, usually at the top of the report.
+- The chart of an analysis went into the report as a second item, with its own heading and Help button, and the window scrolled to it rather than to the start of the analysis; the outputs of one run of an analysis now make one item.
+- Copying the whole report: Ctrl+A with the focus outside the results selected the whole page, toolbar and all, and that copy reached Word as raw markup, the charts as their axis text; Ctrl+A anywhere in the report now selects all results, and a selection that spills outside the results is clamped to them before a copy.
+
+### Added
+- A right-click in a report shows a menu with Cut, Copy, Paste, Select result, Select all and Help for the result under the pointer.
+
+### Changed
+- The panes in the body of a report are gone: the name and Help button above each result, and the width and Fit controls of each chart. Help is in the ribbon and the right-click menu, which also selects a result or all of them.
+
 ##[v5.1.0] 2026-10-10
 
 Version 5.1.0 replaces the Windows rich-text report editor and compiled CHM help with HTML5 reports and help displayed through WebView2. Reports reuse the editor developed for the Mac version and retain the established statistical templates and result colours.
