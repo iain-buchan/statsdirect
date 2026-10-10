@@ -1,232 +1,55 @@
-﻿using System;
-using System.Text;
+using System;
+using System.ComponentModel;
+using System.Drawing;
 using System.Windows.Forms;
-using System.Media;
-using StatsDirect.Numerics;
 using StatsDirect.UI;
-using StatsDirect.Utilities;
-using StatsDirect.Builtins;
 using StatsDirect.UI.Properties;
-using StatsDirect.Expressions;
 
-namespace StatsDirect.Calculator
+namespace StatsDirect.Calculator;
+
+/// <summary>Compatibility host for the standalone -calculator command.</summary>
+public sealed class frmStatsDirectCalculator : Form
 {
-    public partial class frmStatsDirectCalculator : Form
+    private readonly CalculatorView view;
+    public frmStatsDirectCalculator()
     {
-        public frmStatsDirectCalculator()
+        Text = "StatsDirect Calculator";
+        Name = "frmStatsDirectCalculator";
+        AutoScaleDimensions = new SizeF(96, 96);
+        AutoScaleMode = AutoScaleMode.Dpi;
+        Size = new Size(720, 580);
+        MinimumSize = new Size(400, 400);
+        Icon = (Icon)new ComponentResourceManager(typeof(frmStatsDirectCalculator)).GetObject("$this.Icon");
+        view = new CalculatorView(() => SdApplication.SoleInstance.ShowHelp(this, "1020"));
+        view.SetStandalone();
+        view.CloseRequested += Close;
+        Controls.Add(view);
+        Load += (_, _) =>
         {
-            InitializeComponent();
-        }
-
-        private void cmdCalculate_Click(object sender, EventArgs e)
+            var settings = Settings.Default;
+            if (!settings.WasLoaded || settings.CalculatorWidth <= 0 || settings.CalculatorHeight <= 0) return;
+            var bounds = new Rectangle(settings.CalculatorLeft, settings.CalculatorTop, settings.CalculatorWidth, settings.CalculatorHeight);
+            var screen = Screen.FromRectangle(bounds).WorkingArea;
+            bounds.Width = Math.Min(Math.Max(MinimumSize.Width, bounds.Width), screen.Width);
+            bounds.Height = Math.Min(Math.Max(MinimumSize.Height, bounds.Height), screen.Height);
+            bounds.X = Math.Clamp(bounds.X, screen.Left, screen.Right - bounds.Width);
+            bounds.Y = Math.Clamp(bounds.Y, screen.Top, screen.Bottom - bounds.Height);
+            Bounds = bounds;
+            if (settings.CalculatorMaximized) WindowState = FormWindowState.Maximized;
+        };
+        Shown += (_, _) => view.FocusExpression();
+        FormClosing += (_, _) =>
         {
-            DoCalculate();
-        }
-
-        private void DoCalculate()
-        {
-#if !WATCH_EXCEPTIONS
-            try
-            {
-#endif
-                string equation = txtExpression.Text;
-                if (equation.Length > 0)
-                {
-                    Calcit c = new(equation, new DataType[0], false);
-                    object res = c.EvaluateObject<object>(null);
-                    txtResult.Text = res is double && Constant.MISSING == (double)res ? Formatting.ERRR : res.ToString();
-                }
-                else
-                {
-                    txtResult.Text = " Please enter an expression first";
-                    SystemSounds.Beep.Play();
-                }
-                txtExpression.Focus();
-#if !WATCH_EXCEPTIONS
-            }
-            catch (Exception ex)
-            {
-                HandleException(ex);
-            }
-#endif
-        }
-
-        private void cmdSave_Click(object sender, EventArgs e)
-        {
-            DoCalculate();
-            DoSave();
-        }
-
-        private void DoSave()
-        {
-#if !WATCH_EXCEPTIONS
-            try
-            {
-#endif
-                if (txtExpression.Text.Trim().Length > 0)
-                {
-                    lstSavedExpressions.Items.Add(txtExpression.Text.Trim() + "\t" + txtResult.Text);
-                    lstSavedExpressions.Enabled = true;
-                }
-                else
-                {
-                    SystemSounds.Beep.Play();
-                }
-                txtExpression.Focus();
-#if !WATCH_EXCEPTIONS
-            }
-            catch (Exception ex)
-            {
-                HandleException(ex);
-            }
-#endif
-        }
-
-        private void cmdClose_Click(object sender, EventArgs e)
-        {
-            Close();
-        }
-
-        private void SavePosition()
-        {
-            Settings.Default.CalculatorTop = Top;
-            Settings.Default.CalculatorLeft = Left;
-            Settings.Default.CalculatorWidth = Width;
-            Settings.Default.CalculatorHeight = Height;
-            Settings.Default.CalculatorMaximized = WindowState == FormWindowState.Maximized;
-            Settings.Default.Save();
-        }
-
-        private void LoadPosition()
-        {
-            Settings settings = Settings.Default;
-            if (settings is not null && settings.WasLoaded)
-            {
-                Top = settings.CalculatorTop;
-                Left = settings.CalculatorLeft;
-                Width = settings.CalculatorWidth;
-                Height = settings.CalculatorHeight;
-                WindowState = settings.CalculatorMaximized ? FormWindowState.Maximized : FormWindowState.Normal;
-            }
-        }
-
-        private void cmdPaste_Click(object sender, EventArgs e)
-        {
-            DoPaste();
-        }
-
-        private void DoPaste()
-        {
-#if !WATCH_EXCEPTIONS
-            try
-            {
-#endif
-                if (lstSavedExpressions.SelectedIndex >= 0)
-                {
-                    string toPaste = (string)lstSavedExpressions.SelectedItem;
-                    toPaste = toPaste.Substring(0, toPaste.IndexOf('\t'));
-                    txtExpression.SelectionLength = 0;
-                    txtExpression.SelectedText = toPaste;
-                }
-                else
-                {
-                    SystemSounds.Beep.Play();
-                }
-#if !WATCH_EXCEPTIONS
-            }
-            catch (Exception ex)
-            {
-                HandleException(ex);
-            }
-#endif
-        }
-
-        private void cmdDelete_Click(object sender, EventArgs e)
-        {
-#if !WATCH_EXCEPTIONS
-            try
-            {
-#endif
-                if (lstSavedExpressions.SelectedIndex >= 0)
-                {
-                    lstSavedExpressions.Items.RemoveAt(lstSavedExpressions.SelectedIndex);
-                    if (0 == lstSavedExpressions.Items.Count)
-                    {
-                        lstSavedExpressions.Enabled = false;
-                        cmdPaste.Enabled = false;
-                        cmdDelete.Enabled = false;
-                    }
-                }
-                else
-                {
-                    SystemSounds.Beep.Play();
-                }
-#if !WATCH_EXCEPTIONS
-            }
-            catch (Exception ex)
-            {
-                HandleException(ex);
-            }
-#endif
-        }
-
-        private void cmdHelp_Click(object sender, EventArgs e)
-        {
-            SdApplication.SoleInstance.ShowHelp(this, "1020");
-        }
-
-        private void lstSavedExpressions_Enter(object sender, EventArgs e)
-        {
-            cmdPaste.Enabled = true;
-            cmdDelete.Enabled = true;
-        }
-
-        private static void HandleException(Exception ex)
-        {
-            SdApplication.SoleInstance.FriendlyError("Couldn't evaluate expression", ex, false);
-        }
-
-        private void frmStatsDirectCalculator_FormClosing(object sender, FormClosingEventArgs e)
-        {
-#if !WATCH_EXCEPTIONS
-            try
-            {
-#endif
-                SavePosition();
-                if (lstSavedExpressions.Items.Count > 0)
-                {
-                    if (DialogResult.Yes == MessageBox.Show(this, "Copy saved results to clipboard?", Text, MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, 0))
-                    {
-                        StringBuilder sb = new();
-                        foreach (object os in lstSavedExpressions.Items)
-                        {
-                            string s = (string)os;
-                            string[] splitS = s.Split('\t');
-                            string expr = splitS[0].Trim();
-                            string result = splitS[1].Trim();
-                            string formatted = expr + " = " + result;
-                            sb.AppendLine(formatted);
-                        }
-                        Clipboard.SetText(sb.ToString());
-                    }
-                }
-#if !WATCH_EXCEPTIONS
-            }
-            catch (Exception ex)
-            {
-                HandleException(ex);
-            }
-#endif
-        }
-
-        private void frmStatsDirectCalculator_Load(object sender, EventArgs e)
-        {
-            LoadPosition();
-        }
-
-        private void frmStatsDirectCalculator_Shown(object sender, EventArgs e)
-        {
-            txtExpression.Focus();
-        }
+            var bounds = WindowState == FormWindowState.Normal ? Bounds : RestoreBounds;
+            var settings = Settings.Default;
+            settings.CalculatorTop = bounds.Top;
+            settings.CalculatorLeft = bounds.Left;
+            settings.CalculatorWidth = bounds.Width;
+            settings.CalculatorHeight = bounds.Height;
+            settings.CalculatorMaximized = WindowState == FormWindowState.Maximized;
+            settings.Save();
+            if (view.Saved.Items.Count > 0 && MessageBox.Show(this, "Copy saved results to clipboard?", Text,
+                MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes) view.CopySaved();
+        };
     }
 }

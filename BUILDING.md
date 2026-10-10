@@ -91,6 +91,22 @@ excludes CHM/CHW files and removes the old `StatsDirect.chm`/`StatsDirect.chw`
 during upgrades. `tests/HtmlHelp` covers the browser and context map; also test
 an upgrade on a clean Windows VM before release.
 
+### Calculator
+
+Tools > Calculator opens a resizable pane below the workspace, created only on
+request. Close hides it without leaving a tab. Pop out and Dock move the same
+calculator view; its expression, result, saved calculations, size and presentation
+are retained for the current session. Help can remain open on the right.
+The expression wraps and scrolls vertically; Enter evaluates and Shift+Enter
+inserts a line break. Recall restores a saved calculation; Insert puts a saved
+expression at the caret. During modal dialogs, a visible calculator floats and
+then returns, preserving focus in the parameter dialog.
+
+The shared tool-window infrastructure is used by Calculator and Help. Run
+`tests/Calculator` and `tests/HtmlHelp` after changing it. Existing saved Tools
+entries for this installation's `StatsDirect.exe -calculator` are deduplicated
+and routed to the pane; explicit standalone command-line launches still work.
+
 ### Visual Studio 2026
 
 * Open `<repository-root>/StatsDirectUI.slnx`.

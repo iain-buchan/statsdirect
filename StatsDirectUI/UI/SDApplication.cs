@@ -434,7 +434,10 @@ namespace StatsDirect.UI
         }
 
         private readonly HtmlHelp.HelpService htmlHelp = new();
+        private readonly Calculator.CalculatorService calculator = new();
         private string messageHelpTopic;
+
+        internal void ShowCalculator() => calculator.Show(MainWindow, () => ShowHelp(MainWindow, "1020"));
 
         internal void ShowHelp(Form Parent, string Topic)
         {
@@ -879,7 +882,7 @@ namespace StatsDirect.UI
         {
             // Approximate by detecting child forms of the main window and any MDI children.  Most are modal; this will therefore fail safe and occasionally show a dialog box when it could have presented in the main window.
             foreach (Form owned in f.OwnedForms)
-                if (owned is not HtmlHelp.HelpWindow) return true;
+                if (owned is not ToolWindows.ToolWindow) return true;
             foreach (Form child in f.MdiChildren)
                 if (ModalDialogShowing(child))
                     return true;

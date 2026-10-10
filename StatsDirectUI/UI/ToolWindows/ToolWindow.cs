@@ -2,26 +2,23 @@ using System;
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace StatsDirect.UI.HtmlHelp;
+namespace StatsDirect.UI.ToolWindows;
 
-/// <summary>The floating frame owns no browser state; the service moves the shared view in and out.</summary>
-internal sealed class HelpWindow : Form
+/// <summary>The frame owns no session state. Its view is parked before closing.</summary>
+internal sealed class ToolWindow : Form
 {
     internal event Action CloseRequested;
     internal bool Retiring;
     protected override bool ShowWithoutActivation => true;
-
-    internal HelpWindow()
+    internal ToolWindow(string title)
     {
-        Text = "StatsDirect Help";
+        Text = title;
         AutoScaleDimensions = new SizeF(96, 96);
         AutoScaleMode = AutoScaleMode.Dpi;
-        Size = new Size(900, 780);
         MinimumSize = new Size(360, 300);
         StartPosition = FormStartPosition.Manual;
         ShowInTaskbar = false;
     }
-
     protected override void OnFormClosing(FormClosingEventArgs e)
     {
         if (!Retiring && e.CloseReason == CloseReason.UserClosing)

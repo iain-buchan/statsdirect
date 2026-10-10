@@ -3111,10 +3111,17 @@ namespace StatsDirect.UI
             // Set up the new items
             IReadOnlyList<string> names = Settings.Default.ToolsNames;
             IReadOnlyList<string> paths = Settings.Default.ToolsPrograms;
+            // Calculator is an optional in-process tool, always reachable here.
+            // Old saved Tools entries are filtered below instead of launching a second process.
+            var calculatorItem = new ToolStripMenuItem("Calculator") { Tag = "#{help=1020|cmd=%STATSDIRECT%\\StatsDirect.exe -calculator}" };
+            calculatorItem.Click += ToolsMenuItemHandler;
+            toolsToolStripMenuItem.DropDownItems.Insert(toolsToolStripMenuItem.DropDownItems.Count - 3, calculatorItem);
+            toolsMenuItems.Add(calculatorItem);
             for (int i = 0; i < names.Count; i++)
             {
                 string name = names[i];
                 string path = paths[i];
+                if (Calculator.CalculatorService.IsBuiltInCommand(path, Application.ExecutablePath)) continue;
                 ToolStripMenuItem menuItem = new()
                 {
                     DisplayStyle = ToolStripItemDisplayStyle.Text,
@@ -3128,7 +3135,7 @@ namespace StatsDirect.UI
                 toolsToolStripMenuItem.DropDownItems.Insert(toolsToolStripMenuItem.DropDownItems.Count - 3, menuItem);
                 toolsMenuItems.Add(menuItem);
             }
-            fileListToolStripSeparator.Visible = names.Count > 0;
+            fileListToolStripSeparator.Visible = true;
         }
 
         private void ToolsMenuItemHandler(object sender, EventArgs e)
@@ -3143,6 +3150,13 @@ namespace StatsDirect.UI
                     return;
                 if (null == commandLine)
                     return;
+
+                if (Calculator.CalculatorService.IsBuiltInCommand(commandLine, Application.ExecutablePath))
+                {
+                    // Let the Tools dropdown dismiss before changing the workspace layout.
+                    BeginInvoke(new Action(() => SdApplication.SoleInstance.ShowCalculator()));
+                    return;
+                }
 
                 // Split off any arguments
                 string arguments = string.Empty;

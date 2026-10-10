@@ -6,6 +6,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4258.31" />
     <Compile Include="../../StatsDirectUI/UI/HtmlHelp/*.cs" Link="Production/%(Filename)%(Extension)" />
+    <Compile Include="../../StatsDirectUI/UI/ToolWindows/*.cs" Link="Production/%(Filename)%(Extension)" />
     <Content Include="../../StatsDirectUI/Assets/Help/**" Exclude="../../StatsDirectUI/Assets/Help/**/*.output;../../StatsDirectUI/Assets/Help/**/*.log.zip" Link="Help/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <Target Name="RemoveUnusedWebView2WpfReference" BeforeTargets="ResolveAssemblyReferences"><ItemGroup><Reference Remove="@(Reference)" Condition="'%(Reference.Filename)' == 'Microsoft.Web.WebView2.Wpf'" /></ItemGroup></Target>
