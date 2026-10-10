@@ -85,7 +85,7 @@ namespace StatsDirect.UI
             if (!Dirty || dirtyButSafeToClose)   // already answered "No" in this close of the program: not asked again on its retry
                 return true;
 
-            DialogResult result = SdApplication.SoleInstance.MsgboxX(Text + " has changes that have not been saved. Do you want to save these changes?", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Exclamation, "StatsDirect", false, MessageBoxDefaultButton.Button3);
+            DialogResult result = AskToSaveChanges();
             if (DialogResult.Cancel == result)
             {
                 SdApplication.SoleInstance.NoteASubformCloseIsCancelled();
@@ -98,6 +98,13 @@ namespace StatsDirect.UI
             }
             return SaveContents();
         }
+
+        /// <summary>
+        /// The one question a window with changes not saved asks when it closes, the same for a workbook, a report and a script, in the
+        /// program's message banner: Yes saves, No closes without saving, Cancel (the default) keeps the window open.
+        /// </summary>
+        protected DialogResult AskToSaveChanges() =>
+            SdApplication.SoleInstance.MsgboxX(Text + " has changes that have not been saved. Do you want to save these changes?", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Exclamation, "StatsDirect", false, MessageBoxDefaultButton.Button3);
 
         /// <summary>
         /// Note that, despite being asked to close, the application is not closing.

@@ -262,7 +262,8 @@ internal sealed class frmReportWebView : StatsDirectForm, IReport
         await closePrompts.WaitAsync();
         try
         {
-            var answer = MessageBox.Show(this, Text + " has unsaved changes. Save the editable HTML report?", "StatsDirect", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button3);
+            // the same question, in the program's message banner, as a workbook or a script asks on closing
+            DialogResult answer = AskToSaveChanges();
             return answer == DialogResult.No || (answer == DialogResult.Yes && await SaveHtmlAsync(false));
         }
         finally { closePrompts.Release(); }
