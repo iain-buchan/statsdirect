@@ -109,9 +109,18 @@ namespace StatsDirect.R
         }
 
         /// <summary>A recipe's header: the variables it takes.</summary>
+        /// <summary>One item of a recipe's "# data:" line: "name" takes the next column, "name..." the remaining columns as a list,
+        /// "name = input" the first column of the input of that name, "name... = input" all of that input's columns as a list.</summary>
+        private sealed class DataItem
+        {
+            public string Variable;
+            public string Input;        // null: positional
+            public bool IsList;
+        }
+
         private sealed class Binding
         {
-            public List<string> Data = new();           // vector variables, in the order of the frames' columns
+            public List<DataItem> Data = new();         // the variables, positional ones in the order of the frames' columns
             public string List;                         // a variable that takes every column not named above, as a named list
             public string Table;                        // a variable that takes a table of counts as a matrix
             public string Matrix;                       // a variable that takes a frame of counts as a matrix
@@ -132,10 +141,14 @@ namespace StatsDirect.R
             bool unavailable = false;
             JsonElement kept = record.TryGetProperty("data", out JsonElement d) && d.ValueKind == JsonValueKind.Object ? d : default;
             string now = DateTime.Now.ToString("d MMM yyyy HH:mm", inv);
+            List<(string name, int start, int count)> groups = new();   // the columns of each input, for the variables bound to an input by name
             if (record.TryGetProperty("inputs", out JsonElement inputs) && inputs.ValueKind == JsonValueKind.Array)
                 foreach (JsonElement input in inputs.EnumerateArray())
                 {
                     string name = Text(input, "name") ?? "input", kind = Text(input, "kind") ?? "other";
+                    int start = columns.Count;
+                    try
+                    {
                     if (kind == "table")
                     {
                         tables.Add((Rows(input, "counts"), Strings(input, "rowLabels"), Strings(input, "columnLabels"), Text(input, "rowsTitle"), Text(input, "columnsTitle")));
@@ -178,6 +191,12 @@ namespace StatsDirect.R
                             columns.Add(new Column { Title = c.Title, Values = Array.Empty<object>(), Where = Where(pointer, pointer.Columns.IndexOf(c)), Unavailable = true });
                         notes.Add($"Data: {source} could not be read ({values?.Unavailable ?? "no workbook is available"}): put the values in by hand.");
                     }
+                    }
+                    finally
+                    {
+                        if (kind == "frame" || kind == "entered")
+                            groups.Add((name, start, columns.Count - start));
+                    }
                 }
             StringBuilder s = new();
             s.Append("# ").Append(analysisTitle).Append(", from StatsDirect, ").Append(RunTime(record)).Append('\n');
@@ -188,24 +207,48 @@ namespace StatsDirect.R
             s.Append('\n');
             // the data
             HashSet<string> names = new();
-            int next = 0;
+            HashSet<int> bound = new();   // the columns taken by a variable bound to an input by name
+            void ListOf(string variable, IEnumerable<int> indices)
+            {
+                s.Append(variable).Append(" <- list(").Append(string.Join(",\n  ", indices.Select(i => Quote(columns[i].Title) + " = " + Vector(columns[i].Values)))).Append(")\n");
+                names.Add(variable);
+            }
+            void Missing(string variable, string why)
+            {
+                // an optional column the run did not give (stratum labels, weights, a group identifier): the recipe can test for it
+                names.Add(variable);
+                s.Append(variable).Append(" <- NULL   # ").Append(why).Append('\n');
+            }
             if (binding != null)
-                foreach (string variable in binding.Data)
+                foreach (DataItem item in binding.Data.Where(i => i.Input != null))
                 {
-                    if (next >= columns.Count)
-                        break;
-                    Assign(s, variable, columns[next++], names);
+                    int at = groups.FindIndex(g => g.name == item.Input);
+                    if (at < 0 || groups[at].count == 0) { Missing(item.Variable, $"no \"{item.Input}\" in this run"); continue; }
+                    (string _, int start, int count) = groups[at];
+                    IEnumerable<int> indices = Enumerable.Range(start, count).Where(i => !bound.Contains(i));
+                    if (item.IsList) { ListOf(item.Variable, indices); foreach (int i in indices.ToList()) bound.Add(i); }
+                    else if (indices.Any()) { int i = indices.First(); Assign(s, item.Variable, columns[i], names); bound.Add(i); }
+                    else Missing(item.Variable, $"no column of \"{item.Input}\" is left for it");
                 }
+            int next = 0;
+            void Skip() { while (next < columns.Count && bound.Contains(next)) next++; }
+            if (binding != null)
+                foreach (DataItem item in binding.Data.Where(i => i.Input == null))
+                {
+                    Skip();
+                    if (next >= columns.Count) { Missing(item.Variable, "no column for it in this run"); continue; }
+                    Assign(s, item.Variable, columns[next], names);
+                    bound.Add(next++);
+                }
+            Skip();
             if (binding?.List != null)
             {
-                List<string> parts = new();
-                for (; next < columns.Count; next++)
-                    parts.Add(Quote(columns[next].Title) + " = " + Vector(columns[next].Values));
-                s.Append(binding.List).Append(" <- list(").Append(string.Join(",\n  ", parts)).Append(")\n");
-                names.Add(binding.List);
+                ListOf(binding.List, Enumerable.Range(0, columns.Count).Where(i => !bound.Contains(i)));
+                next = columns.Count;
             }
             for (; next < columns.Count; next++)
-                Assign(s, SafeName(columns[next].Title, names), columns[next], names);
+                if (!bound.Contains(next))
+                    Assign(s, SafeName(columns[next].Title, names), columns[next], names);
             foreach ((string[][] counts, string[] rows, string[] cols, string rowsTitle, string colsTitle) in tables)
             {
                 string variable = binding?.Table ?? SafeName("counts", names);
@@ -298,8 +341,14 @@ namespace StatsDirect.R
                 {
                     case "data":
                         foreach (string item in rest.Split(',').Select(x => x.Trim()).Where(x => x.Length > 0))
-                            if (item.EndsWith("...", StringComparison.Ordinal)) b.List = item[..^3].Trim();
-                            else b.Data.Add(item);
+                        {
+                            int eq = item.IndexOf('=');
+                            string variable = (eq > 0 ? item[..eq] : item).Trim(), input = eq > 0 ? item[(eq + 1)..].Trim() : null;
+                            bool list = variable.EndsWith("...", StringComparison.Ordinal);
+                            if (list) variable = variable[..^3].Trim();
+                            if (list && input == null) b.List = variable;
+                            else b.Data.Add(new DataItem { Variable = variable, Input = input, IsList = list });
+                        }
                         break;
                     case "table": b.Table = rest; break;
                     case "matrix": b.Matrix = rest; break;
