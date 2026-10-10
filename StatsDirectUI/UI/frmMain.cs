@@ -838,8 +838,9 @@ namespace StatsDirect.UI
                 awaitingWebReportsClose = true;
                 bool accepted = true;
                 foreach (var pending in webReports) accepted &= await pending;
-                foreach (Form child in MdiChildren)
-                    if (child is StatsDirectForm form && child is not frmReportWebView && !form.SafeToClose) accepted = false;
+                // The other children have not been asked yet: Windows Forms stops asking the children at the first that cancels, and a
+                // report always cancels its first asking to show its question.  The retry below asks each of them in turn, so a child
+                // with unsaved changes must not veto the close here, where the user has had no chance to answer for it.
                 awaitingWebReportsClose = false;
                 if (accepted)
                 {
@@ -874,7 +875,8 @@ namespace StatsDirect.UI
                 {
                     e.Cancel = true;
                     foreach (Form child in MdiChildren)
-                        (child as StatsDirectForm)?.NoteNonClosure();
+                        if (child is frmReportWebView web) web.CancelParentClose();   // asked again at the next close, like the others
+                        else (child as StatsDirectForm)?.NoteNonClosure();
                 }
                 else
                 {

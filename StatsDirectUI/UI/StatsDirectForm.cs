@@ -82,7 +82,7 @@ namespace StatsDirect.UI
         /// <returns></returns>
         protected bool AllowClose()
         {
-            if (!Dirty)
+            if (!Dirty || dirtyButSafeToClose)   // already answered "No" in this close of the program: not asked again on its retry
                 return true;
 
             DialogResult result = SdApplication.SoleInstance.MsgboxX(Text + " has changes that have not been saved. Do you want to save these changes?", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Exclamation, "StatsDirect", false, MessageBoxDefaultButton.Button3);
