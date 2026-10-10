@@ -69,7 +69,8 @@ body.engine-report .report-body svg, body.engine-report .report-media > img {
    context menu), and the width and Fit of each chart. The header stays in the page, out of view and out of the flow, for the selection
    of a result, which clicks it unseen, and for the keyboard, which can still reach it and delete an empty result */
 .report-entry > header { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
-.report-editing .report-media > .report-controls, .report-editing .report-chart > .report-controls { display: none; }
+.report-editing .report-media > .report-controls:not(.report-chart-resize), .report-editing .report-chart > .report-controls:not(.report-chart-resize) { display: none; }
+/* the handle at a chart's bottom right corner, dragged to resize it, stays */
 .report-entry > header h2 { margin: 4px 12px 4px 0; font: 12px Arial, sans-serif; text-decoration: none; }
 .report-body:focus { outline: 1px solid #99bbb6; }
 /* Keep picture sizing controls out of reading mode. */
