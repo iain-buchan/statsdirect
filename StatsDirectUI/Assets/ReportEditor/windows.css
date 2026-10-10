@@ -65,7 +65,11 @@ body.engine-report .report-body svg, body.engine-report .report-media > img {
   max-width: 100%;
   margin: 16px 0;
 }
-.report-entry > header { display: flex; justify-content: flex-start; }
+/* the panes in the body of the report are not shown: the operation's name and Help of each result (the help is in the ribbon and the
+   context menu), and the width and Fit of each chart. The header stays in the page, out of view and out of the flow, for the selection
+   of a result, which clicks it unseen, and for the keyboard, which can still reach it and delete an empty result */
+.report-entry > header { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+.report-editing .report-media > .report-controls, .report-editing .report-chart > .report-controls { display: none; }
 .report-entry > header h2 { margin: 4px 12px 4px 0; font: 12px Arial, sans-serif; text-decoration: none; }
 .report-body:focus { outline: 1px solid #99bbb6; }
 /* Keep picture sizing controls out of reading mode. */
