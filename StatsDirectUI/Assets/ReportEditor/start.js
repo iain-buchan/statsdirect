@@ -5,7 +5,7 @@ document.querySelector('[data-command="addText"]').onclick=()=>StatsDirectReport
 document.addEventListener('keydown',e=>{
   const key=e.key.toLowerCase();
   if(key==='f5'||e.ctrlKey&&key==='r'){e.preventDefault();return;}
-  if(key==='f1'){e.preventDefault();const body=document.activeElement?.closest('.report-body');const entry=entries.find(x=>x.id===body?.dataset.resultId);chrome.webview.postMessage({action:'help',context:entry?.helpContextId??0});return;}
+  if(key==='f1'){e.preventDefault();chrome.webview.postMessage({action:'help',context:currentHelpContext()});return;}
   if(e.ctrlKey&&['s','o','p'].includes(key)){e.preventDefault();chrome.webview.postMessage({action:'command',command:key==='s'?(e.shiftKey?'saveAs':'save'):key==='o'?'open':'print'});}
 },true);
 chrome.webview.postMessage({action:'ready'});
