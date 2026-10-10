@@ -84,7 +84,7 @@
         </boolean>
         <confidence-interval>
           <name>ci</name>
-          <acquire-if-true>=parameters["plotFitsAndCi"].AsBoolean</acquire-if-true>
+          <acquire-if-true>=parameters.ContainsKey("plotFitsAndCi") &amp;&amp; parameters["plotFitsAndCi"].AsBoolean</acquire-if-true>
         </confidence-interval>
         <boolean>
           <name>saveFitsAndSe</name>
