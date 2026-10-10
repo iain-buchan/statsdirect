@@ -15,8 +15,8 @@ namespace StatsDirect.R
 
     /// <summary>
     /// The R recipes shared with the Mac version (the R folder of the program: analysis-recipes.json maps engine operation names to
-    /// recipe files under recipes/, with helpers.R that every script carries).  A recipe is plain base R that reads the run's data and
-    /// settings through the helpers; the script writer puts the data and settings before it.
+    /// recipe files under recipes/).  A recipe is the analysis as the help's R code shows it, with a header naming the variables it
+    /// takes; the script writer puts the run's data and settings before it under those names.
     /// </summary>
     public static class RRecipes
     {
@@ -48,8 +48,8 @@ namespace StatsDirect.R
         public static IEnumerable<string> Operations => Manifest.Keys;
         public static bool Has(string operation) => !string.IsNullOrEmpty(operation) && Manifest.ContainsKey(operation);
         public static RRecipe Find(string operation) => Has(operation) ? Manifest[operation] : null;
-        public static string Helpers => Read("helpers.R");
 
+        /// <summary>A recipe file: a header naming the variables it takes, then the analysis as the help shows it in R.</summary>
         public static string Recipe(string file)
         {
             if (string.IsNullOrEmpty(file) || file.Contains('/') || file.Contains('\\') || !file.EndsWith(".R", StringComparison.Ordinal))

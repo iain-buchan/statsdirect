@@ -36,8 +36,20 @@ namespace StatsDirect.Templates
                 input.Parts = new[] { table.TopLeftName, table.TopRightName, table.BottomLeftName, table.BottomRightName };
                 input.RowLabels = new[] { table.TopRowPrompt ?? "", table.BottomRowPrompt ?? "" };
                 input.ColumnLabels = new[] { table.LeftColumnPrompt ?? "", table.RightColumnPrompt ?? "" };
+                input.RowsTitle = Title(table.RowsPrompt);
+                input.ColumnsTitle = Title(table.ColumnsPrompt);
             }
             Inputs.Add(input);
+        }
+
+        /// <summary>A dialog's prompt as a name for a table's rows or columns: without a trailing colon or an aside in brackets.</summary>
+        private static string Title(string prompt)
+        {
+            string s = (prompt ?? "").Trim();
+            int bracket = s.IndexOf('(');
+            if (bracket > 0)
+                s = s[..bracket].Trim();
+            return s.TrimEnd(':').Trim();
         }
     }
 
@@ -51,6 +63,9 @@ namespace StatsDirect.Templates
         public string[] Parts { get; set; }
         public string[] RowLabels { get; set; }
         public string[] ColumnLabels { get; set; }
+        /// <summary>What the rows and the columns of a 2 by 2 table stand for, from the dialog's prompts.</summary>
+        public string RowsTitle { get; set; }
+        public string ColumnsTitle { get; set; }
 
         public RunInput(string name, string prompt, string kind)
         {

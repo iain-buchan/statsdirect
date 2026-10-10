@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace StatsDirect.R
 {
@@ -87,107 +88,232 @@ namespace StatsDirect.R
     }
 
     /// <summary>
-    /// Writes the R script of a result from the record of its run: the settings, the results, the history of the inputs, the data
-    /// (the values kept with the result, or read again from the workbook by the record's pointers), the shared helpers and the
-    /// recipe of the operation, or, where there is none, the data and settings alone.  The layout is that of the Mac version, so
-    /// that the recipes serve both.
+    /// Writes the R script of a result from the record of its run: a short script of data, settings and analysis, as a user would
+    /// write it to explore in R or RStudio.  The data are plain named vectors (the values kept with the result, or read again from
+    /// the workbook by the record's pointers, with a note on any column that has changed since the analysis); a table of counts is a
+    /// matrix; the settings are plain assignments; the analysis is the recipe of the operation, derived from the R code in the help,
+    /// whose header names the variables it takes.  Without a recipe the script holds the data and settings for the user's own analysis.
     /// </summary>
     public static class RScriptWriter
     {
         private static readonly CultureInfo inv = CultureInfo.InvariantCulture;
+
+        /// <summary>A column of the run's data with its provenance, as the script will write it.</summary>
+        private sealed class Column
+        {
+            public string Title;
+            public object[] Values;
+            public string Where;        // "column 1, rows 2 to 21" when read from a sheet
+            public bool Changed;
+            public bool Unavailable;
+        }
+
+        /// <summary>A recipe's header: the variables it takes.</summary>
+        private sealed class Binding
+        {
+            public List<string> Data = new();           // vector variables, in the order of the frames' columns
+            public string List;                         // a variable that takes every column not named above, as a named list
+            public string Table;                        // a variable that takes a table of counts as a matrix
+            public string Matrix;                       // a variable that takes a frame of counts as a matrix
+            public List<(string variable, string parameter)> Settings = new();
+            public string Body = "";
+        }
 
         public static RScript Write(JsonElement record, string title, Func<FramePointer, FrameValues> read)
         {
             string operation = Text(record, "operation") ?? "";
             string analysisTitle = string.IsNullOrEmpty(title) ? Text(record, "title") ?? operation : title;
             RRecipe recipe = RRecipes.Find(operation);
-            string detail = recipe?.Detail ?? "Data and settings only: an equivalent R implementation of this method is not yet available.";
-            List<string> notes = new(), history = new();
-            StringBuilder frames = new();
-            HashSet<string> keys = new();
+            Binding binding = recipe != null ? Parse(RRecipes.Recipe(recipe.File)) : null;
+            string detail = recipe?.Detail;
+            List<string> notes = new();
+            List<Column> columns = new();
+            List<(string[][] counts, string[] rows, string[] cols, string rowsTitle, string colsTitle)> tables = new();
             bool unavailable = false;
             JsonElement kept = record.TryGetProperty("data", out JsonElement d) && d.ValueKind == JsonValueKind.Object ? d : default;
+            string now = DateTime.Now.ToString("d MMM yyyy HH:mm", inv);
             if (record.TryGetProperty("inputs", out JsonElement inputs) && inputs.ValueKind == JsonValueKind.Array)
                 foreach (JsonElement input in inputs.EnumerateArray())
                 {
-                    string name = Text(input, "name") ?? "input", prompt = Text(input, "prompt") ?? "", kind = Text(input, "kind") ?? "other";
-                    if (kind != "frame" && kind != "entered" && kind != "table")
+                    string name = Text(input, "name") ?? "input", kind = Text(input, "kind") ?? "other";
+                    if (kind == "table")
                     {
-                        history.Add(NamedList(new[] { ("name", Quote(name)), ("title", Quote(prompt)), ("kind", Quote(kind)),
-                                                      ("value", input.TryGetProperty("value", out JsonElement v) ? Literal(v) : "NULL") }));
+                        tables.Add((Rows(input, "counts"), Strings(input, "rowLabels"), Strings(input, "columnLabels"), Text(input, "rowsTitle"), Text(input, "columnsTitle")));
                         continue;
                     }
-                    string key = Unique(name, keys);
-                    FramePointer pointer = kind == "frame" ? FramePointer.From(input) : null;
-                    IList<ColumnValues> columns = null;
-                    if (kind == "entered" || kind == "table")
+                    if (kind != "frame" && kind != "entered")
+                        continue;
+                    if (kind == "entered")
                     {
-                        columns = Entered(input);
-                        notes.Add(kind == "table" ? $"{Quote(key)} holds the columns of the table of counts typed in for the analysis; parameters$counts holds its rows with their labels."
-                                                  : $"{Quote(key)} holds the values typed in for the analysis.");
+                        foreach (ColumnValues c in Entered(input))
+                            columns.Add(new Column { Title = c.Title, Values = c.Values });
+                        continue;
                     }
-                    else if (kept.ValueKind == JsonValueKind.Object && kept.TryGetProperty(name, out JsonElement held) && held.ValueKind == JsonValueKind.Object)
+                    FramePointer pointer = FramePointer.From(input);
+                    string source = $"\"{pointer.File}\", sheet \"{pointer.Sheet}\"";
+                    if (kept.ValueKind == JsonValueKind.Object && kept.TryGetProperty(name, out JsonElement held) && held.ValueKind == JsonValueKind.Object)
                     {
-                        columns = Kept(held);
-                        notes.Add($"{Quote(key)} holds the values kept with the result, as read from {Quote(pointer.File)}, sheet {Quote(pointer.Sheet)}, when the analysis ran.");
+                        int i = 0;
+                        foreach (ColumnValues c in Kept(held))
+                            columns.Add(new Column { Title = c.Title, Values = c.Values, Where = Where(pointer, i++) });
+                        notes.Add($"Data: {source}, the values the analysis used.");
+                        continue;
                     }
-                    else
+                    FrameValues values;
+                    try { values = read?.Invoke(pointer); }
+                    catch (Exception ex) { values = new FrameValues { Unavailable = ex.Message }; }
+                    if (values != null && values.Unavailable == null)
                     {
-                        FrameValues values;
-                        try { values = read?.Invoke(pointer); }
-                        catch (Exception ex) { values = new FrameValues { Unavailable = ex.Message }; }
-                        if (values != null && values.Unavailable == null)
-                        {
-                            columns = values.Columns;
-                            notes.Add($"{Quote(key)} was read from {Quote(pointer.File)}, sheet {Quote(pointer.Sheet)}, {Where(pointer)}, on {DateTime.Now.ToString("yyyy-MM-dd HH:mm", inv)}.");
-                        }
-                        else
-                        {
-                            unavailable = true;
-                            notes.Add($"{Quote(key)} could not be read: {values?.Unavailable ?? "no workbook is available"}. Put its columns ({string.Join(", ", pointer.Columns.Select(c => Quote(c.Title)))}) into data_frames[[{Quote(key)}]] by hand.");
-                        }
-                    }
-                    frames.Append("\n# Input: ").Append(Quote(key)).Append(prompt.Length > 0 ? " (" + prompt + ")" : "").Append('\n');
-                    if (columns != null)
-                    {
-                        frames.Append("data_frames[[").Append(Quote(key)).Append("]] <- ").Append(NamedList(columns.Select(c => (c.Title ?? "", Vector(c.Values))))).Append('\n');
-                        foreach (ColumnValues column in columns.Where(c => c.Changed))
-                            frames.Append("# NOTE: the values of ").Append(Quote(column.Title)).Append(" are not those the analysis used: the column has changed in the workbook since it ran.\n");
+                        int i = 0;
+                        foreach (ColumnValues c in values.Columns)
+                            columns.Add(new Column { Title = c.Title, Values = c.Values, Where = Where(pointer, i++), Changed = c.Changed });
+                        notes.Add($"Data: {source}, read on {now}.");
+                        foreach (ColumnValues c in values.Columns.Where(c => c.Changed))
+                            notes.Add($"NOTE: \"{c.Title}\" has changed in the workbook since the analysis ran; these are its values now.");
                     }
                     else
-                        frames.Append("data_frames[[").Append(Quote(key)).Append("]] <- NULL   # not available: see the note at the top\n");
-                    List<(string, string)> where = new();
-                    if (pointer != null)
                     {
-                        where.Add(("file", Quote(pointer.File)));
-                        where.Add(("sheet", Quote(pointer.Sheet)));
+                        unavailable = true;
+                        foreach (ColumnPointer c in pointer.Columns)
+                            columns.Add(new Column { Title = c.Title, Values = Array.Empty<object>(), Where = Where(pointer, pointer.Columns.IndexOf(c)), Unavailable = true });
+                        notes.Add($"Data: {source} could not be read ({values?.Unavailable ?? "no workbook is available"}): put the values in by hand.");
                     }
-                    where.Add(("data_frame", Quote(key)));
-                    history.Add(NamedList(new[] { ("name", Quote(name)), ("title", Quote(prompt)), ("kind", Quote(kind)), ("value", NamedList(where)) }));
                 }
             StringBuilder s = new();
-            s.Append("# StatsDirect: continue this completed analysis in R\n");
-            s.Append("# ").Append(analysisTitle).Append(" (").Append(operation).Append("), run on ").Append(RunTime(record)).Append(".\n");
+            s.Append("# ").Append(analysisTitle).Append(", from StatsDirect, ").Append(RunTime(record)).Append('\n');
             foreach (string note in notes)
                 s.Append("# ").Append(note).Append('\n');
-            s.Append("# ").Append(detail).Append('\n');
-            s.Append("# No packages are needed. This script can also be saved and run outside StatsDirect.\n");
-            s.Append("operation <- ").Append(Quote(operation)).Append('\n');
-            s.Append("analysis_title <- ").Append(Quote(analysisTitle)).Append('\n');
-            s.Append("parameters <- ").Append(record.TryGetProperty("parameters", out JsonElement parameters) ? Literal(parameters) : "list()").Append('\n');
-            s.Append("original_results <- ").Append(record.TryGetProperty("values", out JsonElement values2) ? Literal(values2) : "list()").Append('\n');
-            s.Append("# Data inputs in this history refer to the exact selected columns in data_frames.\n");
-            s.Append("input_history <- list(").Append(string.Join(",\n  ", history)).Append(")\n");
-            s.Append("data_frames <- list()\n");
-            s.Append(frames);
-            s.Append("\n# The output tables are in the report itself; a recipe recomputes what it needs.\nresult_tables <- list()\n\n");
-            s.Append(RRecipes.Helpers).Append('\n');
-            s.Append("# Analysis: edit or extend the following code.\n");
-            if (recipe != null)
-                s.Append(RRecipes.Recipe(recipe.File));
+            if (detail != null)
+                s.Append("# ").Append(detail).Append('\n');
+            s.Append('\n');
+            // the data
+            HashSet<string> names = new();
+            int next = 0;
+            if (binding != null)
+                foreach (string variable in binding.Data)
+                {
+                    if (next >= columns.Count)
+                        break;
+                    Assign(s, variable, columns[next++], names);
+                }
+            if (binding?.List != null)
+            {
+                List<string> parts = new();
+                for (; next < columns.Count; next++)
+                    parts.Add(Quote(columns[next].Title) + " = " + Vector(columns[next].Values));
+                s.Append(binding.List).Append(" <- list(").Append(string.Join(",\n  ", parts)).Append(")\n");
+                names.Add(binding.List);
+            }
+            for (; next < columns.Count; next++)
+                Assign(s, SafeName(columns[next].Title, names), columns[next], names);
+            foreach ((string[][] counts, string[] rows, string[] cols, string rowsTitle, string colsTitle) in tables)
+            {
+                string variable = binding?.Table ?? SafeName("counts", names);
+                s.Append(variable).Append(" <- matrix(c(").Append(string.Join(", ", counts.SelectMany(r => r))).Append("), ").Append(counts.Length).Append(", byrow = TRUE");
+                if (rows.Length == counts.Length && cols.Length == (counts.Length > 0 ? counts[0].Length : 0))
+                    s.Append(",\n  dimnames = list(").Append(rowsTitle != null ? Quote(rowsTitle) + " = " : "").Append("c(").Append(string.Join(", ", rows.Select(Quote))).Append("), ")
+                     .Append(colsTitle != null ? Quote(colsTitle) + " = " : "").Append("c(").Append(string.Join(", ", cols.Select(Quote))).Append("))");
+                s.Append(")\n");
+                names.Add(variable);
+            }
+            if (binding?.Matrix != null && columns.Count > 0 && binding.Data.Count == 0 && binding.List == null)
+            {
+                // a frame of counts, its columns the columns of the matrix: written in place of the vectors above
+                s.Clear();
+                s.Append("# ").Append(analysisTitle).Append(", from StatsDirect, ").Append(RunTime(record)).Append('\n');
+                foreach (string note in notes)
+                    s.Append("# ").Append(note).Append('\n');
+                if (detail != null)
+                    s.Append("# ").Append(detail).Append('\n');
+                s.Append('\n');
+                s.Append(binding.Matrix).Append(" <- cbind(").Append(string.Join(",\n  ", columns.Select(c => Quote(c.Title) + " = " + Vector(c.Values)))).Append(")\n");
+                names.Add(binding.Matrix);
+            }
+            // the settings
+            JsonElement parameters = record.TryGetProperty("parameters", out JsonElement p) && p.ValueKind == JsonValueKind.Object ? p : default;
+            if (binding != null)
+            {
+                foreach ((string variable, string parameter) in binding.Settings)
+                    if (parameters.ValueKind == JsonValueKind.Object && parameters.TryGetProperty(parameter, out JsonElement value) && IsScalar(value))
+                        s.Append(variable).Append(" <- ").Append(Literal(value)).Append('\n');
+            }
+            else if (parameters.ValueKind == JsonValueKind.Object)
+                foreach (JsonProperty property in parameters.EnumerateObject())
+                    if (IsScalar(property.Value) && !property.Name.StartsWith("statsdirect", StringComparison.OrdinalIgnoreCase))
+                        s.Append(SafeName(property.Name, names)).Append(" <- ").Append(Literal(property.Value)).Append("   # ").Append(property.Name).Append('\n');
+            s.Append('\n');
+            // the analysis
+            if (binding != null)
+                s.Append(binding.Body.TrimEnd('\n')).Append('\n');
             else
-                s.Append("cat(").Append(Quote(detail + "\n")).Append(")\nstr(data_frames)\nprint(parameters)\n# original_results holds the StatsDirect results for reference.\n# Add your own R analysis here.\n");
-            return new RScript { Text = s.ToString(), HasRecipe = recipe != null, Detail = detail, DataUnavailable = unavailable };
+                s.Append("# Add your analysis here.\n");
+            return new RScript { Text = s.ToString(), HasRecipe = recipe != null, Detail = detail ?? "Data and settings only: no R recipe of this method yet.", DataUnavailable = unavailable };
+        }
+
+        private static void Assign(StringBuilder s, string variable, Column column, HashSet<string> names)
+        {
+            names.Add(variable);
+            s.Append(variable).Append(" <- ");
+            if (column.Unavailable)
+                s.Append("NULL");
+            else
+                s.Append(Vector(column.Values));
+            s.Append("   # ").Append(column.Title);
+            if (column.Where != null)
+                s.Append(", ").Append(column.Where);
+            if (column.Unavailable)
+                s.Append(": not read, see above");
+            s.Append('\n');
+        }
+
+        private static string Where(FramePointer pointer, int index)
+        {
+            if (index < 0 || index >= pointer.Columns.Count)
+                return null;
+            ColumnPointer c = pointer.Columns[index];
+            return "column " + c.Column + ", rows " + c.FirstRow + " to " + c.LastRow;
+        }
+
+        /// <summary>The recipe's header and body.  The header lines at the top of the file: "# data: a, b", "# data: a, b, rest...",
+        /// "# table: counts", "# matrix: counts", "# settings: confidence = gamma, mu = population-mean".</summary>
+        private static Binding Parse(string recipe)
+        {
+            Binding b = new();
+            string[] lines = recipe.Replace("\r\n", "\n").Split('\n');
+            // the header is the comment block at the top: its keyword lines bind the variables; the body starts after the last line of
+            // the header that is a keyword line or a line about the recipe itself, so that the analysis keeps its own opening comment
+            int last = -1;
+            for (int i = 0; i < lines.Length && (lines[i].Trim().Length == 0 || lines[i].StartsWith("#", StringComparison.Ordinal)); i++)
+            {
+                Match m = Regex.Match(lines[i], "^#\\s*(data|table|matrix|settings|recipe):\\s*(.*)$", RegexOptions.IgnoreCase);
+                if (!m.Success)
+                {
+                    if (Regex.IsMatch(lines[i], "^# (StatsDirect recipe|From the help|hand-edited)", RegexOptions.IgnoreCase))
+                        last = i;
+                    continue;
+                }
+                last = i;
+                string what = m.Groups[1].Value.ToLowerInvariant(), rest = m.Groups[2].Value.Trim();
+                switch (what)
+                {
+                    case "data":
+                        foreach (string item in rest.Split(',').Select(x => x.Trim()).Where(x => x.Length > 0))
+                            if (item.EndsWith("...", StringComparison.Ordinal)) b.List = item[..^3].Trim();
+                            else b.Data.Add(item);
+                        break;
+                    case "table": b.Table = rest; break;
+                    case "matrix": b.Matrix = rest; break;
+                    case "settings":
+                        foreach (string item in rest.Split(',').Select(x => x.Trim()).Where(x => x.Length > 0))
+                        {
+                            int eq = item.IndexOf('=');
+                            if (eq > 0) b.Settings.Add((item[..eq].Trim(), item[(eq + 1)..].Trim()));
+                        }
+                        break;
+                }
+            }
+            b.Body = string.Join("\n", lines.Skip(last + 1)).TrimStart('\n');
+            return b;
         }
 
         internal static string Text(JsonElement element, string property) =>
@@ -196,25 +322,18 @@ namespace StatsDirect.R
         private static string RunTime(JsonElement record)
         {
             string run = Text(record, "run");
-            return run != null && DateTime.TryParse(run, inv, DateTimeStyles.RoundtripKind, out DateTime time) ? time.ToLocalTime().ToString("yyyy-MM-dd HH:mm", inv) : run ?? "an unknown date";
+            return run != null && DateTime.TryParse(run, inv, DateTimeStyles.RoundtripKind, out DateTime time) ? time.ToLocalTime().ToString("d MMM yyyy HH:mm", inv) : run ?? "";
         }
 
-        private static string Where(FramePointer pointer)
+        private static string[][] Rows(JsonElement input, string property)
         {
-            if (pointer.Columns.Count == 0)
-                return "no columns";
-            int first = pointer.Columns.Min(c => c.Column), last = pointer.Columns.Max(c => c.Column);
-            int top = pointer.Columns.Min(c => c.FirstRow), bottom = pointer.Columns.Max(c => c.LastRow);
-            return (first == last ? "column " + first : "columns " + first + " to " + last) + ", rows " + top + " to " + bottom;
+            if (!input.TryGetProperty(property, out JsonElement rows) || rows.ValueKind != JsonValueKind.Array)
+                return Array.Empty<string[]>();
+            return rows.EnumerateArray().Select(r => r.ValueKind == JsonValueKind.Array ? r.EnumerateArray().Select(Literal).ToArray() : new[] { Literal(r) }).ToArray();
         }
 
-        private static string Unique(string name, HashSet<string> keys)
-        {
-            string key = name;
-            for (int n = 2; !keys.Add(key); n++)
-                key = name + "_" + n.ToString(inv);
-            return key;
-        }
+        private static string[] Strings(JsonElement input, string property) =>
+            input.TryGetProperty(property, out JsonElement a) && a.ValueKind == JsonValueKind.Array ? a.EnumerateArray().Select(v => v.ValueKind == JsonValueKind.String ? v.GetString() : v.GetRawText()).ToArray() : Array.Empty<string>();
 
         private static IList<ColumnValues> Entered(JsonElement input)
         {
@@ -247,6 +366,19 @@ namespace StatsDirect.R
             }).ToArray();
         }
 
+        /// <summary>A name R accepts, made from a column title or a parameter name, unique among those given.</summary>
+        public static string SafeName(string title, HashSet<string> names)
+        {
+            string s = Regex.Replace((title ?? "").Trim().ToLowerInvariant(), "[^a-z0-9]+", "_").Trim('_');
+            if (s.Length == 0 || char.IsDigit(s[0]))
+                s = "x" + s;
+            string candidate = s;
+            for (int n = 2; names.Contains(candidate); n++)
+                candidate = s + n.ToString(inv);
+            names.Add(candidate);
+            return candidate;
+        }
+
         /// <summary>An R string literal.</summary>
         public static string Quote(string value)
         {
@@ -267,33 +399,26 @@ namespace StatsDirect.R
             return s.Append('"').ToString();
         }
 
-        /// <summary>A named list; setNames allows empty and repeated names without treating them as R code.</summary>
-        public static string NamedList(IEnumerable<(string name, string value)> entries)
-        {
-            (string name, string value)[] list = entries.ToArray();
-            if (list.Length == 0)
-                return "list()";
-            return "setNames(list(" + string.Join(",\n  ", list.Select(e => e.value)) + "), c(" + string.Join(", ", list.Select(e => Quote(e.name))) + "))";
-        }
-
         /// <summary>A vector of a column's values: numeric when every value is a number or missing, else text.</summary>
         public static string Vector(object[] values)
         {
             bool numeric = values.All(v => v == null || v is double);
             if (values.Length == 0)
                 return numeric ? "numeric(0)" : "character(0)";
-            return "c(" + string.Join(", ", values.Select(v => numeric ? Number(v) : v == null ? "NA_character_" : Quote(v is double x ? x.ToString("R", inv) : v is bool b ? (b ? "TRUE" : "FALSE") : v is DateTime t ? t.ToString("yyyy-MM-dd", inv) : v.ToString()))) + ")";
+            return "c(" + string.Join(", ", values.Select(v => numeric ? Number(v) : v == null ? "NA" : Quote(v is double x ? x.ToString("R", inv) : v is bool b ? (b ? "TRUE" : "FALSE") : v is DateTime t ? t.ToString("yyyy-MM-dd", inv) : v.ToString()))) + ")";
         }
 
         private static string Number(object value)
         {
             if (value is not double x)
-                return "NA_real_";
+                return "NA";
             if (double.IsNaN(x)) return "NaN";
             if (double.IsPositiveInfinity(x)) return "Inf";
             if (double.IsNegativeInfinity(x)) return "-Inf";
             return x.ToString("R", inv);
         }
+
+        private static bool IsScalar(JsonElement value) => value.ValueKind is JsonValueKind.Number or JsonValueKind.True or JsonValueKind.False or JsonValueKind.String;
 
         /// <summary>The R literal of a JSON value: numbers, TRUE/FALSE, strings, lists and named lists, NULL.</summary>
         public static string Literal(JsonElement value) => value.ValueKind switch
@@ -303,7 +428,7 @@ namespace StatsDirect.R
             JsonValueKind.False => "FALSE",
             JsonValueKind.String => Quote(value.GetString()),
             JsonValueKind.Array => "list(" + string.Join(", ", value.EnumerateArray().Select(Literal)) + ")",
-            JsonValueKind.Object => NamedList(value.EnumerateObject().Select(p => (p.Name, Literal(p.Value)))),
+            JsonValueKind.Object => "list(" + string.Join(", ", value.EnumerateObject().Select(p => Quote(p.Name) + " = " + Literal(p.Value))) + ")",
             _ => "NULL"
         };
     }

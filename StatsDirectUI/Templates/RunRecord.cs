@@ -286,6 +286,10 @@ namespace StatsDirect.Templates
             foreach (string label in table.ColumnLabels)
                 w.WriteStringValue(label);
             w.WriteEndArray();
+            if (!string.IsNullOrEmpty(table.RowsTitle))
+                w.WriteString("rowsTitle", table.RowsTitle);
+            if (!string.IsNullOrEmpty(table.ColumnsTitle))
+                w.WriteString("columnsTitle", table.ColumnsTitle);
         }
 
         private static int Count(DataFrame frame)
