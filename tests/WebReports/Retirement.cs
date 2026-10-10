@@ -20,6 +20,13 @@ internal static partial class Program
         var parserType = typeof(CreoleHtmlReportRenderer).Assembly.GetType("StatsDirect.R.RResultsParser");
         var parser = System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject(parserType);
         var picture = (ReportPicture)parserType.GetMethod("PathToChart", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(parser, new object[] { picturePath });
+        // The scripts of the program draw with R's svg device: the file becomes a vector picture, inline in the report
+        string vectorPath = Path.Combine(output, "r-chart.svg");
+        File.WriteAllText(vectorPath, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"432pt\" height=\"288pt\" viewBox=\"0 0 432 288\"><rect width=\"432\" height=\"288\" fill=\"white\"/></svg>\n");
+        var vectorPicture = (ReportVectorPicture)parserType.GetMethod("PathToChart", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(parser, new object[] { vectorPath });
+        parameters.AddOutput("vector", vectorPicture);
+        string vectorHtml = new CreoleHtmlReportRenderer().Render(null, "<report>@vector</report>", parameters);
+        Check(vectorHtml.Contains("<svg xmlns=\"http://www.w3.org/2000/svg\"") && !vectorHtml.Contains("<?xml") && !vectorHtml.Contains("data:image") && vectorPicture.Width == 576 && vectorPicture.Height == 384, "R chart files written by the svg device become inline vector pictures sized from their points");
         parameters.AddOutput("chart", picture);
         html = new CreoleHtmlReportRenderer().Render(null, "<report>@chart</report>", parameters);
         Check(html.Contains("data:image/png;base64,") && !html.Contains(@"\pict") && picture.Width == 32 && picture.Height == 16, "R chart files become embedded PNG pictures without RTF or an EMF report dependency");
