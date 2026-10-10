@@ -169,6 +169,7 @@ internal static partial class Program
         await CheckSameRun();
         await CheckClampedSelection();
         await CheckPanesHidden();
+        await CheckRecordRoundTrip();
     }
 
     private static async Task CheckStandardPresentation(string real)
