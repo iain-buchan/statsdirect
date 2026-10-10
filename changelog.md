@@ -6,20 +6,13 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
 Version 5.1.0 replaces the Windows rich-text report editor and compiled CHM help with HTML5 reports and help displayed through WebView2. Reports reuse the editor developed for the Mac version and retain the established statistical templates and result colours.
 
+The release also follows the port of the engine to the Mac, whose checks of the shared code and replay of the help examples found faults on Windows too. The selection of data by group identifiers left out a row whose identifier cell was blank, so that the values after it were paired with the wrong groups without a warning, and the analysis of covariance by identifier took blank cells into its sums; such rows are now refused or left out, as the layout in separate columns has always left them out. The "Select model" follow-on of the linearized estimates regression and LOESS curve fitting with two or more predictors stopped with internal errors. Seven operations that no menu has reached since 2012, and the second menu layout that defined them, are removed.
+
 ### Changed
 - Reports are editable immediately, with Arial as the default report and chart font. Text, charts and whole results can be selected and deleted with ordinary editing commands and restored with undo. The ribbon is simpler and uses sharper icons.
 - File > Save and Save As store editable HTML reports; Word and PDF exports are available from the File menu. Report templates retain consistent heading, table, font and colour styles. R chart output is embedded as PNG.
 - Help opens offline in a resizable pane beside the worksheet or report. Pop out and Dock retain the same topic, navigation history, reading position and expanded R examples. F1 preserves the active worksheet/report and data selection; help temporarily floats during modal parameter dialogs and returns when they close.
 - The installer supplies the WebView2 runtime when required and removes the retired CHM files and DevExpress components during upgrades.
-
-### Removed
-- The DevExpress RichEdit report editor and RTF/EMF report generation. New reports use HTML and SVG. Existing RTF, MHTML and DOCX reports can be opened in Word or another compatible editor and saved as HTML for use in StatsDirect.
-- Separate result/chart removal buttons, the replay-operation dropdown and the Edit report toggle.
-- Compiled CHM help, replaced by the complete HTML5 help bundle with search and R equivalents.
-
-##[v5.0.15] 2026-10-10
-
-Version 5.0.15 follows the port of the engine to the Mac, whose checks of the shared code and replay of the help examples found faults on Windows too. The selection of data by group identifiers left out a row whose identifier cell was blank, so that the values after it were paired with the wrong groups without a warning, and the analysis of covariance by identifier took blank cells into its sums; such rows are now refused or left out, as the layout in separate columns has always left them out. The "Select model" follow-on of the linearized estimates regression and LOESS curve fitting with two or more predictors stopped with internal errors. Seven operations that no menu has reached since 2012, and the second menu layout that defined them, are removed.
 
 ### Fixed
 - Groups by identifier: a row whose identifier cell is blank was left out of the identifiers, so that they were fewer than the rows selected, the data had to be cut to their number ("all columns selected must be the same length"), and the values after the blank were then paired with the wrong groups without a warning. Such a row now keeps its place, and a row that has a value but no identifier is refused by its row number. An identifier that is the label of a missing value, "* (missing)", is a missing identifier too, not a group.
@@ -33,6 +26,9 @@ Version 5.0.15 follows the port of the engine to the Mac, whose checks of the sh
 - Example workbook: the heading GMTA of a column on the Nonparametric sheet, which the help calls GMAT, corrected; a workbook already copied to a Documents folder keeps its old heading.
 
 ### Removed
+- The DevExpress RichEdit report editor and RTF/EMF report generation. New reports use HTML and SVG. Existing RTF, MHTML and DOCX reports can be opened in Word or another compatible editor and saved as HTML for use in StatsDirect.
+- Separate result/chart removal buttons, the replay-operation dropdown and the Edit report toggle.
+- Compiled CHM help, replaced by the complete HTML5 help bundle with search and R equivalents.
 - Seven operations that no menu reached and no help topic described, defined since StatsDirect 3 in 2012 for a second menu layout that the program never loads: the one way and two way analyses of variance grouped by a classifier (the analyses themselves take groups by identifier), sort by expression, the stacked bar plots, the explorer of continuous distributions, and the z score transform based on the empirical cumulative distribution.
 - The second menu layout, menu-sd2.xml, which the program never loaded: the setting that names the menu file has always been menu.xml, and the seven operations that only this layout reached were retired in the change before.
 
