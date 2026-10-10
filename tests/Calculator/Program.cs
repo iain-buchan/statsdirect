@@ -2,7 +2,7 @@ using System.Reflection;
 using StatsDirect.Calculator;
 using StatsDirect.UI.HtmlHelp;
 
-internal static class Program
+internal static partial class Program
 {
     static int checks;
     static string output;
@@ -58,7 +58,7 @@ internal static class Program
         Check(ribbon.Width == host.ClientSize.Width && mdi.Bottom <= session.DockHost.Divider.Top, "calculator and divider leave the ribbon and worksheet unobscured");
         calc.Show(host, () => { });
         Check(ReferenceEquals(view, calc.View) && ReferenceEquals(session, calc.Session), "repeated Tools command reuses one calculator session");
-        Check(view.Expression.Multiline && view.Expression.WordWrap && view.Expression.ScrollBars == ScrollBars.Vertical, "input wraps with vertical scrolling");
+        Check(view.Expression.Multiline && view.Expression.WordWrap && view.Expression.ScrollBars == RichTextBoxScrollBars.Vertical, "input wraps with vertical scrolling");
         double dockedLines = view.Expression.ClientSize.Height / (double)view.Expression.Font.Height;
         Check(dockedLines >= 2.5 && dockedLines <= 4.5, $"default docked input shows about three lines at {view.DeviceDpi} DPI ({dockedLines:F2})");
         var viewport = view.Controls.OfType<Panel>().Single();
@@ -85,7 +85,7 @@ internal static class Program
         Check(view.LastError != null && view.Result.Text == "" && view.Saved.Items.Count == 1, "invalid expressions show an inline error and cannot save stale results");
         view.Saved.SelectedIndex = 0;
         view.Recall();
-        Check(view.Expression.Text == "(2 + 3)\r\n* 4" && view.Result.Text == "20", "recall restores original multiline expression and result");
+        Check(view.Expression.Text == "(2 + 3)\n* 4" && view.Result.Text == "20", "recall restores original multiline expression and result (native LF line endings)");
         view.Expression.Select(1, 5);
         await session.ToggleModeAsync();
         Check(!session.IsDocked && session.Window != null && ReferenceEquals(view.Parent, session.Window) && mdi.Size == full, "Pop out moves the same live calculator and restores the workspace");
@@ -170,15 +170,17 @@ internal static class Program
         clipboardView.Saved.SelectedIndex = 0;
         clipboardView.Recall();
         clipboardView.CopySaved();
-        Check(clipboardView.Expression.Text == "2\t+\r\n3" && copied.EndsWith(" = 5"), "saved multiline/tabbed expressions retain exact text and copy readable results");
+        Check(clipboardView.Expression.Text == "2\t+\n3" && copied.EndsWith(" = 5"), "saved multiline/tabbed expressions retain the editor text and copy readable results");
         clipboardView.Expression.Text = "2 * ()";
         clipboardView.Expression.Select(5, 0);
         clipboardView.InsertSaved();
-        Check(clipboardView.Expression.Text == "2 * (2\t+\r\n3)" && clipboardView.EvaluateCurrent() && clipboardView.Result.Text == "10", "saved expressions can be inserted at the caret in a new calculation");
+        Check(clipboardView.Expression.Text == "2 * (2\t+\n3)" && clipboardView.EvaluateCurrent() && clipboardView.Result.Text == "10", "saved expressions can be inserted at the caret in a new calculation");
         clipboardView.RemoveSaved();
         Check(clipboardView.Saved.Items.Count == 0, "saved calculations can be removed");
         help.Dispose();
         calc.Dispose();
         Check(view.IsDisposed && mdi.Size == full, "disposing the services releases both tools and restores the workspace");
+        sheet.Close();
+        await EditingChecks(host);
     }
 }

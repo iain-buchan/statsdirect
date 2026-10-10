@@ -44,8 +44,27 @@ export function windowsExportStyle(source) {
     const numberFormat=element.getAttribute('style')?.match(/(?:^|;)\\s*(mso-number-format\\s*:[^;]*;?)/i)?.[1];
     element.removeAttribute('border');element.style.cssText=style??'';
     if(numberFormat)element.setAttribute('style',element.style.cssText+';'+numberFormat);
+  }
+  // Office interprets CSS pixels using the Windows display DPI. Physical point
+  // units keep a 10pt report at 10pt even on a 250% monitor. Preserve Excel's
+  // literal number-format hint when CSSStyleDeclaration rewrites the attribute.
+  const pointProperties=['font-size','line-height','width','height','max-width',
+    ...['top','right','bottom','left'].flatMap(e=>['margin-'+e,'padding-'+e,'border-'+e+'-width'])];
+  for(const element of root.querySelectorAll('[style]')) {
+    const numberFormat=element.getAttribute('style')?.match(/(?:^|;)\\s*(mso-number-format\\s*:[^;]*;?)/i)?.[1];
+    for(const property of pointProperties) {
+      const value=element.style.getPropertyValue(property);
+      if(/^-?[\\d.]+px$/.test(value))element.style.setProperty(property,Number((parseFloat(value)*.75).toFixed(4))+'pt');
+    }
+    if(numberFormat&&!element.getAttribute('style').includes('mso-number-format'))element.setAttribute('style',element.style.cssText+';'+numberFormat);
   }`);
   replace('body,p,td,th{font:11pt Arial}h1,h2,h3{font: bold 12pt Arial}td,th{white-space:normal}p{margin:6pt 0}',
     'body,p,td,th{font:10pt Arial;color:#000;line-height:1.2}h1,h2,h3{font:bold 10pt Arial;text-decoration:underline}h2,th{font-weight:normal;text-decoration:underline}td,th{white-space:normal;text-align:left}p{margin:0}');
+  // Windows Excel uses 96-dpi pixels for HTML image attributes. The shared Mac
+  // clipboard compensates for AppKit's interpretation; that shrinks charts here.
+  replace('img.width=Math.round(width*.75);img.height=Math.round(height*.75);',
+    'img.width=Math.round(width);img.height=Math.round(height);');
+  replace('img.width=Math.round(displayWidth*.75);img.height=Math.round(displayHeight*.75);',
+    'img.width=Math.round(displayWidth);img.height=Math.round(displayHeight);');
   return source;
 }

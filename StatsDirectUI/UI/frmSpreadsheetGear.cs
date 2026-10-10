@@ -1029,16 +1029,19 @@ namespace StatsDirect.UI
 
         private void cutToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (MdiParent is frmMain main && main.TryCalculatorEdit("cut")) return;
             DoOrWarn(workbookView.Cut, "Cut failed");
         }
 
         private void copyToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (MdiParent is frmMain main && main.TryCalculatorEdit("copy")) return;
             DoOrWarn(workbookView.Copy, "Copy failed");
         }
 
         private void pasteToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (MdiParent is frmMain main && main.TryCalculatorEdit("paste")) return;
             DoOrWarn(workbookView.Paste, "Paste failed");
         }
 
@@ -1118,6 +1121,7 @@ namespace StatsDirect.UI
 
         private void undoToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (MdiParent is frmMain main && main.TryCalculatorEdit("undo")) return;
             DoOrWarn(Undo, "Undo failed");
         }
 
@@ -1792,6 +1796,7 @@ namespace StatsDirect.UI
 
         private void redoToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (MdiParent is frmMain main && main.TryCalculatorEdit("redo")) return;
             DoOrWarn(EditRedo, "Couldn't redo");
         }
 

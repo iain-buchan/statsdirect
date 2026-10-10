@@ -44,7 +44,7 @@ internal static partial class Program
         string clipboard = office.RootElement.GetProperty("html").GetString();
         await Js("window.templateClipboard=" + JsonSerializer.Serialize(clipboard));
         await File.WriteAllTextAsync(Path.Combine(output, "template-clipboard.html"), clipboard);
-        Check(await True("(()=>{const d=new DOMParser().parseFromString(templateClipboard,'text/html'),cells=[...d.querySelectorAll('td,th')];return cells.length===8&&cells.every(c=>Math.abs(parseFloat(c.style.fontSize)-40/3)<.01&&c.style.textAlign==='left'&&(!c.style.borderBottomWidth||c.style.borderBottomWidth==='0px'))&&[...d.querySelectorAll('th')].every(c=>c.style.fontWeight==='400'&&c.style.textDecorationLine.includes('underline'));})()"), "Office clipboard retains the template's 10pt table text and header styling");
+        Check(await True("(()=>{const d=new DOMParser().parseFromString(templateClipboard,'text/html'),cells=[...d.querySelectorAll('td,th')];return cells.length===8&&cells.every(c=>c.style.fontSize==='10pt'&&c.style.textAlign==='left'&&(!c.style.borderBottomWidth||parseFloat(c.style.borderBottomWidth)===0))&&[...d.querySelectorAll('th')].every(c=>c.style.fontWeight==='400'&&c.style.textDecorationLine.includes('underline'));})()"), "Office clipboard retains the template's 10pt table text and header styling");
         Check(clipboard.Contains("x:num=\"56.1\"") && clipboard.Contains("mso-number-format:&quot;General&quot;") && clipboard.Contains("mso-number-format:&quot;\\@&quot;") && clipboard.Contains("colspan=\"2\"") && clipboard.Contains("color: rgb(0, 0, 255)"), "Office table styling preserves Excel number/text formats, merged cells and CI colours");
         string docxPath = Path.Combine(output, "template-styles.docx");
         await view.SaveAsync(docxPath, "Template report styles", "docx");
@@ -73,7 +73,7 @@ internal static partial class Program
         selection = await view.CallAsync("prepareClipboard", new { cut = false });
         using var custom = JsonDocument.Parse((await view.CallAsync("officeClipboard", new { html = selection.GetProperty("html").GetString() })).GetString());
         await Js("window.templateClipboard=" + JsonSerializer.Serialize(custom.RootElement.GetProperty("html").GetString()));
-        Check(await True("(()=>{const d=new DOMParser().parseFromString(templateClipboard,'text/html'),c=[...d.querySelectorAll('td')].find(e=>e.textContent==='User cell');return c.style.fontSize==='24px'&&c.style.fontFamily.includes('Georgia')&&c.style.color==='rgb(128, 0, 128)'&&c.style.backgroundColor==='rgb(255, 255, 0)';})()"), "Office copying preserves a deliberately reformatted table cell");
+        Check(await True("(()=>{const d=new DOMParser().parseFromString(templateClipboard,'text/html'),c=[...d.querySelectorAll('td')].find(e=>e.textContent==='User cell');return c.style.fontSize==='18pt'&&c.style.fontFamily.includes('Georgia')&&c.style.color==='rgb(128, 0, 128)'&&c.style.backgroundColor==='rgb(255, 255, 0)';})()"), "Office copying preserves a deliberately reformatted table cell");
         string customDocxPath = Path.Combine(output, "template-styles-custom.docx");
         await view.SaveAsync(customDocxPath, "Custom cell style", "docx");
         using (var archive = ZipFile.OpenRead(customDocxPath))

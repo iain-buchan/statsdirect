@@ -4,6 +4,7 @@ import {build} from './upstream/Report/node_modules/esbuild/lib/main.js';
 import {readFile} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import {windowsExportStyle} from './export-style.mjs';
+import {safeBorderStyle} from './safe-border-style.mjs';
 await build({entryPoints:[fileURLToPath(new URL('./upstream/Report/editor.mjs',import.meta.url))],bundle:true,format:'iife',globalName:'StatsDirectReportEditor',target:'chrome120',minify:true,legalComments:'eof',outfile:fileURLToPath(new URL('../StatsDirectUI/Assets/ReportEditor/vendor/editor.js',import.meta.url)),plugins:[{name:'windows-report-host',setup(b){b.onLoad({filter:/(editor|transfer)\.mjs$/},async ({path})=>{
   let contents=await readFile(path,'utf8');
   const replace=(from,to)=>{if(!contents.includes(from))throw new Error('Review the Windows selection adapter for the new upstream source: '+from);contents=contents.replace(from,to);};
@@ -20,7 +21,7 @@ await build({entryPoints:[fileURLToPath(new URL('./upstream/Report/editor.mjs',i
     contents="export {segments,deletePiece,currentRange,selectRange};\n"+contents.replaceAll('event.altKey','event.ctrlKey').replace('||event.ctrlKey||event.metaKey','||event.metaKey');
   }
   return {contents,loader:'js'};
-});b.onResolve({filter:/^windows-report-deletion$/},()=>({path:fileURLToPath(new URL('./deletion.mjs',import.meta.url))}));}}]});
+});b.onResolve({filter:/^windows-report-deletion$/},()=>({path:fileURLToPath(new URL('./deletion.mjs',import.meta.url))}));}},safeBorderStyle]});
 
 // Word reads inline runs, not CSS selectors. Resolve report presentation in
 // the detached export copy, using the same helper as the shared clipboard.
@@ -36,4 +37,6 @@ await build({entryPoints:[fileURLToPath(new URL('./upstream/Report/export.mjs',i
     if(!element.closest('svg,.report-controls'))inlinePresentation(element,styledCopies[index]);
   });`);
   return {contents,loader:'js'};
-});}}]});
+});}},safeBorderStyle]});
+
+await build({entryPoints:[fileURLToPath(new URL('./upstream/Report/import.mjs',import.meta.url))],bundle:true,format:'iife',globalName:'StatsDirectReportImport',target:'chrome120',minify:true,legalComments:'eof',outfile:fileURLToPath(new URL('../StatsDirectUI/Assets/ReportEditor/vendor/import.js',import.meta.url)),plugins:[safeBorderStyle]});

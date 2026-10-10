@@ -70,6 +70,13 @@ window.WindowsReport={async run(request){
       case 'export':{
         const state=snapshot();value=await StatsDirectReportExport.capture({format:request.args.format,title:request.args.title});
         if(request.args.format==='html'){
+          // The editable entry metadata must contain the same resolved styles
+          // as the visible export. Raw editor classes may depend on stylesheets
+          // or ancestor selectors that are unavailable when loading each entry.
+          const exported=new DOMParser().parseFromString(value,'text/html');
+          const bodies=[...exported.querySelectorAll('.report-entry > .report-body')];
+          if(bodies.length!==state.entries.length)throw Error('The report sections could not be saved.');
+          state.entries.forEach((entry,index)=>entry.html=bodies[index].innerHTML);
           const metadata=JSON.stringify(state).replaceAll('<','\\u003c');
           value=value.replace('<head>','<head><meta name="statsdirect-report-format" content="1">').replace('</body>',`<script type="application/json" id="statsdirect-report-data">${metadata}</script></body>`);
         }value={content:value,revision:state.revision};break;

@@ -1,6 +1,16 @@
 # Windows WebView2 report integration checks
 
-Current validation, 10 October 2026: **99 checks pass** with WebView2 as the only report editor. The checks assert no DevExpress assembly references and no retired RichEdit/RTF renderer types; `Retirement.cs` covers encoded multiline warnings, conversion of R chart files to embedded PNG and read-only chart previews. The older RTF comparison checks below describe the migration history; they have been replaced with checks of the established HTML template roles.
+Current validation, 10 October 2026: **110 native checks and 18 installed Office checks pass** with WebView2 as the only report editor. The checks assert no DevExpress assembly references and no retired RichEdit/RTF renderer types; `Retirement.cs` covers encoded multiline warnings, conversion of R chart files to embedded PNG and read-only chart previews. The older RTF comparison checks below describe the migration history; they have been replaced with checks of the established HTML template roles.
+
+`Interoperability.cs` covers stylesheet-dependent cell formatting, four distinct borders, merged cells, Excel numeric/text hints, physical chart size, resizing and export without modifying report content or revision. The invariant comparison excludes editor selection controls. Reopening editable HTML retains the same resolved styles. The fixture writes `office-clipboard.cfhtml` and `office-export.html/.docx/.pdf`.
+
+With desktop Word and Excel installed, run the actual clipboard/import checks:
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -STA -File tests/WebReports/OfficeInterop.ps1 -Artifacts C:\path\to\test-artifacts
+```
+
+This uses new hidden Office instances and temporary documents and restores the previous clipboard immediately after each paste. Add `-SavePasteArtifacts` to write `excel-paste.xlsx` and `word-paste.docx`; Word's automated Save As blocked during one repeat, so this optional artifact step is separate from the assertions. The checks cover editable tables, numeric values, text identifiers, formula-like labels, merged cells, fonts, borders, and four-by-two-inch charts. They also open the exported DOCX in Word. At 240 DPI, they exposed Office shrinking CSS-pixel font sizes and the Mac image-size adjustment shrinking charts on Windows; the clipboard adapter now preserves their point sizes. This does not cover other Office versions or PowerPoint.
 
 The Release application, MSI and offline setup bundle build successfully (existing NU1701 and intentional ICE61 warnings). MSI inspection found no DevExpress payload or blank RTF template, and confirmed the WebView2 prerequisite and upgrade-removal entries. Extracting the bundle confirmed its signed Microsoft WebView2 standalone installer, .NET runtime and MSI; the WebView2 package is per-machine and permanent, with `/silent /install`. No installation or upgrade was run on this development PC; a clean-machine/upgrade acceptance test remains necessary before release.
 

@@ -142,10 +142,30 @@ namespace StatsDirect.UI
             ModalMessage
         };
 
+        private Calculator.CalculatorView calculatorMenuTarget;
+        [System.ComponentModel.DesignerSerializationVisibility(System.ComponentModel.DesignerSerializationVisibility.Hidden)]
+        internal bool ShowOpeningDialog { get; set; } = true;
+        internal bool TryCalculatorEdit(string command) =>
+            calculatorMenuTarget?.TryEdit(command, true) ?? SdApplication.SoleInstance.CalculatorView?.TryEdit(command) ?? false;
+
         public frmMain()
         {
             currentScaleFactor = new SizeF(1f, 1f);
             InitializeComponent();
+            // A menu temporarily owns keyboard focus. Remember its edit target
+            // until Click has run, instead of editing the underlying worksheet.
+            mnuMain.MenuActivate += (_, _) =>
+            {
+                var calculator = SdApplication.SoleInstance.CalculatorView;
+                // WinForms can raise MenuActivate again as the menu takes
+                // focus. Keep the target captured by the first activation.
+                if (calculator?.ContainsFocus == true) calculatorMenuTarget = calculator;
+            };
+            mnuMain.MenuDeactivate += (_, _) =>
+            {
+                if (IsHandleCreated && !IsDisposed)
+                    BeginInvoke(new Action(() => calculatorMenuTarget = null));
+            };
             toolStrip.Renderer = new SharpToolbarRenderer();
             // ImageScalingSize is in device pixels, unlike the icon design grid.
             void SizeToolbarIcons() => toolStrip.ImageScalingSize = toolStrip.LogicalToDeviceUnits(new Size(20, 20));
@@ -2988,7 +3008,7 @@ namespace StatsDirect.UI
                 SdApplication.SoleInstance.MainWindowIsShown();
 
                 // We may pre-load a document via a FileOpen parameter.  If we don't, show an opening form.
-                if (MdiChildren.Length == 0)
+                if (MdiChildren.Length == 0 && ShowOpeningDialog)
                     SdApplication.SoleInstance.ShowOrQueueDialog(new frmOpening(), null);
             }
             catch (Exception ex)
@@ -3242,7 +3262,7 @@ namespace StatsDirect.UI
         {
             try
             {
-                SdApplication.SoleInstance.ActiveWindow.EditCut();
+                if (!TryCalculatorEdit("cut")) SdApplication.SoleInstance.ActiveWindow?.EditCut();
             }
             catch (Exception ex)
             {
@@ -3254,7 +3274,7 @@ namespace StatsDirect.UI
         {
             try
             {
-                SdApplication.SoleInstance.ActiveWindow.EditCopy();
+                if (!TryCalculatorEdit("copy")) SdApplication.SoleInstance.ActiveWindow?.EditCopy();
             }
             catch (Exception ex)
             {
@@ -3266,7 +3286,7 @@ namespace StatsDirect.UI
         {
             try
             {
-                SdApplication.SoleInstance.ActiveWindow.EditPaste();
+                if (!TryCalculatorEdit("paste")) SdApplication.SoleInstance.ActiveWindow?.EditPaste();
             }
             catch (Exception ex)
             {

@@ -29,7 +29,7 @@ internal static partial class Program
         int exit = 1;
         form.Shown += async (_, _) =>
         {
-            try { await Run(); Console.WriteLine($"PASS {checks} Windows WebView2 checks"); exit = 0; }
+        try { await Run(); await InteroperabilityChecks(); Console.WriteLine($"PASS {checks} Windows WebView2 checks"); exit = 0; }
             catch (Exception ex) { Console.WriteLine("FAIL " + ex); }
             finally { form.Close(); }
         };

@@ -103,11 +103,17 @@ Enter evaluates and Shift+Enter
 inserts a line break. Recall restores a saved calculation; Insert puts a saved
 expression at the caret. During modal dialogs, a visible calculator floats and
 then returns, preserving focus in the parameter dialog.
+The calculator's Edit menu and Ctrl+Z/Ctrl+Y provide multilevel undo/redo,
+including Recall and Insert, even without an open worksheet. Docking preserves
+the input control and its editing history. Input is plain text; the native
+Windows text control does not restore the retired DevExpress report editor.
 
 The shared tool-window infrastructure is used by Calculator and Help. Run
 `tests/Calculator` and `tests/HtmlHelp` after changing it. Existing saved Tools
 entries for this installation's `StatsDirect.exe -calculator` are deduplicated
-and routed to the pane; explicit standalone command-line launches still work.
+and routed to the pane. Old `-calculator` shortcuts now open the main application
+with this same pane; the separate calculator application has been removed.
+`tests/WindowsShell` checks the actual main form and merged worksheet commands.
 
 ### Visual Studio 2026
 

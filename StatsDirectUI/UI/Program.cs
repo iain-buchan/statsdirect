@@ -1,4 +1,3 @@
-using StatsDirect.Calculator;
 using StatsDirect.Configuration;
 using StatsDirect.UI.Properties;
 using StatsDirect.Utilities;
@@ -24,9 +23,7 @@ namespace StatsDirect.UI
 
             ApplicationConfiguration.Initialize();
 
-            if (args.Length > 0 && "-calculator".Equals(args[0]))
-                StartCalculator();
-            else if (args.Length > 0 && "-sanity-check".Equals(args[0]))
+            if (args.Length > 0 && "-sanity-check".Equals(args[0]))
                 SanityChecker.Check();
             else if (args.Length > 0 && "-test-operations".Equals(args[0]))
                 OperationsTester.TestAll();
@@ -34,10 +31,15 @@ namespace StatsDirect.UI
                 StartStatsDirect(args);
         }
 
-        private static void StartCalculator()
+        internal static void ConfigureStartupCommand(string[] args, frmMain mainWindow)
         {
-            using frmStatsDirectCalculator mainWindow = new();
-            Application.Run(mainWindow);
+            // Old shortcuts now open the integrated pane. There is no separate
+            // calculator application or second calculator lifecycle to maintain.
+            if (args.Length > 0 && "-calculator".Equals(args[0], StringComparison.OrdinalIgnoreCase))
+            {
+                mainWindow.ShowOpeningDialog = false;
+                mainWindow.Shown += (_, _) => mainWindow.BeginInvoke(new Action(() => SdApplication.SoleInstance.ShowCalculator()));
+            }
         }
 
         private static void StartStatsDirect(string[] args)
@@ -99,7 +101,7 @@ namespace StatsDirect.UI
                 SetupUserInterface();
 
                 // Get ready to show the main window...
-                SdApplication.SoleInstance.CreateMainWindow();
+                ConfigureStartupCommand(args, SdApplication.SoleInstance.CreateMainWindow());
 
                 // ... and go!
                 loader.Hide();

@@ -159,9 +159,10 @@ namespace StatsDirect.UI
             return MainWindow.OpenFile(path, removeFromRecentFilesIfNotFound);
         }
 
-        internal void CreateMainWindow()
+        internal frmMain CreateMainWindow()
         {
             MainWindow = new frmMain();
+            return MainWindow;
         }
 
         internal StatsDirectForm CreateReport()
@@ -438,6 +439,7 @@ namespace StatsDirect.UI
         private string messageHelpTopic;
 
         internal void ShowCalculator() => calculator.Show(MainWindow, () => ShowHelp(MainWindow, "1020"));
+        internal Calculator.CalculatorView CalculatorView => calculator.View;
 
         internal void ShowHelp(Form Parent, string Topic)
         {

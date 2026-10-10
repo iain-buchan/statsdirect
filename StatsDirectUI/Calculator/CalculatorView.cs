@@ -12,7 +12,7 @@ namespace StatsDirect.Calculator;
 /// <summary>A live calculator session, independent of the window that displays it.</summary>
 internal sealed class CalculatorView : UserControl
 {
-    internal TextBox Expression { get; } = new() { Name = "Expression", AccessibleName = "Expression to evaluate", Multiline = true, WordWrap = true, AcceptsReturn = true, ScrollBars = ScrollBars.Vertical, Dock = DockStyle.Fill };
+    internal ExpressionEditor Expression { get; } = new() { Name = "Expression", AccessibleName = "Expression to evaluate", Multiline = true, WordWrap = true, ScrollBars = RichTextBoxScrollBars.Vertical, Dock = DockStyle.Fill };
     internal TextBox Result { get; } = new() { Name = "Result", AccessibleName = "Calculator result", Multiline = true, WordWrap = true, ReadOnly = true, ScrollBars = ScrollBars.Vertical, Dock = DockStyle.Fill };
     internal ListBox Saved { get; } = new() { Name = "SavedExpressions", AccessibleName = "Saved calculations", Dock = DockStyle.Fill, HorizontalScrollbar = true, IntegralHeight = false };
     internal string LastError { get; private set; }
@@ -28,6 +28,8 @@ internal sealed class CalculatorView : UserControl
     private readonly RowStyle resultRow;
     private bool stacked;
     private bool arranging;
+    private TextBoxBase editTarget;
+    internal ToolStripDropDownButton EditMenu { get; } = new("&Edit");
 
     internal sealed record Calculation(string Expression, string Result)
     {
@@ -44,6 +46,21 @@ internal sealed class CalculatorView : UserControl
         Dock = DockStyle.Fill;
         var heading = new ToolStrip { GripStyle = ToolStripGripStyle.Hidden, Dock = DockStyle.Top };
         heading.Items.AddRange([new ToolStripLabel("Calculator"), new ToolStripButton("Close", null, (_, _) => CloseRequested?.Invoke()) { Alignment = ToolStripItemAlignment.Right }, mode]);
+        heading.Items.Insert(1, EditMenu);
+        editTarget = Expression;
+        Expression.EditFailed += ShowNotice;
+        Expression.Enter += (_, _) => editTarget = Expression;
+        Result.Enter += (_, _) => editTarget = Result;
+        AddEditCommands(EditMenu.DropDownItems);
+        EditMenu.DropDownOpening += (_, _) => UpdateEditCommands(EditMenu.DropDownItems);
+        foreach (TextBoxBase editor in new TextBoxBase[] { Expression, Result })
+        {
+            var context = new ContextMenuStrip();
+            AddEditCommands(context.Items);
+            context.Opening += (_, _) => { editTarget = editor; UpdateEditCommands(context.Items); };
+            editor.ContextMenuStrip = context;
+            editor.Disposed += (_, _) => context.Dispose();
+        }
         mode.Click += (_, _) => ModeRequested?.Invoke();
         content = new Panel { Dock = DockStyle.Fill, AutoScroll = true };
         columns = new TableLayoutPanel { ColumnCount = 2, RowCount = 2, Padding = new Padding(8), Margin = Padding.Empty };
@@ -178,7 +195,6 @@ internal sealed class CalculatorView : UserControl
         mode.Enabled = !floating || canDock;
         mode.ToolTipText = floating && !canDock ? "Calculator will return when the parameter dialog closes." : floating ? "Dock below the workspace" : "Open Calculator in a separate window";
     }
-    internal void SetStandalone() => mode.Visible = false;
     internal void FocusExpression() => Expression.Focus();
     internal void ShowNotice(string message) { LastError = message; status.Text = message; status.Visible = !string.IsNullOrEmpty(message); }
     internal bool EvaluateCurrent()
@@ -209,7 +225,8 @@ internal sealed class CalculatorView : UserControl
     internal void Recall()
     {
         if (Saved.SelectedItem is not Calculation item) return;
-        Expression.Text = item.Expression;
+        Expression.SelectAll();
+        Expression.ReplaceSelection(item.Expression);
         Result.Text = item.Result;
         FocusExpression();
     }
@@ -217,7 +234,7 @@ internal sealed class CalculatorView : UserControl
     internal void InsertSaved()
     {
         if (Saved.SelectedItem is not Calculation item) return;
-        Expression.SelectedText = item.Expression;
+        Expression.ReplaceSelection(item.Expression);
         FocusExpression();
     }
     internal void CopyResult() { if (Result.Text.Length > 0) Copy(Result.Text); }
@@ -226,6 +243,44 @@ internal sealed class CalculatorView : UserControl
     {
         try { copy(text); }
         catch (Exception ex) { ShowNotice("Could not copy: " + ex.Message); }
+    }
+    private void AddEditCommands(ToolStripItemCollection items)
+    {
+        foreach (var (name, shortcut) in new[] { ("Undo", "Ctrl+Z"), ("Redo", "Ctrl+Y"), ("Cut", "Ctrl+X"), ("Copy", "Ctrl+C"), ("Paste", "Ctrl+V"), ("Select all", "Ctrl+A") })
+            items.Add(new ToolStripMenuItem(name, null, (_, _) => TryEdit(name, true)) { ShortcutKeyDisplayString = shortcut });
+    }
+    private void UpdateEditCommands(ToolStripItemCollection items)
+    {
+        foreach (ToolStripItem item in items)
+            item.Enabled = item.Text switch
+            {
+                "Undo" => editTarget == Expression && Expression.CanUndo,
+                "Redo" => editTarget == Expression && Expression.CanRedo,
+                "Cut" => !editTarget.ReadOnly && editTarget.SelectionLength > 0,
+                "Copy" => editTarget.SelectionLength > 0,
+                "Paste" => !editTarget.ReadOnly,
+                _ => editTarget.TextLength > 0
+            };
+    }
+    internal bool TryEdit(string command, bool fromMenu = false)
+    {
+        if (!Visible || (!ContainsFocus && !fromMenu)) return false;
+        try
+        {
+            switch (command.ToLowerInvariant())
+            {
+                case "undo": if (editTarget == Expression) Expression.Undo(); break;
+                case "redo": if (editTarget == Expression) Expression.Redo(); break;
+                case "cut": if (!editTarget.ReadOnly) editTarget.Cut(); break;
+                case "copy": if (editTarget.SelectionLength > 0) Copy(editTarget.SelectedText); break;
+                case "paste": if (!editTarget.ReadOnly) Expression.PasteText(); break;
+                case "select all": editTarget.SelectAll(); break;
+                default: return false;
+            }
+            editTarget.Focus();
+        }
+        catch (Exception ex) { ShowNotice("Could not edit expression: " + ex.Message); }
+        return true;
     }
     protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
     {

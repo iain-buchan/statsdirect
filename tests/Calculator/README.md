@@ -16,5 +16,9 @@ Help coexistence in either opening order and temporary floating during modal
 dialogs without stealing focus. The harness does not modify the system clipboard.
 Docked, floating and narrow-layout screenshots are written to the supplied output directory.
 
-Also check Tools > Calculator and Enter/Shift+Enter in the full application;
-native keyboard routing and the installed Tools menu are outside this harness.
+The expanded suite passes 72 checks at both 96 and 240 DPI. It exercises the
+pane Edit menu, Ctrl+Z/Ctrl+Y, Recall/Insert undo steps, chronological history,
+read-only result protection, and selection/history across hiding and docking.
+`tests/WindowsShell` additionally exercises the actual compiled main form,
+legacy startup command and merged worksheet Edit menu. Physical keyboard and
+assistive-technology acceptance remains useful before release.
