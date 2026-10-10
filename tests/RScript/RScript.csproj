@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0-windows10.0.17763.0</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <!-- The folder of a build of the program: that of the Debug configuration unless another is given with -p:StatsDirectBin=... -->
+    <StatsDirectBin Condition="'$(StatsDirectBin)' == ''">../../StatsDirectUI/bin/Debug/net10.0-windows10.0.17763.0</StatsDirectBin>
+    <Operations>../../StatsDirectUI/Assets/Operations</Operations>
+    <Recipes>../../StatsDirectUI/Assets/R</Recipes>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="StatsDirect">
+      <HintPath>$(StatsDirectBin)/StatsDirect.dll</HintPath>
+    </Reference>
+    <!-- the report templates, which the engine reads beside its own assembly -->
+    <Content Include="../../StatsDirectUI/Assets/Template/*.creole" Link="Template/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <!-- the definitions of the operations and the R recipes are read from the repository at run time -->
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>Operations</_Parameter1>
+      <_Parameter2>$([System.IO.Path]::GetFullPath('$(Operations)', '$(MSBuildProjectDirectory)'))</_Parameter2>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>Recipes</_Parameter1>
+      <_Parameter2>$([System.IO.Path]::GetFullPath('$(Recipes)', '$(MSBuildProjectDirectory)'))</_Parameter2>
+    </AssemblyAttribute>
+  </ItemGroup>
+</Project>
