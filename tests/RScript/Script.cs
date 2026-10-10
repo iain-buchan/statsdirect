@@ -19,6 +19,7 @@ internal static partial class Program
             string text = RRecipes.Recipe(recipe.File);
             string xml = File.ReadAllText(Path.Combine(Metadata("Operations"), op + ".xml"));
             HashSet<string> parameters = Regex.Matches(xml, "<name>([^<]+)</name>").Select(m => m.Groups[1].Value.Trim()).Skip(1).ToHashSet();
+            parameters.UnionWith(Regex.Matches(xml, "<(?:top-left|top-right|bottom-left|bottom-right)-name>([^<]+)</").Select(m => m.Groups[1].Value.Trim()));   // the cells of a 2 by 2 table typed in
             if (Regex.IsMatch(xml, "<builtin function-name=\"dist[A-Za-z]+\""))
                 parameters.UnionWith(new[] { "value", "df", "df2", "lower", "upper", "two_sided", "asked" });   // the Distributions calculator's boxes, which it records itself
             Match settings = Regex.Match(text, "^# settings:\\s*(.*)$", RegexOptions.Multiline);

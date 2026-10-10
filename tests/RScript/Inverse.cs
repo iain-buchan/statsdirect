@@ -25,6 +25,11 @@ internal static partial class Program
             ("DistributionNonCentralT", "{\"df\":10,\"df2\":1,\"upper\":0.1,\"asked\":\"invert-upper\"}"),
             ("DistributionPoisson", "{\"df\":14,\"upper\":0.025,\"asked\":\"invert-upper\"}"),
             ("DistributionPoisson", "{\"df\":14,\"two_sided\":0.025,\"asked\":\"invert-two-sided\"}"),
+            // the rank correlation calculators: the help works from two rankings of 10 (S = 23, T = 52), so their forward branch is checked here too
+            ("DistributionKendall", "{\"df\":10,\"df2\":23,\"asked\":\"calculate\"}"),
+            ("DistributionKendall", "{\"df\":10,\"upper\":0.05,\"asked\":\"invert-upper\"}"),
+            ("DistributionSpearman", "{\"df\":10,\"df2\":52,\"asked\":\"calculate\"}"),
+            ("DistributionSpearman", "{\"df\":10,\"upper\":0.025,\"asked\":\"invert-upper\"}"),
         };
         Dictionary<string, HashSet<string>> help = new();
         List<string> failures = new();

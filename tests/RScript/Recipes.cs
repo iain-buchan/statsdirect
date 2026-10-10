@@ -29,6 +29,13 @@ internal static partial class Program
                 RScript script = RScriptWriter.Write(JsonDocument.Parse(record).RootElement, null, null);
                 string output = RunR(script.Text, Path.Combine(folder, op));
                 string ours = Figures(output);
+                if (example.TryGetProperty("nocompare", out JsonElement nc) && nc.ValueKind == JsonValueKind.True)
+                {
+                    // a recipe the help's script cannot be compared with figure for figure (random numbers; a calculator whose help
+                    // works from data): it must run and print figures; its figures are checked elsewhere (Inverse.cs)
+                    if (ours.Length > 0) agreed++; else failures.Add(op + " (printed no figure)");
+                    continue;
+                }
                 string file = RRecipes.Find(op).File;
                 if (!gold.TryGetValue(file, out string expected))
                     gold[file] = expected = Figures(RunR(File.ReadAllText(Path.Combine(examples, op + ".R")).Replace("\r", ""), Path.Combine(folder, op + "-help")));
@@ -57,6 +64,9 @@ internal static partial class Program
     private static string RecordOf(JsonElement example)
     {
         List<string> inputs = new();
+        if (example.TryGetProperty("inputs", out JsonElement named) && named.ValueKind == JsonValueKind.Array)
+            foreach (JsonElement input in named.EnumerateArray())   // the example's frames under the names the operation asks them by
+                inputs.Add("{\"name\":" + input.GetProperty("name").GetRawText() + ",\"prompt\":" + input.GetProperty("name").GetRawText() + ",\"kind\":\"entered\",\"columns\":" + input.GetProperty("columns").GetRawText() + "}");
         if (example.TryGetProperty("data", out JsonElement data))
             inputs.Add("{\"name\":\"data\",\"prompt\":\"Select data\",\"kind\":\"entered\",\"columns\":" + data.GetRawText() + "}");
         if (example.TryGetProperty("list", out JsonElement list))
