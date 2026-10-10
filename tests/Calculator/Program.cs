@@ -12,7 +12,13 @@ internal static class Program
     {
         output = Path.GetFullPath(args.FirstOrDefault() ?? Path.Combine(AppContext.BaseDirectory, "artifacts"));
         Directory.CreateDirectory(output);
-        ApplicationConfiguration.Initialize();
+        if (args.Contains("--96dpi"))
+        {
+            Application.SetHighDpiMode(HighDpiMode.DpiUnaware);
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+        }
+        else ApplicationConfiguration.Initialize();
         using var host = new Form { IsMdiContainer = true, Width = 1600, Height = 1100, StartPosition = FormStartPosition.Manual, Location = new Point(-16000, -16000), ShowInTaskbar = false };
         int exit = 1;
         host.Shown += async (_, _) =>
@@ -53,6 +59,10 @@ internal static class Program
         calc.Show(host, () => { });
         Check(ReferenceEquals(view, calc.View) && ReferenceEquals(session, calc.Session), "repeated Tools command reuses one calculator session");
         Check(view.Expression.Multiline && view.Expression.WordWrap && view.Expression.ScrollBars == ScrollBars.Vertical, "input wraps with vertical scrolling");
+        double dockedLines = view.Expression.ClientSize.Height / (double)view.Expression.Font.Height;
+        Check(dockedLines >= 2.5 && dockedLines <= 4.5, $"default docked input shows about three lines at {view.DeviceDpi} DPI ({dockedLines:F2})");
+        var viewport = view.Controls.OfType<Panel>().Single();
+        Check(!viewport.HorizontalScroll.Visible && !viewport.VerticalScroll.Visible, "default dock shows every control without scrolling the whole pane");
         using (var bitmap = new Bitmap(view.Width, view.Height)) { view.DrawToBitmap(bitmap, view.ClientRectangle); bitmap.Save(Path.Combine(output, "calculator-docked.png")); }
         Check(view.RectangleToScreen(view.ClientRectangle).Contains(view.Result.RectangleToScreen(view.Result.ClientRectangle)), "result remains visible in the initial dock at the current DPI");
         string longExpression = string.Join(" + ", Enumerable.Repeat("1", 180));
@@ -80,25 +90,37 @@ internal static class Program
         await session.ToggleModeAsync();
         Check(!session.IsDocked && session.Window != null && ReferenceEquals(view.Parent, session.Window) && mdi.Size == full, "Pop out moves the same live calculator and restores the workspace");
         session.Window.Location = new Point(-16000, -16000);
+        double floatingLines = view.Expression.ClientSize.Height / (double)view.Expression.Font.Height;
+        Check(floatingLines >= 2.5 && floatingLines <= 4.5, $"default floating input shows about three lines at {view.DeviceDpi} DPI ({floatingLines:F2})");
+        int compactWindowHeight = session.Window.Height, compactInputHeight = view.Expression.Height;
+        session.Window.Height += (int)(100 * scale);
+        Check(view.Expression.Height > compactInputHeight, "enlarging the floating window gives the input more visible lines");
+        session.Window.Height = compactWindowHeight;
+        Check(!viewport.HorizontalScroll.Visible && !viewport.VerticalScroll.Visible, "compact floating layout does not acquire unnecessary scrollbars after resizing");
+        Check(view.RectangleToScreen(view.ClientRectangle).Contains(view.Result.RectangleToScreen(view.Result.ClientRectangle)), "result remains visible in the compact floating window");
+        using (var bitmap = new Bitmap(view.Width, view.Height)) { view.DrawToBitmap(bitmap, view.ClientRectangle); bitmap.Save(Path.Combine(output, "calculator-floating.png")); }
         Check(view.Expression.SelectionStart == 1 && view.Expression.SelectionLength == 5 && view.Saved.Items.Count == 1 && view.Result.Text == "20", "pop-out preserves caret selection, result and saved calculations");
         session.Window.Width = (int)(550 * scale);
+        Check(!viewport.HorizontalScroll.Visible, "narrow floating calculator keeps every control reachable with vertical scrolling only");
         view.Expression.Text = longExpression;
         Check(view.Expression.GetLineFromCharIndex(longExpression.Length - 1) > 0 && view.Expression.Text == longExpression, "narrow floating input continues to wrap without changing the expression");
         using (var bitmap = new Bitmap(view.Width, view.Height)) { view.DrawToBitmap(bitmap, view.ClientRectangle); bitmap.Save(Path.Combine(output, "calculator-narrow.png")); }
         await session.ToggleModeAsync();
         Check(session.IsDocked && view.Saved.Items.Count == 1 && view.Expression.Text == longExpression, "Dock preserves all calculator state");
         int height = session.DockHost.Panel.Height;
-        session.DockHost.Divider.SplitPosition = height - 50;
-        Check(session.DockHost.Panel.Height == height - 50 && mdi.Bottom <= session.DockHost.Divider.Top, "divider resizes calculator height and worksheet together");
+        int inputHeight = view.Expression.Height;
+        session.DockHost.Divider.SplitPosition = height + 50;
+        Check(session.DockHost.Panel.Height == height + 50 && mdi.Bottom <= session.DockHost.Divider.Top, "divider resizes calculator height and worksheet together");
+        Check(view.Expression.Height > inputHeight, "enlarging the dock gives the input more visible lines");
         Size normal = host.Size;
         host.Height = (int)(450 * scale);
         Check(session.DockHost.Panel.Height >= session.DockHost.Divider.MinSize && mdi.Height >= session.DockHost.Divider.MinExtra, "small windows keep splitter limits within the available space");
         host.Size = normal;
-        Check(session.DockHost.Panel.Height == height - 50, "restoring window size restores the preferred pane height");
+        Check(session.DockHost.Panel.Height == height + 50, "restoring window size restores the preferred pane height");
         session.Hide();
         Check(!session.IsVisible && mdi.Size == full && !host.Controls.OfType<TabControl>().Any(), "Close removes the calculator and its divider without leaving a tab");
         calc.Show(host, () => { });
-        Check(session.IsDocked && session.DockHost.Panel.Height == height - 50 && ReferenceEquals(view, calc.View) && view.Saved.Items.Count == 1, "reopening retains dock size and saved session");
+        Check(session.IsDocked && session.DockHost.Panel.Height == height + 50 && ReferenceEquals(view, calc.View) && view.Saved.Items.Count == 1, "reopening retains dock size and saved session");
         await session.ToggleModeAsync();
         session.Window.Close();
         Check(!session.IsVisible && !view.IsDisposed, "floating X hides rather than disposes the calculator");

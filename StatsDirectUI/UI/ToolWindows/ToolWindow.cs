@@ -10,12 +10,12 @@ internal sealed class ToolWindow : Form
     internal event Action CloseRequested;
     internal bool Retiring;
     protected override bool ShowWithoutActivation => true;
-    internal ToolWindow(string title)
+    internal ToolWindow(string title, Size? minimumSize = null)
     {
         Text = title;
         AutoScaleDimensions = new SizeF(96, 96);
         AutoScaleMode = AutoScaleMode.Dpi;
-        MinimumSize = new Size(360, 300);
+        MinimumSize = minimumSize ?? new Size(360, 300);
         StartPosition = FormStartPosition.Manual;
         ShowInTaskbar = false;
     }

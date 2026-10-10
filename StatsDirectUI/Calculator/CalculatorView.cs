@@ -23,6 +23,7 @@ internal sealed class CalculatorView : UserControl
     private readonly Label status = new() { AutoSize = true, ForeColor = Color.DarkRed, Visible = false };
     private readonly TableLayoutPanel columns;
     private readonly Panel content;
+    private readonly TableLayoutPanel input;
     private readonly TableLayoutPanel savedPanel;
     private readonly RowStyle resultRow;
     private bool stacked;
@@ -45,12 +46,12 @@ internal sealed class CalculatorView : UserControl
         heading.Items.AddRange([new ToolStripLabel("Calculator"), new ToolStripButton("Close", null, (_, _) => CloseRequested?.Invoke()) { Alignment = ToolStripItemAlignment.Right }, mode]);
         mode.Click += (_, _) => ModeRequested?.Invoke();
         content = new Panel { Dock = DockStyle.Fill, AutoScroll = true };
-        columns = new TableLayoutPanel { ColumnCount = 2, RowCount = 2, Padding = new Padding(8) };
+        columns = new TableLayoutPanel { ColumnCount = 2, RowCount = 2, Padding = new Padding(8), Margin = Padding.Empty };
         columns.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 65));
         columns.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 35));
         columns.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
         columns.RowStyles.Add(new RowStyle(SizeType.Percent, 0));
-        var input = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 6, Margin = new Padding(0, 0, 8, 0) };
+        input = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 6, Margin = new Padding(0, 0, 8, 0) };
         input.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
         input.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         input.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
@@ -91,6 +92,7 @@ internal sealed class CalculatorView : UserControl
         };
         SizeChanged += (_, _) => LayoutColumns();
         content.SizeChanged += (_, _) => LayoutColumns();
+        content.Layout += (_, _) => LayoutColumns();
     }
 
     private void LayoutColumns()
@@ -103,6 +105,16 @@ internal sealed class CalculatorView : UserControl
             bool narrow = Width < 650 * scale;
             resultRow.Height = Math.Max(42 * scale, Result.Font.Height * 2 + 12 * scale);
             columns.SuspendLayout();
+            // Controls are created dynamically, so apply logical spacing after
+            // autoscaling. Otherwise the three-line default varies with DPI.
+            columns.Padding = new Padding((int)(8 * scale));
+            input.Margin = new Padding(0, 0, (int)(8 * scale), 0);
+            var margin = new Padding((int)(3 * scale));
+            foreach (var section in new[] { input, savedPanel })
+                foreach (Control child in section.Controls)
+                    if (child is FlowLayoutPanel commands)
+                        foreach (Control button in commands.Controls) button.Margin = margin;
+                    else child.Margin = margin;
             if (narrow != stacked)
             {
                 stacked = narrow;
@@ -114,9 +126,17 @@ internal sealed class CalculatorView : UserControl
             }
             // Size the contents explicitly: a scrolling TableLayoutPanel with
             // Fill children can retain its old scroll extent after widening.
-            int height = Math.Max(content.ClientSize.Height, (int)((narrow ? 480 : 240) * scale));
-            columns.Bounds = new Rectangle(content.AutoScrollPosition, new Size(content.ClientSize.Width, height));
+            // This borderless panel's full size excludes neither scrollbar.
+            // Using ClientSize here would let old bars reduce the next layout
+            // and keep each other visible after shrinking the floating window.
+            int height = Math.Max(content.Height, (int)((narrow ? 340 : 175) * scale));
+            int width = content.Width - (height > content.Height ? SystemInformation.VerticalScrollBarWidth : 0);
+            int top = Math.Max(content.AutoScrollPosition.Y, content.Height - height);
+            var bounds = new Rectangle(0, top, Math.Max(0, width), height);
+            bool resized = columns.Bounds != bounds;
+            columns.Bounds = bounds;
             columns.ResumeLayout(true);
+            if (resized) content.PerformLayout();
         }
         finally { arranging = false; }
     }
@@ -131,6 +151,15 @@ internal sealed class CalculatorView : UserControl
         // Parent autoscaling may run after the initial SizeChanged event.
         // Reapply dimensions in device pixels once that first scaling is done.
         LayoutColumns();
+    }
+    internal int MeasureCompactHeight(int width)
+    {
+        // Measure the actual font, labels, buttons and Windows control chrome.
+        // Some native borders do not scale linearly with the monitor DPI.
+        Size = new Size(width, (int)(220 * DeviceDpi / 96f));
+        PerformLayout();
+        LayoutColumns();
+        return Height - Expression.ClientSize.Height + 3 * Expression.Font.Height;
     }
     private static FlowLayoutPanel Commands(params (string Name, Action Run)[] commands)
     {

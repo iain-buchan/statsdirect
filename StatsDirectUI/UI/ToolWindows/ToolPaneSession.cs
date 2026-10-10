@@ -33,6 +33,7 @@ internal sealed class ToolPaneSession : IDisposable
     internal static Form FindOwner(Form parent) => Application.OpenForms.Cast<Form>().LastOrDefault(f => f.Modal && f.Visible) ?? parent?.MdiParent ?? parent;
 
     private readonly Size defaultSize;
+    private readonly Size? minimumWindowSize;
     private readonly Action<bool, bool> presentation;
     private readonly Action focus;
     private readonly Func<Action, Task> preservePosition;
@@ -40,17 +41,19 @@ internal sealed class ToolPaneSession : IDisposable
     private string title;
 
     internal ToolPaneSession(Form host, Control view, string name, DockStyle edge, int length, Size defaultSize,
-        Action<bool, bool> presentation, Action focus, Action<string> notice, Func<Action, Task> preservePosition = null)
+        Action<bool, bool> presentation, Action focus, Action<string> notice, Func<Action, Task> preservePosition = null,
+        int minimumDockLength = 240, Size? minimumWindowSize = null)
     {
         this.host = host;
         this.view = view;
         this.defaultSize = defaultSize;
+        this.minimumWindowSize = minimumWindowSize;
         this.presentation = presentation;
         this.focus = focus;
         this.notice = notice;
         this.preservePosition = preservePosition;
         title = "StatsDirect " + name;
-        dock = new ToolDockHost(host, name, edge, length);
+        dock = new ToolDockHost(host, name, edge, length, minimumDockLength);
         host.FormClosed += HostClosed;
         Application.Idle += CheckModality;
     }
@@ -147,7 +150,7 @@ internal sealed class ToolPaneSession : IDisposable
         ParkView();
         CloseFrame();
         dock.SetVisible(false);
-        window = new ToolWindow(title);
+        window = new ToolWindow(title, minimumWindowSize);
         window.Controls.Add(view);
         window.CloseRequested += Hide;
         UpdateTitle();

@@ -97,7 +97,9 @@ Tools > Calculator opens a resizable pane below the workspace, created only on
 request. Close hides it without leaving a tab. Pop out and Dock move the same
 calculator view; its expression, result, saved calculations, size and presentation
 are retained for the current session. Help can remain open on the right.
-The expression wraps and scrolls vertically; Enter evaluates and Shift+Enter
+The input shows about three lines by default in both docked and floating modes;
+enlarging the pane or window gives it more space. It wraps and scrolls vertically;
+Enter evaluates and Shift+Enter
 inserts a line break. Recall restores a saved calculation; Insert puts a saved
 expression at the caret. During modal dialogs, a visible calculator floats and
 then returns, preserving focus in the parameter dialog.

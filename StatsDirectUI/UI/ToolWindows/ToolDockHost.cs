@@ -9,15 +9,17 @@ internal sealed class ToolDockHost : IDisposable
 {
     private readonly Form host;
     private readonly DockStyle edge;
+    private readonly int minimumLength;
     internal Panel Panel { get; }
     internal Splitter Divider { get; }
     private int preferredLength;
     private bool sizing;
 
-    internal ToolDockHost(Form host, string name, DockStyle edge, int length)
+    internal ToolDockHost(Form host, string name, DockStyle edge, int length, int minimumLength = 240)
     {
         this.host = host;
         this.edge = edge;
+        this.minimumLength = minimumLength;
         float scale = host.DeviceDpi / 96f;
         preferredLength = (int)(length * scale);
         Panel = new Panel { Dock = edge, Visible = false, AccessibleName = name + " pane", Tag = this };
@@ -72,9 +74,10 @@ internal sealed class ToolDockHost : IDisposable
             available = Math.Max(0, available);
             // The drag limits must agree with the fitted size, including in a
             // small window at high DPI. Keep room for both tool and workspace.
-            int minimum = Math.Min((int)(240 * host.DeviceDpi / 96f), available / 2);
-            Divider.MinSize = Divider.MinExtra = minimum;
-            int maximum = available - minimum;
+            int minimum = Math.Min((int)(minimumLength * host.DeviceDpi / 96f), available / 2);
+            Divider.MinSize = minimum;
+            Divider.MinExtra = Math.Min((int)(240 * host.DeviceDpi / 96f), available / 2);
+            int maximum = available - Divider.MinExtra;
             int length = Math.Clamp(preferredLength, minimum, maximum);
             if (edge == DockStyle.Bottom) Panel.Height = length;
             else Panel.Width = length;

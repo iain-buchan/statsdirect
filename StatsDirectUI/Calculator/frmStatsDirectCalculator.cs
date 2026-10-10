@@ -17,8 +17,8 @@ public sealed class frmStatsDirectCalculator : Form
         Name = "frmStatsDirectCalculator";
         AutoScaleDimensions = new SizeF(96, 96);
         AutoScaleMode = AutoScaleMode.Dpi;
-        Size = new Size(720, 580);
-        MinimumSize = new Size(400, 400);
+        Size = new Size(720, 260);
+        MinimumSize = new Size(360, 220);
         Icon = (Icon)new ComponentResourceManager(typeof(frmStatsDirectCalculator)).GetObject("$this.Icon");
         view = new CalculatorView(() => SdApplication.SoleInstance.ShowHelp(this, "1020"));
         view.SetStandalone();
@@ -27,7 +27,12 @@ public sealed class frmStatsDirectCalculator : Form
         Load += (_, _) =>
         {
             var settings = Settings.Default;
-            if (!settings.WasLoaded || settings.CalculatorWidth <= 0 || settings.CalculatorHeight <= 0) return;
+            if (!settings.WasLoaded || settings.CalculatorWidth <= 0 || settings.CalculatorHeight <= 0)
+            {
+                int frameHeight = Height - ClientSize.Height;
+                Height = view.MeasureCompactHeight(view.Width) + frameHeight;
+                return;
+            }
             var bounds = new Rectangle(settings.CalculatorLeft, settings.CalculatorTop, settings.CalculatorWidth, settings.CalculatorHeight);
             var screen = Screen.FromRectangle(bounds).WorkingArea;
             bounds.Width = Math.Min(Math.Max(MinimumSize.Width, bounds.Width), screen.Width);
