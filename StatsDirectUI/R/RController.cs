@@ -137,6 +137,55 @@ namespace StatsDirect.R
         }
 
         /// <summary>
+        /// Runs an R script with the installed R and returns what it printed, as the script window shows it: the script of a result that
+        /// the user continues in R.  The working folder is the user's R folder, so the files a script writes, charts among them, land there.
+        /// </summary>
+        public static string RunScriptCapturingOutput(string scriptBody)
+        {
+            string rFolder = SDConfiguration.MyStatsDirectRFolder;
+            if (!Directory.Exists(rFolder))
+                Directory.CreateDirectory(rFolder);
+            string scriptPath = Path.Combine(rFolder, "continue.r");
+            string repairedScriptBody = scriptBody.Replace("\r", string.Empty).Replace("\n", "\r\n");
+            using (TextWriter tw = new StreamWriter(scriptPath, false, new UTF8Encoding(false)))
+            {
+                tw.Write(SCRIPT_HEAD, rFolder.Replace(@"\", @"\\"));
+                tw.WriteLine();
+                tw.WriteLine(repairedScriptBody);
+            }
+            RVersion preferredVersion = PreferredRVersion();
+            while (null == preferredVersion)
+            {
+                if (!UserMightHaveInstalledR())
+                    throw new TemplateOperationCancelledException();
+                preferredVersion = PreferredRVersion();
+            }
+            ProcessStartInfo startInfo = new()
+            {
+                FileName = Path.Combine(preferredVersion.BinPath, RSCRIPT_EXE_NAME),
+                WorkingDirectory = rFolder,
+                Arguments = $"--vanilla --encoding=UTF-8 \"{scriptPath}\"",
+                CreateNoWindow = true,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                StandardOutputEncoding = Encoding.UTF8,
+                StandardErrorEncoding = Encoding.UTF8
+            };
+            using Process p = Process.Start(startInfo);
+            System.Threading.Tasks.Task<string> errors = p.StandardError.ReadToEndAsync();
+            string output = p.StandardOutput.ReadToEnd();
+            p.WaitForExit();
+            StringBuilder result = new(output);
+            if (errors.Result.Length > 0)
+                result.Append('\n').Append(errors.Result);
+            if (0 != p.ExitCode)
+                result.Append("\n(R stopped with exit code ").Append(p.ExitCode).Append(')');
+            result.Append("\n(files the script writes are in ").Append(rFolder).Append(')');
+            return result.ToString();
+        }
+
+        /// <summary>
         /// If necessary, prompt the user to install R.  Return true if we think the user might have installed R successfully, or false if there's no chance (for example, the user's told us that they're not going to)
         /// </summary>
         /// <returns></returns>

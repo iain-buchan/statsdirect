@@ -1,3 +1,4 @@
+using StatsDirect.R;
 using StatsDirect.TemplateProcessing;
 using StatsDirect.Templates;
 using System;
@@ -168,8 +169,9 @@ namespace StatsDirect.UI
         private void SaveAsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             SaveFileDialog1.Title = "Save File";
-            SaveFileDialog1.DefaultExt = "rtf";
-            SaveFileDialog1.Filter = "Script Files|*.cs;*.vb|All Files|*.*";
+            bool r = cboLanguage.SelectedIndex == 1;   // an R script is saved as plain text with the extension R
+            SaveFileDialog1.DefaultExt = r ? "R" : "rtf";
+            SaveFileDialog1.Filter = r ? "R scripts|*.R|Script Files|*.cs;*.vb|All Files|*.*" : "Script Files|*.cs;*.vb|All Files|*.*";
             SaveFileDialog1.FilterIndex = 1;
             SaveFileDialog1.ShowDialog(SdApplication.SoleInstance.DialogOwner);
             if (SaveFileDialog1.FileName.Length == 0)
@@ -329,6 +331,20 @@ namespace StatsDirect.UI
             set => rtbDoc.Rtf = value;
         }
 
+        /// <summary>
+        /// Shows an R script, the one written for a result the user continues in R: the language set to R, so that Run runs it with the
+        /// installed R and Save As offers an R file.
+        /// </summary>
+        internal void ShowR(string script, string title)
+        {
+            rtbDoc.Text = script;
+            rtbDoc.SelectionStart = 0;
+            rtbDoc.SelectionLength = 0;
+            rtbDoc.Modified = true;
+            cboLanguage.SelectedIndex = 1;
+            Text = title;
+        }
+
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string TextInRtfBox
         {
@@ -377,6 +393,14 @@ namespace StatsDirect.UI
                 try
                 {
                     string script = rtbDoc.Text;
+                    if (cboLanguage.SelectedIndex == 1)
+                    {
+                        // R: the installed R runs the script and what it prints is shown here, as for a result continued in R; files it writes go to the R folder
+                        using (new WaitCursor())
+                            rtbOutput.AppendText(RController.RunScriptCapturingOutput(script));
+                        rtbOutput.AppendText("\n======== End of run ========\n");
+                        return;
+                    }
                     IScriptEngine engine = new ScriptEngine();
                     string Language = ScriptLanguageForScript();
                     object output = engine.Run(Language, script, ScriptType.Method, SdApplication.SoleInstance, null, null, null);
