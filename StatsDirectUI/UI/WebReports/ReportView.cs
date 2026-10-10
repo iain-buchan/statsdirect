@@ -50,7 +50,8 @@ internal sealed class ReportView : UserControl
             var core = Browser.CoreWebView2;
             core.Settings.AreHostObjectsAllowed = false;
             core.Settings.IsStatusBarEnabled = false;
-            core.Settings.AreDefaultContextMenusEnabled = false;
+            core.Settings.AreDefaultContextMenusEnabled = true;   // the request is taken below and the program's own menu shown
+            core.ContextMenuRequested += ShowContextMenu;
             core.Settings.AreDevToolsEnabled = false;
             core.Settings.IsGeneralAutofillEnabled = false;
             core.Settings.IsPasswordAutosaveEnabled = false;
@@ -223,6 +224,42 @@ internal sealed class ReportView : UserControl
         }
         catch (Exception ex) { Notice?.Invoke(ex.Message); }
         finally { busy = false; }
+    }
+
+    private ContextMenuStrip contextMenu;
+
+    /// <summary>
+    /// The program's own context menu in place of the browser's: the editor's clipboard commands, the selection of the result under the
+    /// pointer or of all of them, and the help topic of that result.  The editor records the target of the right-click first.
+    /// </summary>
+    private async void ShowContextMenu(object sender, CoreWebView2ContextMenuRequestedEventArgs e)
+    {
+        e.Handled = true;
+        var deferral = e.GetDeferral();
+        try
+        {
+            var target = await CallAsync("contextTarget");
+            bool selection = target.ValueKind == JsonValueKind.Object && target.TryGetProperty("hasSelection", out var s) && s.ValueKind == JsonValueKind.True;
+            bool editable = target.ValueKind == JsonValueKind.Object && target.TryGetProperty("editable", out var ed) && ed.ValueKind == JsonValueKind.True;
+            string resultId = target.ValueKind == JsonValueKind.Object && target.TryGetProperty("resultId", out var r) && r.ValueKind == JsonValueKind.String ? r.GetString() : null;
+            int help = target.ValueKind == JsonValueKind.Object && target.TryGetProperty("helpContextId", out var h) && h.ValueKind == JsonValueKind.Number ? h.GetInt32() : 0;
+            // the menu lives until the next right-click: an item's click is handled after the menu has closed
+            contextMenu?.Dispose();
+            var menu = contextMenu = new ContextMenuStrip();
+            void Run(Func<Task> action) => _ = action().ContinueWith(t => { if (t.Exception != null) Notice?.Invoke(t.Exception.GetBaseException().Message); }, TaskScheduler.FromCurrentSynchronizationContext());
+            void Try(Action action) { try { action(); } catch (Exception ex) { Notice?.Invoke(ex.Message); } }
+            menu.Items.Add(new ToolStripMenuItem("Cu&t", null, (_, _) => Run(() => ClipboardCommandAsync("cut"))) { Enabled = selection && editable, ShortcutKeyDisplayString = "Ctrl+X" });
+            menu.Items.Add(new ToolStripMenuItem("&Copy", null, (_, _) => Run(() => ClipboardCommandAsync("copy"))) { Enabled = selection, ShortcutKeyDisplayString = "Ctrl+C" });
+            menu.Items.Add(new ToolStripMenuItem("&Paste", null, (_, _) => Run(() => ClipboardCommandAsync("paste"))) { Enabled = editable, ShortcutKeyDisplayString = "Ctrl+V" });
+            menu.Items.Add(new ToolStripSeparator());
+            menu.Items.Add(new ToolStripMenuItem("Select &result", null, (_, _) => Run(() => CallAsync("selectResult", new { id = resultId }))) { Enabled = resultId != null });
+            menu.Items.Add(new ToolStripMenuItem("Select &all", null, (_, _) => Run(() => CallAsync("selectAll"))) { ShortcutKeyDisplayString = "Ctrl+A" });
+            menu.Items.Add(new ToolStripSeparator());
+            menu.Items.Add(new ToolStripMenuItem("&Help", null, (_, _) => Try(() => TopicRequested?.Invoke(help))) { Enabled = help > 0, ShortcutKeyDisplayString = "F1" });
+            menu.Show(Cursor.Position);
+        }
+        catch (Exception ex) { Notice?.Invoke(ex.Message); }
+        finally { deferral.Complete(); }
     }
 
     private void OpenExternal(string url)

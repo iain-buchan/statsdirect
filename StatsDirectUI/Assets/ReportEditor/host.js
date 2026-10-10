@@ -55,12 +55,22 @@ window.statsDirectReportHost={post(m){
 function render(){StatsDirectReportEditor.detach(document.getElementById('results'));document.getElementById('results').innerHTML=entries.map(entryHTML).join('');for(const e of entries)replace(e);history();}
 function snapshot(){for(const e of entries){const body=document.querySelector(`#result-${e.id} .report-body`);if(body)e.html=StatsDirectReportEditor.serialize(body);}return {version:1,entries:structuredClone(entries),revision};}
 document.addEventListener('click',e=>{const h=e.target.closest('[data-help]');if(h)post({action:'help',context:Number(h.dataset.help)});});
+// The target of a right-click, for the context menu that C# shows: the result under the pointer and its help topic, whether text is selected, and whether the place is editable
+let contextTarget={};
+document.addEventListener('contextmenu',e=>{const entry=e.target.closest?.('.report-entry'),id=entry?entry.id.slice(7):null,sel=getSelection();contextTarget={resultId:id,helpContextId:id?(entries.find(v=>v.id===id)?.helpContextId??0):0,hasSelection:!!sel&&sel.rangeCount>0&&!sel.isCollapsed,editable:editing&&!!e.target.closest?.('.report-body')};});
+// A result selected as a click on its heading selects it; all of them as Ctrl+A does. The result's body takes the focus first, so that
+// a key that follows (Delete, Ctrl+C) reaches the editor's handling of the results
+function selectResult(id){document.querySelector('#result-'+id+' .report-body')?.focus();document.querySelector('#result-'+id+' [data-select-result]')?.click();}
+function selectAll(){document.querySelector('.report-body')?.focus();document.getElementById('results').dispatchEvent(new KeyboardEvent('keydown',{key:'a',ctrlKey:true,bubbles:true,cancelable:true}));}
 document.addEventListener('focusin',e=>{const body=e.target.closest('.report-body');if(body){const entry=entries.find(v=>v.id===body.dataset.resultId);post({action:'context',context:entry?.helpContextId??0});}});
 window.WindowsReport={async run(request){
   try {let value;
     switch(request.method){
       case 'append':append(request.args);changed();value=true;break;
       case 'snapshot':value=snapshot();break;
+      case 'contextTarget':value=contextTarget;break;
+      case 'selectResult':selectResult(request.args.id);value=true;break;
+      case 'selectAll':selectAll();value=true;break;
       case 'preview':StatsDirectReportEditor.setEditing(false);document.body.classList.add('chart-preview');value=true;break;
       case 'command':StatsDirectReportEditor.command(request.args.name,request.args.value);value=true;break;
       case 'load':{
