@@ -11,7 +11,7 @@ The release also follows the port of the engine to the Mac, whose checks of the 
 ### Changed
 - Tools > Calculator opens an optional dockable pane with Pop out, Dock and Close, without a permanent tab. Expressions wrap; Enter calculates and Shift+Enter adds a line break. Expressions, results and saved calculations survive hiding and docking, and Calculator can stay open alongside Help.
 - Reports are editable immediately, with Arial as the default report and chart font. Text, charts and whole results can be selected and deleted with ordinary editing commands and restored with undo. The ribbon is simpler and uses sharper icons.
-- File > Save and Save As store editable HTML reports; Word and PDF exports are available from the File menu. Report templates retain consistent heading, table, font and colour styles. R chart output is embedded as PNG.
+- File > Save and Save As store editable HTML reports; Word and PDF exports are available from the File menu. Report templates retain consistent heading, table, font and colour styles. R charts are drawn as SVG, so that every chart in a report is a vector picture.
 - Help opens offline in a resizable pane beside the worksheet or report. Pop out and Dock retain the same topic, navigation history, reading position and expanded R examples. F1 preserves the active worksheet/report and data selection; help temporarily floats during modal parameter dialogs and returns when they close.
 - The installer supplies the WebView2 runtime when required and removes the retired CHM files and DevExpress components during upgrades.
 
