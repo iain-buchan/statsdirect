@@ -13,6 +13,8 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
 ### Added
 - A right-click in a report shows a menu with Cut, Copy, Paste, Select result, Select all and Help for the result under the pointer.
+- Continue in R: the right-click menu of a result offers an R script that reproduces the analysis, with the data read from the workbook by the pointers kept with the result, for the 38 analyses that have a shared R recipe; for the others, "Open data and settings in R" gives the data and settings. The script opens in a script window set to R, where Run runs it with the installed R and shows what it prints.
+- A result keeps a record of its run in the report: the workbook, sheet, columns and rows of each input, with a hash of each column to tell whether the data have changed, the settings and the scalar results; the values themselves only when the run has few. The Mac version keeps the same record, so that a report moves between the two.
 
 ### Changed
 - The panes in the body of a report are gone: the name and Help button above each result, and the width and Fit controls of each chart. Help is in the ribbon and the right-click menu, which also selects a result or all of them.
