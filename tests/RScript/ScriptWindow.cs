@@ -39,6 +39,23 @@ internal static partial class Program
         ToolStrip toolbar = (ToolStrip)script.GetField("ToolStrip1", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(first.window);
         ToolStripButton[] buttons = toolbar.Items.OfType<ToolStripButton>().ToArray();
         Check(string.Join("|", buttons.Take(5).Select(b => b.Text)) == "Save|Cut|Copy|Paste|Find" && buttons.Take(5).All(b => b.Image != null), "the toolbar has Cut, Copy and Paste between Save and Find, each with an icon: " + string.Join(", ", buttons.Select(b => b.Text)));
+        // Save, Cut, Copy and Paste wear the main window's toolbar icons, so that the script window matches the other windows
+        System.ComponentModel.ComponentResourceManager main = new(program.GetType("StatsDirect.UI.frmMain"));
+        bool SamePixels(System.Drawing.Image x, System.Drawing.Image y)
+        {
+            using System.Drawing.Bitmap a = new(x), b = new(y);
+            if (a.Size != b.Size) return false;
+            for (int i = 0; i < a.Width; i++) for (int j = 0; j < a.Height; j++) if (a.GetPixel(i, j) != b.GetPixel(i, j)) return false;
+            return true;
+        }
+        List<string> differ = new();
+        foreach ((string text, string resource) in new[] { ("Save", "saveToolStripButton.Image"), ("Cut", "cutToolStripButton.Image"), ("Copy", "copyToolStripButton.Image"), ("Paste", "pasteToolStripButton.Image") })
+        {
+            System.Drawing.Image ours = buttons.First(b => b.Text == text).Image, theirs = (System.Drawing.Image)main.GetObject(resource);
+            if (theirs == null || !SamePixels(ours, theirs)) differ.Add($"{text} ({ours.Width}x{ours.Height} against {(theirs == null ? "no resource" : theirs.Width + "x" + theirs.Height)})");
+        }
+        if (differ.Count > 0) Console.WriteLine("      not the main window's icon: " + string.Join(", ", differ));
+        Check(differ.Count == 0, "Save, Cut, Copy and Paste on the script window's toolbar are the main window's icons");
         Check(first.window.Text == "Script 1: Paired t test" && first.tab.Text == first.window.Text, "the first script window is Script 1 with the analysis after it, and its tab is named with it: " + first.tab.Text);
         Check(second.window.Text == "Script 2: Unpaired t test" && second.tab.Text == second.window.Text, "a second Continue in R opens Script 2: " + second.tab.Text);
         Check((int)nextNumber.Invoke(app, null) == 3, "the next script window would be Script 3");
