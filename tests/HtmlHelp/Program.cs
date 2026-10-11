@@ -139,7 +139,10 @@ internal static class Program
         await service.ToggleModeAsync();
         await Task.Delay(150);
         Check(service.IsDocked && service.Window == null && help.Browser.CoreWebView2.CanGoBack && (await Js("window.dockTestToken === 'persistent'")).GetBoolean(), "Dock returns the same page/session/history to the workspace");
-        Check((await Js("window.__sdHelpPosition.length > 0 && window.__sdHelpPosition.every(p=>Math.abs(p.e.scrollTop-Math.min(p.y,Math.max(0,p.e.scrollHeight-p.e.clientHeight)))<1)")).GetBoolean(), "Dock restores the original reading position, clamping only containers that no longer scroll");
+        // the program puts the reading position back in the second animation frame after the dock, which comes later on a busy machine
+        string positionRestored = "window.__sdHelpPosition.length > 0 && window.__sdHelpPosition.every(p=>Math.abs(p.e.scrollTop-Math.min(p.y,Math.max(0,p.e.scrollHeight-p.e.clientHeight)))<1)";
+        await Until(positionRestored);
+        Check((await Js(positionRestored)).GetBoolean(), "Dock restores the original reading position, clamping only containers that no longer scroll");
         int widthBeforeDrag = service.DockHost.Panel.Width;
         service.DockHost.Divider.SplitPosition = widthBeforeDrag - 100;
         int preferredWidth = service.DockHost.Panel.Width;
