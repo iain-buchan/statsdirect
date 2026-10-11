@@ -51,6 +51,10 @@ internal static partial class Program
             if (Regex.IsMatch(text, "^# table:", RegexOptions.Multiline) && !xml.Contains("<double-2-by-2>")) mismatches.Add($"{op}: {recipe.File} takes a 2 by 2 table, and the operation asks for none");
             if (Regex.IsMatch(text, "^# nested:", RegexOptions.Multiline) && !xml.Contains("<frame2d>") && !xml.Contains("<grouped-covariance>")) mismatches.Add($"{op}: {recipe.File} takes a two-level input, and the operation asks for none");
             if (!Regex.IsMatch(text, "^# (data|table|matrix|nested|settings):", RegexOptions.Multiline)) mismatches.Add($"{op}: {recipe.File} has no header");
+            // a package the recipe loads is installed first when it is missing, so that the script runs where the package is not yet
+            foreach (Match library in Regex.Matches(text, "^[ ]*library\\((\\w[\\w.]*)\\)", RegexOptions.Multiline))
+                if (!text.Contains("if (!requireNamespace(\"" + library.Groups[1].Value + "\", quietly = TRUE)) install.packages(\"" + library.Groups[1].Value + "\""))
+                    mismatches.Add($"{op}: {recipe.File} loads {library.Groups[1].Value} without installing it first when it is missing");
         }
         // every operation that continues one with a recipe (its prerequisite operation) has a recipe of its own
         foreach (string definition in Directory.GetFiles(Metadata("Operations"), "*.xml"))

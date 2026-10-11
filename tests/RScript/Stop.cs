@@ -27,7 +27,26 @@ internal static partial class Program
         string profile = RController.OpenInRProfile(@"C:\Users\someone\Documents\StatsDirect\R\Script 1_ Paired t test.R");
         string profileText = File.ReadAllText(profile);
         Check(File.Exists(Path.Combine(version.BinPath, "Rgui.exe")) && profileText.Contains(".libPaths(c(rlib, .libPaths()))")
-              && profileText.Contains("f <- \"C:/Users/someone/Documents/StatsDirect/R/Script 1_ Paired t test.R\"") && profileText.Contains("try(source(f, echo = TRUE") && profileText.Contains("file.edit(f)"),
+              && profileText.Contains("f <- \"C:/Users/someone/Documents/StatsDirect/R/Script 1_ Paired t test.R\"") && profileText.Contains("try(source(f, echo = TRUE") && profileText.Contains("if (interactive()) file.edit(f)"),
               "the installed R has its own window program, and the profile Open in R starts it on runs the script as a session and opens it in R's editor, with the program's library on the path");
+        // the profile runs before R attaches its default packages: a script using the stats package must still run from it (Iain's R
+        // window said it could not find t.test); R run headlessly on the profile shows the script as a session and its result
+        string folder = Path.Combine(Path.GetTempPath(), "statsdirect-rscript-checks", "open-in-r");
+        Directory.CreateDirectory(folder);
+        string statsScript = Path.Combine(folder, "stats.R");
+        File.WriteAllText(statsScript, "r <- t.test(c(1, 2, 3), mu = 0)\ncat(\"p\", format(r$p.value, digits = 4), \"\n\")\n");
+        string statsProfile = RController.OpenInRProfile(statsScript);
+        System.Diagnostics.ProcessStartInfo start = new()
+        {
+            FileName = Path.Combine(version.BinPath, "Rscript.exe"), Arguments = "-e \"cat('end\n')\"", WorkingDirectory = folder,
+            UseShellExecute = false, RedirectStandardOutput = true, RedirectStandardError = true, CreateNoWindow = true
+        };
+        start.Environment["R_PROFILE_USER"] = statsProfile;
+        using System.Diagnostics.Process r = System.Diagnostics.Process.Start(start);
+        string viaProfile = r.StandardOutput.ReadToEnd() + r.StandardError.ReadToEnd();
+        r.WaitForExit();
+        viaProfile = viaProfile.Replace("\r", "");
+        Check(viaProfile.Contains("> r <- t.test(c(1, 2, 3), mu = 0)") && viaProfile.Contains("p 0.07418") && viaProfile.Contains("end") && !viaProfile.Contains("could not find function"),
+              "R started on the profile has its default packages attached before the script runs, shows the script as a session, and gives its result");
     }
 }
