@@ -1,3 +1,4 @@
+using StatsDirect.Builtins;
 using StatsDirect.Data;
 using System.Linq;
 using StatsDirect.Numerics;
@@ -104,7 +105,9 @@ namespace StatsDirect.Templates
                         w.WriteEndObject();
                         continue;
                     }
-                    if (!bag.TryGetValue(input.Name, out FilledParameter filled) || filled == null || !filled.HasData)
+                    // the value as it was asked, else the bag's: a parameter asked in each pass of a loop keeps each pass's value
+                    FilledParameter filled = input.Value ?? (bag.TryGetValue(input.Name, out FilledParameter current) ? current : null);
+                    if (filled == null || !filled.HasData)
                         continue;
                     w.WriteStartObject();
                     w.WriteString("name", input.Name);
@@ -117,7 +120,10 @@ namespace StatsDirect.Templates
                             w.WriteString("kind", "frame");
                             WritePointer(w, frame);
                             pointerValues += Count(frame);
-                            pointerFrames.Add(new KeyValuePair<string, DataFrame>(input.Name, frame));
+                            // the values of a frame asked in each pass of a loop are held under a key of their own, "name#2" for the second
+                            string held = pointerFrames.Any(p => p.Key == input.Name) ? input.Name + "#" + (pointerFrames.Count(p => p.Key == input.Name || p.Key.StartsWith(input.Name + "#", StringComparison.Ordinal)) + 1) : input.Name;
+                            if (held != input.Name) w.WriteString("held", held);
+                            pointerFrames.Add(new KeyValuePair<string, DataFrame>(held, frame));
                         }
                         else
                         {
@@ -172,6 +178,9 @@ namespace StatsDirect.Templates
                         w.WritePropertyName(pair.Key);
                         WriteValue(w, pair.Value.AsObject, 0, threshold);
                     }
+                if (!bag.ContainsKey("ci"))
+                    foreach (KeyValuePair<string, FilledParameter> pair in bag.Pairs)
+                        if (pair.Value?.HasData == true && pair.Value.AsObject is GroupedCovarianceData covariance) { w.WriteNumber("ci", covariance.GAMMA); break; }
                 if (table != null && !bag.ContainsKey("counts"))
                     WriteTable(w, table, counts);   // the table's rows of counts and their labels, as a recipe takes a table typed in
                 w.WriteEndObject();
@@ -484,7 +493,7 @@ namespace StatsDirect.Templates
                     int count = 0;
                     foreach (IList<IVariable> variables in frame2d.Variables)
                         foreach (IVariable variable in variables)
-                            count += variable.Length;
+                            count += variable?.Length ?? 0;
                     w.WriteStartObject();
                     if (count <= threshold)
                     {
@@ -495,9 +504,46 @@ namespace StatsDirect.Templates
                             foreach (IVariable variable in variables)
                             {
                                 w.WriteStartObject();
-                                w.WriteString("title", variable.Title ?? "");
+                                w.WriteString("title", variable?.Title ?? "");
                                 w.WritePropertyName("values");
-                                WriteValues(w, variable);
+                                if (variable != null) WriteValues(w, variable); else { w.WriteStartArray(); w.WriteEndArray(); }   // a combination with no rows
+                                w.WriteEndObject();
+                            }
+                            w.WriteEndArray();
+                        }
+                        w.WriteEndArray();
+                    }
+                    else
+                        w.WriteBoolean("omitted", true);
+                    w.WriteEndObject();
+                    break;
+                case GroupedCovarianceData covariance:
+                    // the grouped covariance's data in the shape of a two-level frame: for each group, the predictor's levels first and then
+                    // the outcome's replicates at each level, so that a recipe reads it as it reads a two-level frame
+                    int values = 0;
+                    for (int g = 1; g <= covariance.k; g++)
+                        for (int j = 1; j <= covariance.nxi[g]; j++)
+                            values += 1 + covariance.ny[g, j];
+                    w.WriteStartObject();
+                    if (values <= threshold)
+                    {
+                        w.WriteStartArray("frames");
+                        for (int g = 1; g <= covariance.k; g++)
+                        {
+                            w.WriteStartArray();
+                            w.WriteStartObject();
+                            w.WriteString("title", covariance.cx[g]?.Title ?? "");
+                            w.WriteStartArray("values");
+                            for (int j = 1; j <= covariance.nxi[g]; j++) WriteScalar(w, covariance.xt[g, j]);
+                            w.WriteEndArray();
+                            w.WriteEndObject();
+                            for (int j = 1; j <= covariance.nxi[g]; j++)
+                            {
+                                w.WriteStartObject();
+                                w.WriteString("title", "");
+                                w.WriteStartArray("values");
+                                for (int r = 1; r <= covariance.ny[g, j]; r++) WriteScalar(w, covariance.y[g, j, r]);
+                                w.WriteEndArray();
                                 w.WriteEndObject();
                             }
                             w.WriteEndArray();

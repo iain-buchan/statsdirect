@@ -126,6 +126,7 @@ namespace StatsDirect.R
             public string Table;                        // a variable that takes a table of counts as a matrix
             public string Matrix;                       // a variable that takes a frame of counts as a matrix
             public List<(string variable, string parameter)> Settings = new();
+            public List<(string variable, string input)> Nested = new();   // variables that take a two-level input (a frame2d, the grouped covariance's data) as a list of lists
             public string Body = "";
         }
 
@@ -143,6 +144,7 @@ namespace StatsDirect.R
             JsonElement kept = record.TryGetProperty("data", out JsonElement d) && d.ValueKind == JsonValueKind.Object ? d : default;
             string now = DateTime.Now.ToString("d MMM yyyy HH:mm", inv);
             List<(string name, int start, int count)> groups = new();   // the columns of each input, for the variables bound to an input by name
+            Dictionary<string, (JsonElement value, bool inherited)> nested = new();   // the two-level inputs (a frame2d, the grouped covariance's data) by name
             if (record.TryGetProperty("inputs", out JsonElement inputs) && inputs.ValueKind == JsonValueKind.Array)
                 foreach (JsonElement input in inputs.EnumerateArray())
                 {
@@ -156,6 +158,12 @@ namespace StatsDirect.R
                         tables.Add((Rows(input, "counts"), Strings(input, "rowLabels"), Strings(input, "columnLabels"), Text(input, "rowsTitle"), Text(input, "columnsTitle")));
                         continue;
                     }
+                    if ((kind == "frame2d" || kind == "covariance") && input.TryGetProperty("value", out JsonElement levels))
+                    {
+                        // a two-level input: its blocks or groups, each a list of columns, kept whole for a nested list
+                        nested[name] = (levels, inherited);
+                        continue;
+                    }
                     if (kind != "frame" && kind != "entered")
                         continue;
                     if (kind == "entered")
@@ -166,7 +174,7 @@ namespace StatsDirect.R
                     }
                     FramePointer pointer = FramePointer.From(input);
                     string source = $"\"{pointer.File}\", sheet \"{pointer.Sheet}\"";
-                    if (kept.ValueKind == JsonValueKind.Object && kept.TryGetProperty(name, out JsonElement held) && held.ValueKind == JsonValueKind.Object)
+                    if (kept.ValueKind == JsonValueKind.Object && kept.TryGetProperty(Text(input, "held") ?? name, out JsonElement held) && held.ValueKind == JsonValueKind.Object)
                     {
                         int i = 0;
                         foreach (ColumnValues c in Kept(held))
@@ -211,6 +219,10 @@ namespace StatsDirect.R
             // the data
             HashSet<string> names = new();
             HashSet<int> bound = new();   // the columns taken by a variable bound to an input by name
+            // a recipe that names every input it takes (no positional column, no rest list, no table or matrix): the run's other inputs, such
+            // as a grid of new values a prediction asks for, are not the analysis's and are left out of its script
+            bool namedOnly = binding != null && binding.List == null && binding.Matrix == null && binding.Table == null && binding.Data.All(i => i.Input != null) && (binding.Data.Count > 0 || binding.Nested.Count > 0);
+            bool ownFrames = columns.Any(c => !c.Inherited);   // the run asked for frames itself: the bag's inherited frames are not its data
             void ListOf(string variable, IEnumerable<int> indices)
             {
                 s.Append(variable).Append(" <- list(").Append(string.Join(",\n  ", indices.Select(i => Quote(columns[i].Title) + " = " + Vector(columns[i].Values)))).Append(")\n");
@@ -222,6 +234,19 @@ namespace StatsDirect.R
                 names.Add(variable);
                 s.Append(variable).Append(" <- NULL   # ").Append(why).Append('\n');
             }
+            void NestedList(string variable, JsonElement value)
+            {
+                // a two-level input (blocks and treatments, groups and subgroups, the grouped covariance's groups with the predictor's
+                // levels and then the outcome's replicates) as a list of lists, the inner vectors named by their titles when they have any
+                names.Add(variable);
+                if (!value.TryGetProperty("frames", out JsonElement frames) || frames.ValueKind != JsonValueKind.Array)
+                {
+                    s.Append(variable).Append(" <- NULL   # the run's data were too many to keep with the result\n");
+                    return;
+                }
+                s.Append(variable).Append(" <- list(\n  ").Append(string.Join(",\n  ", frames.EnumerateArray().Select(level =>
+                    "list(" + string.Join(", ", level.EnumerateArray().Select(c => (string.IsNullOrEmpty(Text(c, "title")) ? "" : Quote(Text(c, "title")) + " = ") + Vector(c.TryGetProperty("values", out JsonElement v) ? Objects(v) : Array.Empty<object>()))) + ")"))).Append(")\n");
+            }
             if (binding != null)
                 foreach (DataItem item in binding.Data.Where(i => i.Input != null))
                 {
@@ -232,6 +257,14 @@ namespace StatsDirect.R
                     if (item.IsList) { ListOf(item.Variable, indices); foreach (int i in indices) bound.Add(i); }
                     else if (indices.Count > 0) { int i = indices[0]; Assign(s, item.Variable, columns[i], names); bound.Add(i); }
                     else Missing(item.Variable, $"no column of \"{item.Input}\" is left for it");
+                }
+            HashSet<string> nestedTaken = new();
+            if (binding != null)
+                foreach ((string variable, string input) in binding.Nested)
+                {
+                    if (!nested.TryGetValue(input, out (JsonElement value, bool inherited) two)) { Missing(variable, $"no \"{input}\" in this run"); continue; }
+                    nestedTaken.Add(input);
+                    NestedList(variable, two.value);
                 }
             int next = 0;
             void Skip() { while (next < columns.Count && bound.Contains(next)) next++; }
@@ -246,12 +279,15 @@ namespace StatsDirect.R
             Skip();
             if (binding?.List != null)
             {
-                ListOf(binding.List, Enumerable.Range(0, columns.Count).Where(i => !bound.Contains(i)));
+                ListOf(binding.List, Enumerable.Range(0, columns.Count).Where(i => !bound.Contains(i) && !(ownFrames && columns[i].Inherited)));   // the rest list: not the bag's grids
                 next = columns.Count;
             }
             for (; next < columns.Count; next++)
-                if (!bound.Contains(next) && !(binding != null && columns[next].Inherited))   // an inherited frame the recipe does not take is left out
+                if (!bound.Contains(next) && !(binding != null && columns[next].Inherited) && !namedOnly)   // an inherited frame the recipe does not take is left out
                     Assign(s, SafeName(columns[next].Title, names), columns[next], names);
+            foreach (KeyValuePair<string, (JsonElement value, bool inherited)> pair in nested)
+                if (!nestedTaken.Contains(pair.Key) && !(binding != null && pair.Value.inherited) && !namedOnly)   // as for the columns: without a recipe every input is written
+                    NestedList(SafeName(pair.Key, names), pair.Value.value);
             foreach ((string[][] counts, string[] rows, string[] cols, string rowsTitle, string colsTitle) in tables)
             {
                 string variable = binding?.Table ?? SafeName("counts", names);
@@ -331,7 +367,7 @@ namespace StatsDirect.R
             int last = -1;
             for (int i = 0; i < lines.Length && (lines[i].Trim().Length == 0 || lines[i].StartsWith("#", StringComparison.Ordinal)); i++)
             {
-                Match m = Regex.Match(lines[i], "^#\\s*(data|table|matrix|settings|recipe):\\s*(.*)$", RegexOptions.IgnoreCase);
+                Match m = Regex.Match(lines[i], "^#\\s*(data|table|matrix|nested|settings|recipe):\\s*(.*)$", RegexOptions.IgnoreCase);
                 if (!m.Success)
                 {
                     if (Regex.IsMatch(lines[i], "^# (StatsDirect recipe|From the help|hand-edited)", RegexOptions.IgnoreCase))
@@ -355,6 +391,13 @@ namespace StatsDirect.R
                         break;
                     case "table": b.Table = rest; break;
                     case "matrix": b.Matrix = rest; break;
+                    case "nested":
+                        foreach (string item in rest.Split(',').Select(x => x.Trim()).Where(x => x.Length > 0))
+                        {
+                            int eq = item.IndexOf('=');
+                            if (eq > 0) b.Nested.Add((item[..eq].Trim(), item[(eq + 1)..].Trim()));
+                        }
+                        break;
                     case "settings":
                         foreach (string item in rest.Split(',').Select(x => x.Trim()).Where(x => x.Length > 0))
                         {

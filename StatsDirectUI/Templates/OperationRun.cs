@@ -12,7 +12,8 @@ namespace StatsDirect.Templates
     {
         public Operation Operation { get; }
         public DateTime Started { get; } = DateTime.Now;
-        /// <summary>The parameters as they were asked, in order; a parameter asked again replaces its earlier note.</summary>
+        /// <summary>The parameters as they were asked, in order; a parameter asked again in the same pass replaces its earlier note, and one
+        /// asked in each pass of a loop (the groups of a survival plot) is noted once per pass with the value of that pass.</summary>
         public IList<RunInput> Inputs { get; } = new List<RunInput>();
         /// <summary>The JSON record of the run as it stood at the last report step, or null when none has been written.</summary>
         public string Record { get; set; }
@@ -22,14 +23,14 @@ namespace StatsDirect.Templates
             Operation = operation;
         }
 
-        public void Note(Parameter parameter, string prompt)
+        public void Note(Parameter parameter, string prompt, string pass = "", FilledParameter value = null)
         {
             if (string.IsNullOrEmpty(parameter?.Name))
                 return;
             for (int i = Inputs.Count - 1; i >= 0; i--)
-                if (Inputs[i].Name == parameter.Name)
+                if (Inputs[i].Name == parameter.Name && Inputs[i].Pass == pass)
                     Inputs.RemoveAt(i);
-            RunInput input = new(parameter.Name, prompt, RunRecord.KindOf(parameter));
+            RunInput input = new(parameter.Name, prompt, RunRecord.KindOf(parameter)) { Pass = pass, Value = value };
             if (parameter is Double2By2Parameter table)
             {
                 // a 2 by 2 table is held as four named counts: the record puts them back together with the labels of its rows and columns
@@ -66,6 +67,10 @@ namespace StatsDirect.Templates
         /// <summary>What the rows and the columns of a 2 by 2 table stand for, from the dialog's prompts.</summary>
         public string RowsTitle { get; set; }
         public string ColumnsTitle { get; set; }
+        /// <summary>The pass of the loop or loops the parameter was asked in ("" outside any loop, "0", "1" ... inside one, "1.0" ... in nested loops).</summary>
+        public string Pass { get; set; } = "";
+        /// <summary>The value as it was asked, when the processor had it to hand; the bag's current value stands in otherwise.</summary>
+        public FilledParameter Value { get; set; }
 
         public RunInput(string name, string prompt, string kind)
         {

@@ -240,15 +240,20 @@ namespace StatsDirect.TemplateProcessing
             {
                 if (null != step.LoopVariableName)
                     filledParameters[step.LoopVariableName] = FilledParameterFactory.Output(i);
-                foreach (Step s in step.Steps)
+                loopPasses.Add(i);   // a parameter asked in this pass is noted for this pass
+                try
                 {
-                    // TODO: How to handle execution failures?
-                    StepOutput result = s.ExecuteInternal(this, filledParameters);
-                    // Add in any required parameters, combining everything into one big mass of outputs.
-                    // Overwrite earlier loop results with later ones.
-                    foreach (string k in result.ParameterBag.Keys)
-                        filledParameters[k] = result.ParameterBag[k];
+                    foreach (Step s in step.Steps)
+                    {
+                        // TODO: How to handle execution failures?
+                        StepOutput result = s.ExecuteInternal(this, filledParameters);
+                        // Add in any required parameters, combining everything into one big mass of outputs.
+                        // Overwrite earlier loop results with later ones.
+                        foreach (string k in result.ParameterBag.Keys)
+                            filledParameters[k] = result.ParameterBag[k];
+                    }
                 }
+                finally { loopPasses.RemoveAt(loopPasses.Count - 1); }
             }
             return new StepOutput(filledParameters);
         }
@@ -321,7 +326,7 @@ namespace StatsDirect.TemplateProcessing
                             if (null == outstandingFilledParameters)
                                 throw new TemplateOperationCancelledException();
                             foreach (Parameter outstandingParameter in outstandingParameters)
-                                { MaybeRemember(outstandingParameter, outstandingFilledParameters); NoteInput(outstandingParameter, parmsAndFilledParameters); }
+                                { MaybeRemember(outstandingParameter, outstandingFilledParameters); NoteInput(outstandingParameter, parmsAndFilledParameters, outstandingFilledParameters); }
                             foreach (KeyValuePair<string, FilledParameter> pair in outstandingFilledParameters.Pairs)
                             {
                                 // Handle removal of explicit blanks
@@ -363,7 +368,7 @@ namespace StatsDirect.TemplateProcessing
                     else
                     {
                         MaybeRemember(parameter, newFilledParameters);
-                        NoteInput(parameter, parmsAndFilledParameters);
+                        NoteInput(parameter, parmsAndFilledParameters, newFilledParameters);
                         if (null != newFilledParameters)
                             foreach (KeyValuePair<string, FilledParameter> pair in newFilledParameters.Pairs)
                                 filledParameters.Add(pair.Key, pair.Value);
@@ -390,7 +395,7 @@ namespace StatsDirect.TemplateProcessing
                     if (null == outstandingFilledParameters)
                         throw new TemplateOperationCancelledException();
                     foreach (Parameter outstandingParameter in outstandingParameters)
-                        { MaybeRemember(outstandingParameter, outstandingFilledParameters); NoteInput(outstandingParameter, parmsAndFilledParameters); }
+                        { MaybeRemember(outstandingParameter, outstandingFilledParameters); NoteInput(outstandingParameter, parmsAndFilledParameters, outstandingFilledParameters); }
                     foreach (KeyValuePair<string, FilledParameter> pair in outstandingFilledParameters.Pairs)
                         filledParameters[pair.Key] = pair.Value;
                     outstandingParameters.Clear();
@@ -421,15 +426,19 @@ namespace StatsDirect.TemplateProcessing
         /// <summary>
         /// The run's note of a parameter as it was asked, with the prompt the user saw: the record of the run lists the inputs in this order.
         /// </summary>
-        private void NoteInput(Parameter parameter, ParameterBag context)
+        private void NoteInput(Parameter parameter, ParameterBag context, ParameterBag filled)
         {
             if (null == currentRun || null == parameter)
                 return;
             string prompt;
             try { prompt = parameter.Prompt(this, context, parameter.Title ?? parameter.Name); }
             catch (Exception) { prompt = parameter.Title ?? parameter.Name; }
-            currentRun.Note(parameter, prompt);
+            FilledParameter value = filled != null && !string.IsNullOrEmpty(parameter.Name) && filled.ContainsKey(parameter.Name) ? filled[parameter.Name] : null;
+            currentRun.Note(parameter, prompt, string.Join(".", loopPasses), value);
         }
+
+        /// <summary>The passes of the loops being run, outermost first: a parameter asked in each pass is noted once per pass.</summary>
+        private readonly List<int> loopPasses = new();
 
         private static ParameterBag CombinePreferringLater(ParameterBag bag1, ParameterBag bag2)
         {
