@@ -52,7 +52,17 @@ namespace StatsDirect.UI
             mnuPageSetup.Click += mnuPageSetup_Click;
             tbrSave.Click += tbrSave_Click;
             tbrFind.Click += tbrFind_Click;
+            // Cut, Copy and Paste on the toolbar, between Save and Find, with the Edit menu items' icons and handlers
+            int find = ToolStrip1.Items.IndexOf(tbrFind);
+            ToolStrip1.Items.Insert(find++, ToolbarButton("Cut", CutToolStripMenuItem, CutToolStripMenuItem_Click));
+            ToolStrip1.Items.Insert(find++, ToolbarButton("Copy", CopyToolStripMenuItem, CopyToolStripMenuItem_Click));
+            ToolStrip1.Items.Insert(find++, ToolbarButton("Paste", PasteToolStripMenuItem, PasteToolStripMenuItem_Click));
+            ToolStrip1.Items.Insert(find, new ToolStripSeparator());
         }
+
+        /// <summary>A toolbar button with a menu item's icon, doing what the item does; its text is its tooltip.</summary>
+        private static ToolStripButton ToolbarButton(string text, ToolStripMenuItem item, EventHandler click) =>
+            new(text, item.Image, click) { DisplayStyle = ToolStripItemDisplayStyle.Image, ImageTransparentColor = System.Drawing.Color.Magenta };
 
         private string currentFile;
 
