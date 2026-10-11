@@ -38,6 +38,7 @@ internal static partial class Program
             CheckFollowOn();
             CheckRealRuns();
             CheckScriptWindowNumbers();
+            CheckRegressionFollowOn();
             Console.WriteLine($"PASS {checks} Continue in R checks");
             return 0;
         }
