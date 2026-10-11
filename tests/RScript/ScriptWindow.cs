@@ -68,6 +68,21 @@ internal static partial class Program
         Check((string)helpTopic.GetValue(first.window) == "1239" && (string)helpTopic.GetValue(second.window) == "1401" && (string)helpTopic.GetValue(empty.window) == "1401",
               "Help opens the result's topic for its script, and the R script window's own topic for a script of no result or an empty window");
         empty.window.Dispose();
+        // what Find selects stays highlighted while its dialog has the focus; printing draws the script, page by page, through the print document
+        RichTextBox editor = (RichTextBox)script.GetField("rtbDoc", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(first.window);
+        Check(!editor.HideSelection, "the editor keeps its selection visible when another window has the focus, so that what Find selects is highlighted");
+        System.Drawing.Printing.PrintDocument document = (System.Drawing.Printing.PrintDocument)script.GetField("PrintDocument1", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(first.window);
+        if (document.PrinterSettings.IsValid)
+        {
+            editor.Text = string.Join("\n", Enumerable.Range(1, 120).Select(i => "line " + i + " of a script long enough for two pages"));
+            System.Drawing.Printing.PreviewPrintController preview = new();
+            document.PrintController = preview;
+            document.Print();
+            System.Drawing.Printing.PreviewPageInfo[] pages = preview.GetPreviewPageInfo();
+            int Dark(System.Drawing.Image image) { using System.Drawing.Bitmap b = new(image); int n = 0; for (int x = 0; x < b.Width; x += 2) for (int y = 0; y < b.Height; y += 2) if (b.GetPixel(x, y).GetBrightness() < 0.5) n++; return n; }
+            Check(pages.Length >= 2 && Dark(pages[0].Image) > 200 && Dark(pages[1].Image) > 200, $"printing draws the script on {pages.Length} pages, each with text on it");
+        }
+        else Console.WriteLine("      (no printer is set up on this PC, so the printed pages are not checked)");
         // the main window's toolbar is the report's and the worksheet's: it goes while a script window, which has its own, is active
         MethodInfo toolbarShown = program.GetType("StatsDirect.UI.frmMain").GetMethod("ToolbarShownFor", BindingFlags.Static | BindingFlags.NonPublic);
         using Form plain = new();
