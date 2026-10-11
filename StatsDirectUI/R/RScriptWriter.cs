@@ -494,7 +494,8 @@ namespace StatsDirect.R
                     case '\r': s.Append("\\r"); break;
                     case '\t': s.Append("\\t"); break;
                     default:
-                        if (ch < ' ' || ch == '\x7f') s.Append("\\u").Append(((int)ch).ToString("x4", inv));
+                        if (ch == '\0') s.Append(' ');   // R cannot hold a NUL in a string, and its parser refuses the escape outright: a space, as in a comment
+                        else if (ch < ' ' || ch == '\x7f') s.Append("\\u").Append(((int)ch).ToString("x4", inv));
                         else s.Append(ch);
                         break;
                 }
