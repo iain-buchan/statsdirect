@@ -52,6 +52,14 @@ internal static partial class Program
             if (Regex.IsMatch(text, "^# nested:", RegexOptions.Multiline) && !xml.Contains("<frame2d>") && !xml.Contains("<grouped-covariance>")) mismatches.Add($"{op}: {recipe.File} takes a two-level input, and the operation asks for none");
             if (!Regex.IsMatch(text, "^# (data|table|matrix|nested|settings):", RegexOptions.Multiline)) mismatches.Add($"{op}: {recipe.File} has no header");
         }
+        // every operation that continues one with a recipe (its prerequisite operation) has a recipe of its own
+        foreach (string definition in Directory.GetFiles(Metadata("Operations"), "*.xml"))
+        {
+            Match prerequisite = Regex.Match(File.ReadAllText(definition), "<prerequisite-operation>\\s*([^<\\s]+)\\s*</prerequisite-operation>");
+            string name = Path.GetFileNameWithoutExtension(definition);
+            if (prerequisite.Success && RRecipes.Has(prerequisite.Groups[1].Value) && !RRecipes.Has(name))
+                mismatches.Add($"{name}: continues {prerequisite.Groups[1].Value}, which has a recipe, and has none of its own");
+        }
         mismatches = mismatches.Distinct().ToList();
         foreach (string mismatch in mismatches) Console.WriteLine("      mismatch: " + mismatch);
         Check(mismatches.Count == 0, "every setting and kind of data a recipe takes is what the operations it serves ask for");
