@@ -136,6 +136,10 @@ namespace StatsDirect.R
             return Process.Start(startInfo);
         }
 
+        /// <summary>The number of the last run started here: each run's files are named after it, so that runs going at the same time
+        /// (several script windows) do not read one another's.</summary>
+        private static int runSerial;
+
         /// <summary>
         /// Runs an R script with the installed R and returns what it printed, as the script window shows it: the script of a result that
         /// the user continues in R.  The working folder is the user's R folder, so the files a script writes, charts among them, land there.
@@ -163,12 +167,14 @@ namespace StatsDirect.R
             string rFolder = SDConfiguration.MyStatsDirectRFolder;
             if (!Directory.Exists(rFolder))
                 Directory.CreateDirectory(rFolder);
-            string scriptPath = Path.Combine(rFolder, "continue.r");
+            // the run's own files, removed when it is over: a run going at the same time as another must not read the other's script
+            string runId = System.Threading.Interlocked.Increment(ref runSerial) + "-" + Environment.ProcessId;
+            string scriptPath = Path.Combine(rFolder, "continue-" + runId + ".r");
+            string sourcePath = Path.Combine(rFolder, "script-" + runId + ".r");
             string repairedScriptBody = scriptBody.Replace("\r", string.Empty).Replace("\n", "\r\n");
             if (echo)
             {
                 // the script in a file of its own, sourced with echo by the run's head, so that the head's own lines do not show
-                string sourcePath = Path.Combine(rFolder, "script.r");
                 using (TextWriter ts = new StreamWriter(sourcePath, false, new UTF8Encoding(false)))
                     ts.WriteLine(repairedScriptBody);
                 repairedScriptBody = "sink(stdout(), type = \"message\")\r\nsource(\"" + sourcePath.Replace('\\', '/') + "\", echo = TRUE, max.deparse.length = Inf, spaced = FALSE, encoding = \"UTF-8\")";
@@ -179,33 +185,42 @@ namespace StatsDirect.R
                 tw.WriteLine();
                 tw.WriteLine(repairedScriptBody);
             }
-            ProcessStartInfo startInfo = new()
+            try
             {
-                FileName = Path.Combine(preferredVersion.BinPath, RSCRIPT_EXE_NAME),
-                WorkingDirectory = rFolder,
-                Arguments = $"--vanilla --encoding=UTF-8 \"{scriptPath}\"",
-                CreateNoWindow = true,
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                StandardOutputEncoding = Encoding.UTF8,
-                StandardErrorEncoding = Encoding.UTF8
-            };
-            using Process p = Process.Start(startInfo);
-            // a stop kills R and waits for it to go, so that a run started next can write the script file afresh
-            using System.Threading.CancellationTokenRegistration stopping = stop.Register(() => { try { p.Kill(true); p.WaitForExit(3000); } catch (Exception) { } });
-            System.Threading.Tasks.Task<string> errors = p.StandardError.ReadToEndAsync();
-            string output = p.StandardOutput.ReadToEnd();
-            p.WaitForExit();
-            if (stop.IsCancellationRequested)
-                return output + "\n(stopped)";
-            StringBuilder result = new(output);
-            if (errors.Result.Length > 0)
-                result.Append('\n').Append(errors.Result);
-            if (0 != p.ExitCode)
-                result.Append("\n(R stopped with exit code ").Append(p.ExitCode).Append(')');
-            result.Append("\n(files the script writes are in ").Append(rFolder).Append(')');
-            return result.ToString();
+                ProcessStartInfo startInfo = new()
+                {
+                    FileName = Path.Combine(preferredVersion.BinPath, RSCRIPT_EXE_NAME),
+                    WorkingDirectory = rFolder,
+                    Arguments = $"--vanilla --encoding=UTF-8 \"{scriptPath}\"",
+                    CreateNoWindow = true,
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    StandardOutputEncoding = Encoding.UTF8,
+                    StandardErrorEncoding = Encoding.UTF8
+                };
+                using Process p = Process.Start(startInfo);
+                // a stop kills R and waits for it to go, so that a run started next can write the script file afresh
+                using System.Threading.CancellationTokenRegistration stopping = stop.Register(() => { try { p.Kill(true); p.WaitForExit(3000); } catch (Exception) { } });
+                System.Threading.Tasks.Task<string> errors = p.StandardError.ReadToEndAsync();
+                string output = p.StandardOutput.ReadToEnd();
+                p.WaitForExit();
+                if (stop.IsCancellationRequested)
+                    return output + "\n(stopped)";
+                StringBuilder result = new(output);
+                if (errors.Result.Length > 0)
+                    result.Append('\n').Append(errors.Result);
+                if (0 != p.ExitCode)
+                    result.Append("\n(R stopped with exit code ").Append(p.ExitCode).Append(')');
+                result.Append("\n(files the script writes are in ").Append(rFolder).Append(')');
+                return result.ToString();
+            }
+            finally
+            {
+                // the run's files go when it is over; a file R still holds (a stop not yet complete) is left behind
+                foreach (string file in new[] { scriptPath, sourcePath })
+                    try { if (File.Exists(file)) File.Delete(file); } catch (IOException) { }
+            }
         }
 
         /// <summary>The profile R's own window runs at its start for Open in R: the program's library on the path as the runs here have it, the
