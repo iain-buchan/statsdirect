@@ -143,15 +143,26 @@ namespace StatsDirect.Templates
                 // simulation) takes the data of the result it was asked from without asking for them again
                 foreach (KeyValuePair<string, FilledParameter> pair in bag.Pairs)
                 {
-                    if (!IsSetting(pair.Key) || pair.Value == null || !pair.Value.HasData || !pair.Value.IsDataFrame || pair.Value.Direction == FilledParameterDirection.Output)
+                    if (!IsSetting(pair.Key) || pair.Value == null || !pair.Value.HasData || pair.Value.Direction == FilledParameterDirection.Output)
+                        continue;
+                    bool twoLevel = !pair.Value.IsDataFrame && pair.Value.AsObject is DataFrame2D;   // the nested and replicated layouts' frame
+                    if (!pair.Value.IsDataFrame && !twoLevel)
                         continue;
                     if (run.Inputs.Any(i => i.Name == pair.Key))
                         continue;
-                    DataFrame frame = pair.Value.AsDataFrame;
                     w.WriteStartObject();
                     w.WriteString("name", pair.Key);
                     w.WriteString("prompt", "");
                     w.WriteBoolean("inherited", true);
+                    if (twoLevel)
+                    {
+                        w.WriteString("kind", "frame2d");
+                        w.WritePropertyName("value");
+                        WriteValue(w, pair.Value.AsObject, 0, threshold);
+                        w.WriteEndObject();
+                        continue;
+                    }
+                    DataFrame frame = pair.Value.AsDataFrame;
                     if (IsPointerFrame(frame))
                     {
                         w.WriteString("kind", "frame");
