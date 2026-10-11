@@ -162,7 +162,7 @@ internal sealed class frmReportWebView : StatsDirectForm, IReport
         string title = entry.TryGetProperty("title", out JsonElement t) && t.ValueKind == JsonValueKind.String ? t.GetString() : "Analysis";
         RScript script = RScriptWriter.Write(record, title, FrameReader.Read);
         if (SdApplication.SoleInstance.CreateScriptWindow() is frmScript window)
-            window.ShowR(script.Text, "R: " + title);
+            window.ShowR(script.Text, title);
         status.Text = script.DataUnavailable ? "R script opened, but its data could not be read from the workbook: see the head of the script"
                     : script.HasRecipe ? "R script of the analysis opened" : "R script with the data and settings opened";
     }

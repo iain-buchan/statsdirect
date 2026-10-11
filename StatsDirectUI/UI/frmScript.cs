@@ -348,7 +348,9 @@ namespace StatsDirect.UI
             rtbDoc.Modified = false;   // written from the report, not an unsaved document: closing the program must not wait on it
             Dirty = false;             // (setting the text marked the form changed)
             cboLanguage.SelectedIndex = 1;
-            Text = title;
+            // the window keeps its number, so that the next script is Script 2, and names the analysis after it; the tab is named with it
+            string name = Text + ": " + title;
+            if (Tag is WindowInformation info && info.IsNew) info.FriendlyName = name; else Text = name;
             if (!rTools)
             {
                 // the toolbar of an R script: run it again after editing, clear what earlier runs printed, and open the folder R writes to; the

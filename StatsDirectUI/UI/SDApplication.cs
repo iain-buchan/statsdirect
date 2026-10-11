@@ -362,7 +362,11 @@ namespace StatsDirect.UI
                         string windowName = wi.FriendlyName;
                         if (windowName.StartsWith("Script "))
                         {
-                            string windowNumberAsString = windowName[7..].Trim();
+                            // the number, which a title may follow: "Script 1: Paired t test" is Script 1
+                            string rest = windowName[7..].TrimStart();
+                            int digits = 0;
+                            while (digits < rest.Length && char.IsDigit(rest[digits])) digits++;
+                            string windowNumberAsString = rest[..digits];
                             if (int.TryParse(windowNumberAsString, out int windowNumber))
                             {
                                 if (windowNumber == candidateNumber)
