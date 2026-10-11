@@ -453,7 +453,7 @@ namespace StatsDirect.Templates
         private static bool IsScalar(object value) => value is double or int or long or bool || value is string s && s.Length <= LongestText;
 
         private static bool Writable(object value) =>
-            value is null or double or int or long or bool or string or IList<string> or ParameterBag or IList<ParameterBag> or DataFrame2D;
+            value is null or double or int or long or bool or string or IList<string> or IList<bool> or ParameterBag or IList<ParameterBag> or DataFrame2D;
 
         private static void WriteScalar(Utf8JsonWriter w, object value)
         {
@@ -479,6 +479,12 @@ namespace StatsDirect.Templates
                     w.WriteStartArray();
                     foreach (string s in list)
                         w.WriteStringValue(s);
+                    w.WriteEndArray();
+                    break;
+                case IList<bool> flags:   // the marks of a pick from a list (the observer that is a reference standard)
+                    w.WriteStartArray();
+                    foreach (bool flag in flags)
+                        w.WriteBooleanValue(flag);
                     w.WriteEndArray();
                     break;
                 case ParameterBag bag:
