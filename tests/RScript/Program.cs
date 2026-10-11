@@ -23,7 +23,7 @@ internal static partial class Program
     {
         try
         {
-            BuiltinRegistry.SoleInstance.AddAll(StatsDirect.Builtins.Registry.GetFunctionRegistry());   // the engine's functions, as the program registers them at its start
+            _ = typeof(StatsDirect.R.RScriptWriter).Assembly.GetType("StatsDirect.UI.SdApplication").GetProperty("SoleInstance", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null);   // the application object, whose making registers the engine's functions, as the program does at its start
             CheckRecord();
             CheckThreshold();
             CheckHash();
@@ -37,6 +37,7 @@ internal static partial class Program
             CheckInverseRecipes();
             CheckFollowOn();
             CheckRealRuns();
+            CheckScriptWindowNumbers();
             Console.WriteLine($"PASS {checks} Continue in R checks");
             return 0;
         }
