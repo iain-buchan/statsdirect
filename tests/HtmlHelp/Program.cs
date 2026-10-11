@@ -49,6 +49,7 @@ internal static class Program
             .SelectMany(file => XDocument.Load(file).Descendants().Attributes("chm-id").Select(a => a.Value)).Distinct().ToArray();
         Check(ids.Length > 150 && ids.All(id => catalog.Resolve(id) != null), $"all {ids.Length} distinct operation context IDs have offline topics");
         Check(catalog.Resolve("1239").AbsolutePath == "/parametric_methods/paired_t.htm", "paired t-test context ID preserves its topic");
+        Check(catalog.Resolve("1401")?.AbsolutePath == "/basics/r_script_window.htm", "the R script window's own topic, which its Help shows while the window is empty, is in the bundle");
         Check(catalog.Resolve("https://www.statsdirect.com/help/parametric_methods/paired_t.htm#ref")?.Fragment == "#ref", "existing website topic URLs map to offline help with anchors");
         Check(catalog.Resolve("https://iain-buchan.github.io/statisticalhelp/parametric_methods/paired_t.htm")?.AbsolutePath == "/parametric_methods/paired_t.htm", "GitHub Pages help URLs map offline");
         Check(new[] { "../../contents.htm", "%2e%2e/contents.htm", "file:///C:/windows/win.ini", "javascript:alert(1)", "missing.htm", "1234567", "https://example.com/" }.All(x => catalog.Resolve(x) == null), "unknown topics, traversal and untrusted schemes do not resolve to local pages");
