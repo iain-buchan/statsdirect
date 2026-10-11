@@ -4,30 +4,13 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
 ##[Unreleased]
 
-### Fixed
-- Copying results with charts into Word: the empty lines after each chart, which were reserved for Excel, are gone; Excel places the next result below the picture without them.
-- The status line at the bottom of the report window, which shows "Unsaved changes" and the file saved, was cut off at a display scaling above 100%.
-- A result added to a report scrolls into view, its top just below the toolbar; the window stayed where it was, usually at the top of the report.
-- The chart of an analysis went into the report as a second item, with its own heading and Help button, and the window scrolled to it rather than to the start of the analysis; the outputs of one run of an analysis now make one item.
-- Copying the whole report: Ctrl+A with the focus outside the results selected the whole page, toolbar and all, and that copy reached Word as raw markup, the charts as their axis text; Ctrl+A anywhere in the report now selects all results, and a selection that spills outside the results is clamped to them before a copy.
-
-### Added
-- A right-click in a report shows a menu with Cut, Copy, Paste, Select result, Select all and Help for the result under the pointer.
-- Continue in R: the right-click menu of a result offers a short R script of its data, its settings and the analysis as the help's R code gives it, to run, edit or take to R or RStudio; the data are read from the workbook by the pointers kept with the result, and found again by their content if columns have since been inserted or removed to their left; every analysis whose help shows the method in R, 180 in all, has such a script: the Distributions calculators, the sample size calculators, the meta-analyses, the survival analyses, the regressions, the tables typed on screen and the random number generators among them, and a follow-on operation such as a prediction or an exact P by simulation gives the script of the run it continues; and for the others "Open data and settings in R" gives the data and settings. The calculator keeps the values of its boxes with the result, so that its script reproduces the calculation. The script opens in a script window, runs at once in the installed R and shows what R prints below it, with the files it wrote, charts among them, listed as links to open; Run on the toolbar runs it again after edits, and Output folder opens the folder R writes to. Run while R is still running the script as it was stops that run and runs the script as edited; Clear output clears what R printed. What R prints appears as an R session shows it, each command after its prompt with its output under it. Open in R saves the script as an R file and opens it in RStudio when that is installed, else in R's own window, run in its console and open in its editor.
-- A result keeps a record of its run in the report: the workbook, sheet, columns and rows of each input, with a hash of each column to tell whether the data have changed, the settings and the scalar results; the values themselves only when the run has few. The Mac version keeps the same record, so that a report moves between the two.
-- A right-click on a chart in a report offers Save chart as SVG or as PNG: the SVG file is the chart itself, the PNG is drawn from it at twice its size on the page.
-
-### Changed
-- The panes in the body of a report are gone: the name and Help button above each result, and the width and Fit controls of each chart. Help is in the ribbon and the right-click menu, which also selects a result or all of them.
-- The question whether to save a report's changes when it closes is asked in the program's message banner at the top of the main window, as a workbook or a script asks it, and in the same words; it came in a floating Windows message box of its own.
-- The LOESS chart is drawn square, 6 by 6 inches; it was 6 by 4.
-- The method comparison regression draws its test against reference plot square, with equal axes, so that the line of equality runs at 45 degrees; the difference, residual and bias plots stay 6 by 4.
-
-##[v5.1.0] 2026-10-10
+##[v5.1.0] 2026-10-11
 
 Version 5.1.0 replaces the Windows rich-text report editor and compiled CHM help with HTML5 reports and help displayed through WebView2. Reports reuse the editor developed for the Mac version and retain the established statistical templates and result colours.
 
 The release also follows the port of the engine to the Mac, whose checks of the shared code and replay of the help examples found faults on Windows too. The selection of data by group identifiers left out a row whose identifier cell was blank, so that the values after it were paired with the wrong groups without a warning, and the analysis of covariance by identifier took blank cells into its sums; such rows are now refused or left out, as the layout in separate columns has always left them out. The "Select model" follow-on of the linearized estimates regression and LOESS curve fitting with two or more predictors stopped with internal errors. Seven operations that no menu has reached since 2012, and the second menu layout that defined them, are removed.
+
+Every result in a report can be continued in R: its right-click menu writes a short R script of the data, the settings and the analysis as the help gives it in R, into a script window that runs the script in the installed R and shows what R prints as a session shows it, or opens it in RStudio or in R's own window. Reports keep a record of each run, charts can be saved as SVG or PNG, and the results of one run make one item in the report.
 
 ### Changed
 - Tools > Calculator opens an optional dockable pane with Pop out, Dock and Close, without a permanent tab. Expressions wrap; Enter calculates and Shift+Enter adds a line break. Expressions, results and saved calculations survive hiding and docking, and Calculator can stay open alongside Help.
@@ -35,6 +18,17 @@ The release also follows the port of the engine to the Mac, whose checks of the 
 - File > Save and Save As store editable HTML reports; Word and PDF exports are available from the File menu. Report templates retain consistent heading, table, font and colour styles. R charts are drawn as SVG, so that every chart in a report is a vector picture.
 - Help opens offline in a resizable pane beside the worksheet or report. Pop out and Dock retain the same topic, navigation history, reading position and expanded R examples. F1 preserves the active worksheet/report and data selection; help temporarily floats during modal parameter dialogs and returns when they close.
 - The installer supplies the WebView2 runtime when required and removes the retired CHM files and DevExpress components during upgrades.
+- The panes in the body of a report are gone: the name and Help button above each result, and the width and Fit controls of each chart. Help is in the ribbon and the right-click menu, which also selects a result or all of them.
+- The question whether to save a report's changes when it closes is asked in the program's message banner at the top of the main window, as a workbook or a script asks it, and in the same words; it came in a floating Windows message box of its own.
+- The LOESS chart is drawn square, 6 by 6 inches; it was 6 by 4.
+- The method comparison regression draws its test against reference plot square, with equal axes, so that the line of equality runs at 45 degrees; the difference, residual and bias plots stay 6 by 4.
+
+### Added
+- A right-click in a report shows a menu with Cut, Copy, Paste, Select result, Select all and Help for the result under the pointer.
+- Continue in R: the right-click menu of a result offers a short R script of its data, its settings and the analysis as the help's R code gives it, to run, edit or take to R or RStudio; the data are read from the workbook by the pointers kept with the result, and found again by their content if columns have since been inserted or removed to their left; every analysis whose help shows the method in R, 180 in all, has such a script: the Distributions calculators, the sample size calculators, the meta-analyses, the survival analyses, the regressions, the tables typed on screen and the random number generators among them, and a follow-on operation such as a prediction or an exact P by simulation gives the script of the run it continues; and for the others "Open data and settings in R" gives the data and settings. The calculator keeps the values of its boxes with the result, so that its script reproduces the calculation. The script opens in a script window, runs at once in the installed R and shows what R prints below it, with the files it wrote, charts among them, listed as links to open; Run on the toolbar runs it again after edits, and Output folder opens the folder R writes to. Run while R is still running the script as it was stops that run and runs the script as edited; Clear output clears what R printed. What R prints appears as an R session shows it, each command after its prompt with its output under it. Open in R saves the script as an R file and opens it in RStudio when that is installed, else in R's own window, run in its console and open in its editor. A script that loads an R package installs it first when it is missing.
+- A result keeps a record of its run in the report: the workbook, sheet, columns and rows of each input, with a hash of each column to tell whether the data have changed, the settings and the scalar results; the values themselves only when the run has few. The Mac version keeps the same record, so that a report moves between the two.
+- A right-click on a chart in a report offers Save chart as SVG or as PNG: the SVG file is the chart itself, the PNG is drawn from it at twice its size on the page.
+- Find on the toolbar of a workbook, a report and a script: in a workbook it opens Find and Replace; in a report or a script it opens a find bar under the toolbar, with Replace in a script, and shows the text found selected.
 
 ### Fixed
 - Calculator undo/redo now includes typing, Recall and Insert and survives docking and hiding. Its own Edit menu works without a worksheet, and the main Edit menu targets the calculator when it has focus. Old standalone calculator shortcuts open this integrated pane.
@@ -49,6 +43,11 @@ The release also follows the port of the engine to the Mac, whose checks of the 
 - Simple linearized estimates regression: "Select model" from the follow-on box, to fit another model to the same data, stopped with an error of the program, because the follow-on took the fit of the first model rather than the data; each model is now fitted from the data.
 - LOESS curve fitting with two or more predictors stopped before the fit with "Internal error: Cannot find parameter 'plotFitsAndCi'", because the confidence level was asked for on a condition that only the layout with one predictor sets.
 - Example workbook: the heading GMTA of a column on the Nonparametric sheet, which the help calls GMAT, corrected; a workbook already copied to a Documents folder keeps its old heading.
+- Copying results with charts into Word: the empty lines after each chart, which were reserved for Excel, are gone; Excel places the next result below the picture without them.
+- The status line at the bottom of the report window, which shows "Unsaved changes" and the file saved, was cut off at a display scaling above 100%.
+- A result added to a report scrolls into view, its top just below the toolbar; the window stayed where it was, usually at the top of the report.
+- The chart of an analysis went into the report as a second item, with its own heading and Help button, and the window scrolled to it rather than to the start of the analysis; the outputs of one run of an analysis now make one item.
+- Copying the whole report: Ctrl+A with the focus outside the results selected the whole page, toolbar and all, and that copy reached Word as raw markup, the charts as their axis text; Ctrl+A anywhere in the report now selects all results, and a selection that spills outside the results is clamped to them before a copy.
 
 ### Removed
 - The DevExpress RichEdit report editor and RTF/EMF report generation. New reports use HTML and SVG. Existing RTF, MHTML and DOCX reports can be opened in Word or another compatible editor and saved as HTML for use in StatsDirect.
