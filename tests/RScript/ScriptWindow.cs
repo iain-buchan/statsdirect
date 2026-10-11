@@ -83,6 +83,14 @@ internal static partial class Program
             Check(pages.Length >= 2 && Dark(pages[0].Image) > 200 && Dark(pages[1].Image) > 200, $"printing draws the script on {pages.Length} pages, each with text on it");
         }
         else Console.WriteLine("      (no printer is set up on this PC, so the printed pages are not checked)");
+        // the print preview inside the window, as the report's, in place of a dialog: Print shows it in front of the script, Close returns
+        MethodInfo print = script.GetMethod("Print", BindingFlags.Instance | BindingFlags.NonPublic);
+        PropertyInfo previewShown = script.GetProperty("PreviewShown", BindingFlags.Instance | BindingFlags.NonPublic);
+        print.Invoke(first.window, null);
+        Check((bool)previewShown.GetValue(first.window) && first.window.Controls[0] is Panel front && front.Controls.OfType<PrintPreviewControl>().Any(c => c.Document == document),
+              "Print shows the preview inside the window, in front of the script, with the script's print document");
+        script.GetMethod("HidePreview", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(first.window, null);
+        Check(!(bool)previewShown.GetValue(first.window), "Close returns to the script");
         // Find and Replace as a bar at the top of the window, hidden until asked: the search goes on from the selection and round to the start
         PropertyInfo findBarShown = script.GetProperty("FindBarShown", BindingFlags.Instance | BindingFlags.NonPublic);
         MethodInfo findNext = script.GetMethod("FindNext", BindingFlags.Instance | BindingFlags.NonPublic, null, new[] { typeof(string), typeof(bool) }, null);
