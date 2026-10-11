@@ -1,5 +1,7 @@
 using System.Diagnostics;
+using System.Text.RegularExpressions;
 using StatsDirect.R;
+using StatsDirect.Configuration;
 
 internal static partial class Program
 {
@@ -17,6 +19,11 @@ internal static partial class Program
         Check(watch.Elapsed < TimeSpan.FromSeconds(20) && output.Contains("(stopped)") && !output.Contains("after"), "a run stopped while R sleeps returns within seconds, marked stopped, without what would have followed");
         output = RController.RunScriptCapturingOutput("cat('done\\n')\n", version, CancellationToken.None);
         Check(output.Contains("done") && !output.Contains("(stopped)"), "a run that is not stopped returns what R printed, not marked stopped");
+        // runs going at the same time, as several script windows run their scripts at once: each returns its own script's output (the
+        // runs had shared two file names, so one could read another's script, or fail on the file the other R held)
+        string[] parallel = Task.WhenAll(Enumerable.Range(1, 4).Select(i => Task.Run(() => RController.RunScriptCapturingOutput($"Sys.sleep(0.5)\ncat('run {i} says {i * 11}\\n')\n", version, CancellationToken.None, echo: i % 2 == 0)))).Result;
+        Check(parallel.Select((o, i) => o.Contains($"run {i + 1} says {(i + 1) * 11}") && !Regex.IsMatch(o, $"says (?!{(i + 1) * 11}\\b)\\d")).All(ok => ok) && !Directory.EnumerateFiles(SDConfiguration.MyStatsDirectRFolder, "continue-*.r").Any(),
+              "four runs at once each return their own script's output, not another's, and leave no run files behind");
         // the session look: each command after R's prompt with its output under it, and an error in its place, not gathered at the end
         string echoed = RController.RunScriptCapturingOutput("x <- 1:3\nx * 2\ncat('a\\n')\nstop('oops')\ncat('b\\n')\n", version, CancellationToken.None, echo: true);
         echoed = echoed.Replace("\r", "");   // R on Windows ends its lines with a carriage return too

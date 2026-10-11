@@ -24,6 +24,9 @@ internal static partial class Program
         try
         {
             _ = typeof(StatsDirect.R.RScriptWriter).Assembly.GetType("StatsDirect.UI.SdApplication").GetProperty("SoleInstance", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null);   // the application object, whose making registers the engine's functions, as the program does at its start
+            // one group of checks alone, while it is being written: STATSDIRECT_RSCRIPT_ONLY=options runs the options checks and stops
+            if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "options") { CheckOptions(); Console.WriteLine($"PASS {checks} Continue in R checks (the options alone)"); return 0; }
+            if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "options2") { CheckOptions2(); Console.WriteLine($"PASS {checks} Continue in R checks (the second batch of options alone)"); return 0; }
             CheckRecord();
             CheckThreshold();
             CheckHash();
@@ -37,6 +40,8 @@ internal static partial class Program
             CheckInverseRecipes();
             CheckFollowOn();
             CheckRealRuns();
+            CheckOptions();
+            CheckOptions2();
             CheckScriptWindowNumbers();
             CheckRegressionFollowOn();
             CheckTwoLevel();

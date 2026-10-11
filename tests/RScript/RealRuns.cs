@@ -22,7 +22,7 @@ internal static partial class Program
         // repeats: inputs the operation asks for once per pass of a loop, one of the example's columns for each pass
         (string op, Dictionary<string, object> extra, string mode, string[] repeats)[] runs =
         {
-            ("MiscRelRisk", new() { ["scrap"] = new double[] { 72, 20, 684, 553 }, ["pe"] = 0.5, ["cco"] = 0.95 }, "subset", null),
+            ("MiscRelRisk", new() { ["scrap"] = new double[] { 72, 20, 684, 553 }, ["pe"] = null, ["cco"] = 0.95 }, "subset", null),   // no population proportion exposed, as the help's example
             ("SizePaired", new() { ["d"] = 20.0, ["sd"] = 35.0, ["p"] = 0.8, ["a"] = 0.05 }, "", null),
             ("SizeUnPaired", new() { ["d"] = 5.0, ["sd"] = 12.0, ["m"] = 1.0, ["p"] = 0.9, ["a"] = 0.05 }, "", null),
             // the Mac's harness ran every example through its engine (11 Oct 2026) and found these: the kappa grid's parameter is
