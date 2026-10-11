@@ -40,6 +40,7 @@ internal static partial class Program
             CheckScriptWindowNumbers();
             CheckRegressionFollowOn();
             CheckTwoLevel();
+            CheckColumnLocator();
             Console.WriteLine($"PASS {checks} Continue in R checks");
             return 0;
         }
