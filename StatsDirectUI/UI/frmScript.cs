@@ -59,6 +59,7 @@ namespace StatsDirect.UI
             rtbDoc.HideSelection = false;   // what Find selects stays highlighted while the Find dialog has the focus
             PrintDocument1.BeginPrint += (_, _) => printRemaining = rtbDoc.Text;
             PrintDocument1.PrintPage += PrintScriptPage;
+            BuildFindBar();
             // the toolbar in the main window's order, New, Open, Save, Print, Cut, Copy, Paste, Help, with Find before Help for the script, and
             // drawn as the main window's: its renderer paints each button's symbol by its name at the display size, so the buttons take the
             // names it knows, and a bitmap only sizes them; the R tools follow when the window shows an R script
@@ -334,17 +335,119 @@ namespace StatsDirect.UI
                 rtbDoc.Redo();
         }
 
-        private void FindToolStripMenuItem_Click(object sender, EventArgs e)
+        private void FindToolStripMenuItem_Click(object sender, EventArgs e) => ShowFindBar(false);
+
+        private void FindAndReplaceToolStripMenuItem_Click(object sender, EventArgs e) => ShowFindBar(true);
+
+        #region Find bar
+        // Find and replace as a bar at the top of the window, as the report's find is, in place of floating dialogs: hidden until asked
+        private Panel findBar;
+        private TextBox txtFind, txtReplace;
+        private CheckBox chkMatchCase;
+        private Label lblFindStatus;
+        private bool findBarShown;
+        internal bool FindBarShown => findBarShown;
+
+        private void BuildFindBar()
         {
-            frmScriptFind f = new(this);
-            f.Show();
+            Padding beside = new(3, 6, 3, 3);   // labels and the check box sit level with the boxes and buttons
+            txtFind = new TextBox { Width = 220 };
+            chkMatchCase = new CheckBox { Text = "Match case", AutoSize = true, Margin = beside };
+            txtReplace = new TextBox { Width = 220 };
+            lblFindStatus = new Label { AutoSize = true, ForeColor = System.Drawing.SystemColors.GrayText, Margin = beside };
+            Button Button(string text, EventHandler click) { Button b = new() { Text = text, AutoSize = true }; b.Click += click; return b; }
+            FlowLayoutPanel row = new() { Dock = DockStyle.Top, AutoSize = true, WrapContents = true, Padding = new Padding(4, 2, 4, 2) };
+            row.Controls.AddRange(new Control[]
+            {
+                new Label { Text = "Find", AutoSize = true, Margin = beside }, txtFind, chkMatchCase, Button("Find next", (_, _) => FindNext()),
+                new Label { Text = "Replace with", AutoSize = true, Margin = beside }, txtReplace, Button("Replace", (_, _) => Replace()), Button("Replace all", (_, _) => ReplaceAll()),
+                lblFindStatus, Button("Close", (_, _) => HideFindBar()),
+            });
+            findBar = new Panel { Dock = DockStyle.Top, AutoSize = true, Visible = false };
+            findBar.Controls.Add(row);
+            Controls.Add(findBar);
+            findBar.BringToFront();   // docked below the toolbar, above the script
+            txtFind.KeyDown += (_, e) => { if (e.KeyCode == Keys.Enter) { FindNext(); e.SuppressKeyPress = true; } else if (e.KeyCode == Keys.Escape) { HideFindBar(); e.SuppressKeyPress = true; } };
+            txtReplace.KeyDown += (_, e) => { if (e.KeyCode == Keys.Enter) { Replace(); e.SuppressKeyPress = true; } else if (e.KeyCode == Keys.Escape) { HideFindBar(); e.SuppressKeyPress = true; } };
         }
 
-        private void FindAndReplaceToolStripMenuItem_Click(object sender, EventArgs e)
+        private void ShowFindBar(bool replace)
         {
-            frmScriptReplace f = new(this);
-            f.Show();
+            findBar.Visible = true;
+            findBarShown = true;
+            lblFindStatus.Text = "";
+            if (rtbDoc.SelectionLength > 0 && !rtbDoc.SelectedText.Contains('\n'))
+                txtFind.Text = rtbDoc.SelectedText;
+            (replace ? txtReplace : txtFind).Focus();
+            txtFind.SelectAll();
         }
+
+        private void HideFindBar()
+        {
+            findBar.Visible = false;
+            findBarShown = false;
+            rtbDoc.Focus();
+        }
+
+        private bool FindNext() => FindNext(txtFind.Text, chkMatchCase.Checked);
+
+        /// <summary>Selects the next match after the selection, going round to the start when there is none after it; false when there is none at all.</summary>
+        internal bool FindNext(string term, bool matchCase)
+        {
+            if (string.IsNullOrEmpty(term))
+                return false;
+            StringComparison comparison = matchCase ? StringComparison.CurrentCulture : StringComparison.CurrentCultureIgnoreCase;
+            string text = rtbDoc.Text;
+            int from = rtbDoc.SelectionStart + rtbDoc.SelectionLength;
+            int at = from < text.Length ? text.IndexOf(term, from, comparison) : -1;
+            if (at < 0)
+                at = text.IndexOf(term, 0, comparison);
+            if (at < 0)
+            {
+                if (lblFindStatus != null) lblFindStatus.Text = "Not found: " + term;
+                return false;
+            }
+            rtbDoc.Select(at, term.Length);
+            rtbDoc.ScrollToCaret();
+            if (lblFindStatus != null) lblFindStatus.Text = "";
+            return true;
+        }
+
+        private void Replace()
+        {
+            // the match found last is replaced, then the next is found
+            string term = txtFind.Text;
+            StringComparison comparison = chkMatchCase.Checked ? StringComparison.CurrentCulture : StringComparison.CurrentCultureIgnoreCase;
+            if (term.Length > 0 && string.Equals(rtbDoc.SelectedText, term, comparison))
+                rtbDoc.SelectedText = txtReplace.Text;
+            FindNext();
+        }
+
+        private int ReplaceAll() => ReplaceAll(txtFind.Text, txtReplace.Text, chkMatchCase.Checked);
+
+        /// <summary>Replaces every match in the script; the number replaced.</summary>
+        internal int ReplaceAll(string term, string replacement, bool matchCase)
+        {
+            if (string.IsNullOrEmpty(term))
+                return 0;
+            StringComparison comparison = matchCase ? StringComparison.CurrentCulture : StringComparison.CurrentCultureIgnoreCase;
+            string text = rtbDoc.Text;
+            System.Text.StringBuilder s = new();
+            int count = 0, at = 0;
+            while (at <= text.Length)
+            {
+                int next = at < text.Length ? text.IndexOf(term, at, comparison) : -1;
+                if (next < 0) { s.Append(text, at, text.Length - at); break; }
+                s.Append(text, at, next - at).Append(replacement);
+                at = next + term.Length;
+                count++;
+            }
+            if (count > 0)
+                rtbDoc.Text = s.ToString();
+            if (lblFindStatus != null) lblFindStatus.Text = count == 0 ? "Not found: " + term : count + " replaced";
+            return count;
+        }
+        #endregion
 
         private void PreviewToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -380,11 +483,7 @@ namespace StatsDirect.UI
             SaveToolStripMenuItem_Click(this, e);
         }
 
-        private void tbrFind_Click(object sender, EventArgs e)
-        {
-            frmScriptFind f = new(this);
-            f.Show();
-        }
+        private void tbrFind_Click(object sender, EventArgs e) => ShowFindBar(false);
 
         #endregion
 
@@ -670,10 +769,13 @@ namespace StatsDirect.UI
 
         internal override void Print()
         {
+            // the printer and its settings from the print dialog, then the preview, whose own Print button sends the pages
             PrintDocument1.DocumentName = Text;
             PrintDialog1.Document = PrintDocument1;
-            if (PrintDialog1.ShowDialog(SdApplication.SoleInstance.DialogOwner) == DialogResult.OK)
-                PrintDocument1.Print();
+            if (PrintDialog1.ShowDialog(SdApplication.SoleInstance.DialogOwner) != DialogResult.OK)
+                return;
+            PrintPreviewDialog1.Document = PrintDocument1;
+            PrintPreviewDialog1.ShowDialog(SdApplication.SoleInstance.DialogOwner);
         }
 
         private void closeToolStripMenuItem_Click(object sender, EventArgs e)
