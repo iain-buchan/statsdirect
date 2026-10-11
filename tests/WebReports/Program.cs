@@ -166,6 +166,7 @@ internal static partial class Program
         await CheckRetirement();
         await CheckScrolling();
         await CheckContextMenu();
+        await CheckCurrentResult();
         await CheckSameRun();
         await CheckClampedSelection();
         await CheckPanesHidden();

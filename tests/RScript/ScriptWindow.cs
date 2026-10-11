@@ -138,7 +138,28 @@ internal static partial class Program
         using Form plain = new();
         Check(!(bool)toolbarShown.Invoke(null, new object[] { first.window }) && (bool)toolbarShown.Invoke(null, new object[] { plain }) && (bool)toolbarShown.Invoke(null, new object[] { null }),
               "the main toolbar hides while a script window is active and shows for any other window, or none");
+        // the main toolbar's R button, after Help: it continues the report's result at the cursor, or the latest, in R, so it shows for a
+        // report only; named as the renderer draws it, with its text as the tooltip's head
+        MethodInfo rButton = program.GetType("StatsDirect.UI.frmMain").GetMethod("RButton", BindingFlags.Static | BindingFlags.NonPublic);
+        using ToolStripButton r = (ToolStripButton)rButton.Invoke(null, new object[] { new System.Drawing.Bitmap(16, 16), null });
+        Check(r.Name == "rToolStripButton" && r.Text == "Continue in R" && r.ToolTipText.StartsWith("Continue in R: ") && Ink(r) > 40,
+              "the main toolbar's R button is named for the renderer, which draws a symbol for it, and its tooltip says what it does");
+        MethodInfo rShown = program.GetType("StatsDirect.UI.frmMain").GetMethod("RButtonShownFor", BindingFlags.Static | BindingFlags.NonPublic);
+        using ReportStub report = new();
+        Check(typeof(IReport).IsAssignableFrom(program.GetType("StatsDirect.UI.frmReportWebView")) && (bool)rShown.Invoke(null, new object[] { report })
+              && !(bool)rShown.Invoke(null, new object[] { first.window }) && !(bool)rShown.Invoke(null, new object[] { plain }) && !(bool)rShown.Invoke(null, new object[] { null }),
+              "the R button shows for a report, which the report window is, and not for a script window, another window, or none");
         first.window.Dispose();
         second.window.Dispose();
+    }
+
+    /// <summary>A report as the main window knows one: the interface the report window implements, with nothing behind it.</summary>
+    private sealed class ReportStub : Form, IReport
+    {
+        public void AppendRenderable(StatsDirect.Templates.IRenderable renderable, int helpContextId, StatsDirect.Templates.Operation operation, object run) { }
+        public void EnsureActive() { }
+        public string Id() => "stub";
+        public bool SelectPane(Pane pane) => false;
+        public Pane SelectedPane => null;
     }
 }
