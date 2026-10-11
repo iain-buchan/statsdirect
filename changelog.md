@@ -19,6 +19,7 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 - Continue in R: a setting the run skipped or was not asked for is NULL in the script, rather than left out so that the script stopped on it.
 - Continue in R: intervals that the scripts gave at 95% whatever level the run chose now follow the run's level: the rate ratios of a Poisson regression; the odds ratios of a conditional logistic regression; the slope of a simple linear regression; the difference of a Mann-Whitney test; each study's proportion in a proportion meta-analysis; the exact limits of the diagnostic test's odds ratio and of the pooled rate ratio and rate difference; the exact and approximate limits of each effect size; the inconsistency's limits of the effect size, correlation and Mantel-Haenszel meta-analyses; the exact limits of the log-rank hazard ratio; the Monte Carlo limits of an abridged life table; and the intraclass correlation.
 - Continue in R: the script of a conditional logistic regression stopped when a predictor's title had a space; the formula now quotes the titles.
+- Continue in R: the scripts of a normal plot and of a method comparison regression stopped on every run, because they looked for a setting no run records; the normal plot takes the van der Waerden scores, the default of its chart options, and the method comparison takes the regressions as the dialog ticks them.
 
 
 ##[v5.1.0] 2026-10-11
