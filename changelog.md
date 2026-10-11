@@ -4,12 +4,12 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
 ##[Unreleased]
 
-### Added
-- Continue in R: an R button on the toolbar of a report, after Help, continues the result the cursor is in, or the latest result when the cursor is in none, as Continue in R on the right-click menu continues the result under the pointer.
-
 ##[v5.1.1] 2026-10-11
 
-Version 5.1.1 corrects the scripts that Continue in R writes. Reviews of version 5.1.0, on Windows and through the Mac port of the engine, found that many scripts followed the help's example rather than the run: a fixed number of predictors, an intercept, no weights or the default of an option whatever the run had chosen, intervals at 95% whatever the level, and in two cases a setting that no run records, so that the script stopped. Each script now follows the run's data, options and confidence level, and scripts run at the same time from several script windows no longer share their files.
+Version 5.1.1 corrects the scripts that Continue in R writes. Reviews of version 5.1.0, on Windows and through the Mac port of the engine, found that many scripts followed the help's example rather than the run: a fixed number of predictors, an intercept, no weights or the default of an option whatever the run had chosen, intervals at 95% whatever the level, and in two cases a setting that no run records, so that the script stopped. Each script now follows the run's data, options and confidence level, and scripts run at the same time from several script windows no longer share their files. The toolbar of a report gains an R button that continues the result the cursor is in, or the latest result, in R.
+
+### Added
+- Continue in R: an R button on the toolbar of a report, after Help, continues the result the cursor is in, or the latest result when the cursor is in none, as Continue in R on the right-click menu continues the result under the pointer.
 
 ### Fixed
 - Continue in R: scripts run at the same time from several script windows shared two files, so that one run could show another's output or stop with "The process cannot access the file"; each run now has files of its own, removed when it is over.
