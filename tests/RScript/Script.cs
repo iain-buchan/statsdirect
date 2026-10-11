@@ -17,13 +17,14 @@ internal static partial class Program
         {
             RRecipe recipe = RRecipes.Find(op);
             string text = RRecipes.Recipe(recipe.File);
-            string xml = File.ReadAllText(Path.Combine(Metadata("Operations"), op + ".xml"));
+            string xml = Regex.Replace(File.ReadAllText(Path.Combine(Metadata("Operations"), op + ".xml")), "<!--.*?-->", "", RegexOptions.Singleline);   // a parameter commented out is not asked, so no run records it
             HashSet<string> parameters = Regex.Matches(xml, "<name>([^<]+)</name>").Select(m => m.Groups[1].Value.Trim()).Skip(1).ToHashSet();
+            parameters.UnionWith(Regex.Matches(xml, "<option name=\"([^\"]+)\"").Select(m => m.Groups[1].Value));   // the options of a set of options, which the dialog records one by one under their names
             // a follow-on operation continues an earlier run and may take that operation's parameters and frames
             Match inherits = Regex.Match(File.ReadAllText(Path.Combine(RRecipes.Folder, "analysis-recipes.json")), "\"" + Regex.Escape(op) + "\":\\s*\\{[^}]*\"inherits\":\\s*\"([^\"]+)\"");
             if (inherits.Success)
             {
-                string parent = File.ReadAllText(Path.Combine(Metadata("Operations"), inherits.Groups[1].Value + ".xml"));
+                string parent = Regex.Replace(File.ReadAllText(Path.Combine(Metadata("Operations"), inherits.Groups[1].Value + ".xml")), "<!--.*?-->", "", RegexOptions.Singleline);
                 parameters.UnionWith(Regex.Matches(parent, "<name>([^<]+)</name>").Select(m => m.Groups[1].Value.Trim()).Skip(1));
                 if (parent.Contains("<frame>")) xml += "<frame>";
             }
