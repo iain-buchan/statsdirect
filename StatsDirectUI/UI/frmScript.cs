@@ -52,25 +52,35 @@ namespace StatsDirect.UI
             mnuPageSetup.Click += mnuPageSetup_Click;
             tbrSave.Click += tbrSave_Click;
             tbrFind.Click += tbrFind_Click;
-            // the toolbar drawn as the main window's: the renderer paints each button's symbol by its name at the display size, so the buttons
-            // take the names it knows, and the bitmaps of the designer and the menus only size them
+            // the toolbar in the main window's order, New, Open, Save, Print, Cut, Copy, Paste, Help, with Find before Help for the script, and
+            // drawn as the main window's: its renderer paints each button's symbol by its name at the display size, so the buttons take the
+            // names it knows, and a bitmap only sizes them; the R tools follow when the window shows an R script
             ToolStrip1.Renderer = new SharpToolbarRenderer();
             void SizeToolbarIcons() => ToolStrip1.ImageScalingSize = ToolStrip1.LogicalToDeviceUnits(new System.Drawing.Size(20, 20));
             SizeToolbarIcons();
             ToolStrip1.DpiChangedAfterParent += (_, _) => SizeToolbarIcons();
             tbrSave.Name = "saveToolStripButton";
             tbrFind.Name = "findToolStripButton";
-            // Cut, Copy and Paste on the toolbar, between Save and Find, with the Edit menu items' icons and handlers
-            int find = ToolStrip1.Items.IndexOf(tbrFind);
-            ToolStrip1.Items.Insert(find++, ToolbarButton("Cut", CutToolStripMenuItem, CutToolStripMenuItem_Click));
-            ToolStrip1.Items.Insert(find++, ToolbarButton("Copy", CopyToolStripMenuItem, CopyToolStripMenuItem_Click));
-            ToolStrip1.Items.Insert(find++, ToolbarButton("Paste", PasteToolStripMenuItem, PasteToolStripMenuItem_Click));
-            ToolStrip1.Items.Insert(find, new ToolStripSeparator());
+            ToolStrip1.Items.Clear();
+            ToolStrip1.Items.AddRange(new ToolStripItem[]
+            {
+                ToolbarButton("New script", "newToolStripButton", (_, _) => SdApplication.SoleInstance.CreateScriptWindow()),
+                ToolbarButton("Open", "openToolStripButton", (_, _) => SdApplication.SoleInstance.OpenFile()),
+                tbrSave,
+                ToolbarButton("Print", "printToolStripButton", (_, _) => Print()),
+                new ToolStripSeparator(),
+                ToolbarButton("Cut", "cutToolStripButton", CutToolStripMenuItem_Click),
+                ToolbarButton("Copy", "copyToolStripButton", CopyToolStripMenuItem_Click),
+                ToolbarButton("Paste", "pasteToolStripButton", PasteToolStripMenuItem_Click),
+                tbrFind,
+                new ToolStripSeparator(),
+                ToolbarButton("Help", "helpToolStripButton", (_, _) => ShowHelp()),
+            });
         }
 
-        /// <summary>A toolbar button with a menu item's icon, doing what the item does; its text is its tooltip.</summary>
-        private static ToolStripButton ToolbarButton(string text, ToolStripMenuItem item, EventHandler click) =>
-            new(text, item.Image, click) { Name = text.ToLowerInvariant() + "ToolStripButton", DisplayStyle = ToolStripItemDisplayStyle.Image, ImageTransparentColor = System.Drawing.Color.Magenta };
+        /// <summary>A toolbar button named as the renderer draws it, with its text as its tooltip; the bitmap only sizes it.</summary>
+        private ToolStripButton ToolbarButton(string text, string name, EventHandler click) =>
+            new(text, tbrSave.Image, click) { Name = name, DisplayStyle = ToolStripItemDisplayStyle.Image, ImageTransparentColor = System.Drawing.Color.Magenta };
 
         private string currentFile;
         private string helpTopic;   // the help topic of the result the script continues, when it does

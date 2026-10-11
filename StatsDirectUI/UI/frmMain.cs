@@ -167,6 +167,8 @@ namespace StatsDirect.UI
                     BeginInvoke(new Action(() => calculatorMenuTarget = null));
             };
             toolStrip.Renderer = new SharpToolbarRenderer();
+            // the toolbar is the report's and the worksheet's: a script window has a toolbar of its own, so it goes while one is active
+            MdiChildActivate += (_, _) => toolStrip.Visible = ToolbarShownFor(ActiveMdiChild);
             // ImageScalingSize is in device pixels, unlike the icon design grid.
             void SizeToolbarIcons() => toolStrip.ImageScalingSize = toolStrip.LogicalToDeviceUnits(new Size(20, 20));
             SizeToolbarIcons();
@@ -209,6 +211,9 @@ namespace StatsDirect.UI
             else
                 SetMenuVisibility(false);
         }
+
+        /// <summary>Whether the main toolbar shows above the active window: not above a script window, which has its own.</summary>
+        internal static bool ToolbarShownFor(Form active) => active is not frmScript;
 
         internal void SetMenuVisibility(bool isGridVisible)
         {
