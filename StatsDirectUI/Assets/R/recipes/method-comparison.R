@@ -1,7 +1,7 @@
 # StatsDirect recipe: Method comparison regression (Deming) with the mcr package, as the help shows it in R.
 # From the help's R code (agreement/mcr.htm); the data and settings above come from the run.
 # data: plasma = testData, serum = referenceData
-# settings: error_ratio = error-ratio, confidence = ci, methods = methods, seed = seed
+# settings: error_ratio = error-ratio, confidence = ci, seed = seed, do.deming.jackknife = do.deming.jackknife, do.deming.bootstrap = do.deming.bootstrap, do.deming.analytical = do.deming.analytical, do.wdeming.jackknife = do.wdeming.jackknife, do.wdeming.nestedbootstrap = do.wdeming.nestedbootstrap, do.paba = do.paba, do.paba.nestedbootstrap = do.paba.nestedbootstrap, do.pabalarge = do.pabalarge, do.pabalarge.nestedbootstrap = do.pabalarge.nestedbootstrap
 
 # Method comparison regression: the StatsDirect help example (the creatinine data of
 # the mcr package, serum and plasma creatinine in 108 subjects; the test workbook's
@@ -15,7 +15,7 @@ library(mcr)
 # an error ratio of 1, its standard errors and confidence intervals from Linnet's
 # jackknife: the package's summary, then its coefficient table to 6 places
 # the regressions the run asked for, each by the package, from the run's seed where the limits are bootstrapped
-chosen <- if (is.null(names(methods))) unlist(methods) else names(methods)[unlist(methods) %in% TRUE]
+chosen <- names(Filter(isTRUE, list(do.deming.jackknife = do.deming.jackknife, do.deming.bootstrap = do.deming.bootstrap, do.deming.analytical = do.deming.analytical, do.wdeming.jackknife = do.wdeming.jackknife, do.wdeming.nestedbootstrap = do.wdeming.nestedbootstrap, do.paba = do.paba, do.paba.nestedbootstrap = do.paba.nestedbootstrap, do.pabalarge = do.pabalarge, do.pabalarge.nestedbootstrap = do.pabalarge.nestedbootstrap)))   # the regressions the run ticked
 regressions <- list(do.deming.jackknife = c("Deming", "jackknife"), do.deming.bootstrap = c("Deming", "bootstrap"), do.deming.analytical = c("Deming", "analytical"), do.wdeming.jackknife = c("WDeming", "jackknife"), do.wdeming.nestedbootstrap = c("WDeming", "nestedbootstrap"), do.paba = c("PaBa", "bootstrap"), do.paba.nestedbootstrap = c("PaBa", "nestedbootstrap"), do.pabalarge = c("PaBaLarge", "bootstrap"), do.pabalarge.nestedbootstrap = c("PaBaLarge", "nestedbootstrap"))
 set.seed(seed)
 fits <- lapply(chosen, function(name) mcreg(serum, plasma, error.ratio = error_ratio, method.reg = regressions[[name]][1], method.ci = regressions[[name]][2], alpha = 1 - confidence, mref.name = "Reference", mtest.name = "Test"))

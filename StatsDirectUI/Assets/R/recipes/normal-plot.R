@@ -1,8 +1,8 @@
 # StatsDirect recipe: Normal plot with the scores of the method chosen, as the help shows it in R.
 # From the help's R code (graphics/normal.htm); the data and settings above come from the run.
 # data: pimax
-# settings: method = ScoreMethod
 
+method <- "1"   # the score method: 1 van der Waerden (the chart options' default, which the run does not record), 2 Blom, 3 expected normal order
 # Normal plot: an illustration for the StatsDirect help (maximal static inspiratory
 # pressure, PImax, of 25 patients with cystic fibrosis, Altman 1991; the test
 # workbook's Graphics worksheet column "PImax (cm H2O)") in R
