@@ -52,6 +52,13 @@ namespace StatsDirect.UI
             mnuPageSetup.Click += mnuPageSetup_Click;
             tbrSave.Click += tbrSave_Click;
             tbrFind.Click += tbrFind_Click;
+            // the window's own menu strip goes: the main window's File and Edit menus and the toolbar serve it, and the keyboard keeps its
+            // Edit functions (Ctrl+Z undo, Ctrl+Y redo, Ctrl+A select all, Ctrl+F find, Ctrl+H find and replace)
+            MenuStrip1.Visible = false;
+            rtbDoc.KeyDown += ScriptKeyDown;
+            rtbDoc.HideSelection = false;   // what Find selects stays highlighted while the Find dialog has the focus
+            PrintDocument1.BeginPrint += (_, _) => printRemaining = rtbDoc.Text;
+            PrintDocument1.PrintPage += PrintScriptPage;
             // the toolbar in the main window's order, New, Open, Save, Print, Cut, Copy, Paste, Help, with Find before Help for the script, and
             // drawn as the main window's: its renderer paints each button's symbol by its name at the display size, so the buttons take the
             // names it knows, and a bitmap only sizes them; the R tools follow when the window shows an R script
@@ -83,6 +90,32 @@ namespace StatsDirect.UI
             new(text, tbrSave.Image, click) { Name = name, DisplayStyle = ToolStripItemDisplayStyle.Image, ImageTransparentColor = System.Drawing.Color.Magenta };
 
         private string currentFile;
+        private string printRemaining;   // what is left to print of the script, page by page
+
+        /// <summary>Prints the script as the editor shows it, as many pages as its lines wrapped to the page take.</summary>
+        private void PrintScriptPage(object sender, System.Drawing.Printing.PrintPageEventArgs e)
+        {
+            using System.Drawing.StringFormat format = new(System.Drawing.StringFormat.GenericTypographic) { Trimming = System.Drawing.StringTrimming.Word };
+            string text = printRemaining ?? "";
+            e.Graphics.MeasureString(text, rtbDoc.Font, e.MarginBounds.Size, format, out int characters, out _);
+            e.Graphics.DrawString(text.Substring(0, characters), rtbDoc.Font, System.Drawing.Brushes.Black, e.MarginBounds, format);
+            printRemaining = text.Substring(characters);
+            e.HasMorePages = printRemaining.Trim().Length > 0 && characters > 0;
+        }
+
+        private void ScriptKeyDown(object sender, KeyEventArgs e)
+        {
+            if (!e.Control || e.Alt) return;
+            switch (e.KeyCode)
+            {
+                case Keys.Y: rtbDoc.Redo(); break;
+                case Keys.A: rtbDoc.SelectAll(); break;
+                case Keys.F: FindToolStripMenuItem_Click(sender, e); break;
+                case Keys.H: FindAndReplaceToolStripMenuItem_Click(sender, e); break;
+                default: return;
+            }
+            e.SuppressKeyPress = true;
+        }
         private string helpTopic;   // the help topic of the result the script continues, when it does
 
         private void frmScript_FormClosing(object sender, FormClosingEventArgs e)
@@ -637,6 +670,7 @@ namespace StatsDirect.UI
 
         internal override void Print()
         {
+            PrintDocument1.DocumentName = Text;
             PrintDialog1.Document = PrintDocument1;
             if (PrintDialog1.ShowDialog(SdApplication.SoleInstance.DialogOwner) == DialogResult.OK)
                 PrintDocument1.Print();
