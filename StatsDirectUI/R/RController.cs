@@ -156,13 +156,23 @@ namespace StatsDirect.R
         /// The same with the R to use already found, so that the run can go on a background thread: finding R may ask the user to install it.
         /// A stop asked for through the token ends the R process; the run then returns "(stopped)" with whatever R had printed.
         /// </summary>
-        public static string RunScriptCapturingOutput(string scriptBody, RVersion preferredVersion, System.Threading.CancellationToken stop = default)
+        /// <param name="echo">As an R session shows a script: each command after R's prompt, its output under it, and messages and errors in
+        /// their place rather than gathered at the end.  Without it the script runs as a batch and prints only what it prints.</param>
+        public static string RunScriptCapturingOutput(string scriptBody, RVersion preferredVersion, System.Threading.CancellationToken stop = default, bool echo = false)
         {
             string rFolder = SDConfiguration.MyStatsDirectRFolder;
             if (!Directory.Exists(rFolder))
                 Directory.CreateDirectory(rFolder);
             string scriptPath = Path.Combine(rFolder, "continue.r");
             string repairedScriptBody = scriptBody.Replace("\r", string.Empty).Replace("\n", "\r\n");
+            if (echo)
+            {
+                // the script in a file of its own, sourced with echo by the run's head, so that the head's own lines do not show
+                string sourcePath = Path.Combine(rFolder, "script.r");
+                using (TextWriter ts = new StreamWriter(sourcePath, false, new UTF8Encoding(false)))
+                    ts.WriteLine(repairedScriptBody);
+                repairedScriptBody = "sink(stdout(), type = \"message\")\r\nsource(\"" + sourcePath.Replace('\\', '/') + "\", echo = TRUE, max.deparse.length = Inf, spaced = FALSE, encoding = \"UTF-8\")";
+            }
             using (TextWriter tw = new StreamWriter(scriptPath, false, new UTF8Encoding(false)))
             {
                 tw.Write(SCRIPT_HEAD, rFolder.Replace(@"\", @"\\"));
@@ -196,6 +206,21 @@ namespace StatsDirect.R
                 result.Append("\n(R stopped with exit code ").Append(p.ExitCode).Append(')');
             result.Append("\n(files the script writes are in ").Append(rFolder).Append(')');
             return result.ToString();
+        }
+
+        /// <summary>RStudio's program when it is installed in one of its usual places, else null: a user at home in R may take a script there.</summary>
+        public static string FindRStudio()
+        {
+            string[] candidates =
+            {
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RStudio", "rstudio.exe"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RStudio", "bin", "rstudio.exe"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "RStudio", "rstudio.exe"),
+            };
+            foreach (string candidate in candidates)
+                if (File.Exists(candidate))
+                    return candidate;
+            return null;
         }
 
         /// <summary>

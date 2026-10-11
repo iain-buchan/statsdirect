@@ -62,6 +62,7 @@ namespace StatsDirect.UI
             PrintDocument1.PrintPage += PrintScriptPage;
             BuildFindBar();
             BuildPreview();
+            rtbOutput.Font = new System.Drawing.Font("Consolas", rtbOutput.Font.Size);   // R's transcript in a monospace face, as an R session shows it
             // the toolbar in the main window's order, New, Open, Save, Print, Cut, Copy, Paste, Help, with Find before Help for the script, and
             // drawn as the main window's: its renderer paints each button's symbol by its name at the display size, so the buttons take the
             // names it knows, and a bitmap only sizes them; the R tools follow when the window shows an R script
@@ -488,6 +489,7 @@ namespace StatsDirect.UI
                 ToolStrip1.Items.Add(new ToolStripButton("▶ Run in R", null, (_, _) => RunR()) { DisplayStyle = ToolStripItemDisplayStyle.Text, ToolTipText = "Run the script with the installed R; what it prints appears below" });
                 ToolStrip1.Items.Add(new ToolStripButton("Clear output", null, (_, _) => rtbOutput.Clear()) { DisplayStyle = ToolStripItemDisplayStyle.Text, ToolTipText = "Clear what R has printed below" });
                 ToolStrip1.Items.Add(new ToolStripButton("Output folder", null, (_, _) => OpenRFolder()) { DisplayStyle = ToolStripItemDisplayStyle.Text, ToolTipText = "Open the folder the script writes its files to" });
+                ToolStrip1.Items.Add(new ToolStripButton("Open in R", null, (_, _) => OpenInR()) { DisplayStyle = ToolStripItemDisplayStyle.Text, ToolTipText = "Save the script as an R file and open it in RStudio, or in whatever opens R files here" });
                 rtbOutput.DetectUrls = true;
                 rtbOutput.LinkClicked += (_, e) => OpenLink(e.LinkText);
             }
@@ -497,6 +499,35 @@ namespace StatsDirect.UI
         private bool rTools, runningR;
         private System.Threading.CancellationTokenSource rRun;   // stops the R process of the run in progress
         private int rGeneration;                                   // counts the runs, so that a stopped run's output is dropped
+
+        /// <summary>The name of the file a script is saved as for R: the window's title, with what a file name cannot hold replaced.</summary>
+        internal static string ScriptFileName(string title)
+        {
+            string name = string.Concat((title ?? "").Select(ch => System.IO.Path.GetInvalidFileNameChars().Contains(ch) ? '_' : ch)).Trim();
+            return (name.Length == 0 ? "script" : name) + ".R";
+        }
+
+        /// <summary>Saves the script as an R file in the R folder and opens it in RStudio when that is installed, else in whatever opens R
+        /// files here: a user at home in R goes on from there, with the data in the script.</summary>
+        private void OpenInR()
+        {
+            string path = System.IO.Path.Combine(SDConfiguration.MyStatsDirectRFolder, ScriptFileName(Text));
+            try
+            {
+                Directory.CreateDirectory(SDConfiguration.MyStatsDirectRFolder);
+                File.WriteAllText(path, rtbDoc.Text.Replace("\r", "").Replace("\n", "\r\n"), new System.Text.UTF8Encoding(false));
+                string rstudio = RController.FindRStudio();
+                if (rstudio != null)
+                    Process.Start(new ProcessStartInfo(rstudio, "\"" + path + "\"") { UseShellExecute = false, WorkingDirectory = SDConfiguration.MyStatsDirectRFolder });
+                else
+                    Process.Start(new ProcessStartInfo(path) { UseShellExecute = true, WorkingDirectory = SDConfiguration.MyStatsDirectRFolder });
+                rtbOutput.AppendText("(the script is saved as " + path + " and opened in " + (rstudio != null ? "RStudio" : "the program that opens R files here") + ")\n");
+            }
+            catch (Exception ex)
+            {
+                rtbOutput.AppendText("Could not open the script in R: " + ex.Message + "\n(the script is saved as " + path + "; open it from there)\n");
+            }
+        }
 
         private static void OpenRFolder()
         {
@@ -561,7 +592,7 @@ namespace StatsDirect.UI
             rtbOutput.AppendText("\n======== Running in R ========\n");
             System.Threading.Tasks.Task.Run(() =>
             {
-                try { return RController.RunScriptCapturingOutput(script, version, run.Token); }
+                try { return RController.RunScriptCapturingOutput(script, version, run.Token, echo: true); }
                 catch (Exception ex) { return "Error: " + ex.Message; }
             }).ContinueWith(t =>
             {
@@ -569,13 +600,29 @@ namespace StatsDirect.UI
                 if (generation != rGeneration || IsDisposed)
                     return;   // stopped by a later run, whose output follows, or by the window closing
                 runningR = false;
-                rtbOutput.AppendText(t.Result);
+                AppendTranscript(t.Result);
                 rtbOutput.AppendText(FilesWritten(started));
                 rtbOutput.AppendText("\n======== End of run ========\n");
                 rtbOutput.SelectionStart = rtbOutput.TextLength;
                 rtbOutput.ScrollToCaret();
             }, System.Threading.Tasks.TaskScheduler.FromCurrentSynchronizationContext());
         }
+
+        /// <summary>Appends R's transcript to the output pane as an R session shows it: the commands after their prompts in a colour of their
+        /// own, what R printed in the pane's colour.</summary>
+        internal void AppendTranscript(string transcript)
+        {
+            foreach (string line in (transcript ?? "").Replace("\r", "").Split('\n'))
+            {
+                rtbOutput.SelectionStart = rtbOutput.TextLength;
+                rtbOutput.SelectionLength = 0;
+                rtbOutput.SelectionColor = line.StartsWith("> ", StringComparison.Ordinal) || line.StartsWith("+ ", StringComparison.Ordinal) || line == ">" ? PromptColour : rtbOutput.ForeColor;
+                rtbOutput.AppendText(line + "\n");
+            }
+            rtbOutput.SelectionColor = rtbOutput.ForeColor;
+        }
+
+        internal static readonly System.Drawing.Color PromptColour = System.Drawing.Color.FromArgb(0, 0, 160);
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string TextInRtfBox
