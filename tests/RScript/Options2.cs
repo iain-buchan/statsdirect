@@ -133,7 +133,7 @@ internal static partial class Program
         Check(script.Contains("se_in <- c(0.1, 0.2, 0.15)") && script.Contains("lower <- NULL") && Near(rMeta, engineMeta, 1e-4), "R's pooled relative risk from the standard errors given gives the engine's");
 
         // the proportion meta-analysis with Miller's inverse and 1 added to each n
-        (run, output) = Run("ProportionMeta", new() { ["gamma"] = 0.95, ["fudge"] = "1", ["method"] = "doubleArcsine", ["strata"] = null, ["sn"] = Sheet(("n", new double[] { 50, 60, 40 })), ["sr"] = Sheet(("r", new double[] { 20, 30, 10 })) });
+        (run, output) = Run("ProportionMeta", new() { ["gamma"] = 0.95, ["method"] = "doubleArcsine", ["strata"] = null, ["sn"] = Sheet(("n", new double[] { 50, 60, 40 })), ["sr"] = Sheet(("r", new double[] { 20, 30, 10 })) });
         script = Script(run);
         r = Rr(script, Path.Combine(folder, "proportion-meta"));
         double rProp = Numbers(r, "^Pooled proportion = +(-?[0-9.]+)")[0], engineProp = Found(output.ParameterBag, "rmh")[0];

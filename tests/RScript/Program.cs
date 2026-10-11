@@ -14,6 +14,7 @@ using StatsDirect.UI;
 internal static partial class Program
 {
     private static int checks;
+    internal static bool MetaExact;   // whether the host's preferences ask the meta-analyses for their exact methods
     private static readonly CultureInfo inv = CultureInfo.InvariantCulture;
     private static void Check(bool ok, string description) { if (!ok) throw new Exception("FAIL " + description); checks++; Console.WriteLine("PASS " + description); }
     private static string Metadata(string key) => typeof(Program).Assembly.GetCustomAttributes<AssemblyMetadataAttribute>().First(a => a.Key == key).Value;
@@ -27,6 +28,7 @@ internal static partial class Program
             // one group of checks alone, while it is being written: STATSDIRECT_RSCRIPT_ONLY=options runs the options checks and stops
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "options") { CheckOptions(); Console.WriteLine($"PASS {checks} Continue in R checks (the options alone)"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "options2") { CheckOptions2(); Console.WriteLine($"PASS {checks} Continue in R checks (the second batch of options alone)"); return 0; }
+            if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "options3") { CheckOptions3(); Console.WriteLine($"PASS {checks} Continue in R checks (the confidence levels alone)"); return 0; }
             CheckRecord();
             CheckThreshold();
             CheckHash();
@@ -42,6 +44,7 @@ internal static partial class Program
             CheckRealRuns();
             CheckOptions();
             CheckOptions2();
+            CheckOptions3();
             CheckScriptWindowNumbers();
             CheckRegressionFollowOn();
             CheckTwoLevel();
@@ -169,6 +172,7 @@ public class PreferencesProxy : System.Reflection.DispatchProxy
             case "get_PDecimalPlaces":
             case "get_DisplayDecimalPlaces": return 6;
             case "get_DefaultConfidenceInterval": return 0.95;
+            case "get_MetaExact": return Program.MetaExact;   // the exact methods of the meta-analyses, for the checks that want them
         }
         Type type = method.ReturnType;
         return type == typeof(void) ? null : type.IsValueType ? Activator.CreateInstance(type) : null;
