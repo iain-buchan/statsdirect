@@ -49,8 +49,8 @@ ncp_limit <- function(t, df, hw, p) {
 }
 if (type != "m") {   # the exact limits and the table of g: not for a mean difference
 hw <- z * sqrt(vard) * scale
-lcig <- mapply(ncp_limit, g * scale, m, hw, 0.975) / scale
-ucig <- mapply(ncp_limit, g * scale, m, hw, 0.025) / scale
+lcig <- mapply(ncp_limit, g * scale, m, hw, (1 + confidence) / 2) / scale
+ucig <- mapply(ncp_limit, g * scale, m, hw, (1 - confidence) / 2) / scale
 print(data.frame(trial, J = six(J), g = six(g), exact_lower = six(lcig),
                  exact_upper = six(ucig)), row.names = FALSE)
 }
@@ -83,7 +83,7 @@ ncp_chisq <- function(p) {
   uniroot(function(lambda) pchisq(Q, df, ncp = lambda) - p, c(0, 10 * Q + 100),
           tol = 1e-10)$root
 }
-lambda_ci <- c(ncp_chisq(0.975), ncp_chisq(0.025))
+lambda_ci <- c(ncp_chisq((1 + confidence) / 2), ncp_chisq((1 - confidence) / 2))
 isq_ci <- 100 * lambda_ci / (df + lambda_ci)
 pc1 <- function(x) formatC(x, digits = 1, format = "f", drop0trailing = TRUE)
 cat("Non-combinability of studies\n")

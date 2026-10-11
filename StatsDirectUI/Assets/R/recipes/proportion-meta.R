@@ -25,7 +25,7 @@ p <- adherent / total
 # Each study's proportion with its exact (Clopper-Pearson) 95% confidence interval, as
 # binom.test() gives it; when every subject responds, as in the Zu trial, the interval
 # is one sided and its lower limit is the 97.5% limit
-ci <- t(sapply(seq_len(k), function(i) binom.test(adherent[i], total[i])$conf.int))
+ci <- t(sapply(seq_len(k), function(i) binom.test(adherent[i], total[i], conf.level = confidence)$conf.int))
 one_sided <- ifelse(adherent == 0 | adherent == total, "[97.5% one-sided CI]", "")
 cat("Method:", if (method == "doubleArcsine") "Miller (exact inverse Freeman-Tukey double arcsine)" else "Stuart-Ord (inverse double arcsine square root)", "\n")
 print(data.frame(Study = seq_len(k), Proportion = six(p), Lower = six(ci[, 1]),

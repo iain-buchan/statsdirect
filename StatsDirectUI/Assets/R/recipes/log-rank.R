@@ -144,12 +144,12 @@ mean_deaths <- function(log_ratio) sum(prob(exp(log_ratio)) * support) - A
 cmle <- exp(uniroot(mean_deaths, c(-30, 30), tol = 1e-12)$root)
 cat("Conditional maximum likelihood estimates:\n")
 cat("Hazard Ratio =", six(cmle), "\n")
-cat("Exact Fisher", pct, "confidence interval =", six(limit(0.025, 0)), "to",
-    six(limit(0.975, 1)), "\n")
+cat("Exact Fisher", pct, "confidence interval =", six(limit((1 - confidence) / 2, 0)), "to",
+    six(limit((1 + confidence) / 2, 1)), "\n")
 cat("Exact Fisher one sided ", pv(min(upper, lower)), ", two sided ",
     pv(sum(p[p <= p[observed]])), "\n", sep = "")
-cat("Exact mid-P", pct, "confidence interval =", six(limit(0.025, 0.5)), "to",
-    six(limit(0.975, 0.5)), "\n")
+cat("Exact mid-P", pct, "confidence interval =", six(limit((1 - confidence) / 2, 0.5)), "to",
+    six(limit((1 + confidence) / 2, 0.5)), "\n")
 cat("Exact mid-P one sided ", pv(min(upper_mid, 1 - upper_mid)), ", two sided ",
     pv(min(1, 2 * min(upper_mid, 1 - upper_mid))), "\n", sep = "")
 

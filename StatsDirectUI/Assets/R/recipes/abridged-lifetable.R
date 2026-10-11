@@ -78,7 +78,7 @@ lifetable <- function(D) {
 }
 set.seed(1)
 sim <- replicate(20000, lifetable(rpois(w, D)))
-mc <- function(v) paste(six(quantile(v, 0.025)), "to", six(quantile(v, 0.975)))
+mc <- function(v) paste(six(quantile(v, (1 - confidence) / 2)), "to", six(quantile(v, (1 + confidence) / 2)))
 cat("Median expectation of life (age at which half of original cohort survives) =",
     six(med), "\n")
 cat(pct, "CI by Monte Carlo (20000) simulation =", mc(sim["median", ]), "\n")

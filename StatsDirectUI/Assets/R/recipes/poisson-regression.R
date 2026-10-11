@@ -41,7 +41,7 @@ cat("log(response)", if (is.null(exposure)) "" else "[offset log(exposure)]", "=
 
 # Incidence rate ratios: exp of the coefficients, with Wald limits (the intercept's
 # row is the baseline rate per subject-year)
-ci <- confint.default(fit)
+ci <- confint.default(fit, level = confidence)
 for (i in seq_len(nrow(s))) {
   cat(lab[i], six(s[i, 1]), six(exp(s[i, 1])), six(exp(ci[i, 1])), "to",
       six(exp(ci[i, 2])), "\n")
