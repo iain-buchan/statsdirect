@@ -61,6 +61,7 @@ namespace StatsDirect.UI
             PrintDocument1.BeginPrint += (_, _) => printRemaining = rtbDoc.Text;
             PrintDocument1.PrintPage += PrintScriptPage;
             BuildFindBar();
+            BuildPreview();
             // the toolbar in the main window's order, New, Open, Save, Print, Cut, Copy, Paste, Help, with Find before Help for the script, and
             // drawn as the main window's: its renderer paints each button's symbol by its name at the display size, so the buttons take the
             // names it knows, and a bitmap only sizes them; the R tools follow when the window shows an R script
@@ -732,15 +733,54 @@ namespace StatsDirect.UI
             rtbDoc.Paste();
         }
 
+        #region Print preview
+        // the preview inside the window, as the report's print preview is, in place of a dialog of its own: it takes the script's place,
+        // Print above it asks for the printer and sends the pages, and Close returns to the script
+        private Panel previewPanel;
+        private PrintPreviewControl previewControl;
+        private bool previewShown;
+        internal bool PreviewShown => previewShown;
+
+        private void BuildPreview()
+        {
+            previewControl = new PrintPreviewControl { Dock = DockStyle.Fill, AutoZoom = true };
+            Button Button(string text, EventHandler click) { Button b = new() { Text = text, AutoSize = true }; b.Click += click; return b; }
+            FlowLayoutPanel row = new() { Dock = DockStyle.Top, AutoSize = true, Padding = new Padding(4, 2, 4, 2) };
+            row.Controls.AddRange(new Control[] { Button("Print", (_, _) => PrintPages()), Button("Close", (_, _) => HidePreview()), new Label { Text = "Print preview", AutoSize = true, Margin = new Padding(12, 6, 3, 3), ForeColor = System.Drawing.SystemColors.GrayText } });
+            previewPanel = new Panel { Dock = DockStyle.Fill, Visible = false };
+            previewPanel.Controls.Add(previewControl);
+            previewPanel.Controls.Add(row);   // added after the preview, so laid out first: the row at the top, the pages below
+            Controls.Add(previewPanel);
+            Controls.SetChildIndex(previewPanel, 0);   // in front of the script, filling the same place, and shown only while the preview is wanted
+        }
+
         internal override void Print()
         {
-            // the preview of the pages, whose own Print button sends them to the default printer: the print dialog went before it, and the
-            // printer's own software answered its preview with a message that this program had none
             PrintDocument1.DocumentName = Text;
-            PrintPreviewDialog1.Document = PrintDocument1;
-            PrintPreviewDialog1.WindowState = FormWindowState.Maximized;
-            PrintPreviewDialog1.ShowDialog(SdApplication.SoleInstance.DialogOwner);
+            previewControl.Document = PrintDocument1;
+            previewControl.InvalidatePreview();
+            previewPanel.Visible = true;
+            previewShown = true;
+            previewPanel.BringToFront();
         }
+
+        private void HidePreview()
+        {
+            previewPanel.Visible = false;
+            previewShown = false;
+            rtbDoc.Focus();
+        }
+
+        private void PrintPages()
+        {
+            // the plain print dialog for the printer: the extended one offered a preview of its own, which the printer's software answered
+            // with a message that this program had none
+            PrintDialog1.Document = PrintDocument1;
+            PrintDialog1.UseEXDialog = false;
+            if (PrintDialog1.ShowDialog(SdApplication.SoleInstance.DialogOwner) == DialogResult.OK)
+                PrintDocument1.Print();
+        }
+        #endregion
 
         private void closeToolStripMenuItem_Click(object sender, EventArgs e)
         {
