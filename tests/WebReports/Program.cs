@@ -171,6 +171,7 @@ internal static partial class Program
         await CheckPanesHidden();
         await CheckRecordRoundTrip();
         await CheckChartFiles();
+        await CheckFindReplace();
     }
 
     private static async Task CheckStandardPresentation(string real)

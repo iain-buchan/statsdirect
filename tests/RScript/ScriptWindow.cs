@@ -98,6 +98,20 @@ internal static partial class Program
               "the find bar is hidden until asked, and Find next goes on from the selection, round to the start, matching case only when asked: " + at1 + ", " + at2 + ", " + at3 + ", " + at4);
         int replaced = (int)replaceAll.Invoke(first.window, new object[] { "alpha", "x", false });
         Check(replaced == 2 && editor.Text == "x beta x", "Replace all replaces every match: " + editor.Text);
+        // the find bar sits in the docking order after the toolbar and before the script, so it pushes the script down rather than covering it
+        Control bar = (Control)script.GetField("findBar", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(first.window);
+        Control strip = (Control)script.GetField("ToolStrip1", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(first.window);
+        Control body = (Control)script.GetField("splitContainer1", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(first.window);
+        int barAt = first.window.Controls.GetChildIndex(bar), stripAt = first.window.Controls.GetChildIndex(strip), bodyAt = first.window.Controls.GetChildIndex(body);
+        Check(bar.Dock == DockStyle.Top && bodyAt < barAt && barAt < stripAt, $"the find bar is docked at the top between the toolbar and the script: body {bodyAt}, bar {barAt}, toolbar {stripAt}");
+        // the main window's top panel: the gap, the tabs and the toolbar's height only while the toolbar shows
+        MethodInfo topPanel = program.GetType("StatsDirect.UI.frmMain").GetMethod("TopPanelHeight", BindingFlags.Static | BindingFlags.NonPublic);
+        Check((int)topPanel.Invoke(null, new object[] { 6, 25, 30, true }) == 61 && (int)topPanel.Invoke(null, new object[] { 6, 25, 30, false }) == 31,
+              "the panel above the windows gives up the toolbar's height while the toolbar is hidden");
+        // the main toolbar's Find button, for the worksheet and the report: named as the renderer draws it
+        MethodInfo findButton = program.GetType("StatsDirect.UI.frmMain").GetMethod("FindButton", BindingFlags.Static | BindingFlags.NonPublic);
+        using ToolStripButton find = (ToolStripButton)findButton.Invoke(null, new object[] { new System.Drawing.Bitmap(16, 16), null });
+        Check(find.Name == "findToolStripButton" && find.Text == "Find" && Ink(find) > 40, "the main toolbar's Find button is drawn by the renderer as the script window's");
         // the main window's toolbar is the report's and the worksheet's: it goes while a script window, which has its own, is active
         MethodInfo toolbarShown = program.GetType("StatsDirect.UI.frmMain").GetMethod("ToolbarShownFor", BindingFlags.Static | BindingFlags.NonPublic);
         using Form plain = new();
