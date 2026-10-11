@@ -203,6 +203,12 @@ internal sealed class ReportView : UserControl
     /// <summary>A result's title, operation and the record of its run (null when it has none), for the R script of the result.</summary>
     internal Task<JsonElement> RecordAsync(string id) => CallAsync("record", new { id });
 
+    /// <summary>
+    /// The result for the toolbar's R button: the one the selection or focus is in, else the latest that has a record of its run; its id (null
+    /// in a report with neither), how it was chosen (selection, latest or none), its title and operation, and whether it has a record.
+    /// </summary>
+    internal Task<JsonElement> CurrentResultAsync() => CallAsync("currentTarget");
+
     internal async Task OpenHtmlAsync(string html, string title)
     {
         if (Encoding.UTF8.GetByteCount(html) > 30_000_000) throw new InvalidDataException("This report is too large to open (30 MB limit).");

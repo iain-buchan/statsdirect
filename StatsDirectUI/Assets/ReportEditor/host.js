@@ -80,6 +80,8 @@ window.WindowsReport={async run(request){
       case 'chartImage':value=await StatsDirectReportEditor.chartImage(request.args.format,request.args.scale);break;
       case 'snapshot':value=snapshot();break;
       case 'contextTarget':value=contextTarget;break;
+      // The result for the toolbar's R button: the one the selection or focus is in, else the latest with a record of its run; none in a report with neither
+      case 'currentTarget':{const sel=getSelection();const at=resultAt(sel?.rangeCount?sel.anchorNode:null)??resultAt(document.activeElement);const latest=entries.findLast(e=>isRecord(e.record))?.id??null;const e=entryOf(at??latest);value={resultId:e?e.id:null,how:e?(at?'selection':'latest'):'none',title:e?.title??null,operation:e?.operation??'',hasRecord:isRecord(e?.record)};break;}
       case 'selectResult':StatsDirectReportEditor.selectResult(request.args.id);value=true;break;
       case 'selectAll':StatsDirectReportEditor.selectAll();value=true;break;
       case 'preview':StatsDirectReportEditor.setEditing(false);document.body.classList.add('chart-preview');value=true;break;

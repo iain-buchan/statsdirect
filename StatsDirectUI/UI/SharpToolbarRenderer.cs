@@ -23,6 +23,7 @@ namespace StatsDirect.UI
                 case "pasteToolStripButton":
                 case "helpToolStripButton":
                 case "findToolStripButton":
+                case "rToolStripButton":
                     DrawSymbol(e);
                     return;
                 default:
@@ -96,6 +97,17 @@ namespace StatsDirect.UI
                     case "findToolStripButton":
                         g.DrawEllipse(pen, 3, 3, 12, 12);
                         Line(14, 14, 21, 21);
+                        break;
+                    case "rToolStripButton":
+                        // the letter R: its stem, its bowl and its leg
+                        Lines(new(7, 21), new(7, 3), new(13, 3));
+                        using (var bowl = new GraphicsPath())
+                        {
+                            bowl.AddBezier(13, 3, 19.5f, 3, 19.5f, 12, 13, 12);
+                            g.DrawPath(pen, bowl);
+                        }
+                        Line(7, 12, 13, 12);
+                        Line(12.5f, 12, 18.5f, 21);
                         break;
                 }
             }

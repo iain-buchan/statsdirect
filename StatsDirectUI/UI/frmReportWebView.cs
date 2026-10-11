@@ -175,6 +175,19 @@ internal sealed class frmReportWebView : StatsDirectForm, IReport, IFindTarget
                     : script.HasRecipe ? "R script of the analysis opened" : "R script with the data and settings opened";
     }
 
+    /// <summary>
+    /// The R button of the toolbar: the result the cursor or selection is in, else the latest result that has a record of its run,
+    /// continued in R as the right-click menu's Continue in R continues the result under the pointer.
+    /// </summary>
+    internal void ContinueCurrentInR() => _ = Guard(ContinueCurrentInRAsync);
+    private async Task ContinueCurrentInRAsync()
+    {
+        JsonElement target = await view.CurrentResultAsync();
+        string id = target.ValueKind == JsonValueKind.Object && target.TryGetProperty("resultId", out JsonElement r) && r.ValueKind == JsonValueKind.String ? r.GetString() : null;
+        if (id == null) { status.Text = "No result to continue in R: run an analysis into this report first."; return; }
+        await ContinueInRAsync(id);
+    }
+
     // Find on the toolbar: the bar at the top of the window, as the script window's, whose searches the view answers
     private readonly FindBar findBar;
     internal override void EditFind() => findBar.Open(false);

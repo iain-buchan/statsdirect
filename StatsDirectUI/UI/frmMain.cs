@@ -169,11 +169,16 @@ namespace StatsDirect.UI
             toolStrip.Renderer = new SharpToolbarRenderer();
             // Find after Paste, as the script window's toolbar has it: the worksheet's Find and Replace, the report's find bar
             toolStrip.Items.Insert(toolStrip.Items.IndexOf(toolStripSeparator2), FindButton(pasteToolStripButton.Image, (_, _) => SdApplication.SoleInstance.ActiveWindow?.EditFind()));
+            // R after Help, for the report: the result the cursor is in, or the latest, continued in R; the button shows while a report is active
+            ToolStripButton rButton = RButton(helpToolStripButton.Image, (_, _) => (ActiveMdiChild as frmReportWebView)?.ContinueCurrentInR());
+            toolStrip.Items.Insert(toolStrip.Items.IndexOf(helpToolStripButton) + 1, rButton);
+            rButton.Visible = RButtonShownFor(ActiveMdiChild);
             // the toolbar is the report's and the worksheet's: a script window has a toolbar of its own, so it goes while one is active
             MdiChildActivate += (_, _) =>
             {
                 toolbarShown = ToolbarShownFor(ActiveMdiChild);
                 toolStrip.Visible = toolbarShown;
+                rButton.Visible = RButtonShownFor(ActiveMdiChild);   // the R button is the report's
                 FitWindowTabsToText();   // the panel above the windows gives up the toolbar's height while it is hidden
             };
             // ImageScalingSize is in device pixels, unlike the icon design grid.
@@ -225,6 +230,12 @@ namespace StatsDirect.UI
 
         /// <summary>The toolbar's Find button, named as the renderer draws it; the bitmap only sizes it.</summary>
         internal static ToolStripButton FindButton(Image placeholder, EventHandler click) => new("Find", placeholder, click) { Name = "findToolStripButton", DisplayStyle = ToolStripItemDisplayStyle.Image, ImageTransparentColor = Color.Magenta };
+
+        /// <summary>The toolbar's R button, named as the renderer draws it; the bitmap only sizes it.</summary>
+        internal static ToolStripButton RButton(Image placeholder, EventHandler click) => new("Continue in R", placeholder, click) { Name = "rToolStripButton", DisplayStyle = ToolStripItemDisplayStyle.Image, ImageTransparentColor = Color.Magenta, ToolTipText = "Continue in R: the result the cursor is in, or the latest result, as an R script" };
+
+        /// <summary>Whether the toolbar's R button shows: while a report, whose results it continues in R, is active.</summary>
+        internal static bool RButtonShownFor(Form active) => active is IReport;
 
         /// <summary>The height of the panel above the windows: the gap, the tabs and the toolbar when it shows.</summary>
         internal static int TopPanelHeight(int gap, int tabHeight, int toolbarHeight, bool toolbarShown) => gap + tabHeight + (toolbarShown ? toolbarHeight : 0);
