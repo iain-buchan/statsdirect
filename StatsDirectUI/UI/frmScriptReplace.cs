@@ -14,11 +14,15 @@ namespace StatsDirect.UI
     public partial class frmScriptReplace
     {
         private readonly frmScript mainForm;
+        private readonly Label status;
 
         public frmScriptReplace(frmScript MainForm)
         {
             mainForm = MainForm;
             InitializeComponent();
+            // the result of a search is shown here in the dialog, where the search was asked, rather than in the main window's banner behind it
+            status = new Label { AutoSize = true, Location = new System.Drawing.Point(16, 146), ForeColor = System.Drawing.SystemColors.GrayText };
+            Controls.Add(status);
             // events handled by btnFind_Click
             btnFind.Click += btnFind_Click;
             // events handled by btnFindNext_Click
@@ -39,9 +43,11 @@ namespace StatsDirect.UI
 
             if (startPosition < 0)
             {
-                SdApplication.SoleInstance.MsgboxX("String: '" + txtSearchTerm.Text + "' not found", MessageBoxButtons.OK, MessageBoxIcon.Asterisk, "No Matches", false);
+                status.Text = "Not found: " + txtSearchTerm.Text;
                 return;
             }
+
+            status.Text = "";
 
             mainForm.rtbDoc.Select(startPosition, txtSearchTerm.Text.Length);
             mainForm.rtbDoc.ScrollToCaret();
@@ -60,9 +66,11 @@ namespace StatsDirect.UI
 
             if (startPosition < 0)
             {
-                SdApplication.SoleInstance.MsgboxX("String: " + txtSearchTerm.Text + " not found", MessageBoxButtons.OK, MessageBoxIcon.Asterisk, "No Matches", false);
+                status.Text = "Not found: " + txtSearchTerm.Text;
                 return;
             }
+
+            status.Text = "";
 
             mainForm.rtbDoc.Select(startPosition, txtSearchTerm.Text.Length);
             mainForm.rtbDoc.ScrollToCaret();
@@ -85,9 +93,11 @@ namespace StatsDirect.UI
 
             if (startPosition < 0)
             {
-                SdApplication.SoleInstance.MsgboxX("String: '" + txtSearchTerm.Text + "' not found", MessageBoxButtons.OK, MessageBoxIcon.Asterisk, "No Matches", false);
+                status.Text = "Not found: " + txtSearchTerm.Text;
                 return;
             }
+
+            status.Text = "";
 
             mainForm.rtbDoc.Select(startPosition, txtSearchTerm.Text.Length);
             mainForm.rtbDoc.ScrollToCaret();

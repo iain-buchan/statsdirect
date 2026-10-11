@@ -4,9 +4,10 @@ using System.Windows.Forms;
 
 namespace StatsDirect.UI
 {
-    // Draw the main toolbar symbols at their actual display size. The original
-    // resource images still supply layout/designer previews, but are never
-    // stretched to paint these buttons on a high-DPI display.
+    // Draw the toolbar symbols of the main window and the script window at their
+    // actual display size. The original resource images still supply layout and
+    // designer previews, but are never stretched to paint these buttons on a
+    // high-DPI display.
     internal sealed class SharpToolbarRenderer : ToolStripSystemRenderer
     {
         protected override void OnRenderItemImage(ToolStripItemImageRenderEventArgs e)
@@ -21,6 +22,7 @@ namespace StatsDirect.UI
                 case "copyToolStripButton":
                 case "pasteToolStripButton":
                 case "helpToolStripButton":
+                case "findToolStripButton":
                     DrawSymbol(e);
                     return;
                 default:
@@ -90,6 +92,10 @@ namespace StatsDirect.UI
                             g.DrawPath(pen, question);
                         }
                         Line(12, 17, 12, 17.2f);
+                        break;
+                    case "findToolStripButton":
+                        g.DrawEllipse(pen, 3, 3, 12, 12);
+                        Line(14, 14, 21, 21);
                         break;
                 }
             }

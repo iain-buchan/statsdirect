@@ -11,11 +11,15 @@ namespace StatsDirect.UI
     public partial class frmScriptFind  
     {
         private readonly frmScript mainForm;
+        private readonly Label status;
 
         public frmScriptFind(frmScript MainForm) 
         { 
             mainForm = MainForm;
             InitializeComponent();
+            // the result of a search is shown here in the dialog, where the search was asked, rather than in the main window's banner behind it
+            status = new Label { AutoSize = true, Location = new System.Drawing.Point(16, 84), ForeColor = System.Drawing.SystemColors.GrayText };
+            Controls.Add(status);
             btnFind.Click += btnFind_Click; 
             btnFindNext.Click += btnFindNext_Click; 
         } 
@@ -29,9 +33,11 @@ namespace StatsDirect.UI
             
             if (startPosition < 0)
             {
-                SdApplication.SoleInstance.MsgboxX("String: " + txtSearchTerm.Text + " not found", MessageBoxButtons.OK, MessageBoxIcon.Asterisk, "No Matches", false); 
+                status.Text = "Not found: " + txtSearchTerm.Text; 
                 return; 
             }
+
+            status.Text = "";
 
             mainForm.rtbDoc.Select(startPosition, txtSearchTerm.Text.Length);
             mainForm.rtbDoc.ScrollToCaret();
@@ -50,9 +56,11 @@ namespace StatsDirect.UI
             
             if ( startPosition < 0 ) 
             {
-                SdApplication.SoleInstance.MsgboxX("String: " + txtSearchTerm.Text + " not found", MessageBoxButtons.OK, MessageBoxIcon.Asterisk, "No Matches", false); 
+                status.Text = "Not found: " + txtSearchTerm.Text; 
                 return; 
             }
+
+            status.Text = "";
 
             mainForm.rtbDoc.Select(startPosition, txtSearchTerm.Text.Length);
             mainForm.rtbDoc.ScrollToCaret();

@@ -52,13 +52,14 @@ namespace StatsDirect.UI
             mnuPageSetup.Click += mnuPageSetup_Click;
             tbrSave.Click += tbrSave_Click;
             tbrFind.Click += tbrFind_Click;
-            // the icons of the main window's toolbar for Save, Cut, Copy and Paste, so that the script window matches the other windows
-            System.ComponentModel.ComponentResourceManager main = new(typeof(frmMain));
-            System.Drawing.Image MainIcon(string name) => (System.Drawing.Image)main.GetObject(name);
-            tbrSave.Image = SaveToolStripMenuItem.Image = MainIcon("saveToolStripButton.Image");
-            CutToolStripMenuItem.Image = MainIcon("cutToolStripButton.Image");
-            CopyToolStripMenuItem.Image = MainIcon("copyToolStripButton.Image");
-            PasteToolStripMenuItem.Image = MainIcon("pasteToolStripButton.Image");
+            // the toolbar drawn as the main window's: the renderer paints each button's symbol by its name at the display size, so the buttons
+            // take the names it knows, and the bitmaps of the designer and the menus only size them
+            ToolStrip1.Renderer = new SharpToolbarRenderer();
+            void SizeToolbarIcons() => ToolStrip1.ImageScalingSize = ToolStrip1.LogicalToDeviceUnits(new System.Drawing.Size(20, 20));
+            SizeToolbarIcons();
+            ToolStrip1.DpiChangedAfterParent += (_, _) => SizeToolbarIcons();
+            tbrSave.Name = "saveToolStripButton";
+            tbrFind.Name = "findToolStripButton";
             // Cut, Copy and Paste on the toolbar, between Save and Find, with the Edit menu items' icons and handlers
             int find = ToolStrip1.Items.IndexOf(tbrFind);
             ToolStrip1.Items.Insert(find++, ToolbarButton("Cut", CutToolStripMenuItem, CutToolStripMenuItem_Click));
@@ -69,9 +70,10 @@ namespace StatsDirect.UI
 
         /// <summary>A toolbar button with a menu item's icon, doing what the item does; its text is its tooltip.</summary>
         private static ToolStripButton ToolbarButton(string text, ToolStripMenuItem item, EventHandler click) =>
-            new(text, item.Image, click) { DisplayStyle = ToolStripItemDisplayStyle.Image, ImageTransparentColor = System.Drawing.Color.Magenta };
+            new(text, item.Image, click) { Name = text.ToLowerInvariant() + "ToolStripButton", DisplayStyle = ToolStripItemDisplayStyle.Image, ImageTransparentColor = System.Drawing.Color.Magenta };
 
         private string currentFile;
+        private string helpTopic;   // the help topic of the result the script continues, when it does
 
         private void frmScript_FormClosing(object sender, FormClosingEventArgs e)
         {
@@ -357,8 +359,9 @@ namespace StatsDirect.UI
         /// Shows an R script, the one written for a result the user continues in R: the language set to R, so that Run runs it with the
         /// installed R and Save As offers an R file.
         /// </summary>
-        internal void ShowR(string script, string title)
+        internal void ShowR(string script, string title, string helpTopic = null)
         {
+            this.helpTopic = helpTopic;
             rtbDoc.Text = script;
             rtbDoc.SelectionStart = 0;
             rtbDoc.SelectionLength = 0;
@@ -600,6 +603,12 @@ namespace StatsDirect.UI
             // There's only ever one, do nothing
             return true;
         }
+
+        /// <summary>The help topic of this window: the topic of the result the script continues; the R script window's own topic for an
+        /// empty window or a script of no result.</summary>
+        internal string HelpTopic => rtbDoc.TextLength == 0 || string.IsNullOrEmpty(helpTopic) ? "1401" : helpTopic;
+
+        internal override void ShowHelp() => SdApplication.SoleInstance.ShowHelp(this, HelpTopic);
 
         internal override void EditCut()
         {

@@ -162,7 +162,13 @@ internal sealed class frmReportWebView : StatsDirectForm, IReport
         string title = entry.TryGetProperty("title", out JsonElement t) && t.ValueKind == JsonValueKind.String ? t.GetString() : "Analysis";
         RScript script = RScriptWriter.Write(record, title, FrameReader.Read);
         if (SdApplication.SoleInstance.CreateScriptWindow() is frmScript window)
-            window.ShowR(script.Text, title);
+        {
+            // the help of the script window is the result's topic: the operation's help context, as the menu shows it
+            string operationName = entry.TryGetProperty("operation", out JsonElement o) && o.ValueKind == JsonValueKind.String ? o.GetString() : null;
+            string helpTopic = !string.IsNullOrEmpty(operationName) && TemplateFactory.Operations.TryGetValue(operationName, out Operation operation) && operation.HelpContext != null
+                               ? operation.HelpContext.Url ?? operation.HelpContext.ChmId.ToString() : null;
+            window.ShowR(script.Text, title, helpTopic);
+        }
         status.Text = script.DataUnavailable ? "R script opened, but its data could not be read from the workbook: see the head of the script"
                     : script.HasRecipe ? "R script of the analysis opened" : "R script with the data and settings opened";
     }
