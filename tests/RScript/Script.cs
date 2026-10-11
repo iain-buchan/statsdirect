@@ -30,6 +30,7 @@ internal static partial class Program
             parameters.UnionWith(Regex.Matches(xml, "<(?:top-left|top-right|bottom-left|bottom-right)-name>([^<]+)</").Select(m => m.Groups[1].Value.Trim()));   // the cells of a 2 by 2 table typed in
             if (Regex.IsMatch(xml, "<builtin function-name=\"dist[A-Za-z]+\""))
                 parameters.UnionWith(new[] { "value", "df", "df2", "lower", "upper", "two_sided", "asked" });   // the Distributions calculator's boxes, which it records itself
+            if (xml.Contains("<grouped-covariance>")) parameters.Add("ci");   // its confidence level is asked through the grid and recorded as the setting ci
             Match settings = Regex.Match(text, "^# settings:\\s*(.*)$", RegexOptions.Multiline);
             if (settings.Success)
                 foreach (string item in settings.Groups[1].Value.Split(',').Select(x => x.Trim()).Where(x => x.Contains('=')))
@@ -37,11 +38,19 @@ internal static partial class Program
                     string parameter = item[(item.IndexOf('=') + 1)..].Trim();
                     if (!parameters.Contains(parameter)) mismatches.Add($"{op}: {recipe.File} takes the setting \"{parameter}\"");
                 }
+            // every input a recipe binds by name must be a parameter the operation, or the operation it continues, asks for
+            foreach (Match header in Regex.Matches(text, "^# (?:data|nested):[ ]*(.*)$", RegexOptions.Multiline))
+                foreach (string item in header.Groups[1].Value.Split(',').Select(x => x.Trim()).Where(x => x.Contains('=')))
+                {
+                    string input = item[(item.IndexOf('=') + 1)..].Trim();
+                    if (!parameters.Contains(input)) mismatches.Add($"{op}: {recipe.File} binds the input \"{input}\", which the operation does not ask for");
+                }
             // a grid typed on screen (a special parameter of one of these types) reaches the run as a frame too
             bool frames = xml.Contains("<frame>") || xml.Contains("<double-2-by-2-by-k>") || Regex.IsMatch(xml, "<type>(chi-2-column|chi-3-column|person-time-size|rr-index|raters-2d|likelihood|1-to-n|frame)</type>");
             if (Regex.IsMatch(text, "^# (data|matrix):", RegexOptions.Multiline) && !frames) mismatches.Add($"{op}: {recipe.File} takes columns, and the operation asks for no frame");
             if (Regex.IsMatch(text, "^# table:", RegexOptions.Multiline) && !xml.Contains("<double-2-by-2>")) mismatches.Add($"{op}: {recipe.File} takes a 2 by 2 table, and the operation asks for none");
-            if (!Regex.IsMatch(text, "^# (data|table|matrix|settings):", RegexOptions.Multiline)) mismatches.Add($"{op}: {recipe.File} has no header");
+            if (Regex.IsMatch(text, "^# nested:", RegexOptions.Multiline) && !xml.Contains("<frame2d>") && !xml.Contains("<grouped-covariance>")) mismatches.Add($"{op}: {recipe.File} takes a two-level input, and the operation asks for none");
+            if (!Regex.IsMatch(text, "^# (data|table|matrix|nested|settings):", RegexOptions.Multiline)) mismatches.Add($"{op}: {recipe.File} has no header");
         }
         mismatches = mismatches.Distinct().ToList();
         foreach (string mismatch in mismatches) Console.WriteLine("      mismatch: " + mismatch);

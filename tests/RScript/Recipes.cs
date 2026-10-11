@@ -71,6 +71,9 @@ internal static partial class Program
         if (example.TryGetProperty("inputs", out JsonElement named) && named.ValueKind == JsonValueKind.Array)
             foreach (JsonElement input in named.EnumerateArray())   // the example's frames under the names the operation asks them by
                 inputs.Add("{\"name\":" + input.GetProperty("name").GetRawText() + ",\"prompt\":" + input.GetProperty("name").GetRawText() + ",\"kind\":\"entered\",\"columns\":" + input.GetProperty("columns").GetRawText() + "}");
+        if (example.TryGetProperty("nested", out JsonElement nested) && nested.ValueKind == JsonValueKind.Array)
+            foreach (JsonElement input in nested.EnumerateArray())   // a two-level input: its blocks or groups, each a list of columns, as the record holds a frame2d
+                inputs.Add("{\"name\":" + input.GetProperty("name").GetRawText() + ",\"prompt\":" + input.GetProperty("name").GetRawText() + ",\"kind\":\"frame2d\",\"value\":{\"frames\":" + input.GetProperty("frames").GetRawText() + "}}");
         if (example.TryGetProperty("data", out JsonElement data))
             inputs.Add("{\"name\":\"data\",\"prompt\":\"Select data\",\"kind\":\"entered\",\"columns\":" + data.GetRawText() + "}");
         if (example.TryGetProperty("list", out JsonElement list))

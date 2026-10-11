@@ -39,6 +39,7 @@ internal static partial class Program
             CheckRealRuns();
             CheckScriptWindowNumbers();
             CheckRegressionFollowOn();
+            CheckTwoLevel();
             Console.WriteLine($"PASS {checks} Continue in R checks");
             return 0;
         }
@@ -106,7 +107,9 @@ internal sealed class Host : ITemplateHost, IProgressBar
     public ParameterBag FillAndValidateCombinedParameters(ITemplateProcessor processor, ParameterBag context) => throw new NotImplementedException();
     public ParameterBag FillParameter(ITemplateProcessor processor, Parameter parameter, ParameterBag context, bool shouldCombine)
     {
+        if (parameter.HasAcquireIfTrue && !parameter.AcquireIfTrue(processor, context)) return new ParameterBag();   // not acquired, as the dialog leaves such a parameter
         if (!answers.TryGetValue(parameter.Name, out object value)) throw new Exception($"the operation asked for {parameter.Name}, which these checks do not answer");
+        if (value is Queue<object> passes) value = passes.Count > 0 ? passes.Dequeue() : throw new Exception($"the operation asked for {parameter.Name} more times than these checks answer");   // a prompt asked in each pass of a loop
         if (value == null) { ParameterBag skipped = new(); skipped[parameter.Name] = null; return skipped; }   // an optional parameter skipped: the dialog notes it as a null entry
         if (parameter is OptionsParameter options && value is Dictionary<string, bool> chosen)
         {
@@ -125,6 +128,15 @@ internal sealed class Host : ITemplateHost, IProgressBar
             cells.AddInput(table.BottomLeftName, counts[2]);
             cells.AddInput(table.BottomRightName, counts[3]);
             return cells;
+        }
+        if (parameter is FrameParameter frameParameter && !string.IsNullOrEmpty(frameParameter.AppendToFrame) && value is DataFrame part)
+        {
+            // as the grid appends a frame asked in each pass of a loop to the accumulated frame the operation names (the survival plot's groups)
+            ParameterBag both = new(parameter.Name, FilledParameterFactory.Input(part));
+            DataFrame whole = context != null && context.ContainsKey(frameParameter.AppendToFrame) ? context[frameParameter.AppendToFrame].AsDataFrame : new DataFrame();
+            foreach (IVariable v in part.Variables) whole.Variables.Add(v);
+            both.AddInput(frameParameter.AppendToFrame, whole);
+            return both;
         }
         return new ParameterBag(parameter.Name, FilledParameterFactory.Input(value));
     }

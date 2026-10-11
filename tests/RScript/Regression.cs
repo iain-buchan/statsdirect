@@ -50,6 +50,11 @@ internal static partial class Program
         node["inputs"].AsArray().Add(JsonNode.Parse("{\"name\":\"newValues\",\"prompt\":\"\",\"inherited\":true,\"kind\":\"entered\",\"columns\":[{\"title\":\"New name\",\"values\":[\"x1 (Longley)\"]},{\"title\":\"New value\",\"values\":[101.68125]}]}"));
         RScript withGrid = RScriptWriter.Write(JsonDocument.Parse(node.ToJsonString()).RootElement, null, null);
         Check(withGrid.Text == script.Text, "an inherited grid the recipe does not take (a follow-on's new values) is left out of the script");
+        // the same grid asked for by the run itself (the prediction's own new values): the recipe names every input it takes, so it is left out too
+        JsonArray added = node["inputs"].AsArray();
+        added[added.Count - 1]["inherited"] = false;
+        RScript withOwnGrid = RScriptWriter.Write(JsonDocument.Parse(node.ToJsonString()).RootElement, null, null);
+        Check(withOwnGrid.Text == script.Text, "a grid the run asked for that the recipe does not name is left out as well, the recipe naming every input it takes");
         node["operation"] = "NoSuchOperation";
         RScript withoutRecipe = RScriptWriter.Write(JsonDocument.Parse(node.ToJsonString()).RootElement, null, null);
         Check(!withoutRecipe.HasRecipe && withoutRecipe.Text.Contains("\nnew_value <- c(101.68125)") && withoutRecipe.Text.Contains("\nold_value <- c("), "without a recipe the inherited frames are written with the rest of the data");
