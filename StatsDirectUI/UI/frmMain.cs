@@ -1040,8 +1040,11 @@ namespace StatsDirect.UI
             pnlDefault.MinimumSize = new Size(0, panelHeight);
             pnlDefault.MaximumSize = new Size(0, panelHeight);
             pnlDefault.Height = panelHeight;
-            if (pnlDefault.Visible)
-                pnlTop.Height = panelHeight;   // the panel that holds it follows, as ShowPanel sets it when the default panel shows: without this the toolbar's share stayed as a band
+            if (pnlDefault.Visible)   // the panel that holds it follows, as ShowPanel sets it when the default panel shows
+            {
+                pnlTop.MinimumSize = new Size(0, panelHeight);   // the designer's minimum, 58 at 96 dpi, kept it at the toolbar's height once the toolbar was hidden
+                pnlTop.Height = panelHeight;
+            }
         }
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
