@@ -4,6 +4,10 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
 ##[Unreleased]
 
+##[v5.1.1] 2026-10-11
+
+Version 5.1.1 corrects the scripts that Continue in R writes. Reviews of version 5.1.0, on Windows and through the Mac port of the engine, found that many scripts followed the help's example rather than the run: a fixed number of predictors, an intercept, no weights or the default of an option whatever the run had chosen, intervals at 95% whatever the level, and in two cases a setting that no run records, so that the script stopped. Each script now follows the run's data, options and confidence level, and scripts run at the same time from several script windows no longer share their files.
+
 ### Fixed
 - Continue in R: scripts run at the same time from several script windows shared two files, so that one run could show another's output or stop with "The process cannot access the file"; each run now has files of its own, removed when it is over.
 - Continue in R: the script of a multiple linear regression fitted an intercept and ignored the weights whatever the run's options; it now follows the run's intercept option and weights, and its lines take the run's number of predictors.
@@ -20,7 +24,6 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 - Continue in R: intervals that the scripts gave at 95% whatever level the run chose now follow the run's level: the rate ratios of a Poisson regression; the odds ratios of a conditional logistic regression; the slope of a simple linear regression; the difference of a Mann-Whitney test; each study's proportion in a proportion meta-analysis; the exact limits of the diagnostic test's odds ratio and of the pooled rate ratio and rate difference; the exact and approximate limits of each effect size; the inconsistency's limits of the effect size, correlation and Mantel-Haenszel meta-analyses; the exact limits of the log-rank hazard ratio; the Monte Carlo limits of an abridged life table; and the intraclass correlation.
 - Continue in R: the script of a conditional logistic regression stopped when a predictor's title had a space; the formula now quotes the titles.
 - Continue in R: the scripts of a normal plot and of a method comparison regression stopped on every run, because they looked for a setting no run records; the normal plot takes the van der Waerden scores, the default of its chart options, and the method comparison takes the regressions as the dialog ticks them.
-
 
 ##[v5.1.0] 2026-10-11
 
