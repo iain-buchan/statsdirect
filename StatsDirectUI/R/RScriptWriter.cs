@@ -199,11 +199,11 @@ namespace StatsDirect.R
                     }
                 }
             StringBuilder s = new();
-            s.Append("# ").Append(analysisTitle).Append(", from StatsDirect, ").Append(RunTime(record)).Append('\n');
+            s.Append("# ").Append(Plain(analysisTitle)).Append(", from StatsDirect, ").Append(RunTime(record)).Append('\n');
             foreach (string note in notes)
-                s.Append("# ").Append(note).Append('\n');
+                s.Append("# ").Append(Plain(note)).Append('\n');
             if (detail != null)
-                s.Append("# ").Append(detail).Append('\n');
+                s.Append("# ").Append(Plain(detail)).Append('\n');
             s.Append('\n');
             // the data
             HashSet<string> names = new();
@@ -222,12 +222,12 @@ namespace StatsDirect.R
             if (binding != null)
                 foreach (DataItem item in binding.Data.Where(i => i.Input != null))
                 {
-                    int at = groups.FindIndex(g => g.name == item.Input);
-                    if (at < 0 || groups[at].count == 0) { Missing(item.Variable, $"no \"{item.Input}\" in this run"); continue; }
-                    (string _, int start, int count) = groups[at];
-                    IEnumerable<int> indices = Enumerable.Range(start, count).Where(i => !bound.Contains(i));
-                    if (item.IsList) { ListOf(item.Variable, indices); foreach (int i in indices.ToList()) bound.Add(i); }
-                    else if (indices.Any()) { int i = indices.First(); Assign(s, item.Variable, columns[i], names); bound.Add(i); }
+                    // a prompt repeated for each series, group or period gives several inputs of one name: a list takes every one of
+                    // their columns, a vector the first not yet taken
+                    List<int> indices = groups.Where(g => g.name == item.Input).SelectMany(g => Enumerable.Range(g.start, g.count)).Where(i => !bound.Contains(i)).ToList();
+                    if (!groups.Any(g => g.name == item.Input)) { Missing(item.Variable, $"no \"{item.Input}\" in this run"); continue; }
+                    if (item.IsList) { ListOf(item.Variable, indices); foreach (int i in indices) bound.Add(i); }
+                    else if (indices.Count > 0) { int i = indices[0]; Assign(s, item.Variable, columns[i], names); bound.Add(i); }
                     else Missing(item.Variable, $"no column of \"{item.Input}\" is left for it");
                 }
             int next = 0;
@@ -263,11 +263,11 @@ namespace StatsDirect.R
             {
                 // a frame of counts, its columns the columns of the matrix: written in place of the vectors above
                 s.Clear();
-                s.Append("# ").Append(analysisTitle).Append(", from StatsDirect, ").Append(RunTime(record)).Append('\n');
+                s.Append("# ").Append(Plain(analysisTitle)).Append(", from StatsDirect, ").Append(RunTime(record)).Append('\n');
                 foreach (string note in notes)
-                    s.Append("# ").Append(note).Append('\n');
+                    s.Append("# ").Append(Plain(note)).Append('\n');
                 if (detail != null)
-                    s.Append("# ").Append(detail).Append('\n');
+                    s.Append("# ").Append(Plain(detail)).Append('\n');
                 s.Append('\n');
                 s.Append(binding.Matrix).Append(" <- cbind(").Append(string.Join(",\n  ", columns.Select(c => Quote(c.Title) + " = " + Vector(c.Values)))).Append(")\n");
                 names.Add(binding.Matrix);
@@ -283,7 +283,7 @@ namespace StatsDirect.R
             else if (parameters.ValueKind == JsonValueKind.Object)
                 foreach (JsonProperty property in parameters.EnumerateObject())
                     if (IsScalar(property.Value) && !property.Name.StartsWith("statsdirect", StringComparison.OrdinalIgnoreCase))
-                        s.Append(SafeName(property.Name, names)).Append(" <- ").Append(Literal(property.Value)).Append("   # ").Append(property.Name).Append('\n');
+                        s.Append(SafeName(property.Name, names)).Append(" <- ").Append(Literal(property.Value)).Append("   # ").Append(Plain(property.Name)).Append('\n');
             s.Append('\n');
             // the analysis
             if (binding != null)
@@ -301,7 +301,7 @@ namespace StatsDirect.R
                 s.Append("NULL");
             else
                 s.Append(Vector(column.Values));
-            s.Append("   # ").Append(column.Title);
+            s.Append("   # ").Append(Plain(column.Title));
             if (column.Where != null)
                 s.Append(", ").Append(column.Where);
             if (column.Unavailable)
@@ -429,6 +429,10 @@ namespace StatsDirect.R
         }
 
         /// <summary>An R string literal.</summary>
+        /// <summary>Text for a comment line: a control character (a line break in a column title, say) would end the comment and leave
+        /// what follows to run as R, so each becomes a space.</summary>
+        private static string Plain(string value) => string.Concat((value ?? "").Select(ch => ch < ' ' || ch == '\x7f' ? ' ' : ch));
+
         public static string Quote(string value)
         {
             StringBuilder s = new("\"");

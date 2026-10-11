@@ -1,4 +1,5 @@
 using StatsDirect.Data;
+using System.Linq;
 using StatsDirect.Numerics;
 using StatsDirect.Utilities;
 using System;
@@ -132,11 +133,40 @@ namespace StatsDirect.Templates
                     }
                     w.WriteEndObject();
                 }
+                // the frames the run inherited from an earlier one: a follow-on operation (a prediction, the residuals, an exact P by
+                // simulation) takes the data of the result it was asked from without asking for them again
+                foreach (KeyValuePair<string, FilledParameter> pair in bag.Pairs)
+                {
+                    if (!IsSetting(pair.Key) || pair.Value == null || !pair.Value.HasData || !pair.Value.IsDataFrame || pair.Value.Direction == FilledParameterDirection.Output)
+                        continue;
+                    if (run.Inputs.Any(i => i.Name == pair.Key))
+                        continue;
+                    DataFrame frame = pair.Value.AsDataFrame;
+                    w.WriteStartObject();
+                    w.WriteString("name", pair.Key);
+                    w.WriteString("prompt", "");
+                    w.WriteBoolean("inherited", true);
+                    if (IsPointerFrame(frame))
+                    {
+                        w.WriteString("kind", "frame");
+                        WritePointer(w, frame);
+                        pointerValues += Count(frame);
+                        pointerFrames.Add(new KeyValuePair<string, DataFrame>(pair.Key, frame));
+                    }
+                    else
+                    {
+                        w.WriteString("kind", "entered");
+                        WriteColumns(w, frame);
+                    }
+                    w.WriteEndObject();
+                }
                 w.WriteEndArray();
                 // the settings: every input or default that is not a frame
                 w.WriteStartObject("parameters");
+                // (a value the run asked for and the operation wrote back as a result under the same name, as the sample size
+                // calculators do with the standard deviation, is still the run's setting)
                 foreach (KeyValuePair<string, FilledParameter> pair in bag.Pairs)
-                    if (IsSetting(pair.Key) && pair.Value != null && pair.Value.HasData && pair.Value.Direction != FilledParameterDirection.Output
+                    if (IsSetting(pair.Key) && pair.Value != null && pair.Value.HasData && (pair.Value.Direction != FilledParameterDirection.Output || run.Inputs.Any(i => i.Name == pair.Key))
                         && !pair.Value.IsDataFrame && Writable(pair.Value.AsObject))
                     {
                         w.WritePropertyName(pair.Key);
