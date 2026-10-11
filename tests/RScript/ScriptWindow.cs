@@ -83,6 +83,21 @@ internal static partial class Program
             Check(pages.Length >= 2 && Dark(pages[0].Image) > 200 && Dark(pages[1].Image) > 200, $"printing draws the script on {pages.Length} pages, each with text on it");
         }
         else Console.WriteLine("      (no printer is set up on this PC, so the printed pages are not checked)");
+        // Find and Replace as a bar at the top of the window, hidden until asked: the search goes on from the selection and round to the start
+        PropertyInfo findBarShown = script.GetProperty("FindBarShown", BindingFlags.Instance | BindingFlags.NonPublic);
+        MethodInfo findNext = script.GetMethod("FindNext", BindingFlags.Instance | BindingFlags.NonPublic, null, new[] { typeof(string), typeof(bool) }, null);
+        MethodInfo replaceAll = script.GetMethod("ReplaceAll", BindingFlags.Instance | BindingFlags.NonPublic, null, new[] { typeof(string), typeof(string), typeof(bool) }, null);
+        editor.Text = "alpha beta Alpha";
+        editor.Select(0, 0);
+        bool one = (bool)findNext.Invoke(first.window, new object[] { "alpha", false }); int at1 = editor.SelectionStart;
+        bool two = (bool)findNext.Invoke(first.window, new object[] { "alpha", false }); int at2 = editor.SelectionStart;
+        bool three = (bool)findNext.Invoke(first.window, new object[] { "alpha", false }); int at3 = editor.SelectionStart;
+        bool none = (bool)findNext.Invoke(first.window, new object[] { "gamma", false });
+        bool cased = (bool)findNext.Invoke(first.window, new object[] { "Alpha", true }); int at4 = editor.SelectionStart;
+        Check(!(bool)findBarShown.GetValue(first.window) && one && at1 == 0 && two && at2 == 11 && three && at3 == 0 && !none && cased && at4 == 11 && editor.SelectionLength == 5,
+              "the find bar is hidden until asked, and Find next goes on from the selection, round to the start, matching case only when asked: " + at1 + ", " + at2 + ", " + at3 + ", " + at4);
+        int replaced = (int)replaceAll.Invoke(first.window, new object[] { "alpha", "x", false });
+        Check(replaced == 2 && editor.Text == "x beta x", "Replace all replaces every match: " + editor.Text);
         // the main window's toolbar is the report's and the worksheet's: it goes while a script window, which has its own, is active
         MethodInfo toolbarShown = program.GetType("StatsDirect.UI.frmMain").GetMethod("ToolbarShownFor", BindingFlags.Static | BindingFlags.NonPublic);
         using Form plain = new();
