@@ -35,6 +35,10 @@ internal static partial class Program
         }
         (Form window, TabPage tab) first = Open("Paired t test");
         (Form window, TabPage tab) second = Open("Unpaired t test");
+        // the toolbar: Save, then Cut, Copy and Paste with the Edit menu's icons, then Find, then the R tools
+        ToolStrip toolbar = (ToolStrip)script.GetField("ToolStrip1", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(first.window);
+        ToolStripButton[] buttons = toolbar.Items.OfType<ToolStripButton>().ToArray();
+        Check(string.Join("|", buttons.Take(5).Select(b => b.Text)) == "Save|Cut|Copy|Paste|Find" && buttons.Take(5).All(b => b.Image != null), "the toolbar has Cut, Copy and Paste between Save and Find, each with an icon: " + string.Join(", ", buttons.Select(b => b.Text)));
         Check(first.window.Text == "Script 1: Paired t test" && first.tab.Text == first.window.Text, "the first script window is Script 1 with the analysis after it, and its tab is named with it: " + first.tab.Text);
         Check(second.window.Text == "Script 2: Unpaired t test" && second.tab.Text == second.window.Text, "a second Continue in R opens Script 2: " + second.tab.Text);
         Check((int)nextNumber.Invoke(app, null) == 3, "the next script window would be Script 3");
