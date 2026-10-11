@@ -208,6 +208,38 @@ namespace StatsDirect.R
             return result.ToString();
         }
 
+        /// <summary>The profile R's own window runs at its start for Open in R: the program's library on the path as the runs here have it, the
+        /// script run in the console as a session shows it, and the script opened in R's editor.  The path of the profile written.</summary>
+        public static string OpenInRProfile(string scriptPath)
+        {
+            string rFolder = SDConfiguration.MyStatsDirectRFolder;
+            if (!Directory.Exists(rFolder))
+                Directory.CreateDirectory(rFolder);
+            string profile = Path.Combine(rFolder, "open-in-r.r");
+            using (TextWriter tw = new StreamWriter(profile, false, new UTF8Encoding(false)))
+            {
+                tw.Write(SCRIPT_HEAD, rFolder.Replace(@"\", @"\\"));
+                tw.WriteLine();
+                tw.WriteLine("local({ f <- \"" + scriptPath.Replace('\\', '/') + "\"; try(source(f, echo = TRUE, max.deparse.length = Inf, spaced = FALSE, encoding = \"UTF-8\")); file.edit(f) })");
+            }
+            return profile;
+        }
+
+        /// <summary>Opens R's own window on the script: R reads the profile above at its start, through the environment.</summary>
+        public static void OpenInRGui(RVersion version, string scriptPath)
+        {
+            string profile = OpenInRProfile(scriptPath);
+            ProcessStartInfo start = new()
+            {
+                FileName = Path.Combine(version.BinPath, "Rgui.exe"),
+                WorkingDirectory = SDConfiguration.MyStatsDirectRFolder,
+                Arguments = "--no-save --no-restore",
+                UseShellExecute = false
+            };
+            start.Environment["R_PROFILE_USER"] = profile;
+            Process.Start(start);
+        }
+
         /// <summary>RStudio's program when it is installed in one of its usual places, else null: a user at home in R may take a script there.</summary>
         public static string FindRStudio()
         {

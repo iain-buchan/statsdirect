@@ -486,10 +486,10 @@ namespace StatsDirect.UI
                 // files a run writes are listed as links
                 rTools = true;
                 ToolStrip1.Items.Add(new ToolStripSeparator());
-                ToolStrip1.Items.Add(new ToolStripButton("▶ Run in R", null, (_, _) => RunR()) { DisplayStyle = ToolStripItemDisplayStyle.Text, ToolTipText = "Run the script with the installed R; what it prints appears below" });
+                ToolStrip1.Items.Add(new ToolStripButton("Run", null, (_, _) => RunR()) { DisplayStyle = ToolStripItemDisplayStyle.Text, ToolTipText = "Run the script with the installed R; what it prints appears below" });
                 ToolStrip1.Items.Add(new ToolStripButton("Clear output", null, (_, _) => rtbOutput.Clear()) { DisplayStyle = ToolStripItemDisplayStyle.Text, ToolTipText = "Clear what R has printed below" });
                 ToolStrip1.Items.Add(new ToolStripButton("Output folder", null, (_, _) => OpenRFolder()) { DisplayStyle = ToolStripItemDisplayStyle.Text, ToolTipText = "Open the folder the script writes its files to" });
-                ToolStrip1.Items.Add(new ToolStripButton("Open in R", null, (_, _) => OpenInR()) { DisplayStyle = ToolStripItemDisplayStyle.Text, ToolTipText = "Save the script as an R file and open it in RStudio, or in whatever opens R files here" });
+                ToolStrip1.Items.Add(new ToolStripButton("Open in R", null, (_, _) => OpenInR()) { DisplayStyle = ToolStripItemDisplayStyle.Text, ToolTipText = "Save the script as an R file and open it in RStudio when that is installed, else in R's own window" });
                 rtbOutput.DetectUrls = true;
                 rtbOutput.LinkClicked += (_, e) => OpenLink(e.LinkText);
             }
@@ -518,10 +518,21 @@ namespace StatsDirect.UI
                 File.WriteAllText(path, rtbDoc.Text.Replace("\r", "").Replace("\n", "\r\n"), new System.Text.UTF8Encoding(false));
                 string rstudio = RController.FindRStudio();
                 if (rstudio != null)
+                {
                     Process.Start(new ProcessStartInfo(rstudio, "\"" + path + "\"") { UseShellExecute = false, WorkingDirectory = SDConfiguration.MyStatsDirectRFolder });
-                else
-                    Process.Start(new ProcessStartInfo(path) { UseShellExecute = true, WorkingDirectory = SDConfiguration.MyStatsDirectRFolder });
-                rtbOutput.AppendText("(the script is saved as " + path + " and opened in " + (rstudio != null ? "RStudio" : "the program that opens R files here") + ")\n");
+                    rtbOutput.AppendText("(the script is saved as " + path + " and opened in RStudio)\n");
+                    return;
+                }
+                // R's own window: the script run in its console as a session shows it, and open in its editor
+                RVersion version = RController.PreferredRVersion();
+                while (version == null)
+                {
+                    if (!RController.UserMightHaveInstalledR())
+                        return;
+                    version = RController.PreferredRVersion();
+                }
+                RController.OpenInRGui(version, path);
+                rtbOutput.AppendText("(the script is saved as " + path + ", run in R's own window and opened in its editor)\n");
             }
             catch (Exception ex)
             {
