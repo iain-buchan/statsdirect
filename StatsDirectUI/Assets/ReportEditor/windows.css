@@ -54,10 +54,12 @@ body.engine-report pre { font-family: "Courier New", monospace; font-size: 10pt;
 .report-toolbar, .report-controls,
 .report-toolbar button, .report-toolbar select, .report-toolbar input,
 .report-controls button, .report-controls input { font-family: Arial, sans-serif; }
+/* The report is one editable region (#results); each result is a block in it with nothing but its content: the result's name and Help
+   are in the ribbon and the context menu, and a chart's width and Fit are in the toolbar while the chart is selected. */
 .report-entry { padding-top: 8px; }
 .report-entry + .report-entry { margin-top: 20px; padding-top: 12px; }
 .report-body { min-height: 20px; }
-/* room below the last result, so that a result just added can be scrolled to the top of the window (set by host.js) */
+/* room below the last result, so that a result just added can be scrolled to the top of the window (set by the editor) */
 #results { padding-bottom: var(--reveal-room, 0px); }
 @media print { #results { padding-bottom: 0 !important; } }
 body.engine-report .report-body svg, body.engine-report .report-media > img {
@@ -65,21 +67,8 @@ body.engine-report .report-body svg, body.engine-report .report-media > img {
   max-width: 100%;
   margin: 16px 0;
 }
-/* the panes in the body of the report are not shown: the operation's name and Help of each result (the help is in the ribbon and the
-   context menu), and the width and Fit of each chart. The header stays in the page, out of view and out of the flow, for the selection
-   of a result, which clicks it unseen, and for the keyboard, which can still reach it and delete an empty result */
-.report-entry > header { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
-.report-editing .report-media > .report-controls:not(.report-chart-resize), .report-editing .report-chart > .report-controls:not(.report-chart-resize) { display: none; }
-/* the handle at a chart's bottom right corner, dragged to resize it, stays */
-.report-entry > header h2 { margin: 4px 12px 4px 0; font: 12px Arial, sans-serif; text-decoration: none; }
 .report-body:focus { outline: 1px solid #99bbb6; }
-/* Keep picture sizing controls out of reading mode. */
-body:not(.report-editing) .report-chart > .report-controls,
-body:not(.report-editing) .report-media > .report-controls,
 #empty[hidden] { display: none; }
-.report-editing [data-select-result] { cursor: pointer; }
-.report-editing [data-select-result]:focus-visible,
-.report-editing .report-result-selected > .report-body,
 .report-editing .report-media:focus { outline: 2px solid #278a7c; outline-offset: 3px; }
 .report-toolbar {
   border: 0;
@@ -103,7 +92,7 @@ body:not(.report-editing) .report-media > .report-controls,
   stroke-width: 2;
 }
 @media print {
-  .report-result-selected > .report-body, [data-select-result], .report-media { outline: none !important; }
+  .report-media { outline: none !important; }
   #report-toolbar, .report-controls { display: none !important; }
   body.engine-report { padding: 0; max-width: none; }
   .report-entry { break-before: auto; }
