@@ -23,5 +23,11 @@ internal static partial class Program
         int command = echoed.IndexOf("> x * 2", StringComparison.Ordinal), value = echoed.IndexOf("[1] 2 4 6", StringComparison.Ordinal), a = echoed.IndexOf("\na\n", StringComparison.Ordinal), error = echoed.IndexOf("Error", StringComparison.Ordinal);
         Check(echoed.Contains("> x <- 1:3") && command >= 0 && value > command && a > value && error > a && !echoed.Contains("\nb\n") && !echoed.Contains("userdir"),
               "run as a session, the script shows each command after R's prompt with its output under it, an error in its place, and none of the run's own head");
+        // Open in R without RStudio: R's own window, started on a profile that runs the script as a session and opens it in R's editor
+        string profile = RController.OpenInRProfile(@"C:\Users\someone\Documents\StatsDirect\R\Script 1_ Paired t test.R");
+        string profileText = File.ReadAllText(profile);
+        Check(File.Exists(Path.Combine(version.BinPath, "Rgui.exe")) && profileText.Contains(".libPaths(c(rlib, .libPaths()))")
+              && profileText.Contains("f <- \"C:/Users/someone/Documents/StatsDirect/R/Script 1_ Paired t test.R\"") && profileText.Contains("try(source(f, echo = TRUE") && profileText.Contains("file.edit(f)"),
+              "the installed R has its own window program, and the profile Open in R starts it on runs the script as a session and opens it in R's editor, with the program's library on the path");
     }
 }
