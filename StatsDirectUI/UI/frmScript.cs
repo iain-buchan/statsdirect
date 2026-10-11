@@ -52,6 +52,13 @@ namespace StatsDirect.UI
             mnuPageSetup.Click += mnuPageSetup_Click;
             tbrSave.Click += tbrSave_Click;
             tbrFind.Click += tbrFind_Click;
+            // the icons of the main window's toolbar for Save, Cut, Copy and Paste, so that the script window matches the other windows
+            System.ComponentModel.ComponentResourceManager main = new(typeof(frmMain));
+            System.Drawing.Image MainIcon(string name) => (System.Drawing.Image)main.GetObject(name);
+            tbrSave.Image = SaveToolStripMenuItem.Image = MainIcon("saveToolStripButton.Image");
+            CutToolStripMenuItem.Image = MainIcon("cutToolStripButton.Image");
+            CopyToolStripMenuItem.Image = MainIcon("copyToolStripButton.Image");
+            PasteToolStripMenuItem.Image = MainIcon("pasteToolStripButton.Image");
             // Cut, Copy and Paste on the toolbar, between Save and Find, with the Edit menu items' icons and handlers
             int find = ToolStrip1.Items.IndexOf(tbrFind);
             ToolStrip1.Items.Insert(find++, ToolbarButton("Cut", CutToolStripMenuItem, CutToolStripMenuItem_Click));
