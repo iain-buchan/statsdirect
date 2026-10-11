@@ -106,6 +106,7 @@ namespace StatsDirect.R
             public string Where;        // "column 1, rows 2 to 21" when read from a sheet
             public bool Changed;
             public bool Unavailable;
+            public bool Inherited;      // of a frame the run inherited from the run it continues
         }
 
         /// <summary>A recipe's header: the variables it takes.</summary>
@@ -147,6 +148,7 @@ namespace StatsDirect.R
                 {
                     string name = Text(input, "name") ?? "input", kind = Text(input, "kind") ?? "other";
                     int start = columns.Count;
+                    bool inherited = input.TryGetProperty("inherited", out JsonElement inheritedFlag) && inheritedFlag.ValueKind == JsonValueKind.True;
                     try
                     {
                     if (kind == "table")
@@ -196,11 +198,12 @@ namespace StatsDirect.R
                     {
                         if (kind == "frame" || kind == "entered")
                             groups.Add((name, start, columns.Count - start));
+                        for (int i = start; i < columns.Count; i++) columns[i].Inherited = inherited;
                     }
                 }
             StringBuilder s = new();
             s.Append("# ").Append(Plain(analysisTitle)).Append(", from StatsDirect, ").Append(RunTime(record)).Append('\n');
-            foreach (string note in notes)
+            foreach (string note in notes.Distinct())
                 s.Append("# ").Append(Plain(note)).Append('\n');
             if (detail != null)
                 s.Append("# ").Append(Plain(detail)).Append('\n');
@@ -247,7 +250,7 @@ namespace StatsDirect.R
                 next = columns.Count;
             }
             for (; next < columns.Count; next++)
-                if (!bound.Contains(next))
+                if (!bound.Contains(next) && !(binding != null && columns[next].Inherited))   // an inherited frame the recipe does not take is left out
                     Assign(s, SafeName(columns[next].Title, names), columns[next], names);
             foreach ((string[][] counts, string[] rows, string[] cols, string rowsTitle, string colsTitle) in tables)
             {
@@ -264,7 +267,7 @@ namespace StatsDirect.R
                 // a frame of counts, its columns the columns of the matrix: written in place of the vectors above
                 s.Clear();
                 s.Append("# ").Append(Plain(analysisTitle)).Append(", from StatsDirect, ").Append(RunTime(record)).Append('\n');
-                foreach (string note in notes)
+                foreach (string note in notes.Distinct())
                     s.Append("# ").Append(Plain(note)).Append('\n');
                 if (detail != null)
                     s.Append("# ").Append(Plain(detail)).Append('\n');
