@@ -45,7 +45,7 @@ internal static partial class Program
 
         await ClickReport(".report-body svg");
         await Key("Delete",46);
-        Check(await True("!document.querySelector('.report-body svg') && document.querySelectorAll('.report-entry').length===3 && document.querySelectorAll('.report-body')[1].textContent.includes('After chart')"), "clicking a chart then Delete removes its vector object without neighbouring text");
+        Check(await True("!document.querySelector('.report-body svg') && document.querySelectorAll('.report-entry').length===3 && document.querySelectorAll('.report-entry')[1].textContent.includes('After chart')"), "clicking a chart then Delete removes its vector object without neighbouring text");
         await Key("z",90,2);
         Check(await True("!!document.querySelector('.report-body svg path') && document.querySelector('.report-body svg').getAttribute('viewBox')==='0 0 300 120'"), "Ctrl+Z restores the complete SVG chart");
         await ClickReport(".report-body svg");
@@ -53,11 +53,11 @@ internal static partial class Program
         Check(await True("!document.querySelector('.report-body svg')"), "Backspace also deletes a selected chart");
         await Key("z",90,2);
 
-        await Selection(".report-entry:nth-child(2) .report-body > p:last-child",0,0);
+        await Selection(".report-entry:nth-child(2) > p:last-child",0,0);
         await Key("Backspace",8);
-        Check(await True("!document.querySelector('.report-body svg') && document.querySelectorAll('.report-body')[1].textContent.includes('After chart')"), "Backspace at the start of the following paragraph deletes the adjacent chart");
+        Check(await True("!document.querySelector('.report-body svg') && document.querySelectorAll('.report-entry')[1].textContent.includes('After chart')"), "Backspace at the start of the following paragraph deletes the adjacent chart");
         await Key("z",90,2);
-        await Js("(()=>{const b=document.querySelectorAll('.report-body')[1],p=b.querySelector('p'),r=document.createRange();b.focus();r.selectNodeContents(p);r.collapse(false);getSelection().removeAllRanges();getSelection().addRange(r);})()");
+        await Js("(()=>{const b=document.querySelectorAll('.report-entry')[1],p=b.querySelector('p'),r=document.createRange();document.getElementById('results').focus();r.selectNodeContents(p);r.collapse(false);getSelection().removeAllRanges();getSelection().addRange(r);})()");
         await Key("Delete",46);
         Check(await True("!document.querySelector('.report-body svg')"), "Delete at the end of the preceding paragraph deletes the adjacent chart");
         await Key("z",90,2);
@@ -77,11 +77,11 @@ internal static partial class Program
         Check(await True("document.querySelectorAll('.report-entry').length===2 && document.querySelector('.report-body p').textContent==='Alpha '"), "Redo reapplies both text and whole-result deletion in order");
 
         await LoadDeletionFixture();
-        await Js("(()=>{const a=document.querySelector('.report-body p').firstChild,z=document.querySelectorAll('.report-body')[2].querySelector('p').firstChild,r=document.createRange();a.parentElement.closest('.report-body').focus();r.setStart(a,6);r.setEnd(z,6);getSelection().removeAllRanges();getSelection().addRange(r);})()");
+        await Js("(()=>{const a=document.querySelector('.report-body p').firstChild,z=document.querySelectorAll('.report-entry')[2].querySelector('p').firstChild,r=document.createRange();a.parentElement.closest('.report-body').focus();r.setStart(a,6);r.setEnd(z,6);getSelection().removeAllRanges();getSelection().addRange(r);})()");
         await Key("Delete",46);
-        Check(await True("document.querySelectorAll('.report-entry').length===2 && document.querySelectorAll('.report-body')[0].textContent==='Alpha ' && document.querySelectorAll('.report-body')[1].textContent==='words'"), "cross-result selection deletes partial text and the fully selected middle result atomically");
+        Check(await True("document.querySelectorAll('.report-entry').length===2 && document.querySelectorAll('.report-entry')[0].textContent==='Alpha ' && document.querySelectorAll('.report-entry')[1].textContent==='words'"), "cross-result selection deletes partial text and the fully selected middle result atomically");
         await Key("z",90,2);
-        Check(await True("document.querySelectorAll('.report-entry').length===3 && document.querySelectorAll('.report-body')[0].textContent==='Alpha words' && document.querySelectorAll('.report-body')[2].textContent==='Omega words' && !!document.querySelector('.report-body svg')"), "one Undo restores both partial sections and the intervening whole result");
+        Check(await True("document.querySelectorAll('.report-entry').length===3 && document.querySelectorAll('.report-entry')[0].textContent==='Alpha words' && document.querySelectorAll('.report-entry')[2].textContent==='Omega words' && !!document.querySelector('.report-body svg')"), "one Undo restores both partial sections and the intervening whole result");
 
         await Js("document.querySelector('.report-body').focus()");
         await Key("a",65,2);
@@ -94,10 +94,10 @@ internal static partial class Program
         await Key("Delete",46);
         await view.AppendAsync("<p>New engine result</p>","Arrived later","NewOperation",99);
         await Key("z",90,2);
-        Check(await True("document.querySelectorAll('.report-entry').length===4 && document.querySelectorAll('.report-body')[3].textContent==='New engine result' && !!document.querySelector('.report-body svg')"), "restoring a deleted result preserves newly appended engine output");
+        Check(await True("document.querySelectorAll('.report-entry').length===4 && document.querySelectorAll('.report-entry')[3].textContent==='New engine result' && !!document.querySelector('.report-body svg')"), "restoring a deleted result preserves newly appended engine output");
 
         await LoadDeletionFixture();
-        await Js("StatsDirectReportEditor.setEditing(false);document.querySelector('header').focus()");
+        await Js("StatsDirectReportEditor.setEditing(false);document.getElementById('results').focus()");
         var readOnly=(await view.CallAsync("snapshot")).GetRawText();
         await Key("Delete",46);
         Check((await view.CallAsync("snapshot")).GetRawText()==readOnly, "Delete cannot remove a result in reading mode");
@@ -135,25 +135,27 @@ internal static partial class Program
         Check(await True("document.querySelector('.report-body p').textContent==='New words'"), "new typing after Undo invalidates the abandoned Redo branch");
 
         await view.CallAsync("load",new {entries=new[]{new {html="",title="Empty result",operation="Empty",helpContextId=7}}});
-        await Js("StatsDirectReportEditor.setEditing(true);document.querySelector('header').focus()");
+        await Js("StatsDirectReportEditor.setEditing(true)");
+        await view.CallAsync("selectResult", new { id = (await Js("document.querySelector('.report-entry').id.slice(7)")).GetString() });
         await Key("Delete",46);
-        Check((await view.CallAsync("snapshot")).GetProperty("entries").GetArrayLength()==0, "keyboard focus on a heading can delete even an empty result");
+        Check((await view.CallAsync("snapshot")).GetProperty("entries").GetArrayLength()==0, "an empty result selected from the menu is deleted by the Delete key");
         await Key("z",90,2);
         Check((await view.CallAsync("snapshot")).GetProperty("entries")[0].GetProperty("helpContextId").GetInt32()==7, "Undo restores an empty result and its metadata");
 
         const string pixel="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=";
         await view.CallAsync("load",new {entries=new[]{new {html="<p>Before</p><img width='100' height='100' src='"+pixel+"'><p>After</p>",title="Picture",operation="Image",helpContextId=1}}});
-        await Js("StatsDirectReportEditor.setEditing(true);document.querySelector('.report-media').focus()");
+        await Js("StatsDirectReportEditor.setEditing(true)");
+        await ClickReport("#results img");
         await Key("Delete",46);
-        Check(await True("!document.querySelector('.report-body img') && document.querySelector('.report-body').textContent==='BeforeAfter'"), "keyboard-selected raster pictures delete without neighbouring text");
+        Check(await True("!document.querySelector('.report-body img') && document.querySelector('.report-body').textContent==='BeforeAfter'"), "a picture selected by a click deletes without neighbouring text");
         await Key("z",90,2);
         Check(await True("document.querySelector('.report-body img').getAttribute('src').startsWith('data:image/png')"), "Undo restores the raster picture data");
 
         await LoadDeletionFixture();
         await view.CallAsync("selectResult", new { id = (await Js("document.querySelectorAll('.report-entry')[0].id.slice(7)")).GetString() });   // the first result, as the context menu selects it
-        await Js("document.querySelectorAll('header')[2].querySelector('h2').dispatchEvent(new MouseEvent('click',{bubbles:true,shiftKey:true}))");
+        await Js("(()=>{const e=document.querySelectorAll('.report-entry'),r=document.createRange();r.setStartBefore(e[0]);r.setEndAfter(e[2]);const s=getSelection();s.removeAllRanges();s.addRange(r);})()");
         await Key("Delete",46);
-        Check((await view.CallAsync("snapshot")).GetProperty("entries").GetArrayLength()==0, "Shift-clicking result headings selects a contiguous group for deletion");
+        Check((await view.CallAsync("snapshot")).GetProperty("entries").GetArrayLength()==0, "a selection spanning three results, as a drag makes it, then Delete removes them all");
         await Key("z",90,2);
         Check((await view.CallAsync("snapshot")).GetProperty("entries").GetArrayLength()==3, "one Undo restores a group of deleted results");
     }

@@ -26,7 +26,7 @@ internal static partial class Program
         await Js("(()=>{const c=[...document.querySelectorAll('.report-body td')].find(c=>c.textContent==='Border sample');c.removeAttribute('style');c.className='sides';})()");
         await Js("document.head.insertAdjacentHTML('beforeend',`<style id=interop-style>.report-body .ci{color:#0000ff}.report-body .sides{font:12pt Georgia;color:#800080;background:#ffff00;border-top:2px solid #ff0000;border-right:4px dashed #ff8000;border-bottom:6px solid #0000ff;border-left:8px dotted #008000}</style>`)");
         const string presentation = """
-            (()=>[...document.querySelectorAll('.report-body')].map(body=>{
+            (()=>[...document.querySelectorAll('.report-entry')].map(body=>{
               const clone=body.cloneNode(true);clone.querySelectorAll('.report-controls').forEach(e=>e.remove());
               return {html:clone.innerHTML,styles:[...body.querySelectorAll('*')].filter(e=>!e.closest('.report-controls')).map(e=>{
                 const c=getComputedStyle(e);return [e.tagName,...['font-family','font-size','font-weight','color','background-color','border-top','border-right','border-bottom','border-left'].map(p=>c.getPropertyValue(p))];})};}))()
@@ -40,7 +40,7 @@ internal static partial class Program
         Check(await True("window.interopRendered===true"), "report resize waits for a rendered frame");
         var resized = await view.CallAsync("snapshot");
         Check(beforeResize.GetProperty("revision").GetInt64() == resized.GetProperty("revision").GetInt64(), "responsive editor layout does not count as a report edit");
-        await Js("(()=>{const b=document.querySelector('.report-body'),r=document.createRange();b.focus();r.selectNodeContents(b);getSelection().removeAllRanges();getSelection().addRange(r);})()");
+        await Js("(()=>{const b=document.querySelector('.report-entry'),r=document.createRange();document.getElementById('results').focus();r.selectNodeContents(b);getSelection().removeAllRanges();getSelection().addRange(r);})()");
         var selection = await view.CallAsync("prepareClipboard", new { cut = false });
         using var office = JsonDocument.Parse((await view.CallAsync("officeClipboard", new { html = selection.GetProperty("html").GetString() })).GetString());
         string html = office.RootElement.GetProperty("html").GetString();

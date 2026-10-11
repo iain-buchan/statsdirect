@@ -72,7 +72,7 @@ internal static partial class Program
         await Js("(()=>{const p=document.querySelector('.report-body p');p.focus();const r=document.createRange();r.selectNodeContents(p);const s=getSelection();s.removeAllRanges();s.addRange(r);})()");
         await view.CallAsync("command", new { name = "bold" });
         Check(await True("document.querySelector('.report-body p').innerHTML.includes('font-weight') || !!document.querySelector('.report-body p b')"), "Chromium formatting command changes the selected text");
-        await Js("(()=>{const b=document.querySelector('.report-body');b.focus();const r=document.createRange();r.selectNodeContents(b);const s=getSelection();s.removeAllRanges();s.addRange(r);})()");
+        await Js("(()=>{const b=document.querySelector('.report-entry');document.getElementById('results').focus();const r=document.createRange();r.selectNodeContents(b);const s=getSelection();s.removeAllRanges();s.addRange(r);})()");
         var selected = await view.CallAsync("prepareClipboard", new { cut = false });
         string fragment = selected.GetProperty("html").GetString();
         Check(fragment.Contains("<svg") && fragment.Contains("colspan=\"2\""), "private clipboard preserves SVG and merged table cells");
@@ -83,7 +83,7 @@ internal static partial class Program
         Check((await view.CallAsync("cut", new { token = cutToken })).GetBoolean(), "transactional cut removes the prepared selection");
         await view.CallAsync("command", new { name = "undo" });
         Check(await True("!!document.querySelector('.report-body svg') && !!document.querySelector('.report-body table')"), "undo cut restores both chart and table");
-        await Js("(()=>{const b=document.querySelectorAll('.report-body')[1];b.focus();const r=document.createRange();r.selectNodeContents(b);r.collapse(false);const s=getSelection();s.removeAllRanges();s.addRange(r);})()");
+        await Js("(()=>{const b=document.querySelectorAll('.report-entry')[1];document.getElementById('results').focus();const r=document.createRange();r.selectNodeContents(b);r.collapse(false);const s=getSelection();s.removeAllRanges();s.addRange(r);})()");
         string token = (await view.CallAsync("preparePaste")).GetProperty("token").GetString();
         Check((await view.CallAsync("paste", new { token, payload = new { html = fragment, text = "" } })).GetBoolean(), "rich fragment pastes into another report section");
         Check(await True("document.querySelectorAll('.report-body svg').length===2 && new Set([...document.querySelectorAll('clipPath')].map(n=>n.id)).size===2"), "pasted SVG identifiers do not collide");
@@ -96,7 +96,7 @@ internal static partial class Program
         Check(!html.Contains("src=\"vendor/") && !html.Contains("onclick="), "saved HTML has no application scripts or event handlers");
         await Js("StatsDirectReportEditor.setEditing(false)");
         await view.OpenHtmlAsync(html, "Reopened report");
-        Check(await True("document.querySelectorAll('.report-entry').length===2 && document.querySelector('.report-body').textContent.includes('Edited β interpretation') && [...document.querySelectorAll('.report-body')].every(b=>b.isContentEditable) && snapshot().revision===0"), "saved reports reopen ready to edit without becoming modified");
+        Check(await True("document.querySelectorAll('.report-entry').length===2 && document.querySelector('.report-body').textContent.includes('Edited β interpretation') && [...document.querySelectorAll('.report-entry')].every(b=>b.isContentEditable) && snapshot().revision===0"), "saved reports reopen ready to edit without becoming modified");
         Check(await True("document.querySelector('svg text').getAttribute('text-anchor')==='middle'"), "SVG text alignment survives HTML reopening");
         var state = await view.CallAsync("snapshot");
         Check(state.GetProperty("entries")[0].GetProperty("helpContextId").GetInt32() == 1150, "context help metadata survives save/reopen");
@@ -147,9 +147,9 @@ internal static partial class Program
         await Mouse("mouseMoved",dx,dy,1);
         await Mouse("mouseReleased",dx,dy);
         await view.CallAsync("snapshot");
-        Check(await True("[...document.querySelectorAll('.report-body')].every(b=>b.textContent.includes('Alpha words'))"), "native Chromium Ctrl-drag copies between report sections");
+        Check(await True("[...document.querySelectorAll('.report-entry')].every(b=>b.textContent.includes('Alpha words'))"), "native Chromium Ctrl-drag copies between report sections");
         await view.CallAsync("command", new {name="undo"});
-        Check(await True("document.querySelectorAll('.report-body')[0].textContent.includes('Alpha words') && !document.querySelectorAll('.report-body')[1].textContent.includes('Alpha words')"), "Ctrl-drag copy undoes as one transaction");
+        Check(await True("document.querySelectorAll('.report-entry')[0].textContent.includes('Alpha words') && !document.querySelectorAll('.report-entry')[1].textContent.includes('Alpha words')"), "Ctrl-drag copy undoes as one transaction");
         await Js("(()=>{const p=document.querySelector('.report-body p');p.focus();const r=document.createRange();r.selectNodeContents(p);const s=getSelection();s.removeAllRanges();s.addRange(r);})()");
         await Mouse("mouseMoved",sx,sy,0,0);
         await Mouse("mousePressed",sx,sy,1,0);
@@ -157,9 +157,9 @@ internal static partial class Program
         await Mouse("mouseMoved",dx,dy,1,0);
         await Mouse("mouseReleased",dx,dy,0,0);
         await view.CallAsync("snapshot");
-        Check(await True("!document.querySelectorAll('.report-body')[0].textContent.includes('Alpha words') && document.querySelectorAll('.report-body')[1].textContent.includes('Alpha words')"), "native drag moves text across report sections");
+        Check(await True("!document.querySelectorAll('.report-entry')[0].textContent.includes('Alpha words') && document.querySelectorAll('.report-entry')[1].textContent.includes('Alpha words')"), "native drag moves text across report sections");
         await view.CallAsync("command", new {name="undo"});
-        Check(await True("document.querySelectorAll('.report-body')[0].textContent.includes('Alpha words') && !document.querySelectorAll('.report-body')[1].textContent.includes('Alpha words')"), "one undo restores BOTH sections of a drag move");
+        Check(await True("document.querySelectorAll('.report-entry')[0].textContent.includes('Alpha words') && !document.querySelectorAll('.report-entry')[1].textContent.includes('Alpha words')"), "one undo restores BOTH sections of a drag move");
         await CheckStandardPresentation(real);
         await CheckTemplateStyles(real);
         await CheckDeletion();
@@ -179,13 +179,13 @@ internal static partial class Program
         await view.AppendAsync(real, "Paired t test and agreement", "TPaired", 1150);
         await view.Browser.CoreWebView2.CallDevToolsProtocolMethodAsync("Emulation.setDeviceMetricsOverride", "{\"width\":1600,\"height\":950,\"deviceScaleFactor\":1,\"mobile\":false}");
         await Js("window.scrollTo(0,0)");
-        Check(await True("(()=>{const b=document.querySelector('.report-body'),p=b.querySelector('p'),h=b.querySelector('h1');return b.getBoundingClientRect().left===24 && getComputedStyle(document.body).maxWidth==='none' && getComputedStyle(p).fontFamily.startsWith('Arial') && Math.abs(parseFloat(getComputedStyle(p).fontSize)-40/3)<.01 && getComputedStyle(h).fontSize===getComputedStyle(p).fontSize;})()"), "wide report starts at the left margin with standard Arial 10pt text and headings");
+        Check(await True("(()=>{const b=document.querySelector('.report-entry'),p=b.querySelector('p'),h=b.querySelector('h1');return b.getBoundingClientRect().left===24 && getComputedStyle(document.body).maxWidth==='none' && getComputedStyle(p).fontFamily.startsWith('Arial') && Math.abs(parseFloat(getComputedStyle(p).fontSize)-40/3)<.01 && getComputedStyle(h).fontSize===getComputedStyle(p).fontSize;})()"), "wide report starts at the left margin with standard Arial 10pt text and headings");
         Check(await True("(()=>{const s=document.querySelector('.report-body svg'),box=s.getBoundingClientRect();return s.getAttribute('width')==='6in' && Math.abs(box.width-576)<1 && box.left===24;})()"), "engine chart keeps its six-inch report width and left alignment on a wide screen");
         await view.AppendAsync("<p><span class='ci'>CI marker</span> <span class='pval'>P marker</span> <span class='score'>Score marker</span> <span class='warn'>Warning marker</span> <span class='subtotal'>Subtotal marker</span> <span class='model'>Model marker</span> <span class='grandtotal'>Grand total marker</span></p><p style='font:18pt Georgia;color:#800080'>User formatting</p>", "Palette", "", 0);
-        const string palette = "[...document.querySelectorAll('.report-body')].at(-1).querySelectorAll('span')";
+        const string palette = "[...document.querySelectorAll('.report-entry')].at(-1).querySelectorAll('span')";
         Check(await True($"JSON.stringify([...{palette}].map(e=>getComputedStyle(e).color))===JSON.stringify(['rgb(0, 0, 255)','rgb(0, 127, 0)','rgb(0, 127, 127)','rgb(255, 0, 0)','rgb(127, 0, 0)','rgb(0, 0, 127)','rgb(0, 0, 127)'])"), "all seven semantic result colours match the standard RTF palette");
         Check(await True("(()=>{const p=[...document.querySelectorAll('.report-body p')].find(p=>p.textContent==='User formatting');return getComputedStyle(p).fontSize==='24px' && getComputedStyle(p).color==='rgb(128, 0, 128)';})()"), "user formatting overrides the default report font and colour");
-        await Js("(()=>{const b=document.querySelector('.report-body'),r=document.createRange();b.focus();r.selectNodeContents(b);getSelection().removeAllRanges();getSelection().addRange(r);})()");
+        await Js("(()=>{const b=document.querySelector('.report-entry'),r=document.createRange();document.getElementById('results').focus();r.selectNodeContents(b);getSelection().removeAllRanges();getSelection().addRange(r);})()");
         var fragment = await view.CallAsync("prepareClipboard", new { cut = false });
         using var clipboard = JsonDocument.Parse((await view.CallAsync("officeClipboard", new { html = fragment.GetProperty("html").GetString() })).GetString());
         string clipboardHtml = clipboard.RootElement.GetProperty("html").GetString();

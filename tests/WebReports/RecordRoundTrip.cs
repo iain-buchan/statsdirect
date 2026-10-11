@@ -14,10 +14,10 @@ internal static partial class Program
         Check((await view.RecordAsync(plain)).GetProperty("record").ValueKind == System.Text.Json.JsonValueKind.Null, "a result appended without a record gives none");
         await view.ExtendAsync(id, "<p>More of the result</p>", record.Replace("-0.81", "-0.82"));
         Check((await view.RecordAsync(id)).GetProperty("record").GetProperty("values").GetProperty("t").GetDouble() == -0.82, "more of a result replaces its record with the run's latest");
-        await Js($"document.querySelector('#result-{id} .report-body').dispatchEvent(new MouseEvent('contextmenu',{{bubbles:true,cancelable:true}}))");
+        await Js($"document.querySelector('#result-{id}').dispatchEvent(new MouseEvent('contextmenu',{{bubbles:true,cancelable:true}}))");
         var target = await view.CallAsync("contextTarget");
         Check(target.GetProperty("hasRecord").GetBoolean() && target.GetProperty("operation").GetString() == "TPaired", "a right-click on the result reports that it has a record, and its operation");
-        await Js($"document.querySelector('#result-{plain} .report-body').dispatchEvent(new MouseEvent('contextmenu',{{bubbles:true,cancelable:true}}))");
+        await Js($"document.querySelector('#result-{plain}').dispatchEvent(new MouseEvent('contextmenu',{{bubbles:true,cancelable:true}}))");
         Check(!(await view.CallAsync("contextTarget")).GetProperty("hasRecord").GetBoolean(), "a right-click on a result without a record says so");
         var snapshot = await view.CallAsync("snapshot");
         Check(snapshot.GetProperty("entries")[0].GetProperty("record").GetProperty("operation").GetString() == "TPaired" && !snapshot.GetProperty("entries")[1].TryGetProperty("record", out _),
