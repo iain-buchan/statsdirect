@@ -138,5 +138,11 @@ internal static partial class Program
         output = RunR(script.Text, folder);
         Check(!script.HasRecipe && script.Text.Contains("peak_flow_1st <- c(1, NA, 3)   # Peak flow (1st)\n") && script.Text.Contains("k <- 2   # k\n") && script.Text.Contains("label <- \"x \\\"y\\\"\"   # label\n") && script.Text.TrimEnd().EndsWith("# Add your analysis here.") && output.Trim().Length == 0,
               "without a recipe the script holds the data and settings under safe names, escapes text, and runs in R");
+        // a NUL character in text, which only a report edited by hand would hold: R cannot hold it and refuses the escape, so it is written as a space
+        JsonElement nul = JsonDocument.Parse("{\"version\":1,\"operation\":\"NoSuchMethod\",\"title\":\"A\\u0000B\",\"run\":\"2026-10-10T22:00:00+01:00\",\"inputs\":[{\"name\":\"data\",\"prompt\":\"Select data\",\"kind\":\"entered\",\"columns\":[{\"title\":\"x\\u0000y\",\"values\":[\"p\\u0000q\",\"r\"]}]}],\"parameters\":{\"label\":\"a\\u0000b\"},\"values\":{}}").RootElement;
+        script = RScriptWriter.Write(nul, null, null);
+        output = RunR(script.Text, folder);
+        Check(RScriptWriter.Quote("a\0b") == "\"a b\"" && !script.Text.Contains("\\u0000") && !script.Text.Contains('\0') && script.Text.Contains("label <- \"a b\"") && script.Text.Contains("c(\"p q\", \"r\")") && output.Trim().Length == 0,
+              "a NUL character in a title, a value or a setting is written as a space, and the script runs in R");
     }
 }
