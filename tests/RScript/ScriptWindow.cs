@@ -39,14 +39,14 @@ internal static partial class Program
         // the toolbar: Save, then Cut, Copy and Paste with the Edit menu's icons, then Find, then the R tools
         ToolStrip toolbar = (ToolStrip)script.GetField("ToolStrip1", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(first.window);
         ToolStripButton[] buttons = toolbar.Items.OfType<ToolStripButton>().ToArray();
-        Check(string.Join("|", buttons.Take(5).Select(b => b.Text)) == "Save|Cut|Copy|Paste|Find" && buttons.Take(5).All(b => b.Image != null), "the toolbar has Cut, Copy and Paste between Save and Find, each with an icon: " + string.Join(", ", buttons.Select(b => b.Text)));
+        Check(string.Join("|", buttons.Take(9).Select(b => b.Text)) == "New script|Open|Save|Print|Cut|Copy|Paste|Find|Help" && buttons.Take(9).All(b => b.Image != null), "the toolbar is in the main window's order, New, Open, Save, Print, Cut, Copy, Paste, then Find and Help, each with an icon: " + string.Join(", ", buttons.Select(b => b.Text)));
         // the toolbar is drawn as the main window's: the same renderer paints a symbol for each button by its name at the display size, the
         // bitmaps serving only to size the buttons, so the script window's buttons take the names the renderer knows, and it must draw each
         Type renderer = program.GetType("StatsDirect.UI.SharpToolbarRenderer");
         Check(toolbar.Renderer.GetType() == renderer && toolbar.ImageScalingSize == toolbar.LogicalToDeviceUnits(new System.Drawing.Size(20, 20)),
               "the script window's toolbar has the main window's renderer and icon size");
-        Check(string.Join("|", buttons.Take(5).Select(b => b.Name)) == "saveToolStripButton|cutToolStripButton|copyToolStripButton|pasteToolStripButton|findToolStripButton",
-              "Save, Cut, Copy, Paste and Find are named as the renderer draws them");
+        Check(string.Join("|", buttons.Take(9).Select(b => b.Name)) == "newToolStripButton|openToolStripButton|saveToolStripButton|printToolStripButton|cutToolStripButton|copyToolStripButton|pasteToolStripButton|findToolStripButton|helpToolStripButton",
+              "the nine buttons are named as the renderer draws them");
         MethodInfo draw = renderer.GetMethod("DrawSymbol", BindingFlags.Static | BindingFlags.NonPublic);
         int Ink(ToolStripItem item)   // the pixels the renderer paints for an item, on a white bitmap
         {
@@ -58,8 +58,8 @@ internal static partial class Program
             for (int i = 0; i < 32; i++) for (int j = 0; j < 32; j++) if (bitmap.GetPixel(i, j).ToArgb() != System.Drawing.Color.White.ToArgb()) ink++;
             return ink;
         }
-        string[] inks = buttons.Take(5).Select(b => b.Text + " " + Ink(b)).ToArray();
-        Check(buttons.Take(5).All(b => Ink(b) > 40) && Ink(new ToolStripButton("Nothing") { Name = "noSuchButton" }) == 0, "the renderer draws a symbol for each of the five, and none for a name it does not know: " + string.Join(", ", inks));
+        string[] inks = buttons.Take(9).Select(b => b.Text + " " + Ink(b)).ToArray();
+        Check(buttons.Take(9).All(b => Ink(b) > 40) && Ink(new ToolStripButton("Nothing") { Name = "noSuchButton" }) == 0, "the renderer draws a symbol for each of the nine, and none for a name it does not know: " + string.Join(", ", inks));
         Check(first.window.Text == "Script 1: Paired t test" && first.tab.Text == first.window.Text, "the first script window is Script 1 with the analysis after it, and its tab is named with it: " + first.tab.Text);
         Check(second.window.Text == "Script 2: Unpaired t test" && second.tab.Text == second.window.Text, "a second Continue in R opens Script 2: " + second.tab.Text);
         Check((int)nextNumber.Invoke(app, null) == 3, "the next script window would be Script 3");
@@ -68,6 +68,11 @@ internal static partial class Program
         Check((string)helpTopic.GetValue(first.window) == "1239" && (string)helpTopic.GetValue(second.window) == "1401" && (string)helpTopic.GetValue(empty.window) == "1401",
               "Help opens the result's topic for its script, and the R script window's own topic for a script of no result or an empty window");
         empty.window.Dispose();
+        // the main window's toolbar is the report's and the worksheet's: it goes while a script window, which has its own, is active
+        MethodInfo toolbarShown = program.GetType("StatsDirect.UI.frmMain").GetMethod("ToolbarShownFor", BindingFlags.Static | BindingFlags.NonPublic);
+        using Form plain = new();
+        Check(!(bool)toolbarShown.Invoke(null, new object[] { first.window }) && (bool)toolbarShown.Invoke(null, new object[] { plain }) && (bool)toolbarShown.Invoke(null, new object[] { null }),
+              "the main toolbar hides while a script window is active and shows for any other window, or none");
         first.window.Dispose();
         second.window.Dispose();
     }
