@@ -29,16 +29,16 @@ ll <- fit$loglik[2]
 ll0 <- fit$loglik[1]
 cat("Deviance (-2 log likelihood) =", six(-2 * ll), "\n")
 cat("Deviance (likelihood ratio) chi-square =", six(2 * (ll - ll0)), " ",
-    pv(pchisq(2 * (ll - ll0), 6, lower.tail = FALSE)), "\n")
+    pv(pchisq(2 * (ll - ll0), length(coef(fit)), lower.tail = FALSE)), "\n")
 cat("Pseudo (McFadden) R-square =", six(1 - ll / ll0), "\n")
 s <- summary(fit)$coefficients
-lab <- c("RACE (b)", "SMOKE", "HT", "UI", "PTD", "LWT")
-for (i in 1:6) {
+lab <- rownames(s)
+for (i in seq_len(nrow(s))) {
   cat(lab[i], six(s[i, "coef"]), six(s[i, "se(coef)"]), " z =", six(s[i, "z"]), " ",
       pv(s[i, "Pr(>|z|)"]), "\n")
 }
 ci <- summary(fit)$conf.int
-for (i in 1:6) {
+for (i in seq_len(nrow(s))) {
   cat(lab[i], six(ci[i, "exp(coef)"]), six(ci[i, "lower .95"]), "to",
       six(ci[i, "upper .95"]), "\n")
 }
