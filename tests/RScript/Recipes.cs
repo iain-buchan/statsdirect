@@ -39,9 +39,13 @@ internal static partial class Program
                 string file = RRecipes.Find(op).File;
                 if (!gold.TryGetValue(file, out string expected))
                     gold[file] = expected = Figures(RunR(File.ReadAllText(Path.Combine(examples, op + ".R")).Replace("\r", ""), Path.Combine(folder, op + "-help")));
-                // the recipe's figures are the help's, or the start of them where a second example at the end of the help's script was left out
+                // the recipe's figures are the help's, or the start of them where a second example at the end of the help's script was left
+                // out ("cut"), or every one of them is among the help's where the recipe covers one part of the help's script ("subset")
                 bool cut = example.TryGetProperty("cut", out JsonElement c) && c.ValueKind == JsonValueKind.True;
-                if (ours == expected || (cut && ours.Length > 0 && expected.StartsWith(ours + " ", StringComparison.Ordinal))) agreed++;
+                bool subset = example.TryGetProperty("subset", out JsonElement sb) && sb.ValueKind == JsonValueKind.True;
+                HashSet<string> helpFigures = expected.Split(' ', StringSplitOptions.RemoveEmptyEntries).ToHashSet();
+                if (ours == expected || (cut && ours.Length > 0 && expected.StartsWith(ours + " ", StringComparison.Ordinal))
+                    || (subset && ours.Length > 0 && ours.Split(' ').All(helpFigures.Contains))) agreed++;
                 else
                 {
                     failures.Add(op);

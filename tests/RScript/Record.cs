@@ -31,6 +31,7 @@ internal static partial class Program
         var (run, output) = Run("TPaired", new() { ["data"] = data, ["gamma"] = 0.95, ["doAgreement"] = false });
         Check(run != null && run.Operation.Name == "TPaired" && output?.ParameterBag != null, "the report step hands the report the run of the operation");
         JsonElement r = Record(run);
+        Console.WriteLine("      inputs: " + string.Join(", ", r.GetProperty("inputs").EnumerateArray().Select(i => i.GetProperty("name").GetString() + " (" + i.GetProperty("prompt").GetString() + ") " + i.GetProperty("kind").GetString())) + "; source modified " + r.GetProperty("source").GetProperty("modified").GetString());
         Console.WriteLine("      record: " + run.Record.Length + " characters; title " + r.GetProperty("title").GetString());
         Check(r.GetProperty("version").GetInt32() == 1 && r.GetProperty("operation").GetString() == "TPaired" && r.GetProperty("title").GetString().Length > 0
               && DateTime.TryParse(r.GetProperty("run").GetString(), inv, System.Globalization.DateTimeStyles.RoundtripKind, out DateTime started) && (DateTime.Now - started).TotalMinutes < 5,

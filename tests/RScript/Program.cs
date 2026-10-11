@@ -35,6 +35,8 @@ internal static partial class Program
             CheckLoessChart();
             CheckMethodComparisonCharts();
             CheckInverseRecipes();
+            CheckFollowOn();
+            CheckRealRuns();
             Console.WriteLine($"PASS {checks} Continue in R checks");
             return 0;
         }
@@ -56,11 +58,11 @@ internal static partial class Program
     }
 
     /// <summary>The run of an operation with the given answers: the record it left at its last report step, and its outputs.</summary>
-    private static (OperationRun run, StepOutput output) Run(string name, Dictionary<string, object> answers)
+    private static (OperationRun run, StepOutput output) Run(string name, Dictionary<string, object> answers, ParameterBag context = null)
     {
         Host host = new(answers);
         ITemplateProcessor processor = new TemplateProcessor(host);
-        StepOutput output = processor.Execute(Load(name), new ParameterBag());
+        StepOutput output = processor.Execute(Load(name), context ?? new ParameterBag());   // a context: the earlier run a follow-on operation continues
         return (host.LastRun, output);
     }
 
@@ -103,6 +105,7 @@ internal sealed class Host : ITemplateHost, IProgressBar
     public ParameterBag FillParameter(ITemplateProcessor processor, Parameter parameter, ParameterBag context, bool shouldCombine)
     {
         if (!answers.TryGetValue(parameter.Name, out object value)) throw new Exception($"the operation asked for {parameter.Name}, which these checks do not answer");
+        if (value == null) { ParameterBag skipped = new(); skipped[parameter.Name] = null; return skipped; }   // an optional parameter skipped: the dialog notes it as a null entry
         if (parameter is OptionsParameter options && value is Dictionary<string, bool> chosen)
         {
             // as the program's dialog fills a set of options: one boolean input per option, under the option's name

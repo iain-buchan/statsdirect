@@ -19,6 +19,14 @@ internal static partial class Program
             string text = RRecipes.Recipe(recipe.File);
             string xml = File.ReadAllText(Path.Combine(Metadata("Operations"), op + ".xml"));
             HashSet<string> parameters = Regex.Matches(xml, "<name>([^<]+)</name>").Select(m => m.Groups[1].Value.Trim()).Skip(1).ToHashSet();
+            // a follow-on operation continues an earlier run and may take that operation's parameters and frames
+            Match inherits = Regex.Match(File.ReadAllText(Path.Combine(RRecipes.Folder, "analysis-recipes.json")), "\"" + Regex.Escape(op) + "\":\\s*\\{[^}]*\"inherits\":\\s*\"([^\"]+)\"");
+            if (inherits.Success)
+            {
+                string parent = File.ReadAllText(Path.Combine(Metadata("Operations"), inherits.Groups[1].Value + ".xml"));
+                parameters.UnionWith(Regex.Matches(parent, "<name>([^<]+)</name>").Select(m => m.Groups[1].Value.Trim()).Skip(1));
+                if (parent.Contains("<frame>")) xml += "<frame>";
+            }
             parameters.UnionWith(Regex.Matches(xml, "<(?:top-left|top-right|bottom-left|bottom-right)-name>([^<]+)</").Select(m => m.Groups[1].Value.Trim()));   // the cells of a 2 by 2 table typed in
             if (Regex.IsMatch(xml, "<builtin function-name=\"dist[A-Za-z]+\""))
                 parameters.UnionWith(new[] { "value", "df", "df2", "lower", "upper", "two_sided", "asked" });   // the Distributions calculator's boxes, which it records itself
@@ -29,7 +37,9 @@ internal static partial class Program
                     string parameter = item[(item.IndexOf('=') + 1)..].Trim();
                     if (!parameters.Contains(parameter)) mismatches.Add($"{op}: {recipe.File} takes the setting \"{parameter}\"");
                 }
-            if (Regex.IsMatch(text, "^# (data|matrix):", RegexOptions.Multiline) && !xml.Contains("<frame>")) mismatches.Add($"{op}: {recipe.File} takes columns, and the operation asks for no frame");
+            // a grid typed on screen (a special parameter of one of these types) reaches the run as a frame too
+            bool frames = xml.Contains("<frame>") || xml.Contains("<double-2-by-2-by-k>") || Regex.IsMatch(xml, "<type>(chi-2-column|chi-3-column|person-time-size|rr-index|raters-2d|likelihood|1-to-n|frame)</type>");
+            if (Regex.IsMatch(text, "^# (data|matrix):", RegexOptions.Multiline) && !frames) mismatches.Add($"{op}: {recipe.File} takes columns, and the operation asks for no frame");
             if (Regex.IsMatch(text, "^# table:", RegexOptions.Multiline) && !xml.Contains("<double-2-by-2>")) mismatches.Add($"{op}: {recipe.File} takes a 2 by 2 table, and the operation asks for none");
             if (!Regex.IsMatch(text, "^# (data|table|matrix|settings):", RegexOptions.Multiline)) mismatches.Add($"{op}: {recipe.File} has no header");
         }
