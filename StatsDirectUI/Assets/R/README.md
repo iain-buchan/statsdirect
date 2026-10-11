@@ -59,3 +59,7 @@ so on, which the input names in `held`. The writer gathers the inputs of one nam
 every input it takes gets only those: the run's other inputs, such as a grid of new values a prediction asks for, and the frames the
 operation left in the bag are not written; a rest list (`rest...`) likewise leaves out the bag's frames when the run asked for frames of
 its own.
+
+A column that is not at its recorded place when the script is written, because the analysis wrote its result columns to the left of
+its data or a column was inserted or removed by hand, is found again by its hash and its title within 64 columns to either side
+(`ColumnLocator`); the script notes the move, and the column's comment gives its new place.

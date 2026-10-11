@@ -76,6 +76,7 @@ namespace StatsDirect.R
         public object[] Values { get; set; }
         /// <summary>Whether the values differ from those the analysis used, by the hash kept with the result.</summary>
         public bool Changed { get; set; }
+        public bool Moved { get; set; }     // found at another column than the record's: the data moved along the sheet since the run
     }
 
     /// <summary>The script written for a result.</summary>
@@ -193,6 +194,8 @@ namespace StatsDirect.R
                         notes.Add($"Data: {source}, read on {now}.");
                         foreach (ColumnValues c in values.Columns.Where(c => c.Changed))
                             notes.Add($"NOTE: \"{c.Title}\" has changed in the workbook since the analysis ran; these are its values now.");
+                        foreach (ColumnValues c in values.Columns.Where(c => c.Moved))
+                            notes.Add($"NOTE: \"{c.Title}\" has moved along the sheet since the analysis ran, by columns inserted or removed to its left; its values are as they were.");
                     }
                     else
                     {

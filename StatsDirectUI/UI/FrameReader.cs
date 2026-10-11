@@ -38,11 +38,40 @@ namespace StatsDirect.UI
             for (int i = 0; i < frame.VariableCount; i++)
             {
                 IVariable variable = frame.Variables[i];
+                ColumnPointer column = pointer.Columns[i];
+                bool moved = false;
+                if (column.Hash != null && RunRecord.Hash(variable) != column.Hash)
+                {
+                    // not the values the analysis used: the column may have moved along the sheet since the record was written, by result
+                    // columns the analysis wrote to its left or a column inserted or removed by hand; it is looked for by its hash and title
+                    IVariable ReadAt(int index)
+                    {
+                        try
+                        {
+                            DataFrame one = grid.ReadColumns(new List<WorksheetOrigin> { new WorksheetOrigin(file, column.Sheet ?? pointer.Sheet, index - 1, column.FirstRow - 1, column.LastRow - column.FirstRow + 1, mode, column.HasTitle, false, 0) });
+                            return one != null && one.VariableCount > 0 ? one.Variables[0] : null;
+                        }
+                        catch (Exception) { return null; }
+                    }
+                    int? found = ColumnLocator.Find(column, index =>
+                    {
+                        IVariable v = index == column.Column ? variable : ReadAt(index);
+                        if (v == null) return null;
+                        return (v.Title, RunRecord.Hash(v));
+                    });
+                    if (found != null && found != column.Column)
+                    {
+                        variable = ReadAt(found.Value) ?? variable;
+                        column.Column = found.Value;   // the pointer now names the column's new place, which the script's comment gives
+                        moved = true;
+                    }
+                }
                 values.Columns.Add(new ColumnValues
                 {
-                    Title = string.IsNullOrEmpty(pointer.Columns[i].Title) ? variable.Title : pointer.Columns[i].Title,
+                    Title = string.IsNullOrEmpty(column.Title) ? variable.Title : column.Title,
                     Values = RunRecord.Values(variable),
-                    Changed = pointer.Columns[i].Hash != null && RunRecord.Hash(variable) != pointer.Columns[i].Hash
+                    Changed = column.Hash != null && RunRecord.Hash(variable) != column.Hash,
+                    Moved = moved
                 });
             }
             return values;
