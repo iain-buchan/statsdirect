@@ -220,7 +220,9 @@ namespace StatsDirect.R
             {
                 tw.Write(SCRIPT_HEAD, rFolder.Replace(@"\", @"\\"));
                 tw.WriteLine();
-                tw.WriteLine("local({ f <- \"" + scriptPath.Replace('\\', '/') + "\"; try(source(f, echo = TRUE, max.deparse.length = Inf, spaced = FALSE, encoding = \"UTF-8\")); file.edit(f) })");
+                // the profile runs before R attaches its default packages (stats, utils and the rest), so it attaches them itself first
+                tw.WriteLine("for (p in getOption(\"defaultPackages\")) suppressPackageStartupMessages(library(p, character.only = TRUE))");
+                tw.WriteLine("local({ f <- \"" + scriptPath.Replace('\\', '/') + "\"; try(source(f, echo = TRUE, max.deparse.length = Inf, spaced = FALSE, encoding = \"UTF-8\")); if (interactive()) file.edit(f) })");
             }
             return profile;
         }
