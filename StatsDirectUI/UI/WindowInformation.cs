@@ -100,6 +100,12 @@ namespace StatsDirect.UI
                 Window.EditPaste();
         }
 
+        internal void EditFind()
+        {
+            if (HasWindow)
+                Window.EditFind();
+        }
+
         internal void Print()
         {
             if (HasWindow)

@@ -167,8 +167,15 @@ namespace StatsDirect.UI
                     BeginInvoke(new Action(() => calculatorMenuTarget = null));
             };
             toolStrip.Renderer = new SharpToolbarRenderer();
+            // Find after Paste, as the script window's toolbar has it: the worksheet's Find and Replace, the report's find bar
+            toolStrip.Items.Insert(toolStrip.Items.IndexOf(toolStripSeparator2), FindButton(pasteToolStripButton.Image, (_, _) => SdApplication.SoleInstance.ActiveWindow?.EditFind()));
             // the toolbar is the report's and the worksheet's: a script window has a toolbar of its own, so it goes while one is active
-            MdiChildActivate += (_, _) => toolStrip.Visible = ToolbarShownFor(ActiveMdiChild);
+            MdiChildActivate += (_, _) =>
+            {
+                toolbarShown = ToolbarShownFor(ActiveMdiChild);
+                toolStrip.Visible = toolbarShown;
+                FitWindowTabsToText();   // the panel above the windows gives up the toolbar's height while it is hidden
+            };
             // ImageScalingSize is in device pixels, unlike the icon design grid.
             void SizeToolbarIcons() => toolStrip.ImageScalingSize = toolStrip.LogicalToDeviceUnits(new Size(20, 20));
             SizeToolbarIcons();
@@ -214,6 +221,13 @@ namespace StatsDirect.UI
 
         /// <summary>Whether the main toolbar shows above the active window: not above a script window, which has its own.</summary>
         internal static bool ToolbarShownFor(Form active) => active is not frmScript;
+        private bool toolbarShown = true;
+
+        /// <summary>The toolbar's Find button, named as the renderer draws it; the bitmap only sizes it.</summary>
+        internal static ToolStripButton FindButton(Image placeholder, EventHandler click) => new("Find", placeholder, click) { Name = "findToolStripButton", DisplayStyle = ToolStripItemDisplayStyle.Image, ImageTransparentColor = Color.Magenta };
+
+        /// <summary>The height of the panel above the windows: the gap, the tabs and the toolbar when it shows.</summary>
+        internal static int TopPanelHeight(int gap, int tabHeight, int toolbarHeight, bool toolbarShown) => gap + tabHeight + (toolbarShown ? toolbarHeight : 0);
 
         internal void SetMenuVisibility(bool isGridVisible)
         {
@@ -1021,7 +1035,7 @@ namespace StatsDirect.UI
             tabWindows.MaximumSize = new Size(0, tabHeight);
             tabWindows.Height = tabHeight;
 
-            int panelHeight = LogicalToDeviceUnits(designedGapAboveTabs) + tabHeight + toolStrip.Height;
+            int panelHeight = TopPanelHeight(LogicalToDeviceUnits(designedGapAboveTabs), tabHeight, toolStrip.Height, toolbarShown);
             pnlDefault.MaximumSize = Size.Empty;
             pnlDefault.MinimumSize = new Size(0, panelHeight);
             pnlDefault.MaximumSize = new Size(0, panelHeight);

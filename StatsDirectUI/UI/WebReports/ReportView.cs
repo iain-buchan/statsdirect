@@ -126,6 +126,35 @@ internal sealed class ReportView : UserControl
         catch (Exception ex) { Notice?.Invoke(ex.Message); }
     }
 
+    /// <summary>Selects the next match of a term after the selection, round to the start of the report; false when there is none.</summary>
+    internal async Task<bool> FindNextAsync(string term, bool matchCase)
+    {
+        if (string.IsNullOrEmpty(term)) return false;
+        await Ready;
+        return await Browser.CoreWebView2.ExecuteScriptAsync("window.find(" + Json(term) + ", " + (matchCase ? "true" : "false") + ", false, true, false, false, false)") == "true";
+    }
+
+    /// <summary>Replaces the selection when it is the term; false when it is not, or cannot be edited.</summary>
+    internal async Task<bool> ReplaceSelectionAsync(string term, string replacement, bool matchCase)
+    {
+        if (string.IsNullOrEmpty(term)) return false;
+        await Ready;
+        string same = matchCase ? "t === " + Json(term) : "t.toLowerCase() === " + Json(term) + ".toLowerCase()";
+        return await Browser.CoreWebView2.ExecuteScriptAsync("(() => { const t = getSelection().toString(); if (!t || !(" + same + ")) return false; return document.execCommand('insertText', false, " + Json(replacement) + "); })()") == "true";
+    }
+
+    /// <summary>Replaces every match from the start of the report; the number replaced.</summary>
+    internal async Task<int> ReplaceAllAsync(string term, string replacement, bool matchCase)
+    {
+        if (string.IsNullOrEmpty(term)) return 0;
+        await Ready;
+        string script = "(() => { const s = getSelection(), r = document.createRange(); r.setStart(document.body, 0); r.collapse(true); s.removeAllRanges(); s.addRange(r); let n = 0; "
+                      + "while (n < 100000 && window.find(" + Json(term) + ", " + (matchCase ? "true" : "false") + ", false, false, false, false, false)) { if (!document.execCommand('insertText', false, " + Json(replacement) + ")) break; n++; } return n; })()";
+        return int.TryParse(await Browser.CoreWebView2.ExecuteScriptAsync(script), out int n) ? n : 0;
+    }
+
+    private static string Json(string s) => System.Text.Json.JsonSerializer.Serialize(s);
+
     internal async Task<JsonElement> CallAsync(string method, object args = null)
     {
         await Ready.WaitAsync(TimeSpan.FromSeconds(45));

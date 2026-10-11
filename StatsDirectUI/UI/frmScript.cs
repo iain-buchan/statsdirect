@@ -9,11 +9,12 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace StatsDirect.UI
 {
-    public partial class frmScript : StatsDirectForm, IScriptWindow
+    public partial class frmScript : StatsDirectForm, IScriptWindow, IFindTarget
     {
         /// <summary>
         /// A small print class that allows scripts to throw output at the window.
@@ -340,56 +341,37 @@ namespace StatsDirect.UI
         private void FindAndReplaceToolStripMenuItem_Click(object sender, EventArgs e) => ShowFindBar(true);
 
         #region Find bar
-        // Find and replace as a bar at the top of the window, as the report's find is, in place of floating dialogs: hidden until asked
-        private Panel findBar;
-        private TextBox txtFind, txtReplace;
-        private CheckBox chkMatchCase;
-        private Label lblFindStatus;
-        private bool findBarShown;
-        internal bool FindBarShown => findBarShown;
+        // Find and replace as a bar at the top of the window, as the report's, in place of floating dialogs: hidden until asked
+        private FindBar findBar;
+        internal bool FindBarShown => findBar.Shown;
 
         private void BuildFindBar()
         {
-            Padding beside = new(3, 6, 3, 3);   // labels and the check box sit level with the boxes and buttons
-            txtFind = new TextBox { Width = 220 };
-            chkMatchCase = new CheckBox { Text = "Match case", AutoSize = true, Margin = beside };
-            txtReplace = new TextBox { Width = 220 };
-            lblFindStatus = new Label { AutoSize = true, ForeColor = System.Drawing.SystemColors.GrayText, Margin = beside };
-            Button Button(string text, EventHandler click) { Button b = new() { Text = text, AutoSize = true }; b.Click += click; return b; }
-            FlowLayoutPanel row = new() { Dock = DockStyle.Top, AutoSize = true, WrapContents = true, Padding = new Padding(4, 2, 4, 2) };
-            row.Controls.AddRange(new Control[]
-            {
-                new Label { Text = "Find", AutoSize = true, Margin = beside }, txtFind, chkMatchCase, Button("Find next", (_, _) => FindNext()),
-                new Label { Text = "Replace with", AutoSize = true, Margin = beside }, txtReplace, Button("Replace", (_, _) => Replace()), Button("Replace all", (_, _) => ReplaceAll()),
-                lblFindStatus, Button("Close", (_, _) => HideFindBar()),
-            });
-            findBar = new Panel { Dock = DockStyle.Top, AutoSize = true, Visible = false };
-            findBar.Controls.Add(row);
+            findBar = new FindBar(this);
             Controls.Add(findBar);
-            findBar.BringToFront();   // docked below the toolbar, above the script
-            txtFind.KeyDown += (_, e) => { if (e.KeyCode == Keys.Enter) { FindNext(); e.SuppressKeyPress = true; } else if (e.KeyCode == Keys.Escape) { HideFindBar(); e.SuppressKeyPress = true; } };
-            txtReplace.KeyDown += (_, e) => { if (e.KeyCode == Keys.Enter) { Replace(); e.SuppressKeyPress = true; } else if (e.KeyCode == Keys.Escape) { HideFindBar(); e.SuppressKeyPress = true; } };
+            Controls.SetChildIndex(findBar, Controls.GetChildIndex(ToolStrip1));   // laid out after the toolbar and before the script, so docked below the toolbar with the script below it
         }
 
-        private void ShowFindBar(bool replace)
+        private void ShowFindBar(bool replace) => findBar.Open(replace);
+
+        internal override void EditFind() => ShowFindBar(false);
+
+        string IFindTarget.SelectedText => rtbDoc.SelectionLength > 0 && !rtbDoc.SelectedText.Contains('\n') ? rtbDoc.SelectedText : null;
+
+        void IFindTarget.FocusContent() => rtbDoc.Focus();
+
+        Task<bool> IFindTarget.FindNextAsync(string term, bool matchCase) => Task.FromResult(FindNext(term, matchCase));
+
+        Task<bool> IFindTarget.ReplaceSelectionAsync(string term, string replacement, bool matchCase)
         {
-            findBar.Visible = true;
-            findBarShown = true;
-            lblFindStatus.Text = "";
-            if (rtbDoc.SelectionLength > 0 && !rtbDoc.SelectedText.Contains('\n'))
-                txtFind.Text = rtbDoc.SelectedText;
-            (replace ? txtReplace : txtFind).Focus();
-            txtFind.SelectAll();
+            StringComparison comparison = matchCase ? StringComparison.CurrentCulture : StringComparison.CurrentCultureIgnoreCase;
+            if (term.Length == 0 || !string.Equals(rtbDoc.SelectedText, term, comparison))
+                return Task.FromResult(false);
+            rtbDoc.SelectedText = replacement;
+            return Task.FromResult(true);
         }
 
-        private void HideFindBar()
-        {
-            findBar.Visible = false;
-            findBarShown = false;
-            rtbDoc.Focus();
-        }
-
-        private bool FindNext() => FindNext(txtFind.Text, chkMatchCase.Checked);
+        Task<int> IFindTarget.ReplaceAllAsync(string term, string replacement, bool matchCase) => Task.FromResult(ReplaceAll(term, replacement, matchCase));
 
         /// <summary>Selects the next match after the selection, going round to the start when there is none after it; false when there is none at all.</summary>
         internal bool FindNext(string term, bool matchCase)
@@ -403,27 +385,11 @@ namespace StatsDirect.UI
             if (at < 0)
                 at = text.IndexOf(term, 0, comparison);
             if (at < 0)
-            {
-                if (lblFindStatus != null) lblFindStatus.Text = "Not found: " + term;
                 return false;
-            }
             rtbDoc.Select(at, term.Length);
             rtbDoc.ScrollToCaret();
-            if (lblFindStatus != null) lblFindStatus.Text = "";
             return true;
         }
-
-        private void Replace()
-        {
-            // the match found last is replaced, then the next is found
-            string term = txtFind.Text;
-            StringComparison comparison = chkMatchCase.Checked ? StringComparison.CurrentCulture : StringComparison.CurrentCultureIgnoreCase;
-            if (term.Length > 0 && string.Equals(rtbDoc.SelectedText, term, comparison))
-                rtbDoc.SelectedText = txtReplace.Text;
-            FindNext();
-        }
-
-        private int ReplaceAll() => ReplaceAll(txtFind.Text, txtReplace.Text, chkMatchCase.Checked);
 
         /// <summary>Replaces every match in the script; the number replaced.</summary>
         internal int ReplaceAll(string term, string replacement, bool matchCase)
@@ -444,7 +410,6 @@ namespace StatsDirect.UI
             }
             if (count > 0)
                 rtbDoc.Text = s.ToString();
-            if (lblFindStatus != null) lblFindStatus.Text = count == 0 ? "Not found: " + term : count + " replaced";
             return count;
         }
         #endregion
@@ -769,12 +734,11 @@ namespace StatsDirect.UI
 
         internal override void Print()
         {
-            // the printer and its settings from the print dialog, then the preview, whose own Print button sends the pages
+            // the preview of the pages, whose own Print button sends them to the default printer: the print dialog went before it, and the
+            // printer's own software answered its preview with a message that this program had none
             PrintDocument1.DocumentName = Text;
-            PrintDialog1.Document = PrintDocument1;
-            if (PrintDialog1.ShowDialog(SdApplication.SoleInstance.DialogOwner) != DialogResult.OK)
-                return;
             PrintPreviewDialog1.Document = PrintDocument1;
+            PrintPreviewDialog1.WindowState = FormWindowState.Maximized;
             PrintPreviewDialog1.ShowDialog(SdApplication.SoleInstance.DialogOwner);
         }
 

@@ -1263,10 +1263,10 @@ namespace StatsDirect.UI
 
         private void findToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            DoOrWarn(EditFind, "Find failed");
+            DoOrWarn(ShowFindDialog, "Find failed");
         }
 
-        private void EditFind()
+        private void ShowFindDialog()   // the Find dialog, from the Edit menu; Find on the toolbar opens Find and Replace
         {
             // Fix this rather nasty workaround once SpreadsheetGear has API support for its find dialog
             workbookView.Focus();
@@ -1278,6 +1278,8 @@ namespace StatsDirect.UI
         {
             DoOrWarn(EditReplace, "Replace failed");
         }
+
+        internal override void EditFind() => DoOrWarn(EditReplace, "Find and Replace failed");   // Find on the toolbar: the Find and Replace dialog
 
         private void EditReplace()
         {

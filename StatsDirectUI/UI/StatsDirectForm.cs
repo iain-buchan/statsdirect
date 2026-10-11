@@ -173,6 +173,9 @@ namespace StatsDirect.UI
 
         internal /* abstract */ virtual void Print() { throw new NotSupportedException(); }
 
+        /// <summary>Find on the toolbar: the worksheet's Find and Replace, the report's and the script's find bar; nothing for a window with nothing to search.</summary>
+        internal virtual void EditFind() { }
+
         internal WindowInformation WindowInformation => (WindowInformation)Tag;
 
         /// <summary>

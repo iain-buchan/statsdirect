@@ -14,7 +14,7 @@ using System.Windows.Forms;
 namespace StatsDirect.UI;
 
 /// <summary>HTML/SVG report editor for generated and saved reports.</summary>
-internal sealed class frmReportWebView : StatsDirectForm, IReport
+internal sealed class frmReportWebView : StatsDirectForm, IReport, IFindTarget
 {
     private readonly ReportView view;
     private readonly Label status = new() { Dock = DockStyle.Bottom, AutoSize = true, Text = "Loading the report editor…" };   // sized by its text: a fixed height cut it off at a display scaling above 100%
@@ -28,6 +28,8 @@ internal sealed class frmReportWebView : StatsDirectForm, IReport
         Width = 1000; Height = 750;
         view = new ReportView(System.IO.Path.Combine(SDConfiguration.InstallationDirectory, "ReportEditor")) { Dock = DockStyle.Fill };
         Controls.Add(view); Controls.Add(status);
+        findBar = new FindBar(this);
+        Controls.Add(findBar);   // added last, so laid out first: a bar at the top, the report below it
         status.Padding = new Padding((int)Math.Round(6 * DeviceDpi / 96.0));   // the padding scaled with the display
         CreateFileMenu();
         view.Changed += () => { if (allowClosing) CancelParentClose(); Dirty = true; status.Text = "Unsaved changes"; };
@@ -172,6 +174,15 @@ internal sealed class frmReportWebView : StatsDirectForm, IReport
         status.Text = script.DataUnavailable ? "R script opened, but its data could not be read from the workbook: see the head of the script"
                     : script.HasRecipe ? "R script of the analysis opened" : "R script with the data and settings opened";
     }
+
+    // Find on the toolbar: the bar at the top of the window, as the script window's, whose searches the view answers
+    private readonly FindBar findBar;
+    internal override void EditFind() => findBar.Open(false);
+    string IFindTarget.SelectedText => null;
+    void IFindTarget.FocusContent() => view.Browser.Focus();
+    Task<bool> IFindTarget.FindNextAsync(string term, bool matchCase) => view.FindNextAsync(term, matchCase);
+    Task<bool> IFindTarget.ReplaceSelectionAsync(string term, string replacement, bool matchCase) => view.ReplaceSelectionAsync(term, replacement, matchCase);
+    Task<int> IFindTarget.ReplaceAllAsync(string term, string replacement, bool matchCase) => view.ReplaceAllAsync(term, replacement, matchCase);
 
     public override IList<Pane> AvailablePanes => new List<Pane> { SelectedPane };
     public override Pane SelectedPane => new(Text, WindowInformation, 0);
