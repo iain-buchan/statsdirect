@@ -29,18 +29,35 @@ Searchable PDF course import uses unmodified PdfPig 0.1.16, Apache-2.0, source
 commit `a7bb35662bbbf405efddad50aedc9bcdcf515afc`. Its full licence and included
 font notices ship in `Assets/Licenses/PdfPig`. OCR is not included.
 
-## Preparing a complete build
+## First-use ChatGPT setup
 
-Run `./Learning/prepare-runtime.ps1` from PowerShell before building. It downloads
-the official OpenAI app-server 0.157.1 Windows x64 package, verifies the pinned
-SHA-256 and OpenAI Authenticode signature, and keeps its exact-tag LICENSE,
-NOTICE and source metadata. `DownloadedBinaries/TutorRuntime` is ignored by Git
-and copied into the application output. No credentials are distributed.
+Normal builds and installers do not bundle the 351 MB runtime and do not require
+a preparatory download. On the first explicit **Use my ChatGPT** action, a setup
+dialog automatically downloads the reviewed official OpenAI app-server 0.157.1
+Windows x64 archive (122,840,599 bytes), shows download and verification progress,
+and installs without administrator rights. Success closes setup before continuing
+the existing account/sign-in flow. Cancel preserves the question and offers Retry;
+closing the dialog waits for cleanup. Network/verification failures offer Retry or
+Not now. Opening local lessons, Learning Options or the AI pane alone never downloads.
 
-A normal build checks the runtime and notices exist. Offline, engine-only builds
-may explicitly set `-p:AllowMissingTutorRuntime=true`; those are incomplete and
-must not be released. The package is Windows x64; Windows ARM64 requires the same
-x64 compatibility as the existing application. No new Windows minimum is set.
+`UI/Learning/TutorRuntimeInstallation.cs` pins the archive SHA-256 and every
+extracted file, restricts HTTPS redirects, bounds archive size and entries, rejects
+unexpected paths/links/duplicates, and verifies the OpenAI Authenticode publisher.
+Exact-tag Apache-2.0 LICENSE and NOTICE files ship as small application assets in
+`Assets/Licenses/OpenAI`, with pinned hashes. Complete trees are atomically promoted
+under `%LOCALAPPDATA%\StatsDirect\TutorRuntime\<version>-<hash>`; incomplete attempts
+are removed. A file lock serialises setup across application processes. Existing
+verified installations are reused offline, and corrupted files are repaired on
+the next explicit setup attempt. Full file hashes are checked before process startup.
+Account storage remains separately under `Learning\ChatGPT Tutor`.
+
+The MSI explicitly excludes `TutorRuntime/**`, including stale copies in incremental
+build folders. Old MSI-owned copies are handled by the normal major-upgrade removal.
+The optional `./Learning/prepare-runtime.ps1` script still prepares an official local
+fixture for tests; it is no longer a build prerequisite. Future runtime changes must
+update and verify both the archive/file pins and exact-tag licence assets, then run
+[the first-use checks](../tests/TutorRuntime/README.md). The package remains Windows
+x64; Windows ARM64 uses x64 compatibility. No new Windows minimum is set.
 
 R setup pins CRAN's R 4.6.1 Windows installer and SHA-256, verifies its Windows
 publisher signature, downloads with cancellation/progress and starts the native

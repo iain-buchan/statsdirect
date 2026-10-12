@@ -123,6 +123,9 @@
         </Component>
         <Files Include="$(var.StatsDirectUI.TargetDir)\**">
           <Exclude Files="$(var.StatsDirectUI.TargetDir)\StatsDirect.exe" />
+          <!-- First-use AI setup owns its per-user runtime. Exclude old bundled
+               copies even if an incremental application output still has one. -->
+          <Exclude Files="$(var.StatsDirectUI.TargetDir)\TutorRuntime\**" />
           <!-- Things that can be in the build output but do not belong on a user's machine: the result files that -sanity-check and -test-operations write beside the program, and any separate symbol files. -->
           <Exclude Files="$(var.StatsDirectUI.TargetDir)\sanity-check-results.txt" />
           <Exclude Files="$(var.StatsDirectUI.TargetDir)\test-operations-results.txt" />

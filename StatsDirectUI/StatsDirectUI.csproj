@@ -82,12 +82,8 @@
       <HintPath>..\..\..\..\..\Windows Kits\10\Windows Performance Toolkit\PresentationFramework.dll</HintPath>
     </Reference>
   </ItemGroup>
-  <ItemGroup>
-    <Content Include="../DownloadedBinaries/TutorRuntime/**" Link="TutorRuntime/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-  </ItemGroup>
-  <Target Name="RequireTutorRuntime" BeforeTargets="PrepareForBuild" Condition="'$(DesignTimeBuild)' != 'true' and '$(AllowMissingTutorRuntime)' != 'true'">
-    <Error Condition="!Exists('../DownloadedBinaries/TutorRuntime/bin/codex-app-server.exe') or !Exists('../DownloadedBinaries/TutorRuntime/LICENSE') or !Exists('../DownloadedBinaries/TutorRuntime/NOTICE') or !Exists('../DownloadedBinaries/TutorRuntime/STATSDIRECT-RUNTIME.json')" Text="Run Learning/prepare-runtime.ps1 to verify and prepare the bundled ChatGPT component. For offline engine-only development, use -p:AllowMissingTutorRuntime=true; do not release that incomplete build." />
-  </Target>
+  <!-- The ChatGPT runtime is downloaded into LocalAppData on first explicit AI
+       use. It is not a build prerequisite or part of the application payload. -->
   <!-- The installer's helper (StatsDirectRetire: see OldSetupRetirer.cs there) is packaged from this project's output folder, beside StatsDirect.exe. Nothing in
        StatsDirect refers to it, so it is built first and its files are copied here rather than referenced. -->
   <ItemGroup>

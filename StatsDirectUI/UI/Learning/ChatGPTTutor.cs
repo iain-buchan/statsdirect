@@ -52,7 +52,12 @@ internal sealed class ChatGPTTutor : IDisposable
     }
     internal ChatGPTTutor(string executable, string storage, string resources, params string[] prefixArguments)
     { this.executable = executable; this.storage = storage; this.resources = resources; this.prefixArguments = prefixArguments; }
-    internal static ChatGPTTutor Bundled(string storage) => new(Path.Combine(Configuration.SDConfiguration.InstallationDirectory, "TutorRuntime", "bin", "codex-app-server.exe"), Path.Combine(storage, "ChatGPT Tutor"), Path.Combine(Configuration.SDConfiguration.InstallationDirectory, "Tutor"));
+    internal TutorRuntimeInstallation Runtime { get; private init; }
+    internal static ChatGPTTutor OnDemand(string storage, TutorRuntimeInstallation runtime = null)
+    {
+        runtime ??= new TutorRuntimeInstallation(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "StatsDirect", "TutorRuntime"), Path.Combine(Configuration.SDConfiguration.InstallationDirectory, "Licenses", "OpenAI"));
+        return new(runtime.Executable, Path.Combine(storage, "ChatGPT Tutor"), Path.Combine(Configuration.SDConfiguration.InstallationDirectory, "Tutor")) { Runtime = runtime };
+    }
     private static void CheckPolicy() { if (Disabled) throw new InvalidOperationException(PolicyMessage); }
     private async Task EnsureStartedAsync()
     {
@@ -62,7 +67,9 @@ internal sealed class ChatGPTTutor : IDisposable
     }
     private async Task LaunchAsync()
     {
-        if (!File.Exists(executable)) throw new IOException("The ChatGPT connection component is missing. Install the complete StatsDirect build.");
+        if (Runtime != null && !await Task.Run(() => Runtime.IsValidAsync(CancellationToken.None))) throw new IOException("Choose Use my ChatGPT to download or repair the ChatGPT component.");
+        CheckPolicy(); ObjectDisposedException.ThrowIf(disposed, this);
+        if (!File.Exists(executable)) throw new IOException("Choose Use my ChatGPT to download the ChatGPT component.");
         string workspace = Path.Combine(storage, "Workspace"); Directory.CreateDirectory(workspace);
         File.Copy(Path.Combine(resources, "config.toml"), Path.Combine(storage, "config.toml"), true);
         var start = new ProcessStartInfo(executable) { WorkingDirectory = workspace, UseShellExecute = false, CreateNoWindow = true, RedirectStandardInput = true, RedirectStandardOutput = true, RedirectStandardError = true };
@@ -196,6 +203,9 @@ internal sealed class ChatGPTTutor : IDisposable
     }
     internal async Task RefreshAccountAsync()
     {
+        CheckPolicy();
+        // Merely opening lessons or the AI pane must not initiate a download.
+        if (Runtime != null && !Runtime.IsInstalled) { Status = "Choose Use my ChatGPT to set up the connection"; Changed?.Invoke(); return; }
         await EnsureStartedAsync(); var result = await RequestAsync("account/read", new JsonObject { ["refreshToken"] = false });
         var account = result["account"];
         Email = account.S("type") == "chatgpt" ? account.S("email") : null; Plan = account.S("planType");

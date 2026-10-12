@@ -11,6 +11,31 @@ Windows adaptations are recorded in `ReportEditor/chart-alignment-port.md`.
 Windows review executable:
 `C:\Users\ieb21\Documents\Codex\2026-09-19\po\work\windows-parity\app-mac-catchup\StatsDirect.exe`
 
+## First-use AI installation follow-up
+
+The next Windows review build is
+`C:\Users\ieb21\Documents\Codex\2026-09-19\po\work\windows-parity\app-ai-ondemand\StatsDirect.exe`.
+The Release build passes with the existing NU1701 warning. The output contains
+OpenAI licence/notice assets and no TutorRuntime directory. The project no longer
+requires or copies a runtime; the MSI explicitly excludes old TutorRuntime trees
+left in incremental output. No installer or release has been built for this follow-up.
+
+**40 first-use runtime checks pass**, including an actual 123 MB GitHub/CDN download,
+archive/file SHA-256 checks, OpenAI publisher verification, installation, offline
+reuse, corrupt-install repair, cancellation/cleanup, malformed archive rejection,
+cross-process lock cancellation and native modal progress/error/retry/close.
+The progress dialog was rendered and inspected at 240 DPI; Cancel remains visible.
+**131 native Learning/AI/R checks pass** on the changed application, including the
+new missing-runtime check proving account refresh performs no download/startup.
+The official runtime also starts with isolated credentials and no inherited login.
+No live account sign-in or model request was made. Clean-machine installer/upgrade
+acceptance remains a release check; the tests use isolated temporary runtime roots.
+
+Evidence: `outputs/ai-ondemand-build.txt`, `outputs/ai-ondemand-runtime-tests.txt`,
+`outputs/ai-ondemand-learning-tests.txt`, and
+`work/windows-parity/ai-runtime-checks/ai-setup-progress.png` under the same workspace.
+The earlier results below remain the baseline for unchanged report/engine workflows.
+
 ## Automated results
 
 | Area | Windows evidence | Result |

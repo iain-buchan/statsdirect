@@ -20,7 +20,7 @@ internal sealed partial class LearningService : IDisposable
     internal JsonObject State { get; private set; }
     private JsonObject pack;
     private readonly JsonArray lessons;
-    private bool canSave, disposed;
+    private bool canSave, disposed, configuringTutor;
     private CancellationTokenSource question;
     private string requestId;
     private ScriptAIPane ai;
@@ -28,7 +28,7 @@ internal sealed partial class LearningService : IDisposable
     {
         this.main = main;
         Storage = storage ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "StatsDirect", "Learning");
-        Tutor = tutor ?? ChatGPTTutor.Bundled(Storage);
+        Tutor = tutor ?? ChatGPTTutor.OnDemand(Storage);
         Tutor.Changed += UpdateConnection;
         lessons = LearningJson.Read(Path.Combine(SDConfiguration.InstallationDirectory, "Learn", "lessons.json"), 2_000_000) as JsonArray ?? new();
         string packPath = Path.Combine(Storage, "course-pack.json");
@@ -72,7 +72,7 @@ internal sealed partial class LearningService : IDisposable
                     if (state != null && (state is not JsonObject || state.I("schemaVersion") != 2)) throw new InvalidDataException("The saved learning record has an unsupported format. It has not been overwritten.");
                     canSave = true; await view.CallAsync("restore", state); await view.CallAsync("settings", Settings());
                     await view.CallAsync("coursePack", PackInfo());
-                    await view.CallAsync("diagnostics", new JsonObject { ["appVersion"] = Application.ProductVersion, ["engineVersion"] = Application.ProductVersion, ["tutorRuntime"] = "0.157.1", ["promptVersion"] = "statsdirect-chatgpt-tutor-v4", ["libraryVersion"] = lessons.FirstOrDefault().S("contentVersion") });
+                    await view.CallAsync("diagnostics", new JsonObject { ["appVersion"] = Application.ProductVersion, ["engineVersion"] = Application.ProductVersion, ["tutorRuntime"] = TutorRuntimeInstallation.Version, ["promptVersion"] = "statsdirect-chatgpt-tutor-v4", ["libraryVersion"] = lessons.FirstOrDefault().S("contentVersion") });
                     view.Loaded(); RefreshWorkspace();
                     if (view.OptionsOnReady) { view.OptionsOnReady = false; await view.CallAsync("showOptions"); }
                     if (!ChatGPTTutor.Disabled) _ = RefreshAccountAsync();
@@ -157,6 +157,21 @@ internal sealed partial class LearningService : IDisposable
     private async Task RefreshAccountAsync() { try { await Tutor.RefreshAccountAsync(); } catch (Exception ex) { if (View?.IsDisposed == false) await View.CallAsync("notice", JsonValue.Create(ex.Message)); } }
     internal async Task ConfigureTutorAsync(IWin32Window owner)
     {
+        if (configuringTutor || disposed) return;
+        configuringTutor = true;
+        try { await ConfigureTutorCoreAsync(owner); }
+        finally { configuringTutor = false; }
+    }
+    private async Task ConfigureTutorCoreAsync(IWin32Window owner)
+    {
+        if (ChatGPTTutor.Disabled) throw new InvalidOperationException(ChatGPTTutor.PolicyMessage);
+        if (Tutor.Runtime != null && !await Task.Run(() => Tutor.Runtime.IsValidAsync(CancellationToken.None)))
+        {
+            if (disposed || owner is Control { IsDisposed: true }) return;
+            using var setup = new frmInstallTutor(Tutor.Runtime);
+            if (setup.ShowDialog(owner) != DialogResult.OK) return;
+        }
+        if (disposed) return;
         if (ChatGPTTutor.Disabled) throw new InvalidOperationException(ChatGPTTutor.PolicyMessage);
         await Tutor.RefreshAccountAsync();
         if (Tutor.Email != null)

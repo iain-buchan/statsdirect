@@ -1,4 +1,6 @@
 param([string]$Destination = (Join-Path $PSScriptRoot '..\DownloadedBinaries\TutorRuntime'))
+# Optional developer/test fixture. Application builds no longer bundle this tree;
+# production first-use setup is implemented in TutorRuntimeInstallation.cs.
 $ErrorActionPreference = 'Stop'
 $runtimeVersion = '0.157.1'
 $runtimeArchive = 'codex-app-server-package-x86_64-pc-windows-msvc.tar.gz'

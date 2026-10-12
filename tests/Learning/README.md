@@ -10,12 +10,18 @@ conversation and dynamic-tool messages use `mock-server.mjs`, with no model
 requests. Optional runtime checks start the official component under a fresh
 temporary CODEX_HOME and read account status only. R analyses use installed R.
 
+First-use setup follow-up: **131 checks pass** on `app-ai-ondemand`, including a
+missing-runtime account refresh that performs no download or startup. The optional
+R-installer-file check was not supplied in this run. Download/install and setup
+dialog checks are in [TutorRuntime](../TutorRuntime/README.md): 40 pass including
+the optional real GitHub download. The application no longer bundles its runtime.
+
 Build StatsDirect first, then run from the repository root:
 
 ```powershell
 $env:STATSDIRECT_TEST_NODE = (Get-Command node).Source
 $env:STATSDIRECT_LEARNING_ARTIFACTS = 'C:\path\to\test-artifacts'
-$env:STATSDIRECT_TEST_TUTOR_RUNTIME = 'C:\path\to\app\TutorRuntime\bin\codex-app-server.exe'
+$env:STATSDIRECT_TEST_TUTOR_RUNTIME = "$PWD\DownloadedBinaries\TutorRuntime\bin\codex-app-server.exe" # optional prepare-runtime.ps1 fixture
 # Optional: verify an already downloaded, pinned official R installer; never install it.
 $env:STATSDIRECT_TEST_R_INSTALLER = 'C:\path\to\R-4.6.1-win.exe'
 dotnet run --project tests/Learning -c Release -p:StatsDirectBin=C:\path\to\app

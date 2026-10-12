@@ -30,6 +30,12 @@ internal static partial class Program
     }
     static async Task TestTutor(ChatGPTTutor tutor)
     {
+        var missing = new TutorRuntimeInstallation(Path.Combine(root,"missing-runtime"),Path.Combine(AppContext.BaseDirectory,"Licenses","OpenAI"));
+        using (var firstUse = ChatGPTTutor.OnDemand(Path.Combine(root,"first-use-account"),missing))
+        {
+            await firstUse.RefreshAccountAsync();
+            Check(firstUse.Email==null&&firstUse.Status.Contains("Use my ChatGPT")&&!Directory.Exists(Path.GetDirectoryName(missing.DirectoryPath)),"opening Learning or AI before setup performs no download or runtime startup");
+        }
         await tutor.RefreshAccountAsync();Check(tutor.Email==null,"fresh isolated account starts disconnected");
         Check(ChatGPTTutor.IsLoginUrl("https://auth.openai.com/authorize")&&!ChatGPTTutor.IsLoginUrl("http://auth.openai.com/authorize")&&!ChatGPTTutor.IsLoginUrl("https://auth.openai.com.evil.invalid/authorize"),"sign-in accepts only official HTTPS authentication hosts");
         await tutor.SignInAsync();await Wait(()=>tutor.Email=="mock@example.invalid","mocked sign-in completion updates account state");
