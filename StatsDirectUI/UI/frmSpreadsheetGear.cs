@@ -81,6 +81,7 @@ namespace StatsDirect.UI
 
         private void workbookView_RangeChanged(object sender, RangeChangedEventArgs e)
         {
+            LearningVersion++;
             Dirty = true;
         }
 
@@ -1135,10 +1136,13 @@ namespace StatsDirect.UI
         private void undoToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (MdiParent is frmMain main && main.TryCalculatorEdit("undo")) return;
-            DoOrWarn(Undo, "Undo failed");
+            DoOrWarn(EditUndo, "Undo failed");
         }
 
-        private void Undo()
+        internal override bool CanUndo => workbookView.WithLock(() => workbookView.ActiveCommandManager.CanUndo);
+        internal override bool CanRedo => workbookView.WithLock(() => workbookView.ActiveCommandManager.CanRedo);
+
+        internal override void EditUndo()
         {
             if (workbookView.ActiveCommandManager.CanUndo)
                 workbookView.ActiveCommandManager.Undo();
@@ -1815,7 +1819,7 @@ namespace StatsDirect.UI
             DoOrWarn(EditRedo, "Couldn't redo");
         }
 
-        private void EditRedo()
+        internal override void EditRedo()
         {
             if (workbookView.ActiveCommandManager.CanRedo)
                 workbookView.ActiveCommandManager.Redo();

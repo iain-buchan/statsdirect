@@ -4,6 +4,20 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
 ##[Unreleased]
 
+### Changed
+- Help remains after Window; Check for Updates is in Help, and Example workbook is the final item in its own section. Script tools end with AI then R+, using the same symbols as Mac; R+ retains the accessible Open in R label.
+- Report charts start left aligned. Left, Centre and Right work on a single selected SVG or raster picture as well as text, with undo/redo and alignment retained during resizing, copying, HTML reopening and Word/PDF export.
+- Reports, scripts and data grids use one document toolbar, with the same Windows-style icons and command order as the Mac version: Save, Undo/Redo, Cut/Copy/Paste, Find, document tools, then Help and R where available. Report formatting moves into More at narrower widths; scripts and grids use native More overflow. File menus retain New, Open, Save As and printing. The script's separate lower Run row is removed, with its language selector available through More.
+- Startup opens the supplied document or a blank worksheet, without a compulsory Open/New chooser.
+- Missing-R setup offers a verified official installer with progress, cancel/retry and an executable-readiness check before resuming the pending Run/Open in R action.
+- Script AI replies update incrementally without resetting the conversation on every chunk. Scrolling back or selecting text pauses automatic following; returning to the bottom resumes it.
+
+### Added
+- Help > Learning and Learning Options reuse the Mac lesson library, provider courses, learner preferences, independent practice and learning-record exports. Records stay local; sharing document context with the user's ChatGPT account requires confirmation for each question.
+- R scripts have a dockable, read-only AI assistant in the existing toolbar. Suggested code opens for review before execution.
+- Script AI groups sharing, question entry and Send/Stop at the top, with the conversation and code actions below. Help > Example workbook opens an editable unsaved copy of the supplied workbook.
+- The Learning assistant can run ten supported analyses through the unchanged StatsDirect engine on approved worksheet ranges, adding normal HTML/SVG report results with Continue in R. Stale, cancelled, unapproved and duplicate requests are checked before publication.
+
 ##[v5.1.1] 2026-10-11
 
 Version 5.1.1 corrects the scripts that Continue in R writes. Reviews of version 5.1.0, on Windows and through the Mac port of the engine, found that many scripts followed the help's example rather than the run: a fixed number of predictors, an intercept, no weights or the default of an option whatever the run had chosen, intervals at 95% whatever the level, and in two cases a setting that no run records, so that the script stopped. Each script now follows the run's data, options and confidence level, and scripts run at the same time from several script windows no longer share their files. The toolbar of a report gains an R button that continues the result the cursor is in, or the latest result, in R.

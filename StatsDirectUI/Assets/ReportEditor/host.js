@@ -115,6 +115,7 @@ window.WindowsReport={async run(request){
       case 'paste':value=StatsDirectReportEditor.pastePrepared(request.args.token,request.args.payload);break;
       default:throw Error('Unknown report command.');
     }
+    window.WindowsReportToolbar?.refresh();
     post({action:'reply',id:request.id,value:value??null});
   }catch(error){post({action:'reply',id:request.id,error:String(error.message??error)});}
 }};

@@ -171,6 +171,11 @@ namespace StatsDirect.UI
 
         internal /* abstract */ virtual void EditPaste() { throw new NotSupportedException(); }
 
+        internal virtual bool CanUndo => false;
+        internal virtual bool CanRedo => false;
+        internal virtual void EditUndo() { }
+        internal virtual void EditRedo() { }
+
         internal /* abstract */ virtual void Print() { throw new NotSupportedException(); }
 
         /// <summary>Find on the toolbar: the worksheet's Find and Replace, the report's and the script's find bar; nothing for a window with nothing to search.</summary>

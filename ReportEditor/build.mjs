@@ -1,5 +1,5 @@
-// Keep the pinned Mac sources intact. The small host/platform adaptations are
-// applied during bundling so that an upstream update has one reviewable boundary.
+// Bundle the recorded Mac source baseline plus the shared chart-alignment port.
+// Apply Windows-only adaptations here so their review boundary stays explicit.
 // The editor finds the Windows host bridge (window.statsDirectReportHost) and the
 // platform's shortcut labels itself, and both sanitizers allow border longhands;
 // what remains is the drag-copy modifier and the Windows report presentation.
@@ -24,4 +24,12 @@ await bundle('editor','StatsDirectReportEditor',[{name:'windows-report-transfer'
 
 await bundle('export','StatsDirectReportExport',[{name:'windows-report-export-style',setup(b){b.onLoad({filter:/export\.mjs$/},async ({path})=>({contents:windowsExportStyle(await readFile(path,'utf8')),loader:'js'}));}}]);
 
-await bundle('import','StatsDirectReportImport',[]);
+// Windows imports inside the report WebView, where workspace.css also applies.
+// Tag only the temporary container so plain imports use the host's chart defaults.
+await bundle('import','StatsDirectReportImport',[{name:'windows-report-import-style',setup(b){b.onLoad({filter:/import\.mjs$/},async ({path})=>{
+  let contents=await readFile(path,'utf8');
+  const before="const container=document.createElement('div');container.append";
+  if(!contents.includes(before))throw Error('Review the Windows import container adapter');
+  contents=contents.replace(before,"const container=document.createElement('div');container.className='report-import';container.append");
+  return {contents,loader:'js'};
+});}}]);

@@ -1,5 +1,9 @@
 # Production Windows shell checks
 
+12 October 2026 catch-up: all **28 shell checks** pass with an R script active for toolbar rendering. The RScript suite passes **163 checks**, including AI then R+, all eleven vector symbols and the single accessible Open in R control. Native Learning separately verifies the final Help ordering: Help after Window, updates in Help, Example workbook last below a separator.
+
+12 October 2026: **28 checks pass** with the common document toolbar. They cover worksheet and script undo/redo, one-click script Save, Find, native More overflow, the language selector, output selection retained through More, switching document toolbars, and calculator focus/undo routing. `STATSDIRECT_TOOLBAR_ARTIFACTS` optionally selects a directory for rendered grid/script toolbar images. The separate R script-window checks pass 22 assertions, including the labelled Run button starting the existing R workflow and print/Find/Help behaviour. No installer or release was created.
+
 Build the Release application, then run on Windows:
 
 ```powershell

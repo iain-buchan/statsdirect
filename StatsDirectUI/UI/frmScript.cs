@@ -38,6 +38,9 @@ namespace StatsDirect.UI
         public frmScript()
         {
             InitializeComponent();
+            editTarget = rtbDoc;
+            rtbDoc.Enter += (_, _) => editTarget = rtbDoc;
+            rtbOutput.Enter += (_, _) => editTarget = rtbOutput;
             SaveToolStripMenuItem.Click += SaveToolStripMenuItem_Click;
             SaveAsToolStripMenuItem.Click +=SaveAsToolStripMenuItem_Click;
             SelectAllToolStripMenuItem.Click += SelectAllToolStripMenuItem_Click;
@@ -63,37 +66,39 @@ namespace StatsDirect.UI
             BuildFindBar();
             BuildPreview();
             rtbOutput.Font = new System.Drawing.Font("Consolas", rtbOutput.Font.Size);   // R's transcript in a monospace face, as an R session shows it
-            // the toolbar in the main window's order, New, Open, Save, Print, Cut, Copy, Paste, Help, with Find before Help for the script, and
-            // drawn as the main window's: its renderer paints each button's symbol by its name at the display size, so the buttons take the
-            // names it knows, and a bitmap only sizes them; the R tools follow when the window shows an R script
-            ToolStrip1.Renderer = new SharpToolbarRenderer();
-            void SizeToolbarIcons() => ToolStrip1.ImageScalingSize = ToolStrip1.LogicalToDeviceUnits(new System.Drawing.Size(20, 20));
-            SizeToolbarIcons();
-            ToolStrip1.DpiChangedAfterParent += (_, _) => SizeToolbarIcons();
-            tbrSave.Name = "saveToolStripButton";
-            tbrFind.Name = "findToolStripButton";
+            // The same document command order as worksheets and the web report. File actions remain in File.
+            var undo = DocumentToolbar.Button("Undo", "undo", mnuUndo_Click, "Ctrl+Z");
+            var redo = DocumentToolbar.Button("Redo", "redo", mnuRedo_Click, "Ctrl+Y");
+            var cut = DocumentToolbar.Button("Cut", "cut", CutToolStripMenuItem_Click, "Ctrl+X");
+            var copy = DocumentToolbar.Button("Copy", "copy", CopyToolStripMenuItem_Click, "Ctrl+C");
+            var paste = DocumentToolbar.Button("Paste", "paste", PasteToolStripMenuItem_Click, "Ctrl+V");
+            // Keep the existing language selector and Run handler, but remove the second command row.
+            cboLanguage.AccessibleName = "Script language";
+            var language = new ToolStripControlHost(cboLanguage) { Name = "scriptLanguage", AccessibleName = "Script language", Overflow = ToolStripItemOverflow.Always };
+            pnlActions.Visible = false;
             ToolStrip1.Items.Clear();
             ToolStrip1.Items.AddRange(new ToolStripItem[]
             {
-                ToolbarButton("New script", "newToolStripButton", (_, _) => SdApplication.SoleInstance.CreateScriptWindow()),
-                ToolbarButton("Open", "openToolStripButton", (_, _) => SdApplication.SoleInstance.OpenFile()),
-                tbrSave,
-                ToolbarButton("Print", "printToolStripButton", (_, _) => Print()),
+                DocumentToolbar.Button("Save", "save", tbrSave_Click, "Ctrl+S"),
                 new ToolStripSeparator(),
-                ToolbarButton("Cut", "cutToolStripButton", CutToolStripMenuItem_Click),
-                ToolbarButton("Copy", "copyToolStripButton", CopyToolStripMenuItem_Click),
-                ToolbarButton("Paste", "pasteToolStripButton", PasteToolStripMenuItem_Click),
-                tbrFind,
+                undo, redo, new ToolStripSeparator(), cut, copy,
+                paste,
+                DocumentToolbar.Button("Find", "find", tbrFind_Click, "Ctrl+F"),
                 new ToolStripSeparator(),
-                ToolbarButton("Help", "helpToolStripButton", (_, _) => ShowHelp()),
+                DocumentToolbar.Button("Run", "run", cmdRun_Click, "Alt+R", labelled: true),
+                DocumentToolbar.Button("Help", "help", (_, _) => ShowHelp(), "F1"),
+                language,
+            });
+            DocumentToolbar.Configure(ToolStrip1, () => {
+                undo.Enabled = CanUndo; redo.Enabled = CanRedo;
+                copy.Enabled = editTarget.SelectionLength > 0;
+                cut.Enabled = copy.Enabled && !editTarget.ReadOnly;
+                paste.Enabled = !editTarget.ReadOnly;
             });
         }
 
-        /// <summary>A toolbar button named as the renderer draws it, with its text as its tooltip; the bitmap only sizes it.</summary>
-        private ToolStripButton ToolbarButton(string text, string name, EventHandler click) =>
-            new(text, tbrSave.Image, click) { Name = name, DisplayStyle = ToolStripItemDisplayStyle.Image, ImageTransparentColor = System.Drawing.Color.Magenta };
-
         private string currentFile;
+        private RichTextBox editTarget; // retained when the toolbar or its More dropdown takes keyboard focus
         private string printRemaining;   // what is left to print of the script, page by page
 
         /// <summary>Prints the script as the editor shows it, as many pages as its lines wrapped to the page take.</summary>
@@ -119,6 +124,13 @@ namespace StatsDirect.UI
                 default: return;
             }
             e.SuppressKeyPress = true;
+        }
+
+        protected override bool ProcessCmdKey(ref Message message, Keys keyData)
+        {
+            // Preserve the old lower Run button's access key after moving it into the toolbar.
+            if (keyData == (Keys.Alt | Keys.R)) { cmdRun_Click(this, EventArgs.Empty); return true; }
+            return base.ProcessCmdKey(ref message, keyData);
         }
         private string helpTopic;   // the help topic of the result the script continues, when it does
 
@@ -208,6 +220,11 @@ namespace StatsDirect.UI
                 cboLanguage.SelectedIndex = 2;
             else if(".cs".Equals(strExt))
                 cboLanguage.SelectedIndex = 0;
+            else if (".r".Equals(strExt))
+            {
+                cboLanguage.SelectedIndex = 1;
+                EnsureRTools();
+            }
             return true;
         }
 
@@ -285,7 +302,7 @@ namespace StatsDirect.UI
         {
             try
             {
-                rtbDoc.Copy();
+                EditCopy();
             }
             catch (Exception)
             {
@@ -297,7 +314,7 @@ namespace StatsDirect.UI
         {
             try
             {
-                rtbDoc.Cut();
+                EditCut();
             }
             catch (Exception)
             {
@@ -309,7 +326,7 @@ namespace StatsDirect.UI
         {
             try
             {
-                rtbDoc.Paste();
+                EditPaste();
             }
             catch (Exception)
             {
@@ -328,14 +345,12 @@ namespace StatsDirect.UI
 
         private void mnuUndo_Click(object sender, EventArgs e)
         {
-            if (rtbDoc.CanUndo)
-                rtbDoc.Undo();
+            EditUndo();
         }
 
         private void mnuRedo_Click(object sender, EventArgs e)
         {
-            if (rtbDoc.CanRedo)
-                rtbDoc.Redo();
+            EditRedo();
         }
 
         private void FindToolStripMenuItem_Click(object sender, EventArgs e) => ShowFindBar(false);
@@ -468,7 +483,7 @@ namespace StatsDirect.UI
         /// Shows an R script, the one written for a result the user continues in R: the language set to R, so that Run runs it with the
         /// installed R and Save As offers an R file.
         /// </summary>
-        internal void ShowR(string script, string title, string helpTopic = null)
+        internal void ShowR(string script, string title, string helpTopic = null, bool runImmediately = true)
         {
             this.helpTopic = helpTopic;
             rtbDoc.Text = script;
@@ -480,21 +495,32 @@ namespace StatsDirect.UI
             // the window keeps its number, so that the next script is Script 2, and names the analysis after it; the tab is named with it
             string name = Text + ": " + title;
             if (Tag is WindowInformation info && info.IsNew) info.FriendlyName = name; else Text = name;
+            EnsureRTools();
+            if (runImmediately) RunR();
+        }
+
+        private void EnsureRTools()
+        {
             if (!rTools)
             {
                 // the toolbar of an R script: run it again after editing, clear what earlier runs printed, and open the folder R writes to; the
                 // files a run writes are listed as links
                 rTools = true;
-                ToolStrip1.Items.Add(new ToolStripSeparator());
-                ToolStrip1.Items.Add(new ToolStripButton("Run", null, (_, _) => RunR()) { DisplayStyle = ToolStripItemDisplayStyle.Text, ToolTipText = "Run the script with the installed R; what it prints appears below" });
-                ToolStrip1.Items.Add(new ToolStripButton("Clear output", null, (_, _) => rtbOutput.Clear()) { DisplayStyle = ToolStripItemDisplayStyle.Text, ToolTipText = "Clear what R has printed below" });
-                ToolStrip1.Items.Add(new ToolStripButton("Output folder", null, (_, _) => OpenRFolder()) { DisplayStyle = ToolStripItemDisplayStyle.Text, ToolTipText = "Open the folder the script writes its files to" });
-                ToolStrip1.Items.Add(new ToolStripButton("Open in R", null, (_, _) => OpenInR()) { DisplayStyle = ToolStripItemDisplayStyle.Text, ToolTipText = "Save the script as an R file and open it in RStudio when that is installed, else in R's own window" });
+                ToolStrip1.Items["runToolStripButton"].ToolTipText = "Run (Alt+R): run the current script in R; run again to restart with your latest edits";
+                var ai = DocumentToolbar.Button("AI assistance", "ai", (_, _) => (MdiParent as frmMain)?.Learning.ShowScriptAI(this));
+                ai.ToolTipText = "Ask about this R script";
+                ToolStrip1.Items.Add(ai);
+                ToolStrip1.Items.Add(DocumentToolbar.Button("Open in R", "rPlus", (_, _) => OpenInR()));
+                ToolStrip1.Items.Add(new ToolStripButton("Clear output", null, (_, _) => rtbOutput.Clear()) { Overflow = ToolStripItemOverflow.Always, ToolTipText = "Clear what R has printed below" });
+                ToolStrip1.Items.Add(new ToolStripButton("Output folder", null, (_, _) => OpenRFolder()) { Overflow = ToolStripItemOverflow.Always, ToolTipText = "Open the folder the script writes its files to" });
                 rtbOutput.DetectUrls = true;
                 rtbOutput.LinkClicked += (_, e) => OpenLink(e.LinkText);
             }
-            RunR();
         }
+
+        internal string LearningScript => rtbDoc.Text;
+        internal string LearningOutput => rtbOutput.Text;
+        internal bool LearningRunning => runningR;
 
         private bool rTools, runningR;
         private System.Threading.CancellationTokenSource rRun;   // stops the R process of the run in progress
@@ -776,19 +802,24 @@ namespace StatsDirect.UI
 
         internal override void ShowHelp() => SdApplication.SoleInstance.ShowHelp(this, HelpTopic);
 
+        internal override bool CanUndo => editTarget.CanUndo;
+        internal override bool CanRedo => editTarget.CanRedo;
+        internal override void EditUndo() { if (CanUndo) editTarget.Undo(); }
+        internal override void EditRedo() { if (CanRedo) editTarget.Redo(); }
+
         internal override void EditCut()
         {
-            rtbDoc.Cut();
+            if (!editTarget.ReadOnly) editTarget.Cut();
         }
 
         internal override void EditCopy()
         {
-            rtbDoc.Copy();
+            editTarget.Copy();
         }
 
         internal override void EditPaste()
         {
-            rtbDoc.Paste();
+            if (!editTarget.ReadOnly) editTarget.Paste();
         }
 
         #region Print preview

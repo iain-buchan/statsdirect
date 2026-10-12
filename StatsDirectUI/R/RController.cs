@@ -27,34 +27,42 @@ namespace StatsDirect.R
         {
             string[] rLocations = { @"Software\R-core\R", @"Software\R-core\R64" };
             List<RVersion> installedVersions = new();
-            try
+            foreach (RegistryHive hive in new[] { RegistryHive.CurrentUser, RegistryHive.LocalMachine })
+            foreach (RegistryView view in new[] { RegistryView.Registry64, RegistryView.Registry32 })
             {
-                using RegistryKey hklm = Registry.LocalMachine;
                 foreach (string rLocation in rLocations)
                 {
-                    using RegistryKey rKey = hklm.OpenSubKey(rLocation);
-                    foreach (string version32 in rKey.GetSubKeyNames())
+                    try
                     {
-                        using RegistryKey versionKey = rKey.OpenSubKey(version32);
-                        object installPathObject = versionKey.GetValue("InstallPath");
-                        if (null != installPathObject)
+                        using RegistryKey root = RegistryKey.OpenBaseKey(hive, view);
+                        using RegistryKey rKey = root.OpenSubKey(rLocation);
+                        if (rKey == null) continue;
+                        foreach (string versionName in rKey.GetSubKeyNames())
                         {
-                            bool isX64 = rLocation.EndsWith("64");
-                            string installPath = (string)installPathObject;
-                            RVersion version = new() { IsX64 = isX64, VersionString = version32, InstallPath = installPath };
-                            // Probe for a binary there to check it's still around and hasn't been uninstalled/deleted
-                            string binaryPath = Path.Combine(version.BinPath, "Rscript.exe");
-                            if (File.Exists(binaryPath))
-                                installedVersions.Add(version);
+                            using RegistryKey versionKey = rKey.OpenSubKey(versionName);
+                            AddInstalledVersion(installedVersions, versionKey?.GetValue("InstallPath") as string, versionName);
                         }
+                        // Some installations record only the current version at the root.
+                        AddInstalledVersion(installedVersions, rKey.GetValue("InstallPath") as string, rKey.GetValue("Current Version") as string);
                     }
+                    catch (System.Security.SecurityException) { }
+                    catch (UnauthorizedAccessException) { }
+                    catch (IOException) { }
                 }
             }
-            catch (Exception)
-            {
-                // Return whatever we have
-            }
             return installedVersions;
+        }
+
+        internal static void AddInstalledVersion(List<RVersion> versions, string path, string versionName)
+        {
+            if (string.IsNullOrEmpty(path) || !Version.TryParse(versionName, out _)) return;
+            foreach (bool x64 in new[] { true, false })
+            {
+                var candidate = new RVersion { InstallPath = path, VersionString = versionName, IsX64 = x64 };
+                if (File.Exists(Path.Combine(candidate.BinPath, RSCRIPT_EXE_NAME)) &&
+                    !versions.Exists(v => v.BinPath.Equals(candidate.BinPath, StringComparison.OrdinalIgnoreCase)))
+                    versions.Add(candidate);
+            }
         }
 
         /// <summary>

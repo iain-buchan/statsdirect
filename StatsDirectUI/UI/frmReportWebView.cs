@@ -17,6 +17,7 @@ namespace StatsDirect.UI;
 internal sealed class frmReportWebView : StatsDirectForm, IReport, IFindTarget
 {
     private readonly ReportView view;
+    internal ReportView LearningReport => view;
     private readonly Label status = new() { Dock = DockStyle.Bottom, AutoSize = true, Text = "Loading the report editor…" };   // sized by its text: a fixed height cut it off at a display scaling above 100%
     private bool allowClosing, saving, opening;
     private static readonly System.Threading.SemaphoreSlim closePrompts = new(1, 1);
@@ -41,7 +42,9 @@ internal sealed class frmReportWebView : StatsDirectForm, IReport, IFindTarget
         {
             if (command == "open") await OpenDialogAsync();
             else if (command == "print") Print();
-            else await SaveHtmlAsync(command == "saveAs");
+            else if (command == "find") EditFind();
+            else if (command == "continueInR") await ContinueCurrentInRAsync();
+            else if (command is "save" or "saveAs") await SaveHtmlAsync(command == "saveAs");
         });
         Shown += async (_, _) => await Guard(async () => { await view.Ready; status.Text = "Ready"; });
         Activated += (_, _) =>
@@ -95,6 +98,20 @@ internal sealed class frmReportWebView : StatsDirectForm, IReport, IFindTarget
 
     private object lastRun;            // the run of the operation whose item was appended last
     private Task<string> lastItem;     // that item's id, once appended
+
+    internal async Task<string> AppendLearningResultAsync(string html, string operationName, string record, Action check)
+    {
+        await view.Ready;
+        var operation = TemplateFactory.Operations[operationName];
+        string item = await view.AppendAsync(html, operation.FriendlyName, operationName, operation.HelpContext?.ChmId ?? 0, record, () =>
+        {
+            check();
+            if (IsDisposed) throw new InvalidOperationException("The report closed before the calculation finished.");
+            if (allowClosing) CancelParentClose();
+            Dirty = true;
+        });
+        Activate(); return item;
+    }
 
     void IReport.AppendRenderable(IRenderable renderable, int helpContextId, Operation operation, object run)
     {

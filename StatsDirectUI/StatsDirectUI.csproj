@@ -49,6 +49,9 @@
     <AssemblyAttribute Include="System.CLSCompliantAttribute">
       <_Parameter1>false</_Parameter1>
     </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>StatsDirect.LearningChecks</_Parameter1>
+    </AssemblyAttribute>
   </ItemGroup>
 
   <ItemGroup>
@@ -61,6 +64,7 @@
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.9.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.VisualBasic" Version="5.9.0" />
     <PackageReference Include="OpenMcdf" Version="3.3.0" />
+    <PackageReference Include="PdfPig" Version="0.1.16" />
     <PackageReference Include="PresentationFramework" Version="4.6.0" />
     <PackageReference Include="SpreadsheetGear" Version="9.3.84" />
     <PackageReference Include="SpreadsheetGear.Windows" Version="9.3.84" />
@@ -78,6 +82,12 @@
       <HintPath>..\..\..\..\..\Windows Kits\10\Windows Performance Toolkit\PresentationFramework.dll</HintPath>
     </Reference>
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="../DownloadedBinaries/TutorRuntime/**" Link="TutorRuntime/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <Target Name="RequireTutorRuntime" BeforeTargets="PrepareForBuild" Condition="'$(DesignTimeBuild)' != 'true' and '$(AllowMissingTutorRuntime)' != 'true'">
+    <Error Condition="!Exists('../DownloadedBinaries/TutorRuntime/bin/codex-app-server.exe') or !Exists('../DownloadedBinaries/TutorRuntime/LICENSE') or !Exists('../DownloadedBinaries/TutorRuntime/NOTICE') or !Exists('../DownloadedBinaries/TutorRuntime/STATSDIRECT-RUNTIME.json')" Text="Run Learning/prepare-runtime.ps1 to verify and prepare the bundled ChatGPT component. For offline engine-only development, use -p:AllowMissingTutorRuntime=true; do not release that incomplete build." />
+  </Target>
   <!-- The installer's helper (StatsDirectRetire: see OldSetupRetirer.cs there) is packaged from this project's output folder, beside StatsDirect.exe. Nothing in
        StatsDirect refers to it, so it is built first and its files are copied here rather than referenced. -->
   <ItemGroup>

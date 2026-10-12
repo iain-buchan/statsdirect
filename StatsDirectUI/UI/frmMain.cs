@@ -152,6 +152,7 @@ namespace StatsDirect.UI
         {
             currentScaleFactor = new SizeF(1f, 1f);
             InitializeComponent();
+            InitializeLearningCommands();
             // A menu temporarily owns keyboard focus. Remember its edit target
             // until Click has run, instead of editing the underlying worksheet.
             mnuMain.MenuActivate += (_, _) =>
@@ -166,25 +167,35 @@ namespace StatsDirect.UI
                 if (IsHandleCreated && !IsDisposed)
                     BeginInvoke(new Action(() => calculatorMenuTarget = null));
             };
-            toolStrip.Renderer = new SharpToolbarRenderer();
-            // Find after Paste, as the script window's toolbar has it: the worksheet's Find and Replace, the report's find bar
-            toolStrip.Items.Insert(toolStrip.Items.IndexOf(toolStripSeparator2), FindButton(pasteToolStripButton.Image, (_, _) => SdApplication.SoleInstance.ActiveWindow?.EditFind()));
-            // R after Help, for the report: the result the cursor is in, or the latest, continued in R; the button shows while a report is active
-            ToolStripButton rButton = RButton(helpToolStripButton.Image, (_, _) => (ActiveMdiChild as frmReportWebView)?.ContinueCurrentInR());
-            toolStrip.Items.Insert(toolStrip.Items.IndexOf(helpToolStripButton) + 1, rButton);
-            rButton.Visible = RButtonShownFor(ActiveMdiChild);
-            // the toolbar is the report's and the worksheet's: a script window has a toolbar of its own, so it goes while one is active
+            // Reports and scripts own their single document toolbar. This bar serves the worksheet;
+            // its Results to selector stays available without putting a second bar above a report.
+            var undoButton = DocumentToolbar.Button("Undo", "undo", (_, _) => EditHistory(false), "Ctrl+Z");
+            var redoButton = DocumentToolbar.Button("Redo", "redo", (_, _) => EditHistory(true), "Ctrl+Y");
+            toolStrip.Items.Clear();
+            toolStrip.Items.AddRange(new ToolStripItem[] {
+                DocumentToolbar.Button("Save", "save", saveToolStripButton_Click, "Ctrl+S"), new ToolStripSeparator(),
+                undoButton, redoButton, new ToolStripSeparator(),
+                DocumentToolbar.Button("Cut", "cut", cutToolStripButton_Click, "Ctrl+X"),
+                DocumentToolbar.Button("Copy", "copy", copyToolStripButton_Click, "Ctrl+C"),
+                DocumentToolbar.Button("Paste", "paste", pasteToolStripButton_Click, "Ctrl+V"),
+                DocumentToolbar.Button("Find", "find", (_, _) => SdApplication.SoleInstance.ActiveWindow?.EditFind(), "Ctrl+F"),
+                new ToolStripSeparator(), lblActiveReport, cboActiveReport, new ToolStripSeparator(),
+                DocumentToolbar.Button("Help", "help", helpToolStripButton_Click, "F1")
+            });
+            DocumentToolbar.Configure(toolStrip, () => {
+                var document = ActiveMdiChild as StatsDirectForm;
+                var calculator = SdApplication.SoleInstance.CalculatorView;
+                undoButton.Enabled = calculator?.ContainsFocus == true ? calculator.Expression.CanUndo : document?.CanUndo == true;
+                redoButton.Enabled = calculator?.ContainsFocus == true ? calculator.Expression.CanRedo : document?.CanRedo == true;
+            });
+            toolbarShown = ToolbarShownFor(ActiveMdiChild);
+            toolStrip.Visible = toolbarShown;
             MdiChildActivate += (_, _) =>
             {
                 toolbarShown = ToolbarShownFor(ActiveMdiChild);
                 toolStrip.Visible = toolbarShown;
-                rButton.Visible = RButtonShownFor(ActiveMdiChild);   // the R button is the report's
                 FitWindowTabsToText();   // the panel above the windows gives up the toolbar's height while it is hidden
             };
-            // ImageScalingSize is in device pixels, unlike the icon design grid.
-            void SizeToolbarIcons() => toolStrip.ImageScalingSize = toolStrip.LogicalToDeviceUnits(new Size(20, 20));
-            SizeToolbarIcons();
-            toolStrip.DpiChangedAfterParent += (_, _) => SizeToolbarIcons();
             tipBatch.SetToolTip(chkBatchMode, "Run this function again automatically");
             panelTypeStack = new Stack<PanelType>();
             ShowPanel(PanelType.Default, false);
@@ -224,18 +235,9 @@ namespace StatsDirect.UI
                 SetMenuVisibility(false);
         }
 
-        /// <summary>Whether the main toolbar shows above the active window: not above a script window, which has its own.</summary>
-        internal static bool ToolbarShownFor(Form active) => active is not frmScript;
+        /// <summary>Only worksheets use the main bar; reports and scripts each own one toolbar.</summary>
+        internal static bool ToolbarShownFor(Form active) => active is IGrid;
         private bool toolbarShown = true;
-
-        /// <summary>The toolbar's Find button, named as the renderer draws it; the bitmap only sizes it.</summary>
-        internal static ToolStripButton FindButton(Image placeholder, EventHandler click) => new("Find", placeholder, click) { Name = "findToolStripButton", DisplayStyle = ToolStripItemDisplayStyle.Image, ImageTransparentColor = Color.Magenta };
-
-        /// <summary>The toolbar's R button, named as the renderer draws it; the bitmap only sizes it.</summary>
-        internal static ToolStripButton RButton(Image placeholder, EventHandler click) => new("Continue in R", placeholder, click) { Name = "rToolStripButton", DisplayStyle = ToolStripItemDisplayStyle.Image, ImageTransparentColor = Color.Magenta, ToolTipText = "Continue in R: the result the cursor is in, or the latest result, as an R script" };
-
-        /// <summary>Whether the toolbar's R button shows: while a report, whose results it continues in R, is active.</summary>
-        internal static bool RButtonShownFor(Form active) => active is IReport;
 
         /// <summary>The height of the panel above the windows: the gap, the tabs and the toolbar when it shows.</summary>
         internal static int TopPanelHeight(int gap, int tabHeight, int toolbarHeight, bool toolbarShown) => gap + tabHeight + (toolbarShown ? toolbarHeight : 0);
@@ -1730,6 +1732,11 @@ namespace StatsDirect.UI
         /// <returns>The operation most recently run to completion (as it can change), or null if the most recent operation was cancelled or otherwise didn't complete</returns>
         internal Operation DoOperation(Operation operation, ParameterBag inputParameters, bool isRedo)
         {
+            if (LearningCalculationRunning)
+            {
+                SdApplication.SoleInstance.MsgboxX("Finish or stop the learning assistant's calculation before starting another analysis.", MessageBoxButtons.OK, MessageBoxIcon.Information, "Analysis in progress", true);
+                return null;
+            }
             // If we're already running an operation, another DoOperation further up the stack has control.  Punt this operation to it!
             if (InOperation)
                 throw new CancelCurrentOperationAndDoException(operation, inputParameters);
@@ -3041,17 +3048,23 @@ namespace StatsDirect.UI
                 // We're now ready to accept files from other StatsDirect instances.
                 IpcListener.StartListening();
 
-                // A dialog raised by a background task during start-up (a newer version found) is shown after the opening form.
-                SdApplication.SoleInstance.MainWindowIsShown();
+                // Open directly into the workspace. A file supplied at launch already has its document;
+                // normal launches get a blank worksheet. Legacy calculator-only shortcuts stay pane-only.
+                EnsureStartupDocument();
 
-                // We may pre-load a document via a FileOpen parameter.  If we don't, show an opening form.
-                if (MdiChildren.Length == 0 && ShowOpeningDialog)
-                    SdApplication.SoleInstance.ShowOrQueueDialog(new frmOpening(), null);
+                // Background update dialogs can now be shown after the workspace is ready.
+                SdApplication.SoleInstance.MainWindowIsShown();
             }
             catch (Exception ex)
             {
                 EatException(ex);
             }
+        }
+
+        internal void EnsureStartupDocument()
+        {
+            if (MdiChildren.Length == 0 && ShowOpeningDialog)
+                CreateGrid();
         }
 
         public void EnsureBuiltInMenuItemsCanShowHelp(ToolStrip toolStrip)
@@ -3172,7 +3185,7 @@ namespace StatsDirect.UI
             // Old saved Tools entries are filtered below instead of launching a second process.
             var calculatorItem = new ToolStripMenuItem("Calculator") { Tag = "#{help=1020|cmd=%STATSDIRECT%\\StatsDirect.exe -calculator}" };
             calculatorItem.Click += ToolsMenuItemHandler;
-            toolsToolStripMenuItem.DropDownItems.Insert(toolsToolStripMenuItem.DropDownItems.Count - 3, calculatorItem);
+            toolsToolStripMenuItem.DropDownItems.Insert(toolsToolStripMenuItem.DropDownItems.IndexOf(toolsToolStripSeparator), calculatorItem);
             toolsMenuItems.Add(calculatorItem);
             for (int i = 0; i < names.Count; i++)
             {
@@ -3189,7 +3202,7 @@ namespace StatsDirect.UI
                 // 167,22 is merely a convenient magic size that came from the VS2005 designer; it may not be "right", but it works.
                 menuItem.Click += ToolsMenuItemHandler;
                 menuItem.MergeAction = MergeAction.Replace;
-                toolsToolStripMenuItem.DropDownItems.Insert(toolsToolStripMenuItem.DropDownItems.Count - 3, menuItem);
+                toolsToolStripMenuItem.DropDownItems.Insert(toolsToolStripMenuItem.DropDownItems.IndexOf(toolsToolStripSeparator), menuItem);
                 toolsMenuItems.Add(menuItem);
             }
             fileListToolStripSeparator.Visible = true;
@@ -3304,6 +3317,20 @@ namespace StatsDirect.UI
             catch (Exception ex)
             {
                 SdApplication.SoleInstance.FriendlyError("Cut failed due to an internal error", ex, false);
+            }
+        }
+
+        private void EditHistory(bool redo)
+        {
+            try
+            {
+                if (TryCalculatorEdit(redo ? "redo" : "undo")) return;
+                if (redo) (ActiveMdiChild as StatsDirectForm)?.EditRedo();
+                else (ActiveMdiChild as StatsDirectForm)?.EditUndo();
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError(redo ? "Redo failed" : "Undo failed", ex, false);
             }
         }
 

@@ -23,6 +23,7 @@ You may want:
 * If you wish, install your IDE.
 * If you wish, install HeatWave.
 * Install the WebView2 Evergreen Runtime if it is not already present. No DevExpress subscription or package feed is needed.
+* After cloning, run `./Learning/prepare-runtime.ps1` to download and verify the official ChatGPT connection runtime and its redistribution notices. No account or credentials are needed to build. See [Learning/README.md](Learning/README.md). Engine-only development can use `-p:AllowMissingTutorRuntime=true`; do not distribute that incomplete build.
 * Follow the instructions on the SpreadsheetGear web site to obtain a license **string** from your license **key**.  Record that string.
 * Clone this repository. In these instructions, we use `<repository-root>` to refer to the top of the cloned repository.
   * Keep `<repository-root>` short, such as `C:\src\statsdirect`. Unless Windows long paths are enabled, the installer build fails with `WIX0103: Cannot find the file ...` once the path to a file in the build output passes 260 characters, which happens when the repository root is longer than about 125 characters (a clone inside a deep OneDrive or Temp folder, for example).

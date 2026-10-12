@@ -1,0 +1,213 @@
+using StatsDirect.R;
+using StatsDirect.UI;
+using StatsDirect.UI.Learning;
+using System.Net;
+using System.Text;
+using System.Text.Json.Nodes;
+
+internal static partial class Program
+{
+    static async Task Reject(Func<Task> action,string label)
+    { try{await action();}catch(Exception){Check(true,label);return;}throw new Exception("Expected rejection: "+label); }
+    static JsonArray Message(string text)=>new(new JsonObject{["role"]="user",["text"]=text});
+    static async Task TestCourses(LearningService service,LearningView view)
+    {
+        await service.HandleAsync(view,new JsonObject{["action"]="exampleCourse"});await Task.Delay(100);
+        Check((await JS(view,"document.querySelectorAll('[data-lesson]').length")).GetValue<int>()==15,"provider pack adds its three lessons to the shared library");
+        var saved=LearningJson.Read(Path.Combine(service.Storage,"course-pack.json"),2_000_000);
+        Check(saved.I("schemaVersion")==2,"provider course schema is preserved");
+        string bad=Path.Combine(root,"bad-course.json");var invalid=saved.DeepClone();invalid["provider"]["reviewEmail"]="x@example.invalid\r\nBcc: injected@example.invalid";File.WriteAllText(bad,invalid.ToJsonString());
+        string original=File.ReadAllText(Path.Combine(service.Storage,"course-pack.json"));
+        await Reject(()=>{service.ImportPack(bad);return Task.CompletedTask;},"malformed course/contact metadata is rejected");
+        Check(File.ReadAllText(Path.Combine(service.Storage,"course-pack.json"))==original,"failed import preserves the active course");
+        string id="course:"+saved.S("id")+":"+saved.S("version")+":"+saved.A("lessons")[0].S("id");
+        service.OpenExample(id,true);await Task.Delay(100);
+        var script=service.Documents.OfType<frmScript>().Last();
+        Check(script.LearningScript==saved.A("lessons")[0].S("r")&&!script.LearningRunning&&(int)Field(script,"rGeneration")==0,"provider R code opens for review without execution");
+        Check(((ToolStrip)Field(script,"ToolStrip1")).Items["aiToolStripButton"]!=null,"R script has an AI command in the existing single toolbar");
+        string rFile=Path.Combine(root,"existing.R");File.WriteAllText(rFile,"# Read only test\nmean(c(1,2))\n");script.OpenFile(rFile,false,null);
+        Check(((ComboBox)Field(script,"cboLanguage")).SelectedIndex==1,"opening an R file selects the R language and keeps R tools");
+    }
+    static async Task TestTutor(ChatGPTTutor tutor)
+    {
+        await tutor.RefreshAccountAsync();Check(tutor.Email==null,"fresh isolated account starts disconnected");
+        Check(ChatGPTTutor.IsLoginUrl("https://auth.openai.com/authorize")&&!ChatGPTTutor.IsLoginUrl("http://auth.openai.com/authorize")&&!ChatGPTTutor.IsLoginUrl("https://auth.openai.com.evil.invalid/authorize"),"sign-in accepts only official HTTPS authentication hosts");
+        await tutor.SignInAsync();await Wait(()=>tutor.Email=="mock@example.invalid","mocked sign-in completion updates account state");
+        string streamed="";
+        var reply=await tutor.ConverseAsync("fictional context",Message("Explain paired tests"),new(),true,t=>streamed=t,(_,_)=>Task.FromResult<JsonNode>(new JsonObject()),CancellationToken.None);
+        Check(reply.Text.Contains("paired")&&streamed==reply.Text&&reply.Model=="mock-no-network","mocked text streams and completes without a live model request");
+        try{await tutor.ConverseAsync("",Message("FORCE_ERROR"),new(),true,null,(_,_)=>Task.FromResult<JsonNode>(new JsonObject()),CancellationToken.None);throw new Exception("missing provider error");}
+        catch(IOException ex){Check(!ex.Message.Contains("SECRET")&&ex.Message.Contains("sign-in"),"provider authentication errors are redacted and actionable");}
+        using var stop=new CancellationTokenSource(100);
+        await Reject(()=>tutor.ConverseAsync("",Message("SLOW_REPLY"),new(),true,null,(_,_)=>Task.FromResult<JsonNode>(new JsonObject()),stop.Token),"cancel interrupts a pending mocked reply");
+        reply=await tutor.ConverseAsync("",Message("retry"),new(),true,null,(_,_)=>Task.FromResult<JsonNode>(new JsonObject()),CancellationToken.None);
+        Check(reply.Text.Length>0,"a question can be retried after cancellation");
+        int calls=0;var tools=new QuestionContext([],true,CancellationToken.None).Tools;
+        reply=await tutor.ConverseAsync("",Message("TOOL_BOUNDARIES"),tools,true,null,(_,_)=>{calls++;return Task.FromResult<JsonNode>(new JsonObject());},CancellationToken.None);
+        var boundary=JsonNode.Parse(reply.Text);
+        Check(calls==1&&boundary.B("valid")&&!boundary.B("wrong")&&!boundary.B("namespace")&&!boundary.B("unknown")&&!boundary.B("duplicate"),"transport rejects wrong threads, namespaces, unknown tools and duplicate call IDs before invoking the host");
+        string actual=Environment.GetEnvironmentVariable("STATSDIRECT_TEST_TUTOR_RUNTIME");
+        if(actual!=null)
+        {
+            using var runtime=new ChatGPTTutor(actual,Path.Combine(root,"actual-runtime-no-credentials"),Path.Combine(AppContext.BaseDirectory,"Tutor"));
+            await runtime.RefreshAccountAsync();
+            Check(runtime.Email==null&&runtime.Status=="Not connected","official pinned app-server starts with strict isolated config and no inherited login; no model request made");
+        }
+    }
+    static async Task TestConsent(frmMain main,LearningService service,LearningView view,frmSpreadsheetGear grid)
+    {
+        grid.LoadLearningExample(new JsonArray(new JsonObject{["title"]="Before",["values"]=new JsonArray(1,2,3)},new JsonObject{["title"]="After",["values"]=new JsonArray(2,3,4)}));
+        using var empty=new CancellationTokenSource();var noSharing=new QuestionContext([],true,empty.Token);
+        Check(noSharing.Overview().A("documents").Count==0&&!noSharing.InitialContext().ToJsonString().Contains("Before"),"question-only context contains no document titles, headings or values");
+        await Reject(()=>noSharing.CallAsync("statsdirect_read_data",new JsonObject{["documentId"]=grid.Id()}),"unapproved worksheet reads are denied");
+        var context=new QuestionContext([grid],true,empty.Token);
+        var data=await context.CallAsync("statsdirect_read_data",new JsonObject{["documentId"]=grid.Id(),["firstRow"]=2,["lastRow"]=4,["columns"]=new JsonArray(0,1)});
+        Check(data.I("rowCount")==3&&data.A("columns")[0].A("values")[0].GetValue<double>()==1,"approved worksheet reads preserve literal rows and numeric values");
+        await Reject(()=>context.CallAsync("statsdirect_read_data",new JsonObject{["documentId"]=grid.Id(),["firstRow"]=1,["lastRow"]=10000}),"large ranges are rejected without silent sampling");
+        Check(context.Tools.All(t=>t.S("name")!="statsdirect_open_analysis"),"script assistant exposes no analysis execution or code-editing tool");
+        grid.LoadLearningExample(new JsonArray(new JsonObject{["title"]="Changed",["values"]=new JsonArray(8,9)}));
+        await Reject(()=>context.CallAsync("statsdirect_workspace",new()),"worksheet changes invalidate an existing sharing grant");
+        view.Activate();await view.CallAsync("restore",service.State.DeepClone());await Task.Delay(70);
+        // Use the actual web composer and native confirmation hook; inspect only local state.
+        await JS(view,"document.querySelector('[data-lesson=precision]').click()");
+        service.ConfirmSharing=_=>LearningService.SharingDecision.Share;view.SourceId=grid.Id();service.RefreshWorkspace();
+        await service.HandleAsync(view,new JsonObject{["action"]="workspace"});
+        Check(view.SourceId==grid.Id(),"refreshing the workspace preserves the learner's explicit document choice");
+        await JS(view,"document.getElementById('question').value='Explain this example';document.getElementById('send').click()");
+        await Wait(()=>service.State?.A("sharingConsents").Count==1,"learning stores a per-question sharing record before tutor access");
+        await Wait(()=>service.State?.A("conversation").Any(m=>m.S("text").Contains("Mock answer"))==true,"approved Learning question completes through the native bridge");
+        service.ConfirmSharing=_=>LearningService.SharingDecision.LessonsOnly;
+        await JS(view,"document.getElementById('question').value='Lessons only please';document.getElementById('send').click()");
+        await Wait(()=>view.SourceId=="__none__","lessons-only choice removes the document scope for the next question");
+        Check(service.State.A("sharingConsents").Count==1,"lessons-only question does not reuse the previous consent");
+        await Task.Delay(250);
+        var script=service.Documents.OfType<frmScript>().Last();service.ShowScriptAI(script);await Task.Delay(100);
+        var pane=(ScriptAIPane)Field(service,"ai");
+        var paneView=(Control)Field(pane,"view");
+        static int Top(Control c)=>c.PointToScreen(Point.Empty).Y;
+        void CheckComposerOrder(string mode)
+        {
+            Check(Top(pane.SharingOptions)<Top(pane.Composer)&&Top(pane.Composer)+pane.Composer.Height<=Top(pane.Send)&&Top(pane.Send)+pane.Send.Height<Top(pane.Transcript),mode+": sharing, question and Send precede the conversation");
+            Check(paneView.ClientRectangle.Contains(paneView.RectangleToClient(pane.Composer.RectangleToScreen(pane.Composer.ClientRectangle)))&&pane.Transcript.Height>=80,mode+": composer is visible with room for replies (pane "+paneView.Size+", question "+pane.Composer.Bounds+", replies "+pane.Transcript.Bounds+")");
+        }
+        void CapturePane(string name){using var bitmap=new Bitmap(paneView.Width,paneView.Height);paneView.DrawToBitmap(bitmap,paneView.ClientRectangle);bitmap.Save(Path.Combine(artifacts,name+".png"));}
+        CapturePane("script-ai-expanded");CheckComposerOrder("expanded docked AI");
+        Check(!pane.ShareScript.Checked&&!pane.ShareWorkbook.Checked,"script AI sharing starts off");
+        pane.ShareScript.Checked=true;Check(!pane.Send.Enabled,"shared script question cannot send without acknowledgment");
+        pane.Composer.Text="Check consent";await pane.SendAsync();
+        Check(((Label)Field(pane,"status")).Text.Contains("confirm sharing"),"unconfirmed context request displays the sharing reminder");
+        pane.Acknowledge.Checked=true;await Task.Delay(20);
+        Check(((Label)Field(pane,"status")).Text=="","confirming sharing clears the previous confirmation reminder");
+        Check(pane.Composer.Focused&&pane.SharingOptions.Text.Contains("Confirmed"),"confirming sharing collapses controls and focuses the composer");
+        CheckComposerOrder("confirmed docked AI");
+        pane.Composer.Text="Explain the script";await pane.SendAsync();
+        Check(pane.Transcript.Text.Contains("Mock answer")&&!pane.Acknowledge.Checked&&!pane.Send.Enabled,"script reply resets confirmation for the next shared question");
+        CapturePane("script-ai-reply");
+        pane.ShareScript.Checked=false;Check(pane.Send.Enabled,"question-only conversation can continue without document access");
+        pane.Composer.Text="Keep this question while moving the pane.";
+        var session=(StatsDirect.UI.ToolWindows.ToolPaneSession)Field(pane,"session");
+        await session.ToggleModeAsync();await Task.Delay(60);CheckComposerOrder("floating AI");
+        CapturePane("script-ai-floating");
+        session.Window.ClientSize=new Size((int)(360*session.Window.DeviceDpi/96f),(int)(420*session.Window.DeviceDpi/96f));await Task.Delay(60);
+        var viewport=(Panel)Field(pane,"viewport");
+        Check(!viewport.HorizontalScroll.Visible&&viewport.VerticalScroll.Visible&&pane.Acknowledge.Height>pane.Acknowledge.Font.Height*2,"small AI pane wraps confirmation text and scrolls vertically without clipping");
+        viewport.ScrollControlIntoView(pane.Transcript);await Task.Delay(20);
+        Check(viewport.RectangleToScreen(viewport.ClientRectangle).IntersectsWith(pane.Transcript.RectangleToScreen(pane.Transcript.ClientRectangle)),"conversation remains reachable in a small AI window");
+        viewport.ScrollControlIntoView(pane.Composer);pane.Composer.Focus();CapturePane("script-ai-small");
+        await session.ToggleModeAsync();await Task.Delay(60);
+        Check(pane.Composer.Text=="Keep this question while moving the pane."&&pane.Transcript.Text.Contains("Mock answer")&&pane.Composer.Focused,"dock and pop-out preserve the draft, replies and typing focus");
+        await TestScriptReplyStability(pane);
+        pane.Hide();
+    }
+    static async Task TestScriptReplyStability(ScriptAIPane pane)
+    {
+        pane.NewConversation();pane.Composer.Focus();
+        var render=typeof(ScriptAIPane).GetMethod("Render",Members)!;
+        var partial=typeof(ScriptAIPane).GetField("partial",Members)!;
+        var viewport=(Panel)Field(pane,"viewport");
+        string text=string.Join("\n",Enumerable.Range(1,80).Select(i=>$"Reply line {i}: a streamed explanation."));
+        partial.SetValue(pane,text);render.Invoke(pane,null);await Task.Delay(30);
+        pane.Transcript.Select(0,15);pane.Transcript.ScrollToCaret();
+        var question=pane.Composer.RectangleToScreen(pane.Composer.ClientRectangle);
+        var bounds=pane.Transcript.Bounds;var scroll=viewport.AutoScrollPosition;
+        int first=pane.Transcript.GetCharIndexFromPosition(new Point(2,2));
+        for(int i=0;i<12;i++){text+=$"\nAdditional reply line {i}.";partial.SetValue(pane,text);render.Invoke(pane,null);await Task.Delay(5);}
+        Check(pane.Transcript.SelectionStart==0&&pane.Transcript.SelectionLength==15,"incoming reply preserves selected conversation text");
+        Check(pane.Transcript.GetCharIndexFromPosition(new Point(2,2))==first,"incoming reply leaves earlier lines in view while the user reads them");
+        Check(pane.Transcript.Bounds==bounds&&pane.Composer.RectangleToScreen(pane.Composer.ClientRectangle)==question&&viewport.AutoScrollPosition==scroll,"streaming leaves the pane geometry and outer scroll position unchanged");
+        Check(pane.Composer.Focused,"incoming replies do not steal typing focus");
+        pane.Transcript.Select(pane.Transcript.Text.IndexOf("Reply line 40:"),0);pane.Transcript.ScrollToCaret();
+        first=pane.Transcript.GetCharIndexFromPosition(new Point(2,2));
+        text+="\nAnother chunk while reading earlier lines.";partial.SetValue(pane,text);render.Invoke(pane,null);
+        Check(pane.Transcript.GetCharIndexFromPosition(new Point(2,2))==first,"scrolling back pauses automatic following without needing a text selection");
+        pane.Transcript.Select(pane.Transcript.TextLength,0);pane.Transcript.ScrollToCaret();
+        first=pane.Transcript.GetCharIndexFromPosition(new Point(2,2));
+        text+=string.Concat(Enumerable.Range(1,10).Select(i=>$"\nNew ending {i}."));partial.SetValue(pane,text);render.Invoke(pane,null);
+        Check(pane.Transcript.SelectionStart==pane.Transcript.TextLength&&pane.Transcript.GetCharIndexFromPosition(new Point(2,2))>first,"returning to the bottom resumes following new reply text");
+        int changes=0;EventHandler changed=(_,_)=>changes++;pane.Transcript.TextChanged+=changed;
+        try{render.Invoke(pane,null);Check(changes==0,"identical completion text does not repaint or reset the conversation");}
+        finally{pane.Transcript.TextChanged-=changed;}
+        text=string.Join("\n",Enumerable.Range(1,4000).Select(i=>$"Long reply line {i}."));partial.SetValue(pane,text);render.Invoke(pane,null);
+        pane.Transcript.Select(pane.Transcript.Text.IndexOf("Long reply line 3000."),8);pane.Transcript.ScrollToCaret();
+        first=pane.Transcript.GetCharIndexFromPosition(new Point(2,2));int selection=pane.Transcript.SelectionStart;
+        text+="\nFinal corrected tail.";partial.SetValue(pane,text);render.Invoke(pane,null);
+        Check(pane.Transcript.GetCharIndexFromPosition(new Point(2,2))==first&&pane.Transcript.SelectionStart==selection&&pane.Transcript.SelectionLength==8,"long conversations preserve a reading position beyond the 16-bit pixel scroll range");
+        text=text.Replace("Final corrected tail.","Replacement ending.");partial.SetValue(pane,text);render.Invoke(pane,null);
+        Check(pane.Transcript.Text.EndsWith("Replacement ending.")&&pane.Transcript.GetCharIndexFromPosition(new Point(2,2))==first&&pane.Transcript.SelectionStart==selection,"corrected final reply updates only its tail and preserves earlier reading position");
+        text=text.Substring(0,text.LastIndexOf('\n'));partial.SetValue(pane,text);render.Invoke(pane,null);
+        Check(pane.Transcript.Text.EndsWith("Long reply line 4000.")&&pane.Transcript.GetCharIndexFromPosition(new Point(2,2))==first,"trimming a streamed tail works in the read-only conversation without moving the reader");
+        pane.NewConversation();
+        Check(pane.Transcript.TextLength==0&&pane.Transcript.SelectionStart==0,"a new conversation clears the old reply and selection");
+    }
+    static async Task TestExports(LearningService service,LearningView view)
+    {
+        view.Activate();await JS(view,"document.getElementById('recordNav').click()");
+        var payload=(JsonObject)await JS(view,"(()=>{const old=window.webkit.messageHandlers.statsDirectLearn.postMessage;let result;window.webkit.messageHandlers.statsDirectLearn.postMessage=m=>result=m;window.statsDirectLearn.exportRecord();window.webkit.messageHandlers.statsDirectLearn.postMessage=old;return result})()");
+        Check(payload.S("text").Contains("learning",StringComparison.OrdinalIgnoreCase)&&payload.S("html").Length>0,"learning record preview produces text, structured data and formatted content");
+        foreach(string format in new[]{"txt","json","html","pdf","docx"})
+        {
+            string path=Path.Combine(artifacts,"learning-record."+format);await service.ExportToAsync(payload,path,format);
+            Check(new FileInfo(path).Length>100,"learning record exports to "+format.ToUpperInvariant());
+        }
+        payload["recipient"]="reviewer@example.invalid";string draft=service.PrepareEmail(payload);string eml=File.ReadAllText(draft);
+        Check(eml.StartsWith("X-Unsent: 1")&&eml.Contains("learning-record.txt")&&eml.Contains("learning-record.json"),"assessment handoff prepares an unsent email with both record formats; no mail client or sending invoked");
+        var pdfPack=CoursePack.Import([Path.Combine(artifacts,"learning-record.pdf")]);Check(pdfPack.A("documents").Count>0,"searchable PDF course material imports locally");
+    }
+    static async Task TestRSetup(frmMain main)
+    {
+        int attempts=0;
+        using var dialog=new frmInstallR(_=>Task.FromResult(++attempts>1));dialog.StartPosition=FormStartPosition.Manual;dialog.Location=new(-16000,-16000);dialog.ShowInTaskbar=false;dialog.Show(main);
+        var check=(Button)Field(dialog,"check");check.PerformClick();await Task.Delay(50);
+        Check(!dialog.UserThinksRIsInstalled&&dialog.Visible,"missing-R check does not claim installation or lose the pending dialog");
+        check.PerformClick();await Task.Delay(50);Check(dialog.UserThinksRIsInstalled,"successful injected R readiness probe resumes the pending action");
+        using var cancelled=new frmInstallR(_=>Task.FromResult(false));cancelled.StartPosition=FormStartPosition.Manual;cancelled.Location=new(-16000,-16000);cancelled.ShowInTaskbar=false;cancelled.Show(main);((Button)Field(cancelled,"cancel")).PerformClick();
+        Check(!cancelled.UserThinksRIsInstalled,"declining setup leaves the requested action unexecuted");
+        var slow=new TaskCompletionSource<bool>();
+        using var late=new frmInstallR(_=>slow.Task);late.StartPosition=FormStartPosition.Manual;late.Location=new(-16000,-16000);late.ShowInTaskbar=false;late.Show(main);
+        ((Button)Field(late,"check")).PerformClick();late.Close();slow.SetResult(true);await Task.Delay(50);
+        Check(!late.UserThinksRIsInstalled&&!late.Visible,"closing R setup prevents a late readiness reply from resuming or reopening it");
+        bool launched=false;frmInstallR modal=null;
+        using(modal=new frmInstallR(_=>Task.FromResult(launched),async(_,ct)=>await Task.Delay(30,ct),async ct=>{Check(modal.Visible&&modal.WindowState==FormWindowState.Minimized,"setup stays modal but out of the installer's way while the native installer runs");await Task.Delay(30,ct);launched=true;}))
+        {
+            modal.Shown+=(_,_)=>((Button)Field(modal,"download")).PerformClick();
+            Check(modal.ShowDialog(main)==DialogResult.OK&&modal.UserThinksRIsInstalled&&launched,"modal setup returns success only after installer exit and readiness, so the pending action can resume");
+        }
+        int downloads=0;bool didLaunch=false;
+        using var retry=new frmInstallR(_=>Task.FromResult(didLaunch),async(_,ct)=>{if(++downloads==1)await Task.Delay(30000,ct);},_=>{didLaunch=true;return Task.CompletedTask;});
+        retry.StartPosition=FormStartPosition.Manual;retry.Location=new(-16000,-16000);retry.ShowInTaskbar=false;retry.Show(main);
+        ((Button)Field(retry,"download")).PerformClick();((Button)Field(retry,"cancel")).PerformClick();
+        await Wait(()=>((Button)Field(retry,"download")).Enabled,"cancelled download restores Retry without losing the setup form");
+        Check(!didLaunch&&!retry.UserThinksRIsInstalled,"cancel does not launch an installer or resume the pending action");
+        ((Button)Field(retry,"download")).PerformClick();await Wait(()=>retry.UserThinksRIsInstalled,"retry after cancellation completes setup and resumes once ready");
+        string bytes=Path.Combine(root,"bad-installer.exe");await File.WriteAllTextAsync(bytes,"not an installer");
+        await Reject(()=>RInstallation.VerifyHashAsync(bytes,RInstallation.Sha256,CancellationToken.None),"R installer checksum rejects substituted content");
+        using var package=new RInstallation();using var client=new HttpClient(new FakeHandler());
+        await Reject(()=>package.DownloadAsync(client,null,CancellationToken.None),"R setup rejects redirected or unexpected download responses");
+        Check(!File.Exists(package.FilePath),"failed verification never exposes a launchable installer");
+        string reviewed=Environment.GetEnvironmentVariable("STATSDIRECT_TEST_R_INSTALLER");
+        if(reviewed!=null){await RInstallation.VerifyHashAsync(reviewed,RInstallation.Sha256,CancellationToken.None);RInstallation.VerifySignature(reviewed);Check(true,"downloaded official R package passes hash and Windows publisher verification without being installed");}
+        Check(await RInstallation.ReadyAsync(CancellationToken.None),"installed R passes a harmless executable-readiness probe");
+    }
+    sealed class FakeHandler:HttpMessageHandler
+    {protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,CancellationToken token)=>Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK){RequestMessage=new HttpRequestMessage(HttpMethod.Get,"https://elsewhere.invalid/package.exe"),Content=new ByteArrayContent([1,2,3])});}
+}

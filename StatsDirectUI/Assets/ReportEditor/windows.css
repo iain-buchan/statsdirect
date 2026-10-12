@@ -62,10 +62,18 @@ body.engine-report pre { font-family: "Courier New", monospace; font-size: 10pt;
 /* room below the last result, so that a result just added can be scrolled to the top of the window (set by the editor) */
 #results { padding-bottom: var(--reveal-room, 0px); }
 @media print { #results { padding-bottom: 0 !important; } }
-body.engine-report .report-body svg, body.engine-report .report-media > img {
+body.engine-report .report-body svg:not(:where(.report-import *)), body.engine-report .report-body img:not(:where(.report-import *)) {
   width: auto;
   max-width: 100%;
-  margin: 16px 0;
+  margin: 16px auto 16px 0;
+}
+/* The importer measures plain incoming charts before adding report wrappers.
+   Use low specificity, so incoming document styles still win. */
+:where(body.engine-report .report-import) :is(svg, img) {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  margin: 16px auto 16px 0;
 }
 .report-body:focus { outline: 1px solid #99bbb6; }
 #empty[hidden] { display: none; }
@@ -89,10 +97,20 @@ body.engine-report .report-body svg, body.engine-report .report-media > img {
   margin: 0;
   background: transparent;
   flex-shrink: 0;
-  stroke-width: 2;
+  stroke-width: 1.8;
 }
+/* One command row. Secondary controls move into the existing More popover. */
+#report-format-tools { display: block; width: 100%; min-width: 0; }
+.document-toolbar-row { display: flex; align-items: center; gap: 4px; flex-wrap: nowrap; width: 100%; }
+.document-toolbar-row > * { flex-shrink: 0; }
+.document-toolbar-separator { width: 1px; height: 22px; margin: 0 4px; background: #c7d4db; }
+.document-toolbar-separator[hidden], .report-picture-tools[hidden] { display: none !important; }
+.report-overflow-commands { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.report-overflow-commands:not(:empty) { border-bottom: 1px solid #e2e9ec; margin-bottom: 8px; padding-bottom: 8px; }
+.report-more-tools { max-height: min(70vh, 500px); overflow-y: auto; }
+.report-toolbar :focus-visible { outline: 2px solid #23695f; outline-offset: 2px; }
 @media print {
-  .report-media { outline: none !important; }
+  .report-body, .report-media { outline: none !important; }
   #report-toolbar, .report-controls { display: none !important; }
   body.engine-report { padding: 0; max-width: none; }
   .report-entry { break-before: auto; }

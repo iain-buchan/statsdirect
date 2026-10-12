@@ -59,6 +59,7 @@ internal static class Program
             workbook.RangeSelection = workbook.ActiveWorksheet.Cells["A1:B2"];
             return workbook.RangeSelection.Address;
         });
+        await CheckDocumentToolbars(main, grid, workbook);
         Call(app, "ShowCalculator");
         var view = (Control)Get(app, "CalculatorView");
         var input = (RichTextBox)Get(view, "Expression");
@@ -66,6 +67,13 @@ internal static class Program
         Check(input.Focused && main.ActiveMdiChild == grid, "opening Calculator in the actual MDI shell focuses its editor and retains the grid");
         Check(Locked(() => workbook.RangeSelection.Address) == selected, "opening Calculator preserves the actual SpreadsheetGear range");
         input.Text = "2"; input.Select(1, 0); input.ClearUndo(); input.SelectedText = " + 3";
+        await Task.Delay(30);
+        var mainToolbar = (ToolStrip)Field(main,"toolStrip");
+        mainToolbar.Items["undoToolStripButton"].PerformClick();
+        Check(input.Text=="2", "toolbar Undo respects calculator focus rather than changing the underlying worksheet");
+        await Task.Delay(30);
+        mainToolbar.Items["redoToolStripButton"].PerformClick();
+        Check(input.Text=="2 + 3", "toolbar Redo respects calculator focus");
         var menu = (MenuStrip)Field(main, "mnuMain");
         var edit = menu.Items.OfType<ToolStripMenuItem>().Single(i => i.Text.Replace("&", "") == "Edit");
         ToolStripMenuItem Command(string label) => edit.DropDownItems.OfType<ToolStripMenuItem>().Single(i => i.Text.Replace("&", "") == label);
@@ -96,5 +104,86 @@ internal static class Program
         var calculatorEdit = (ToolStripDropDownButton)Get(view, "EditMenu");
         calculatorEdit.DropDownItems.OfType<ToolStripMenuItem>().Single(i => i.Text == "Undo").PerformClick();
         Check(input.Text == "2" && main.ActiveMdiChild == null, "calculator Edit menu still works after the last MDI document closes");
+    }
+
+    static async Task CheckDocumentToolbars(frmMain main, Form grid, SpreadsheetGear.Windows.Forms.WorkbookView workbook)
+    {
+        var toolbar = (ToolStrip)Field(main, "toolStrip");
+        Check(toolbar.Visible && string.Join("|", toolbar.Items.OfType<ToolStripButton>().Select(b => b.Text)) == "Save|Undo|Redo|Cut|Copy|Paste|Find|Help",
+            "worksheet has one native toolbar in the shared document order");
+        CaptureToolbar(toolbar, "grid-toolbar.png");
+        Check(((Control)Field(grid,"formulaBar")).Visible && toolbar.Items.ContainsKey("cboActiveReport"), "formula entry and Results to selection remain available");
+        workbook.Focus();
+        Call(grid,"EditFillDown");
+        await Task.Delay(30);
+        Check(toolbar.Items["undoToolStripButton"].Enabled, "worksheet Undo is enabled after a recorded cell edit");
+        toolbar.Items["undoToolStripButton"].PerformClick();
+        await Task.Delay(30);
+        workbook.GetLock();
+        try { Check(workbook.ActiveWorksheet.Cells["A2"].Value == null, "toolbar Undo restores the worksheet cell"); }
+        finally { workbook.ReleaseLock(); }
+        Check(toolbar.Items["redoToolStripButton"].Enabled, "worksheet Redo reflects its real history");
+        toolbar.Items["redoToolStripButton"].PerformClick();
+        workbook.GetLock();
+        try { Check(workbook.ActiveWorksheet.Cells["A2"].Value?.ToString() == "123", "toolbar Redo replays the worksheet edit"); }
+        finally { workbook.ReleaseLock(); }
+        using var script = (Form)Call(main,"CreateScriptWindow");
+        Call(script,"ShowR","x <- 1","Toolbar check",null,true);
+        await Task.Delay(180);
+        var scriptToolbar = (ToolStrip)Field(script,"ToolStrip1");
+        Check(!toolbar.Visible && scriptToolbar.Visible, "switching to a script leaves exactly its own toolbar visible");
+        Check(!((Control)Field(script,"pnlActions")).Visible && scriptToolbar.Items.ContainsKey("runToolStripButton"), "script has one Run control and no lower command row");
+        var editor = (RichTextBox)Field(script,"rtbDoc");
+        editor.Text="original"; editor.ClearUndo(); editor.Select(editor.TextLength,0); editor.SelectedText=" edited";
+        await Task.Delay(30);
+        scriptToolbar.Items["undoToolStripButton"].PerformClick();
+        Check(editor.Text=="original", "script toolbar Undo uses native editor history");
+        await Task.Delay(30);
+        scriptToolbar.Items["redoToolStripButton"].PerformClick();
+        Check(editor.Text=="original edited", "script toolbar Redo restores the edit");
+        string saved = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "StatsDirect-toolbar-" + Guid.NewGuid().ToString("N") + ".R");
+        try
+        {
+            script.GetType().GetField("currentFile", Internal)!.SetValue(script,saved);
+            scriptToolbar.Items["saveToolStripButton"].PerformClick();
+            Check(System.IO.File.ReadAllText(saved)=="original edited", "one-click script Save writes the current editor contents");
+        }
+        finally { if(System.IO.File.Exists(saved)) System.IO.File.Delete(saved); }
+        CaptureToolbar(scriptToolbar, "script-toolbar.png");
+        scriptToolbar.Items["findToolStripButton"].PerformClick();
+        Check((bool)Get(script,"FindBarShown"), "script toolbar Find opens the existing find bar");
+        var oldWidth = main.Width;
+        var oldMinimum = main.MinimumSize;
+        main.MinimumSize = Size.Empty;
+        main.Width = main.LogicalToDeviceUnits(290);
+        await Task.Delay(60);
+        Check(scriptToolbar.OverflowButton.Visible && scriptToolbar.OverflowButton.AccessibleName=="More commands" && scriptToolbar.Items.Cast<ToolStripItem>().Any(i=>i.Placement==ToolStripItemPlacement.Overflow), "narrow script uses accessible native More overflow");
+        editor.Select(0,8);
+        scriptToolbar.OverflowButton.ShowDropDown();
+        await Task.Delay(30);
+        var language = (ComboBox)Field(script,"cboLanguage");
+        Check(language.Visible && language.AccessibleName=="Script language" && editor.SelectionLength==8, "More exposes the existing language selector without losing the script selection");
+        scriptToolbar.OverflowButton.HideDropDown();
+        var output = (RichTextBox)Field(script,"rtbOutput");
+        output.Text="Results to copy"; output.SelectAll(); output.Focus();
+        await Task.Delay(30);
+        scriptToolbar.OverflowButton.ShowDropDown();
+        await Task.Delay(30);
+        Check(ReferenceEquals(Field(script,"editTarget"),output) && scriptToolbar.Items["copyToolStripButton"].Enabled && output.SelectedText=="Results to copy", "Copy from output retains its selection and target when More takes focus");
+        scriptToolbar.OverflowButton.HideDropDown();
+        main.Width = oldWidth; main.MinimumSize = oldMinimum;
+        script.Dispose(); grid.Activate();
+        await Task.Delay(180);
+        Check(toolbar.Visible, "returning to data restores its toolbar");
+    }
+
+    static void CaptureToolbar(ToolStrip toolbar, string file)
+    {
+        string output = Environment.GetEnvironmentVariable("STATSDIRECT_TOOLBAR_ARTIFACTS");
+        if(string.IsNullOrEmpty(output)) return;
+        System.IO.Directory.CreateDirectory(output);
+        using Bitmap bitmap = new(toolbar.Width,toolbar.Height);
+        toolbar.DrawToBitmap(bitmap,new Rectangle(Point.Empty,toolbar.Size));
+        bitmap.Save(System.IO.Path.Combine(output,file));
     }
 }

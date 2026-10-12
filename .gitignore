@@ -23,6 +23,8 @@ ReportEditor/upstream/Report/node_modules/
 *.chw
 /Key/sign.txt
 /DownloadedBinaries/*.exe
+/DownloadedBinaries/TutorRuntime/
+/DownloadedBinaries/TutorCache/
 
 # Build metadata left by MadCap Flare, not part of the shipped help
 /StatsDirectUI/Assets/Data/*.output

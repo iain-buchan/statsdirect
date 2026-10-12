@@ -78,6 +78,22 @@ try {
     $document = $word.Documents.Open((Join-Path $Artifacts 'office-export.docx'), $false, $true)
     Check ($document.Tables.Count -eq 1 -and $document.InlineShapes.Count -gt 0) 'Word opens the exported DOCX with table and chart intact'
     Check ($document.Tables.Item(1).Cell(2,1).Range.Font.Name -eq 'Georgia') 'Word reads the exported cell font correctly'
+    foreach ($alignmentFile in 'chart-alignment.docx','chart-alignment-reopened.docx') {
+        if (Test-Path -LiteralPath (Join-Path $Artifacts $alignmentFile)) {
+            $document.Close(0); $document = $null
+            $document = $word.Documents.Open((Join-Path $Artifacts $alignmentFile), $false, $true)
+            $alignments = @(foreach ($shape in $document.InlineShapes) { [int]$shape.Range.ParagraphFormat.Alignment })
+            Check (($alignments -join ',') -eq '0,1,2,2') "Word opens $alignmentFile with all four picture alignments intact"
+        }
+    }
+    if (Test-Path -LiteralPath (Join-Path $Artifacts 'chart-alignment-clipboard.cfhtml')) {
+        $document.Close(0); $document = $null
+        $document = $word.Documents.Add()
+        $payload = [System.Windows.Forms.DataObject]::new()
+        $payload.SetData([System.Windows.Forms.DataFormats]::Html, [IO.File]::ReadAllText((Join-Path $Artifacts 'chart-alignment-clipboard.cfhtml')))
+        PasteFixture { $document.Content.Paste() }
+        Check ($document.InlineShapes.Count -eq 1 -and $document.InlineShapes.Item(1).Range.ParagraphFormat.Alignment -eq 2 -and [Math]::Abs($document.InlineShapes.Item(1).Width - 180) -lt 1) 'Word pastes the SVG-to-PNG fallback at its chosen right alignment and physical size'
+    }
     Write-Output "PASS $script:checks installed Office integration checks"
 } finally {
     if ($document) { try { $document.Close(0) } catch { Write-Warning $_ } }

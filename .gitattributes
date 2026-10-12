@@ -1,0 +1,6 @@
+# Keep vendored files byte-for-byte consistent with Learning/upstream.lock.json.
+# These include source, offline assets, licences and fonts copied for redistribution.
+Learning/upstream/** -text
+StatsDirectUI/Assets/Learn/** -text
+StatsDirectUI/Assets/Tutor/** -text
+StatsDirectUI/Assets/Brand/** -text

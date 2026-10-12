@@ -1,3 +1,4 @@
+using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -10,6 +11,24 @@ namespace StatsDirect.UI
     // high-DPI display.
     internal sealed class SharpToolbarRenderer : ToolStripSystemRenderer
     {
+        protected override void OnRenderOverflowButtonBackground(ToolStripItemRenderEventArgs e)
+        {
+            var bounds = new Rectangle(Point.Empty, e.Item.Size);
+            using var background = new SolidBrush(e.Item.Selected ? SystemColors.ControlLight : SystemColors.Control);
+            e.Graphics.FillRectangle(background, bounds);
+            var state = e.Graphics.Save();
+            try
+            {
+                float size = Math.Min(bounds.Width - 4, bounds.Height - 4);
+                e.Graphics.TranslateTransform((bounds.Width - size) / 2, (bounds.Height - size) / 2);
+                e.Graphics.ScaleTransform(size / 24, size / 24);
+                e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+                using var pen = new Pen(SystemColors.ControlText, 1.8f);
+                foreach (int x in new[] { 4, 12, 20 }) e.Graphics.DrawEllipse(pen, x - 1, 11, 2, 2);
+            }
+            finally { e.Graphics.Restore(state); }
+        }
+
         protected override void OnRenderItemImage(ToolStripItemImageRenderEventArgs e)
         {
             switch (e.Item.Name)
@@ -24,6 +43,11 @@ namespace StatsDirect.UI
                 case "helpToolStripButton":
                 case "findToolStripButton":
                 case "rToolStripButton":
+                case "rPlusToolStripButton":
+                case "aiToolStripButton":
+                case "undoToolStripButton":
+                case "redoToolStripButton":
+                case "runToolStripButton":
                     DrawSymbol(e);
                     return;
                 default:
@@ -57,6 +81,20 @@ namespace StatsDirect.UI
                     case "newToolStripButton":
                         Lines(new(14, 3), new(5, 3), new(5, 21), new(19, 21), new(19, 8), new(14, 3), new(14, 8), new(19, 8));
                         Line(8, 13, 16, 13); Line(8, 17, 14, 17);
+                        break;
+                    case "undoToolStripButton":
+                    case "redoToolStripButton":
+                        if (e.Item.Name == "redoToolStripButton") { g.TranslateTransform(24, 0); g.ScaleTransform(-1, 1); }
+                        Lines(new(8, 4), new(3, 9), new(8, 14));
+                        using (var turn = new GraphicsPath())
+                        {
+                            turn.AddLine(3, 9, 14, 9);
+                            turn.AddBezier(14, 9, 23, 9, 23, 21, 14, 21);
+                            g.DrawPath(pen, turn);
+                        }
+                        break;
+                    case "runToolStripButton":
+                        Lines(new(7, 3), new(21, 12), new(7, 21), new(7, 3));
                         break;
                     case "openToolStripButton":
                         Lines(new(3, 18), new(3, 5), new(9, 5), new(11, 8), new(20, 8), new(20, 11));
@@ -108,6 +146,20 @@ namespace StatsDirect.UI
                         }
                         Line(7, 12, 13, 12);
                         Line(12.5f, 12, 18.5f, 21);
+                        break;
+                    case "rPlusToolStripButton":
+                        Lines(new(3, 20), new(3, 4), new(8, 4));
+                        using (var bowl = new GraphicsPath())
+                        {
+                            bowl.AddBezier(8, 4, 15, 4, 15, 12, 8, 12);
+                            g.DrawPath(pen, bowl);
+                        }
+                        Line(3, 12, 8, 12); Line(8, 12, 14, 20);
+                        Line(16, 12, 23, 12); Line(19.5f, 8.5f, 19.5f, 15.5f);
+                        break;
+                    case "aiToolStripButton":
+                        Lines(new(2, 20), new(8, 4), new(14, 20)); Line(4.25f, 14, 11.75f, 14);
+                        Line(18, 4, 22, 4); Line(20, 4, 20, 20); Line(18, 20, 22, 20);
                         break;
                 }
             }

@@ -119,7 +119,7 @@ internal sealed class ReportView : UserControl
                 case "clipboard": _ = ClipboardCommandAsync(m.GetProperty("command").GetString()); break;
                 case "command":
                     string command = m.GetProperty("command").GetString();
-                    if (command is "save" or "saveAs" or "open" or "print") CommandRequested?.Invoke(command);
+                    if (command is "save" or "saveAs" or "open" or "print" or "find" or "continueInR") CommandRequested?.Invoke(command);
                     break;
             }
         }
@@ -170,17 +170,19 @@ internal sealed class ReportView : UserControl
     }
 
     /// <param name="record">The JSON record of the run that made the result (RunRecord), kept with the item, or null.</param>
-    internal Task<string> AppendAsync(string html, string title, string operation, int helpContextId, string record = null)
+    internal Task<string> AppendAsync(string html, string title, string operation, int helpContextId, string record = null, Action beforeAppend = null)
     {
         async Task<string> AppendAfter(Task prior)
         {
             await prior;
+            beforeAppend?.Invoke();
             string id = Guid.NewGuid().ToString("D");
             await CallAsync("append", new { id, html, title, operation, helpContextId, record = Record(record) });
             return id;
         }
         Task<string> appended = AppendAfter(mutations);
-        mutations = appended;
+        // A cancelled consent check must reject this append without poisoning later edits.
+        mutations = appended.ContinueWith(_ => { }, TaskScheduler.Default);
         return appended;
     }
 
