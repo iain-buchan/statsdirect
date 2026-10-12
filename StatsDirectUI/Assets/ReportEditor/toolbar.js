@@ -60,7 +60,7 @@ window.WindowsReportToolbar = (() => {
     const paste = button('paste', 'Paste', 'Ctrl+V', () => clipboard('paste'), 84);
     const find = button('find', 'Find', 'Ctrl+F', () => send('find'), 75);
     const help = button('help', 'Method help', 'F1', () => chrome.webview.postMessage({action:'help', context:currentHelpContext()}), 60);
-    const r = button('r', 'Continue in R: selected result, otherwise latest eligible result', null, () => send('continueInR'), 65);
+    const r = button('r', 'Continue in R: the result the cursor is in, or the latest result, as an R script', null, () => send('continueInR'), 65);
     function separator() { const s = document.createElement('span'); s.className = 'document-toolbar-separator'; s.setAttribute('role','separator'); return s; }
     undo.dataset.priority = 90; redo.dataset.priority = 89;
     const specific = formatting.filter(n => n !== undo && n !== redo && n !== toggle);
@@ -117,7 +117,11 @@ window.WindowsReportToolbar = (() => {
       cut.disabled = !selected || !editable; copy.disabled = !selected; paste.disabled = !editable;
       const selection = getSelection(), at = resultAt(selection?.rangeCount ? selection.anchorNode : null) ?? resultAt(range?.startContainer);
       const target = entryOf(at ?? entries.findLast(e => isRecord(e.record))?.id);
-      r.disabled = !isRecord(target?.record);
+      // A disabled button is scanned, so its tooltip carries the reason: the text the cursor is in has no record, or the report has none.
+      const ready = isRecord(target?.record);
+      r.disabled = !ready;
+      r.title = ready ? 'Continue in R: the result the cursor is in, or the latest result, as an R script' : at ? 'Continue in R: put the cursor in a result; this text has no record of a run' : 'Continue in R: run an analysis into this report first';
+      r.setAttribute('aria-label', r.title);
     };
     document.addEventListener('selectionchange', refresh);
     document.addEventListener('focusin', refresh);
