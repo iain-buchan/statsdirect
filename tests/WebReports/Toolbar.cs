@@ -55,10 +55,22 @@ internal static partial class Program
         finally { view.CommandRequested -= receive; view.TopicRequested -= topic; }
         await Js("(()=>{const p=document.querySelectorAll('.report-entry p')[1],r=document.createRange();r.selectNodeContents(p);getSelection().removeAllRanges();getSelection().addRange(r);WindowsReportToolbar.refresh()})()");
         Check(await True("document.querySelector('[data-host-command=r]').disabled"), "R is disabled for a selected note rather than silently continuing a different result");
+        // a disabled button is scanned, so its tooltip gives the reason; enabled, it names what it continues
+        Check(await True("document.querySelector('[data-host-command=r]').title==='Continue in R: put the cursor in a result; this text has no record of a run' && document.querySelector('[data-host-command=r]').getAttribute('aria-label')==='Continue in R: put the cursor in a result; this text has no record of a run'"), "the disabled R button's tooltip says the note has no record of a run");
+        await view.CallAsync("selectResult", new { id=firstId });
+        await Js("WindowsReportToolbar.refresh()");
+        Check(await True("!document.querySelector('[data-host-command=r]').disabled && document.querySelector('[data-host-command=r]').title==='Continue in R: the result the cursor is in, or the latest result, as an R script'"), "the enabled R button's tooltip names the result it continues");
+        await Js("getSelection().removeAllRanges();WindowsReportToolbar.refresh()");
+        Check(await True("!document.querySelector('[data-host-command=r]').disabled && document.querySelector('[data-host-command=r]').title==='Continue in R: the result the cursor is in, or the latest result, as an R script'"), "with the cursor in no result, R stays enabled for the latest recorded result");
         using (var png = File.Create(System.IO.Path.Combine(output,"single-toolbar-wide.png"))) await view.Browser.CoreWebView2.CapturePreviewAsync(CoreWebView2CapturePreviewImageFormat.Png,png);
         await Width(360);
         await Js("document.querySelector('#report-more-toggle').click()");
         using (var png = File.Create(System.IO.Path.Combine(output,"single-toolbar-narrow.png"))) await view.Browser.CoreWebView2.CapturePreviewAsync(CoreWebView2CapturePreviewImageFormat.Png,png);
+        // a report with no recorded result: the button is disabled and says to run an analysis first
+        await Width(1400);
+        await view.CallAsync("load", new { entries = new[] { new {title="Note", operation="", helpContextId=0, html="<p>Only a note</p>"} } });
+        await Js("getSelection().removeAllRanges();WindowsReportToolbar.refresh()");
+        Check(await True("document.querySelector('[data-host-command=r]').disabled && document.querySelector('[data-host-command=r]').title==='Continue in R: run an analysis into this report first'"), "with no recorded result in the report, the disabled R button's tooltip says to run an analysis first");
         await view.Browser.CoreWebView2.CallDevToolsProtocolMethodAsync("Emulation.clearDeviceMetricsOverride", "{}");
     }
 }
