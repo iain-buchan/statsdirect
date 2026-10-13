@@ -1,5 +1,7 @@
 using StatsDirect.UI.ToolWindows;
+using StatsDirect.UI.WebReports;
 using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -20,7 +22,7 @@ internal sealed class ScriptAIPane : IDisposable
     private readonly Panel viewport = new() { Dock = DockStyle.Fill, AutoScroll = true };
     private readonly TableLayoutPanel layout = new() { Dock = DockStyle.Top, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink, ColumnCount = 1, RowCount = 10, Padding = new Padding(8) };
     private readonly FlowLayoutPanel sharing = new() { AutoSize = true, Dock = DockStyle.Fill, FlowDirection = FlowDirection.TopDown, WrapContents = false };
-    internal readonly ConversationTextBox Transcript = new() { Dock = DockStyle.Fill, ReadOnly = true, BackColor = SystemColors.Window, DetectUrls = false };
+    internal readonly ConversationView Transcript;   // the conversation as a page: Markdown rendered, code blocks with their buttons
     internal readonly TextBox Composer = new() { Multiline = true, Dock = DockStyle.Fill, ScrollBars = ScrollBars.Vertical, WordWrap = true, MaxLength = 4000, AccessibleName = "Question for the script assistant" };
     internal readonly CheckBox ShareScript = new() { AutoSize = true, Text = "Share this script and its R output" };
     internal readonly CheckBox ShareWorkbook = new() { AutoSize = true, Text = "Share the chosen workbook" };
@@ -44,6 +46,9 @@ internal sealed class ScriptAIPane : IDisposable
     internal ScriptAIPane(frmMain main, LearningService service)
     {
         this.service = service;
+        Transcript = new ConversationView(Path.Combine(Configuration.SDConfiguration.InstallationDirectory, "Tutor"), Path.Combine(service.Storage, "WebView")) { Dock = DockStyle.Fill };
+        Transcript.CodeRequested += (what, code) => { if (what == "copy") Clipboard.SetText(code); else service.OpenScript(code, "AI suggestion — review before running", false); };
+        Transcript.Notice += text => { if (!disposed) status.Text = text; };
         var heading = new ToolStrip { GripStyle = ToolStripGripStyle.Hidden, Dock = DockStyle.Top };
         var title = new ToolStripLabel("Script AI"); var pop = new ToolStripButton("Pop out"); var close = new ToolStripButton("Close");
         heading.Items.AddRange([title, new ToolStripButton("New conversation", null, (_, _) => NewConversation()), pop, close]);
@@ -143,14 +148,19 @@ internal sealed class ScriptAIPane : IDisposable
     private void Render()
     {
         if (chat == null || disposed) return;
-        string text = string.Join("\n\n", chat.Messages.Select(m => (m.S("role") == "user" ? "You" : "StatsDirect AI") + ":\n" + m.S("text"))) + (partial.Length > 0 ? "\n\nStatsDirect AI:\n" + partial : "");
-        Transcript.UpdateConversation(text, renderedChat != chat);
+        Transcript.Update(chat.Messages, partial, renderedChat != chat);
         renderedChat = chat;
     }
     internal async Task SendAsync()
     {
         if (pending != null || chat == null || script?.IsDisposed != false) return;
-        if (service.Tutor.Email == null) { try { await service.ConfigureTutorAsync(view); } catch (Exception ex) { status.Text = ex.Message; } return; }
+        if (service.Tutor.Email == null)
+        {
+            // a dropped connection comes back by itself while the sign-in is held; the set-up and sign-in only when it is not
+            try { await service.Tutor.RefreshAccountAsync(); } catch (Exception ex) { status.Text = ex.Message; }
+            UpdateConnection();
+            if (service.Tutor.Email == null) { try { await service.ConfigureTutorAsync(view); } catch (Exception ex) { status.Text = ex.Message; } return; }
+        }
         string question = Composer.Text.Trim(); if (question.Length == 0) { status.Text = "Enter a question."; return; }
         if ((ShareScript.Checked || ShareWorkbook.Checked) && !Acknowledge.Checked) { status.Text = "Review the selected content and confirm sharing for this question."; return; }
         var approved = new List<StatsDirectForm>();

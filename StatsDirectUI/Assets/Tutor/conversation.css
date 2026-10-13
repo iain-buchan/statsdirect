@@ -1,0 +1,31 @@
+/* The Script AI conversation: each message a block, Markdown rendered; the look of the pane's own font. */
+:root { color-scheme: light; }
+html, body { margin: 0; padding: 0; background: #ffffff; color: #1f2a30; }
+body { font: 10pt Arial, "Segoe UI", sans-serif; line-height: 1.45; }
+#conversation { padding: 4px 8px 12px 8px; }
+.message { margin: 0 0 10px 0; padding: 6px 10px; border-radius: 6px; }
+.message.user { background: #eef5f8; }
+.message.assistant { background: #f7f7f5; }
+.message.partial { border-left: 3px solid #9fc4cf; }
+.who { font-weight: bold; color: #4a5a62; font-size: 0.9em; margin-bottom: 2px; }
+.body > :first-child { margin-top: 0.2em; }
+.body > :last-child { margin-bottom: 0.2em; }
+.body p { margin: 0.4em 0 0.7em; }
+.body h1, .body h2, .body h3, .body h4, .body h5, .body h6 { margin: 0.8em 0 0.4em; line-height: 1.25; color: #173c52; }
+.body h1 { font-size: 1.25em; } .body h2 { font-size: 1.15em; } .body h3 { font-size: 1.05em; } .body h4, .body h5, .body h6 { font-size: 1em; }
+.body ul, .body ol { margin: 0.3em 0 0.7em; padding-left: 1.6em; }
+.body li { margin: 0.15em 0; }
+.body blockquote { margin: 0.5em 0; padding: 0.1em 0.8em; border-left: 3px solid #cfd8dc; color: #3d4b52; }
+.body hr { border: 0; border-top: 1px solid #dce5e9; margin: 0.8em 0; }
+.body code { font-family: Consolas, "Courier New", monospace; font-size: 0.95em; background: #eef1f3; padding: 0 3px; border-radius: 3px; }
+.body pre { margin: 0; padding: 8px 10px; background: #f0f3f5; border: 1px solid #dce5e9; border-radius: 0 0 5px 5px; overflow-x: auto; white-space: pre; }
+.body pre code { background: none; padding: 0; font-size: 0.95em; }
+.code-block { margin: 0.5em 0 0.8em; }
+.code-actions { display: flex; align-items: center; gap: 6px; padding: 3px 8px; background: #e3eaee; border: 1px solid #dce5e9; border-bottom: 0; border-radius: 5px 5px 0 0; font-size: 0.85em; color: #4a5a62; }
+.code-actions span { flex: 1 1 auto; font-weight: bold; }
+.code-actions button { font: inherit; padding: 1px 8px; border: 1px solid #b8c6cd; border-radius: 4px; background: #ffffff; color: #173c52; cursor: pointer; }
+.code-actions button:hover { background: #f3f7f9; }
+.body table { border-collapse: collapse; margin: 0.5em 0 0.8em; max-width: 100%; }
+.body th, .body td { border: 1px solid #cfd8dc; padding: 3px 8px; text-align: left; vertical-align: top; }
+.body th { background: #eef1f3; }
+.body a { color: #175e79; }
