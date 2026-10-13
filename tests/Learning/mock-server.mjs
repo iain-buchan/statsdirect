@@ -31,7 +31,7 @@ readline.createInterface({input:process.stdin}).on('line',line=>{
      out({method:'item/agentMessage/delta',params:{threadId:p.threadId,turnId:id,itemId:'reply',delta:answer}});
      out({method:'item/completed',params:{threadId:p.threadId,turnId:id,item:{type:'agentMessage',id:'reply',text:answer}}});
      out({method:'turn/completed',params:{threadId:p.threadId,turn:{id,status:'completed'}}});
-   },text.includes('SLOW_REPLY')?8000:50);turns.set(id,timer);break;}
+   },text.includes('COPY_SELECTION_CHECK')?60000:text.includes('SLOW_REPLY')?8000:50);turns.set(id,timer);break;}
  case 'turn/interrupt':clearTimeout(turns.get(p.turnId));result({});break;
  case 'thread/unsubscribe':result({});break;
  default: if(q.id!==undefined)out({id:q.id,error:{code:-32601,message:'Unsupported mock method'}});

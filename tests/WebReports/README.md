@@ -1,5 +1,12 @@
 # Windows WebView2 report integration checks
 
+13 October 2026 selection/copy follow-up: **258 checks pass**. Script AI already
+preserves exact selected text at paragraph boundaries in Windows WebView2.
+Additional cases exercise Chromium's actual Copy command and Windows clipboard
+text after streaming and completion, including backwards, paragraph-end and
+mixed-format selections. No Script AI production change was needed for this
+follow-up. The helper temporarily preserves/restores the previous clipboard.
+
 13 October 2026 AI-to-R follow-up: **252 checks pass**, including the originating
 message and R-block identifiers on Open in R, so native export can restore the
 correct data context for an older reply. Stale clicks from another conversation
@@ -41,7 +48,7 @@ dotnet run --project tests/WebReports -c Release -p:StatsDirectBin=C:\path\to\ap
 node --test ReportEditor/upstream/Report/clipboard.test.mjs ReportEditor/upstream/Report/fonts.test.mjs ReportEditor/upstream/Report/legacy-layout.test.mjs ReportEditor/upstream/Report/metafile.test.mjs
 ```
 
-Requires Windows, .NET 10 Desktop and the WebView2 Runtime. The harness uses an off-screen native form and an isolated browser profile inside the artifact directory. It leaves the user's clipboard and reports untouched. Browser input tests dispatch native Chromium mouse events through its test protocol; they do not move the desktop mouse.
+Requires Windows, .NET 10 Desktop and the WebView2 Runtime. The harness uses an off-screen native form and an isolated browser profile inside the artifact directory. It leaves the user's reports untouched. Native copy checks temporarily use the clipboard and restore its contents unless another application changes it meanwhile. Browser input tests dispatch native Chromium mouse events through its test protocol; they do not move the desktop mouse.
 
 Coverage includes the editor startup, text formatting, append without losing edits, undo/redo, merged-table and SVG clipboard payloads, CF_HTML Unicode byte offsets, cut/paste transactions and SVG identifier remapping, Windows Ctrl-drag copying, cross-section drag moves and atomic undo, editable HTML round trips and context metadata, Word XML/merged tables/vector charts with raster fallbacks, native PDF export, sanitization, restricted host access, Ctrl+S and reload protection. The paired-t help example is calculated by the production builtin and rendered with the production HTML/SVG renderer before being displayed in WebView2.
 

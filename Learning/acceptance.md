@@ -1,5 +1,24 @@
 # Windows / Mac workflow acceptance — 13 October 2026
 
+## Selection and copying follow-up
+
+Windows Script AI does not reproduce the Mac/WebKit extra-paragraph-break bug:
+actual Chromium Copy and Windows clipboard checks preserve the exact selected
+text. Windows Learning did lose its selection on the next streamed chunk. The
+Learning bundle now uses the unchanged Mac `conversation-view.mjs` module from
+`0a112baeae9f799b10685ada30f6dd442aec68c5`, with stable message IDs across completion
+and a narrow build-time adapter to the existing lesson source. No engine, report
+editor, lesson content or third-party dependency version changed.
+
+Learning passes **165 checks**, WebReports/Script AI **258**, WindowsShell **32**
+and the shared Learning/R runner **27**: **482 total**. New cases cover paragraph starts and ends,
+backwards and mixed-format selections, intentional paragraph breaks, paused
+following, completed replies and viewport clamping. Copy checks temporarily use
+the real Windows clipboard and restore its previous contents. The AI response is
+synthetic; R examples run in R 4.6.1. The optional runtime and installer probes
+are omitted. Evidence is in `outputs/selection-boundary-*` and
+`work/selection-boundary` under the workspace recorded below.
+
 ## AI-to-R context follow-up
 
 The updated 5.2.0 candidate fixes Script AI's bottom Open R code and per-block Open

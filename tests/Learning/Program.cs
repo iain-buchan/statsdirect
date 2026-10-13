@@ -77,6 +77,7 @@ internal static partial class Program
         using(var shot=File.Create(Path.Combine(artifacts,"learning-options.png")))await view.Browser.CoreWebView2.CapturePreviewAsync(CoreWebView2CapturePreviewImageFormat.Png,shot);
         await TestCourses(service,view);
         await TestTutor(tutor);
+        await TestLearningSelection(service,view);
         await TestConsent(main,service,view,grid);
         await TestConversationR(main,service,grid);
         await TestCalculations(main,grid);

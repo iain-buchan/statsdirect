@@ -19,6 +19,7 @@ Version 5.2.0 brings the Windows workspace into step with the Mac version and ad
 - Selecting text within a growing reply preserves the selection and reading position as further chunks arrive, including backwards selections and selections across formatting. If the conversation browser fails, closing and reopening the pane recreates it and restores the latest conversation with the same security restrictions.
 - Connection diagnostics record only error types, recognised protocol message types, identifiers and lengths. Raw responses and exception details are excluded, and upgrading removes diagnostics written in the older format.
 - Script AI's Open R code and per-block Open in R retain the source script snapshot, worksheet values actually read and preceding R blocks, so follow-up code can use the data and variables discussed. Opening code does not execute it or reread edited worksheets.
+- Learning replies retain highlighted text and reading position as chunks arrive and when the completed reply replaces them. Copying preserves the selected text at paragraph boundaries and across formatting, including backwards selections.
 
 ### Added
 - Help > Learning and Learning Options reuse the Mac lesson library, provider courses, learner preferences, independent practice and learning-record exports. Records stay local; sharing document context with the user's ChatGPT account requires confirmation for each question.

@@ -12,11 +12,12 @@ documented separately in `ReportEditor/chart-alignment-port.md`.
 
 The source is `iain-buchan/statsdirect-mac`, commit
 `1f4d920be36081a6e9121d83933b6356ed6ece2d` (MIT).
-`upstream/Learn` and `upstream/Docs/Learn/bank.mjs` are copied unchanged. The built
-`Content/Learn`, `Content/Tutor` and `Content/Brand` files are under
+`upstream/Learn` and `upstream/Docs/Learn/bank.mjs` are copied unchanged. The original
+`Content/Learn`, `Content/Tutor` and `Content/Brand` assets are under
 `StatsDirectUI/Assets`. The Windows host supplies the bridge and adjusts platform
-wording without changing the bundled JavaScript. `upstream.lock.json` records
-SHA-256 hashes of the files as copied. `.gitattributes` prevents Git's line-ending
+wording. `upstream.lock.json` records SHA-256 hashes of the original copied files;
+its `windowsAdaptations` entry separately records the Learning selection port.
+`.gitattributes` prevents Git's line-ending
 conversion from changing those vendored bytes. Preserve the MIT notice and the bundled
 `THIRD-PARTY-LICENSES.txt` for DOMPurify, KaTeX and highlight.js.
 
@@ -24,6 +25,18 @@ For a content update, build and review the Mac source at a recorded commit, copy
 these same directories, update the lock, and run the Windows checks. The upstream
 build uses its pinned Learn dependencies and the Grid esbuild dependency; it does
 not need to run when compiling the Windows application from checked-in assets.
+
+The Windows Learning bundle now includes the selection/reading-position module
+from Mac commit `0a112baeae9f799b10685ada30f6dd442aec68c5`, copied unchanged as
+`conversation-view.mjs`. `selection-port.mjs` applies a narrow, guarded adaptation
+to the recorded app source at build time: stable message IDs and selection
+capture/restoration around streamed and completed replies. It imports no other
+Mac lesson, engine or bridge changes. Dependency versions match the original
+bundle. To rebuild it, run `pnpm --dir Learning install --frozen-lockfile` and
+`node Learning/build.mjs` from the repository root. Commit the generated
+`StatsDirectUI/Assets/Learn/app.js` and refresh the adaptation hashes when changing
+the port. The build fails if its expected source fragments no longer match;
+review the adaptation explicitly when updating the upstream baseline.
 
 Searchable PDF course import uses unmodified PdfPig 0.1.16, Apache-2.0, source
 commit `a7bb35662bbbf405efddad50aedc9bcdcf515afc`. Its full licence and included

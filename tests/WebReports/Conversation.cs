@@ -100,6 +100,28 @@ internal static partial class Program
         string selected = await page.SelectionAsync();
         text += " And more."; page.Update(question, text, false); await page.SettledAsync();
         Check(await page.SelectionAsync() == selected && selected == "bold words and plain", "selection across emphasis and plain text survives new chunks");
+        // The end of one paragraph and start of the next have the same text offset.
+        // Replacing the latter must not restore its start to the previous paragraph.
+        text = "Previous paragraph.\n\nSelected paragraph continues";
+        page.Update(question, text, true); await page.SettledAsync();
+        await page.SelectAsync("Selected paragraph");
+        text += " while streaming.";
+        page.Update(question, text, false); await page.SettledAsync();
+        selected = await page.SelectionAsync();
+        Check(selected == "Selected paragraph", "paragraph-start selection retains exact copy text without leading newlines: " + JsonSerializer.Serialize(selected));
+        Check(await BrowserCopyProbe.CopyAsync(page.Browser.CoreWebView2)==selected,"Script AI native copy has no extra paragraph breaks after streaming");
+        await Page("(()=>{const s=getSelection(),a=s.anchorNode,ao=s.anchorOffset,f=s.focusNode,fo=s.focusOffset;s.setBaseAndExtent(f,fo,a,ao)})()");
+        text+=" Another chunk.";page.Update(question,text,false);await page.SettledAsync();
+        Check(await page.SelectionAsync()==selected&&await BrowserCopyProbe.CopyAsync(page.Browser.CoreWebView2)==selected,"Script AI backwards paragraph-start selection copies exactly after another chunk");
+        await Page("(()=>{const n=document.querySelector('.partial p').firstChild;getSelection().setBaseAndExtent(n,9,n,n.length)})()");
+        selected=await page.SelectionAsync();text+=" More.";page.Update(question,text,false);await page.SettledAsync();
+        Check(await page.SelectionAsync()==selected&&await BrowserCopyProbe.CopyAsync(page.Browser.CoreWebView2)==selected,"Script AI paragraph-end selection and copying remain exact");
+        text="Previous paragraph.\n\n**Selected** paragraph continues";page.Update(question,text,true);await page.SettledAsync();
+        await Page("(()=>{const p=document.querySelectorAll('.partial p')[1];getSelection().setBaseAndExtent(p.querySelector('strong').firstChild,0,p.lastChild,10)})()");
+        text+=" and grows.";page.Update(question,text,false);await page.SettledAsync();
+        Check(await page.SelectionAsync()=="Selected paragraph"&&await BrowserCopyProbe.CopyAsync(page.Browser.CoreWebView2)=="Selected paragraph","Script AI mixed-format paragraph-start selection copies exactly");
+        page.Update(Messages(("user","Please explain the streamed reply."),("assistant",text)),"",false);await page.SettledAsync();
+        Check(await page.SelectionAsync()=="Selected paragraph"&&await BrowserCopyProbe.CopyAsync(page.Browser.CoreWebView2)=="Selected paragraph","Script AI completion preserves paragraph-start selection and copying");
         // A selection at the bottom pauses following without stopping rendering.
         text = string.Join("\n\n", Enumerable.Range(1, 25).Select(i => $"Paragraph {i} stable text.")) + "\n\n";
         page.Update(question, text, true); await page.SettledAsync(); await page.ScrollToEndAsync();

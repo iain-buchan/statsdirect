@@ -25,9 +25,9 @@
     mod
   ));
 
-  // Learn/node_modules/.pnpm/highlight.js@11.12.0/node_modules/highlight.js/lib/core.js
+  // Learning/node_modules/.pnpm/highlight.js@11.12.0/node_modules/highlight.js/lib/core.js
   var require_core = __commonJS({
-    "Learn/node_modules/.pnpm/highlight.js@11.12.0/node_modules/highlight.js/lib/core.js"(exports, module) {
+    "Learning/node_modules/.pnpm/highlight.js@11.12.0/node_modules/highlight.js/lib/core.js"(exports, module) {
       function deepFreeze(obj) {
         if (obj instanceof Map) {
           obj.clear = obj.delete = obj.set = function() {
@@ -1579,7 +1579,7 @@
     }
   });
 
-  // Grid/node_modules/.pnpm/marked@4.3.0/node_modules/marked/lib/marked.esm.js
+  // Learning/node_modules/marked/lib/marked.esm.js
   function getDefaults() {
     return {
       async: false,
@@ -3741,7 +3741,7 @@ ${content}</tr>
   var parser = Parser.parse;
   var lexer = Lexer.lex;
 
-  // Learn/node_modules/.pnpm/dompurify@3.4.16/node_modules/dompurify/dist/purify.es.mjs
+  // Learning/node_modules/.pnpm/dompurify@3.4.16/node_modules/dompurify/dist/purify.es.mjs
   function _OverloadYield(e2, d) {
     this.v = e2, this.k = d;
   }
@@ -5716,7 +5716,7 @@ ${content}</tr>
   }
   var purify_default = createDOMPurify();
 
-  // Learn/node_modules/.pnpm/katex@0.19.0/node_modules/katex/dist/katex.mjs
+  // Learning/node_modules/.pnpm/katex@0.19.0/node_modules/katex/dist/katex.mjs
   var ParseError = class _ParseError extends Error {
     // The underlying error message without any context added.
     constructor(message, token) {
@@ -19924,11 +19924,11 @@ ${content}</tr>
     __domTree
   };
 
-  // Learn/node_modules/.pnpm/highlight.js@11.12.0/node_modules/highlight.js/es/core.js
+  // Learning/node_modules/.pnpm/highlight.js@11.12.0/node_modules/highlight.js/es/core.js
   var import_core = __toESM(require_core(), 1);
   var core_default = import_core.default;
 
-  // Learn/node_modules/.pnpm/highlight.js@11.12.0/node_modules/highlight.js/es/languages/r.js
+  // Learning/node_modules/.pnpm/highlight.js@11.12.0/node_modules/highlight.js/es/languages/r.js
   function r(hljs) {
     const regex = hljs.regex;
     const IDENT_RE = /(?:(?:[a-zA-Z]|\.[._a-zA-Z])[._a-zA-Z0-9]*)|\.(?!\d)/;
@@ -20138,7 +20138,7 @@ ${content}</tr>
     };
   }
 
-  // Learn/rich-text.mjs
+  // Learning/upstream/Learn/rich-text.mjs
   core_default.registerLanguage("r", r);
   var esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
   var math2 = (text3, displayMode) => katex.renderToString(text3, { displayMode, throwOnError: false, trust: false, strict: "ignore", maxExpand: 500, maxSize: 20 });
@@ -20180,7 +20180,7 @@ ${content}</tr>
     });
   }
 
-  // Learn/record-html.mjs
+  // Learning/upstream/Learn/record-html.mjs
   var e = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
   function exportRichText(text3) {
     const content = document.createElement("div");
@@ -20202,7 +20202,56 @@ ${x.verification}`)).join("")) + section("Reflection", para(r2.reflection || "No
     return '<!doctype html><html><head><meta charset="utf-8"><title>StatsDirect learning record</title><style>body{font:14px/1.5 -apple-system,Arial,sans-serif;color:#213b48;max-width:900px;margin:auto;padding:32px}h1,h2,h3{break-after:avoid}h2{border-bottom:1px solid #ccc;margin-top:28px}article{margin:20px 0}pre{white-space:pre-wrap;overflow-wrap:anywhere}table{border-collapse:collapse}th,td{border:1px solid #bbb;padding:6px}.code-actions{display:none}.katex-html{display:none}</style></head><body>' + body + "</body></html>";
   }
 
-  // Content/Learn/lessons.json with { type: 'json' }
+  // Learning/conversation-view.mjs
+  function endpoint(container, node, offset) {
+    const element = node?.nodeType === 1 ? node : node?.parentElement;
+    const body = element?.closest(".message-body"), message = body?.closest("[data-message-id]");
+    if (!body || !message || !container.contains(message)) return null;
+    const range = container.ownerDocument.createRange();
+    range.selectNodeContents(body);
+    range.setEnd(node, offset);
+    const end = node.nodeType === 3 ? node.length : node.childNodes.length;
+    return { id: message.dataset.messageId, offset: range.toString().length, backward: offset === end };
+  }
+  function resolve(container, point) {
+    if (!point) return null;
+    const message = Array.from(container.querySelectorAll("[data-message-id]")).find((x) => x.dataset.messageId === point.id);
+    const body = message?.querySelector(".message-body");
+    if (!body) return null;
+    const walker = container.ownerDocument.createTreeWalker(body, 4);
+    let remaining = point.offset, last = null, node;
+    while (node = walker.nextNode()) {
+      if (remaining < node.length || remaining === node.length && point.backward) return [node, remaining];
+      remaining -= node.length;
+      last = node;
+    }
+    return last ? [last, last.length] : [body, 0];
+  }
+  function conversationReading(container) {
+    if (!container) return null;
+    const selection = container.ownerDocument.defaultView.getSelection();
+    return {
+      top: container.scrollTop,
+      left: container.scrollLeft,
+      follow: (!selection || selection.isCollapsed) && container.scrollHeight - container.clientHeight - container.scrollTop < 80,
+      anchor: endpoint(container, selection?.anchorNode, selection?.anchorOffset),
+      focus: endpoint(container, selection?.focusNode, selection?.focusOffset)
+    };
+  }
+  function restoreConversationReading(container, reading) {
+    if (!container) return;
+    if (reading) {
+      const anchor = resolve(container, reading.anchor), focus = resolve(container, reading.focus);
+      if (anchor && focus) {
+        const selection = container.ownerDocument.defaultView.getSelection();
+        selection.setBaseAndExtent(...anchor, ...focus);
+      }
+      container.scrollLeft = reading.left;
+      container.scrollTop = reading.follow ? container.scrollHeight : reading.top;
+    } else container.scrollTop = container.scrollHeight;
+  }
+
+  // StatsDirectUI/Assets/Learn/lessons.json with { type: 'json' }
   var lessons_default = [
     {
       id: "epidemiology",
@@ -21770,7 +21819,7 @@ ${x.verification}`)).join("")) + section("Reflection", para(r2.reflection || "No
     }
   ];
 
-  // Learn/bank.mjs
+  // Learning/upstream/Learn/bank.mjs
   var bankVersion = "learn-draft-2026-10-01";
   var tracks = {
     foundation: { title: "Medical undergraduate", description: "Understand the question, choose the method, interpret the result." },
@@ -21996,7 +22045,7 @@ ${x.verification}`)).join("")) + section("Reflection", para(r2.reflection || "No
   );
   questions.push(...lessons_default.flatMap((lesson2) => lesson2.practiceQuestions ?? []));
 
-  // Learn/quiz.mjs
+  // Learning/upstream/Learn/quiz.mjs
   function createSession(track, mode, id = crypto.randomUUID(), providerPack = null) {
     if (!tracks[track] || !["learn", "test"].includes(mode)) throw new Error("Choose a valid learning path and mode.");
     const selected = providerPack?.questions ?? questions.filter((q) => q.track === track || q.track === "core");
@@ -22061,7 +22110,7 @@ ${x.verification}`)).join("")) + section("Reflection", para(r2.reflection || "No
     return session.questionSnapshots?.find((q) => q.id === id) ?? questions.find((q) => q.id === id);
   }
 
-  // Learn/provider-course.mjs
+  // Learning/upstream/Learn/provider-course.mjs
   var statisticalSkills = { beginner: "Beginner", intermediate: "Intermediate", advanced: "Advanced" };
   var assessmentTypes = { none: "None", cpd: "Continued professional development credits", self: "AI supported self-assessment" };
   var assessmentNotes = { none: "Learn at your own pace.", cpd: "Keep a learning record for your provider to review for credit.", self: "Use the tutor for practice questions and feedback on your reasoning." };
@@ -22106,7 +22155,7 @@ ${x.verification}`)).join("")) + section("Reflection", para(r2.reflection || "No
     return review;
   }
 
-  // Learn/portfolio.mjs
+  // Learning/upstream/Learn/portfolio.mjs
   var stages = { menus: "Start with menus", bridge: "Connect menus to R", coding: "Practise R coding" };
   function newPortfolio() {
     return { schemaVersion: 2, id: crypto.randomUUID(), startedAt: (/* @__PURE__ */ new Date()).toISOString(), profile: "foundation", stage: "menus", lesson: "epidemiology", view: "study", identity: { name: "", email: "", goal: "" }, learning: { statisticalSkills: "beginner", needs: "", qualifications: "", priorKnowledge: "", targetDate: "", focus: ["epidemiology", "causal"], style: "Worked examples and questions" }, training: trainingDefaults(), courseKey: "", courseWork: [], workDrafts: {}, providerReviews: [], evidence: [], conversation: [], sharingConsents: [], activities: [], attempts: [], quiz: null, reflection: "", draft: "" };
@@ -22218,7 +22267,7 @@ ${item.options.map((x) => x.id + ". " + x.text).join("\n")}
 Teaching rationale: ${item.explanation}` : "";
   }
 
-  // Learn/exam-sources.mjs
+  // Learning/upstream/Learn/exam-sources.mjs
   var examSources = [
     { title: "MRCP(UK): official Part 1 sample examination", url: "https://www.thefederation.uk/examinations/part-1/part-1-sample-questions", note: "Official best-of-five practice access. Registration is required; the questions behind that step were not reviewed for this build." },
     { title: "MRCP-style diagnostic questions: published practice examples", url: "https://www.pastpaperhero.com/resources/rcp-mrcp-statistics-epidemiology-and-evidence-based-medicine-sensitivity-specificity-and-predictive-values?content=article", note: "Independent publisher, not a Royal College source. Public questions cover diagnostic denominators, prevalence and threshold changes. Used for topic inspiration only." },
@@ -22228,7 +22277,7 @@ Teaching rationale: ${item.explanation}` : "";
   ];
   var communicationPrompt = "Practise a short public-health communication scenario with me. You are a fictional service manager asking whether a clinic with longer average waiting times is performing poorly. Give me a small original data example, ask me to explain it in plain language, and wait for my reply. Then give formative feedback on interpretation, case mix, uncertainty and clarity. Do not assign an official examination grade.";
 
-  // Learn/lesson-context.mjs
+  // Learning/upstream/Learn/lesson-context.mjs
   function labelStudyGuides(state2, lessons) {
     for (const entry of state2.conversation) {
       if (entry.source !== "Study guide" || entry.role !== "assistant") continue;
@@ -22262,7 +22311,7 @@ ${c.text}` : c.text }));
     return state2.conversation.filter((c) => c.lessonId === state2.lesson || !c.lessonId && state2.lesson === "epidemiology");
   }
 
-  // Content/Learn/lessons.json
+  // StatsDirectUI/Assets/Learn/lessons.json
   var lessons_default2 = [
     {
       id: "epidemiology",
@@ -23830,7 +23879,7 @@ ${c.text}` : c.text }));
     }
   ];
 
-  // Learn/lesson-guide.mjs
+  // Learning/upstream/Learn/lesson-guide.mjs
   function lessonGuideHTML(lesson2, catalogue, esc4, safeURL2) {
     const list = (values) => `<ul>${values.map((value) => `<li>${esc4(value)}</li>`).join("")}</ul>`;
     const section = (title, html3) => html3 ? `<h3>${esc4(title)}</h3>${html3}` : "";
@@ -23846,7 +23895,7 @@ ${c.text}` : c.text }));
     return html2;
   }
 
-  // Learn/course-ui.mjs
+  // Learning/upstream/Learn/course-ui.mjs
   var esc2 = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
   function trainingHTML(state2, pack) {
     const t = state2.training;
@@ -23889,7 +23938,7 @@ ${pack ? `<details><summary>Included materials</summary><ul>${pack.documents.map
 <section class="card"><h2>Returned assessments</h2><button id="importProviderReview">Import provider response\u2026</button><p class="small">Import a response file returned by your provider for this learning record. StatsDirect records the supplied decision and feedback; it does not authenticate certificates or award credit.</p>${state2.providerReviews.map((r2) => `<article class="review-line"><strong>${esc2(r2.provider)} \u2014 ${esc2(r2.decision)}</strong><p>${esc2(r2.feedback)}</p><p>${esc2(r2.creditStatement)}</p><p class="small">${esc2(r2.reviewer)} \xB7 ${esc2(r2.reviewedAt)} \xB7 ${esc2(r2.verification)}</p></article>`).join("")}</section>`;
   }
 
-  // Learn/app.mjs
+  // Learning/upstream/Learn/app.mjs
   var $ = (id) => document.getElementById(id);
   var esc3 = (value) => String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
   var state = newPortfolio();
@@ -23902,6 +23951,7 @@ ${pack ? `<details><summary>Included materials</summary><ul>${pack.documents.map
   var coursePack = null;
   var streamedText = "";
   var streamTimer = null;
+  var renderedStudy = null;
   var workspace = { choice: "__none__", choices: [], label: "Lessons only \xB7 open documents are not shared" };
   var native = Boolean(window.webkit?.messageHandlers?.statsDirectLearn);
   var post = (body) => window.webkit?.messageHandlers?.statsDirectLearn?.postMessage(body);
@@ -23967,12 +24017,14 @@ ${pack ? `<details><summary>Included materials</summary><ul>${pack.documents.map
   function renderStudy() {
     const l = lesson();
     if (ensureLessonPrompt(state, allLessons())) save();
+    const key = state.id + ":" + l.id, reading = renderedStudy === key ? conversationReading($("messages")) : null;
+    renderedStudy = key;
     $("main").innerHTML = `<section class="intro"><div class="eyebrow">${esc3(l.topic)}</div><h1>${esc3(l.title)}</h1></section><div class="actions">${l.operation ? '<button class="primary" data-action="example">Try in StatsDirect</button>' : ""}${l.r ? '<button data-action="r">Explore in R</button>' : ""}${l.help ? '<button class="link-button" data-action="help">Read help \u2197</button>' : ""}</div><details class="lesson-guide"><summary>Lesson guide and worked example</summary>${lessonGuideHTML(l, allLessons(), esc3, safeURL)}</details>${courseWorkHTML(state, l)}<section class="chat"><div class="chat-heading"><strong>Your biostatistics tutor</strong><button id="focusConversation" class="link-button">${state.conversationFocus ? "Show lesson controls" : "Expand conversation"}</button><span id="tutorBadge" class="badge">${esc3(settings.label)}</span></div><div id="messages" class="messages" role="log" aria-label="Learning conversation"></div><div class="composer"><label for="question">Ask a question, explain your thinking, or paste a small R example</label><textarea id="question" rows="2" maxlength="4000" placeholder="For example: why do we analyse the differences?" ${pending ? "disabled" : ""}>${esc3(state.draft)}</textarea><div class="composer-bottom"><small id="connectionPrivacy">${esc3(privacyText())}</small><button id="send" class="primary" ${pending || settings.disabled ? "disabled" : ""}>${esc3(sendLabel())}</button>${pending ? '<button id="stop">Stop</button>' : ""}</div><p class="small" id="chatStatus" role="status">${pending ? "The tutor is thinking\u2026" : ""}</p></div></section><div class="suggestions"><button data-prompt="Explain this without assuming I know any statistics.">Explain simply</button><button data-prompt="Ask me one original exam-style question on this topic, then wait for my answer.">Test my understanding</button><button data-prompt="Walk me through the bundled R example line by line, and suggest one small change I can try.">Help me learn R</button></div>`;
     $("messages").innerHTML = lessonConversation(state).map((c) => {
       const guide = guidePresentation(c, l);
       const content = `<div class="message-body">${bodyHTML(c.text)}</div>${c.courseSources?.length ? `<div class="small context-used">Lesson context supplied: ${c.courseSources.map((s) => safeURL(s.url) ? `<a href="${esc3(safeURL(s.url))}" target="_blank" rel="noopener">${esc3(s.title)}</a>` : esc3(s.title)).join("; ")}</div>` : ""}${c.workspaceSources?.length ? `<div class="small context-used">Used: ${c.workspaceSources.map(esc3).join("; ")}</div>` : ""}`;
-      if (guide.earlier) return `<details class="earlier-guide"><summary>${esc3(guide.label)}</summary>${content}</details>`;
-      return `<article class="message ${c.role === "user" ? "user" : ""}"><div class="message-label">${c.role === "user" ? "YOU" : esc3(guide.label.toUpperCase())}${c.model ? " \xB7 " + esc3(c.model) : ""}</div>${content}</article>`;
+      if (guide.earlier) return `<details class="earlier-guide" data-message-id="${esc3(c.id)}"><summary>${esc3(guide.label)}</summary>${content}</details>`;
+      return `<article data-message-id="${esc3(c.id)}" class="message ${c.role === "user" ? "user" : ""}"><div class="message-label">${c.role === "user" ? "YOU" : esc3(guide.label.toUpperCase())}${c.model ? " \xB7 " + esc3(c.model) : ""}</div>${content}</article>`;
     }).join("");
     if ($("courseAnswer")) {
       $("courseAnswer").oninput = () => {
@@ -23996,9 +24048,9 @@ ${pack ? `<details><summary>Included materials</summary><ul>${pack.documents.map
       render3();
     };
     bindConversation();
-    if (pending) renderStream();
+    if (pending) renderStream(false);
     renderWorkspace();
-    $("messages").scrollTop = $("messages").scrollHeight;
+    restoreConversationReading($("messages"), reading);
     $("question").oninput = () => {
       state.draft = $("question").value;
       save();
@@ -24039,19 +24091,20 @@ ${pack ? `<details><summary>Included materials</summary><ul>${pack.documents.map
       }
     });
   }
-  function renderStream() {
+  function renderStream(preserve = true) {
     if (!$("messages") || !pending) return;
     let article = $("streamedReply");
-    const atBottom = $("messages").scrollHeight - $("messages").scrollTop - $("messages").clientHeight < 80;
+    const reading = preserve ? conversationReading($("messages")) : null;
     if (!article) {
       article = document.createElement("article");
       article.id = "streamedReply";
+      article.dataset.messageId = pending;
       article.className = "message";
       $("messages").append(article);
     }
     article.innerHTML = '<div class="message-label">TUTOR \xB7 REPLYING</div><div class="message-body">' + richText(streamedText || "Thinking\u2026") + "</div>";
     bindConversation();
-    if (atBottom) $("messages").scrollTop = $("messages").scrollHeight;
+    if (preserve) restoreConversationReading($("messages"), reading);
   }
   function refreshEvidenceChoices() {
     const select = $("evidenceDocument");
@@ -24437,9 +24490,10 @@ ${pack ? `<details><summary>Included materials</summary><ul>${pack.documents.map
     notice,
     reply(value) {
       if (value.id !== pending) return;
+      const messageId = pending;
       pending = null;
       if (value.workspaceSources?.length) activity("Tutor used: " + value.workspaceSources.join("; "));
-      transcriptEntry(state, "assistant", value.text, "StatsDirect AI tutor", { lessonId: lesson().id, lessonTitle: lesson().title, model: value.model, responseID: value.responseID, promptVersion: value.promptVersion, diagnostics: value.diagnostics ?? [], learningOptions: structuredClone(state.learning), rExperience: state.stage, courseSources: value.courseSources ?? [], workspaceSources: value.workspaceSources ?? [] });
+      transcriptEntry(state, "assistant", value.text, "StatsDirect AI tutor", { id: messageId, lessonId: lesson().id, lessonTitle: lesson().title, model: value.model, responseID: value.responseID, promptVersion: value.promptVersion, diagnostics: value.diagnostics ?? [], learningOptions: structuredClone(state.learning), rExperience: state.stage, courseSources: value.courseSources ?? [], workspaceSources: value.workspaceSources ?? [] });
       save();
       render3();
     },

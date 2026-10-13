@@ -101,5 +101,21 @@
     "StatsDirectUI/Assets/Tutor/script-instructions.txt": "9324f4f91e2d022ffc7cb9c282e999ea293e633cec2534683ea7877e7d6811b7",
     "StatsDirectUI/Assets/Brand/README.md": "5a43054590598039defdea2e08d98ae4ae7305cd2b721bee32f1b65abd95531d",
     "StatsDirectUI/Assets/Brand/statsdirect.png": "d6c1fe5de3e99b70971bed33140efe12322b4ab53279a0e0a6ce2ed6c65e5198"
-  }
+  },
+  "windowsAdaptations": [
+    {
+      "description": "Learning selection and reading position during streaming and completion; original files hashes above remain provenance of the copied baseline.",
+      "source": "https://github.com/iain-buchan/statsdirect-mac",
+      "commit": "0a112baeae9f799b10685ada30f6dd442aec68c5",
+      "upstreamFile": "Learn/conversation-view.mjs",
+      "files": {
+        "Learning/conversation-view.mjs": "6abd6fb911b717ae8b9fe07ed48ff819d52a26ee3b15a6a091b0118c176bc1ea",
+        "Learning/selection-port.mjs": "fdbe3d0f744755250bbb81e497fdd7843679ba5c2a1078878b97cadccbc40a96",
+        "Learning/build.mjs": "fc3f437c929a1575f799baa4367b3aaa668feb557589a3d4096a708cf57786d6",
+        "Learning/package.json": "a8b3dea79732bc51c0a5a7001df33c584b29bb0d5644a7e1aa67862106f2d0ba",
+        "Learning/pnpm-lock.yaml": "abd935fd35b7ad84adfab7b9ac3cdb4ebc2a2eb83eefeedb24ac9e9bf3dd09cf",
+        "StatsDirectUI/Assets/Learn/app.js": "c712d38280dd3c2aa65b336ac032a5e7b485db25e6352c85896a180adf6044e6"
+      }
+    }
+  ]
 }

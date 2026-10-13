@@ -1,5 +1,14 @@
 # Windows Learning integration checks
 
+13 October 2026 selection/copy follow-up: **165 checks pass**. The previous
+Learning bundle lost the selection on the next streamed chunk. `Selection.cs`
+now checks paragraph-start/end boundaries, backwards and mixed-format selections,
+deliberate paragraph breaks, paused following and completion with viewport
+clamping. It uses Chromium's actual Copy command and reads Windows clipboard
+text, temporarily preserving/restoring the previous clipboard contents.
+The shared Learning/R runner also passes all **27 tests**. No live AI request
+is made; the optional runtime and installer probes are omitted.
+
 13 October 2026 AI-to-R follow-up: **152 checks pass** with the optional official
 runtime and R-installer probes omitted. `ConversationR.cs` tests the actual bottom
 and per-block Open in R actions and runs the user's PEFR code in a fresh real R
