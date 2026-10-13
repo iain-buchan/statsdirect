@@ -1,5 +1,6 @@
 using Microsoft.Win32;
 using System;
+using System.Text;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -72,7 +73,11 @@ internal sealed class ChatGPTTutor : IDisposable
         if (!File.Exists(executable)) throw new IOException("Choose Use my ChatGPT to download the ChatGPT component.");
         string workspace = Path.Combine(storage, "Workspace"); Directory.CreateDirectory(workspace);
         File.Copy(Path.Combine(resources, "config.toml"), Path.Combine(storage, "config.toml"), true);
-        var start = new ProcessStartInfo(executable) { WorkingDirectory = workspace, UseShellExecute = false, CreateNoWindow = true, RedirectStandardInput = true, RedirectStandardOutput = true, RedirectStandardError = true };
+        // The component speaks JSON-RPC over its standard streams in UTF-8, whatever the console code page: read as the console's
+        // code page, a minus sign or a Greek letter in a reply arrived as three Latin characters.
+        var utf8 = new UTF8Encoding(false);
+        var start = new ProcessStartInfo(executable) { WorkingDirectory = workspace, UseShellExecute = false, CreateNoWindow = true, RedirectStandardInput = true, RedirectStandardOutput = true, RedirectStandardError = true,
+                                                        StandardInputEncoding = utf8, StandardOutputEncoding = utf8, StandardErrorEncoding = utf8 };
         foreach (string argument in prefixArguments) start.ArgumentList.Add(argument);
         foreach (string argument in new[] { "--listen", "stdio://", "--strict-config" }) start.ArgumentList.Add(argument);
         // Do not inherit API keys, personal Codex homes, proxy settings, plugins or project configuration.
@@ -83,7 +88,13 @@ internal sealed class ChatGPTTutor : IDisposable
         start.Environment["CODEX_HOME"] = storage; start.Environment["RUST_LOG"] = "off";
         var child = new Process { StartInfo = start, EnableRaisingEvents = true };
         process = child;
-        child.Exited += (_, _) => ui.Post(_ => { if (process == child) Disconnect("ChatGPT disconnected. Choose Use my ChatGPT to reconnect."); }, null);
+        child.Exited += (_, _) => ui.Post(_ =>
+        {
+            if (process != child) return;
+            string code; try { code = " with code " + child.ExitCode; } catch (InvalidOperationException) { code = ""; }
+            WriteDisconnectNote("the component exited" + code, child, null);
+            Disconnect("ChatGPT disconnected: the component exited" + code + ". Press Send to reconnect, or Use my ChatGPT.");
+        }, null);
         child.Start();
         _ = ReadAsync(child);
         _ = DrainErrorsAsync(child);
@@ -118,9 +129,9 @@ internal sealed class ChatGPTTutor : IDisposable
     }
     private async Task ReadAsync(Process child)
     {
+        string line = null;
         try
         {
-            string line;
             while (process == child && (line = await child.StandardOutput.ReadLineAsync()) != null)
             {
                 CheckPolicy();
@@ -128,6 +139,7 @@ internal sealed class ChatGPTTutor : IDisposable
                 var message = JsonNode.Parse(line);
                 if (message is not JsonObject) throw new IOException("ChatGPT returned an unreadable message.");
                 string method = message.S("method");
+                Note((method.Length > 0 ? method : "reply to " + message.I("id", -1)) + " " + line.Length);
                 if (method.Length > 0)
                 {
                     if (message["id"] != null)
@@ -144,7 +156,28 @@ internal sealed class ChatGPTTutor : IDisposable
                 }
             }
         }
-        catch (Exception) { if (process == child) Disconnect("ChatGPT disconnected. Reconnect and try again."); }
+        catch (Exception ex)
+        {
+            if (process != child) return;
+            WriteDisconnectNote(ex.GetType().Name + ": " + ex.Message, child, line);
+            Disconnect("ChatGPT disconnected: " + ex.Message + " Press Send to reconnect, or Use my ChatGPT.");
+        }
+    }
+    // The shapes of the last messages read (method or id, and length), for the note written when the connection drops: the reason,
+    // whether the component is still running, those shapes and the head of the line being read, in last-disconnect.txt beside the
+    // account data.  No conversation text is kept but that head.
+    private readonly Queue<string> recent = new();
+    private void Note(string shape) { lock (recent) { recent.Enqueue(shape); while (recent.Count > 40) recent.Dequeue(); } }
+    private void WriteDisconnectNote(string why, Process child, string line)
+    {
+        try
+        {
+            string running; try { running = child.HasExited ? "the component had exited with code " + child.ExitCode : "the component was still running"; } catch (InvalidOperationException) { running = "the component's state is unknown"; }
+            string[] shapes; lock (recent) shapes = recent.ToArray();
+            Directory.CreateDirectory(storage);
+            File.WriteAllText(Path.Combine(storage, "last-disconnect.txt"), DateTimeOffset.Now.ToString("O") + "\n" + why + "\n" + running + "\nlast messages read (method or id, length):\n" + string.Join("\n", shapes) + (line == null ? "" : "\nthe line being read:\n" + line.Limit(300)) + "\n");
+        }
+        catch (Exception) { }
     }
     private async Task NotificationAsync(string method, JsonNode parameters)
     {
