@@ -9,6 +9,7 @@
     <Reference Include="StatsDirect"><HintPath>$(StatsDirectBin)/StatsDirect.dll</HintPath></Reference>
     <Compile Include="../../StatsDirectUI/UI/WebReports/*.cs" Link="Production/%(Filename)%(Extension)" />
     <Content Include="../../StatsDirectUI/Assets/ReportEditor/**" Link="ReportEditor/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../StatsDirectUI/Assets/Tutor/conversation.*" Link="Tutor/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="../../StatsDirectUI/Assets/Template/m_paired.creole;../../StatsDirectUI/Assets/Template/charts.creole" Link="Template/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <Target Name="RemoveUnusedWebView2WpfReference" BeforeTargets="ResolveAssemblyReferences"><ItemGroup><Reference Remove="@(Reference)" Condition="'%(Reference.Filename)' == 'Microsoft.Web.WebView2.Wpf'" /></ItemGroup></Target>

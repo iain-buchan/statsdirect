@@ -107,7 +107,8 @@ internal static partial class Program
         Check(pane.Composer.Focused&&pane.SharingOptions.Text.Contains("Confirmed"),"confirming sharing collapses controls and focuses the composer");
         CheckComposerOrder("confirmed docked AI");
         pane.Composer.Text="Explain the script";await pane.SendAsync();
-        Check(pane.Transcript.Text.Contains("Mock answer")&&!pane.Acknowledge.Checked&&!pane.Send.Enabled,"script reply resets confirmation for the next shared question");
+        await pane.Transcript.SettledAsync();
+        Check((await pane.Transcript.TextAsync()).Contains("Mock answer")&&!pane.Acknowledge.Checked&&!pane.Send.Enabled,"script reply resets confirmation for the next shared question");
         CapturePane("script-ai-reply");
         pane.ShareScript.Checked=false;Check(pane.Send.Enabled,"question-only conversation can continue without document access");
         pane.Composer.Text="Keep this question while moving the pane.";
@@ -121,49 +122,51 @@ internal static partial class Program
         Check(viewport.RectangleToScreen(viewport.ClientRectangle).IntersectsWith(pane.Transcript.RectangleToScreen(pane.Transcript.ClientRectangle)),"conversation remains reachable in a small AI window");
         viewport.ScrollControlIntoView(pane.Composer);pane.Composer.Focus();CapturePane("script-ai-small");
         await session.ToggleModeAsync();await Task.Delay(60);
-        Check(pane.Composer.Text=="Keep this question while moving the pane."&&pane.Transcript.Text.Contains("Mock answer")&&pane.Composer.Focused,"dock and pop-out preserve the draft, replies and typing focus");
+        Check(pane.Composer.Text=="Keep this question while moving the pane."&&(await pane.Transcript.TextAsync()).Contains("Mock answer")&&pane.Composer.Focused,"dock and pop-out preserve the draft, replies and typing focus");
         await TestScriptReplyStability(pane);
         pane.Hide();
     }
     static async Task TestScriptReplyStability(ScriptAIPane pane)
     {
+        // The conversation is a page: a streamed reply is rendered as it grows, the view follows it while the reader is at the end and
+        // stays put when they have scrolled up or are selecting text, and a reply that is complete is kept as its block, not rendered again.
         pane.NewConversation();pane.Composer.Focus();
         var render=typeof(ScriptAIPane).GetMethod("Render",Members)!;
         var partial=typeof(ScriptAIPane).GetField("partial",Members)!;
         var viewport=(Panel)Field(pane,"viewport");
+        var page=pane.Transcript;
+        var messages=(JsonArray)typeof(ScriptAIPane).GetField("chat",Members)!.GetValue(pane)!.GetType().GetField("Messages",Members)!.GetValue(typeof(ScriptAIPane).GetField("chat",Members)!.GetValue(pane))!;
+        messages.Add(new JsonObject{["role"]="user",["text"]="Please explain the streamed reply."});
+        async Task Stream(string value){partial.SetValue(pane,value);render.Invoke(pane,null);await page.SettledAsync();}
         string text=string.Join("\n",Enumerable.Range(1,80).Select(i=>$"Reply line {i}: a streamed explanation."));
-        partial.SetValue(pane,text);render.Invoke(pane,null);await Task.Delay(30);
-        pane.Transcript.Select(0,15);pane.Transcript.ScrollToCaret();
+        await Stream(text);
+        Check(await page.SelectAsync("explain the streamed")&&await page.ScrollToTextAsync("Please explain"),"the question before a reply can be selected and brought into view");
         var question=pane.Composer.RectangleToScreen(pane.Composer.ClientRectangle);
-        var bounds=pane.Transcript.Bounds;var scroll=viewport.AutoScrollPosition;
-        int first=pane.Transcript.GetCharIndexFromPosition(new Point(2,2));
-        for(int i=0;i<12;i++){text+=$"\nAdditional reply line {i}.";partial.SetValue(pane,text);render.Invoke(pane,null);await Task.Delay(5);}
-        Check(pane.Transcript.SelectionStart==0&&pane.Transcript.SelectionLength==15,"incoming reply preserves selected conversation text");
-        Check(pane.Transcript.GetCharIndexFromPosition(new Point(2,2))==first,"incoming reply leaves earlier lines in view while the user reads them");
-        Check(pane.Transcript.Bounds==bounds&&pane.Composer.RectangleToScreen(pane.Composer.ClientRectangle)==question&&viewport.AutoScrollPosition==scroll,"streaming leaves the pane geometry and outer scroll position unchanged");
+        var bounds=page.Bounds;var scroll=viewport.AutoScrollPosition;double first=await page.ScrollTopAsync();
+        for(int i=0;i<12;i++){text+=$"\nAdditional reply line {i}.";await Stream(text);}
+        Check(await page.SelectionAsync()=="explain the streamed","incoming reply preserves selected conversation text");
+        Check(await page.ScrollTopAsync()==first,"incoming reply leaves earlier lines in view while the user reads them");
+        Check(page.Bounds==bounds&&pane.Composer.RectangleToScreen(pane.Composer.ClientRectangle)==question&&viewport.AutoScrollPosition==scroll,"streaming leaves the pane geometry and outer scroll position unchanged");
         Check(pane.Composer.Focused,"incoming replies do not steal typing focus");
-        pane.Transcript.Select(pane.Transcript.Text.IndexOf("Reply line 40:"),0);pane.Transcript.ScrollToCaret();
-        first=pane.Transcript.GetCharIndexFromPosition(new Point(2,2));
-        text+="\nAnother chunk while reading earlier lines.";partial.SetValue(pane,text);render.Invoke(pane,null);
-        Check(pane.Transcript.GetCharIndexFromPosition(new Point(2,2))==first,"scrolling back pauses automatic following without needing a text selection");
-        pane.Transcript.Select(pane.Transcript.TextLength,0);pane.Transcript.ScrollToCaret();
-        first=pane.Transcript.GetCharIndexFromPosition(new Point(2,2));
-        text+=string.Concat(Enumerable.Range(1,10).Select(i=>$"\nNew ending {i}."));partial.SetValue(pane,text);render.Invoke(pane,null);
-        Check(pane.Transcript.SelectionStart==pane.Transcript.TextLength&&pane.Transcript.GetCharIndexFromPosition(new Point(2,2))>first,"returning to the bottom resumes following new reply text");
-        int changes=0;EventHandler changed=(_,_)=>changes++;pane.Transcript.TextChanged+=changed;
-        try{render.Invoke(pane,null);Check(changes==0,"identical completion text does not repaint or reset the conversation");}
-        finally{pane.Transcript.TextChanged-=changed;}
-        text=string.Join("\n",Enumerable.Range(1,4000).Select(i=>$"Long reply line {i}."));partial.SetValue(pane,text);render.Invoke(pane,null);
-        pane.Transcript.Select(pane.Transcript.Text.IndexOf("Long reply line 3000."),8);pane.Transcript.ScrollToCaret();
-        first=pane.Transcript.GetCharIndexFromPosition(new Point(2,2));int selection=pane.Transcript.SelectionStart;
-        text+="\nFinal corrected tail.";partial.SetValue(pane,text);render.Invoke(pane,null);
-        Check(pane.Transcript.GetCharIndexFromPosition(new Point(2,2))==first&&pane.Transcript.SelectionStart==selection&&pane.Transcript.SelectionLength==8,"long conversations preserve a reading position beyond the 16-bit pixel scroll range");
-        text=text.Replace("Final corrected tail.","Replacement ending.");partial.SetValue(pane,text);render.Invoke(pane,null);
-        Check(pane.Transcript.Text.EndsWith("Replacement ending.")&&pane.Transcript.GetCharIndexFromPosition(new Point(2,2))==first&&pane.Transcript.SelectionStart==selection,"corrected final reply updates only its tail and preserves earlier reading position");
-        text=text.Substring(0,text.LastIndexOf('\n'));partial.SetValue(pane,text);render.Invoke(pane,null);
-        Check(pane.Transcript.Text.EndsWith("Long reply line 4000.")&&pane.Transcript.GetCharIndexFromPosition(new Point(2,2))==first,"trimming a streamed tail works in the read-only conversation without moving the reader");
-        pane.NewConversation();
-        Check(pane.Transcript.TextLength==0&&pane.Transcript.SelectionStart==0,"a new conversation clears the old reply and selection");
+        await page.ScrollToTextAsync("Reply line 40:");first=await page.ScrollTopAsync();
+        text+="\nAnother chunk while reading earlier lines.";await Stream(text);
+        Check(await page.ScrollTopAsync()==first,"scrolling back pauses automatic following without needing a text selection");
+        await page.ScrollToEndAsync();first=await page.ScrollTopAsync();
+        text+=string.Concat(Enumerable.Range(1,10).Select(i=>$"\nNew ending {i}."));await Stream(text);
+        Check(await page.EndInViewAsync()&&await page.ScrollTopAsync()>first,"returning to the bottom resumes following new reply text");
+        int renders=(await page.StateAsync()).GetProperty("renders").GetInt32();
+        await Stream(text);
+        Check((await page.StateAsync()).GetProperty("renders").GetInt32()==renders,"identical completion text does not repaint or reset the conversation");
+        text=string.Join("\n\n",Enumerable.Range(1,4000).Select(i=>$"Long reply line {i}."));await Stream(text);
+        await page.ScrollToTextAsync("Long reply line 3000.");first=await page.ScrollTopAsync();
+        text+="\n\nFinal corrected tail.";await Stream(text);
+        Check(await page.ScrollTopAsync()==first,"long conversations preserve a reading position beyond the 16-bit pixel scroll range");
+        text=text.Replace("Final corrected tail.","Replacement ending.");await Stream(text);
+        Check((await page.TextAsync()).TrimEnd().EndsWith("Replacement ending.")&&await page.ScrollTopAsync()==first,"corrected final reply updates only its tail and preserves earlier reading position");
+        text=text.Substring(0,text.LastIndexOf('\n')).TrimEnd();await Stream(text);
+        Check((await page.TextAsync()).TrimEnd().EndsWith("Long reply line 4000.")&&await page.ScrollTopAsync()==first,"trimming a streamed tail works in the read-only conversation without moving the reader");
+        pane.NewConversation();await page.SettledAsync();
+        Check((await page.TextAsync()).Trim().Length==0&&(await page.SelectionAsync()).Length==0,"a new conversation clears the old reply and selection");
     }
     static async Task TestExports(LearningService service,LearningView view)
     {

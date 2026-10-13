@@ -60,7 +60,7 @@ internal static class Program
             return workbook.RangeSelection.Address;
         });
         await CheckDocumentToolbars(main, grid, workbook);
-        CheckConversationFollows();
+        await CheckTutorEncoding();
         Call(app, "ShowCalculator");
         var view = (Control)Get(app, "CalculatorView");
         var input = (RichTextBox)Get(view, "Expression");
@@ -112,39 +112,55 @@ internal static class Program
         Check(input.Text == "2" && main.ActiveMdiChild == null, "calculator Edit menu still works after the last MDI document closes");
     }
 
-    // The AI pane's conversation box: a streamed reply arrives in chunks while the reader is at the end, and the box must scroll with
-    // it, keeping the end in view after every chunk, rather than letting the text fill below the visible lines; a reader who has
-    // scrolled up to earlier lines is left where they were.
-    static void CheckConversationFollows()
+    // The ChatGPT component speaks JSON-RPC over its standard streams in UTF-8: what it writes must be read as UTF-8, else a minus
+    // sign or a Greek letter in a reply arrives as three Latin characters.  A stand-in component, a PowerShell script answering the same
+    // requests with raw UTF-8 bytes, stands where the real one would, through the real tutor class: the account's email and a streamed
+    // reply must come back intact.
+    static async Task CheckTutorEncoding()
     {
-        var type = typeof(frmMain).Assembly.GetType("StatsDirect.UI.Learning.ConversationTextBox")!;
-        using var box = (RichTextBox)Activator.CreateInstance(type, true)!;
-        var update = type.GetMethod("UpdateConversation", Internal)!;
-        using var host = new Form { StartPosition = FormStartPosition.Manual, Location = new Point(-16000, -16000), Size = new Size(420, 260), ShowInTaskbar = false };
-        box.ReadOnly = true; box.Dock = DockStyle.Fill; box.Font = new Font("Arial", 10);
-        host.Controls.Add(box); host.Show(); Application.DoEvents();
-        bool EndInView() { Point end = box.GetPositionFromCharIndex(Math.Max(0, box.TextLength - 1)); return end.Y >= 0 && end.Y + box.Font.Height <= box.ClientSize.Height; }
-        string text = "You:\nWhy is the paired test right here?\n\nStatsDirect AI:\n";
-        update.Invoke(box, new object[] { text, true }); Application.DoEvents();
-        Check(EndInView() && box.TextLength == text.Length, "a short conversation shows its end");   // the measure itself, before it is relied on
-        int behind = 0, lines = 40;
-        for (int i = 1; i <= lines; i++)
+        var type = typeof(frmMain).Assembly.GetType("StatsDirect.UI.Learning.ChatGPTTutor")!;
+        // A child's streams default to the console's code page, which is UTF-8 under this runner but a one-byte page when the program
+        // starts from Explorer: make it one-byte here, so that only an explicit UTF-8 can pass.
+        System.Text.Encoding consoleOut = Console.OutputEncoding, consoleIn = Console.InputEncoding;
+        try { Console.OutputEncoding = System.Text.Encoding.Latin1; Console.InputEncoding = System.Text.Encoding.Latin1; } catch (IOException) { }
+        string bin = Path.GetDirectoryName(typeof(frmMain).Assembly.Location)!, resources = Path.Combine(bin, "Tutor");
+        Check(File.Exists(Path.Combine(resources, "config.toml")) && File.Exists(Path.Combine(resources, "script-instructions.txt")), "the tutor's configuration and instructions are beside the program");
+        string root = Path.Combine(Path.GetTempPath(), "StatsDirect-shell-tutor-" + Guid.NewGuid().ToString("N")); Directory.CreateDirectory(root);
+        string mock = Path.Combine(root, "mock.ps1");
+        File.WriteAllText(mock, string.Join("\n", new[] {
+            "[Console]::InputEncoding=[Text.Encoding]::UTF8",
+            "[Console]::OutputEncoding=[Text.Encoding]::UTF8",
+            "$minus=[string][char]0x2212; $beta=[string][char]0x03B2",
+            "while(($l=[Console]::In.ReadLine()) -ne $null){",
+            "  $m=$l|ConvertFrom-Json",
+            "  if($m.method -eq 'account/read'){ [Console]::Out.WriteLine('{\"id\":'+$m.id+',\"result\":{\"account\":{\"type\":\"chatgpt\",\"email\":\"'+$minus+$beta+'@example.org\",\"planType\":\"plus\"}}}') }",
+            "  elseif($m.method -eq 'thread/start'){ [Console]::Out.WriteLine('{\"id\":'+$m.id+',\"result\":{\"thread\":{\"id\":\"t1\"},\"model\":\"mock\"}}') }",
+            "  elseif($m.method -eq 'turn/start'){",
+            "    [Console]::Out.WriteLine('{\"id\":'+$m.id+',\"result\":{\"turn\":{\"id\":\"u1\"}}}')",
+            "    [Console]::Out.WriteLine('{\"method\":\"item/agentMessage/delta\",\"params\":{\"threadId\":\"t1\",\"turnId\":\"u1\",\"itemId\":\"i1\",\"delta\":\"Limits of agreement: '+$minus+'10.9 to 123.1 '+$beta+'\"}}')",
+            "    [Console]::Out.WriteLine('{\"method\":\"turn/completed\",\"params\":{\"threadId\":\"t1\",\"turn\":{\"id\":\"u1\",\"status\":\"completed\"}}}')",
+            "  }",
+            "  elseif($m.id -ne $null){ [Console]::Out.WriteLine('{\"id\":'+$m.id+',\"result\":{}}') }",
+            "}" }));
+        string powershell = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "System32", "WindowsPowerShell", "v1.0", "powershell.exe");
+        var tutor = (IDisposable)Activator.CreateInstance(type, Internal, null, new object[] { powershell, Path.Combine(root, "account"), resources, new[] { "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", mock } }, null)!;
+        try
         {
-            text += $"Reply line {i} of the streamed answer, long enough to wrap in a narrow pane at this width.\n";
-            update.Invoke(box, new object[] { text, false }); Application.DoEvents();
-            if (!EndInView()) behind++;
+            await (Task)type.GetMethod("RefreshAccountAsync", Internal)!.Invoke(tutor, null)!;
+            Check((string)Get(tutor, "Email") == "\u2212\u03B2@example.org", "the account's email is read from the component as UTF-8");
+            var messages = new System.Text.Json.Nodes.JsonArray(new System.Text.Json.Nodes.JsonObject { ["role"] = "user", ["text"] = "What are the limits of agreement?" });
+            Func<string, System.Text.Json.Nodes.JsonObject, Task<System.Text.Json.Nodes.JsonNode>> noTools = (_, _) => Task.FromResult<System.Text.Json.Nodes.JsonNode>(new System.Text.Json.Nodes.JsonObject());
+            var task = (Task)type.GetMethod("ConverseAsync", Internal)!.Invoke(tutor, new object[] { "{}", messages, new System.Text.Json.Nodes.JsonArray(), true, (Action<string>)(_ => { }), noTools, CancellationToken.None })!;
+            await task;
+            object reply = task.GetType().GetProperty("Result")!.GetValue(task)!;
+            Check((string)Get(reply, "Text") == "Limits of agreement: \u221210.9 to 123.1 \u03B2", "a streamed reply with a minus sign and a Greek letter arrives intact");
         }
-        Check(behind == 0 && box.TextLength == text.Length, $"a reply streamed to a reader at the end keeps its end in view after every chunk: behind on {behind} of {lines}");
-        // a reader who has scrolled up stays put while the reply goes on
-        box.Select(text.IndexOf("Reply line 5 "), 0); box.ScrollToCaret(); Application.DoEvents();
-        int first = box.GetCharIndexFromPosition(new Point(2, 2));
-        for (int i = lines + 1; i <= lines + 5; i++) { text += $"Reply line {i} after the reader scrolled up.\n"; update.Invoke(box, new object[] { text, false }); Application.DoEvents(); }
-        Check(box.GetCharIndexFromPosition(new Point(2, 2)) == first && !EndInView(), "a reader who scrolled up to earlier lines is left there while the reply goes on");
-        // back at the end, the box follows again
-        box.Select(box.TextLength, 0); box.ScrollToCaret(); Application.DoEvents();
-        text += "Reply line at the end again.\n"; update.Invoke(box, new object[] { text, false }); Application.DoEvents();
-        Check(EndInView(), "returning to the end resumes following the reply");
-        host.Close();
+        finally
+        {
+            tutor.Dispose();
+            try { Console.OutputEncoding = consoleOut; Console.InputEncoding = consoleIn; } catch (IOException) { }
+            try { Directory.Delete(root, true); } catch (IOException) { } catch (UnauthorizedAccessException) { }
+        }
     }
     static async Task CheckDocumentToolbars(frmMain main, Form grid, SpreadsheetGear.Windows.Forms.WorkbookView workbook)
     {
