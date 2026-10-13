@@ -84,11 +84,13 @@
 
   // The page's state: the messages rendered, in order, and the streamed reply.
   const rendered = [];
-  let partialElement = null, partialText = '', renders = 0, applied = 0;
+  let partialElement = null, partialText = '', renders = 0, applied = 0, context = 0;
   function bind(element) {
     element.querySelectorAll('button[data-code]').forEach(button => button.onclick = () => {
       const code = button.closest('.code-block').querySelector('code').textContent;
-      post({ action: 'code', what: button.dataset.code, code });
+      post({ action: 'code', what: button.dataset.code, code, context,
+        messageIndex: [...container.children].indexOf(element),
+        blockIndex: [...element.querySelectorAll('button[data-code=open]')].indexOf(button) });
       if (button.dataset.code === 'copy') { button.textContent = 'Copied'; setTimeout(() => { button.textContent = 'Copy'; }, 1500); }
     });
     element.querySelectorAll('a').forEach(a => { if (!/^https?:\/\//i.test(a.getAttribute('href') || '')) a.removeAttribute('href'); });
@@ -114,8 +116,43 @@
   const scroller = () => document.scrollingElement || document.documentElement;
   const atEnd = () => { const d = scroller(); return d.scrollTop + d.clientHeight >= d.scrollHeight - 4; };
 
+  // A streamed paragraph can be replaced when its Markdown changes. Bookmark the
+  // selection within each message body so removing those nodes does not remove
+  // the reader's selection. Keep anchor/focus separately for backwards selections.
+  function saveSelection() {
+    const selection = getSelection();
+    if (!selection || selection.isCollapsed || !container.contains(selection.anchorNode) || !container.contains(selection.focusNode)) return null;
+    const point = (node, offset) => {
+      const element = node.nodeType === Node.ELEMENT_NODE ? node : node.parentElement;
+      const body = element.closest('.body') || container;
+      const range = document.createRange(); range.selectNodeContents(body); range.setEnd(node, offset);
+      return { node, offset, body, index: [...container.children].indexOf(body.closest('.message')), textOffset: range.toString().length };
+    };
+    return { anchor: point(selection.anchorNode, selection.anchorOffset), focus: point(selection.focusNode, selection.focusOffset) };
+  }
+  function restoreSelection(bookmark) {
+    if (!bookmark) return;
+    const point = saved => {
+      if (container.contains(saved.node)) return [saved.node, Math.min(saved.offset, saved.node.nodeType === Node.TEXT_NODE ? saved.node.length : saved.node.childNodes.length)];
+      const body = saved.body.isConnected ? saved.body : container.children[saved.index]?.querySelector('.body');
+      if (!body) return null;
+      const walker = document.createTreeWalker(body, NodeFilter.SHOW_TEXT);
+      let node, previous, remaining = saved.textOffset;
+      while ((node = walker.nextNode())) {
+        if (remaining <= node.length) return [node, remaining];
+        remaining -= node.length; previous = node;
+      }
+      return previous ? [previous, previous.length] : [body, 0];
+    };
+    const anchor = point(bookmark.anchor), focus = point(bookmark.focus);
+    if (anchor && focus) getSelection().setBaseAndExtent(anchor[0], anchor[1], focus[0], focus[1]);
+  }
+
   function update(m) {
-    const follow = !!m.reset || atEnd();
+    context = m.context;
+    const selection = m.reset ? null : saveSelection();
+    const top = scroller().scrollTop;
+    const follow = !!m.reset || (!selection && atEnd());
     if (m.reset) { container.replaceChildren(); rendered.length = 0; partialElement = null; partialText = ''; }
     const messages = Array.isArray(m.messages) ? m.messages : [];
     let same = 0;
@@ -138,7 +175,8 @@
       else { partialElement = block('assistant', partial); partialElement.classList.add('partial'); container.appendChild(partialElement); }
       partialText = partial;
     }
-    if (follow) scroller().scrollTop = scroller().scrollHeight;
+    restoreSelection(selection);
+    scroller().scrollTop = follow ? scroller().scrollHeight : top;
     if (typeof m.sequence === 'number') applied = m.sequence;
   }
 

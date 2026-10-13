@@ -52,7 +52,23 @@ internal sealed class ChatGPTTutor : IDisposable
         internal Action<string> Progress;
     }
     internal ChatGPTTutor(string executable, string storage, string resources, params string[] prefixArguments)
-    { this.executable = executable; this.storage = storage; this.resources = resources; this.prefixArguments = prefixArguments; }
+    {
+        this.executable = executable; this.storage = storage; this.resources = resources; this.prefixArguments = prefixArguments;
+        // Older diagnostics included raw response text. Do not retain those files
+        // after upgrading; the new format contains only bounded protocol metadata.
+        try
+        {
+            string path = Path.Combine(storage, "last-disconnect.txt");
+            if (File.Exists(path))
+            {
+                bool legacy;
+                using (var reader = File.OpenText(path)) legacy = reader.ReadLine() != DiagnosticHeader;
+                if (legacy) File.Delete(path);
+            }
+        }
+        catch (IOException) { }
+        catch (UnauthorizedAccessException) { }
+    }
     internal TutorRuntimeInstallation Runtime { get; private init; }
     internal static ChatGPTTutor OnDemand(string storage, TutorRuntimeInstallation runtime = null)
     {
@@ -139,7 +155,7 @@ internal sealed class ChatGPTTutor : IDisposable
                 var message = JsonNode.Parse(line);
                 if (message is not JsonObject) throw new IOException("ChatGPT returned an unreadable message.");
                 string method = message.S("method");
-                Note((method.Length > 0 ? method : "reply to " + message.I("id", -1)) + " " + line.Length);
+                Note((method.Length > 0 ? DiagnosticMethod(method) : "reply to " + message.I("id", -1)) + " " + line.Length);
                 if (method.Length > 0)
                 {
                     if (message["id"] != null)
@@ -159,23 +175,31 @@ internal sealed class ChatGPTTutor : IDisposable
         catch (Exception ex)
         {
             if (process != child) return;
-            WriteDisconnectNote(ex.GetType().Name + ": " + ex.Message, child, line);
-            Disconnect("ChatGPT disconnected: " + ex.Message + " Press Send to reconnect, or Use my ChatGPT.");
+            WriteDisconnectNote(ex.GetType().Name, child, line?.Length);
+            string reason = ex is System.Text.Json.JsonException ? "the component returned an unreadable response."
+                : ex is IOException ? "the component's response could not be read."
+                : "the component's response could not be processed.";
+            Disconnect("ChatGPT disconnected: " + reason + " Press Send to reconnect, or Use my ChatGPT.");
         }
     }
-    // The shapes of the last messages read (method or id, and length), for the note written when the connection drops: the reason,
-    // whether the component is still running, those shapes and the head of the line being read, in last-disconnect.txt beside the
-    // account data.  No conversation text is kept but that head.
+    // Never record raw JSON, exception messages, account details or reply/tool text.
+    // Unknown method names are untrusted too: log a fixed label instead.
+    private const string DiagnosticHeader = "StatsDirect connection diagnostic v2 (metadata only)";
+    private static string DiagnosticMethod(string method) => method switch
+    {
+        "account/login/completed" or "account/updated" or "item/tool/call" or "item/agentMessage/delta" or "item/completed" or "turn/completed" => method,
+        _ => "other notification"
+    };
     private readonly Queue<string> recent = new();
     private void Note(string shape) { lock (recent) { recent.Enqueue(shape); while (recent.Count > 40) recent.Dequeue(); } }
-    private void WriteDisconnectNote(string why, Process child, string line)
+    private void WriteDisconnectNote(string why, Process child, int? lineLength)
     {
         try
         {
             string running; try { running = child.HasExited ? "the component had exited with code " + child.ExitCode : "the component was still running"; } catch (InvalidOperationException) { running = "the component's state is unknown"; }
             string[] shapes; lock (recent) shapes = recent.ToArray();
             Directory.CreateDirectory(storage);
-            File.WriteAllText(Path.Combine(storage, "last-disconnect.txt"), DateTimeOffset.Now.ToString("O") + "\n" + why + "\n" + running + "\nlast messages read (method or id, length):\n" + string.Join("\n", shapes) + (line == null ? "" : "\nthe line being read:\n" + line.Limit(300)) + "\n");
+            File.WriteAllText(Path.Combine(storage, "last-disconnect.txt"), DiagnosticHeader + "\n" + DateTimeOffset.Now.ToString("O") + "\n" + why + "\n" + running + "\nlast messages read (method or id, length):\n" + string.Join("\n", shapes) + (lineLength.HasValue ? "\nresponse length: " + lineLength.Value : "") + "\n");
         }
         catch (Exception) { }
     }

@@ -1,4 +1,5 @@
 import readline from 'node:readline';
+import {readFileSync} from 'node:fs';
 let loggedIn=false,sequence=0;const turns=new Map(),threadTools=new Map(),responses=new Map();
 const out=v=>process.stdout.write(JSON.stringify(v)+'\n');
 readline.createInterface({input:process.stdin}).on('line',line=>{
@@ -16,6 +17,12 @@ readline.createInterface({input:process.stdin}).on('line',line=>{
    const timer=setTimeout(async()=>{
      if(text.includes('FORCE_ERROR')){out({method:'turn/completed',params:{threadId:p.threadId,turn:{id,status:'failed',error:{message:'401 SECRET_SHOULD_NOT_BE_SHOWN'}}}});return;}
      let answer='Mock answer: paired observations need paired analysis.\n```r\nx <- c(1,2,3)\nmean(x)\n```';
+     const question=JSON.parse(text.slice(text.indexOf('\n')+1)).conversation.at(-1).text;
+     if(question==='PEFR_CONTEXT') {
+       const sample=readFileSync(new URL('ai-pefr.R',import.meta.url),'utf8');
+       answer='Use the shared paired data.\n```r\n'+sample.split('\n')[0]+'\n```\nThen analyse and plot:\n```r\n'+sample.split('\n').slice(1).join('\n')+'\n```';
+     }
+     if(question==='PEFR_FOLLOWUP') answer='Continue with the same differences.\n```r\nstopifnot(length(d) == 9)\nprint(mean(d))\n```';
      if(text.includes('TOOL_BOUNDARIES')){
        const call=extra=>new Promise(resolve=>{const rid='tool-'+(++sequence);responses.set(rid,resolve);out({id:rid,method:'item/tool/call',params:{threadId:p.threadId,turnId:id,callId:'call-'+sequence,tool:'statsdirect_workspace',arguments:{},...extra}});});
        const wrong=await call({threadId:'not-approved'}),namespace=await call({namespace:'unapproved'}),unknown=await call({tool:'shell'}),valid=await call({callId:'once'}),duplicate=await call({callId:'once'});

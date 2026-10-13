@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Text.Json.Nodes;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -47,7 +46,7 @@ internal sealed class ScriptAIPane : IDisposable
     {
         this.service = service;
         Transcript = new ConversationView(Path.Combine(Configuration.SDConfiguration.InstallationDirectory, "Tutor"), Path.Combine(service.Storage, "WebView")) { Dock = DockStyle.Fill };
-        Transcript.CodeRequested += (what, code) => { if (what == "copy") Clipboard.SetText(code); else service.OpenScript(code, "AI suggestion — review before running", false); };
+        Transcript.CodeRequested += (what, code, messageIndex, blockIndex) => { if (what == "copy") Clipboard.SetText(code); else OpenCode(messageIndex, blockIndex); };
         Transcript.Notice += text => { if (!disposed) status.Text = text; };
         var heading = new ToolStrip { GripStyle = ToolStripGripStyle.Hidden, Dock = DockStyle.Top };
         var title = new ToolStripLabel("Script AI"); var pop = new ToolStripButton("Pop out"); var close = new ToolStripButton("Close");
@@ -75,7 +74,7 @@ internal sealed class ScriptAIPane : IDisposable
         SharingOptions.LinkClicked += (_, _) => { sharing.Visible = !sharing.Visible; UpdateControls(); };
         Send.Click += async (_, _) => await SendAsync(); stop.Click += (_, _) => Stop();
         copyCode.Click += (_, _) => { string code = LastCode(); if (code.Length > 0) Clipboard.SetText(code); else status.Text = "The last reply contains no R code block."; };
-        openCode.Click += (_, _) => { string code = LastCode(); if (code.Length > 0) service.OpenScript(code, "AI suggestion — review before running", false); else status.Text = "The last reply contains no R code block."; };
+        openCode.Click += (_, _) => OpenCode(LastReply());
         void FitContent()
         {
             int width = Math.Max(120, viewport.ClientSize.Width - SystemInformation.VerticalScrollBarWidth - layout.Padding.Horizontal - 12);
@@ -107,6 +106,7 @@ internal sealed class ScriptAIPane : IDisposable
             Acknowledge.Checked = false; sharing.Visible = true; partial = "";
         }
         RefreshWorkbooks(); Render(); session.Show(true); UpdateConnection();
+        _ = Transcript.ReopenAsync();
         _ = RefreshAccountAsync();
     }
     private async Task RefreshAccountAsync() { try { if (!ChatGPTTutor.Disabled) await service.Tutor.RefreshAccountAsync(); } catch (Exception ex) { if (!disposed) status.Text = ex.Message; } }
@@ -178,22 +178,34 @@ internal sealed class ScriptAIPane : IDisposable
         {
             string reference = context.InitialContext().ToJsonString();
             if (reference.Length > 28000) throw new InvalidOperationException("The selected context is too large. Choose less content for this question.");
-            current.Messages.Add(new JsonObject { ["role"] = "user", ["text"] = question }); Composer.Clear(); current.Draft = ""; partial = ""; Render();
+            current.Messages.Add(new JsonObject { ["role"] = "user", ["text"] = question, ["rSource"] = context.RSource }); Composer.Clear(); current.Draft = ""; partial = ""; Render();
             status.Text = approved.Count == 0 ? "Sending the question and conversation only…" : "Sending the confirmed context…";
             var reply = await service.Tutor.ConverseAsync(reference, current.Messages, context.Tools, true, text => { if (!disposed && pending == request && chat == current) { partial = text; Render(); } }, context.CallAsync, request.Token);
-            context.Check(); current.Messages.Add(new JsonObject { ["role"] = "assistant", ["text"] = reply.Text }); partial = "";
+            context.Check(); current.Messages.Add(new JsonObject { ["role"] = "assistant", ["text"] = reply.Text, ["rData"] = context.RData }); partial = "";
             if (chat == current) { Render(); status.Text = "Reply received. Review suggested code before running. Earlier shared content remains in this conversation."; }
         }
         catch (Exception ex)
         {
             if (chat == current && pending == request)
-            { if (partial.Length > 0) current.Messages.Add(new JsonObject { ["role"] = "assistant", ["text"] = partial + "\n[Reply stopped before completion.]" }); partial = ""; if (Composer.Text.Length == 0) Composer.Text = question; Render(); status.Text = ex is OperationCanceledException ? "Reply stopped. Your question is kept here." : ex.Message; }
+            { if (partial.Length > 0) current.Messages.Add(new JsonObject { ["role"] = "assistant", ["text"] = partial + "\n[Reply stopped before completion.]", ["rData"] = context.RData }); partial = ""; if (Composer.Text.Length == 0) Composer.Text = question; Render(); status.Text = ex is OperationCanceledException ? "Reply stopped. Your question is kept here." : ex.Message; }
         }
         finally { if (pending == request) { pending = null; if (!disposed) { Acknowledge.Checked = false; UpdateControls(); } } }
     }
     internal void Stop() { pending?.Cancel(); }
+    private int LastReply()
+    { for (int i = (chat?.Messages.Count ?? 0) - 1; i >= 0; i--) if (chat.Messages[i].S("role") == "assistant") return i; return -1; }
+    private void OpenCode(int messageIndex, int blockIndex = -1)
+    {
+        try
+        {
+            if (chat == null) return;
+            string code = ConversationRScript.Build(chat.Messages, messageIndex, blockIndex);
+            service.OpenScript(code, "AI suggestion — review before running", false);
+        }
+        catch (InvalidOperationException ex) { status.Text = ex.Message; }
+    }
     private string LastCode()
-    { var text = chat?.Messages.LastOrDefault(m => m.S("role") == "assistant").S("text") ?? ""; var matches = Regex.Matches(text, @"```(?:r|R)\s*\r?\n(.*?)```", RegexOptions.Singleline); return string.Join("\n\n", matches.Cast<Match>().Select(m => m.Groups[1].Value)).Limit(100000); }
+    { return string.Join("\n\n", ConversationRScript.Blocks(chat?.Messages.LastOrDefault(m => m.S("role") == "assistant").S("text") ?? "")).Limit(100000); }
     internal void Hide() { SaveDraft(); Stop(); session.Hide(); script?.Activate(); }
     internal void NewConversation() { Stop(); if (script == null) return; conversations[script.Id()] = chat = new(); Composer.Clear(); partial = ""; ShareScript.Checked = ShareWorkbook.Checked = Acknowledge.Checked = false; sharing.Visible = true; Render(); UpdateControls(); }
     private void ScriptClosed(object sender, FormClosedEventArgs e)

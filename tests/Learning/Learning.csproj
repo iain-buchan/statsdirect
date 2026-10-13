@@ -11,5 +11,6 @@
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4258.31" />
     <Content Include="$(StatsDirectBin)/**" Exclude="$(StatsDirectBin)/TutorRuntime/**" Link="%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="mock-server.mjs" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="ai-pefr.R" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

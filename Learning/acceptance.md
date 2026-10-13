@@ -1,4 +1,62 @@
-# Windows / Mac workflow acceptance — 12 October 2026
+# Windows / Mac workflow acceptance — 13 October 2026
+
+## AI-to-R context follow-up
+
+The updated 5.2.0 candidate fixes Script AI's bottom Open R code and per-block Open
+in R: each export contains the shared source snapshots, literal worksheet values
+actually read and earlier R blocks through the selected reply/block. It does not
+read current edits, execute code or broaden AI sharing. Local export metadata is
+not included in the conversation text sent to ChatGPT. New conversations start
+without earlier data; exported scripts label the replay sections for review.
+
+**436 checks pass** against the application extracted from the signed MSI:
+Learning 152, WebReports 252, WindowsShell 32. The Learning
+run omits optional official-runtime and installer-file probes. New cases execute
+the supplied PEFR example and follow-ups using real R 4.6.1, checking the original
+nine pairs and t statistic, plots, signed-rank, sign and log-ratio code, edited
+source isolation, per-block dependencies, old replies, new conversations, literal
+worksheet snapshots, missing rows and escaped strings. ChatGPT is mocked, and
+opening code is verified not to execute it. Evidence is in `outputs/ai-r-context-*`
+and `work/ai-r-context` under the workspace used below. The earlier numerical,
+runtime and updater results remain the baseline for those unchanged components.
+
+The fresh signed EXE (298,673,648 bytes) and MSI (24,207,360 bytes) supersede the
+earlier packages described below. All 1,703 application files match the signed
+build, all five expected signatures validate and all three bundle payload hashes
+match. The EXE is copied to `C:\temp\StatsDirectSetup.exe` after verification.
+No installer was published by these checks. An actual
+installation/upgrade and a live ChatGPT account request were not performed.
+
+## Windows 5.2.0 release corrections
+
+The local `main` checkout at `e344aa76`, with the corrections in this review,
+passes **478 checks**: Learning/AI/R 137, WebReports 250, WindowsShell 32,
+TutorRuntime 39 and UpdateDownloadRegression 20. Regression coverage includes
+metadata-only disconnection diagnostics and removal of legacy raw diagnostic
+files; preserved forward/backward selections in growing Markdown paragraphs;
+pausing bottom-following while text is selected; and recovery after a real
+isolated WebView renderer crash, with conversation replay and security settings
+reapplied. The calculation engine and shared Mac editor were not changed.
+
+Fresh `ReleaseWithSigning` EXE and MSI packages were built on 13 October 2026.
+All **1,703 application files** extracted from the MSI match the signed build;
+the EXE's embedded MSI, WebView2 installer and .NET installer match their source
+payloads. Authenticode validation passes for both installers and all three signed
+application binaries. The installed version is 5.2.0.0 and no TutorRuntime is
+bundled. A further **169 checks** pass against the extracted signed MSI payload
+(Learning 137 and WindowsShell 32).
+
+Release artifacts are `ReleaseBuild/StatsDirectSetup.exe` (298,678,600 bytes)
+and `ReleaseBuild/StatsDirect-x64.msi` (24,215,552 bytes). Build, suite and package
+verification evidence is under
+`C:\Users\ieb21\Documents\Codex\2026-09-19\po\outputs\release-5.2-fixed-*`.
+The build retains the existing NU1701 and WiX packaging warnings, with no errors.
+These packages were local release candidates during verification.
+A clean-machine installation/upgrade and a live ChatGPT
+account request were not performed. Runtime checks used the previously verified
+cached official archive; no new live runtime download was needed.
+
+## 12 October baseline and earlier follow-ups
 
 Windows review branch: `feature/windows-unified-toolbars`, based on `575d7e58`.
 Version remains 5.1.1. This development branch contains unreleased changes; the

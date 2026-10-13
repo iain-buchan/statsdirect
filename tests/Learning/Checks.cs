@@ -37,6 +37,7 @@ internal static partial class Program
             Check(firstUse.Email==null&&firstUse.Status.Contains("Use my ChatGPT")&&!Directory.Exists(Path.GetDirectoryName(missing.DirectoryPath)),"opening Learning or AI before setup performs no download or runtime startup");
         }
         await tutor.RefreshAccountAsync();Check(tutor.Email==null,"fresh isolated account starts disconnected");
+        await TestPrivateDiagnostics();
         Check(ChatGPTTutor.IsLoginUrl("https://auth.openai.com/authorize")&&!ChatGPTTutor.IsLoginUrl("http://auth.openai.com/authorize")&&!ChatGPTTutor.IsLoginUrl("https://auth.openai.com.evil.invalid/authorize"),"sign-in accepts only official HTTPS authentication hosts");
         await tutor.SignInAsync();await Wait(()=>tutor.Email=="mock@example.invalid","mocked sign-in completion updates account state");
         string streamed="";
@@ -59,6 +60,24 @@ internal static partial class Program
             await runtime.RefreshAccountAsync();
             Check(runtime.Email==null&&runtime.Status=="Not connected","official pinned app-server starts with strict isolated config and no inherited login; no model request made");
         }
+    }
+    static async Task TestPrivateDiagnostics()
+    {
+        string store=Path.Combine(root,"diagnostic-account"),mock=Path.Combine(root,"malformed-server.mjs");
+        Directory.CreateDirectory(store);
+        string logPath=Path.Combine(store,"last-disconnect.txt");
+        await File.WriteAllTextAsync(logPath,"old diagnostic\nPRIVATE_LEGACY_RESPONSE");
+        await File.WriteAllTextAsync(mock,"import readline from 'node:readline';readline.createInterface({input:process.stdin}).on('line',l=>{const q=JSON.parse(l);if(q.method==='initialize')process.stdout.write(JSON.stringify({id:q.id,result:{}})+'\\n');if(q.method==='account/read'){process.stdout.write(JSON.stringify({method:'PRIVATE_METHOD_SENTINEL',params:{text:'PRIVATE_PARAMS_SENTINEL'}})+'\\n');process.stdout.write('{\"response\":\"PRIVATE_REPLY_SENTINEL\",BROKEN\\n');}});");
+        using(var diagnostics=new ChatGPTTutor(Environment.GetEnvironmentVariable("STATSDIRECT_TEST_NODE"),store,Path.Combine(AppContext.BaseDirectory,"Tutor"),mock))
+        {
+            Check(!File.Exists(logPath),"upgrading removes legacy diagnostics containing raw response text");
+            await Reject(()=>diagnostics.RefreshAccountAsync(),"malformed protocol response disconnects without disclosing raw content");
+            string log=await File.ReadAllTextAsync(logPath);
+            Check(log.Contains("metadata only")&&log.Contains("JsonReaderException")&&log.Contains("response length:")&&log.Contains("other notification"),"disconnect diagnostics retain useful error type, message shape and length");
+            Check(!log.Contains("PRIVATE_")&&!log.Contains("BROKEN")&&!diagnostics.Status.Contains("PRIVATE_"),"diagnostics exclude reply content, arbitrary method names and parser exception details");
+        }
+        using(var next=new ChatGPTTutor(Environment.GetEnvironmentVariable("STATSDIRECT_TEST_NODE"),store,Path.Combine(AppContext.BaseDirectory,"Tutor"),mock))
+            Check(File.Exists(logPath),"new metadata-only diagnostics remain available across restarts");
     }
     static async Task TestConsent(frmMain main,LearningService service,LearningView view,frmSpreadsheetGear grid)
     {
@@ -151,6 +170,7 @@ internal static partial class Program
         await page.ScrollToTextAsync("Reply line 40:");first=await page.ScrollTopAsync();
         text+="\nAnother chunk while reading earlier lines.";await Stream(text);
         Check(await page.ScrollTopAsync()==first,"scrolling back pauses automatic following without needing a text selection");
+        await page.Browser.CoreWebView2.ExecuteScriptAsync("getSelection().removeAllRanges()");
         await page.ScrollToEndAsync();first=await page.ScrollTopAsync();
         text+=string.Concat(Enumerable.Range(1,10).Select(i=>$"\nNew ending {i}."));await Stream(text);
         Check(await page.EndInViewAsync()&&await page.ScrollTopAsync()>first,"returning to the bottom resumes following new reply text");

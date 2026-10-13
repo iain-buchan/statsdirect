@@ -1,5 +1,17 @@
 # Windows WebView2 report integration checks
 
+13 October 2026 AI-to-R follow-up: **252 checks pass**, including the originating
+message and R-block identifiers on Open in R, so native export can restore the
+correct data context for an older reply. Stale clicks from another conversation
+are rejected. All streaming/crash-recovery checks pass.
+
+13 October 2026 release fixes: **250 checks pass**. New conversation regressions
+cover selection within a streamed paragraph, backwards selections, selections
+across inline formatting, paused following while selected and resumed following
+after deselection. A real Chromium renderer crash is induced only in the test
+profile; closing/reopening replaces the WebView, restores the latest history and
+partial reply, reapplies security settings and restores code actions exactly once.
+
 12 October 2026 catch-up: **217 native checks, 23 installed Office checks and eight shared JavaScript tests pass**. `Alignment.cs` covers default-left SVG/raster charts, single-picture alignment/state, text and mixed selections, resize anchors, cancellation, undo/redo, responsive HTML reopening, explicit incoming stylesheet alignment (including report wrappers), private SVG/public PNG clipboard round trips, and Word drawing paragraphs. `Charts.cs` also checks standalone SVG output without report margins. Installed Word verifies both exported DOCX files and the right-aligned clipboard fallback. `verify-alignment.py` renders `chart-alignment.pdf`, checks all four coloured picture positions and writes a PNG for visual review. Print excludes focused editing outlines. The Release build passes with existing NU1701. Shared source provenance and Windows importer/default adaptations are recorded in `ReportEditor/chart-alignment-port.md`.
 
 Run `python tests/WebReports/verify-alignment.py C:\path\to\test-artifacts` with pypdfium2, Pillow and numpy after the native suite. The native, Office and PDF checks use synthetic fixtures; no installer or clean-machine acceptance was performed.

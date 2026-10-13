@@ -78,6 +78,7 @@ internal static partial class Program
         await TestCourses(service,view);
         await TestTutor(tutor);
         await TestConsent(main,service,view,grid);
+        await TestConversationR(main,service,grid);
         await TestCalculations(main,grid);
         await TestExports(service,view);
         await TestRSetup(main);

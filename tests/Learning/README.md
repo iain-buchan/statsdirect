@@ -1,5 +1,24 @@
 # Windows Learning integration checks
 
+13 October 2026 AI-to-R follow-up: **152 checks pass** with the optional official
+runtime and R-installer probes omitted. `ConversationR.cs` tests the actual bottom
+and per-block Open in R actions and runs the user's PEFR code in a fresh real R
+process, including plots, paired t, signed-rank, sign and log-ratio analyses.
+Source snapshots survive later edits; follow-ups retain earlier definitions;
+older replies exclude later code; new conversations do not inherit old data.
+Opening code never runs it. Worksheet exports preserve the values actually read,
+column indices, missing positions and escaped text without rereading edited data.
+The AI reply is mocked, while all exported R is executed in isolated test folders.
+The final run uses the application extracted from the signed MSI and includes
+opening R blocks from the user's own questions as well as assistant replies.
+
+13 October 2026 release fixes: **137 checks pass**, including five new diagnostic
+privacy checks. A synthetic malformed protocol response and unknown method name
+must never appear in the diagnostic log; useful error type/message length remains.
+Legacy raw-response diagnostics are removed while new metadata-only logs survive
+restarts. No real account or model request is used. Streaming tests now explicitly
+clear the selection before asserting that following resumes at the bottom.
+
 12 October 2026 catch-up: **131 native checks pass**, including Help after Window,
 Example workbook in its own section before About StatsDirect, no duplicated update command, and clearing
 the obsolete sharing reminder after acknowledgment. The eleven streamed-reply

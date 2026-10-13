@@ -22,9 +22,13 @@ internal sealed class QuestionContext
     private readonly bool scriptOnly;
     private readonly Dictionary<string, (frmSpreadsheetGear Grid, JsonObject Data)> datasets = new();
     private readonly Dictionary<string, Task<JsonNode>> calculations = new();
+    // Full local source is kept for Open R code, independently of the bounded AI excerpt.
+    internal string RSource { get; }
+    internal string RData => string.Join("\n", datasets.Values.Select(d => ConversationRScript.Dataset(d.Data)));
     internal QuestionContext(IEnumerable<StatsDirectForm> documents, bool scriptOnly, CancellationToken token)
     {
         this.documents = documents.ToArray(); this.token = token; this.scriptOnly = scriptOnly;
+        RSource = string.Join("\n\n", this.documents.OfType<frmScript>().Select(s => s.LearningScript));
         versions = this.documents.OfType<frmSpreadsheetGear>().ToDictionary(g => g.Id(), g => g.LearningVersion);
         foreach (var script in this.documents.OfType<frmScript>()) scripts[script.Id()] = new JsonObject { ["documentId"] = script.Id(), ["title"] = script.Text, ["kind"] = "r", ["script"] = script.LearningScript.Limit(12000), ["output"] = script.LearningOutput.Length > 8000 ? script.LearningOutput[^8000..] : script.LearningOutput, ["truncated"] = script.LearningScript.Length > 12000 || script.LearningOutput.Length > 8000, ["running"] = script.LearningRunning, ["snapshot"] = true };
     }
@@ -85,7 +89,10 @@ internal sealed class QuestionContext
         {
             var data = grid.LearningRead(arguments); Check();
             string id = Guid.NewGuid().ToString("N"); data["datasetId"] = id;
-            datasets[id] = (grid, (JsonObject)data.DeepClone()); return data;
+            datasets[id] = (grid, (JsonObject)data.DeepClone());
+            // The R editor uses the same literal values, never a later read of the worksheet.
+            if (scriptOnly) data["rCode"] = ConversationRScript.Dataset(data);
+            return data;
         }
         if (name == "statsdirect_read_document")
         {
