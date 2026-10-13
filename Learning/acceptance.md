@@ -19,6 +19,20 @@ synthetic; R examples run in R 4.6.1. The optional runtime and installer probes
 are omitted. Evidence is in `outputs/selection-boundary-*` and
 `work/selection-boundary` under the workspace recorded below.
 
+The signed 5.2.0.0 installer was rebuilt after source commit `64afea8f`.
+All **1,703 application files**, **five signatures** and **three bundle payloads**
+verify, including the exact committed Learning bundle. Learning's **165 checks**
+and WindowsShell's **32 checks** also pass against the extracted MSI application.
+The EXE (298,677,752 bytes) replaces `C:\temp\StatsDirectSetup.exe` and the
+`ReleaseBuild` copy; the MSI is 24,215,552 bytes. Their SHA-256 values are:
+
+- EXE: `E3ECF0E2A3B4306A8E9327D6BA7BF8396FFC9B95217D182EF0763E62434EB2AA`
+- MSI: `5B6018CEAF5DBFE8C3A6426388A64F2A706C38D041BDF869B8CE056612EA2C98`
+
+Existing NU1701 and WiX warnings remain; the build has no errors. This verification
+does not install or publish the release, perform a clean-machine upgrade, or send
+a live ChatGPT request. The earlier package records below are superseded.
+
 ## AI-to-R context follow-up
 
 The updated 5.2.0 candidate fixes Script AI's bottom Open R code and per-block Open
