@@ -44,7 +44,8 @@ internal static partial class Program
         var menu=(MenuStrip)Field(main,"mnuMain");var help=menu.Items.OfType<ToolStripMenuItem>().Single(i=>i.Text.Replace("&","")=="Help");
         Check(menu.Items.OfType<ToolStripMenuItem>().TakeLast(2).Select(i=>i.Text.Replace("&","")).SequenceEqual(new[]{"Window","Help"}),"main menu ends with Window then Help");
         var helpItems=help.DropDownItems;int exampleIndex=helpItems.IndexOfKey("exampleWorkbookMenuItem");
-        Check(exampleIndex==helpItems.Count-1&&helpItems[exampleIndex-1] is ToolStripSeparator&&helpItems.IndexOfKey("checkForUpdatesToolStripMenuItem")<exampleIndex&&helpItems.IndexOfKey("aboutsStatsDirectToolStripMenuItem")<exampleIndex,"Help ends with Example workbook in its own separated section");
+        int aboutIndex=helpItems.IndexOfKey("aboutsStatsDirectToolStripMenuItem");
+        Check(aboutIndex==helpItems.Count-1&&exampleIndex==aboutIndex-2&&helpItems[aboutIndex-1] is ToolStripSeparator&&helpItems[exampleIndex-1] is ToolStripSeparator&&helpItems.IndexOfKey("checkForUpdatesToolStripMenuItem")<exampleIndex,"Help ends with Example workbook in its own separated section, then About StatsDirect last");
         Check(!((ToolStripMenuItem)Field(main,"toolsToolStripMenuItem")).DropDownItems.ContainsKey("checkForUpdatesToolStripMenuItem"),"update checking is moved to Help without a duplicate in Tools");
         string examplePath=Path.Combine(AppContext.BaseDirectory,"Data","test.xlsx");
         byte[] exampleBytes=File.ReadAllBytes(examplePath);

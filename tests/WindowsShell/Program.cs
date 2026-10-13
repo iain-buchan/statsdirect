@@ -60,6 +60,7 @@ internal static class Program
             return workbook.RangeSelection.Address;
         });
         await CheckDocumentToolbars(main, grid, workbook);
+        CheckConversationFollows();
         Call(app, "ShowCalculator");
         var view = (Control)Get(app, "CalculatorView");
         var input = (RichTextBox)Get(view, "Expression");
@@ -75,6 +76,11 @@ internal static class Program
         mainToolbar.Items["redoToolStripButton"].PerformClick();
         Check(input.Text=="2 + 3", "toolbar Redo respects calculator focus");
         var menu = (MenuStrip)Field(main, "mnuMain");
+        // Help: Example workbook in its own section before About StatsDirect, which stays last
+        var helpItems = menu.Items.OfType<ToolStripMenuItem>().Single(i => i.Text.Replace("&", "") == "Help").DropDownItems;
+        int exampleAt = helpItems.IndexOfKey("exampleWorkbookMenuItem"), aboutAt = helpItems.IndexOfKey("aboutsStatsDirectToolStripMenuItem");
+        Check(aboutAt == helpItems.Count - 1 && exampleAt == aboutAt - 2 && helpItems[aboutAt - 1] is ToolStripSeparator && helpItems[exampleAt - 1] is ToolStripSeparator && helpItems.IndexOfKey("checkForUpdatesToolStripMenuItem") < exampleAt,
+              "Help ends with Example workbook in its own section, then About StatsDirect last");
         var edit = menu.Items.OfType<ToolStripMenuItem>().Single(i => i.Text.Replace("&", "") == "Edit");
         ToolStripMenuItem Command(string label) => edit.DropDownItems.OfType<ToolStripMenuItem>().Single(i => i.Text.Replace("&", "") == label);
         Command("Undo").PerformClick();
@@ -106,6 +112,40 @@ internal static class Program
         Check(input.Text == "2" && main.ActiveMdiChild == null, "calculator Edit menu still works after the last MDI document closes");
     }
 
+    // The AI pane's conversation box: a streamed reply arrives in chunks while the reader is at the end, and the box must scroll with
+    // it, keeping the end in view after every chunk, rather than letting the text fill below the visible lines; a reader who has
+    // scrolled up to earlier lines is left where they were.
+    static void CheckConversationFollows()
+    {
+        var type = typeof(frmMain).Assembly.GetType("StatsDirect.UI.Learning.ConversationTextBox")!;
+        using var box = (RichTextBox)Activator.CreateInstance(type, true)!;
+        var update = type.GetMethod("UpdateConversation", Internal)!;
+        using var host = new Form { StartPosition = FormStartPosition.Manual, Location = new Point(-16000, -16000), Size = new Size(420, 260), ShowInTaskbar = false };
+        box.ReadOnly = true; box.Dock = DockStyle.Fill; box.Font = new Font("Arial", 10);
+        host.Controls.Add(box); host.Show(); Application.DoEvents();
+        bool EndInView() { Point end = box.GetPositionFromCharIndex(Math.Max(0, box.TextLength - 1)); return end.Y >= 0 && end.Y + box.Font.Height <= box.ClientSize.Height; }
+        string text = "You:\nWhy is the paired test right here?\n\nStatsDirect AI:\n";
+        update.Invoke(box, new object[] { text, true }); Application.DoEvents();
+        Check(EndInView() && box.TextLength == text.Length, "a short conversation shows its end");   // the measure itself, before it is relied on
+        int behind = 0, lines = 40;
+        for (int i = 1; i <= lines; i++)
+        {
+            text += $"Reply line {i} of the streamed answer, long enough to wrap in a narrow pane at this width.\n";
+            update.Invoke(box, new object[] { text, false }); Application.DoEvents();
+            if (!EndInView()) behind++;
+        }
+        Check(behind == 0 && box.TextLength == text.Length, $"a reply streamed to a reader at the end keeps its end in view after every chunk: behind on {behind} of {lines}");
+        // a reader who has scrolled up stays put while the reply goes on
+        box.Select(text.IndexOf("Reply line 5 "), 0); box.ScrollToCaret(); Application.DoEvents();
+        int first = box.GetCharIndexFromPosition(new Point(2, 2));
+        for (int i = lines + 1; i <= lines + 5; i++) { text += $"Reply line {i} after the reader scrolled up.\n"; update.Invoke(box, new object[] { text, false }); Application.DoEvents(); }
+        Check(box.GetCharIndexFromPosition(new Point(2, 2)) == first && !EndInView(), "a reader who scrolled up to earlier lines is left there while the reply goes on");
+        // back at the end, the box follows again
+        box.Select(box.TextLength, 0); box.ScrollToCaret(); Application.DoEvents();
+        text += "Reply line at the end again.\n"; update.Invoke(box, new object[] { text, false }); Application.DoEvents();
+        Check(EndInView(), "returning to the end resumes following the reply");
+        host.Close();
+    }
     static async Task CheckDocumentToolbars(frmMain main, Form grid, SpreadsheetGear.Windows.Forms.WorkbookView workbook)
     {
         var toolbar = (ToolStrip)Field(main, "toolStrip");
