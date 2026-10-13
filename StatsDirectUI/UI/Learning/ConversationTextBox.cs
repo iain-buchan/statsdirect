@@ -1,5 +1,5 @@
 using System;
-using System.Runtime.InteropServices;
+using System.Drawing;
 using System.Windows.Forms;
 
 namespace StatsDirect.UI.Learning;
@@ -8,22 +8,13 @@ namespace StatsDirect.UI.Learning;
 internal sealed class ConversationTextBox : RichTextBox
 {
     private const int WM_SETREDRAW = 0x000B, EM_GETFIRSTVISIBLELINE = 0x00CE, EM_LINESCROLL = 0x00B6;
-    [StructLayout(LayoutKind.Sequential)]
-    private struct ScrollInfo
-    {
-        internal uint Size, Mask;
-        internal int Minimum, Maximum;
-        internal uint Page;
-        internal int Position, TrackPosition;
-    }
-    [DllImport("user32.dll")]
-    private static extern bool GetScrollInfo(IntPtr handle, int bar, ref ScrollInfo info);
-
     private int FirstVisibleLine => (int)NativeMethods.SendMessage(Handle, EM_GETFIRSTVISIBLELINE, IntPtr.Zero, IntPtr.Zero);
-    private bool AtBottom()
+    /// <summary>Whether the end of the conversation is in view: the reader is following the reply, so the box scrolls with it.</summary>
+    private bool EndInView()
     {
-        var info = new ScrollInfo { Size = (uint)Marshal.SizeOf<ScrollInfo>(), Mask = 7 /* range, page, position */ };
-        return !GetScrollInfo(Handle, 1 /* vertical */, ref info) || (long)info.Position + info.Page >= info.Maximum;
+        if (TextLength == 0) return true;
+        Point end = GetPositionFromCharIndex(TextLength - 1);
+        return end.Y >= 0 && end.Y < ClientSize.Height;
     }
     internal void UpdateConversation(string text, bool resetPosition)
     {
@@ -31,7 +22,7 @@ internal sealed class ConversationTextBox : RichTextBox
         if (previous == text && !resetPosition) return;
         if (!IsHandleCreated) { Text = text; return; }
         int start = SelectionStart, length = SelectionLength, firstLine = FirstVisibleLine;
-        bool follow = resetPosition || (length == 0 && AtBottom());
+        bool follow = resetPosition || (length == 0 && EndInView());
         // Usually only a suffix arrives. A final response may correct its streamed tail;
         // replace only that changed portion so earlier text and its selection survive.
         int prefix = 0;
@@ -52,10 +43,7 @@ internal sealed class ConversationTextBox : RichTextBox
             }
             ClearUndo();
             if (follow)
-            {
-                Select(TextLength, 0);
-                ScrollToCaret();
-            }
+                Select(TextLength, 0);   // the scroll to the end comes once redrawing is back on: the control ignores it while redrawing is off
             else
             {
                 Select(Math.Min(start, TextLength), Math.Min(length, Math.Max(0, TextLength - start)));
@@ -72,5 +60,8 @@ internal sealed class ConversationTextBox : RichTextBox
                 Invalidate();
             }
         }
+        // Following the reply: scroll so that its end is in view, by as much as this chunk added, rather than letting the text fill
+        // below the visible lines until something else moves the view.
+        if (follow) ScrollToCaret();
     }
 }
