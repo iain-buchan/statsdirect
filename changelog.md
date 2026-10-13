@@ -4,6 +4,10 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
 ##[Unreleased]
 
+##[v5.2.0] 2026-10-13
+
+Version 5.2.0 brings the Windows workspace into step with the Mac version and adds learning. Reports, scripts and data grids share one document toolbar in the Mac's order and with the same symbols, report charts align and keep their alignment, and start-up opens a worksheet without a chooser. Help > Learning offers lessons, provider courses and practice with records kept on the computer, and an AI tutor that works through the learner's own ChatGPT account, with the connection component downloaded and verified on first use rather than installed. R scripts gain a read-only AI assistant, and a missing R is installed from CRAN's verified installer when first needed. The statistical engine, its operations, the Continue in R recipes and the help are unchanged from 5.1.1.
+
 ### Changed
 - Help remains after Window; Check for Updates is in Help, and Example workbook is the final item in its own section. Script tools end with AI then R+, using the same symbols as Mac; R+ retains the accessible Open in R label.
 - Report charts start left aligned. Left, Centre and Right work on a single selected SVG or raster picture as well as text, with undo/redo and alignment retained during resizing, copying, HTML reopening and Word/PDF export.
@@ -18,6 +22,7 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 - R scripts have a dockable, read-only AI assistant in the existing toolbar. Suggested code opens for review before execution.
 - Script AI groups sharing, question entry and Send/Stop at the top, with the conversation and code actions below. Help > Example workbook opens an editable unsaved copy of the supplied workbook.
 - The Learning assistant can run ten supported analyses through the unchanged StatsDirect engine on approved worksheet ranges, adding normal HTML/SVG report results with Continue in R. Stale, cancelled, unapproved and duplicate requests are checked before publication.
+- The ChatGPT connection component, OpenAI's app server, is downloaded on the first Use my ChatGPT rather than installed: the pinned release is fetched from OpenAI's GitHub over HTTPS, checked against its pinned size and hashes and OpenAI's publisher signature, and kept in the user's local application data, where a damaged copy is repaired without touching account data. Opening Learning or the AI pane downloads nothing, and a policy value under Software\Policies\StatsDirect, DisableOnlineTutor, turns the online tutor off while the lessons, practice and R examples remain.
 
 ##[v5.1.1] 2026-10-11
 
