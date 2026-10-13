@@ -15,7 +15,7 @@ Version 5.2.0 brings the Windows workspace into step with the Mac version and ad
 - The report toolbar's R button is disabled, with the reason in its tooltip, while the cursor is in a note without a record of a run or the report has no recorded result; enabled, its tooltip names the result it continues. The Mac version follows the same rule.
 - Startup opens the supplied document or a blank worksheet, without a compulsory Open/New chooser.
 - Missing-R setup offers a verified official installer with progress, cancel/retry and an executable-readiness check before resuming the pending Run/Open in R action.
-- Script AI replies update incrementally without resetting the conversation on every chunk, and the conversation scrolls with a reply as it arrives while the reader is at its end. Scrolling back or selecting text pauses automatic following; returning to the bottom resumes it.
+- Script AI replies update incrementally without resetting the conversation on every chunk, and the conversation scrolls with a reply as it arrives while the reader is at its end. Scrolling back or selecting text pauses automatic following; returning to the bottom resumes it. Replies are read as UTF-8, so a minus sign or a Greek letter shows as itself; a dropped connection says why, and Send reconnects by itself while the sign-in is held. The conversation is a page rather than plain text: headings, lists, tables, emphasis and links are rendered, and each R code block has Copy and Open in R.
 
 ### Added
 - Help > Learning and Learning Options reuse the Mac lesson library, provider courses, learner preferences, independent practice and learning-record exports. Records stay local; sharing document context with the user's ChatGPT account requires confirmation for each question.
