@@ -20,8 +20,10 @@ public partial class frmMain
         toolsToolStripMenuItem.DropDownItems.Remove(checkForUpdatesToolStripMenuItem);
         helpToolStripMenuItem.DropDownItems.Insert(updatesIndex++, checkForUpdatesToolStripMenuItem);
         helpToolStripMenuItem.DropDownItems.Insert(updatesIndex, new ToolStripSeparator());
-        helpToolStripMenuItem.DropDownItems.Add(new ToolStripSeparator());
-        helpToolStripMenuItem.DropDownItems.Add(new ToolStripMenuItem("&Example workbook", null, (_, _) => BeginInvoke(new Action(OpenExampleWorkbook))) { Name = "exampleWorkbookMenuItem" });
+        // Example workbook in its own section before About StatsDirect, which stays last, as the Mac has it
+        int aboutIndex = helpToolStripMenuItem.DropDownItems.IndexOf(aboutsStatsDirectToolStripMenuItem);
+        helpToolStripMenuItem.DropDownItems.Insert(aboutIndex++, new ToolStripMenuItem("&Example workbook", null, (_, _) => BeginInvoke(new Action(OpenExampleWorkbook))) { Name = "exampleWorkbookMenuItem" });
+        helpToolStripMenuItem.DropDownItems.Insert(aboutIndex, new ToolStripSeparator());
         MdiChildActivate += (_, _) => { learning?.RefreshWorkspace(); if (ActiveMdiChild is frmScript script) learning?.ActiveScriptChanged(script); };
         FormClosed += (_, _) => learning?.Dispose();
     }

@@ -96,9 +96,9 @@ That fix first went into `app-stable-chat`; it is also in the current
 
 Help remains after Window. Its final order is Learning, Learning Options,
 separator, Contents and Index, Method Selection, separator, Check for Updates,
-separator, About StatsDirect, separator, **Example workbook**. The human's latest
-direct Windows instruction places Example workbook last; it supersedes the
-earlier Mac request for Example workbook before updates and About last. Updates
+separator, **Example workbook**, separator, About StatsDirect. The instruction was
+Example workbook before About, with About last as on the Mac; an earlier reading
+that put Example workbook last was corrected on 13 October 2026. Updates
 uses the existing Windows implementation, including R checking; no Mac Sparkle
 option was invented for Windows. Custom Tools and Calculator retain their order.
 

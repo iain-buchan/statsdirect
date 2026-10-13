@@ -1,7 +1,7 @@
 # Windows Learning integration checks
 
 12 October 2026 catch-up: **131 native checks pass**, including Help after Window,
-Example workbook as the final Help item, no duplicated update command, and clearing
+Example workbook in its own section before About StatsDirect, no duplicated update command, and clearing
 the obsolete sharing reminder after acknowledgment. The eleven streamed-reply
 selection, scroll and focus regression checks remain green.
 
