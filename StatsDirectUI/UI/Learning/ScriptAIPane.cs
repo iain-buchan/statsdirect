@@ -12,7 +12,7 @@ using System.Windows.Forms;
 
 namespace StatsDirect.UI.Learning;
 
-/// <summary>A dockable assistant for the active R script. Document access is read-only and renewed for every question.</summary>
+/// <summary>A dockable assistant for the active script or report. Each question has a fixed, read-only document scope.</summary>
 internal sealed class ScriptAIPane : IDisposable
 {
     private readonly LearningService service;
@@ -25,14 +25,16 @@ internal sealed class ScriptAIPane : IDisposable
     internal readonly TextBox Composer = new() { Multiline = true, Dock = DockStyle.Fill, ScrollBars = ScrollBars.Vertical, WordWrap = true, MaxLength = 4000, AccessibleName = "Question for the script assistant" };
     internal readonly CheckBox ShareScript = new() { AutoSize = true, Text = "Share this script and its R output" };
     internal readonly CheckBox ShareWorkbook = new() { AutoSize = true, Text = "Share the chosen workbook" };
-    internal readonly CheckBox Acknowledge = new() { AutoSize = true, Text = "I have checked the selected content contains no person identifiers." };
+    internal readonly CheckBox Acknowledge = new() { AutoSize = true, Text = "I have checked the selected content contains no person identifiers. Remember this for this session, until I choose different data." };
     internal readonly ComboBox Workbook = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 290 };
     internal readonly Button Send = new() { AutoSize = true, Text = "Send" };
     private readonly Button stop = new() { AutoSize = true, Text = "Stop", Enabled = false }, connection = new() { AutoSize = true, Text = "Use my ChatGPT" };
-    internal readonly LinkLabel SharingOptions = new() { AutoSize = true, Text = "Sharing for this question ▾", Dock = DockStyle.Fill };
+    internal readonly LinkLabel SharingOptions = new() { AutoSize = true, Text = "Sharing for this session ▾", Dock = DockStyle.Fill };
     private readonly Label status = new() { AutoSize = true, Dock = DockStyle.Fill, AccessibleName = "AI status" };
     private readonly Dictionary<string, Conversation> conversations = new();
-    private frmScript script;
+    private StatsDirectForm script;
+    private readonly ToolStripLabel title = new("Script AI");
+    private string focusedResultId;
     private Conversation chat;
     private Conversation renderedChat;
     private CancellationTokenSource pending;
@@ -41,6 +43,8 @@ internal sealed class ScriptAIPane : IDisposable
     internal bool IsOpen => session.IsVisible;
     private sealed class Conversation
     { internal JsonArray Messages = new(); internal string Draft = "", WorkbookId; internal bool ShareScript, ShareWorkbook; }
+    private IEnumerable<string> SharedDataIds => ShareWorkbook.Checked && Workbook.SelectedItem is WorkbookChoice selected ? new[] { selected.Id } : Array.Empty<string>();
+    private bool ReportMode => script is frmReportWebView;
     private sealed record WorkbookChoice(string Id, string Title) { public override string ToString() => Title; }
     internal ScriptAIPane(frmMain main, LearningService service)
     {
@@ -49,7 +53,7 @@ internal sealed class ScriptAIPane : IDisposable
         Transcript.CodeRequested += (what, code, messageIndex, blockIndex) => { if (what == "copy") Clipboard.SetText(code); else OpenCode(messageIndex, blockIndex); };
         Transcript.Notice += text => { if (!disposed) status.Text = text; };
         var heading = new ToolStrip { GripStyle = ToolStripGripStyle.Hidden, Dock = DockStyle.Top };
-        var title = new ToolStripLabel("Script AI"); var pop = new ToolStripButton("Pop out"); var close = new ToolStripButton("Close");
+        var pop = new ToolStripButton("Pop out"); var close = new ToolStripButton("Close");
         heading.Items.AddRange([title, new ToolStripButton("New conversation", null, (_, _) => NewConversation()), pop, close]);
         for (int row = 0; row < 10; row++) layout.RowStyles.Add(new RowStyle(row == 8 ? SizeType.Percent : row == 4 ? SizeType.Absolute : SizeType.AutoSize, row == 8 ? 100 : row == 4 ? 100 : 0));
         layout.Controls.Add(connection, 0, 0); layout.Controls.Add(SharingOptions, 0, 1);
@@ -70,7 +74,15 @@ internal sealed class ScriptAIPane : IDisposable
         pop.Click += async (_, _) => await session.ToggleModeAsync(); close.Click += (_, _) => Hide();
         connection.Click += async (_, _) => { try { await service.ConfigureTutorAsync(view); } catch (Exception ex) { status.Text = ex.Message; } };
         ShareScript.CheckedChanged += (_, _) => ScopeChanged(); ShareWorkbook.CheckedChanged += (_, _) => ScopeChanged(); Workbook.SelectedIndexChanged += (_, _) => ScopeChanged();
-        Acknowledge.CheckedChanged += (_, _) => { if (Acknowledge.Checked && (ShareScript.Checked || ShareWorkbook.Checked)) { sharing.Visible = false; if (status.Text == "Review the selected content and confirm sharing for this question.") status.Text = ""; Composer.Focus(); } UpdateControls(); };
+        Acknowledge.CheckedChanged += (_, _) => {
+            if (refreshing) return;
+            if (Acknowledge.Checked) {
+                service.Sharing.Approve(SharedDataIds); sharing.Visible = false;
+                if (status.Text == "Review the selected content and confirm sharing for this session.") status.Text = "";
+                Composer.Focus();
+            } else service.RevokeAISharing();
+            UpdateControls();
+        };
         SharingOptions.LinkClicked += (_, _) => { sharing.Visible = !sharing.Visible; UpdateControls(); };
         Send.Click += async (_, _) => await SendAsync(); stop.Click += (_, _) => Stop();
         copyCode.Click += (_, _) => { string code = LastCode(); if (code.Length > 0) Clipboard.SetText(code); else status.Text = "The last reply contains no R code block."; };
@@ -94,18 +106,23 @@ internal sealed class ScriptAIPane : IDisposable
         viewport.ClientSizeChanged += (_, _) => FitContent(); view.FontChanged += (_, _) => FitContent();
         FitContent();
     }
-    internal void Open(frmScript document)
+    internal void Open(StatsDirectForm document, string resultId = null)
     {
         if (script != document)
         {
             SaveDraft(); Stop();
             if (script != null) script.FormClosed -= ScriptClosed;
             script = document; script.FormClosed += ScriptClosed;
-            if (!conversations.TryGetValue(document.Id(), out chat)) conversations[document.Id()] = chat = new Conversation { WorkbookId = service.Documents.OfType<frmSpreadsheetGear>().LastOrDefault()?.Id() };
+            if (!conversations.TryGetValue(document.Id(), out chat)) conversations[document.Id()] = chat = new Conversation { WorkbookId = service.Sharing.DataDocumentId, ShareScript = service.ShareAIDocument, ShareWorkbook = service.ShareAIWorkbook };
             refreshing = true; Composer.Text = chat.Draft; ShareScript.Checked = chat.ShareScript; ShareWorkbook.Checked = chat.ShareWorkbook; refreshing = false;
-            Acknowledge.Checked = false; sharing.Visible = true; partial = "";
+            sharing.Visible = true; partial = "";
         }
-        RefreshWorkbooks(); Render(); session.Show(true); UpdateConnection();
+        focusedResultId = resultId;
+        title.Text = ReportMode ? "Report AI" : "Script AI";
+        session.SetTitle(title.Text);
+        ShareScript.Text = ReportMode ? "Share this report and its displayed results" : "Share this script and its output";
+        Composer.AccessibleName = ReportMode ? "Question for the report assistant" : "Question for the script assistant";
+        RefreshWorkbooks(); SyncAcceptance(); Render(); session.Show(true); UpdateConnection();
         _ = Transcript.ReopenAsync();
         _ = RefreshAccountAsync();
     }
@@ -118,13 +135,18 @@ internal sealed class ScriptAIPane : IDisposable
         string id = (Workbook.SelectedItem as WorkbookChoice)?.Id ?? chat.WorkbookId;
         refreshing = true; Workbook.Items.Clear(); Workbook.Items.AddRange(choices);
         var selected = choices.FirstOrDefault(c => c.Id == id); Workbook.SelectedItem = selected;
-        if (selected == null) { ShareWorkbook.Checked = false; Acknowledge.Checked = false; chat.ShareWorkbook = false; }
-        refreshing = false; UpdateControls();
+        if (selected == null) { ShareWorkbook.Checked = false; chat.ShareWorkbook = false; }
+        refreshing = false; SyncAcceptance(); UpdateControls();
     }
+    internal void SessionSharingChanged() { Stop(); SyncAcceptance(); sharing.Visible = true; UpdateControls(); }
+    private void SyncAcceptance() { refreshing = true; Acknowledge.Checked = service.Sharing.Accepts(SharedDataIds); refreshing = false; }
     private void ScopeChanged()
     {
         if (refreshing) return;
-        Acknowledge.Checked = false; sharing.Visible = true;
+        string selected = (Workbook.SelectedItem as WorkbookChoice)?.Id;
+        if (selected != null && selected != chat?.WorkbookId) service.SelectAIDataDocument(selected);
+        service.ShareAIDocument = ShareScript.Checked; service.ShareAIWorkbook = ShareWorkbook.Checked;
+        SyncAcceptance(); sharing.Visible = !Acknowledge.Checked;
         if (chat != null) { chat.ShareScript = ShareScript.Checked; chat.ShareWorkbook = ShareWorkbook.Checked; chat.WorkbookId = (Workbook.SelectedItem as WorkbookChoice)?.Id; }
         UpdateControls();
     }
@@ -142,7 +164,7 @@ internal sealed class ScriptAIPane : IDisposable
         connection.Enabled = !busy && !ChatGPTTutor.Disabled;
         ShareScript.Enabled = ShareWorkbook.Enabled = Workbook.Enabled = Acknowledge.Enabled = !busy;
         SharingOptions.Enabled = !busy;
-        SharingOptions.Text = sharing.Visible ? "Sharing for this question ▾" : share ? (Acknowledge.Checked ? "Confirmed: " + (ShareScript.Checked ? "script/output " : "") + (ShareWorkbook.Checked ? "+ workbook " : "") + "· Review sharing ▸" : "Review sharing for the next question ▸") : "Question only · Sharing options ▸";
+        SharingOptions.Text = sharing.Visible ? "Sharing for this session ▾" : share ? (Acknowledge.Checked ? "Confirmed: " + (ShareScript.Checked ? (ReportMode ? "report " : "script/output ") : "") + (ShareWorkbook.Checked ? "+ workbook " : "") + "· Review sharing ▸" : "Review sharing ▸") : "Question only · Sharing options ▸";
     }
     private void SaveDraft() { if (chat != null) chat.Draft = Composer.Text; }
     private void Render()
@@ -162,7 +184,7 @@ internal sealed class ScriptAIPane : IDisposable
             if (service.Tutor.Email == null) { try { await service.ConfigureTutorAsync(view); } catch (Exception ex) { status.Text = ex.Message; } return; }
         }
         string question = Composer.Text.Trim(); if (question.Length == 0) { status.Text = "Enter a question."; return; }
-        if ((ShareScript.Checked || ShareWorkbook.Checked) && !Acknowledge.Checked) { status.Text = "Review the selected content and confirm sharing for this question."; return; }
+        if ((ShareScript.Checked || ShareWorkbook.Checked) && !Acknowledge.Checked) { status.Text = "Review the selected content and confirm sharing for this session."; return; }
         var approved = new List<StatsDirectForm>();
         if (ShareScript.Checked) approved.Add(script);
         if (ShareWorkbook.Checked)
@@ -171,16 +193,17 @@ internal sealed class ScriptAIPane : IDisposable
             if (grid == null) { status.Text = "Choose the workbook again and confirm sharing."; ScopeChanged(); return; }
             approved.Add(grid);
         }
-        using var request = new CancellationTokenSource(); pending = request; var current = chat;
-        var context = new QuestionContext(approved, true, request.Token);
-        Acknowledge.Checked = false; sharing.Visible = false; UpdateControls();
+        using var request = new CancellationTokenSource(); pending = request; var current = chat; bool reportMode = ReportMode;
+        var context = new QuestionContext(approved, true, request.Token, service.Sharing);
+        sharing.Visible = false; UpdateControls();
         try
         {
+            await context.CaptureReportsAsync(focusedResultId);
             string reference = context.InitialContext().ToJsonString();
             if (reference.Length > 28000) throw new InvalidOperationException("The selected context is too large. Choose less content for this question.");
             current.Messages.Add(new JsonObject { ["role"] = "user", ["text"] = question, ["rSource"] = context.RSource }); Composer.Clear(); current.Draft = ""; partial = ""; Render();
             status.Text = approved.Count == 0 ? "Sending the question and conversation only…" : "Sending the confirmed context…";
-            var reply = await service.Tutor.ConverseAsync(reference, current.Messages, context.Tools, true, text => { if (!disposed && pending == request && chat == current) { partial = text; Render(); } }, context.CallAsync, request.Token);
+            var reply = await service.Tutor.ConverseAsync(reference, current.Messages, context.Tools, true, text => { if (!disposed && pending == request && chat == current) { partial = text; Render(); } }, context.CallAsync, request.Token, report: reportMode);
             context.Check(); current.Messages.Add(new JsonObject { ["role"] = "assistant", ["text"] = reply.Text, ["rData"] = context.RData }); partial = "";
             if (chat == current) { Render(); status.Text = "Reply received. Review suggested code before running. Earlier shared content remains in this conversation."; }
         }
@@ -189,7 +212,7 @@ internal sealed class ScriptAIPane : IDisposable
             if (chat == current && pending == request)
             { if (partial.Length > 0) current.Messages.Add(new JsonObject { ["role"] = "assistant", ["text"] = partial + "\n[Reply stopped before completion.]", ["rData"] = context.RData }); partial = ""; if (Composer.Text.Length == 0) Composer.Text = question; Render(); status.Text = ex is OperationCanceledException ? "Reply stopped. Your question is kept here." : ex.Message; }
         }
-        finally { if (pending == request) { pending = null; if (!disposed) { Acknowledge.Checked = false; UpdateControls(); } } }
+        finally { if (pending == request) { pending = null; if (!disposed) { SyncAcceptance(); UpdateControls(); } } }
     }
     internal void Stop() { pending?.Cancel(); }
     private int LastReply()
@@ -207,7 +230,7 @@ internal sealed class ScriptAIPane : IDisposable
     private string LastCode()
     { return string.Join("\n\n", ConversationRScript.Blocks(chat?.Messages.LastOrDefault(m => m.S("role") == "assistant").S("text") ?? "")).Limit(100000); }
     internal void Hide() { SaveDraft(); Stop(); session.Hide(); script?.Activate(); }
-    internal void NewConversation() { Stop(); if (script == null) return; conversations[script.Id()] = chat = new(); Composer.Clear(); partial = ""; ShareScript.Checked = ShareWorkbook.Checked = Acknowledge.Checked = false; sharing.Visible = true; Render(); UpdateControls(); }
+    internal void NewConversation() { Stop(); if (script == null) return; conversations[script.Id()] = chat = new() { WorkbookId = (Workbook.SelectedItem as WorkbookChoice)?.Id, ShareScript = ShareScript.Checked, ShareWorkbook = ShareWorkbook.Checked }; Composer.Clear(); partial = ""; SyncAcceptance(); sharing.Visible = !Acknowledge.Checked; Render(); UpdateControls(); }
     private void ScriptClosed(object sender, FormClosedEventArgs e)
     {
         if (sender != script) return;

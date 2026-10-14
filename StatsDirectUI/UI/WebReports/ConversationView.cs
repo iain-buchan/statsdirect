@@ -87,7 +87,7 @@ internal sealed class ConversationView : UserControl
                     e.Response = environment.CreateWebResourceResponse(null, 403, "External resources are disabled", "Content-Type: text/plain");
             };
             core.WebMessageReceived += (sender, e) => { if (Current(browser) && !failed) Receive(sender, e); };
-            core.ProcessFailed += (_, _) => { if (Current(browser)) Fail(new InvalidOperationException("The conversation page stopped. Close and reopen the Script AI pane.")); };
+            core.ProcessFailed += (_, _) => { if (Current(browser)) Fail(new InvalidOperationException("The conversation page stopped. Close and reopen the AI pane.")); };
             core.NavigationCompleted += (_, e) =>
             {
                 if (!Current(browser) || failed) return;
@@ -145,6 +145,12 @@ internal sealed class ConversationView : UserControl
             string code = m.TryGetProperty("code", out var c) && c.ValueKind == JsonValueKind.String ? c.GetString() : "";
             int messageIndex = m.TryGetProperty("messageIndex", out var mi) && mi.TryGetInt32(out int index) ? index : -1;
             int blockIndex = m.TryGetProperty("blockIndex", out var bi) && bi.TryGetInt32(out int block) ? block : -1;
+            var messages = last?["messages"] as JsonArray;
+            if (messages == null || messageIndex < 0 || messageIndex >= messages.Count) return;
+            var original = MessageText(messages[messageIndex], "text");
+            var blocks = CompletedCodeBlocks.Read(original, rOnly: what == "open");
+            if (what == "copy" && Array.IndexOf(blocks, code) < 0) return;
+            if (what == "open" && (blockIndex < 0 || blockIndex >= blocks.Length || blocks[blockIndex] != code)) return;
             if (what is "copy" or "open" && code.Length > 0 && code.Length <= 200_000) CodeRequested?.Invoke(what, code, messageIndex, blockIndex);
         }
         catch (Exception ex) { Notice?.Invoke(ex.Message); }

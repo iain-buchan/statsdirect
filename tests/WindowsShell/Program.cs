@@ -79,8 +79,8 @@ internal static class Program
         // Help: Example workbook in its own section before About StatsDirect, which stays last
         var helpItems = menu.Items.OfType<ToolStripMenuItem>().Single(i => i.Text.Replace("&", "") == "Help").DropDownItems;
         int exampleAt = helpItems.IndexOfKey("exampleWorkbookMenuItem"), aboutAt = helpItems.IndexOfKey("aboutsStatsDirectToolStripMenuItem");
-        Check(aboutAt == helpItems.Count - 1 && exampleAt == aboutAt - 2 && helpItems[aboutAt - 1] is ToolStripSeparator && helpItems[exampleAt - 1] is ToolStripSeparator && helpItems.IndexOfKey("checkForUpdatesToolStripMenuItem") < exampleAt,
-              "Help ends with Example workbook in its own section, then About StatsDirect last");
+        Check(aboutAt == helpItems.Count - 1 && exampleAt < helpItems.IndexOfKey("checkForUpdatesToolStripMenuItem") && helpItems.IndexOfKey("checkForUpdatesToolStripMenuItem") < aboutAt && helpItems[aboutAt - 1] is ToolStripSeparator,
+              "Help ends with Example workbook, Check for Updates and About StatsDirect last");
         var edit = menu.Items.OfType<ToolStripMenuItem>().Single(i => i.Text.Replace("&", "") == "Edit");
         ToolStripMenuItem Command(string label) => edit.DropDownItems.OfType<ToolStripMenuItem>().Single(i => i.Text.Replace("&", "") == label);
         Command("Undo").PerformClick();
@@ -150,7 +150,7 @@ internal static class Program
             Check((string)Get(tutor, "Email") == "\u2212\u03B2@example.org", "the account's email is read from the component as UTF-8");
             var messages = new System.Text.Json.Nodes.JsonArray(new System.Text.Json.Nodes.JsonObject { ["role"] = "user", ["text"] = "What are the limits of agreement?" });
             Func<string, System.Text.Json.Nodes.JsonObject, Task<System.Text.Json.Nodes.JsonNode>> noTools = (_, _) => Task.FromResult<System.Text.Json.Nodes.JsonNode>(new System.Text.Json.Nodes.JsonObject());
-            var task = (Task)type.GetMethod("ConverseAsync", Internal)!.Invoke(tutor, new object[] { "{}", messages, new System.Text.Json.Nodes.JsonArray(), true, (Action<string>)(_ => { }), noTools, CancellationToken.None })!;
+            var task = (Task)type.GetMethod("ConverseAsync", Internal)!.Invoke(tutor, new object[] { "{}", messages, new System.Text.Json.Nodes.JsonArray(), true, (Action<string>)(_ => { }), noTools, CancellationToken.None, false })!;
             await task;
             object reply = task.GetType().GetProperty("Result")!.GetValue(task)!;
             Check((string)Get(reply, "Text") == "Limits of agreement: \u221210.9 to 123.1 \u03B2", "a streamed reply with a minus sign and a Greek letter arrives intact");

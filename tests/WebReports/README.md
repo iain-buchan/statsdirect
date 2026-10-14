@@ -1,5 +1,14 @@
 # Windows WebView2 report integration checks
 
+14 October 2026 Report AI/offline-maths parity: **260 checks pass** with
+`STATSDIRECT_SKIP_CLIPBOARD=1`. The five native clipboard assertions are explicitly
+skipped; exact browser selection is still checked. The shared renderer retains
+streaming/selection and crash recovery, rejects unfinished code actions, and
+validates completed code actions against native message/block identifiers.
+The report toolbar verifies Help → AI → R order and actual native AI dispatch.
+The Learning harness additionally exercises RTF import and Report AI snapshots.
+No installer or release version was built or changed.
+
 13 October 2026 selection/copy follow-up: **258 checks pass**. Script AI already
 preserves exact selected text at paragraph boundaries in Windows WebView2.
 Additional cases exercise Chromium's actual Copy command and Windows clipboard

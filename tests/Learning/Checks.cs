@@ -101,10 +101,16 @@ internal static partial class Program
         await JS(view,"document.getElementById('question').value='Explain this example';document.getElementById('send').click()");
         await Wait(()=>service.State?.A("sharingConsents").Count==1,"learning stores a per-question sharing record before tutor access");
         await Wait(()=>service.State?.A("conversation").Any(m=>m.S("text").Contains("Mock answer"))==true,"approved Learning question completes through the native bridge");
+        service.ConfirmSharing=_=>throw new Exception("Acceptance should be reused for the same data document.");
+        await JS(view,"document.getElementById('question').value='Another question on these data';document.getElementById('send').click()");
+        await Wait(()=>service.State?.A("sharingConsents").Count==2,"Learning records every shared question even when acceptance is reused");
+        Check(service.State.A("sharingConsents")[1].B("reusedAcceptance")&&service.State.A("sharingConsents")[1].S("scope")=="app-session","reused Learning acceptance records its session scope");
+        await Wait(()=>((CancellationTokenSource)Field(service,"question"))==null,"reused-acceptance Learning question finishes");
         service.ConfirmSharing=_=>LearningService.SharingDecision.LessonsOnly;
+        service.RevokeAISharing();
         await JS(view,"document.getElementById('question').value='Lessons only please';document.getElementById('send').click()");
         await Wait(()=>view.SourceId=="__none__","lessons-only choice removes the document scope for the next question");
-        Check(service.State.A("sharingConsents").Count==1,"lessons-only question does not reuse the previous consent");
+        Check(service.State.A("sharingConsents").Count==2,"lessons-only question does not reuse the previous consent");
         await Task.Delay(250);
         var script=service.Documents.OfType<frmScript>().Last();service.ShowScriptAI(script);await Task.Delay(100);
         var pane=(ScriptAIPane)Field(service,"ai");
@@ -127,7 +133,7 @@ internal static partial class Program
         CheckComposerOrder("confirmed docked AI");
         pane.Composer.Text="Explain the script";await pane.SendAsync();
         await pane.Transcript.SettledAsync();
-        Check((await pane.Transcript.TextAsync()).Contains("Mock answer")&&!pane.Acknowledge.Checked&&!pane.Send.Enabled,"script reply resets confirmation for the next shared question");
+        Check((await pane.Transcript.TextAsync()).Contains("Mock answer")&&pane.Acknowledge.Checked&&pane.Send.Enabled,"script reply retains session acceptance for the next shared question");
         CapturePane("script-ai-reply");
         pane.ShareScript.Checked=false;Check(pane.Send.Enabled,"question-only conversation can continue without document access");
         pane.Composer.Text="Keep this question while moving the pane.";

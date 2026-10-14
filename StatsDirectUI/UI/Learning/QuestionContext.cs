@@ -18,6 +18,9 @@ internal sealed class QuestionContext
     private readonly StatsDirectForm[] documents;
     private readonly Dictionary<string, int> versions;
     private readonly Dictionary<string, JsonNode> scripts = new();
+    private readonly Dictionary<string, JsonObject> reports = new();
+    private readonly AISharingConsent sharing;
+    private readonly int sharingRevision;
     private readonly CancellationToken token;
     private readonly bool scriptOnly;
     private readonly Dictionary<string, (frmSpreadsheetGear Grid, JsonObject Data)> datasets = new();
@@ -25,16 +28,18 @@ internal sealed class QuestionContext
     // Full local source is kept for Open R code, independently of the bounded AI excerpt.
     internal string RSource { get; }
     internal string RData => string.Join("\n", datasets.Values.Select(d => ConversationRScript.Dataset(d.Data)));
-    internal QuestionContext(IEnumerable<StatsDirectForm> documents, bool scriptOnly, CancellationToken token)
+    internal QuestionContext(IEnumerable<StatsDirectForm> documents, bool scriptOnly, CancellationToken token, AISharingConsent sharing = null)
     {
         this.documents = documents.ToArray(); this.token = token; this.scriptOnly = scriptOnly;
-        RSource = string.Join("\n\n", this.documents.OfType<frmScript>().Select(s => s.LearningScript));
+        this.sharing = sharing; sharingRevision = sharing?.Revision ?? 0;
+        RSource = string.Join("\n\n", this.documents.OfType<frmScript>().Where(s => s.LearningLanguage == "R").Select(s => s.LearningScript));
         versions = this.documents.OfType<frmSpreadsheetGear>().ToDictionary(g => g.Id(), g => g.LearningVersion);
-        foreach (var script in this.documents.OfType<frmScript>()) scripts[script.Id()] = new JsonObject { ["documentId"] = script.Id(), ["title"] = script.Text, ["kind"] = "r", ["script"] = script.LearningScript.Limit(12000), ["output"] = script.LearningOutput.Length > 8000 ? script.LearningOutput[^8000..] : script.LearningOutput, ["truncated"] = script.LearningScript.Length > 12000 || script.LearningOutput.Length > 8000, ["running"] = script.LearningRunning, ["snapshot"] = true };
+        foreach (var script in this.documents.OfType<frmScript>()) scripts[script.Id()] = new JsonObject { ["documentId"] = script.Id(), ["title"] = script.Text, ["kind"] = LearningService.Kind(script), ["language"] = script.LearningLanguage, ["script"] = script.LearningScript.Limit(12000), ["output"] = script.LearningOutput.Length > 8000 ? script.LearningOutput[^8000..] : script.LearningOutput, ["truncated"] = script.LearningScript.Length > 12000 || script.LearningOutput.Length > 8000, ["running"] = script.LearningRunning, ["snapshot"] = true };
     }
     internal void Check()
     {
         token.ThrowIfCancellationRequested();
+        if (sharing != null && sharing.Revision != sharingRevision) throw new OperationCanceledException("The selected data document changed. Confirm sharing again before sending.");
         if (ChatGPTTutor.Disabled) throw new InvalidOperationException(ChatGPTTutor.PolicyMessage);
         foreach (var doc in documents)
         {
@@ -47,8 +52,22 @@ internal sealed class QuestionContext
         Check();
         return new JsonObject { ["documents"] = new JsonArray(documents.Select(d => (JsonNode)new JsonObject { ["documentId"] = d.Id(), ["title"] = d.Text, ["kind"] = LearningService.Kind(d), ["worksheet"] = d is frmSpreadsheetGear grid ? grid.LearningInfo() : null }).ToArray()), ["sharing"] = documents.Length == 0 ? "Question and conversation only. No open document metadata or content is shared." : "Only these documents are approved for this question. Script/output are fixed snapshots. Worksheet reads are bounded and reject changes." };
     }
-    internal JsonObject InitialContext()
-    { var result = Overview(); result["scripts"] = new JsonArray(scripts.Values.Select(s => s.DeepClone()).ToArray()); return result; }
+    internal JsonObject InitialContext(int limit = 28000)
+    {
+        var result = Overview(); result["scripts"] = new JsonArray(scripts.Values.Select(s => s.DeepClone()).ToArray());
+        if (reports.Count > 0) result["currentReport"] = reports.Values.First().DeepClone();
+        if (result.ToJsonString().Length > limit)
+        {
+            result.Remove("scripts"); result.Remove("currentReport"); result["readDetailsWithTools"] = true;
+        }
+        return result;
+    }
+    internal async Task CaptureReportsAsync(string resultId = null)
+    {
+        Check();
+        foreach (var report in documents.OfType<frmReportWebView>())
+        { reports[report.Id()] = await ReportAIContext.SnapshotAsync(report, resultId); Check(); }
+    }
     private static JsonObject Tool(string name, string description, JsonObject properties, params string[] required) => new() { ["type"] = "function", ["name"] = name, ["description"] = description, ["inputSchema"] = new JsonObject { ["type"] = "object", ["properties"] = properties, ["required"] = new JsonArray(required.Select(s => (JsonNode)JsonValue.Create(s)).ToArray()), ["additionalProperties"] = false } };
     private static JsonObject StringType => new() { ["type"] = "string" };
     private static JsonObject IntegerType => new() { ["type"] = "integer", ["minimum"] = 0 };
@@ -97,7 +116,7 @@ internal sealed class QuestionContext
         if (name == "statsdirect_read_document")
         {
             if (scripts.TryGetValue(doc.Id(), out var snapshot)) return snapshot.DeepClone();
-            if (doc is frmReportWebView report) { string text = await ReportTextAsync(report); Check(); return new JsonObject { ["documentId"] = doc.Id(), ["title"] = doc.Text, ["text"] = text.Limit(18000), ["truncated"] = text.Length > 18000 }; }
+            if (reports.TryGetValue(doc.Id(), out var report)) return report.DeepClone();
         }
         if (name == "statsdirect_open_analysis" && !scriptOnly && doc is frmSpreadsheetGear)
         { ((frmMain)doc.MdiParent).OpenLearningAnalysis(arguments.S("operation"), doc); return new JsonObject { ["state"] = "awaiting_user_input", ["message"] = "The method is opening. No calculation has been completed by this tool." }; }

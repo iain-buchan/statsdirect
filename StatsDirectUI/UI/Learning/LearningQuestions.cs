@@ -16,13 +16,13 @@ internal sealed partial class LearningService
     internal Func<StatsDirectForm[], SharingDecision> ConfirmSharing { get; set; }
     internal static SharingDecision AskSharing(IWin32Window owner, StatsDirectForm[] documents)
     {
-        using var form = new Form { Text = "Share document context for this question?", Font = new Font("Arial", 10), ClientSize = new Size(570, 380), StartPosition = FormStartPosition.CenterParent, FormBorderStyle = FormBorderStyle.FixedDialog, MaximizeBox = false, MinimizeBox = false };
+        using var form = new Form { Text = "Share document context for this session?", Font = new Font("Arial", 10), ClientSize = new Size(570, 380), StartPosition = FormStartPosition.CenterParent, FormBorderStyle = FormBorderStyle.FixedDialog, MaximizeBox = false, MinimizeBox = false };
         var layout = new TableLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(18), RowCount = 4, ColumnCount = 1 };
         layout.RowStyles.Add(new RowStyle(SizeType.AutoSize)); layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100)); layout.RowStyles.Add(new RowStyle(SizeType.AutoSize)); layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         layout.Controls.Add(new Label { AutoSize = true, MaximumSize = new Size(525, 0), Text = "OpenAI will receive these document names and headings and may read their values or text for this question. The learning assistant can run supported StatsDirect analyses on approved worksheet ranges and add results to your report. Remove names, dates of birth, patient IDs and identifying free text. Earlier shared content may remain in the conversation." });
-        layout.Controls.Add(new TextBox { Dock = DockStyle.Fill, Multiline = true, ReadOnly = true, ScrollBars = ScrollBars.Vertical, Text = string.Join(Environment.NewLine, documents.Select(d => "• " + d.Text + " (" + Kind(d) + ")")) });
-        var acknowledge = new CheckBox { Name = "sharingAcknowledgement", AutoSize = true, MaximumSize = new Size(525, 0), Text = "I have checked these documents and confirm they contain no person identifiers." }; layout.Controls.Add(acknowledge);
-        var buttons = new FlowLayoutPanel { AutoSize = true, Dock = DockStyle.Fill }; var share = new Button { Name = "shareForQuestion", AutoSize = true, Text = "Share for this question", Enabled = false, DialogResult = DialogResult.Yes };
+        layout.Controls.Add(new TextBox { Dock = DockStyle.Fill, Multiline = true, ReadOnly = true, ScrollBars = ScrollBars.Vertical, Text = string.Join(Environment.NewLine, documents.Select(d => "â€¢ " + d.Text + " (" + Kind(d) + ")")) });
+        var acknowledge = new CheckBox { Name = "sharingAcknowledgement", AutoSize = true, MaximumSize = new Size(525, 0), Text = "I have checked these documents contain no person identifiers. Remember this until I select different data or restart." }; layout.Controls.Add(acknowledge);
+        var buttons = new FlowLayoutPanel { AutoSize = true, Dock = DockStyle.Fill }; var share = new Button { Name = "shareForQuestion", AutoSize = true, Text = "Confirm sharing", Enabled = false, DialogResult = DialogResult.Yes };
         var none = new Button { AutoSize = true, Text = "Use lessons only", DialogResult = DialogResult.No }; var cancel = new Button { AutoSize = true, Text = "Cancel", DialogResult = DialogResult.Cancel };
         buttons.Controls.AddRange([share, none, cancel]); layout.Controls.Add(buttons); form.Controls.Add(layout); form.CancelButton = cancel; form.AcceptButton = none;
         acknowledge.CheckedChanged += (_, _) => share.Enabled = acknowledge.Checked;
@@ -49,21 +49,26 @@ internal sealed partial class LearningService
             var revisions = approved.OfType<frmSpreadsheetGear>().ToDictionary(d => d.Id(), d => d.LearningVersion);
             if (approved.Length > 0)
             {
-                var decision = ConfirmSharing?.Invoke(approved) ?? AskSharing(main, approved);
+                var dataIds = approved.OfType<frmSpreadsheetGear>().Select(d => d.Id()).ToArray();
+                bool reused = Sharing.Accepts(dataIds);
+                var decision = reused ? SharingDecision.Share : ConfirmSharing?.Invoke(approved) ?? AskSharing(main, approved);
                 pending.Token.ThrowIfCancellationRequested();
                 if (decision == SharingDecision.Cancel) throw new OperationCanceledException("Document sharing cancelled. No question or document context was sent.");
                 if (decision == SharingDecision.LessonsOnly) { approved = []; view.SourceId = "__none__"; }
                 else
                 {
                     if (approved.Any(d => d.IsDisposed || d.MdiParent == null || d is frmSpreadsheetGear g && g.LearningVersion != revisions[g.Id()])) throw new InvalidOperationException("A document changed while you reviewed sharing. Review it again for a new question.");
-                    var consent = new JsonObject { ["id"] = Guid.NewGuid().ToString(), ["at"] = DateTimeOffset.UtcNow.ToString("O"), ["requestID"] = id, ["policyVersion"] = "document-sharing-v1", ["noPersonIdentifiers"] = true, ["statement"] = "Share only the listed documents for this question. I have checked that they contain no person identifiers.", ["documents"] = new JsonArray(approved.Select(d => (JsonNode)new JsonObject { ["id"] = d.Id(), ["title"] = d.Text, ["kind"] = Kind(d), ["version"] = d is frmSpreadsheetGear g ? g.LearningVersion : 0 }).ToArray()) };
+                    var consent = new JsonObject { ["id"] = Guid.NewGuid().ToString(), ["at"] = DateTimeOffset.UtcNow.ToString("O"), ["requestID"] = id, ["policyVersion"] = "document-sharing-v2", ["scope"] = "app-session", ["reusedAcceptance"] = reused, ["noPersonIdentifiers"] = true, ["statement"] = "This question can access only the listed documents. I have checked that they contain no person identifiers. Acceptance is remembered until I choose different data or restart.", ["documents"] = new JsonArray(approved.Select(d => (JsonNode)new JsonObject { ["id"] = d.Id(), ["title"] = d.Text, ["kind"] = Kind(d), ["version"] = d is frmSpreadsheetGear g ? g.LearningVersion : 0 }).ToArray()) };
                     var result = await view.CallAsync("recordSharingConsent", consent);
                     SaveState(result?["state"]); // Must persist before granting access.
+                    pending.Token.ThrowIfCancellationRequested();
+                    Sharing.Approve(dataIds);
                 }
             }
-            workspace = new QuestionContext(approved, false, pending.Token);
+            workspace = new QuestionContext(approved, false, pending.Token, Sharing);
+            await workspace.CaptureReportsAsync();
             string context = TeachingContext(lesson, body);
-            string metadata = workspace.InitialContext().ToJsonString();
+            string metadata = workspace.InitialContext(14000).ToJsonString();
             if (metadata.Length > 14000) throw new InvalidOperationException("The selected document context is too large. Choose fewer documents for this question.");
             context += "\nCURRENT APPROVED WORKSPACE (separate from teaching examples):\n" + metadata;
             RememberRContext(id, userMessageId, workspace);
@@ -76,7 +81,7 @@ internal sealed partial class LearningService
             // Rendering the reply re-enables Send in the shared web UI. Release this request
             // first, so an immediate next question cannot hit a stale busy flag.
             if (question == pending) { question = null; requestId = null; }
-            await view.CallAsync("reply", new JsonObject { ["id"] = id, ["text"] = reply.Text, ["model"] = reply.Model, ["responseID"] = reply.ResponseID, ["promptVersion"] = "statsdirect-chatgpt-tutor-v4", ["workspaceSources"] = new JsonArray(approved.Select(d => (JsonNode)JsonValue.Create(d.Text)).ToArray()), ["courseSources"] = new JsonArray(new JsonObject { ["id"] = "library:" + lesson.S("id"), ["title"] = lesson.S("title") + " · " + lesson.S("contentVersion") }) });
+            await view.CallAsync("reply", new JsonObject { ["id"] = id, ["text"] = reply.Text, ["model"] = reply.Model, ["responseID"] = reply.ResponseID, ["promptVersion"] = "statsdirect-chatgpt-tutor-v4", ["workspaceSources"] = new JsonArray(approved.Select(d => (JsonNode)JsonValue.Create(d.Text)).ToArray()), ["courseSources"] = new JsonArray(new JsonObject { ["id"] = "library:" + lesson.S("id"), ["title"] = lesson.S("title") + " Â· " + lesson.S("contentVersion") }) });
         }
         catch (Exception ex)
         {

@@ -13,6 +13,10 @@ internal static partial class Program
         var form = view.FindForm()!;
         using var page = new ConversationView(System.IO.Path.Combine(AppContext.BaseDirectory, "Tutor"), System.IO.Path.Combine(output, "tutor-profile")) { Width = 420, Height = 220, Left = 0, Top = 0 };
         form.Controls.Add(page); page.BringToFront();
+        async Task Copy(string expected,string label) {
+            if(Environment.GetEnvironmentVariable("STATSDIRECT_SKIP_CLIPBOARD")=="1") { Console.WriteLine("SKIP "+label+" (preserving the user's clipboard)");return; }
+            Check(await BrowserCopyProbe.CopyAsync(page.Browser.CoreWebView2)==expected,label);
+        }
         string opened = null; page.OpenLink = url => opened = url;
         var code = new List<(string what, string code)>(); var positions = new List<(int message, int block)>();
         page.CodeRequested += (what, text, message, block) => { code.Add((what, text)); positions.Add((message, block)); };
@@ -22,7 +26,7 @@ internal static partial class Program
         JsonArray Messages(params (string role, string text)[] items) => new(items.Select(i => (JsonNode)new JsonObject { ["role"] = i.role, ["text"] = i.text }).ToArray());
 
         // Markdown as the tutor writes it, with markup and a script in the text, which must stay text
-        string reply = "### Other output\n- **Limits of agreement: −10.9 to 123.1.** These are wide.\n- A second point with `code`.\n\n```r\nt.test(x, y, paired = TRUE)\n```\n\n| Term | Value |\n|---|---|\n| Mean | 56.1 |\n\n<script>alert(1)</script> and a [reference](https://example.org/paired) and a [bad link](javascript:alert(2)).";
+        string reply = "### Other output\n- **Limits of agreement: −10.9 to 123.1.** These are wide.\n- A second point with `code`.\n\n```r\nt.test(x, y, paired = TRUE)\n```\n\n| Term | Value |\n|---|---|\n| Mean | 56.1 |\n\n<script>alert(1)</script>\n\nA [reference](https://example.org/paired) and a [bad link](javascript:alert(2)).";
         page.Update(Messages(("user", "Why is this **paired**?"), ("assistant", reply)), "", true);
         await page.SettledAsync();
         Check(await PageTrue("document.querySelectorAll('.message').length===2 && document.querySelector('.message.user strong').textContent==='paired' && document.querySelector('.message.assistant h3').textContent==='Other output'"), "a question and a reply render as blocks with their headings and emphasis");
@@ -30,7 +34,7 @@ internal static partial class Program
         Check(await PageTrue("document.querySelector('.code-block pre code').textContent==='t.test(x, y, paired = TRUE)' && document.querySelector('.code-actions span').textContent==='R' && document.querySelector('.code-block button[data-code=open]')!==null && document.querySelector('.code-block button[data-code=copy]')!==null"), "an R code block shows its code with Copy and Open in R");
         Check(await PageTrue("document.querySelector('.message.assistant table td').textContent==='Mean' && document.querySelectorAll('.message.assistant table th').length===2"), "a table renders with its header row");
         Check(await PageTrue("document.querySelectorAll('script').length===1 && document.querySelector('#conversation').innerText.includes('<script>alert(1)</script>')"), "markup in a reply is shown as text, not run");
-        Check(await PageTrue("document.querySelectorAll('.message a').length===1 && document.querySelector('.message a').getAttribute('href')==='https://example.org/paired' && document.querySelector('.message a').target==='_blank' && document.querySelector('#conversation').innerText.includes('[bad link](javascript:alert(2))')"), "a link to an https address keeps its address and opens in a new window; a javascript link stays text");
+        Check(await PageTrue("document.querySelectorAll('.message a[href]').length===1 && document.querySelector('.message a[href]').getAttribute('href')==='https://example.org/paired' && document.querySelector('.message a[href]').target==='_blank' && document.querySelector('#conversation').innerText.includes('bad link')"), "a link to an https address keeps its address and opens in a new window; a javascript link has no actionable address: " + (await Page("[...document.querySelectorAll('.message a')].map(a=>a.outerHTML)")).GetRawText());
         page.Height = 760; await Task.Delay(100); await Page("conversation.scrollTo(0)");
         using (var png = File.Create(System.IO.Path.Combine(output, "conversation-rendered.png"))) await page.Browser.CoreWebView2.CapturePreviewAsync(CoreWebView2CapturePreviewImageFormat.Png, png);
         page.Height = 220; await Task.Delay(100);
@@ -109,19 +113,19 @@ internal static partial class Program
         page.Update(question, text, false); await page.SettledAsync();
         selected = await page.SelectionAsync();
         Check(selected == "Selected paragraph", "paragraph-start selection retains exact copy text without leading newlines: " + JsonSerializer.Serialize(selected));
-        Check(await BrowserCopyProbe.CopyAsync(page.Browser.CoreWebView2)==selected,"Script AI native copy has no extra paragraph breaks after streaming");
+        await Copy(selected,"Script AI native copy has no extra paragraph breaks after streaming");
         await Page("(()=>{const s=getSelection(),a=s.anchorNode,ao=s.anchorOffset,f=s.focusNode,fo=s.focusOffset;s.setBaseAndExtent(f,fo,a,ao)})()");
         text+=" Another chunk.";page.Update(question,text,false);await page.SettledAsync();
-        Check(await page.SelectionAsync()==selected&&await BrowserCopyProbe.CopyAsync(page.Browser.CoreWebView2)==selected,"Script AI backwards paragraph-start selection copies exactly after another chunk");
+        Check(await page.SelectionAsync()==selected,"streamed selection stays exact"); await Copy(selected,"Script AI backwards paragraph-start selection copies exactly after another chunk");
         await Page("(()=>{const n=document.querySelector('.partial p').firstChild;getSelection().setBaseAndExtent(n,9,n,n.length)})()");
         selected=await page.SelectionAsync();text+=" More.";page.Update(question,text,false);await page.SettledAsync();
-        Check(await page.SelectionAsync()==selected&&await BrowserCopyProbe.CopyAsync(page.Browser.CoreWebView2)==selected,"Script AI paragraph-end selection and copying remain exact");
+        Check(await page.SelectionAsync()==selected,"streamed selection stays exact"); await Copy(selected,"Script AI paragraph-end selection and copying remain exact");
         text="Previous paragraph.\n\n**Selected** paragraph continues";page.Update(question,text,true);await page.SettledAsync();
         await Page("(()=>{const p=document.querySelectorAll('.partial p')[1];getSelection().setBaseAndExtent(p.querySelector('strong').firstChild,0,p.lastChild,10)})()");
         text+=" and grows.";page.Update(question,text,false);await page.SettledAsync();
-        Check(await page.SelectionAsync()=="Selected paragraph"&&await BrowserCopyProbe.CopyAsync(page.Browser.CoreWebView2)=="Selected paragraph","Script AI mixed-format paragraph-start selection copies exactly");
+        Check(await page.SelectionAsync()=="Selected paragraph","mixed-format selection stays exact"); await Copy("Selected paragraph","Script AI mixed-format paragraph-start selection copies exactly");
         page.Update(Messages(("user","Please explain the streamed reply."),("assistant",text)),"",false);await page.SettledAsync();
-        Check(await page.SelectionAsync()=="Selected paragraph"&&await BrowserCopyProbe.CopyAsync(page.Browser.CoreWebView2)=="Selected paragraph","Script AI completion preserves paragraph-start selection and copying");
+        Check(await page.SelectionAsync()=="Selected paragraph","mixed-format selection stays exact"); await Copy("Selected paragraph","Script AI completion preserves paragraph-start selection and copying");
         // A selection at the bottom pauses following without stopping rendering.
         text = string.Join("\n\n", Enumerable.Range(1, 25).Select(i => $"Paragraph {i} stable text.")) + "\n\n";
         page.Update(question, text, true); await page.SettledAsync(); await page.ScrollToEndAsync();
@@ -146,6 +150,9 @@ internal static partial class Program
         Check(!page.Browser.CoreWebView2.Settings.AreHostObjectsAllowed && !page.Browser.CoreWebView2.Settings.AreDevToolsEnabled && await PageTrue("document.querySelector('meta[http-equiv=Content-Security-Policy]').content.includes(\"connect-src 'none'\")"), "recovered conversation reapplies host-access restrictions and content security policy");
         int beforeRecoveryAction = code.Count;
         await Page("document.querySelector('[data-code=open]').click()"); await Task.Delay(100);
+        Check(code.Count == beforeRecoveryAction, "recovered partial reply still cannot open unfinished code");
+        page.Update(Messages(("user","Question retained across renderer crash"),("assistant","Recovered **reply**\n\n```r\nmean(c(1,2,3))\n```")),"",false);await page.SettledAsync();
+        await Page("document.querySelector('[data-code=open]').click()");await Task.Delay(100);
         Check(code.Count == beforeRecoveryAction + 1 && code.Last() == ("open", "mean(c(1,2,3))"), "code actions work once after recovery without duplicate handlers");
         page.Update(Messages(("user", "Question retained across renderer crash")), "A later reply after recovery", false); await page.SettledAsync();
         Check((await page.TextAsync()).Contains("A later reply after recovery"), "streaming continues in the recovered conversation");

@@ -17,3 +17,15 @@ await build({
 // Preserve the checked-in bundle's existing line endings for a focused diff.
 const output=local('../StatsDirectUI/Assets/Learn/app.js');
 await writeFile(output,(await readFile(output,'utf8')).replace(/\r\n?/g,'\n').replace(/\n/g,'\r\n'));
+await build({
+  entryPoints:[local('./conversation.mjs')],bundle:true,format:'iife',target:'chrome120',
+  outfile:local('../StatsDirectUI/Assets/Tutor/conversation.js'),
+  plugins:[{name:'windows-conversation',setup(b){
+    b.onResolve({filter:/^\.\.\/Grid\/node_modules\/marked\/lib\/marked\.esm\.js$/},()=>({path:local('./node_modules/marked/lib/marked.esm.js')}));
+    // Preserve the Windows transcript's explicit line breaks while sharing the
+    // sanitized Markdown, equations and code renderer with Learning.
+    b.onLoad({filter:/[\\/]rich-text\.mjs$/},async({path})=>({contents:(await readFile(path,'utf8')).replace('mangle:false','breaks:true,mangle:false'),loader:'js'}));
+  }}]
+});
+const transcript=local('../StatsDirectUI/Assets/Tutor/conversation.js');
+await writeFile(transcript,(await readFile(transcript,'utf8')).replace(/\r\n?/g,'\n').replace(/\n/g,'\r\n'));

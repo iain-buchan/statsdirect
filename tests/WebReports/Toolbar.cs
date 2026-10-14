@@ -40,6 +40,9 @@ internal static partial class Program
         string command = null; int help = -1;
         Action<string> receive = value => command=value; Action<int> topic = value => help=value;
         view.CommandRequested += receive; view.TopicRequested += topic;
+        Check(await True("[...document.querySelectorAll('[data-host-command]')].map(b=>b.dataset.hostCommand).filter(x=>['help','ai','r'].includes(x)).join('|')==='help|ai|r'"), "report toolbar keeps Help, AI and R in Mac command order");
+        await Js("document.querySelector('[data-host-command=ai]').click()");await Task.Delay(50);
+        Check(command=="ai","report toolbar AI dispatches to the native dockable assistant");
         try
         {
             await Js("document.querySelector('[data-host-command=save]').click()");

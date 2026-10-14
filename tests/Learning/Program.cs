@@ -45,7 +45,7 @@ internal static partial class Program
         Check(menu.Items.OfType<ToolStripMenuItem>().TakeLast(2).Select(i=>i.Text.Replace("&","")).SequenceEqual(new[]{"Window","Help"}),"main menu ends with Window then Help");
         var helpItems=help.DropDownItems;int exampleIndex=helpItems.IndexOfKey("exampleWorkbookMenuItem");
         int aboutIndex=helpItems.IndexOfKey("aboutsStatsDirectToolStripMenuItem");
-        Check(aboutIndex==helpItems.Count-1&&exampleIndex==aboutIndex-2&&helpItems[aboutIndex-1] is ToolStripSeparator&&helpItems[exampleIndex-1] is ToolStripSeparator&&helpItems.IndexOfKey("checkForUpdatesToolStripMenuItem")<exampleIndex,"Help ends with Example workbook in its own separated section, then About StatsDirect last");
+        Check(aboutIndex==helpItems.Count-1&&exampleIndex<helpItems.IndexOfKey("checkForUpdatesToolStripMenuItem")&&helpItems.IndexOfKey("checkForUpdatesToolStripMenuItem")<aboutIndex&&helpItems[aboutIndex-1] is ToolStripSeparator,"Help ends with Example workbook, Check for Updates and About StatsDirect last, matching Mac");
         Check(!((ToolStripMenuItem)Field(main,"toolsToolStripMenuItem")).DropDownItems.ContainsKey("checkForUpdatesToolStripMenuItem"),"update checking is moved to Help without a duplicate in Tools");
         string examplePath=Path.Combine(AppContext.BaseDirectory,"Data","test.xlsx");
         byte[] exampleBytes=File.ReadAllBytes(examplePath);
@@ -79,6 +79,8 @@ internal static partial class Program
         await TestTutor(tutor);
         await TestLearningSelection(service,view);
         await TestConsent(main,service,view,grid);
+        await TestParity(main,service,grid);
+        await TestFileInterop(main,grid);
         await TestConversationR(main,service,grid);
         view = await TestLearningReplay(main,service,view,grid);
         view = await TestLearningRecovery(main,service,view);

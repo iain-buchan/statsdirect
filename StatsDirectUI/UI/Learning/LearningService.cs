@@ -24,9 +24,12 @@ internal sealed partial class LearningService : IDisposable
     private CancellationTokenSource question;
     private string requestId;
     private ScriptAIPane ai;
+    internal AISharingConsent Sharing { get; } = new();
+    internal bool ShareAIDocument, ShareAIWorkbook;
     internal LearningService(frmMain main, string storage = null, ChatGPTTutor tutor = null)
     {
         this.main = main;
+        if (main.ActiveMdiChild is frmSpreadsheetGear grid) Sharing.SelectDataDocument(grid.Id());
         Storage = storage ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "StatsDirect", "Learning");
         Tutor = tutor ?? ChatGPTTutor.OnDemand(Storage);
         Tutor.Changed += UpdateConnection;
@@ -34,7 +37,7 @@ internal sealed partial class LearningService : IDisposable
         string packPath = Path.Combine(Storage, "course-pack.json");
         if (File.Exists(packPath)) { try { pack = CoursePack.Validate(LearningJson.Read(packPath, 2_000_000)); } catch (Exception) { /* Preserve an unreadable pack; the learner can reimport a reviewed copy. */ } }
     }
-    internal static string Kind(StatsDirectForm doc) => doc is frmSpreadsheetGear ? "grid" : doc is frmScript ? "r" : doc is frmReportWebView ? "report" : "learn";
+    internal static string Kind(StatsDirectForm doc) => doc is frmSpreadsheetGear ? "grid" : doc is frmScript script ? (script.LearningLanguage == "R" ? "r" : "script") : doc is frmReportWebView ? "report" : "learn";
     internal StatsDirectForm[] Documents => main.MdiChildren.OfType<StatsDirectForm>().Where(d => d is frmSpreadsheetGear or frmScript or frmReportWebView).ToArray();
     internal void Show(bool options)
     {
@@ -48,13 +51,21 @@ internal sealed partial class LearningService : IDisposable
         }
     }
     internal void ShowScriptAI(frmScript script) { ai ??= new ScriptAIPane(main, this); ai.Open(script); }
+    internal void ShowReportAI(frmReportWebView report, string resultId = null) { ai ??= new ScriptAIPane(main, this); ai.Open(report, resultId); }
     internal void ActiveScriptChanged(frmScript script) { if (ai?.IsOpen == true) ai.Open(script); }
+    internal void ActiveReportChanged(frmReportWebView report) { if (ai?.IsOpen == true) ai.Open(report); }
+    internal void SelectAIDataDocument(string id)
+    {
+        if (!Sharing.SelectDataDocument(id)) return;
+        CancelQuestion(); ai?.SessionSharingChanged(); RefreshWorkspace();
+    }
+    internal void RevokeAISharing() { Sharing.Revoke(); CancelQuestion(); ai?.SessionSharingChanged(); RefreshWorkspace(); }
     internal void RefreshWorkspace()
     {
         ai?.RefreshWorkbooks();
         if (View == null || View.IsDisposed || !View.Ready.Task.IsCompletedSuccessfully || question != null) return;
         var choices = new JsonArray(Documents.Select(d => (JsonNode)new JsonObject { ["id"] = d.Id(), ["title"] = d.Text, ["kind"] = Kind(d) }).ToArray());
-        string label = View.SourceId == "__none__" ? "Lessons only · open documents are not shared" : View.SourceId == "" ? "All open documents · confirmation required when you send" : "Confirm sharing when you send: " + Documents.FirstOrDefault(d => d.Id() == View.SourceId)?.Text;
+        string label = View.SourceId == "__none__" ? "Lessons only · open documents are not shared" : View.SourceId == "" ? "All open documents · session acceptance required" : "Selected context: " + Documents.FirstOrDefault(d => d.Id() == View.SourceId)?.Text;
         _ = View.CallAsync("workspace", new JsonObject { ["choice"] = View.SourceId, ["choices"] = choices, ["label"] = label });
     }
     private void UpdateConnection()
@@ -109,6 +120,7 @@ internal sealed partial class LearningService : IDisposable
                 if (question != null) break;
                 string choice = body.S("choice", view.SourceId);
                 if (choice is "" or "__none__" || Documents.Any(d => d.Id() == choice)) view.SourceId = ChatGPTTutor.Disabled ? "__none__" : choice;
+                if (Documents.OfType<frmSpreadsheetGear>().Any(d => d.Id() == view.SourceId)) SelectAIDataDocument(view.SourceId);
                 RefreshWorkspace(); break;
             case "ask": await AskAsync(view, body); break;
             case "cancel": if (body.S("id") == requestId) CancelQuestion(); break;
@@ -206,7 +218,7 @@ internal sealed partial class LearningService : IDisposable
         await Tutor.RefreshAccountAsync();
         if (Tutor.Email != null)
         {
-            if (MessageBox.Show(owner, "Connected as " + Tutor.Email + ". StatsDirect uses this account's Codex access and allowance. Questions and recent conversation go to OpenAI when you send. Document sharing starts off and needs confirmation for each question.\n\nSign out of StatsDirect's ChatGPT connection?", "Tutor connection", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes) await Tutor.SignOutAsync();
+            if (MessageBox.Show(owner, "Connected as " + Tutor.Email + ". StatsDirect uses this account's Codex access and allowance. Questions and recent conversation go to OpenAI when you send. Document sharing starts off. Acceptance is remembered for this session until you select different data; only the documents selected for each question can be read.\n\nSign out of StatsDirect's ChatGPT connection?", "Tutor connection", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes) await Tutor.SignOutAsync();
         }
         else if (Tutor.LoginUrl != null)
         {
@@ -214,7 +226,7 @@ internal sealed partial class LearningService : IDisposable
             if (result == DialogResult.Yes) Process.Start(new ProcessStartInfo(Tutor.LoginUrl.AbsoluteUri) { UseShellExecute = true });
             if (result == DialogResult.No) await Tutor.CancelSignInAsync();
         }
-        else if (MessageBox.Show(owner, "Sign in with your own ChatGPT account; no API key is needed. Your plan's Codex access and allowance apply.\n\nEach Send shares your question and recent conversation with OpenAI. Learning also includes your learning preferences and relevant lesson/course extracts. Document sharing starts off and needs confirmation for each question. Do not include person identifiers. Existing ChatGPT chats are not imported.\n\nOpen the sign-in page?", "Use my ChatGPT", MessageBoxButtons.OKCancel, MessageBoxIcon.Information) == DialogResult.OK)
+        else if (MessageBox.Show(owner, "Sign in with your own ChatGPT account; no API key is needed. Your plan's Codex access and allowance apply.\n\nEach Send shares your question and recent conversation with OpenAI. Learning also includes your learning preferences and relevant lesson/course extracts. Document sharing starts off. Acceptance is remembered for this session until you select different data; only the documents selected for each question can be read. Do not include person identifiers. Existing ChatGPT chats are not imported.\n\nOpen the sign-in page?", "Use my ChatGPT", MessageBoxButtons.OKCancel, MessageBoxIcon.Information) == DialogResult.OK)
             Process.Start(new ProcessStartInfo((await Tutor.SignInAsync()).AbsoluteUri) { UseShellExecute = true });
     }
     internal void CancelQuestion() { question?.Cancel(); }

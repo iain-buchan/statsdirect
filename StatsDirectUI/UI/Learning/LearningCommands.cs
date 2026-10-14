@@ -18,13 +18,17 @@ public partial class frmMain
         helpToolStripMenuItem.DropDownItems.Insert(2, new ToolStripSeparator());
         int updatesIndex = helpToolStripMenuItem.DropDownItems.IndexOf(aboutsStatsDirectToolStripMenuItem);
         toolsToolStripMenuItem.DropDownItems.Remove(checkForUpdatesToolStripMenuItem);
+        helpToolStripMenuItem.DropDownItems.Insert(updatesIndex++, new ToolStripMenuItem("&Example workbook", null, (_, _) => BeginInvoke(new Action(OpenExampleWorkbook))) { Name = "exampleWorkbookMenuItem" });
+        helpToolStripMenuItem.DropDownItems.Insert(updatesIndex++, new ToolStripSeparator());
         helpToolStripMenuItem.DropDownItems.Insert(updatesIndex++, checkForUpdatesToolStripMenuItem);
         helpToolStripMenuItem.DropDownItems.Insert(updatesIndex, new ToolStripSeparator());
-        // Example workbook in its own section before About StatsDirect, which stays last, as the Mac has it
-        int aboutIndex = helpToolStripMenuItem.DropDownItems.IndexOf(aboutsStatsDirectToolStripMenuItem);
-        helpToolStripMenuItem.DropDownItems.Insert(aboutIndex++, new ToolStripMenuItem("&Example workbook", null, (_, _) => BeginInvoke(new Action(OpenExampleWorkbook))) { Name = "exampleWorkbookMenuItem" });
-        helpToolStripMenuItem.DropDownItems.Insert(aboutIndex, new ToolStripSeparator());
-        MdiChildActivate += (_, _) => { learning?.RefreshWorkspace(); if (ActiveMdiChild is frmScript script) learning?.ActiveScriptChanged(script); };
+        MdiChildActivate += (_, _) =>
+        {
+            if (ActiveMdiChild is frmSpreadsheetGear grid) learning?.SelectAIDataDocument(grid.Id());
+            learning?.RefreshWorkspace();
+            if (ActiveMdiChild is frmScript script) learning?.ActiveScriptChanged(script);
+            if (ActiveMdiChild is frmReportWebView report) learning?.ActiveReportChanged(report);
+        };
         FormClosed += (_, _) => learning?.Dispose();
     }
     private void OpenExampleWorkbook()

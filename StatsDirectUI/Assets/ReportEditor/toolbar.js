@@ -10,6 +10,7 @@ window.WindowsReportToolbar = (() => {
     paste: '<path d="M8 5H4V21H20V5H16M8 12H16M8 16H14"/><rect x="8" y="3" width="8" height="4"/>',
     find: '<circle cx="9" cy="9" r="6"/><path d="M14 14L21 21"/>',
     help: '<circle cx="12" cy="12" r="9.5"/><path d="M8.5 8C8.5 4.5 16 4.5 16 8.5C16 11 12 11 12 14M12 17V17.2"/>',
+    ai: '<path d="M2 20L8 4L14 20M4.25 14H11.75M18 4H22M20 4V20M18 20H22"/>',
     r: '<path d="M7 21V3H13C19.5 3 19.5 12 13 12H7M12.5 12L18.5 21"/>',
     more: '<circle cx="4" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="20" cy="12" r="1"/>'
   };
@@ -60,13 +61,14 @@ window.WindowsReportToolbar = (() => {
     const paste = button('paste', 'Paste', 'Ctrl+V', () => clipboard('paste'), 84);
     const find = button('find', 'Find', 'Ctrl+F', () => send('find'), 75);
     const help = button('help', 'Method help', 'F1', () => chrome.webview.postMessage({action:'help', context:currentHelpContext()}), 60);
+    const ai = button('ai', 'AI assistance', null, () => send('ai'), 64);
     const r = button('r', 'Continue in R: the result the cursor is in, or the latest result, as an R script', null, () => send('continueInR'), 65);
     function separator() { const s = document.createElement('span'); s.className = 'document-toolbar-separator'; s.setAttribute('role','separator'); return s; }
     undo.dataset.priority = 90; redo.dataset.priority = 89;
     const specific = formatting.filter(n => n !== undo && n !== redo && n !== toggle);
     for (const n of specific) n.dataset.priority = ({bold:74, italic:73, underline:72})[n.dataset.command] ?? 30;
     addText.dataset.priority = 10;
-    const ordered = [save, separator(), undo, redo, separator(), cut, copy, paste, find, separator(), ...specific, addText, separator(), help, r];
+    const ordered = [save, separator(), undo, redo, separator(), cut, copy, paste, find, separator(), ...specific, addText, separator(), help, ai, r];
     tools.replaceChildren(row, more); bar.replaceChildren(tools);
     row.append(...ordered, toggle);
     let pending = false;

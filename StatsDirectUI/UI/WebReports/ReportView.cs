@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -28,6 +29,7 @@ internal sealed class ReportView : UserControl
     internal event Action<string> CommandRequested;
     /// <summary>The result (by its id) the user asked to continue in R from the context menu.</summary>
     internal event Action<string> RRequested;
+    internal event Action<string> AIRequested;
     /// <summary>The chart under the pointer is to be saved as a file of the given format, "svg" or "png".</summary>
     internal event Action<string> ChartSaveRequested;
     internal int HelpContext { get; private set; }
@@ -119,7 +121,7 @@ internal sealed class ReportView : UserControl
                 case "clipboard": _ = ClipboardCommandAsync(m.GetProperty("command").GetString()); break;
                 case "command":
                     string command = m.GetProperty("command").GetString();
-                    if (command is "save" or "saveAs" or "open" or "print" or "find" or "continueInR") CommandRequested?.Invoke(command);
+                    if (command is "save" or "saveAs" or "open" or "print" or "find" or "continueInR" or "ai") CommandRequested?.Invoke(command);
                     break;
             }
         }
@@ -226,6 +228,15 @@ internal sealed class ReportView : UserControl
         Revision = 0;
     }
 
+    internal async Task OpenLegacyAsync(LegacyReport.Document document, string title)
+    {
+        await mutations;
+        var result = await CallAsync("load", new { document.html, document.pictures, legacy = true, title });
+        Revision = 0;
+        if (result.TryGetProperty("importWarnings", out var warnings) && warnings.GetArrayLength() > 0)
+            Notice?.Invoke(string.Join(" ", warnings.EnumerateArray().Select(w => w.GetString())));
+    }
+
     internal async Task<long> SaveAsync(string filename, string title, string format)
     {
         await mutations;
@@ -325,6 +336,7 @@ internal sealed class ReportView : UserControl
             menu.Items.Add(new ToolStripMenuItem("Select &all", null, (_, _) => Run(() => CallAsync("selectAll"))) { ShortcutKeyDisplayString = "Ctrl+A" });
             menu.Items.Add(new ToolStripSeparator());
             menu.Items.Add(new ToolStripMenuItem("&Help", null, (_, _) => Try(() => TopicRequested?.Invoke(help))) { Enabled = help > 0, ShortcutKeyDisplayString = "F1" });
+            menu.Items.Add(new ToolStripMenuItem("&AI assistance", null, (_, _) => Try(() => AIRequested?.Invoke(resultId))));
             // the result in R: its script from the record of its run, with the recipe of its operation when there is one
             menu.Items.Add(new ToolStripMenuItem(StatsDirect.R.RRecipes.Has(operation) ? "Continue in &R" : "Open data and settings in &R", null, (_, _) => Try(() => RRequested?.Invoke(resultId))) { Enabled = hasRecord && resultId != null });
             if (chart)

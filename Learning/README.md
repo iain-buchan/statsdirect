@@ -1,8 +1,8 @@
 # Windows Learning and AI host
 
-This unreleased Windows host reuses the Mac Learning interface and content. It
+This Windows host reuses the Mac Learning interface and content. It
 adds Help > Learning / Learning Options, provider courses, local learning records,
-assessment exports, a dockable R-script assistant, and guided R installation.
+assessment exports, dockable script/report assistants, and guided R installation.
 The existing single document toolbar is retained. Ordinary startup opens a blank
 worksheet; a supplied file remains the startup document. No calculation algorithm
 or released version number changes here. The later chart-alignment catch-up is
@@ -32,11 +32,14 @@ from Mac commit `0a112baeae9f799b10685ada30f6dd442aec68c5`, copied unchanged as
 to the recorded app source at build time: stable message IDs and selection
 capture/restoration around streamed and completed replies. `recovery-port.mjs`
 adds the recovery and R-context bridge behaviour from Mac `cbccc10b591c85e34c6cc9faee9397e7aeb2e017`.
-Lesson content and dependency versions match the original
-bundle. To rebuild it, run `pnpm --dir Learning install --frozen-lockfile` and
+The 14 October parity update imports the reviewed 12 October lesson refinements
+and guide changes from Mac `5a20b86df2042a88cd96664c960dee6a095cf27d`; dependency
+versions remain pinned. To rebuild it, run `pnpm --dir Learning install --frozen-lockfile` and
 `node Learning/build.mjs` from the repository root. Commit the generated
 `StatsDirectUI/Assets/Learn/app.js` and refresh the adaptation hashes when changing
-the port. The build fails if its expected source fragments no longer match;
+the port. `conversation.mjs` also builds the offline Script/Report AI conversation
+bundle from the shared sanitized Markdown, KaTeX and R highlighting renderer.
+The build fails if its expected source fragments no longer match;
 review the adaptation explicitly when updating the upstream baseline.
 
 Learning recovery keeps the native portfolio and latest reply event while a
@@ -51,6 +54,52 @@ worksheet reads are retained locally in the portfolio's Mac-compatible `rContext
 metadata. They survive reopening, but are removed before restoring the web page
 and excluded from tutor conversation text and learning-record exports. New
 portfolios clear the context. Opening code never runs it or reads edited data.
+
+## Windows/Mac parity, 14 October 2026
+
+Report AI opens from the report toolbar (Help, AI, R) or a result's context menu.
+Its fixed question snapshot includes displayed report text, focused-result text,
+chart labels and bounded result metadata. Hidden run records, source paths and
+original worksheet values are excluded unless displayed; separately selected
+workbooks expose only bounded read tools. Script/Report AI cannot run analyses.
+Large report context is read through the approved snapshot tool. C#/VB scripts
+are labelled correctly and never included as source in Open in R.
+
+Acceptance is held only in memory and shared by Script AI, Report AI and Learning.
+Selecting a different data document revokes it and cancels active requests.
+Changing report/script/Learning tabs, editing the same workbook, stopping a reply
+or starting a new conversation does not revoke session acceptance. Edits still
+invalidate that question's captured worksheet revision. Each Send retains its
+own explicitly chosen document scope; Learning records each shared question,
+including reused acceptance, with `document-sharing-v2` / `app-session`.
+
+File Open now dispatches `.R` to the script editor, and CSV/TSV/TAB to data grids.
+Delimited imports preserve quoted newlines, empty cells, leading-zero and long
+identifiers, and literal formula-like strings. Ordinary numbers remain numeric.
+They support Excel's full row limit and reject overflow explicitly. XLS/XLSX/XLSM
+and Excel templates use SpreadsheetGear; XLSB imports cached values through
+ExcelDataReader. Delimited files, XLSB and templates open as unsaved workbooks,
+so Save cannot overwrite them with the wrong format.
+
+RTF reports import through RtfPipe and the existing sanitized HTML/SVG path.
+WMF/EMF charts become SVG; damaged pictures leave explicit placeholders. Imported
+RTF reports save as HTML. MIT licences for RtfPipe and ExcelDataReader ship in
+`Assets/Licenses` and are listed in the third-party notices.
+
+RDS/RData/RDA use the Mac base-R exchange script with `--vanilla`. RDS saves the
+current sheet; RData saves all sheets. Export uses row 1 for column names and
+preserves imported types, factor levels/order, date precision and missing values.
+Writes replace the destination only after R succeeds. Both hosts share the
+Date/POSIXct NaN fix, retaining NaN distinctly from NA. Windows refuses R export
+when edited imported columns, explicit row names or indistinguishable precise
+timestamps make metadata mapping ambiguous; the workbook remains available for
+Excel export or editing in R. Saving one sheet as RDS never marks a multi-sheet
+workbook fully saved.
+
+The changes retain Windows batch operations, C#/VB scripting, legacy XLS writing,
+and grid/script printing. Help ends with Example workbook, Check for Updates,
+and About StatsDirect. No numerical algorithm, release version or installer was
+changed or rebuilt for this update.
 
 Searchable PDF course import uses unmodified PdfPig 0.1.16, Apache-2.0, source
 commit `a7bb35662bbbf405efddad50aedc9bcdcf515afc`. Its full licence and included

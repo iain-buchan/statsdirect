@@ -132,6 +132,39 @@
         "Learning/recovery-port.mjs": "6c5a80ef09536d6a2e0defe51d4e3a19cb7ddf4da03510c29e7614b3250c8da7",
         "StatsDirectUI/Assets/Learn/app.js": "f2f0e8aae25ce90cfec2daf2a2a64f31481f06af704dff8918955be17bd6ffda"
       }
+    },
+    {
+      "description": "Windows Report AI, offline rich conversation renderer, app-session sharing acceptance, 12 October lesson refinements and R data interchange. Content copied with existing Windows line endings preserved; native consent/report host adapted from the Mac session contract. Shared R data protocol includes the coordinated Date/POSIXct NaN fix. Prior adaptation entries remain historical.",
+      "source": "https://github.com/iain-buchan/statsdirect-mac",
+      "commit": "5a20b86df2042a88cd96664c960dee6a095cf27d",
+      "upstreamFiles": [
+        "Content/Learn/lessons.json",
+        "Content/Tutor/instructions.txt",
+        "Content/Tutor/script-instructions.txt",
+        "Content/R/data-files.R",
+        "Learn/lesson-guide.mjs",
+        "Learn/library.test.mjs",
+        "Learn/content-audit.test.mjs",
+        "Learn/rich-text.mjs",
+        "Docs/Learn/CONTENT-REFINEMENTS-2026-10-12.md"
+      ],
+      "files": {
+        "Learning/build.mjs": "817e5591f35eefc9b73a08cbe05c27998388bacbe500d60b3faa4d17d749780d",
+        "Learning/conversation.mjs": "ee4d82879aa657d957999ef1f9bfa2b8376ddfd52140c6ad5ac7f8803d367356",
+        "Learning/upstream/Learn/content-audit.test.mjs": "d6a17f3592caa5d37a594b7e0be655a27eb13a15b4071172f5edc51509fcbd04",
+        "Learning/upstream/Learn/lesson-guide.mjs": "e8a878926588b13d8d5a65be514f759cd4b898cb2bdfdda175fde2086d23bb21",
+        "Learning/upstream/Learn/library.test.mjs": "74163f9a8fa8bc05477bc06669e73ecb19bd7068faeb031d9e1116ebac7c9995",
+        "Learning/upstream/Learn/lessons.json": "7df8bd1b539c7ae27735383af873e06735464b700c7c9307284ab69bc39ad74f",
+        "Learning/upstream/Docs/Learn/CONTENT-REFINEMENTS-2026-10-12.md": "dd697d1d305dc1478c51221b7cd19cba0a587bfab2011607e66238b214cc063a",
+        "StatsDirectUI/Assets/Learn/app.js": "d29389764f9b816747dac4aa80e36d087e8976309a52d1bc81258087fac966e5",
+        "StatsDirectUI/Assets/Learn/lessons.json": "7df8bd1b539c7ae27735383af873e06735464b700c7c9307284ab69bc39ad74f",
+        "StatsDirectUI/Assets/Tutor/conversation.js": "5b391269643ff0ab570db46a3961231d9b5da9bc00ac39fb604e2d82c3a6484f",
+        "StatsDirectUI/Assets/Tutor/conversation.html": "cfcbfaf5d2a2e78a4c7dee83e6a7b4109bf0e38270430b250a3a1fd8deca8d3f",
+        "StatsDirectUI/Assets/Tutor/instructions.txt": "b1a0fedd3c5f23d4c7752b872cd91b89005fb03f3d229d7b425e426794e787fc",
+        "StatsDirectUI/Assets/Tutor/script-instructions.txt": "c463f187c59d740a5222d3f3edaa684f2c487227171e72fd50c8739a67b27625",
+        "StatsDirectUI/Assets/Tutor/report-instructions.txt": "33739f9336763866bd7cffd86e205971b4100c335296a2a14a02611c9e5eac4a",
+        "StatsDirectUI/Assets/R/data-files.R": "79ec7fc1b947981db4ba6c11561382418438a9fbbffe86577d0e337e0bbccd07"
+      }
     }
   ]
 }

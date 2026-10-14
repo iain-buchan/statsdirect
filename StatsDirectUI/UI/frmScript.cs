@@ -519,6 +519,7 @@ namespace StatsDirect.UI
         }
 
         internal string LearningScript => rtbDoc.Text;
+        internal string LearningLanguage => ScriptLanguageForScript();
         internal string LearningOutput => rtbOutput.Text;
         internal bool LearningRunning => runningR;
 

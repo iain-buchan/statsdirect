@@ -216,6 +216,18 @@ https://dotnet.microsoft.com/dotnet_library_license.htm
     Full licences and notices for docx, DOMPurify, emf-converter and their
     bundled dependencies: ReportEditor/vendor/THIRD-PARTY-LICENSES.txt.
 
+13. Legacy RTF import: RtfPipe 2.0.7677.4303
+    MIT licence: Licenses/RtfPipe/LICENSE.
+    https://github.com/erdomke/RtfPipe
+
+14. CSV and binary Excel import: ExcelDataReader 3.9.0
+    MIT licence: Licenses/ExcelDataReader/LICENSE.
+    https://github.com/ExcelDataReader/ExcelDataReader
+
+15. Offline AI conversation rendering
+    Uses the same marked, DOMPurify, KaTeX and highlight.js components as Learning.
+    Full licences: Learn/THIRD-PARTY-LICENSES.txt.
+
 The Microsoft Edge WebView2 Evergreen Runtime is shared Microsoft software,
 installed by setup when missing and licensed under Microsoft's own terms:
 https://developer.microsoft.com/en-us/microsoft-edge/webview2/

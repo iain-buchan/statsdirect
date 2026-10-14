@@ -37,6 +37,7 @@ internal sealed class frmReportWebView : StatsDirectForm, IReport, IFindTarget
         view.Notice += text => status.Text = text;
         view.TopicRequested += ShowTopic;
         view.RRequested += id => _ = Guard(() => ContinueInRAsync(id));
+        view.AIRequested += id => (MdiParent as frmMain)?.Learning.ShowReportAI(this, id);
         view.ChartSaveRequested += format => _ = Guard(() => SaveChartAsync(format));
         view.CommandRequested += command => _ = Guard(async () =>
         {
@@ -44,6 +45,7 @@ internal sealed class frmReportWebView : StatsDirectForm, IReport, IFindTarget
             else if (command == "print") Print();
             else if (command == "find") EditFind();
             else if (command == "continueInR") await ContinueCurrentInRAsync();
+            else if (command == "ai") (MdiParent as frmMain)?.Learning.ShowReportAI(this);
             else if (command is "save" or "saveAs") await SaveHtmlAsync(command == "saveAs");
         });
         Shown += async (_, _) => await Guard(async () => { await view.Ready; status.Text = "Ready"; });
@@ -271,7 +273,7 @@ internal sealed class frmReportWebView : StatsDirectForm, IReport, IFindTarget
     private async Task OpenDialogAsync()
     {
         if (opening || !await ConfirmDiscardAsync()) return;
-        using var dialog = new OpenFileDialog { Filter = "HTML reports (*.html;*.htm)|*.html;*.htm" };
+        using var dialog = new OpenFileDialog { Filter = "Reports (*.html;*.htm;*.rtf)|*.html;*.htm;*.rtf" };
         if (dialog.ShowDialog(this) == DialogResult.OK) await LoadHtmlAsync(dialog.FileName, false);
     }
 
@@ -288,13 +290,19 @@ internal sealed class frmReportWebView : StatsDirectForm, IReport, IFindTarget
         opening = true;
         try
         {
-            string html = await File.ReadAllTextAsync(filename);
-            if (System.IO.Path.GetExtension(filename).Equals(".txt", StringComparison.OrdinalIgnoreCase))
-                html = "<pre>" + System.Net.WebUtility.HtmlEncode(html) + "</pre>";
-            await view.OpenHtmlAsync(html, System.IO.Path.GetFileNameWithoutExtension(filename));
-            bool importedText = System.IO.Path.GetExtension(filename).Equals(".txt", StringComparison.OrdinalIgnoreCase);
+            string extension = System.IO.Path.GetExtension(filename).ToLowerInvariant();
+            status.Text = "Opened report.";
+            if (extension == ".rtf")
+                await view.OpenLegacyAsync(await Task.Run(() => LegacyReport.Read(filename)), System.IO.Path.GetFileNameWithoutExtension(filename));
+            else
+            {
+                string html = await File.ReadAllTextAsync(filename);
+                if (extension == ".txt") html = "<pre>" + System.Net.WebUtility.HtmlEncode(html) + "</pre>";
+                await view.OpenHtmlAsync(html, System.IO.Path.GetFileNameWithoutExtension(filename));
+            }
+            bool importedText = extension is ".txt" or ".rtf";
             Path = isTempFile || importedText ? null : filename; Text = System.IO.Path.GetFileName(filename);
-            Dirty = false; status.Text = "Opened report.";
+            Dirty = false;
         }
         finally { opening = false; }
     }

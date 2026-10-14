@@ -573,15 +573,19 @@ namespace StatsDirect.UI
                     if (!isTempFile)
                         SdApplication.SoleInstance.NoteRecentFile(filename, opened);
                 }
+                catch (OperationCanceledException) { }
                 catch (IOException ex)
                 {
                     SdApplication.SoleInstance.FriendlyError("Couldn't open spreadsheet", ex, true);
                     SdApplication.SoleInstance.NoteRecentFile(filename, false);
                 }
-                if (!opened)
+                finally
                 {
-                    newGrid.Close();
-                    SdApplication.SoleInstance.NoteFormClosing(newGrid, new FormClosingEventArgs(CloseReason.None, false));
+                    if (!opened)
+                    {
+                        newGrid.Close();
+                        SdApplication.SoleInstance.NoteFormClosing(newGrid, new FormClosingEventArgs(CloseReason.None, false));
+                    }
                 }
                 return opened ? newGrid : null;
             }
@@ -1323,22 +1327,21 @@ namespace StatsDirect.UI
                 // User wants to open the file - but which file type?
                 string extension = Path.GetExtension(path);
                 extension = extension?.ToLower(CultureInfo.InvariantCulture);
-                if (".xls".Equals(extension) || ".xlsx".Equals(extension))
+                if (SpreadsheetFiles.CanOpen(extension) || RDataFiles.IsRData(extension))
                 {
-                    CreateGrid(path, isTempFile, null);
-                    return true;
+                    return CreateGrid(path, isTempFile, null) != null;
                 }
-                if (extension is ".rtf" or ".mht" or ".mhtml" or ".docx")
+                if (extension is ".mht" or ".mhtml" or ".docx")
                 {
                     SdApplication.SoleInstance.MsgboxX("This report format is no longer edited in StatsDirect. Open it in Word or another compatible editor and save it as HTML, then open the HTML file here. The original file has not been changed.", MessageBoxButtons.OK, MessageBoxIcon.Information, "Open legacy report", true);
                     return false;
                 }
-                if (extension is ".htm" or ".html" or ".txt")
+                if (extension is ".htm" or ".html" or ".txt" or ".rtf")
                 {
                     CreateReport(path, isTempFile);
                     return true;
                 }
-                if (".cs".Equals(extension) || ".vb".Equals(extension))
+                if (extension is ".cs" or ".vb" or ".r")
                 {
                     CreateScriptWindow(path, isTempFile);
                     return true;

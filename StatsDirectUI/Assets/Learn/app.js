@@ -20271,7 +20271,7 @@ ${x.verification}`)).join("")) + section("Reflection", para(r2.reflection || "No
       knowledgeSchemaVersion: 1,
       review: {
         date: "2026-10-01",
-        status: "AI-assisted editorial and numerical checks; external subject-expert review pending",
+        status: "AI-assisted editorial and numerical checks",
         authorship: "Original StatsDirect teaching material with fictional examples; not official examination content."
       },
       prerequisites: [],
@@ -20365,7 +20365,7 @@ ${x.verification}`)).join("")) + section("Reflection", para(r2.reflection || "No
       knowledgeSchemaVersion: 1,
       review: {
         date: "2026-10-01",
-        status: "AI-assisted editorial and numerical checks; external subject-expert review pending",
+        status: "AI-assisted editorial and numerical checks",
         authorship: "Original StatsDirect teaching material with fictional examples; not official examination content."
       },
       prerequisites: [
@@ -20492,7 +20492,7 @@ ${x.verification}`)).join("")) + section("Reflection", para(r2.reflection || "No
       knowledgeSchemaVersion: 1,
       review: {
         date: "2026-10-01",
-        status: "AI-assisted editorial and numerical checks; external subject-expert review pending",
+        status: "AI-assisted editorial and numerical checks",
         authorship: "Original StatsDirect teaching material with fictional examples; not official examination content."
       },
       prerequisites: [
@@ -20579,7 +20579,7 @@ ${x.verification}`)).join("")) + section("Reflection", para(r2.reflection || "No
       objective: "Separate standard deviation from standard error and confidence intervals.",
       summary: "Standard deviation describes variation between observations. Standard error describes sampling variation of an estimator. For independent observations from the same population, the mean has SE = population SD / sqrt(n), estimated using the sample SD. A nominal 95% confidence procedure targets 95% repeated-sampling coverage under its assumptions. These 12 waits are skewed: a small-sample t interval is an illustration to scrutinise, not an assurance of reliable coverage.",
       challenge: "For independent observations from the same population with a fixed, finite variance, why does quadrupling sample size halve the theoretical standard error of the mean? Why might the sample SD and estimated SE still vary between samples?",
-      steps: "Open the descriptive summary for the fictional waiting times. Compare mean, median, SD and the 95% confidence interval. Inspect the long wait and the distribution before interpreting the small-sample t interval. Do not delete an observation merely because it is large. The appropriate summary depends on whether the question concerns an average, a typical wait or the long-wait tail.",
+      steps: "Open the descriptive summary for the fictional waiting times. Compare mean, median, SD and the 95% confidence interval. Inspect the long wait and the distribution before interpreting the small-sample t interval. Do not delete an observation merely because it is large. The appropriate summary depends on whether the question concerns an average, a typical wait or the long-wait tail. For these 12 values, StatsDirect and R t.test() both use a Student t interval for the mean with 11 degrees of freedom: approximately 13.8 to 24.8 minutes. Agreement between programs checks the calculation, not whether the model assumptions fit these skewed data.",
       operation: "UnivariateSummary",
       help: "basic_descriptive_statistics/univariate_summary.htm",
       columns: [
@@ -20601,15 +20601,15 @@ ${x.verification}`)).join("")) + section("Reflection", para(r2.reflection || "No
           ]
         }
       ],
-      r: '# Fictional clinic waits; no patient data.\nwait <- c(12,15,14,18,21,16,19,13,45,17,20,22)\nprint(data.frame(Waiting_minutes=wait))\nprint(c(mean=mean(wait), median=median(wait), SD=sd(wait), SE=sd(wait)/sqrt(length(wait))))\n# An illustrative normal-theory mean CI: only 12 skewed observations.\n# Exact t coverage assumes independent normal observations; that is questionable here.\n# A non-significant normality test would not establish the assumption.\nmean_ci <- t.test(wait, conf.level=0.95)$conf.int\ncat("Illustrative 95% t interval for the mean; check assumptions:\\n")\nprint(mean_ci)\nhist(wait, breaks=8, main="Fictional clinic waiting times", xlab="Minutes")\n# Try: explain why mean and median differ; inspect the outlier without silently deleting it.\n',
+      r: '# Fictional clinic waits; no patient data.\nwait <- c(12,15,14,18,21,16,19,13,45,17,20,22)\nprint(data.frame(Waiting_minutes=wait))\nprint(c(mean=mean(wait), median=median(wait), SD=sd(wait), SE=sd(wait)/sqrt(length(wait))))\n# An illustrative Student t mean CI with 11 df, as in StatsDirect: only 12 skewed observations.\n# Exact t coverage assumes independent normal observations; that is questionable here.\n# A non-significant normality test would not establish the assumption.\nmean_ci <- t.test(wait, conf.level=0.95)$conf.int\ncat("Illustrative 95% t interval for the mean; check assumptions:\\n")\nprint(mean_ci)\n# Describe this as about 13.8 to 24.8 minutes; keep full values for calculations.\n# Extra displayed decimals do not make the assumptions more credible.\nhist(wait, breaks=8, main="Fictional clinic waiting times", xlab="Minutes")\n# Try: explain why mean and median differ; inspect the outlier without silently deleting it.\n',
       previousChallenges: [
         "Why would collecting four times as many independent observations halve the standard error but not necessarily change the standard deviation?"
       ],
-      contentVersion: "2026-10-01",
+      contentVersion: "2026-10-12",
       knowledgeSchemaVersion: 1,
       review: {
-        date: "2026-10-01",
-        status: "AI-assisted editorial and numerical checks; external subject-expert review pending",
+        date: "2026-10-12",
+        status: "AI-assisted editorial and numerical checks",
         authorship: "Original StatsDirect teaching material with fictional examples; not official examination content."
       },
       prerequisites: [],
@@ -20644,7 +20644,7 @@ ${x.verification}`)).join("")) + section("Reflection", para(r2.reflection || "No
       ],
       workedExample: {
         design: "Twelve fictional independent clinic waits, including a long wait of 45 minutes.",
-        interpretation: "The mean is 19.33 minutes and the median 17.5. The small-sample t interval requires scrutiny because this example is skewed; a narrow interval would not rule out selection bias."
+        interpretation: "The mean is about 19.3 minutes and the median 17.5. The illustrative 95% Student t interval for the population mean is about 13.8 to 24.8 minutes in both StatsDirect and R (11 degrees of freedom). With only 12 skewed observations, its coverage assumptions need scrutiny. One decimal place is enough for this explanation; extra software digits do not imply reliable precision, and a narrow interval would not rule out selection bias."
       },
       teachingPrompts: [
         {
@@ -20679,6 +20679,14 @@ ${x.verification}`)).join("")) + section("Reflection", para(r2.reflection || "No
           scope: "Data interpretation and critical appraisal in examination preparation; original StatsDirect questions only.",
           checkedAt: "2026-10-01",
           use: "Editorial reference and further reading; no source text or examination items reproduced."
+        },
+        {
+          id: "r-t",
+          title: "R: Student t test",
+          url: "https://stat.ethz.ch/R-manual/R-devel/library/stats/html/t.test.html",
+          scope: "The one-sample t interval for the population mean.",
+          checkedAt: "2026-10-12",
+          use: "Editorial reference and further reading; no source text or examination items reproduced."
         }
       ],
       assessmentIds: [
@@ -20694,16 +20702,16 @@ ${x.verification}`)).join("")) + section("Reflection", para(r2.reflection || "No
       objective: "Choose the right denominator for sensitivity, specificity and predictive value.",
       summary: "Sensitivity is the proportion positive among people with the condition; specificity is the proportion negative among those without it. Predictive values condition on the test result instead. The fictional sample represents a population with 10% prevalence and a reliable reference diagnosis. Predictive values depend on prevalence; sensitivity and specificity also need to be applicable to the intended case mix, threshold and reference standard.",
       challenge: "If the condition becomes rarer while sensitivity and specificity stay the same, what happens to the proportion of positive results that are false positives?",
-      steps: "In the diagnostic grid, columns represent disease present/absent and rows test positive/negative: enter top row 72, 81 and bottom row 18, 729. These are true positives, false positives, false negatives and true negatives respectively. These fictional independent observations give sensitivity 80%, specificity 90%, PPV about 47.1% and NPV about 97.6%. The R example labels a 95% exact binomial interval for sensitivity; different interval methods need not match numerically.",
+      steps: "In the diagnostic grid, columns represent disease present/absent and rows test positive/negative: enter top row 72, 81 and bottom row 18, 729. These are true positives, false positives, false negatives and true negatives respectively. These fictional independent observations give sensitivity 80%, specificity 90%, PPV about 47.1% and NPV about 97.6%. For sensitivity, StatsDirect and R binom.test() both use the Clopper\u2013Pearson exact binomial method: the 95% interval is about 70.2% to 87.7%. This interval concerns sensitivity, not PPV; matching inputs, confidence level and method should give matching limits apart from rounding.",
       operation: "MiscDiagnostic",
       help: "clinical_epidemiology/diagnostic.htm",
       columns: [],
-      r: '# Fictional diagnostic study. Rows: test result; columns: disease status.\ntp <- 72; fn <- 18; fp <- 81; tn <- 729\ncounts <- matrix(c(tp,fp,fn,tn),nrow=2,byrow=TRUE,dimnames=list(Test=c("Positive","Negative"),Disease=c("Present","Absent")))\nprint(counts)\nprint(c(sensitivity=tp/(tp+fn), specificity=tn/(tn+fp), PPV=tp/(tp+fp), NPV=tn/(tn+fn)))\n# Treat diagnoses as reliable and observations as independent.\n# This is a sensitivity interval, not an interval for all four measures.\nsensitivity_ci <- binom.test(tp,tp+fn,conf.level=0.95)$conf.int\ncat("95% exact binomial CI for sensitivity (may be conservative):\\n")\nprint(sensitivity_ci)\nbarplot(counts, beside=TRUE, legend.text=TRUE, main="Fictional diagnostic counts", ylab="People")\n',
-      contentVersion: "2026-10-01",
+      r: '# Fictional diagnostic study. Rows: test result; columns: disease status.\ntp <- 72; fn <- 18; fp <- 81; tn <- 729\ncounts <- matrix(c(tp,fp,fn,tn),nrow=2,byrow=TRUE,dimnames=list(Test=c("Positive","Negative"),Disease=c("Present","Absent")))\nprint(counts)\nprint(c(sensitivity=tp/(tp+fn), specificity=tn/(tn+fp), PPV=tp/(tp+fp), NPV=tn/(tn+fn)))\n# Treat diagnoses as reliable and observations as independent.\n# StatsDirect and binom.test use the same Clopper-Pearson exact binomial method.\n# This is a sensitivity interval, not an interval for all four measures.\nsensitivity_ci <- binom.test(tp,tp+fn,conf.level=0.95)$conf.int\ncat("95% Clopper-Pearson exact CI for sensitivity (may be conservative):\\n")\nprint(sensitivity_ci)\nbarplot(counts, beside=TRUE, legend.text=TRUE, main="Fictional diagnostic counts", ylab="People")\n',
+      contentVersion: "2026-10-12",
       knowledgeSchemaVersion: 1,
       review: {
-        date: "2026-10-01",
-        status: "AI-assisted editorial and numerical checks; external subject-expert review pending",
+        date: "2026-10-12",
+        status: "AI-assisted editorial and numerical checks",
         authorship: "Original StatsDirect teaching material with fictional examples; not official examination content."
       },
       prerequisites: [
@@ -20740,7 +20748,7 @@ ${x.verification}`)).join("")) + section("Reflection", para(r2.reflection || "No
       ],
       workedExample: {
         design: "Fictional representative sample with a reliable reference diagnosis, 90 cases and 810 non-cases; a fixed test threshold.",
-        interpretation: "72 true positives and 81 false positives give PPV 72/153, about 47.1%, despite 80% sensitivity and 90% specificity. A positive result is not a certain diagnosis."
+        interpretation: "72 true positives and 81 false positives give PPV 72/153, about 47.1%, despite 80% sensitivity and 90% specificity. A positive result is not a certain diagnosis. Sensitivity is 80%, with the same 95% Clopper\u2013Pearson interval of about 70.2% to 87.7% in StatsDirect and this R example."
       },
       teachingPrompts: [
         {
@@ -20775,6 +20783,14 @@ ${x.verification}`)).join("")) + section("Reflection", para(r2.reflection || "No
           scope: "Data interpretation and critical appraisal in examination preparation; original StatsDirect questions only.",
           checkedAt: "2026-10-01",
           use: "Editorial reference and further reading; no source text or examination items reproduced."
+        },
+        {
+          id: "r-binom",
+          title: "R: Exact binomial test",
+          url: "https://stat.ethz.ch/R-manual/R-devel/library/stats/html/binom.test.html",
+          scope: "Clopper\u2013Pearson intervals returned by binom.test().",
+          checkedAt: "2026-10-12",
+          use: "Editorial reference and further reading; no source text or examination items reproduced."
         }
       ],
       assessmentIds: [
@@ -20789,18 +20805,18 @@ ${x.verification}`)).join("")) + section("Reflection", para(r2.reflection || "No
       title: "Absolute and relative benefit",
       topic: "Risk, treatment effects and NNT",
       objective: "Interpret absolute risk reduction, relative risk and the follow-up period.",
-      summary: "Over one year, 28/200 controls and 16/200 programme participants have at least one unplanned admission. The estimated absolute risk reduction (control minus programme) is 6 percentage points; programme-to-control RR is about 0.57 and NNT for benefit rounds up to 17. These are uncertain point estimates. The illustrated risk-difference interval includes zero and possible harm, so it does not establish benefit.",
+      summary: "Over one year, 28/200 controls and 16/200 programme participants have at least one unplanned admission. The estimated absolute risk reduction (control minus programme) is 6 percentage points; programme-to-control RR is about 0.57 and NNT for benefit rounds up to 17. These are uncertain point estimates. The illustrated risk-difference interval includes zero and possible harm, so it does not establish benefit. This example was chosen to lie near the conventional 5% significance boundary: interpret the effect size and uncertainty, and do not choose a method just to obtain significance.",
       challenge: "Would the same relative risk imply the same absolute benefit in a population with a much lower baseline risk?",
-      steps: "Assume individual randomisation, independent participants and complete one-year follow-up. In the NNT form enter 16 people with at least one admission among 200 programme participants and 28 among 200 controls. Count people, not repeated admissions. Interpret NNT 17 as the point estimate for preventing one additional person having an admission over one year. A risk-difference interval spanning zero gives NNT uncertainty extending through infinity into both benefit and harm; do not present a single ordinary finite NNT interval.",
+      steps: "Assume individual randomisation, independent participants and complete one-year follow-up. In the NNT form enter 16 people with at least one admission among 200 programme participants and 28 among 200 controls. Count people, not repeated admissions. Interpret NNT 17 as the point estimate for preventing one additional person having an admission over one year. A risk-difference interval spanning zero gives NNT uncertainty extending through infinity into both benefit and harm; do not present a single ordinary finite NNT interval. The R script explicitly computes the same Miettinen\u2013Nurminen score interval as StatsDirect, including its finite-sample variance correction; it does not use the simpler Wald interval from two-sample prop.test().",
       operation: "MiscNumberNeededToTreat",
       help: "clinical_epidemiology/nnt.htm",
       columns: [],
-      r: '# Fictional individually randomised programme; complete one-year follow-up.\n# Events count people with at least one unplanned admission, not repeated admissions.\nevents <- c(16,28); totals <- c(200,200)\nrisk <- events/totals\nprint(data.frame(Group=c("Programme","Usual care"),Events=events,Total=totals,Risk=risk))\narr <- risk[2]-risk[1]\nprint(c(absolute_reduction=arr,relative_risk=risk[1]/risk[2],NNT=ceiling(1/arr)))\n# Keep the CI direction consistent with arr: usual care minus programme.\n# Base R uses its own interval method, which can differ from StatsDirect.\ncomparison <- prop.test(rev(events),rev(totals),correct=FALSE,conf.level=0.95)\narr_ci <- comparison$conf.int\ncat("95% CI for risk reduction, usual care minus programme:\\n")\nprint(arr_ci)\nprint(comparison)\n# This interval includes zero: benefit is not established and some harm is compatible.\n# Inverting an interval across zero requires separate benefit/harm branches via infinity.\n# Do not report its reciprocals as one ordinary finite NNT interval.\nbarplot(risk,names.arg=c("Programme","Usual care"),ylim=c(0,0.2),ylab="One-year event risk")\n',
-      contentVersion: "2026-10-01",
+      r: '# Fictional individually randomised programme; complete one-year follow-up.\n# Events count people with at least one admission, not repeated admissions.\nevents <- c(16,28); totals <- c(200,200)\nrisk <- events/totals\nprint(data.frame(Group=c("Programme","Usual care"),Events=events,Total=totals,Risk=risk))\narr <- risk[2]-risk[1]\nprint(c(absolute_reduction=arr,relative_risk=risk[1]/risk[2],NNT=if(arr==0) Inf else ceiling(1/abs(arr))))\ncat("NNT point-estimate direction:",if(arr>0) "benefit" else if(arr<0) "harm" else "no difference", "\\n")\n\n# Explicit Miettinen-Nurminen score interval, as used by StatsDirect.\n# This base-R helper inverts the constrained-binomial score with the N/(N-1)\n# variance correction. It also handles zero-event and all-event groups.\n# Its direction is the first risk minus the second. No extra R package is needed.\nmn_interval <- function(x1,n1,x0,n0,conf.level=0.95) {\n  args <- c(x1,n1,x0,n0,conf.level)\n  stopifnot(all(lengths(list(x1,n1,x0,n0,conf.level))==1), all(is.finite(args)),\n            n1>=1,n0>=1,x1>=0,x1<=n1,x0>=0,x0<=n0,\n            all(args[1:4]==floor(args[1:4])), conf.level>0,conf.level<1)\n  estimate <- x1/n1-x0/n0\n  critical <- qchisq(conf.level,df=1)\n  score <- function(d) {\n    lo <- max(0,-d); hi <- min(1,1-d)\n    derivative <- function(p0) {\n      term <- function(x,n,p) {\n        (if(x==0) 0 else x/p) - (if(x==n) 0 else (n-x)/(1-p))\n      }\n      term(x1,n1,p0+d)+term(x0,n0,p0)\n    }\n    if(lo==hi) p0 <- lo else {\n      rises <- (lo+d<=0 && x1>0) || (lo<=0 && x0>0) || derivative(lo)>0\n      falls <- (hi+d>=1 && x1<n1) || (hi>=1 && x0<n0) || derivative(hi)<0\n      p0 <- if(!rises) lo else if(!falls) hi else\n        uniroot(derivative,c(lo,hi),tol=1e-14,check.conv=TRUE)$root\n    }\n    p1 <- min(1,max(0,p0+d))\n    variance <- (p1*(1-p1)/n1+p0*(1-p0)/n0)*(n1+n0)/(n1+n0-1)\n    if(variance<=0) return(if(estimate==d) -critical else Inf)\n    (estimate-d)^2/variance-critical\n  }\n  limits <- c(lower=if(estimate<= -1) -1 else uniroot(score,c(-1,estimate),tol=1e-13,check.conv=TRUE)$root,\n              upper=if(estimate>= 1) 1 else uniroot(score,c(estimate,1),tol=1e-13,check.conv=TRUE)$root)\n  attr(limits,"conf.level") <- conf.level\n  limits\n}\n# Keep the interval direction consistent with arr: usual care minus programme.\narr_ci <- mn_interval(events[2],totals[2],events[1],totals[1])\ncat("95% Miettinen-Nurminen interval for risk reduction, usual care minus programme:\\n")\nprint(arr_ci,digits=10)\n# For the supplied counts this agrees with StatsDirect: about -0.001445 to 0.123548.\n# Recalculate when changing the counts; these reference limits are not new data.\n# This deliberately borderline example includes zero and possible harm.\n# Do not change the method to seek a smaller P value. No single method is best\n# for every design: these are independent binary outcomes, not paired/clustered data.\n# Inverting an interval across zero needs separate benefit/harm branches via infinity.\n# Do not report its reciprocals as one ordinary finite NNT interval.\nbarplot(risk,names.arg=c("Programme","Usual care"),ylim=c(0,0.2),ylab="One-year event risk")\n',
+      contentVersion: "2026-10-12",
       knowledgeSchemaVersion: 1,
       review: {
-        date: "2026-10-01",
-        status: "AI-assisted editorial and numerical checks; external subject-expert review pending",
+        date: "2026-10-12",
+        status: "AI-assisted editorial and numerical checks",
         authorship: "Original StatsDirect teaching material with fictional examples; not official examination content."
       },
       prerequisites: [
@@ -20838,7 +20854,7 @@ ${x.verification}`)).join("")) + section("Reflection", para(r2.reflection || "No
       ],
       workedExample: {
         design: "Fictional individually randomised study with complete one-year follow-up and an adverse binary outcome.",
-        interpretation: "Programme risk is 8% versus 14% in controls: ARR 6 percentage points, RR 4/7 and NNT point estimate 17. Assess uncertainty, harms and practical importance together."
+        interpretation: "Programme risk is 8% versus 14% in controls: ARR 6 percentage points, RR about 0.57 and NNT point estimate 17 over one year. For these counts, StatsDirect and the R script both give a Miettinen\u2013Nurminen 95% interval of about \u22120.14 to 12.35 percentage points (\u22120.001445 to 0.123548 on the proportion scale). Extra digits here identify the calculation, not clinical certainty. The interval includes no effect and possible harm; crossing a conventional significance threshold does not create a sharp change in evidence."
       },
       teachingPrompts: [
         {
@@ -20854,7 +20870,7 @@ ${x.verification}`)).join("")) + section("Reflection", para(r2.reflection || "No
       ],
       rProgression: {
         menus: "Enter people with an event and total participants, keeping group labels clear.",
-        bridge: "Trace ARR, RR and ceiling(1/arr) in R.",
+        bridge: "Match the Miettinen\u2013Nurminen risk-difference interval in R to StatsDirect; the helper makes the method explicit.",
         coding: "Change baseline risk and examine absolute benefit without claiming a new trial result."
       },
       sources: [
@@ -20872,6 +20888,14 @@ ${x.verification}`)).join("")) + section("Reflection", para(r2.reflection || "No
           url: "https://www.rcgp.org.uk/mrcgp-exams/applied-knowledge-test/akt-preparing",
           scope: "Data interpretation and critical appraisal in examination preparation; original StatsDirect questions only.",
           checkedAt: "2026-10-01",
+          use: "Editorial reference and further reading; no source text or examination items reproduced."
+        },
+        {
+          id: "statsdirect-nnt",
+          title: "StatsDirect: Number needed to treat",
+          url: "https://www.statsdirect.com/help/clinical_epidemiology/nnt.htm",
+          scope: "Miettinen\u2013Nurminen score intervals for independent risk differences and their inversion for NNT.",
+          checkedAt: "2026-10-12",
           use: "Editorial reference and further reading; no source text or examination items reproduced."
         }
       ],
@@ -20924,7 +20948,7 @@ ${x.verification}`)).join("")) + section("Reflection", para(r2.reflection || "No
       knowledgeSchemaVersion: 1,
       review: {
         date: "2026-10-01",
-        status: "AI-assisted editorial and numerical checks; external subject-expert review pending",
+        status: "AI-assisted editorial and numerical checks",
         authorship: "Original StatsDirect teaching material with fictional examples; not official examination content."
       },
       prerequisites: [
@@ -21043,7 +21067,7 @@ ${x.verification}`)).join("")) + section("Reflection", para(r2.reflection || "No
       knowledgeSchemaVersion: 1,
       review: {
         date: "2026-10-01",
-        status: "AI-assisted editorial and numerical checks; external subject-expert review pending",
+        status: "AI-assisted editorial and numerical checks",
         authorship: "Original StatsDirect teaching material with fictional examples; not official examination content."
       },
       prerequisites: [
@@ -21197,7 +21221,7 @@ ${x.verification}`)).join("")) + section("Reflection", para(r2.reflection || "No
       knowledgeSchemaVersion: 1,
       review: {
         date: "2026-10-01",
-        status: "AI-assisted editorial and numerical checks; external subject-expert review pending",
+        status: "AI-assisted editorial and numerical checks",
         authorship: "Original StatsDirect teaching material with fictional examples; not official examination content."
       },
       prerequisites: [
@@ -21361,7 +21385,7 @@ ${x.verification}`)).join("")) + section("Reflection", para(r2.reflection || "No
       knowledgeSchemaVersion: 1,
       review: {
         date: "2026-10-01",
-        status: "AI-assisted editorial and numerical checks; external subject-expert review pending",
+        status: "AI-assisted editorial and numerical checks",
         authorship: "Original StatsDirect teaching material with fictional examples; not official examination content."
       },
       prerequisites: [
@@ -21531,7 +21555,7 @@ ${x.verification}`)).join("")) + section("Reflection", para(r2.reflection || "No
       knowledgeSchemaVersion: 1,
       review: {
         date: "2026-10-01",
-        status: "AI-assisted editorial and numerical checks; external subject-expert review pending",
+        status: "AI-assisted editorial and numerical checks",
         authorship: "Original StatsDirect teaching material with fictional examples; not official examination content."
       },
       prerequisites: [
@@ -21665,7 +21689,7 @@ ${x.verification}`)).join("")) + section("Reflection", para(r2.reflection || "No
       objective: "Explain inverse-variance weighting and decide whether a pooled effect answers a coherent question.",
       summary: "Pooling requires comparable populations, contrasts, outcomes and follow-up, together with an assessment of bias and dependence. Inverse-variance weights favour more precise estimates. A fixed-effect illustration assumes a common underlying effect. Random-effects models allow between-study variation but cannot repair biased studies or justify combining incompatible questions.",
       challenge: "Three studies estimate the same risk difference, but one has twice the standard error of the others. Should it receive twice the weight, half the weight or a quarter of the weight?",
-      steps: "The fictional independent studies report one-year adverse-outcome risk differences (programme minus control) of \u22120.04, \u22120.08 and \u22120.03, with SEs 0.02, 0.04 and 0.02. In Summary meta-analysis choose Risk Difference, then Standard Error, and select the two named columns; use default study labels and 95% confidence. Compare the fixed-effect estimate with R: \u22120.04, 95% normal interval about \u22120.0661 to \u22120.0139. This exercise assumes approximately normal estimates and a common underlying effect; it is not a complete systematic review.",
+      steps: "The fictional independent studies report one-year adverse-outcome risk differences (programme minus control) of \u22120.04, \u22120.08 and \u22120.03, with SEs 0.02, 0.04 and 0.02. In Summary meta-analysis choose Risk Difference, then Standard Error, and select the two named columns; use default study labels and 95% confidence. Compare the fixed-effect estimate with R: \u22124 percentage points, with a 95% normal interval of about \u22126.6 to \u22121.4 percentage points. Both use the inverse-variance common-effect estimate and a normal critical value. The R output retains unrounded values. This exercise assumes approximately normal estimates and a common underlying effect; it is not a complete systematic review.",
       operation: "MetaSummary",
       help: "meta_analysis/summary.htm",
       columns: [
@@ -21686,12 +21710,40 @@ ${x.verification}`)).join("")) + section("Reflection", para(r2.reflection || "No
           ]
         }
       ],
-      r: '# Three fictional independent trials: same adverse outcome and one-year horizon.\n# Risk difference = programme minus control. SE, not SD, is supplied.\neffect <- c(-0.04,-0.08,-0.03); se <- c(0.02,0.04,0.02)\nweight <- 1/se^2\npooled <- sum(weight*effect)/sum(weight)\npooled_se <- sqrt(1/sum(weight))\npooled_ci <- pooled+c(-1,1)*qnorm(0.975)*pooled_se\nq <- sum(weight*(effect-pooled)^2)\nprint(data.frame(Study=1:3,Risk_difference=effect,SE=se,Percent_weight=100*weight/sum(weight)))\nprint(c(Pooled=pooled,SE=pooled_se,Lower=pooled_ci[1],Upper=pooled_ci[2],Q=q))\nlower <- effect-qnorm(0.975)*se; upper <- effect+qnorm(0.975)*se\nplot(effect,1:3,pch=19,xlim=range(c(lower,upper,0)),ylim=c(0,3.5),yaxt="n",xlab="Risk difference: programme minus control",ylab="",main="Fictional fixed-effect illustration")\nsegments(lower,1:3,upper,1:3); abline(v=0,lty=2)\npoints(pooled,0,pch=18); segments(pooled_ci[1],0,pooled_ci[2],0)\naxis(2,at=0:3,labels=c("Pooled","Study 1","Study 2","Study 3"),las=1)\n# The interval estimates a common effect under the model; not a prediction interval.\n# Few studies give weak information about heterogeneity and publication bias.\n',
-      contentVersion: "2026-10-01",
+      r: `# Three fictional independent trials: same adverse outcome and one-year horizon.
+# Risk difference = programme minus control. SE, not SD, is supplied.
+effect <- c(-0.04,-0.08,-0.03); se <- c(0.02,0.04,0.02)
+weight <- 1/se^2
+pooled <- sum(weight*effect)/sum(weight)
+pooled_se <- sqrt(1/sum(weight))
+pooled_ci <- pooled+c(-1,1)*qnorm(0.975)*pooled_se
+q <- sum(weight*(effect-pooled)^2)
+print(data.frame(Study=1:3,Risk_difference=effect,SE=se,Percent_weight=100*weight/sum(weight)))
+print(c(Pooled=pooled,SE=pooled_se,Lower=pooled_ci[1],Upper=pooled_ci[2],Q=q))
+lower <- effect-qnorm(0.975)*se; upper <- effect+qnorm(0.975)*se
+plot(effect,1:3,pch=19,xlim=range(c(lower,upper,0)),ylim=c(0,3.5),yaxt="n",xlab="Risk difference: programme minus control",ylab="",main="Fictional fixed-effect illustration")
+segments(lower,1:3,upper,1:3); abline(v=0,lty=2)
+points(pooled,0,pch=18); segments(pooled_ci[1],0,pooled_ci[2],0)
+axis(2,at=0:3,labels=c("Pooled","Study 1","Study 2","Study 3"),las=1)
+# The interval estimates a common effect under the model; not a prediction interval.
+# Few studies give weak information about heterogeneity and publication bias.
+
+# Optional further learning: conventional Q-based I-squared.
+# Change FALSE to TRUE to run this extension after the main lesson.
+if (FALSE) {
+  study_df <- length(effect)-1
+  i_squared <- if(q>0) 100*max(0,(q-study_df)/q) else 0
+  print(c(Q=q,df=study_df,I_squared_percent=i_squared))
+  # Here I-squared is 0%, after truncating a negative untruncated estimate.
+  # Three studies give little information: 0% does not establish homogeneity.
+  # Do not select fixed versus random effects just from Q's P value or I-squared.
+}
+`,
+      contentVersion: "2026-10-12",
       knowledgeSchemaVersion: 1,
       review: {
-        date: "2026-10-01",
-        status: "AI-assisted editorial and numerical checks; external subject-expert review pending",
+        date: "2026-10-12",
+        status: "AI-assisted editorial and numerical checks",
         authorship: "Original StatsDirect teaching material with fictional examples; not official examination content."
       },
       prerequisites: [
@@ -21711,7 +21763,7 @@ ${x.verification}`)).join("")) + section("Reflection", para(r2.reflection || "No
         },
         {
           term: "Heterogeneity",
-          explanation: "A pooled-effect interval does not show the spread of true effects across settings. Examine clinical differences and heterogeneity uncertainty; a non-significant heterogeneity test with few studies proves little."
+          explanation: "A pooled-effect interval does not show the spread of true effects across settings. Examine clinical differences and heterogeneity uncertainty; a non-significant heterogeneity test with few studies proves little. Optional extension: conventional Q-based I\xB2 estimates the percentage of variation in study estimates attributable to heterogeneity. Here Q = 1.25 and df = 2, so max(0, (Q \u2212 df)/Q) \xD7 100 = 0%. This truncated estimate is very uncertain with three studies and is not evidence of identical underlying effects."
         },
         {
           term: "Evidence selection",
@@ -21747,7 +21799,7 @@ ${x.verification}`)).join("")) + section("Reflection", para(r2.reflection || "No
       rProgression: {
         menus: "Select risk difference and standard error in the summary form.",
         bridge: "Trace the weighted mean and pooled SE in R.",
-        coding: "Increase one SE and predict the weight change before rerunning; discuss when pooling would be inappropriate."
+        coding: "Increase one SE and predict the weight change before rerunning; discuss when pooling would be inappropriate. Optional further learning: run the I-squared block at the end and explain why an estimate of zero from three studies does not prove homogeneity."
       },
       sources: [
         {
@@ -21755,7 +21807,7 @@ ${x.verification}`)).join("")) + section("Reflection", para(r2.reflection || "No
           title: "Cochrane Handbook, chapter 10: Meta-analysis",
           url: "https://www.cochrane.org/authors/handbooks-and-manuals/handbook/current/chapter-10",
           scope: "Inverse-variance pooling, heterogeneity and interpretation of fixed-effect and random-effects analyses.",
-          checkedAt: "2026-10-01",
+          checkedAt: "2026-10-12",
           use: "Editorial reference and further reading; no source text or examination items reproduced."
         },
         {
@@ -22331,7 +22383,7 @@ ${c.text}` : c.text }));
       knowledgeSchemaVersion: 1,
       review: {
         date: "2026-10-01",
-        status: "AI-assisted editorial and numerical checks; external subject-expert review pending",
+        status: "AI-assisted editorial and numerical checks",
         authorship: "Original StatsDirect teaching material with fictional examples; not official examination content."
       },
       prerequisites: [],
@@ -22425,7 +22477,7 @@ ${c.text}` : c.text }));
       knowledgeSchemaVersion: 1,
       review: {
         date: "2026-10-01",
-        status: "AI-assisted editorial and numerical checks; external subject-expert review pending",
+        status: "AI-assisted editorial and numerical checks",
         authorship: "Original StatsDirect teaching material with fictional examples; not official examination content."
       },
       prerequisites: [
@@ -22552,7 +22604,7 @@ ${c.text}` : c.text }));
       knowledgeSchemaVersion: 1,
       review: {
         date: "2026-10-01",
-        status: "AI-assisted editorial and numerical checks; external subject-expert review pending",
+        status: "AI-assisted editorial and numerical checks",
         authorship: "Original StatsDirect teaching material with fictional examples; not official examination content."
       },
       prerequisites: [
@@ -22639,7 +22691,7 @@ ${c.text}` : c.text }));
       objective: "Separate standard deviation from standard error and confidence intervals.",
       summary: "Standard deviation describes variation between observations. Standard error describes sampling variation of an estimator. For independent observations from the same population, the mean has SE = population SD / sqrt(n), estimated using the sample SD. A nominal 95% confidence procedure targets 95% repeated-sampling coverage under its assumptions. These 12 waits are skewed: a small-sample t interval is an illustration to scrutinise, not an assurance of reliable coverage.",
       challenge: "For independent observations from the same population with a fixed, finite variance, why does quadrupling sample size halve the theoretical standard error of the mean? Why might the sample SD and estimated SE still vary between samples?",
-      steps: "Open the descriptive summary for the fictional waiting times. Compare mean, median, SD and the 95% confidence interval. Inspect the long wait and the distribution before interpreting the small-sample t interval. Do not delete an observation merely because it is large. The appropriate summary depends on whether the question concerns an average, a typical wait or the long-wait tail.",
+      steps: "Open the descriptive summary for the fictional waiting times. Compare mean, median, SD and the 95% confidence interval. Inspect the long wait and the distribution before interpreting the small-sample t interval. Do not delete an observation merely because it is large. The appropriate summary depends on whether the question concerns an average, a typical wait or the long-wait tail. For these 12 values, StatsDirect and R t.test() both use a Student t interval for the mean with 11 degrees of freedom: approximately 13.8 to 24.8 minutes. Agreement between programs checks the calculation, not whether the model assumptions fit these skewed data.",
       operation: "UnivariateSummary",
       help: "basic_descriptive_statistics/univariate_summary.htm",
       columns: [
@@ -22661,15 +22713,15 @@ ${c.text}` : c.text }));
           ]
         }
       ],
-      r: '# Fictional clinic waits; no patient data.\nwait <- c(12,15,14,18,21,16,19,13,45,17,20,22)\nprint(data.frame(Waiting_minutes=wait))\nprint(c(mean=mean(wait), median=median(wait), SD=sd(wait), SE=sd(wait)/sqrt(length(wait))))\n# An illustrative normal-theory mean CI: only 12 skewed observations.\n# Exact t coverage assumes independent normal observations; that is questionable here.\n# A non-significant normality test would not establish the assumption.\nmean_ci <- t.test(wait, conf.level=0.95)$conf.int\ncat("Illustrative 95% t interval for the mean; check assumptions:\\n")\nprint(mean_ci)\nhist(wait, breaks=8, main="Fictional clinic waiting times", xlab="Minutes")\n# Try: explain why mean and median differ; inspect the outlier without silently deleting it.\n',
+      r: '# Fictional clinic waits; no patient data.\nwait <- c(12,15,14,18,21,16,19,13,45,17,20,22)\nprint(data.frame(Waiting_minutes=wait))\nprint(c(mean=mean(wait), median=median(wait), SD=sd(wait), SE=sd(wait)/sqrt(length(wait))))\n# An illustrative Student t mean CI with 11 df, as in StatsDirect: only 12 skewed observations.\n# Exact t coverage assumes independent normal observations; that is questionable here.\n# A non-significant normality test would not establish the assumption.\nmean_ci <- t.test(wait, conf.level=0.95)$conf.int\ncat("Illustrative 95% t interval for the mean; check assumptions:\\n")\nprint(mean_ci)\n# Describe this as about 13.8 to 24.8 minutes; keep full values for calculations.\n# Extra displayed decimals do not make the assumptions more credible.\nhist(wait, breaks=8, main="Fictional clinic waiting times", xlab="Minutes")\n# Try: explain why mean and median differ; inspect the outlier without silently deleting it.\n',
       previousChallenges: [
         "Why would collecting four times as many independent observations halve the standard error but not necessarily change the standard deviation?"
       ],
-      contentVersion: "2026-10-01",
+      contentVersion: "2026-10-12",
       knowledgeSchemaVersion: 1,
       review: {
-        date: "2026-10-01",
-        status: "AI-assisted editorial and numerical checks; external subject-expert review pending",
+        date: "2026-10-12",
+        status: "AI-assisted editorial and numerical checks",
         authorship: "Original StatsDirect teaching material with fictional examples; not official examination content."
       },
       prerequisites: [],
@@ -22704,7 +22756,7 @@ ${c.text}` : c.text }));
       ],
       workedExample: {
         design: "Twelve fictional independent clinic waits, including a long wait of 45 minutes.",
-        interpretation: "The mean is 19.33 minutes and the median 17.5. The small-sample t interval requires scrutiny because this example is skewed; a narrow interval would not rule out selection bias."
+        interpretation: "The mean is about 19.3 minutes and the median 17.5. The illustrative 95% Student t interval for the population mean is about 13.8 to 24.8 minutes in both StatsDirect and R (11 degrees of freedom). With only 12 skewed observations, its coverage assumptions need scrutiny. One decimal place is enough for this explanation; extra software digits do not imply reliable precision, and a narrow interval would not rule out selection bias."
       },
       teachingPrompts: [
         {
@@ -22739,6 +22791,14 @@ ${c.text}` : c.text }));
           scope: "Data interpretation and critical appraisal in examination preparation; original StatsDirect questions only.",
           checkedAt: "2026-10-01",
           use: "Editorial reference and further reading; no source text or examination items reproduced."
+        },
+        {
+          id: "r-t",
+          title: "R: Student t test",
+          url: "https://stat.ethz.ch/R-manual/R-devel/library/stats/html/t.test.html",
+          scope: "The one-sample t interval for the population mean.",
+          checkedAt: "2026-10-12",
+          use: "Editorial reference and further reading; no source text or examination items reproduced."
         }
       ],
       assessmentIds: [
@@ -22754,16 +22814,16 @@ ${c.text}` : c.text }));
       objective: "Choose the right denominator for sensitivity, specificity and predictive value.",
       summary: "Sensitivity is the proportion positive among people with the condition; specificity is the proportion negative among those without it. Predictive values condition on the test result instead. The fictional sample represents a population with 10% prevalence and a reliable reference diagnosis. Predictive values depend on prevalence; sensitivity and specificity also need to be applicable to the intended case mix, threshold and reference standard.",
       challenge: "If the condition becomes rarer while sensitivity and specificity stay the same, what happens to the proportion of positive results that are false positives?",
-      steps: "In the diagnostic grid, columns represent disease present/absent and rows test positive/negative: enter top row 72, 81 and bottom row 18, 729. These are true positives, false positives, false negatives and true negatives respectively. These fictional independent observations give sensitivity 80%, specificity 90%, PPV about 47.1% and NPV about 97.6%. The R example labels a 95% exact binomial interval for sensitivity; different interval methods need not match numerically.",
+      steps: "In the diagnostic grid, columns represent disease present/absent and rows test positive/negative: enter top row 72, 81 and bottom row 18, 729. These are true positives, false positives, false negatives and true negatives respectively. These fictional independent observations give sensitivity 80%, specificity 90%, PPV about 47.1% and NPV about 97.6%. For sensitivity, StatsDirect and R binom.test() both use the Clopper\u2013Pearson exact binomial method: the 95% interval is about 70.2% to 87.7%. This interval concerns sensitivity, not PPV; matching inputs, confidence level and method should give matching limits apart from rounding.",
       operation: "MiscDiagnostic",
       help: "clinical_epidemiology/diagnostic.htm",
       columns: [],
-      r: '# Fictional diagnostic study. Rows: test result; columns: disease status.\ntp <- 72; fn <- 18; fp <- 81; tn <- 729\ncounts <- matrix(c(tp,fp,fn,tn),nrow=2,byrow=TRUE,dimnames=list(Test=c("Positive","Negative"),Disease=c("Present","Absent")))\nprint(counts)\nprint(c(sensitivity=tp/(tp+fn), specificity=tn/(tn+fp), PPV=tp/(tp+fp), NPV=tn/(tn+fn)))\n# Treat diagnoses as reliable and observations as independent.\n# This is a sensitivity interval, not an interval for all four measures.\nsensitivity_ci <- binom.test(tp,tp+fn,conf.level=0.95)$conf.int\ncat("95% exact binomial CI for sensitivity (may be conservative):\\n")\nprint(sensitivity_ci)\nbarplot(counts, beside=TRUE, legend.text=TRUE, main="Fictional diagnostic counts", ylab="People")\n',
-      contentVersion: "2026-10-01",
+      r: '# Fictional diagnostic study. Rows: test result; columns: disease status.\ntp <- 72; fn <- 18; fp <- 81; tn <- 729\ncounts <- matrix(c(tp,fp,fn,tn),nrow=2,byrow=TRUE,dimnames=list(Test=c("Positive","Negative"),Disease=c("Present","Absent")))\nprint(counts)\nprint(c(sensitivity=tp/(tp+fn), specificity=tn/(tn+fp), PPV=tp/(tp+fp), NPV=tn/(tn+fn)))\n# Treat diagnoses as reliable and observations as independent.\n# StatsDirect and binom.test use the same Clopper-Pearson exact binomial method.\n# This is a sensitivity interval, not an interval for all four measures.\nsensitivity_ci <- binom.test(tp,tp+fn,conf.level=0.95)$conf.int\ncat("95% Clopper-Pearson exact CI for sensitivity (may be conservative):\\n")\nprint(sensitivity_ci)\nbarplot(counts, beside=TRUE, legend.text=TRUE, main="Fictional diagnostic counts", ylab="People")\n',
+      contentVersion: "2026-10-12",
       knowledgeSchemaVersion: 1,
       review: {
-        date: "2026-10-01",
-        status: "AI-assisted editorial and numerical checks; external subject-expert review pending",
+        date: "2026-10-12",
+        status: "AI-assisted editorial and numerical checks",
         authorship: "Original StatsDirect teaching material with fictional examples; not official examination content."
       },
       prerequisites: [
@@ -22800,7 +22860,7 @@ ${c.text}` : c.text }));
       ],
       workedExample: {
         design: "Fictional representative sample with a reliable reference diagnosis, 90 cases and 810 non-cases; a fixed test threshold.",
-        interpretation: "72 true positives and 81 false positives give PPV 72/153, about 47.1%, despite 80% sensitivity and 90% specificity. A positive result is not a certain diagnosis."
+        interpretation: "72 true positives and 81 false positives give PPV 72/153, about 47.1%, despite 80% sensitivity and 90% specificity. A positive result is not a certain diagnosis. Sensitivity is 80%, with the same 95% Clopper\u2013Pearson interval of about 70.2% to 87.7% in StatsDirect and this R example."
       },
       teachingPrompts: [
         {
@@ -22835,6 +22895,14 @@ ${c.text}` : c.text }));
           scope: "Data interpretation and critical appraisal in examination preparation; original StatsDirect questions only.",
           checkedAt: "2026-10-01",
           use: "Editorial reference and further reading; no source text or examination items reproduced."
+        },
+        {
+          id: "r-binom",
+          title: "R: Exact binomial test",
+          url: "https://stat.ethz.ch/R-manual/R-devel/library/stats/html/binom.test.html",
+          scope: "Clopper\u2013Pearson intervals returned by binom.test().",
+          checkedAt: "2026-10-12",
+          use: "Editorial reference and further reading; no source text or examination items reproduced."
         }
       ],
       assessmentIds: [
@@ -22849,18 +22917,18 @@ ${c.text}` : c.text }));
       title: "Absolute and relative benefit",
       topic: "Risk, treatment effects and NNT",
       objective: "Interpret absolute risk reduction, relative risk and the follow-up period.",
-      summary: "Over one year, 28/200 controls and 16/200 programme participants have at least one unplanned admission. The estimated absolute risk reduction (control minus programme) is 6 percentage points; programme-to-control RR is about 0.57 and NNT for benefit rounds up to 17. These are uncertain point estimates. The illustrated risk-difference interval includes zero and possible harm, so it does not establish benefit.",
+      summary: "Over one year, 28/200 controls and 16/200 programme participants have at least one unplanned admission. The estimated absolute risk reduction (control minus programme) is 6 percentage points; programme-to-control RR is about 0.57 and NNT for benefit rounds up to 17. These are uncertain point estimates. The illustrated risk-difference interval includes zero and possible harm, so it does not establish benefit. This example was chosen to lie near the conventional 5% significance boundary: interpret the effect size and uncertainty, and do not choose a method just to obtain significance.",
       challenge: "Would the same relative risk imply the same absolute benefit in a population with a much lower baseline risk?",
-      steps: "Assume individual randomisation, independent participants and complete one-year follow-up. In the NNT form enter 16 people with at least one admission among 200 programme participants and 28 among 200 controls. Count people, not repeated admissions. Interpret NNT 17 as the point estimate for preventing one additional person having an admission over one year. A risk-difference interval spanning zero gives NNT uncertainty extending through infinity into both benefit and harm; do not present a single ordinary finite NNT interval.",
+      steps: "Assume individual randomisation, independent participants and complete one-year follow-up. In the NNT form enter 16 people with at least one admission among 200 programme participants and 28 among 200 controls. Count people, not repeated admissions. Interpret NNT 17 as the point estimate for preventing one additional person having an admission over one year. A risk-difference interval spanning zero gives NNT uncertainty extending through infinity into both benefit and harm; do not present a single ordinary finite NNT interval. The R script explicitly computes the same Miettinen\u2013Nurminen score interval as StatsDirect, including its finite-sample variance correction; it does not use the simpler Wald interval from two-sample prop.test().",
       operation: "MiscNumberNeededToTreat",
       help: "clinical_epidemiology/nnt.htm",
       columns: [],
-      r: '# Fictional individually randomised programme; complete one-year follow-up.\n# Events count people with at least one unplanned admission, not repeated admissions.\nevents <- c(16,28); totals <- c(200,200)\nrisk <- events/totals\nprint(data.frame(Group=c("Programme","Usual care"),Events=events,Total=totals,Risk=risk))\narr <- risk[2]-risk[1]\nprint(c(absolute_reduction=arr,relative_risk=risk[1]/risk[2],NNT=ceiling(1/arr)))\n# Keep the CI direction consistent with arr: usual care minus programme.\n# Base R uses its own interval method, which can differ from StatsDirect.\ncomparison <- prop.test(rev(events),rev(totals),correct=FALSE,conf.level=0.95)\narr_ci <- comparison$conf.int\ncat("95% CI for risk reduction, usual care minus programme:\\n")\nprint(arr_ci)\nprint(comparison)\n# This interval includes zero: benefit is not established and some harm is compatible.\n# Inverting an interval across zero requires separate benefit/harm branches via infinity.\n# Do not report its reciprocals as one ordinary finite NNT interval.\nbarplot(risk,names.arg=c("Programme","Usual care"),ylim=c(0,0.2),ylab="One-year event risk")\n',
-      contentVersion: "2026-10-01",
+      r: '# Fictional individually randomised programme; complete one-year follow-up.\n# Events count people with at least one admission, not repeated admissions.\nevents <- c(16,28); totals <- c(200,200)\nrisk <- events/totals\nprint(data.frame(Group=c("Programme","Usual care"),Events=events,Total=totals,Risk=risk))\narr <- risk[2]-risk[1]\nprint(c(absolute_reduction=arr,relative_risk=risk[1]/risk[2],NNT=if(arr==0) Inf else ceiling(1/abs(arr))))\ncat("NNT point-estimate direction:",if(arr>0) "benefit" else if(arr<0) "harm" else "no difference", "\\n")\n\n# Explicit Miettinen-Nurminen score interval, as used by StatsDirect.\n# This base-R helper inverts the constrained-binomial score with the N/(N-1)\n# variance correction. It also handles zero-event and all-event groups.\n# Its direction is the first risk minus the second. No extra R package is needed.\nmn_interval <- function(x1,n1,x0,n0,conf.level=0.95) {\n  args <- c(x1,n1,x0,n0,conf.level)\n  stopifnot(all(lengths(list(x1,n1,x0,n0,conf.level))==1), all(is.finite(args)),\n            n1>=1,n0>=1,x1>=0,x1<=n1,x0>=0,x0<=n0,\n            all(args[1:4]==floor(args[1:4])), conf.level>0,conf.level<1)\n  estimate <- x1/n1-x0/n0\n  critical <- qchisq(conf.level,df=1)\n  score <- function(d) {\n    lo <- max(0,-d); hi <- min(1,1-d)\n    derivative <- function(p0) {\n      term <- function(x,n,p) {\n        (if(x==0) 0 else x/p) - (if(x==n) 0 else (n-x)/(1-p))\n      }\n      term(x1,n1,p0+d)+term(x0,n0,p0)\n    }\n    if(lo==hi) p0 <- lo else {\n      rises <- (lo+d<=0 && x1>0) || (lo<=0 && x0>0) || derivative(lo)>0\n      falls <- (hi+d>=1 && x1<n1) || (hi>=1 && x0<n0) || derivative(hi)<0\n      p0 <- if(!rises) lo else if(!falls) hi else\n        uniroot(derivative,c(lo,hi),tol=1e-14,check.conv=TRUE)$root\n    }\n    p1 <- min(1,max(0,p0+d))\n    variance <- (p1*(1-p1)/n1+p0*(1-p0)/n0)*(n1+n0)/(n1+n0-1)\n    if(variance<=0) return(if(estimate==d) -critical else Inf)\n    (estimate-d)^2/variance-critical\n  }\n  limits <- c(lower=if(estimate<= -1) -1 else uniroot(score,c(-1,estimate),tol=1e-13,check.conv=TRUE)$root,\n              upper=if(estimate>= 1) 1 else uniroot(score,c(estimate,1),tol=1e-13,check.conv=TRUE)$root)\n  attr(limits,"conf.level") <- conf.level\n  limits\n}\n# Keep the interval direction consistent with arr: usual care minus programme.\narr_ci <- mn_interval(events[2],totals[2],events[1],totals[1])\ncat("95% Miettinen-Nurminen interval for risk reduction, usual care minus programme:\\n")\nprint(arr_ci,digits=10)\n# For the supplied counts this agrees with StatsDirect: about -0.001445 to 0.123548.\n# Recalculate when changing the counts; these reference limits are not new data.\n# This deliberately borderline example includes zero and possible harm.\n# Do not change the method to seek a smaller P value. No single method is best\n# for every design: these are independent binary outcomes, not paired/clustered data.\n# Inverting an interval across zero needs separate benefit/harm branches via infinity.\n# Do not report its reciprocals as one ordinary finite NNT interval.\nbarplot(risk,names.arg=c("Programme","Usual care"),ylim=c(0,0.2),ylab="One-year event risk")\n',
+      contentVersion: "2026-10-12",
       knowledgeSchemaVersion: 1,
       review: {
-        date: "2026-10-01",
-        status: "AI-assisted editorial and numerical checks; external subject-expert review pending",
+        date: "2026-10-12",
+        status: "AI-assisted editorial and numerical checks",
         authorship: "Original StatsDirect teaching material with fictional examples; not official examination content."
       },
       prerequisites: [
@@ -22898,7 +22966,7 @@ ${c.text}` : c.text }));
       ],
       workedExample: {
         design: "Fictional individually randomised study with complete one-year follow-up and an adverse binary outcome.",
-        interpretation: "Programme risk is 8% versus 14% in controls: ARR 6 percentage points, RR 4/7 and NNT point estimate 17. Assess uncertainty, harms and practical importance together."
+        interpretation: "Programme risk is 8% versus 14% in controls: ARR 6 percentage points, RR about 0.57 and NNT point estimate 17 over one year. For these counts, StatsDirect and the R script both give a Miettinen\u2013Nurminen 95% interval of about \u22120.14 to 12.35 percentage points (\u22120.001445 to 0.123548 on the proportion scale). Extra digits here identify the calculation, not clinical certainty. The interval includes no effect and possible harm; crossing a conventional significance threshold does not create a sharp change in evidence."
       },
       teachingPrompts: [
         {
@@ -22914,7 +22982,7 @@ ${c.text}` : c.text }));
       ],
       rProgression: {
         menus: "Enter people with an event and total participants, keeping group labels clear.",
-        bridge: "Trace ARR, RR and ceiling(1/arr) in R.",
+        bridge: "Match the Miettinen\u2013Nurminen risk-difference interval in R to StatsDirect; the helper makes the method explicit.",
         coding: "Change baseline risk and examine absolute benefit without claiming a new trial result."
       },
       sources: [
@@ -22932,6 +23000,14 @@ ${c.text}` : c.text }));
           url: "https://www.rcgp.org.uk/mrcgp-exams/applied-knowledge-test/akt-preparing",
           scope: "Data interpretation and critical appraisal in examination preparation; original StatsDirect questions only.",
           checkedAt: "2026-10-01",
+          use: "Editorial reference and further reading; no source text or examination items reproduced."
+        },
+        {
+          id: "statsdirect-nnt",
+          title: "StatsDirect: Number needed to treat",
+          url: "https://www.statsdirect.com/help/clinical_epidemiology/nnt.htm",
+          scope: "Miettinen\u2013Nurminen score intervals for independent risk differences and their inversion for NNT.",
+          checkedAt: "2026-10-12",
           use: "Editorial reference and further reading; no source text or examination items reproduced."
         }
       ],
@@ -22984,7 +23060,7 @@ ${c.text}` : c.text }));
       knowledgeSchemaVersion: 1,
       review: {
         date: "2026-10-01",
-        status: "AI-assisted editorial and numerical checks; external subject-expert review pending",
+        status: "AI-assisted editorial and numerical checks",
         authorship: "Original StatsDirect teaching material with fictional examples; not official examination content."
       },
       prerequisites: [
@@ -23103,7 +23179,7 @@ ${c.text}` : c.text }));
       knowledgeSchemaVersion: 1,
       review: {
         date: "2026-10-01",
-        status: "AI-assisted editorial and numerical checks; external subject-expert review pending",
+        status: "AI-assisted editorial and numerical checks",
         authorship: "Original StatsDirect teaching material with fictional examples; not official examination content."
       },
       prerequisites: [
@@ -23257,7 +23333,7 @@ ${c.text}` : c.text }));
       knowledgeSchemaVersion: 1,
       review: {
         date: "2026-10-01",
-        status: "AI-assisted editorial and numerical checks; external subject-expert review pending",
+        status: "AI-assisted editorial and numerical checks",
         authorship: "Original StatsDirect teaching material with fictional examples; not official examination content."
       },
       prerequisites: [
@@ -23421,7 +23497,7 @@ ${c.text}` : c.text }));
       knowledgeSchemaVersion: 1,
       review: {
         date: "2026-10-01",
-        status: "AI-assisted editorial and numerical checks; external subject-expert review pending",
+        status: "AI-assisted editorial and numerical checks",
         authorship: "Original StatsDirect teaching material with fictional examples; not official examination content."
       },
       prerequisites: [
@@ -23591,7 +23667,7 @@ ${c.text}` : c.text }));
       knowledgeSchemaVersion: 1,
       review: {
         date: "2026-10-01",
-        status: "AI-assisted editorial and numerical checks; external subject-expert review pending",
+        status: "AI-assisted editorial and numerical checks",
         authorship: "Original StatsDirect teaching material with fictional examples; not official examination content."
       },
       prerequisites: [
@@ -23725,7 +23801,7 @@ ${c.text}` : c.text }));
       objective: "Explain inverse-variance weighting and decide whether a pooled effect answers a coherent question.",
       summary: "Pooling requires comparable populations, contrasts, outcomes and follow-up, together with an assessment of bias and dependence. Inverse-variance weights favour more precise estimates. A fixed-effect illustration assumes a common underlying effect. Random-effects models allow between-study variation but cannot repair biased studies or justify combining incompatible questions.",
       challenge: "Three studies estimate the same risk difference, but one has twice the standard error of the others. Should it receive twice the weight, half the weight or a quarter of the weight?",
-      steps: "The fictional independent studies report one-year adverse-outcome risk differences (programme minus control) of \u22120.04, \u22120.08 and \u22120.03, with SEs 0.02, 0.04 and 0.02. In Summary meta-analysis choose Risk Difference, then Standard Error, and select the two named columns; use default study labels and 95% confidence. Compare the fixed-effect estimate with R: \u22120.04, 95% normal interval about \u22120.0661 to \u22120.0139. This exercise assumes approximately normal estimates and a common underlying effect; it is not a complete systematic review.",
+      steps: "The fictional independent studies report one-year adverse-outcome risk differences (programme minus control) of \u22120.04, \u22120.08 and \u22120.03, with SEs 0.02, 0.04 and 0.02. In Summary meta-analysis choose Risk Difference, then Standard Error, and select the two named columns; use default study labels and 95% confidence. Compare the fixed-effect estimate with R: \u22124 percentage points, with a 95% normal interval of about \u22126.6 to \u22121.4 percentage points. Both use the inverse-variance common-effect estimate and a normal critical value. The R output retains unrounded values. This exercise assumes approximately normal estimates and a common underlying effect; it is not a complete systematic review.",
       operation: "MetaSummary",
       help: "meta_analysis/summary.htm",
       columns: [
@@ -23746,12 +23822,40 @@ ${c.text}` : c.text }));
           ]
         }
       ],
-      r: '# Three fictional independent trials: same adverse outcome and one-year horizon.\n# Risk difference = programme minus control. SE, not SD, is supplied.\neffect <- c(-0.04,-0.08,-0.03); se <- c(0.02,0.04,0.02)\nweight <- 1/se^2\npooled <- sum(weight*effect)/sum(weight)\npooled_se <- sqrt(1/sum(weight))\npooled_ci <- pooled+c(-1,1)*qnorm(0.975)*pooled_se\nq <- sum(weight*(effect-pooled)^2)\nprint(data.frame(Study=1:3,Risk_difference=effect,SE=se,Percent_weight=100*weight/sum(weight)))\nprint(c(Pooled=pooled,SE=pooled_se,Lower=pooled_ci[1],Upper=pooled_ci[2],Q=q))\nlower <- effect-qnorm(0.975)*se; upper <- effect+qnorm(0.975)*se\nplot(effect,1:3,pch=19,xlim=range(c(lower,upper,0)),ylim=c(0,3.5),yaxt="n",xlab="Risk difference: programme minus control",ylab="",main="Fictional fixed-effect illustration")\nsegments(lower,1:3,upper,1:3); abline(v=0,lty=2)\npoints(pooled,0,pch=18); segments(pooled_ci[1],0,pooled_ci[2],0)\naxis(2,at=0:3,labels=c("Pooled","Study 1","Study 2","Study 3"),las=1)\n# The interval estimates a common effect under the model; not a prediction interval.\n# Few studies give weak information about heterogeneity and publication bias.\n',
-      contentVersion: "2026-10-01",
+      r: `# Three fictional independent trials: same adverse outcome and one-year horizon.
+# Risk difference = programme minus control. SE, not SD, is supplied.
+effect <- c(-0.04,-0.08,-0.03); se <- c(0.02,0.04,0.02)
+weight <- 1/se^2
+pooled <- sum(weight*effect)/sum(weight)
+pooled_se <- sqrt(1/sum(weight))
+pooled_ci <- pooled+c(-1,1)*qnorm(0.975)*pooled_se
+q <- sum(weight*(effect-pooled)^2)
+print(data.frame(Study=1:3,Risk_difference=effect,SE=se,Percent_weight=100*weight/sum(weight)))
+print(c(Pooled=pooled,SE=pooled_se,Lower=pooled_ci[1],Upper=pooled_ci[2],Q=q))
+lower <- effect-qnorm(0.975)*se; upper <- effect+qnorm(0.975)*se
+plot(effect,1:3,pch=19,xlim=range(c(lower,upper,0)),ylim=c(0,3.5),yaxt="n",xlab="Risk difference: programme minus control",ylab="",main="Fictional fixed-effect illustration")
+segments(lower,1:3,upper,1:3); abline(v=0,lty=2)
+points(pooled,0,pch=18); segments(pooled_ci[1],0,pooled_ci[2],0)
+axis(2,at=0:3,labels=c("Pooled","Study 1","Study 2","Study 3"),las=1)
+# The interval estimates a common effect under the model; not a prediction interval.
+# Few studies give weak information about heterogeneity and publication bias.
+
+# Optional further learning: conventional Q-based I-squared.
+# Change FALSE to TRUE to run this extension after the main lesson.
+if (FALSE) {
+  study_df <- length(effect)-1
+  i_squared <- if(q>0) 100*max(0,(q-study_df)/q) else 0
+  print(c(Q=q,df=study_df,I_squared_percent=i_squared))
+  # Here I-squared is 0%, after truncating a negative untruncated estimate.
+  # Three studies give little information: 0% does not establish homogeneity.
+  # Do not select fixed versus random effects just from Q's P value or I-squared.
+}
+`,
+      contentVersion: "2026-10-12",
       knowledgeSchemaVersion: 1,
       review: {
-        date: "2026-10-01",
-        status: "AI-assisted editorial and numerical checks; external subject-expert review pending",
+        date: "2026-10-12",
+        status: "AI-assisted editorial and numerical checks",
         authorship: "Original StatsDirect teaching material with fictional examples; not official examination content."
       },
       prerequisites: [
@@ -23771,7 +23875,7 @@ ${c.text}` : c.text }));
         },
         {
           term: "Heterogeneity",
-          explanation: "A pooled-effect interval does not show the spread of true effects across settings. Examine clinical differences and heterogeneity uncertainty; a non-significant heterogeneity test with few studies proves little."
+          explanation: "A pooled-effect interval does not show the spread of true effects across settings. Examine clinical differences and heterogeneity uncertainty; a non-significant heterogeneity test with few studies proves little. Optional extension: conventional Q-based I\xB2 estimates the percentage of variation in study estimates attributable to heterogeneity. Here Q = 1.25 and df = 2, so max(0, (Q \u2212 df)/Q) \xD7 100 = 0%. This truncated estimate is very uncertain with three studies and is not evidence of identical underlying effects."
         },
         {
           term: "Evidence selection",
@@ -23807,7 +23911,7 @@ ${c.text}` : c.text }));
       rProgression: {
         menus: "Select risk difference and standard error in the summary form.",
         bridge: "Trace the weighted mean and pooled SE in R.",
-        coding: "Increase one SE and predict the weight change before rerunning; discuss when pooling would be inappropriate."
+        coding: "Increase one SE and predict the weight change before rerunning; discuss when pooling would be inappropriate. Optional further learning: run the I-squared block at the end and explain why an estimate of zero from three studies does not prove homogeneity."
       },
       sources: [
         {
@@ -23815,7 +23919,7 @@ ${c.text}` : c.text }));
           title: "Cochrane Handbook, chapter 10: Meta-analysis",
           url: "https://www.cochrane.org/authors/handbooks-and-manuals/handbook/current/chapter-10",
           scope: "Inverse-variance pooling, heterogeneity and interpretation of fixed-effect and random-effects analyses.",
-          checkedAt: "2026-10-01",
+          checkedAt: "2026-10-12",
           use: "Editorial reference and further reading; no source text or examination items reproduced."
         },
         {
@@ -23893,7 +23997,7 @@ ${c.text}` : c.text }));
     if (lesson2.misconceptions?.length) html2 += section("Common mistakes", lesson2.misconceptions.map((m) => `<p><strong>${esc4(m.claim)}</strong><br>${esc4(m.correction)}</p>`).join(""));
     if (lesson2.teachingPrompts?.length) html2 += section("Think it through", list(lesson2.teachingPrompts.map((p) => p.prompt)));
     if (lesson2.rProgression) html2 += section("From menus to R", list([lesson2.rProgression.menus, lesson2.rProgression.bridge, lesson2.rProgression.coding]));
-    if (lesson2.sources?.length) html2 += section("References and further reading", `<ul>${lesson2.sources.map((s) => `<li>${safeURL2(s.url) ? `<a href="${esc4(safeURL2(s.url))}" target="_blank" rel="noopener">${esc4(s.title)}</a>` : esc4(s.title)} \u2014 ${esc4(s.scope)}</li>`).join("")}</ul><p class="small">Original StatsDirect teaching material. Sources checked ${esc4(lesson2.review?.date)}; external subject-expert review pending.</p>`);
+    if (lesson2.sources?.length) html2 += section("References and further reading", `<ul>${lesson2.sources.map((s) => `<li>${safeURL2(s.url) ? `<a href="${esc4(safeURL2(s.url))}" target="_blank" rel="noopener">${esc4(s.title)}</a>` : esc4(s.title)} \u2014 ${esc4(s.scope)}${s.checkedAt ? ` <span class="small">Checked ${esc4(s.checkedAt)}.</span>` : ""}</li>`).join("")}</ul><p class="small">Original StatsDirect teaching material. AI-assisted editorial review ${esc4(lesson2.review?.date)}.</p>`);
     return html2;
   }
 

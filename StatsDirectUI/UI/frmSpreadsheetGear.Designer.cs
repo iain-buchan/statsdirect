@@ -841,8 +841,7 @@ namespace StatsDirect.UI
             // saveFileDialog
             // 
             this.saveFileDialog.DefaultExt = "xlsx";
-            this.saveFileDialog.Filter = "Excel 2007/2010 files (*.xlsx)|*.xlsx|Excel 97-2003 files (*.xls)|*.xls|All files" +
-    "|*.*";
+            this.saveFileDialog.Filter = "Excel workbook (*.xlsx)|*.xlsx|Excel macro-enabled workbook (*.xlsm)|*.xlsm|Excel 97-2003 workbook (*.xls)|*.xls|R table - current worksheet (*.rds)|*.rds|R tables - all worksheets (*.RData)|*.RData";
             // 
             // toolStripSeparator6
             // 

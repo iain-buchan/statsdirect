@@ -13,23 +13,7 @@ namespace StatsDirect.UI.Learning;
 /// Nothing is evaluated here, and the local snapshots are not conversation text sent to AI.</summary>
 internal static class ConversationRScript
 {
-    internal static string[] Blocks(string markdown)
-    {
-        var blocks = new List<string>();
-        string[] lines = (markdown ?? "").Replace("\r\n", "\n").Replace('\r', '\n').Split('\n');
-        for (int i = 0; i < lines.Length; i++)
-        {
-            var opening = Regex.Match(lines[i], @"^\s*(`{3,}|~{3,})\s*([\w+#.-]*)\s*$");
-            if (!opening.Success) continue;
-            char fence = opening.Groups[1].Value[0];
-            bool r = opening.Groups[2].Value.Equals("r", StringComparison.OrdinalIgnoreCase) || opening.Groups[2].Value.Equals("rscript", StringComparison.OrdinalIgnoreCase);
-            var code = new List<string>();
-            while (++i < lines.Length && !Regex.IsMatch(lines[i], @"^\s*" + fence + @"{3,}\s*$")) code.Add(lines[i]);
-            // An unfinished streamed block is not ready to run.
-            if (r && i < lines.Length) blocks.Add(string.Join("\n", code));
-        }
-        return blocks.ToArray();
-    }
+    internal static string[] Blocks(string markdown, bool rOnly = true) => WebReports.CompletedCodeBlocks.Read(markdown, rOnly);
 
     internal static string Build(JsonArray messages, int messageIndex, int blockIndex = -1)
     {

@@ -26,6 +26,7 @@ namespace StatsDirect.UI
         /// While batching, a storage point for the data area we've most recently selected.
         /// </summary>
         private CellSelection mostRecentCellSelectionDuringBatch;
+        private RDataFiles.Metadata rDataMetadata = new();
 
         public frmSpreadsheetGear()
         {
@@ -96,10 +97,17 @@ namespace StatsDirect.UI
 
             if (new FileInfo(path).IsReadOnly)
                 return SaveAsContents();
+            if (System.IO.Path.GetExtension(path).Equals(".rds", StringComparison.OrdinalIgnoreCase) && workbookView.WithLock(() => workbookView.ActiveWorkbook.Worksheets.Count > 1))
+                return SaveAsContents();
 
             // Known path, overwrite
             return workbookView.WithLock(() =>
             {
+                if (RDataFiles.IsRData(System.IO.Path.GetExtension(path).ToLowerInvariant()))
+                {
+                    RDataFiles.Write(workbookView.ActiveWorkbook, workbookView.ActiveWorksheet, path, rDataMetadata, RDataFiles.Executable());
+                    Dirty = false; return true;
+                }
                 workbookView.ActiveWorkbook.Save();
                 Dirty = false;
                 return true;
@@ -136,33 +144,50 @@ namespace StatsDirect.UI
                 return false;
             }
             // User wants to save the file
-            Path = saveFileDialog.FileName;
-            string extension = System.IO.Path.GetExtension(Path);
+            string destination = saveFileDialog.FileName;
+            string extension = System.IO.Path.GetExtension(destination);
             if (!string.IsNullOrEmpty(extension))
                 extension = extension.ToLower(CultureInfo.InvariantCulture);
-            FileFormat format = ".xlsx".Equals(extension) ? FileFormat.OpenXMLWorkbook : FileFormat.Excel8;
             return workbookView.WithLock(() =>
             {
-                workbookView.ActiveWorkbook.SaveAs(path, format);
-                Dirty = false;
-                SdApplication.SoleInstance.NoteRecentFile(path, true);
-                return true;
+                bool wholeDocument = true;
+                if (RDataFiles.IsRData(extension))
+                {
+                    RDataFiles.Write(workbookView.ActiveWorkbook, workbookView.ActiveWorksheet, destination, rDataMetadata, RDataFiles.Executable());
+                    wholeDocument = extension != ".rds" || workbookView.ActiveWorkbook.Worksheets.Count == 1;
+                }
+                else
+                {
+                    FileFormat format = extension switch { ".xlsx" => FileFormat.OpenXMLWorkbook, ".xlsm" => FileFormat.OpenXMLWorkbookMacroEnabled, ".xls" => FileFormat.Excel8, _ => throw new InvalidOperationException("Choose an Excel, RDS or RData filename.") };
+                    workbookView.ActiveWorkbook.SaveAs(destination, format);
+                }
+                if (wholeDocument) { Path = destination; workbookView.ActiveWorkbook.FullName = destination; Dirty = false; }
+                SdApplication.SoleInstance.NoteRecentFile(destination, true);
+                // A one-sheet export cannot satisfy a request to save/close a multi-sheet workbook.
+                return wholeDocument;
             });
         }
 
         public override bool OpenFile(string filename, bool isTempFile, string nameToDisplay)
         {
-            if (null != workbookView.ActiveWorkbook)
-                workbookView.WithLock(() => workbookView.ActiveWorkbook.Close());
+            string extension = System.IO.Path.GetExtension(filename).ToLowerInvariant();
+            string rExecutable = RDataFiles.IsRData(extension) ? RDataFiles.Executable() : null;
             return workbookView.WithLock(() =>
             {
-                IWorkbook wb = workbookView.ActiveWorkbookSet.Workbooks.Open(filename);
-                if (!isTempFile)
-                    Path = filename;
+                var old = workbookView.ActiveWorkbook;
+                var metadata = new RDataFiles.Metadata();
+                IWorkbook wb = rExecutable != null ? RDataFiles.Read(workbookView.ActiveWorkbookSet, filename, rExecutable, out metadata) : SpreadsheetFiles.Open(workbookView.ActiveWorkbookSet, filename);
+                rDataMetadata = metadata;
+                bool imported = SpreadsheetFiles.Imported(extension);
+                Path = !isTempFile && !imported ? filename : null;
                 if (null != wb)
-                    workbookView.ActiveWorkbook = wb;
+                { workbookView.ActiveWorkbook = wb; old?.Close(); }
+                if (rExecutable != null && !isTempFile) wb.FullName = System.IO.Path.GetFullPath(filename);
                 if (isTempFile && null != nameToDisplay)
                     SetUnsavedName(nameToDisplay);
+                if (imported) SetUnsavedName(System.IO.Path.GetFileName(filename));
+                if (rExecutable != null && RDataFiles.LastWarnings.Length > 0)
+                    SdApplication.SoleInstance.MsgboxX("Opened the supported R tables. Skipped: " + RDataFiles.LastWarnings, MessageBoxButtons.OK, MessageBoxIcon.Information, "Open R data", true);
                 return null != wb;
             });
         }

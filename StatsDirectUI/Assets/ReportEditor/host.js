@@ -89,10 +89,10 @@ window.WindowsReport={async run(request){
       case 'load':{
         const incoming=request.args.entries??[{id:crypto.randomUUID(),title:request.args.title,operation:'',helpContextId:0,html:request.args.html}];
         if(!Array.isArray(incoming)||incoming.length>1000)throw Error('Invalid report entries.');
-        const clean=[];
+        const clean=[],importWarnings=[];
         // No imported markup enters the editor until EVERY section is sanitized.
-        for(const e of incoming){const converted=JSON.parse(await StatsDirectReportImport.convert({html:e.html}));const entry={id:crypto.randomUUID(),title:String(e.title??'Report'),operation:String(e.operation??''),helpContextId:Number.isSafeInteger(e.helpContextId)?e.helpContextId:0,html:converted.html};if(isRecord(e.record))entry.record=e.record;clean.push(entry);}
-        entries.splice(0,entries.length,...clean);undo.length=redo.length=0;render();StatsDirectReportEditor.setEditing(true);revision=0;value=snapshot();break;
+        for(const e of incoming){const converted=JSON.parse(await StatsDirectReportImport.convert({html:e.html,pictures:request.args.pictures??[],legacy:request.args.legacy===true}));importWarnings.push(...converted.warnings);const entry={id:crypto.randomUUID(),title:String(e.title??'Report'),operation:String(e.operation??''),helpContextId:Number.isSafeInteger(e.helpContextId)?e.helpContextId:0,html:converted.html};if(isRecord(e.record))entry.record=e.record;clean.push(entry);}
+        entries.splice(0,entries.length,...clean);undo.length=redo.length=0;render();StatsDirectReportEditor.setEditing(true);revision=0;value={...snapshot(),importWarnings:[...new Set(importWarnings)]};break;
       }
       case 'export':{
         const state=snapshot();value=await StatsDirectReportExport.capture({format:request.args.format,title:request.args.title});

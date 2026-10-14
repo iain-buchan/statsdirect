@@ -1,5 +1,28 @@
 # Windows Learning integration checks
 
+14 October 2026 expanded Windows/Mac parity: **290 native checks pass**, including
+the optional XLSB fixture written by installed Excel 16.0. `Parity.cs` covers
+all twelve lessons' context budgets, memory-only session acceptance and its reset,
+Report AI privacy/snapshots, bounded context fallback, offline maths, pending-code
+guards and C#/VB source isolation. `FileInterop.cs` exercises actual File Open for
+R/CSV/RDS, literal CSV parsing, the full 1,048,576-row Excel limit and explicit
+overflow, workbook/template formats, legacy RTF tables and WMF/EMF/raster charts.
+Real R `identical()` checks cover RDS and named RData tables/matrices, empty strings
+versus NA, NaN/Inf, ordered factors, Unicode/BOM, precise and non-finite dates and
+timestamps. Edits and failed-write preservation are checked too.
+
+The same change passes WebReports **260**, WindowsShell **32**, HtmlHelp **42**,
+Continue in R **163** (including the 227-recipe manifest), shared Learning/R **27**
+and shared report JavaScript **8** checks. The release app builds with the existing
+NU1701 warning. Seven Learning and five WebReports physical clipboard checks were
+explicitly skipped to preserve an existing enhanced-metafile clipboard; browser
+selection and Office payload/export checks still ran. No live-account model call,
+clean-machine installation, Windows 10 VM, installer build or version change.
+
+For the optional XLSB check, set `STATSDIRECT_TEST_XLSB` to an Excel-created XLSB
+whose A2 is literal `0012` and B2 is numeric `12.25`. Otherwise the standard run
+has 289 checks. Test RTF fixtures are copied into the harness output automatically.
+
 14 October 2026 recovery/R-context parity: **217 checks pass**, plus the shared
 runner's **27** and WindowsShell's **32**. `Recovery.cs` terminates four isolated
 WebView2 renderers and checks native history/draft recovery, continued partial

@@ -37,6 +37,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="../StatsDirectRetire/ExcelAddInRetirer.cs" Link="Setup/ExcelAddInRetirer.cs" />
+    <Content Include="Assets/Learn/katex/**" Link="Tutor/katex/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <AssemblyAttribute Include="StatsDirect.UI.SpreadsheetGearLicenseAttribute">
       <_Parameter1>$(SpreadsheetGearLicenseString)</_Parameter1>
     </AssemblyAttribute>
@@ -60,12 +61,14 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Antlr4.Runtime" Version="4.6.6" />
+    <PackageReference Include="ExcelDataReader" Version="3.9.0" />
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4258.31" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.9.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.VisualBasic" Version="5.9.0" />
     <PackageReference Include="OpenMcdf" Version="3.3.0" />
     <PackageReference Include="PdfPig" Version="0.1.16" />
     <PackageReference Include="PresentationFramework" Version="4.6.0" />
+    <PackageReference Include="RtfPipe" Version="2.0.7677.4303" />
     <PackageReference Include="SpreadsheetGear" Version="9.3.84" />
     <PackageReference Include="SpreadsheetGear.Windows" Version="9.3.84" />
   </ItemGroup>
