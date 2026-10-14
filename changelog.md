@@ -20,6 +20,7 @@ Version 5.2.0 brings the Windows workspace into step with the Mac version and ad
 - Connection diagnostics record only error types, recognised protocol message types, identifiers and lengths. Raw responses and exception details are excluded, and upgrading removes diagnostics written in the older format.
 - Script AI's Open R code and per-block Open in R retain the source script snapshot, worksheet values actually read and preceding R blocks, so follow-up code can use the data and variables discussed. Opening code does not execute it or reread edited worksheets.
 - Learning replies retain highlighted text and reading position as chunks arrive and when the completed reply replaces them. Copying preserves the selected text at paragraph boundaries and across formatting, including backwards selections.
+- Reopening Learning after its browser fails restores the saved conversation, draft and latest reply without sending the question again. Closing a failed window retains received partial text, marked incomplete. Learning's Open in R retains approved source snapshots, worksheet values and earlier R blocks within the selected lesson; local replay data survives reopening and stays out of learning-record exports and AI conversation text.
 
 ### Added
 - Help > Learning and Learning Options reuse the Mac lesson library, provider courses, learner preferences, independent practice and learning-record exports. Records stay local; sharing document context with the user's ChatGPT account requires confirmation for each question.

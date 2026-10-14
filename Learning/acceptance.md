@@ -1,4 +1,37 @@
-# Windows / Mac workflow acceptance — 13 October 2026
+# Windows / Mac workflow acceptance — 14 October 2026
+
+## Learning recovery and R-context parity
+
+The Windows Learning host now restores a failed browser from native portfolio
+state and the latest received reply event. It retains drafts, partial/completed
+replies and local R snapshots; it never resends a question during recovery.
+Closing a failed window saves the received text and marks unfinished replies.
+New browser generations reject stale handlers and reinstall restricted settings.
+
+Learning Open in R now replays approved source snapshots, literal worksheet
+values and preceding blocks up to the chosen block, scoped to that lesson.
+Context survives reopening and source edits, is excluded from exports and later
+AI requests, and is cleared for a new portfolio. Invalid local metadata is
+rejected without overwriting the record. Suggested code opens without executing.
+
+**276 checks pass**: Learning/AI/R **217**, WindowsShell **32**, shared Learning/R
+**27**. Four real Chromium renderer crashes test idle, streaming, completion
+while unavailable and closing the failed window. Fresh R 4.6.1 executions verify
+the nine-pair PEFR code, dependent follow-ups, missing rows and quoted worksheet
+text. The source snapshot test exceeds the AI excerpt limit. Selection boundary,
+direction, formatting and completion checks pass. **Seven physical clipboard-copy
+checks were skipped**, explicitly using `STATSDIRECT_SKIP_CLIPBOARD=1`, because the
+user's enhanced-metafile clipboard cannot be safely preserved by the helper.
+The clipboard was left unchanged. The optional official AI-runtime and R-installer
+file probes were not supplied; all AI responses are synthetic.
+
+The Release build passes with existing NU1701 compatibility warnings (the native
+test build also reports the existing WindowsBase assembly-resolution warning).
+The generated Learning bundle rebuilds identically. No engine, lesson content,
+dependency version or release version changed. This task does not rebuild or
+replace the signed installer; it still needs today's source and help changes.
+Evidence is in `outputs/learning-recovery-*` and `work/learning-recovery-context`
+under the workspace recorded below.
 
 ## Selection and copying follow-up
 

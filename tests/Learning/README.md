@@ -1,5 +1,22 @@
 # Windows Learning integration checks
 
+14 October 2026 recovery/R-context parity: **217 checks pass**, plus the shared
+runner's **27** and WindowsShell's **32**. `Recovery.cs` terminates four isolated
+WebView2 renderers and checks native history/draft recovery, continued partial
+replies, exactly-once completion, security settings, one working R bridge,
+closed-window partial retention and resumed conversation without resending.
+`LearningReplay.cs` executes full PEFR and follow-up scripts in real R, checks
+source snapshots beyond the AI excerpt limit, dynamic worksheet reads with blanks
+and quoted text, lesson isolation, old blocks, stale actions, persistence and
+metadata exclusion from AI requests/record exports. Malformed local R metadata
+must leave the saved portfolio untouched.
+
+Set `STATSDIRECT_SKIP_CLIPBOARD=1` to leave the system clipboard untouched when
+its contents cannot be safely preserved (for example, enhanced metafiles). This
+skips seven physical copy checks explicitly; selection assertions still run.
+The 217-check run used this option. Without it there are **224 checks**. Optional
+official-runtime and R-installer-file probes are additional; neither ran here.
+
 13 October 2026 selection/copy follow-up: **165 checks pass**. The previous
 Learning bundle lost the selection on the next streamed chunk. `Selection.cs`
 now checks paragraph-start/end boundaries, backwards and mixed-format selections,

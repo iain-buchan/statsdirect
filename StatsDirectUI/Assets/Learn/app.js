@@ -20171,8 +20171,10 @@ ${content}</tr>
     });
     element.querySelectorAll("[data-code]").forEach((button) => button.onclick = () => {
       const code = button.closest(".code-block").querySelector("code").textContent;
-      if (button.dataset.code === "r") openR(code);
-      else {
+      if (button.dataset.code === "r") {
+        const message = button.closest("[data-message-id]");
+        openR(code, { messageID: message?.dataset.messageId ?? "", blockIndex: Array.from(message?.querySelectorAll("[data-code=r]") ?? []).indexOf(button) });
+      } else {
         copy(code);
         button.textContent = "Copied";
         setTimeout(() => button.textContent = "Copy", 1500);
@@ -23952,6 +23954,7 @@ ${pack ? `<details><summary>Included materials</summary><ul>${pack.documents.map
   var streamedText = "";
   var streamTimer = null;
   var renderedStudy = null;
+  var bridgeGeneration = "";
   var workspace = { choice: "__none__", choices: [], label: "Lessons only \xB7 open documents are not shared" };
   var native = Boolean(window.webkit?.messageHandlers?.statsDirectLearn);
   var post = (body) => window.webkit?.messageHandlers?.statsDirectLearn?.postMessage(body);
@@ -24080,13 +24083,14 @@ ${pack ? `<details><summary>Included materials</summary><ul>${pack.documents.map
     });
   }
   function bindConversation() {
+    const generation = bridgeGeneration, lessonID = lesson().id;
     bindRichText($("messages"), {
       copy: (code) => {
         if (native) post({ action: "copyCode", code });
         else navigator.clipboard.writeText(code).catch(() => notice("Select the code and copy it."));
       },
-      openR: (code) => {
-        if (native) post({ action: "openRCode", code });
+      openR: (code, position) => {
+        if (native) post({ action: "openRCode", generation, lessonID, ...position });
         else notice("Open the Mac app to review and run this code in an R session.");
       }
     });
@@ -24149,13 +24153,13 @@ ${pack ? `<details><summary>Included materials</summary><ul>${pack.documents.map
       return;
     }
     teachingSupport();
-    transcriptEntry(state, "user", text3, "Learner", { lessonId: lesson().id, lessonTitle: lesson().title });
+    const userMessage = transcriptEntry(state, "user", text3, "Learner", { lessonId: lesson().id, lessonTitle: lesson().title });
     state.draft = "";
     pending = crypto.randomUUID();
     streamedText = "";
     save();
     render3();
-    post({ action: "ask", id: pending, lesson: lesson().id, profile: tracks[state.profile].title, stage: stages[state.stage], practiceContext: practiceContext(state), learningGoals: state.learning, messages: conversationForTutor(state) });
+    post({ action: "ask", id: pending, userMessageID: userMessage.id, lesson: lesson().id, profile: tracks[state.profile].title, stage: stages[state.stage], practiceContext: practiceContext(state), learningGoals: state.learning, messages: conversationForTutor(state) });
   }
   function startQuiz(mode, provider = false) {
     if (pending || state.quiz && !state.quiz.completedAt) return;
@@ -24418,9 +24422,25 @@ ${pack ? `<details><summary>Included materials</summary><ul>${pack.documents.map
   $("practiceNav").onclick = () => navigate("practice");
   $("recordNav").onclick = () => navigate("record");
   window.statsDirectLearn = {
+    bridgeGeneration(value) {
+      bridgeGeneration = value;
+    },
+    resumeReply(event) {
+      if (!loaded || !event?.value?.id) return;
+      pending = event.value.id;
+      streamedText = event.partial ?? "";
+      if (event.action === "reply") this.reply(event.value);
+      else if (event.action === "tutorError") this.tutorError(event.value);
+      else render3();
+    },
     restore(value) {
       try {
         loaded = false;
+        pending = null;
+        streamedText = "";
+        renderedStudy = null;
+        clearTimeout(streamTimer);
+        streamTimer = null;
         state = value ? restorePortfolio(value) : newPortfolio();
         if (!state.lesson.startsWith("course:") && !lessons_default2.some((l) => l.id === state.lesson)) state.lesson = "epidemiology";
         labelStudyGuides(state, lessons_default2);
@@ -24492,6 +24512,7 @@ ${pack ? `<details><summary>Included materials</summary><ul>${pack.documents.map
       if (value.id !== pending) return;
       const messageId = pending;
       pending = null;
+      state.conversation = state.conversation.filter((c) => c.id !== messageId);
       if (value.workspaceSources?.length) activity("Tutor used: " + value.workspaceSources.join("; "));
       transcriptEntry(state, "assistant", value.text, "StatsDirect AI tutor", { id: messageId, lessonId: lesson().id, lessonTitle: lesson().title, model: value.model, responseID: value.responseID, promptVersion: value.promptVersion, diagnostics: value.diagnostics ?? [], learningOptions: structuredClone(state.learning), rExperience: state.stage, courseSources: value.courseSources ?? [], workspaceSources: value.workspaceSources ?? [] });
       save();
@@ -24499,8 +24520,14 @@ ${pack ? `<details><summary>Included materials</summary><ul>${pack.documents.map
     },
     tutorError(value) {
       if (value.id && value.id !== pending) return;
+      const id = pending;
       pending = null;
-      state.diagnostics = { ...state.diagnostics, lastError: value.message, events: value.diagnostics ?? [] };
+      if (streamedText && id) {
+        state.conversation = state.conversation.filter((c) => c.id !== id);
+        transcriptEntry(state, "assistant", streamedText + "\n\n[Reply stopped before completion.]", "StatsDirect AI tutor", { id, lessonId: lesson().id, lessonTitle: lesson().title });
+      }
+      streamedText = "";
+      state.diagnostics = { ...state.diagnostics, requestID: value.id, lastError: "Tutor reply stopped or failed", events: value.diagnostics ?? [] };
       save();
       notice(value.message);
       render3();

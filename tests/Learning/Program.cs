@@ -80,6 +80,8 @@ internal static partial class Program
         await TestLearningSelection(service,view);
         await TestConsent(main,service,view,grid);
         await TestConversationR(main,service,grid);
+        view = await TestLearningReplay(main,service,view,grid);
+        view = await TestLearningRecovery(main,service,view);
         await TestCalculations(main,grid);
         await TestExports(service,view);
         await TestRSetup(main);
@@ -92,6 +94,14 @@ internal static partial class Program
         {
             service.Show(true);await Reject(()=>service.View.Ready.Task.WaitAsync(TimeSpan.FromSeconds(20)),"malformed nested portfolio is rejected by the shared validator before options open");
             Check(File.ReadAllText(portfolio)==invalid,"failed restore preserves the original portfolio bytes");
+        }
+        finally{service.View.Close();File.WriteAllText(portfolio,valid);}
+        var invalidContext=JsonNode.Parse(valid);invalidContext["rContexts"]=new JsonObject{["bad"]=new JsonObject{["rSource"]=42}};
+        string invalidReplay=invalidContext.ToJsonString();File.WriteAllText(portfolio,invalidReplay);
+        try
+        {
+            service.Show(false);await Reject(()=>service.View.Ready.Task.WaitAsync(TimeSpan.FromSeconds(20)),"malformed local R metadata is rejected before restoring the portfolio");
+            Check(File.ReadAllText(portfolio)==invalidReplay,"invalid R metadata leaves the saved file untouched");
         }
         finally{service.View.Close();File.WriteAllText(portfolio,valid);}
     }

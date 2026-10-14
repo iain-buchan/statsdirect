@@ -34,6 +34,9 @@ internal sealed partial class LearningService
         if (id.Length == 0) return;
         if (question != null) { await view.CallAsync("tutorError", new JsonObject { ["id"] = id, ["message"] = "Wait for the current question or stop it first." }); return; }
         using var pending = new CancellationTokenSource(); question = pending; requestId = id;
+        view.BeginReply(id, body.S("lesson"));
+        QuestionContext workspace = null;
+        string userMessageId = body.S("userMessageID");
         try
         {
             if (ChatGPTTutor.Disabled) throw new InvalidOperationException(ChatGPTTutor.PolicyMessage);
@@ -58,14 +61,18 @@ internal sealed partial class LearningService
                     SaveState(result?["state"]); // Must persist before granting access.
                 }
             }
-            var workspace = new QuestionContext(approved, false, pending.Token);
+            workspace = new QuestionContext(approved, false, pending.Token);
             string context = TeachingContext(lesson, body);
             string metadata = workspace.InitialContext().ToJsonString();
             if (metadata.Length > 14000) throw new InvalidOperationException("The selected document context is too large. Choose fewer documents for this question.");
             context += "\nCURRENT APPROVED WORKSPACE (separate from teaching examples):\n" + metadata;
+            RememberRContext(id, userMessageId, workspace);
             var reply = await Tutor.ConverseAsync(context, body.A("messages"), workspace.Tools, false,
-                text => { if (question == pending && !view.IsDisposed) _ = view.CallAsync("partial", new JsonObject { ["id"] = id, ["text"] = text }); }, workspace.CallAsync, pending.Token);
+                text => { if (question == pending && !view.IsDisposed) _ = view.CallAsync("partial", new JsonObject { ["id"] = id, ["text"] = text }); },
+                async (name, arguments) => { var result = await workspace.CallAsync(name, arguments); if (!view.IsDisposed) RememberRContext(id, userMessageId, workspace); return result; }, pending.Token);
             workspace.Check();
+            if (view.IsDisposed) return;
+            RememberRContext(id, userMessageId, workspace);
             // Rendering the reply re-enables Send in the shared web UI. Release this request
             // first, so an immediate next question cannot hit a stale busy flag.
             if (question == pending) { question = null; requestId = null; }

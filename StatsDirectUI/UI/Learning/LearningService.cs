@@ -40,7 +40,12 @@ internal sealed partial class LearningService : IDisposable
     {
         if (View == null || View.IsDisposed)
         { View = new LearningView(this, Storage) { OptionsOnReady = options }; main.AddLearningDocument(View); }
-        else { View.Activate(); if (options) _ = View.CallAsync("showOptions"); }
+        else
+        {
+            View.Activate();
+            if (View.NeedsRecovery) { View.OptionsOnReady = options; _ = View.RecoverAsync(); }
+            else if (options) _ = View.CallAsync("showOptions");
+        }
     }
     internal void ShowScriptAI(frmScript script) { ai ??= new ScriptAIPane(main, this); ai.Open(script); }
     internal void ActiveScriptChanged(frmScript script) { if (ai?.IsOpen == true) ai.Open(script); }
@@ -61,26 +66,43 @@ internal sealed partial class LearningService : IDisposable
     internal JsonObject Settings() => new() { ["configured"] = !ChatGPTTutor.Disabled && Tutor.Email != null, ["disabled"] = ChatGPTTutor.Disabled, ["service"] = "ChatGPT", ["label"] = ChatGPTTutor.Disabled ? "Online tutor disabled" : Tutor.Status, ["signingIn"] = !ChatGPTTutor.Disabled && Tutor.LoginUrl != null };
     internal async Task HandleAsync(LearningView view, JsonObject body)
     {
-        if (view != View || disposed) return;
+        if (view != View || view.IsDisposed || view.NeedsRecovery || disposed) return;
         switch (body.S("action"))
         {
             case "ready":
+                if (view.Ready.Task.IsCompleted) return;
+                string readyGeneration = view.Generation;
                 try
                 {
                     string path = Path.Combine(Storage, "portfolio.json");
-                    var state = File.Exists(path) ? LearningJson.Read(path, 10_000_000) : null;
+                    var state = view.Restoring ? State?.DeepClone() : closedSnapshot?.DeepClone() ?? (File.Exists(path) ? LearningJson.Read(path, 10_000_000) : null);
                     if (state != null && (state is not JsonObject || state.I("schemaVersion") != 2)) throw new InvalidDataException("The saved learning record has an unsupported format. It has not been overwritten.");
-                    canSave = true; await view.CallAsync("restore", state); await view.CallAsync("settings", Settings());
+                    LoadRContexts(state); closedSnapshot = null;
+                    if (state is JsonObject record) record.Remove("rContexts");
+                    canSave = true;
+                    await view.CallAsync("bridgeGeneration", JsonValue.Create(view.Generation));
+                    await view.CallAsync("restore", state);
+                    if (view.Generation != readyGeneration || view.NeedsRecovery || view.IsDisposed) return;
+                    await view.CallAsync("settings", Settings());
                     await view.CallAsync("coursePack", PackInfo());
+                    if (view.Generation != readyGeneration || view.NeedsRecovery || view.IsDisposed) return;
                     await view.CallAsync("diagnostics", new JsonObject { ["appVersion"] = Application.ProductVersion, ["engineVersion"] = Application.ProductVersion, ["tutorRuntime"] = TutorRuntimeInstallation.Version, ["promptVersion"] = "statsdirect-chatgpt-tutor-v4", ["libraryVersion"] = lessons.FirstOrDefault().S("contentVersion") });
+                    if (view.NeedsRecovery || view.IsDisposed) return;
+                    if (view.ReplyEvent != null) await view.CallAsync("resumeReply", view.ReplyEvent.DeepClone());
+                    if (view.NeedsRecovery || view.IsDisposed) return;
                     view.Loaded(); RefreshWorkspace();
                     if (view.OptionsOnReady) { view.OptionsOnReady = false; await view.CallAsync("showOptions"); }
                     if (!ChatGPTTutor.Disabled) _ = RefreshAccountAsync();
                 }
-                catch (Exception ex) { canSave = false; await view.CallAsync("loadError", JsonValue.Create(ex.Message)); view.Ready.TrySetException(ex); }
+                catch (Exception ex)
+                {
+                    if (view.Generation != readyGeneration || view.NeedsRecovery || view.IsDisposed) return;
+                    canSave = false; await view.CallAsync("loadError", JsonValue.Create(ex.Message)); view.Ready.TrySetException(ex);
+                }
                 break;
             case "save":
                 SaveState(body["state"]);
+                view.AcknowledgeReply(State);
                 await view.CallAsync("saved", body["revision"]?.DeepClone()); break;
             case "settings": await ConfigureTutorAsync(view); break;
             case "workspace":
@@ -94,7 +116,10 @@ internal sealed partial class LearningService : IDisposable
                 var helpLesson = Lesson(body.S("lesson")); if (helpLesson != null && CoursePack.HelpPath(helpLesson.S("help")) && helpLesson.S("help").Length > 0) SdApplication.SoleInstance.ShowHelp(main, helpLesson.S("help")); break;
             case "example": case "r": OpenExample(body.S("lesson"), body.S("action") == "r"); break;
             case "copyCode": if (body.S("code").Length is > 0 and <= 100_000) Clipboard.SetText(body.S("code")); break;
-            case "openRCode": if (body.S("code").Length <= 100_000) OpenScript(body.S("code"), "Tutor example", false); break;
+            case "openRCode":
+                if (body.S("generation") == view.Generation && body.S("lessonID") == State.S("lesson") && body.I("blockIndex", -1) >= 0)
+                    OpenScript(LearningRScript(body.S("messageID"), body.S("lessonID"), body.I("blockIndex")), "Tutor example — review before running", false);
+                break;
             case "exampleCourse": ImportPack(Path.Combine(SDConfiguration.InstallationDirectory, "Learn", "provider-course-example.json")); await view.CallAsync("coursePack", PackInfo()); break;
             case "importCoursePack":
                 if (question != null) throw new InvalidOperationException("Wait for the reply or stop it before changing course packs.");
@@ -115,7 +140,12 @@ internal sealed partial class LearningService : IDisposable
     internal void SaveState(JsonNode state)
     {
         if (!canSave || state is not JsonObject || state.I("schemaVersion") != 2 || state.S("id").Length == 0) throw new InvalidDataException("The learning record is not ready to save. Export a copy before closing.");
-        LearningJson.Save(Path.Combine(Storage, "portfolio.json"), state); State = (JsonObject)state.DeepClone();
+        var saved = (JsonObject)state.DeepClone();
+        // The browser never grants or edits local replay context. A new portfolio
+        // cannot inherit the previous learner's approved document snapshots.
+        if (replayPortfolioId != saved.S("id")) { rContexts = new(); replayPortfolioId = saved.S("id"); }
+        saved["rContexts"] = rContexts.DeepClone();
+        LearningJson.Save(Path.Combine(Storage, "portfolio.json"), saved); State = saved;
     }
     internal bool SaveCurrent() { if (State == null) return false; SaveState(State); return true; }
     internal void ImportPack(params string[] paths)

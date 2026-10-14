@@ -116,6 +116,22 @@
         "Learning/pnpm-lock.yaml": "abd935fd35b7ad84adfab7b9ac3cdb4ebc2a2eb83eefeedb24ac9e9bf3dd09cf",
         "StatsDirectUI/Assets/Learn/app.js": "c712d38280dd3c2aa65b336ac032a5e7b485db25e6352c85896a180adf6044e6"
       }
+    },
+    {
+      "description": "Learning renderer recovery and local R replay context. Prior adaptation entries are historical; these hashes supersede their changed files.",
+      "source": "https://github.com/iain-buchan/statsdirect-mac",
+      "commit": "cbccc10b591c85e34c6cc9faee9397e7aeb2e017",
+      "upstreamFiles": [
+        "Learn/app.mjs",
+        "Sources/LearnHost.swift",
+        "Sources/LearningRecovery.swift",
+        "Sources/LearningWorkspace.swift"
+      ],
+      "files": {
+        "Learning/build.mjs": "8335829ba4e89583730ee017ed53d20160b98ed733590a4de9dc66d1251edb96",
+        "Learning/recovery-port.mjs": "6c5a80ef09536d6a2e0defe51d4e3a19cb7ddf4da03510c29e7614b3250c8da7",
+        "StatsDirectUI/Assets/Learn/app.js": "f2f0e8aae25ce90cfec2daf2a2a64f31481f06af704dff8918955be17bd6ffda"
+      }
     }
   ]
 }

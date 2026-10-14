@@ -91,7 +91,7 @@ internal sealed class QuestionContext
             string id = Guid.NewGuid().ToString("N"); data["datasetId"] = id;
             datasets[id] = (grid, (JsonObject)data.DeepClone());
             // The R editor uses the same literal values, never a later read of the worksheet.
-            if (scriptOnly) data["rCode"] = ConversationRScript.Dataset(data);
+            data["rCode"] = ConversationRScript.Dataset(data);
             return data;
         }
         if (name == "statsdirect_read_document")

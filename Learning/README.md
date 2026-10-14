@@ -16,7 +16,7 @@ The source is `iain-buchan/statsdirect-mac`, commit
 `Content/Learn`, `Content/Tutor` and `Content/Brand` assets are under
 `StatsDirectUI/Assets`. The Windows host supplies the bridge and adjusts platform
 wording. `upstream.lock.json` records SHA-256 hashes of the original copied files;
-its `windowsAdaptations` entry separately records the Learning selection port.
+its `windowsAdaptations` entries separately record successive Windows ports.
 `.gitattributes` prevents Git's line-ending
 conversion from changing those vendored bytes. Preserve the MIT notice and the bundled
 `THIRD-PARTY-LICENSES.txt` for DOMPurify, KaTeX and highlight.js.
@@ -30,13 +30,27 @@ The Windows Learning bundle now includes the selection/reading-position module
 from Mac commit `0a112baeae9f799b10685ada30f6dd442aec68c5`, copied unchanged as
 `conversation-view.mjs`. `selection-port.mjs` applies a narrow, guarded adaptation
 to the recorded app source at build time: stable message IDs and selection
-capture/restoration around streamed and completed replies. It imports no other
-Mac lesson, engine or bridge changes. Dependency versions match the original
+capture/restoration around streamed and completed replies. `recovery-port.mjs`
+adds the recovery and R-context bridge behaviour from Mac `cbccc10b591c85e34c6cc9faee9397e7aeb2e017`.
+Lesson content and dependency versions match the original
 bundle. To rebuild it, run `pnpm --dir Learning install --frozen-lockfile` and
 `node Learning/build.mjs` from the repository root. Commit the generated
 `StatsDirectUI/Assets/Learn/app.js` and refresh the adaptation hashes when changing
 the port. The build fails if its expected source fragments no longer match;
 review the adaptation explicitly when updating the upstream baseline.
+
+Learning recovery keeps the native portfolio and latest reply event while a
+failed WebView is unavailable. Reopen Learning installs a new restricted browser
+and replays the existing reply without sending another question. Closing a failed
+window keeps received partial text, marked incomplete. Bridge generations reject
+callbacks from replaced browsers.
+
+Learning's Open in R uses the same replay builder as Script AI, limited to the
+chosen lesson and message/block. Approved full source snapshots and literal
+worksheet reads are retained locally in the portfolio's Mac-compatible `rContexts`
+metadata. They survive reopening, but are removed before restoring the web page
+and excluded from tutor conversation text and learning-record exports. New
+portfolios clear the context. Opening code never runs it or reads edited data.
 
 Searchable PDF course import uses unmodified PdfPig 0.1.16, Apache-2.0, source
 commit `a7bb35662bbbf405efddad50aedc9bcdcf515afc`. Its full licence and included
