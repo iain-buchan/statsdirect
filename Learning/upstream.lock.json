@@ -134,7 +134,7 @@
       }
     },
     {
-      "description": "Windows Report AI, offline rich conversation renderer, app-session sharing acceptance, 12 October lesson refinements and R data interchange. Content copied with existing Windows line endings preserved; native consent/report host adapted from the Mac session contract. Shared R data protocol includes the coordinated Date/POSIXct NaN fix. Prior adaptation entries remain historical.",
+      "description": "Windows Report AI, offline rich conversation renderer, app-session sharing acceptance, 12 October lesson refinements and R data interchange. Content copied with existing Windows line endings preserved; native consent/report host adapted from the Mac session contract. Shared R data protocol includes the coordinated Date/POSIXct NaN fix. Prior adaptation entries remain historical.; the three Tutor instruction texts follow the Mac's at 13ca3d3 with two sentences added on both sides on 14 October 2026 (what Open in R takes; the lessons' external review pending)",
       "source": "https://github.com/iain-buchan/statsdirect-mac",
       "commit": "5a20b86df2042a88cd96664c960dee6a095cf27d",
       "upstreamFiles": [
@@ -160,9 +160,9 @@
         "StatsDirectUI/Assets/Learn/lessons.json": "7df8bd1b539c7ae27735383af873e06735464b700c7c9307284ab69bc39ad74f",
         "StatsDirectUI/Assets/Tutor/conversation.js": "5b391269643ff0ab570db46a3961231d9b5da9bc00ac39fb604e2d82c3a6484f",
         "StatsDirectUI/Assets/Tutor/conversation.html": "cfcbfaf5d2a2e78a4c7dee83e6a7b4109bf0e38270430b250a3a1fd8deca8d3f",
-        "StatsDirectUI/Assets/Tutor/instructions.txt": "b1a0fedd3c5f23d4c7752b872cd91b89005fb03f3d229d7b425e426794e787fc",
-        "StatsDirectUI/Assets/Tutor/script-instructions.txt": "c463f187c59d740a5222d3f3edaa684f2c487227171e72fd50c8739a67b27625",
-        "StatsDirectUI/Assets/Tutor/report-instructions.txt": "33739f9336763866bd7cffd86e205971b4100c335296a2a14a02611c9e5eac4a",
+        "StatsDirectUI/Assets/Tutor/instructions.txt": "2a27b3b3ffb8af8d7df170fefb101cc9c1c49d016475b7c96074271ac0f4e18e",
+        "StatsDirectUI/Assets/Tutor/script-instructions.txt": "25b486dbf1a0f8f2c19326d4c175b964837c129190ecc7189d6807ffa0933aad",
+        "StatsDirectUI/Assets/Tutor/report-instructions.txt": "21cec7fb64233f6c77e679c9d8fa190cc4cc4876f3d3eb8c41bf33be43cde7bd",
         "StatsDirectUI/Assets/R/data-files.R": "79ec7fc1b947981db4ba6c11561382418438a9fbbffe86577d0e337e0bbccd07"
       }
     }
