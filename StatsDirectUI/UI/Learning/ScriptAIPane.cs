@@ -5,6 +5,7 @@ using System.IO;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
@@ -123,10 +124,53 @@ internal sealed class ScriptAIPane : IDisposable
         ShareScript.Text = ReportMode ? "Share this report and its displayed results" : "Share this script and its output";
         Composer.AccessibleName = ReportMode ? "Question for the report assistant" : "Question for the script assistant";
         RefreshWorkbooks(); SyncAcceptance(); Render(); session.Show(true); UpdateConnection();
+        if (document is frmReportWebView report) _ = OfferResultWorkbookAsync(report, resultId);
         _ = Transcript.ReopenAsync();
         _ = RefreshAccountAsync();
     }
     private async Task RefreshAccountAsync() { try { if (!ChatGPTTutor.Disabled) await service.Tutor.RefreshAccountAsync(); } catch (Exception ex) { if (!disposed) status.Text = ex.Message; } }
+    /// <summary>
+    /// The workbook offered for sharing is the one the result came from: the result the pane was opened on, else the result the
+    /// cursor is in, else the latest with a record, found among the open workbooks as Continue in R finds it, by the path or name its
+    /// record gives.  The workbook last activated stands when the result has no record or names no open workbook.  The selection is
+    /// made as a choice by hand would be, so the session's data document follows it and the sharing is confirmed again.
+    /// </summary>
+    private async Task OfferResultWorkbookAsync(frmReportWebView report, string resultId)
+    {
+        try
+        {
+            var view = report.LearningReport;
+            await view.Ready;
+            if (string.IsNullOrEmpty(resultId))
+            {
+                var target = await view.CurrentResultAsync();
+                resultId = Text(target, "resultId");
+            }
+            if (string.IsNullOrEmpty(resultId)) return;
+            var entry = await view.RecordAsync(resultId);
+            if (entry.ValueKind != JsonValueKind.Object || !entry.TryGetProperty("record", out var record) || record.ValueKind != JsonValueKind.Object) return;
+            var workbook = RecordWorkbook(record);
+            if (disposed || script != report || workbook == null) return;
+            var choice = Workbook.Items.Cast<WorkbookChoice>().FirstOrDefault(c => c.Id == workbook.Id());
+            if (choice == null || Workbook.SelectedItem == choice) return;
+            Workbook.SelectedItem = choice;
+            status.Text = "The workbook offered for sharing is the result's: " + workbook.Text;
+        }
+        catch (Exception ex) { if (!disposed) status.Text = ex.Message; }
+    }
+    /// <summary>The open workbook a record points to, by the paths and names of its inputs and its source; null when none is open.</summary>
+    private static frmSpreadsheetGear RecordWorkbook(JsonElement record)
+    {
+        var names = new List<string>();
+        if (record.TryGetProperty("inputs", out var inputs) && inputs.ValueKind == JsonValueKind.Array)
+            foreach (var input in inputs.EnumerateArray()) { names.Add(Text(input, "path")); names.Add(Text(input, "file")); }
+        if (record.TryGetProperty("source", out var source)) { names.Add(Text(source, "path")); names.Add(Text(source, "file")); }
+        foreach (string name in names.Where(n => !string.IsNullOrEmpty(n)))
+            foreach (WindowInformation wi in SdApplication.SoleInstance.Windows)
+                if (wi.IsFile(name) && wi.Window is frmSpreadsheetGear grid && !grid.IsDisposed) return grid;
+        return null;
+    }
+    private static string Text(JsonElement o, string key) => o.ValueKind == JsonValueKind.Object && o.TryGetProperty(key, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString() : null;
     internal void RefreshWorkbooks()
     {
         if (disposed || chat == null) return;
