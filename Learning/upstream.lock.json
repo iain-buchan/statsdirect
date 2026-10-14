@@ -165,6 +165,14 @@
         "StatsDirectUI/Assets/Tutor/report-instructions.txt": "21cec7fb64233f6c77e679c9d8fa190cc4cc4876f3d3eb8c41bf33be43cde7bd",
         "StatsDirectUI/Assets/R/data-files.R": "79ec7fc1b947981db4ba6c11561382418438a9fbbffe86577d0e337e0bbccd07"
       }
+    },
+    {
+      "description": "14 October 2026 Windows R dependency guidance: actionable package checks, commented one-time setup, Stan compiler prerequisites, explicit Bayesian priors and printed results. Original upstream provenance remains above; these local hashes supersede the three instruction texts.",
+      "files": {
+        "StatsDirectUI/Assets/Tutor/instructions.txt": "bc604375ccccdbae097eb1f4d413c6bbc9412bdb0007f7cf457a34f473d476e2",
+        "StatsDirectUI/Assets/Tutor/script-instructions.txt": "956e1d82a6477805adb2387ccb08a5f0a7364f06ebc1a6a09c9e1afdd3329007",
+        "StatsDirectUI/Assets/Tutor/report-instructions.txt": "fbe790bbf274babd3a7649ec4e623e5c50b1450e9d2fda582f5ebf6323a050ba"
+      }
     }
   ]
 }
