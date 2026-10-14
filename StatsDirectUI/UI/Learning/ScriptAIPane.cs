@@ -60,7 +60,7 @@ internal sealed class ScriptAIPane : IDisposable
         layout.Controls.Add(connection, 0, 0); layout.Controls.Add(SharingOptions, 0, 1);
         var warning = new Label { AutoSize = true, Text = "Share workbook data or scripts with ChatGPT? Do not share person-identifiable data: remove names, dates of birth, patient IDs and identifying free text." };
         sharing.Controls.AddRange([warning, ShareScript, ShareWorkbook, Workbook, Acknowledge]); layout.Controls.Add(sharing, 0, 2);
-        layout.Controls.Add(new Label { AutoSize = true, Text = "Your question", Dock = DockStyle.Fill }, 0, 3);
+        layout.Controls.Add(new Label { AutoSize = true, Text = "Your question (Enter sends; Shift+Enter adds a line)", Dock = DockStyle.Fill }, 0, 3);
         layout.Controls.Add(Composer, 0, 4);
         var actions = new FlowLayoutPanel { AutoSize = true, Dock = DockStyle.Fill };
         var copyCode = new Button { AutoSize = true, Text = "Copy R code" }; var openCode = new Button { AutoSize = true, Text = "Open R code" };
@@ -86,6 +86,7 @@ internal sealed class ScriptAIPane : IDisposable
         };
         SharingOptions.LinkClicked += (_, _) => { sharing.Visible = !sharing.Visible; UpdateControls(); };
         Send.Click += async (_, _) => await SendAsync(); stop.Click += (_, _) => Stop();
+        Composer.KeyDown += (_, e) => { if (ComposerKey(e.KeyData)) { e.SuppressKeyPress = true; e.Handled = true; } };
         copyCode.Click += (_, _) => { string code = LastCode(); if (code.Length > 0) Clipboard.SetText(code); else status.Text = "The last reply contains no R code block."; };
         openCode.Click += (_, _) => OpenCode(LastReply());
         void FitContent()
@@ -216,6 +217,13 @@ internal sealed class ScriptAIPane : IDisposable
         if (chat == null || disposed) return;
         Transcript.Update(chat.Messages, partial, renderedChat != chat);
         renderedChat = chat;
+    }
+    /// <summary>Enter in the question box sends, as the ChatGPT prompt does; Shift+Enter adds a line, as in the calculator.  True when the key was taken as Send.</summary>
+    internal bool ComposerKey(Keys key)
+    {
+        if ((key & Keys.KeyCode) != Keys.Enter || (key & Keys.Shift) != 0) return false;
+        _ = SendAsync();
+        return true;
     }
     internal async Task SendAsync()
     {
