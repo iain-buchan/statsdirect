@@ -599,7 +599,7 @@ namespace StatsDirect.UI
                 .OrderBy(f => f.Name, StringComparer.OrdinalIgnoreCase).ToList();
         }
 
-        /// <summary>The files written as links the user can open.</summary>
+        /// <summary>The files written as links the user can open; nothing when there are none.</summary>
         private static string FilesWrittenText(List<FileInfo> files)
         {
             if (files.Count == 0)
@@ -611,7 +611,7 @@ namespace StatsDirect.UI
         }
 
         /// <summary>The files a run writes that the output pane draws: SVG, as the scripts of the program draw, and the raster formats.</summary>
-        private static readonly HashSet<string> ChartExtensions = new(StringComparer.OrdinalIgnoreCase) { ".svg", ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".tif", ".tiff" };
+        private static readonly HashSet<string> ChartExtensions = new(StringComparer.OrdinalIgnoreCase) { ".svg", ".pdf", ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".tif", ".tiff" };
 
         /// <summary>
         /// Shows a run as it ends: R's transcript, then each chart the run wrote, drawn in the pane as the Mac's script pane shows its plots,
@@ -626,12 +626,14 @@ namespace StatsDirect.UI
             runningR = false;
             outputPane.AppendTranscript(transcript);
             List<FileInfo> written = FilesWritten(started);
+            List<FileInfo> shown = new();
             foreach (FileInfo file in written.Where(f => ChartExtensions.Contains(f.Extension)))
             {
-                try { outputPane.AppendChart(file); }
+                try { outputPane.AppendChart(file); shown.Add(file); }
                 catch (Exception ex) { outputPane.AppendText("(" + file.Name + " is not shown here: " + ex.Message + ")\n"); }
             }
-            outputPane.AppendText(FilesWrittenText(written));
+            // a chart's caption is its link, so the list names the other files only
+            outputPane.AppendText(FilesWrittenText(written.Except(shown).ToList()));
             outputPane.AppendText("\n======== End of run ========\n");
         }
 

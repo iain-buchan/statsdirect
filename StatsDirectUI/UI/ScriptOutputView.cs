@@ -183,13 +183,16 @@ namespace StatsDirect.UI
 
         /// <summary>
         /// A chart file in the pane after its name: an SVG as it is, drawn by the browser at the size its svg element gives, or narrowed to
-        /// the pane; a raster file as an image; its file as a link under it.  Throws when the file is not a picture that can be shown.
+        /// the pane; a PDF in the browser's viewer; a raster file as an image; the caption names the file and is its link.  Throws when the
+        /// file is not a picture that can be shown.
         /// </summary>
         internal void AppendChart(FileInfo file)
         {
             string picture;
             if (".svg".Equals(file.Extension, StringComparison.OrdinalIgnoreCase))
                 picture = Sanitised(RResultsParser.VectorPicture(File.ReadAllText(file.FullName)).Svg);
+            else if (".pdf".Equals(file.Extension, StringComparison.OrdinalIgnoreCase))
+                picture = "<iframe class=\"pdf\" title=\"" + Escape(file.Name) + "\" src=\"data:application/pdf;base64," + Convert.ToBase64String(File.ReadAllBytes(file.FullName)) + "#toolbar=0&navpanes=0&view=FitH\"></iframe>";
             else
             {
                 using System.Drawing.Image image = System.Drawing.Image.FromFile(file.FullName);
@@ -198,8 +201,8 @@ namespace StatsDirect.UI
                 picture = "<img width=\"" + image.Width + "\" height=\"" + image.Height + "\" alt=\"" + Escape(file.Name) + "\" src=\"data:image/png;base64," + Convert.ToBase64String(png.ToArray()) + "\">";
             }
             string link = new Uri(file.FullName).AbsoluteUri;
-            text.Append("\nChart: ").Append(file.Name).Append('\n').Append(link).Append('\n');
-            Enqueue("append(" + Json("\n<div class=\"chart\">Chart: " + Escape(file.Name) + "</div>" + picture + "<a href=\"" + link + "\">" + link + "</a>\n") + ")");
+            text.Append("\nChart: ").Append(file.Name).Append(" (").Append(link).Append(")\n");
+            Enqueue("append(" + Json("\n<div class=\"chart\"><a href=\"" + link + "\">Chart: " + Escape(file.Name) + "</a></div>" + picture + "\n") + ")");
         }
 
         /// <summary>An SVG with nothing that runs: scripts, event handlers and script links go.</summary>
@@ -245,7 +248,9 @@ body{padding:4px 8px;font:12px/1.35 Consolas,""Courier New"",monospace}
 .prompt{color:#0000a0}
 a{color:#0645ad}
 .chart{margin:8px 0 2px;color:#444}
+.chart a{color:#444}
 svg,img{display:block;max-width:100%;height:auto;margin:2px 0 4px;background:#fff}
+iframe.pdf{display:block;width:100%;height:520px;border:1px solid #ccc;margin:2px 0 4px;background:#fff}
 </style></head><body><div id=""t""></div><script>
 (function(){
 var t=document.getElementById('t');

@@ -191,6 +191,9 @@ namespace StatsDirect.R
             {
                 tw.Write(SCRIPT_HEAD, rFolder.Replace(@"\", @"\\"));
                 tw.WriteLine();
+                // a plot drawn without a device of its own goes to an SVG file in the R folder, one per page, which the script window shows;
+                // R's own default for a run is a PDF, which it cannot draw
+                tw.WriteLine("options(device = function(...) svg(filename = file.path(userdir, \"Rplot%03d.svg\"), ...))");
                 tw.WriteLine(repairedScriptBody);
             }
             try
