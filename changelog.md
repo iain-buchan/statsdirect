@@ -9,7 +9,7 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 Version 5.2.1 shows the charts an R script draws in the script window, corrects the tabs of the document windows and fixes opening older RTF reports. The statistical engine, its operations, the Continue in R recipes and the help are unchanged from 5.2.0.
 
 ### Added
-- The R script window shows the charts a run writes, SVG as the program's scripts draw and PNG or other pictures, in its output under R's transcript, each after its name and with its file as a link, as the Mac's script window shows them; the output pane is a web page, so a chart is drawn at its own size or narrowed to the pane, and the pane scrolls, selects and copies as a page does. The files written are still listed as links.
+- The R script window shows the charts a run writes, SVG as the program's scripts draw and PNG or other pictures, in its output under R's transcript, each after its name and with its file as a link, as the Mac's script window shows them; the output pane is a web page, so a chart is drawn at its own size or narrowed to the pane, and the pane scrolls, selects and copies as a page does. The files written are still listed as links. A plot drawn without a device of its own goes to an SVG file in the R folder, one per page, rather than to R's default PDF for a run, and a PDF a script writes is shown in the pane too.
 - Report Save As offers Word documents (.docx) and PDF alongside the default editable HTML format. Word and PDF save a copy, preserving the report's HTML save location and any unsaved edits.
 
 ### Fixed
