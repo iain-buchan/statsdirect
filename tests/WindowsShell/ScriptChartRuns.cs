@@ -67,7 +67,14 @@ internal static partial class Program
         {
             var file = await Windows.Storage.StorageFile.GetFileFromPathAsync(path);
             var pdf = await Windows.Data.Pdf.PdfDocument.LoadFromFileAsync(file);
-            Check(pdf.PageCount == pages, "the automatic PDF is readable and retains all " + pages + " chart page(s)");
+            Check(pdf.PageCount == pages, "the explicitly selected PDF is readable and retains all " + pages + " chart page(s)");
+        }
+
+        void CheckSvg(string path)
+        {
+            var svg = System.Xml.Linq.XDocument.Load(path).Root;
+            Check(svg?.Name == System.Xml.Linq.XName.Get("svg", "http://www.w3.org/2000/svg") && svg.Descendants().Any(),
+                "the automatic chart is a complete, readable SVG document");
         }
 
         async Task<string[]> ChartLinks(Form script)
@@ -78,20 +85,21 @@ internal static partial class Program
         }
 
         Task<string[]> CheckCharts(Form script, string manifest, params int[] pagesPerDevice)
-            => CheckChartFiles(script, manifest, pagesPerDevice.Select((pages, index) => (Device: index + 1, File: 1, Pages: pages)).ToArray());
+            => CheckChartFiles(script, manifest, pagesPerDevice.SelectMany((pages, index) =>
+                Enumerable.Range(1, pages).Select(page => (Device: index + 1, File: page))).ToArray());
 
-        async Task<string[]> CheckChartFiles(Form script, string manifest, params (int Device, int File, int Pages)[] charts)
+        async Task<string[]> CheckChartFiles(Form script, string manifest, params (int Device, int File)[] charts)
         {
             string id = RunId(manifest);
-            string[] expected = charts.Select(chart => Path.Combine(folder, $"Rplot-{id}-{chart.Device}-{chart.File:000}.pdf")).ToArray();
+            string[] expected = charts.Select(chart => Path.Combine(folder, $"Rplot-{id}-{chart.Device}-{chart.File:000}.svg")).ToArray();
             var browser = (WebView2)Field(Pane(script), "browser");
             string[][] captions = JsonSerializer.Deserialize<string[][]>(await browser.CoreWebView2.ExecuteScriptAsync(
                 "Array.from(document.querySelectorAll('#t .chart a')).map(a=>[a.textContent,a.getAttribute('href')])"))!;
             Check(expected.All(File.Exists) && captions.Length == expected.Length
                 && captions.Select(a => a[0]).SequenceEqual(expected.Select(f => "Chart: " + Path.GetFileName(f)))
                 && captions.Select(a => a[1]).SequenceEqual(expected.Select(f => new Uri(f).AbsoluteUri)),
-                "the script pane captions and links contain exactly its own automatic PDF devices");
-            for (int i = 0; i < expected.Length; i++) await CheckPdf(expected[i], charts[i].Pages);
+                "the script pane captions and links contain exactly its own automatic SVG pages");
+            foreach (string path in expected) CheckSvg(path);
             string[] links = JsonSerializer.Deserialize<string[]>(await browser.CoreWebView2.ExecuteScriptAsync(
                 "Array.from(document.querySelectorAll('#t a')).map(a=>a.getAttribute('href'))"))!;
             Check(!links.Any(link => link.StartsWith("file:", StringComparison.OrdinalIgnoreCase)
@@ -102,9 +110,10 @@ internal static partial class Program
 
         try
         {
-            string initial = Start(first, "initial", "plot(1:3, main = \"First page\")\nplot(3:1, main = \"Second page\")\ndev.off()\nplot(c(2, 4, 3), main = \"Second default device\")\n");
+            string initial = Start(first, "initial", "plot(1:3, main = \"First page\")\ncat(\"SHELL_TEST_SIZE:\", paste(dev.size(\"in\"), collapse = \"x\"), \"\\n\")\nplot(3:1, main = \"Second page\")\ndev.off()\nplot(c(2, 4, 3), main = \"Second default device\")\n");
             await Completed(first);
             string[] initialFiles = await CheckCharts(first, initial, 2, 1);
+            Check(Pane(first).Text.Contains("SHELL_TEST_SIZE: 7x7"), "ordinary Windows R plots use the SVG device's default 7 by 7 inch size");
             var initialState = initialFiles.ToDictionary(f => f, f => (Bytes: File.ReadAllBytes(f), Modified: File.GetLastWriteTimeUtc(f)));
 
             string rerun = Start(first, "rerun", "plot(c(2, 4, 1), main = \"Later run\")\n");
@@ -115,7 +124,7 @@ internal static partial class Program
                 "rerunning a script creates new chart files and preserves every earlier page's bytes and timestamp");
 
             // Hold the first process after it has drawn a page. The second must
-            // finish while the first still owns an open PDF device, then release it.
+            // finish while the first still owns an open SVG device, then release it.
             string slow = Start(first, "slow", "plot(1:4, main = \"Slow first page\")\nwriteLines(\"ready\", " + RString(ready)
                 + ")\nwhile (!file.exists(" + RString(release) + ")) Sys.sleep(0.05)\nplot(4:1, main = \"Slow second page\")\n");
             DateTime readyUntil = DateTime.UtcNow.AddSeconds(60);
@@ -141,52 +150,61 @@ internal static partial class Program
             string[] directOutput = await Task.WhenAll(directScripts.Select(p => Task.Run(() =>
                 RController.RunScriptCapturingOutput(p.Text, version, CancellationToken.None, false))));
             string[] directIds = directScripts.Select(p => RunId(p.Manifest)).ToArray();
-            Check(directIds.Distinct().Count() == 2 && directIds.All(id => File.Exists(Path.Combine(folder, "Rplot-" + id + "-1-001.pdf")))
+            Check(directIds.Distinct().Count() == 2 && directIds.All(id => File.Exists(Path.Combine(folder, "Rplot-" + id + "-1-001.svg")))
                 && directOutput.All(output => output.Contains("SHELL_TEST_DEVICE:") && !output.Contains("(R stopped with exit code")),
                 "the public R runner allocates distinct automatic chart files without a window-supplied run identifier");
-            foreach (string id in directIds) await CheckPdf(Path.Combine(folder, "Rplot-" + id + "-1-001.pdf"), 1);
+            foreach (string id in directIds) CheckSvg(Path.Combine(folder, "Rplot-" + id + "-1-001.svg"));
 
             string failed = Start(first, "error", "plot(1:3, main = \"Page before error\")\nplot(3:1, main = \"Another page before error\")\nstop(\"expected failure after plotting\")\n");
             await Completed(first, expectedError: true);
             await CheckCharts(first, failed, 2);
-            Check(Pane(first).Text.Contains("expected failure after plotting"), "the failing script keeps its R error alongside its flushed PDF charts");
+            Check(Pane(first).Text.Contains("expected failure after plotting"), "the failing script keeps its R error alongside its flushed SVG charts");
 
             string split = Start(first, "separate-page-files", "dev.new(onefile = FALSE, width = 5, height = 3)\ncat(\"SHELL_TEST_SIZE:\", paste(dev.size(\"in\"), collapse = \"x\"), \"\\n\")\nplot(1:3, main = \"First separate page\")\nplot(3:1, main = \"Second separate page\")\n");
             await Completed(first);
-            await CheckChartFiles(first, split, (1, 1, 1), (1, 2, 1));
-            Check(Pane(first).Text.Contains("SHELL_TEST_SIZE: 5x3"), "dev.new forwards explicit PDF width, height and separate-page choices");
+            await CheckChartFiles(first, split, (1, 1), (1, 2));
+            Check(Pane(first).Text.Contains("SHELL_TEST_SIZE: 5x3"), "dev.new forwards explicit SVG width, height and separate-page choices");
 
-            string options = Start(first, "pdf-options", "pdf.options(width = 6, height = 4, onefile = FALSE)\nplot(1:3, main = \"Options first page\")\ncat(\"SHELL_TEST_SIZE:\", paste(dev.size(\"in\"), collapse = \"x\"), \"\\n\")\nplot(3:1, main = \"Options second page\")\n");
+            string optionsStem = "shell-options-" + Guid.NewGuid().ToString("N");
+            string[] optionPdfs = Enumerable.Range(1, 2).Select(page => Path.Combine(folder, optionsStem + $"-{page:000}.pdf")).ToArray();
+            synthetic.AddRange(optionPdfs);
+            string options = Start(first, "pdf-options", "pdf.options(width = 6, height = 4, onefile = FALSE)\npdf(file = " + RString(Path.Combine(folder, optionsStem + "-%03d.pdf")) + ")\nplot(1:3, main = \"Options first page\")\ncat(\"SHELL_TEST_SIZE:\", paste(dev.size(\"in\"), collapse = \"x\"), \"\\n\")\nplot(3:1, main = \"Options second page\")\n");
             await Completed(first);
-            await CheckChartFiles(first, options, (1, 1, 1), (1, 2, 1));
-            Check(Pane(first).Text.Contains("SHELL_TEST_SIZE: 6x4"), "ordinary plots retain pdf.options width, height and separate-page defaults");
+            string optionsId = RunId(options);
+            foreach (string path in optionPdfs) await CheckPdf(path, 1);
+            Check(Pane(first).Text.Contains("SHELL_TEST_SIZE: 6x4")
+                && !Directory.GetFiles(folder, "Rplot-" + optionsId + "-*.svg").Any()
+                && (await ChartLinks(first)).SequenceEqual(optionPdfs.Select(path => new Uri(path).AbsoluteUri)),
+                "an explicit PDF device retains pdf.options dimensions and separate-page defaults with its chosen filenames");
+            foreach (string path in optionPdfs) File.Delete(path);
 
-            string nullFile = Start(first, "null-file", "dev.new(file = NULL, width = 5, height = 3)\nplot(1:3, main = \"Deliberately no output file\")\ndev.off()\n");
+            string nullFile = Start(first, "null-file", "pdf(file = NULL, width = 5, height = 3)\nplot(1:3, main = \"Deliberately no output file\")\ndev.off()\n");
             await Completed(first);
             string nullId = RunId(nullFile);
-            Check(!Directory.GetFiles(folder, "Rplot-" + nullId + "-*.pdf").Any() && (await ChartLinks(first)).Length == 0,
-                "dev.new(file = NULL) deliberately creates no automatic chart file or link");
+            Check(!Directory.GetFiles(folder, "Rplot-" + nullId + "-*.svg").Any() && (await ChartLinks(first)).Length == 0,
+                "an explicit pdf(file = NULL) deliberately creates no automatic chart file or link");
 
             string chosenPdf = Path.Combine(folder, "shell-chosen-" + Guid.NewGuid().ToString("N") + ".pdf");
             synthetic.Add(chosenPdf);
-            string chosen = Start(first, "chosen-file", "dev.new(file = " + RString(chosenPdf) + ", width = 6, height = 4)\nplot(1:3, main = \"Named PDF first page\")\nplot(3:1, main = \"Named PDF second page\")\n");
+            string chosen = Start(first, "chosen-file", "pdf(file = " + RString(chosenPdf) + ", width = 6, height = 4)\nplot(1:3, main = \"Named PDF first page\")\nplot(3:1, main = \"Named PDF second page\")\n");
             await Completed(first);
             string chosenId = RunId(chosen);
             await CheckPdf(chosenPdf, 2);
-            Check(!Directory.GetFiles(folder, "Rplot-" + chosenId + "-*.pdf").Any()
+            Check(!Directory.GetFiles(folder, "Rplot-" + chosenId + "-*.svg").Any()
                 && (await ChartLinks(first)).SequenceEqual(new[] { new Uri(chosenPdf).AbsoluteUri }),
-                "dev.new retains an explicit PDF filename and shows its original file link");
+                "an explicit PDF retains its chosen filename, multiple pages and original file link");
             File.Delete(chosenPdf);
 
             string explicitSvg = Path.Combine(folder, "shell-explicit-" + Guid.NewGuid().ToString("N") + ".svg");
             synthetic.Add(explicitSvg);
-            string explicitManifest = Start(first, "explicit-svg", "svg(" + RString(explicitSvg) + ", width = 5, height = 4)\nplot(1:3, main = \"Explicit SVG still works\")\ndev.off()\n");
+            string explicitManifest = Start(first, "explicit-svg", "dev.new(filename = " + RString(explicitSvg) + ", width = 5, height = 3)\nplot(1:3, main = \"Explicit SVG still works\")\ncat(\"SHELL_TEST_SIZE:\", paste(dev.size(\"in\"), collapse = \"x\"), \"\\n\")\ndev.off()\n");
             await Completed(first);
             string explicitId = RunId(explicitManifest);
             string[] explicitLinks = await ChartLinks(first);
             Check(File.ReadAllText(explicitSvg).Contains("<svg") && explicitLinks.SequenceEqual(new[] { new Uri(explicitSvg).AbsoluteUri })
-                && !Directory.GetFiles(folder, "Rplot-" + explicitId + "-*.pdf").Any(),
-                "an explicit SVG device stays SVG and is shown without creating an automatic PDF");
+                && Pane(first).Text.Contains("SHELL_TEST_SIZE: 5x3")
+                && !Directory.GetFiles(folder, "Rplot-" + explicitId + "-*.svg").Any(),
+                "dev.new forwards an explicit SVG filename and dimensions without creating another automatic chart");
 
             // Ownership must take priority over clocks: a foreign automatic chart
             // with a future timestamp is excluded, while this run's old chart stays.

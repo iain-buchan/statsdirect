@@ -190,22 +190,22 @@ namespace StatsDirect.R
             {
                 tw.Write(SCRIPT_HEAD, rFolder.Replace(@"\", @"\\"));
                 tw.WriteLine();
-                // Ordinary R plots use its standard 7 by 7 inch PDF device, with every page retained in one file per device.
-                // The run/device identity preserves earlier charts and links; the page placeholder also supports onefile=FALSE.
+                // Ordinary Windows R plots use SVG, one file per page at the device's standard 7 by 7 inch default size.
+                // Run, device and page identities preserve earlier charts and their file links across reruns and concurrent windows.
                 // Explicit devices in the script and the separate SVG report-chart path keep their own formats.
-                // dev.new() keeps only arguments named in the device's formals, so expose pdf's formals instead of just (...).
-                // Forward only supplied arguments: pdf itself resolves its defaults, including those depending on other arguments.
+                // dev.new() keeps only arguments named in the device's formals, so expose svg's formals instead of just (...).
+                // Forward only supplied arguments: svg itself resolves its defaults, including those depending on other arguments.
                 tw.WriteLine($$"""
                     options(device = local({
                       n <- 0
                       device <- function() {
                         n <<- n + 1
                         args <- mget(as.character(names(as.list(match.call())[-1L])), envir = environment(), inherits = FALSE)
-                        if (!"file" %in% names(args))
-                          args$file <- file.path(userdir, sprintf("Rplot-{{runId:N}}-%d-%%03d.pdf", n))
-                        do.call(grDevices::pdf, args)
+                        if (!"filename" %in% names(args))
+                          args$filename <- file.path(userdir, sprintf("Rplot-{{runId:N}}-%d-%%03d.svg", n))
+                        do.call(grDevices::svg, args)
                       }
-                      formals(device) <- formals(grDevices::pdf)
+                      formals(device) <- formals(grDevices::svg)
                       device
                     }))
                     """);

@@ -5,7 +5,7 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 ##[Unreleased]
 
 ### Changed
-- Ordinary R-session plots default to multi-page PDF, with unique run/device filenames and the original vector files linked from the output pane. Explicit devices, filenames, dimensions, `onefile` choices and `pdf.options()` remain effective. Integrated report charts continue to use SVG.
+- Ordinary R-session plots on Windows default to SVG, with one uniquely named file per page and isolated chart drawing definitions. Explicit devices, filenames and SVG options remain effective. Mac ordinary R output retains its PDF default; integrated report charts use SVG on both platforms.
 
 ### Fixed
 - Automatic R chart filenames include a unique run identity as well as device and page numbers, preserving charts and their file links across reruns, concurrent script windows and application restarts. Each script window shows only its own automatic charts, and temporary runner scripts are excluded from output links.
