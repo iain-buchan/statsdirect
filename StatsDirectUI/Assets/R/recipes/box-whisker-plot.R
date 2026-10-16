@@ -250,7 +250,8 @@ sd_box_draw <- function() {
   title(xlab = if (box_horizontal) display_axis_title else "",
         ylab = if (box_horizontal) "" else display_axis_title,
         family = device_family(box_axis_title_font$family),
-        cex.lab = box_axis_title_font$size / par("ps"), font.lab = box_axis_title_font$font)
+        cex.lab = box_axis_title_font$size / par("ps"), font.lab = box_axis_title_font$font,
+        line = par("mgp")[1] + max(0, axis_lines - 1) * 0.5 * box_axis_title_font$size / par("ps"))
   # Linear scales carry the user's interval and first tick. Native natural-log
   # scales label powers of two; their positions are equally spaced in any log base.
   value_ticks <- NULL
