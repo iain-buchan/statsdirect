@@ -9,32 +9,34 @@ internal static partial class Program
     static async Task CheckScriptCharts(frmMain main, Form grid)
     {
         string folder = SDConfiguration.MyStatsDirectRFolder;
-        string svgFile = Path.Combine(folder, "shell-chart-check.svg"), pngFile = Path.Combine(folder, "shell-chart-check.png"), pdfFile = Path.Combine(folder, "shell-chart-check.pdf"), defaultFile = Path.Combine(folder, "Rplot001.svg"), textFile = Path.Combine(folder, "shell-chart-check.txt");
-        foreach (string f in new[] { svgFile, pngFile, pdfFile, defaultFile, textFile }) if (File.Exists(f)) File.Delete(f);
+        string svgFile = Path.Combine(folder, "shell-chart-check.svg"), pngFile = Path.Combine(folder, "shell-chart-check.png"), pdfFile = Path.Combine(folder, "shell-chart-check.pdf"), defaultFile = Path.Combine(folder, "Rplot1-001.svg"), secondFile = Path.Combine(folder, "Rplot2-001.svg"), textFile = Path.Combine(folder, "shell-chart-check.txt");
+        foreach (string f in new[] { svgFile, pngFile, pdfFile, defaultFile, secondFile, textFile }) if (File.Exists(f)) File.Delete(f);
         using var script = (Form)Call(main, "CreateScriptWindow");
         try
         {
-            // a plot without a device of its own goes to the run's default device, an SVG file in the R folder (R's own default for a run is a PDF); a PDF a script writes is shown too
-            Call(script, "ShowR", "plot(c(2, 4, 3), main = \"default device\")\nsvg(\"shell-chart-check.svg\", width = 5, height = 4)\nplot(1:3, main = \"shell\")\ndev.off()\npng(\"shell-chart-check.png\", width = 300, height = 200)\nplot(3:1)\ndev.off()\npdf(\"shell-chart-check.pdf\", width = 4, height = 3)\nplot(1:2)\ndev.off()\nwriteLines(\"x\", \"shell-chart-check.txt\")\n", "Chart check", null, true);
+            // a plot without a device of its own goes to the run's default device, an SVG file in the R folder (R's own default for a run is a PDF), and a second
+            // default device after dev.off() gets a file of its own rather than writing over the first; a PDF a script writes is shown too
+            Call(script, "ShowR", "plot(c(2, 4, 3), main = \"default device\")\ndev.off()\nsvg(\"shell-chart-check.svg\", width = 5, height = 4)\nplot(1:3, main = \"shell\")\ndev.off()\npng(\"shell-chart-check.png\", width = 300, height = 200)\nplot(3:1)\ndev.off()\npdf(\"shell-chart-check.pdf\", width = 4, height = 3)\nplot(1:2)\ndev.off()\nwriteLines(\"x\", \"shell-chart-check.txt\")\nplot(c(2, 2), main = \"second default device\")\n", "Chart check", null, true);
             var pane = (Control)Field(script, "outputPane");
             var until = DateTime.UtcNow.AddSeconds(120);
             while (!pane.Text.Contains("End of run") && DateTime.UtcNow < until) await Task.Delay(100);
             await (Task)Call(pane, "SettledAsync");
             string text = pane.Text;
             Check(text.Contains("End of run") && File.Exists(svgFile) && File.Exists(pngFile) && File.Exists(pdfFile), "the script runs in R and writes an SVG, a PNG and a PDF chart to the R folder");
-            Check(File.Exists(defaultFile) && text.Contains("Chart: Rplot001.svg") && !text.Contains("Rplots.pdf"), "a plot without a device of its own goes to an SVG file in the R folder, not to R's default PDF");
+            Check(File.Exists(defaultFile) && File.Exists(secondFile) && text.Contains("Chart: Rplot1-001.svg") && text.Contains("Chart: Rplot2-001.svg") && !text.Contains("Rplots.pdf"),
+                  "a plot without a device of its own goes to an SVG file in the R folder, not to R's default PDF, and a second default device gets its own file");
             var browser = (Microsoft.Web.WebView2.WinForms.WebView2)Field(pane, "browser");
             async Task<string> Eval(string js) => JsonSerializer.Deserialize<string>(await browser.CoreWebView2.ExecuteScriptAsync("String(" + js + ")"))!;
-            Check(await Eval("document.querySelectorAll('svg').length") == "2" && await Eval("document.querySelectorAll('img').length") == "1" && await Eval("document.querySelectorAll('iframe.pdf').length") == "1",
-                  "the pane draws both SVG charts as they are, the PNG chart as an image and the PDF chart in a viewer");
-            string pngLink = new Uri(pngFile).AbsoluteUri, svgLink = new Uri(svgFile).AbsoluteUri, pdfLink = new Uri(pdfFile).AbsoluteUri, defaultLink = new Uri(defaultFile).AbsoluteUri;
+            Check(await Eval("document.querySelectorAll('svg').length") == "3" && await Eval("document.querySelectorAll('img').length") == "1" && await Eval("document.querySelectorAll('iframe.pdf').length") == "1",
+                  "the pane draws the three SVG charts as they are, the PNG chart as an image and the PDF chart in a viewer");
+            string pngLink = new Uri(pngFile).AbsoluteUri, svgLink = new Uri(svgFile).AbsoluteUri, pdfLink = new Uri(pdfFile).AbsoluteUri, defaultLink = new Uri(defaultFile).AbsoluteUri, secondLink = new Uri(secondFile).AbsoluteUri;
             string textLink = new Uri(textFile).AbsoluteUri;
             string order = await Eval("Array.from(document.querySelectorAll('#t a')).map(function(a){return a.textContent+'='+a.getAttribute('href')}).join('|')");
-            Check(order == $"Chart: Rplot001.svg={defaultLink}|Chart: shell-chart-check.pdf={pdfLink}|Chart: shell-chart-check.png={pngLink}|Chart: shell-chart-check.svg={svgLink}|{textLink}={textLink}" && text.IndexOf("Files written", StringComparison.Ordinal) > text.IndexOf("Chart: shell-chart-check.svg", StringComparison.Ordinal),
+            Check(order == $"Chart: Rplot1-001.svg={defaultLink}|Chart: Rplot2-001.svg={secondLink}|Chart: shell-chart-check.pdf={pdfLink}|Chart: shell-chart-check.png={pngLink}|Chart: shell-chart-check.svg={svgLink}|{textLink}={textLink}" && text.IndexOf("Files written", StringComparison.Ordinal) > text.IndexOf("Chart: shell-chart-check.svg", StringComparison.Ordinal),
                   "each chart's caption, in file-name order, is its one link, and the list of files written that follows names only the file not shown as a chart");
             // sizes: the SVG at its svg element's 5 by 4 inches (480 by 384 pixels) or narrowed to the pane keeping its shape; the PNG at its 300 by 200
             int paneWidth = (int)Math.Round(pane.ClientSize.Width * 96.0 / pane.DeviceDpi) - 16;
-            string[] svgBox = (await Eval("(function(){var r=document.querySelectorAll('svg')[1].getBoundingClientRect();return Math.round(r.width)+','+Math.round(r.height)})()")).Split(',');
+            string[] svgBox = (await Eval("(function(){var r=document.querySelectorAll('svg')[2].getBoundingClientRect();return Math.round(r.width)+','+Math.round(r.height)})()")).Split(',');
             string[] imgBox = (await Eval("(function(){var i=document.querySelector('img');return i.naturalWidth+','+i.naturalHeight+','+Math.round(i.getBoundingClientRect().width)})()")).Split(',');
             int svgWidth = int.Parse(svgBox[0]), svgHeight = int.Parse(svgBox[1]);
             Check(Math.Abs(svgWidth - Math.Min(480, paneWidth)) <= 20 && Math.Abs(svgWidth * 384.0 / 480 - svgHeight) <= 2 && imgBox[0] == "300" && imgBox[1] == "200" && Math.Abs(int.Parse(imgBox[2]) - Math.Min(300, paneWidth)) <= 20,
@@ -45,7 +47,7 @@ internal static partial class Program
         }
         finally
         {
-            foreach (string f in new[] { svgFile, pngFile, pdfFile, defaultFile, textFile }) if (File.Exists(f)) File.Delete(f);
+            foreach (string f in new[] { svgFile, pngFile, pdfFile, defaultFile, secondFile, textFile }) if (File.Exists(f)) File.Delete(f);
             grid.Activate();
             await Task.Delay(150);
         }

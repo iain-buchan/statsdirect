@@ -192,8 +192,10 @@ namespace StatsDirect.R
                 tw.Write(SCRIPT_HEAD, rFolder.Replace(@"\", @"\\"));
                 tw.WriteLine();
                 // a plot drawn without a device of its own goes to an SVG file in the R folder, one per page, which the script window shows;
-                // R's own default for a run is a PDF, which it cannot draw
-                tw.WriteLine("options(device = function(...) svg(filename = file.path(userdir, \"Rplot%03d.svg\"), ...))");
+                // R's own default for a run is a PDF, which it cannot draw.  The file is named by the device and the page (Rplot1-001.svg),
+                // because R's page numbers start again with each device: a script that plots, closes the device and plots again would
+                // otherwise write over its first chart
+                tw.WriteLine("options(device = local({ n <- 0; function(...) { n <<- n + 1; svg(filename = file.path(userdir, sprintf(\"Rplot%d-%%03d.svg\", n)), ...) } }))");
                 tw.WriteLine(repairedScriptBody);
             }
             try
