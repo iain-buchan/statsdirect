@@ -4,6 +4,9 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
 ##[Unreleased]
 
+### Fixed
+- R charts in the script output pane display in separate SVG documents, preventing lettering, clipping and other drawing definitions from one chart corrupting later charts on the same page.
+
 ##[v5.2.1] 2026-10-16
 
 Version 5.2.1 shows the charts an R script draws in the script window, corrects the tabs of the document windows and fixes opening older RTF reports. The statistical engine, its operations, the Continue in R recipes and the help are unchanged from 5.2.0.

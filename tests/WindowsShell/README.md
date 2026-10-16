@@ -1,5 +1,15 @@
 # Production Windows shell checks
 
+16 October 2026 R SVG chart isolation: **80 checks pass**. Native browser captures
+verify that charts with deliberately conflicting glyph, clipping, gradient and
+CSS definitions retain their own shapes and colours, including a repeated chart.
+The original inline implementation fails this regression. SVGs now display as
+separate vector image documents and retain their size, aspect ratio and original
+file links. The real R chart tests cover multiple SVG pages, PNG and PDF output;
+any pre-existing output files are restored byte-for-byte with their timestamps.
+Set `STATSDIRECT_SVG_ARTIFACTS` to keep the browser captures in a chosen folder.
+The Release build succeeds with the existing NU1701 and CS0252 warnings.
+
 16 October 2026 startup logo and report closing: **73 checks pass**, with UI-thread
 exceptions captured and failing the run. The real loading window stays visible
 during main-window construction, Load and earlier Shown handlers, then closes

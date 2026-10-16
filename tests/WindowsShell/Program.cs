@@ -82,6 +82,7 @@ internal static partial class Program
         await CheckWorkbookTabs(main, grid, workbook);
         await CheckDocumentToolbars(main, grid, workbook);
         await CheckScriptCharts(main, grid);
+        await CheckScriptSvgIsolation(main, grid, Environment.GetEnvironmentVariable("STATSDIRECT_SVG_ARTIFACTS"));
         await CheckTutorEncoding();
         Call(app, "ShowCalculator");
         var view = (Control)Get(app, "CalculatorView");

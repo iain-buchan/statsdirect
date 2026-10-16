@@ -190,7 +190,13 @@ namespace StatsDirect.UI
         {
             string picture;
             if (".svg".Equals(file.Extension, StringComparison.OrdinalIgnoreCase))
-                picture = Sanitised(RResultsParser.VectorPicture(File.ReadAllText(file.FullName)).Svg);
+            {
+                var vector = RResultsParser.VectorPicture(File.ReadAllText(file.FullName));
+                // Each SVG has its own document. R reuses glyph and clip IDs on
+                // later pages; inline SVGs would resolve those in earlier charts.
+                string data = Convert.ToBase64String(Encoding.UTF8.GetBytes(Sanitised(vector.Svg)));
+                picture = "<img class=\"svg-chart\" width=\"" + vector.Width + "\" height=\"" + vector.Height + "\" alt=\"" + Escape(file.Name) + "\" src=\"data:image/svg+xml;base64," + data + "\">";
+            }
             else if (".pdf".Equals(file.Extension, StringComparison.OrdinalIgnoreCase))
                 picture = "<iframe class=\"pdf\" title=\"" + Escape(file.Name) + "\" src=\"data:application/pdf;base64," + Convert.ToBase64String(File.ReadAllBytes(file.FullName)) + "#toolbar=0&navpanes=0&view=FitH\"></iframe>";
             else
