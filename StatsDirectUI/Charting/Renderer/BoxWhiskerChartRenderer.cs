@@ -94,7 +94,7 @@ namespace StatsDirect.Charting.Renderer
             AxisScales axisScales = LayoutChartAndDrawAxes(Definition.ChartOptions.Title,
                 new AxisDefinition(bwOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType),
                 new AxisDefinition(null, AxisMode.Series, Definition.ScaleParameters.Y.ScaleType) { Series = seriesToUse },
-                false, false);
+                bwOptions.ShouldBoxAxes, false);
             MarkerType mt = ChartPreferences.MarkerTypes[10];
             ColorDescriptor black = ColorDescriptor.Black;
             MarkerType crossMarker = new() { MarkerShape = MarkerShape.Cross, MarkerColor = black, MarkerSize = 10 };
@@ -361,7 +361,7 @@ namespace StatsDirect.Charting.Renderer
             AxisScales axisScales = LayoutChartAndDrawAxes(Definition.ChartOptions.Title,
                 new AxisDefinition(null, AxisMode.Series, Definition.ScaleParameters.X.ScaleType) { Series = seriesToUse },
                 new AxisDefinition(bwOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType),
-                false, false);
+                bwOptions.ShouldBoxAxes, false);
 
             PenDescriptor blackPen = GetMarkerPen(ChartPreferences.MarkerTypes[10]);
             PenDescriptor dottedBlackPen = GetMarkerPen(ChartPreferences.MarkerTypes[10]);

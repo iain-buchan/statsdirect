@@ -8,6 +8,7 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 - Ordinary R-session plots on Windows default to SVG, with one uniquely named file per page and isolated chart drawing definitions. Explicit devices, filenames and SVG options remain effective. Mac ordinary R output retains its PDF default; integrated report charts use SVG on both platforms.
 
 ### Fixed
+- Continue in R for a box-and-whisker plot produces one chart from the selected columns, preserving the chosen summary method, fences, confidence level, orientation, titles, labels, fonts and axis settings. Chart choices are stored with new report results; older results use standard options with a notice when their original choices were not recorded. Native box-and-whisker charts also honour the Box axes option in both orientations.
 - Automatic R chart filenames include a unique run identity as well as device and page numbers, preserving charts and their file links across reruns, concurrent script windows and application restarts. Each script window shows only its own automatic charts, and temporary runner scripts are excluded from output links.
 - Imported and pasted report charts preserve their own SVG glyphs, colours, clipping and gradients, including repeated charts and R identifiers containing `=`. Chart styles and local drawing references remain separate through editing, HTML reopening and Word/PDF export.
 

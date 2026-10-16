@@ -218,6 +218,52 @@ namespace StatsDirect.TemplateProcessing
         {
             results.AddInput(STATSDIRECT_CHART_OPTIONS + (step.ChartName ?? string.Empty), definition.ChartOptions);
             results.AddInput(STATSDIRECT_CHART_SCALE_PARAMETERS + (step.ChartName ?? string.Empty), definition.ScaleParameters);
+            if (definition.ChartOptions is BoxWhiskerOptions box)
+            {
+                // Keep the final dialog choices as ordinary portable values. RunRecord deliberately omits the internal chart
+                // objects above; these settings travel with the selected data through saved reports and Continue in R on either host.
+                ParameterBag settings = new();
+                settings.AddInput("method", (int)box.Method);
+                settings.AddInput("innerFence", box.UseInnerFence);
+                settings.AddInput("outerFence", box.UseOuterFence);
+                settings.AddInput("markMeanAndMedian", box.MarkMeanAndMedian);
+                settings.AddInput("confidence", box.Cco);
+                settings.AddInput("horizontal", box.Orientation == ChartOrientation.Horizontal);
+                settings.AddInput("title", box.Title ?? string.Empty);
+                settings.AddInput("axisTitle", box.XAxisTitle ?? string.Empty);
+                settings.AddInput("seriesTitles", Array.ConvertAll(box.SeriesTitles ?? Array.Empty<string>(), title => title ?? string.Empty));
+                settings.AddInput("boxAxes", box.ShouldBoxAxes);
+                settings.AddInput("lineWidth", (double)box.AxisLineThickness);
+                void Font(string prefix, FontDescriptor font)
+                {
+                    if (font == null) return;
+                    settings.AddInput(prefix + "Family", font.FontFamily ?? "Arial");
+                    settings.AddInput(prefix + "Size", (double)font.SizeInPoints);
+                    settings.AddInput(prefix + "Style", font.Style);
+                }
+                Font("titleFont", box.TitleFontDescriptor);
+                Font("axisTitleFont", box.AxisTitleFontDescriptor);
+                Font("axisLabelFont", box.AxisLabelFontDescriptor);
+
+                // The value scale is X even for a vertical box plot; the renderer swaps a clone for drawing that orientation.
+                AxisScaleParameters axis = definition.ScaleParameters.X;
+                settings.AddInput("valueScale", (int)axis.ScaleType);
+                settings.AddInput("valueGrid", axis.HasGridLines);
+                settings.AddInput("valueGridStyle", (int)axis.GridLineDashStyle);
+                if (axis.MarkerLineValue is double marker && double.IsFinite(marker)) settings.AddInput("valueMarker", marker);
+                if (axis.AxisScale is IAxisScale scale && double.IsFinite(scale.MinimumScaleValue) && double.IsFinite(scale.MaximumScaleValue)
+                    && scale.MinimumScaleValue < scale.MaximumScaleValue)
+                {
+                    settings.AddInput("valueMinimum", scale.MinimumScaleValue);
+                    settings.AddInput("valueMaximum", scale.MaximumScaleValue);
+                    if (scale is ILinearAxisScale linear && double.IsFinite(linear.Interval) && linear.Interval > 0)
+                    {
+                        settings.AddInput("valueInterval", linear.Interval);
+                        settings.AddInput("valueFirstTick", linear.FirstMajorTicValue);
+                    }
+                }
+                results.AddInput("boxWhisker", settings);
+            }
         }
 
         public StepOutput ExecuteInternal(IterationStep step, ParameterBag parms)

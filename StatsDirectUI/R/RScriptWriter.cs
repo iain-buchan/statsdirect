@@ -319,7 +319,7 @@ namespace StatsDirect.R
             if (binding != null)
             {
                 foreach ((string variable, string parameter) in binding.Settings)
-                    if (parameters.ValueKind == JsonValueKind.Object && parameters.TryGetProperty(parameter, out JsonElement value) && (IsScalar(value) || value.ValueKind is JsonValueKind.Array or JsonValueKind.Null))
+                    if (parameters.ValueKind == JsonValueKind.Object && parameters.TryGetProperty(parameter, out JsonElement value) && (IsScalar(value) || value.ValueKind is JsonValueKind.Array or JsonValueKind.Object or JsonValueKind.Null))
                         s.Append(variable).Append(" <- ").Append(Literal(value)).Append('\n');
                     else
                         s.Append(variable).Append(" <- NULL   # the run had no ").Append(Plain(parameter)).Append('\n');   // an option the run was not asked, or skipped

@@ -32,6 +32,8 @@ internal static partial class Program
             if (Regex.IsMatch(xml, "<builtin function-name=\"dist[A-Za-z]+\""))
                 parameters.UnionWith(new[] { "value", "df", "df2", "lower", "upper", "two_sided", "asked" });   // the Distributions calculator's boxes, which it records itself
             if (xml.Contains("<grouped-covariance>")) parameters.Add("ci");   // its confidence level is asked through the grid and recorded as the setting ci
+            // The chart dialog records its final settings as a neutral parameter bag after it closes; those settings are not XML inputs.
+            if ((op is "BoxWhiskerPlot" or "BoxWhiskerPlotText") && xml.Contains("<chart-type>BoxWhisker</chart-type>")) parameters.Add("boxWhisker");
             Match settings = Regex.Match(text, "^# settings:\\s*(.*)$", RegexOptions.Multiline);
             if (settings.Success)
                 foreach (string item in settings.Groups[1].Value.Split(',').Select(x => x.Trim()).Where(x => x.Contains('=')))

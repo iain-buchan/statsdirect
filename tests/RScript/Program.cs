@@ -30,6 +30,8 @@ internal static partial class Program
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "options") { CheckOptions(); Console.WriteLine($"PASS {checks} Continue in R checks (the options alone)"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "options2") { CheckOptions2(); Console.WriteLine($"PASS {checks} Continue in R checks (the second batch of options alone)"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "options3") { CheckOptions3(); Console.WriteLine($"PASS {checks} Continue in R checks (the confidence levels alone)"); return 0; }
+            if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "box") { CheckBoxWhisker(); Console.WriteLine($"PASS {checks} box and whisker Continue in R checks"); return 0; }
+            if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "recipes") { CheckRecipes(); CheckRecipesAgainstHelp(); Console.WriteLine($"PASS {checks} R recipe checks"); return 0; }
             CheckRecord();
             CheckThreshold();
             CheckHash();
@@ -50,6 +52,7 @@ internal static partial class Program
             CheckRegressionFollowOn();
             CheckTwoLevel();
             CheckColumnLocator();
+            CheckBoxWhisker();
             Console.WriteLine($"PASS {checks} Continue in R checks");
             return 0;
         }
@@ -71,9 +74,9 @@ internal static partial class Program
     }
 
     /// <summary>The run of an operation with the given answers: the record it left at its last report step, and its outputs.</summary>
-    private static (OperationRun run, StepOutput output) Run(string name, Dictionary<string, object> answers, ParameterBag context = null)
+    private static (OperationRun run, StepOutput output) Run(string name, Dictionary<string, object> answers, ParameterBag context = null, Action<IFillable> amend = null)
     {
-        Host host = new(answers);
+        Host host = new(answers, amend);
         ITemplateProcessor processor = new TemplateProcessor(host);
         StepOutput output = processor.Execute(Load(name), context ?? new ParameterBag());   // a context: the earlier run a follow-on operation continues
         return (host.LastRun, output);
@@ -102,14 +105,15 @@ internal static partial class Program
 internal sealed class Host : ITemplateHost, IProgressBar
 {
     private readonly Dictionary<string, object> answers;
+    private readonly Action<IFillable> amend;
     public OperationRun LastRun { get; private set; }
-    public Host(Dictionary<string, object> answers) { this.answers = answers; }
+    public Host(Dictionary<string, object> answers, Action<IFillable> amend = null) { this.answers = answers; this.amend = amend; }
 
     public Operation Operation { get; set; }
     public IDictionary<string, ParameterBag> SessionParametersPerOperation { get; } = new Dictionary<string, ParameterBag>();
     public ParameterBag SessionParametersAcrossOperations => new();
     public SDPreferences Preferences { get; } = System.Reflection.DispatchProxy.Create<SDPreferences, PreferencesProxy>();
-    public ParameterBag Amend(IFillable options, ParameterBag context) => context;
+    public ParameterBag Amend(IFillable options, ParameterBag context) { amend?.Invoke(options); return context; }
     public bool CanCombine(Parameter parameter) => false;
     public void Error(string message, string caption) => throw new Exception("the operation refused: " + message);
     public void Warning(string message, string caption) { }

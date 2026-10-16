@@ -27,7 +27,19 @@ internal static partial class Program
                 JsonElement example = JsonDocument.Parse(File.ReadAllText(Path.Combine(examples, op + ".json"))).RootElement;
                 string record = RecordOf(example);
                 RScript script = RScriptWriter.Write(JsonDocument.Parse(record).RootElement, null, null);
-                string output = RunR(script.Text, Path.Combine(folder, op));
+                string runFolder = Path.Combine(folder, op);
+                string scriptText = script.Text;
+                if (op == "BoxWhiskerPlot")
+                {
+                    // This recipe now draws one selected chart instead of running the help's three teaching illustrations.
+                    // Probe the statistics it actually plotted so the worked-example comparison still checks every numerical value.
+                    runFolder = Path.Combine(runFolder, Guid.NewGuid().ToString("N"));
+                    scriptText = "options(device = function(...) grDevices::svg(filename = \"selected-box-%03d.svg\", ...))\n" + scriptText + BoxWhiskerExampleProbe;
+                }
+                string output = RunR(scriptText, runFolder);
+                if (op == "BoxWhiskerPlot")
+                    Check(Directory.GetFiles(runFolder, "selected-box-*.svg").Length == 1,
+                          "the Cuzick worked-example recipe draws exactly one chart from the selected columns and recorded settings");
                 string ours = Figures(output);
                 if (example.TryGetProperty("nocompare", out JsonElement nc) && nc.ValueKind == JsonValueKind.True)
                 {
@@ -63,6 +75,28 @@ internal static partial class Program
         }
         Check(failures.Count == 0, $"every recipe prints the figures the help's script prints on the help's example: {agreed} of {operations.Length} agree" + (failures.Count > 0 ? "; differing: " + string.Join(", ", failures) : ""));
     }
+
+    // Use the recipe's calculated summaries, rather than recomputing a second set for the numeric comparison.
+    private const string BoxWhiskerExampleProbe = """
+
+stopifnot(box_method == 1L, box_inner_fence, box_outer_fence,
+          box_horizontal, !box_mark_mean_median,
+          identical(box_title, "Selected Cuzick cell lines"),
+          identical(box_axis_title, "Selected box-and-whisker settings"),
+          identical(box_series_titles, names(mets)))
+six <- function(x) formatC(x, digits = 6, format = "f", drop0trailing = TRUE)
+for (name in names(box_summaries)) {
+  s <- box_summaries[[name]]
+  cat(paste0(name, ":"), "n =", s$n, " min =", six(s$x[1]), " LQ =", six(s$box[1]),
+      " median =", six(s$centre), " UQ =", six(s$box[2]), " max =", six(s$x[s$n]), "\n")
+  beyond <- s$x[s$x < s$inner[1] | s$x > s$inner[2]]
+  if (length(beyond))
+    cat("   inner fences", six(s$inner[1]), "to", six(s$inner[2]),
+        " outer fences", six(s$outer[1]), "to", six(s$outer[2]),
+        " beyond the inner fence:", six(beyond), "\n")
+}
+
+""";
 
     /// <summary>The record a run on the help's example would leave, from the example as the generator captured it.</summary>
     private static string RecordOf(JsonElement example)
