@@ -71,6 +71,12 @@ namespace StatsDirect.UI
             set
             {
                 path = value;
+                // An unsaved working copy has no path, but still needs its display name.
+                if (value == null)
+                {
+                    if (tabPage != null) tabPage.ToolTipText = FriendlyName;
+                    return;
+                }
                 string fileName = System.IO.Path.GetFileNameWithoutExtension(value);
                 if (HasWindow)
                     Window.Text = fileName;

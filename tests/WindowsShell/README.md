@@ -1,5 +1,14 @@
 # Production Windows shell checks
 
+16 October 2026: **43 checks pass**, including the example-workbook tab regression.
+After entering data in a blank workbook, the harness opens Help > Example workbook,
+runs a real paired analysis from its Agreement sheet into the HTML report and returns
+to the workbook. The example and original tab names, original data and installed
+example file are preserved. Additional checks cover report-title changes, CSV import,
+unnamed temporary workbooks and saved-file path tooltips. These use the actual MDI
+tabs, SpreadsheetGear and WebView2; the test runner now includes their import/browser
+runtime dependencies. The Release application builds; no installer was rebuilt.
+
 12 October 2026 catch-up: all **28 shell checks** pass with an R script active for toolbar rendering. The RScript suite passes **163 checks**, including AI then R+, all eleven vector symbols and the single accessible Open in R control. Native Learning separately verifies the final Help ordering: Help after Window, updates in Help, Example workbook last below a separator.
 
 12 October 2026: **28 checks pass** with the common document toolbar. They cover worksheet and script undo/redo, one-click script Save, Find, native More overflow, the language selector, output selection retained through More, switching document toolbars, and calculator focus/undo routing. `STATSDIRECT_TOOLBAR_ARTIFACTS` optionally selects a directory for rendered grid/script toolbar images. The separate R script-window checks pass 22 assertions, including the labelled Run button starting the existing R workflow and print/Find/Help behaviour. No installer or release was created.

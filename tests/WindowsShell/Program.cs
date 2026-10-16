@@ -1,7 +1,7 @@
 using System.Reflection;
 using StatsDirect.UI;
 
-internal static class Program
+internal static partial class Program
 {
     const BindingFlags Internal = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance;
     static int checks;
@@ -59,6 +59,7 @@ internal static class Program
             workbook.RangeSelection = workbook.ActiveWorksheet.Cells["A1:B2"];
             return workbook.RangeSelection.Address;
         });
+        await CheckWorkbookTabs(main, grid, workbook);
         await CheckDocumentToolbars(main, grid, workbook);
         await CheckTutorEncoding();
         Call(app, "ShowCalculator");

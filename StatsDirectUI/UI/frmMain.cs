@@ -680,7 +680,15 @@ namespace StatsDirect.UI
                 child.MdiParent = this;
 
                 // Make and add the corresponding tab(page)
-                TabPage tabPage = new(child.Text);
+                TabPage tabPage = new(child.Text) { ToolTipText = child.Path ?? child.Text };
+                // Imported and example documents can acquire their display name after
+                // their tab is created. Keep every document's tab tied to its title.
+                child.TextChanged += (_, _) =>
+                {
+                    if (tabPage.IsDisposed) return;
+                    tabPage.Text = child.Text;
+                    tabPage.ToolTipText = child.Path ?? child.Text;
+                };
                 tabWindows.TabPages.Add(tabPage);
                 tabWindows.SelectedTab = tabPage;
 

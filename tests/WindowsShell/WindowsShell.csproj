@@ -8,6 +8,9 @@
     <Reference Include="StatsDirect"><HintPath>$(StatsDirectBin)/StatsDirect.dll</HintPath></Reference>
     <Reference Include="SpreadsheetGear"><HintPath>$(StatsDirectBin)/SpreadsheetGear.dll</HintPath></Reference>
     <Reference Include="SpreadsheetGear.Windows.Forms"><HintPath>$(StatsDirectBin)/SpreadsheetGear.Windows.Forms.dll</HintPath></Reference>
+    <PackageReference Include="ExcelDataReader" Version="3.9.0" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4258.31" />
     <Content Include="$(StatsDirectBin)/**" Link="%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
+  <Target Name="RemoveUnusedWebView2WpfReference" BeforeTargets="ResolveAssemblyReferences"><ItemGroup><Reference Remove="@(Reference)" Condition="'%(Reference.Filename)' == 'Microsoft.Web.WebView2.Wpf'" /></ItemGroup></Target>
 </Project>
