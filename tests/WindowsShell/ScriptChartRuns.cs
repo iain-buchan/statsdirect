@@ -20,8 +20,8 @@ internal static partial class Program
         string release = Path.Combine(scratch, "release-slow.txt"), ready = Path.Combine(scratch, "slow-ready.txt");
         var manifests = new List<string>();
         var synthetic = new List<string>();
-        var legacy = Directory.GetFiles(folder, "Rplot*.svg")
-            .Where(f => Regex.IsMatch(Path.GetFileName(f), @"^Rplot\d+-\d+\.svg$", RegexOptions.IgnoreCase))
+        var legacy = Directory.GetFiles(folder, "Rplot*")
+            .Where(f => new[] { ".svg", ".pdf" }.Contains(Path.GetExtension(f), StringComparer.OrdinalIgnoreCase))
             .ToDictionary(f => f, f => (Bytes: File.ReadAllBytes(f), Modified: File.GetLastWriteTimeUtc(f)));
         using var first = (Form)Call(main, "CreateScriptWindow");
         using var second = (Form)Call(main, "CreateScriptWindow");
@@ -53,26 +53,45 @@ internal static partial class Program
             return ids[0];
         }
 
-        async Task Completed(Form script)
+        async Task Completed(Form script, bool expectedError = false)
         {
             DateTime until = DateTime.UtcNow.AddSeconds(120);
             while ((bool)Field(script, "runningR") && DateTime.UtcNow < until) await Task.Delay(50);
             Check(!(bool)Field(script, "runningR") && Pane(script).Text.Contains("End of run")
-                && !Pane(script).Text.Contains("(R stopped with exit code"), "the real R chart run completes successfully");
+                && (expectedError ? Pane(script).Text.Contains("(R stopped with exit code 1)") : !Pane(script).Text.Contains("(R stopped with exit code")),
+                expectedError ? "an R error is reported after the chart run finishes" : "the real R chart run completes successfully");
             await (Task)Call(Pane(script), "SettledAsync");
         }
 
-        async Task<string[]> CheckCharts(Form script, string manifest, int pages)
+        async Task CheckPdf(string path, int pages)
+        {
+            var file = await Windows.Storage.StorageFile.GetFileFromPathAsync(path);
+            var pdf = await Windows.Data.Pdf.PdfDocument.LoadFromFileAsync(file);
+            Check(pdf.PageCount == pages, "the automatic PDF is readable and retains all " + pages + " chart page(s)");
+        }
+
+        async Task<string[]> ChartLinks(Form script)
+        {
+            var browser = (WebView2)Field(Pane(script), "browser");
+            return JsonSerializer.Deserialize<string[]>(await browser.CoreWebView2.ExecuteScriptAsync(
+                "Array.from(document.querySelectorAll('#t .chart a')).map(a=>a.getAttribute('href'))"))!;
+        }
+
+        Task<string[]> CheckCharts(Form script, string manifest, params int[] pagesPerDevice)
+            => CheckChartFiles(script, manifest, pagesPerDevice.Select((pages, index) => (Device: index + 1, File: 1, Pages: pages)).ToArray());
+
+        async Task<string[]> CheckChartFiles(Form script, string manifest, params (int Device, int File, int Pages)[] charts)
         {
             string id = RunId(manifest);
-            string[] expected = Enumerable.Range(1, pages).Select(i => Path.Combine(folder, $"Rplot-{id}-1-{i:000}.svg")).ToArray();
+            string[] expected = charts.Select(chart => Path.Combine(folder, $"Rplot-{id}-{chart.Device}-{chart.File:000}.pdf")).ToArray();
             var browser = (WebView2)Field(Pane(script), "browser");
             string[][] captions = JsonSerializer.Deserialize<string[][]>(await browser.CoreWebView2.ExecuteScriptAsync(
                 "Array.from(document.querySelectorAll('#t .chart a')).map(a=>[a.textContent,a.getAttribute('href')])"))!;
             Check(expected.All(File.Exists) && captions.Length == expected.Length
                 && captions.Select(a => a[0]).SequenceEqual(expected.Select(f => "Chart: " + Path.GetFileName(f)))
                 && captions.Select(a => a[1]).SequenceEqual(expected.Select(f => new Uri(f).AbsoluteUri)),
-                "the script pane captions and links contain exactly its own automatic chart pages");
+                "the script pane captions and links contain exactly its own automatic PDF devices");
+            for (int i = 0; i < expected.Length; i++) await CheckPdf(expected[i], charts[i].Pages);
             string[] links = JsonSerializer.Deserialize<string[]>(await browser.CoreWebView2.ExecuteScriptAsync(
                 "Array.from(document.querySelectorAll('#t a')).map(a=>a.getAttribute('href'))"))!;
             Check(!links.Any(link => link.StartsWith("file:", StringComparison.OrdinalIgnoreCase)
@@ -83,9 +102,9 @@ internal static partial class Program
 
         try
         {
-            string initial = Start(first, "initial", "plot(1:3, main = \"First page\")\nplot(3:1, main = \"Second page\")\n");
+            string initial = Start(first, "initial", "plot(1:3, main = \"First page\")\nplot(3:1, main = \"Second page\")\ndev.off()\nplot(c(2, 4, 3), main = \"Second default device\")\n");
             await Completed(first);
-            string[] initialFiles = await CheckCharts(first, initial, 2);
+            string[] initialFiles = await CheckCharts(first, initial, 2, 1);
             var initialState = initialFiles.ToDictionary(f => f, f => (Bytes: File.ReadAllBytes(f), Modified: File.GetLastWriteTimeUtc(f)));
 
             string rerun = Start(first, "rerun", "plot(c(2, 4, 1), main = \"Later run\")\n");
@@ -96,7 +115,7 @@ internal static partial class Program
                 "rerunning a script creates new chart files and preserves every earlier page's bytes and timestamp");
 
             // Hold the first process after it has drawn a page. The second must
-            // finish while the first still owns an open SVG device, then release it.
+            // finish while the first still owns an open PDF device, then release it.
             string slow = Start(first, "slow", "plot(1:4, main = \"Slow first page\")\nwriteLines(\"ready\", " + RString(ready)
                 + ")\nwhile (!file.exists(" + RString(release) + ")) Sys.sleep(0.05)\nplot(4:1, main = \"Slow second page\")\n");
             DateTime readyUntil = DateTime.UtcNow.AddSeconds(60);
@@ -122,9 +141,52 @@ internal static partial class Program
             string[] directOutput = await Task.WhenAll(directScripts.Select(p => Task.Run(() =>
                 RController.RunScriptCapturingOutput(p.Text, version, CancellationToken.None, false))));
             string[] directIds = directScripts.Select(p => RunId(p.Manifest)).ToArray();
-            Check(directIds.Distinct().Count() == 2 && directIds.All(id => File.Exists(Path.Combine(folder, "Rplot-" + id + "-1-001.svg")))
+            Check(directIds.Distinct().Count() == 2 && directIds.All(id => File.Exists(Path.Combine(folder, "Rplot-" + id + "-1-001.pdf")))
                 && directOutput.All(output => output.Contains("SHELL_TEST_DEVICE:") && !output.Contains("(R stopped with exit code")),
                 "the public R runner allocates distinct automatic chart files without a window-supplied run identifier");
+            foreach (string id in directIds) await CheckPdf(Path.Combine(folder, "Rplot-" + id + "-1-001.pdf"), 1);
+
+            string failed = Start(first, "error", "plot(1:3, main = \"Page before error\")\nplot(3:1, main = \"Another page before error\")\nstop(\"expected failure after plotting\")\n");
+            await Completed(first, expectedError: true);
+            await CheckCharts(first, failed, 2);
+            Check(Pane(first).Text.Contains("expected failure after plotting"), "the failing script keeps its R error alongside its flushed PDF charts");
+
+            string split = Start(first, "separate-page-files", "dev.new(onefile = FALSE, width = 5, height = 3)\ncat(\"SHELL_TEST_SIZE:\", paste(dev.size(\"in\"), collapse = \"x\"), \"\\n\")\nplot(1:3, main = \"First separate page\")\nplot(3:1, main = \"Second separate page\")\n");
+            await Completed(first);
+            await CheckChartFiles(first, split, (1, 1, 1), (1, 2, 1));
+            Check(Pane(first).Text.Contains("SHELL_TEST_SIZE: 5x3"), "dev.new forwards explicit PDF width, height and separate-page choices");
+
+            string options = Start(first, "pdf-options", "pdf.options(width = 6, height = 4, onefile = FALSE)\nplot(1:3, main = \"Options first page\")\ncat(\"SHELL_TEST_SIZE:\", paste(dev.size(\"in\"), collapse = \"x\"), \"\\n\")\nplot(3:1, main = \"Options second page\")\n");
+            await Completed(first);
+            await CheckChartFiles(first, options, (1, 1, 1), (1, 2, 1));
+            Check(Pane(first).Text.Contains("SHELL_TEST_SIZE: 6x4"), "ordinary plots retain pdf.options width, height and separate-page defaults");
+
+            string nullFile = Start(first, "null-file", "dev.new(file = NULL, width = 5, height = 3)\nplot(1:3, main = \"Deliberately no output file\")\ndev.off()\n");
+            await Completed(first);
+            string nullId = RunId(nullFile);
+            Check(!Directory.GetFiles(folder, "Rplot-" + nullId + "-*.pdf").Any() && (await ChartLinks(first)).Length == 0,
+                "dev.new(file = NULL) deliberately creates no automatic chart file or link");
+
+            string chosenPdf = Path.Combine(folder, "shell-chosen-" + Guid.NewGuid().ToString("N") + ".pdf");
+            synthetic.Add(chosenPdf);
+            string chosen = Start(first, "chosen-file", "dev.new(file = " + RString(chosenPdf) + ", width = 6, height = 4)\nplot(1:3, main = \"Named PDF first page\")\nplot(3:1, main = \"Named PDF second page\")\n");
+            await Completed(first);
+            string chosenId = RunId(chosen);
+            await CheckPdf(chosenPdf, 2);
+            Check(!Directory.GetFiles(folder, "Rplot-" + chosenId + "-*.pdf").Any()
+                && (await ChartLinks(first)).SequenceEqual(new[] { new Uri(chosenPdf).AbsoluteUri }),
+                "dev.new retains an explicit PDF filename and shows its original file link");
+            File.Delete(chosenPdf);
+
+            string explicitSvg = Path.Combine(folder, "shell-explicit-" + Guid.NewGuid().ToString("N") + ".svg");
+            synthetic.Add(explicitSvg);
+            string explicitManifest = Start(first, "explicit-svg", "svg(" + RString(explicitSvg) + ", width = 5, height = 4)\nplot(1:3, main = \"Explicit SVG still works\")\ndev.off()\n");
+            await Completed(first);
+            string explicitId = RunId(explicitManifest);
+            string[] explicitLinks = await ChartLinks(first);
+            Check(File.ReadAllText(explicitSvg).Contains("<svg") && explicitLinks.SequenceEqual(new[] { new Uri(explicitSvg).AbsoluteUri })
+                && !Directory.GetFiles(folder, "Rplot-" + explicitId + "-*.pdf").Any(),
+                "an explicit SVG device stays SVG and is shown without creating an automatic PDF");
 
             // Ownership must take priority over clocks: a foreign automatic chart
             // with a future timestamp is excluded, while this run's old chart stays.
@@ -138,19 +200,22 @@ internal static partial class Program
                 return path;
             }
             DateTime now = DateTime.UtcNow;
-            string ownedChart = Own($"Rplot-{owned:N}-9-001.svg", now.AddDays(-3));
-            string foreignChart = Own($"Rplot-{foreign:N}-9-001.svg", now.AddDays(1));
+            string ownedChart = Own($"Rplot-{owned:N}-9-001.pdf", now.AddDays(-3));
+            string foreignChart = Own($"Rplot-{foreign:N}-9-001.pdf", now.AddDays(1));
+            string ownedSvg = Own($"Rplot-{owned:N}-9-001.svg", now.AddDays(-3));
+            string foreignSvg = Own($"Rplot-{foreign:N}-9-001.svg", now.AddDays(1));
             string foreignHead = Own($"continue-{foreign:N}.r", now.AddDays(1));
             string foreignSource = Own($"script-{foreign:N}.r", now.AddDays(1));
             string explicitChart = Own($"Rplot-results-{owned:N}.svg", now);
             string explicitScript = Own($"script-results-{owned:N}.r", now);
             var discovery = first.GetType().GetMethod("FilesWritten", BindingFlags.Static | BindingFlags.NonPublic)!;
             var found = ((IEnumerable<FileInfo>)discovery.Invoke(null, new object[] { DateTime.Now, owned })!).Select(f => f.FullName).ToHashSet(StringComparer.OrdinalIgnoreCase);
-            Check(found.Contains(ownedChart) && !found.Contains(foreignChart) && !found.Contains(foreignHead) && !found.Contains(foreignSource)
+            Check(found.Contains(ownedChart) && !found.Contains(foreignChart) && found.Contains(ownedSvg) && !found.Contains(foreignSvg)
+                && !found.Contains(foreignHead) && !found.Contains(foreignSource)
                 && found.Contains(explicitChart) && found.Contains(explicitScript),
                 "chart ownership overrides timestamps, temporary scripts stay hidden, and ordinary similarly named outputs remain discoverable");
             Check(legacy.All(p => File.ReadAllBytes(p.Key).SequenceEqual(p.Value.Bytes) && File.GetLastWriteTimeUtc(p.Key) == p.Value.Modified),
-                "real legacy Rplot files retain their original bytes and timestamps throughout the chart runs");
+                "all pre-existing Rplot PDF and SVG files retain their original bytes and timestamps throughout the chart runs");
         }
         finally
         {
@@ -167,7 +232,8 @@ internal static partial class Program
             foreach (string manifest in manifests.Where(File.Exists))
             {
                 foreach (Match match in Regex.Matches(File.ReadAllText(manifest), @"Rplot-([0-9a-f]{32})-", RegexOptions.IgnoreCase))
-                    foreach (string file in Directory.GetFiles(folder, "Rplot-" + match.Groups[1].Value + "-*.svg")) File.Delete(file);
+                    foreach (string file in Directory.GetFiles(folder, "Rplot-" + match.Groups[1].Value + "-*"))
+                        if (new[] { ".svg", ".pdf" }.Contains(Path.GetExtension(file), StringComparer.OrdinalIgnoreCase)) File.Delete(file);
             }
             foreach (string file in synthetic) File.Delete(file);
             // Preserve user-owned legacy files even if this test is intentionally

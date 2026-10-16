@@ -590,7 +590,7 @@ namespace StatsDirect.UI
 
         // These names are reserved for the controller's automatic charts and temporary scripts. Match the complete name so that
         // an explicitly named output such as Rplot-results.svg or script-results.r is still discovered normally.
-        private static readonly System.Text.RegularExpressions.Regex AutomaticChartName = new(@"^Rplot-[0-9a-f]{32}-[0-9]+-[0-9]+\.svg$", System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.CultureInvariant);
+        private static readonly System.Text.RegularExpressions.Regex AutomaticChartName = new(@"^Rplot-[0-9a-f]{32}-[0-9]+-[0-9]+\.(?:pdf|svg)$", System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.CultureInvariant);
         private static readonly System.Text.RegularExpressions.Regex TemporaryRScriptName = new(@"^(?:continue|script)-[0-9a-f]{32}\.r$", System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.CultureInvariant);
 
         /// <summary>The files a run wrote to the R folder, charts among them, by name. Automatic charts belong only to their own run;

@@ -190,10 +190,25 @@ namespace StatsDirect.R
             {
                 tw.Write(SCRIPT_HEAD, rFolder.Replace(@"\", @"\\"));
                 tw.WriteLine();
-                // a plot drawn without a device of its own goes to an SVG file in the R folder, one per page, which the script window shows;
-                // R's own default for a run is a PDF. Name SVGs by run, device and page: both counters restart in another R process,
-                // and page numbers restart when a device is reopened. Earlier charts and their file links must keep their original contents.
-                tw.WriteLine("options(device = local({ n <- 0; function(...) { n <<- n + 1; svg(filename = file.path(userdir, sprintf(\"Rplot-" + runId.ToString("N") + "-%d-%%03d.svg\", n)), ...) } }))");
+                // Ordinary R plots use its standard 7 by 7 inch PDF device, with every page retained in one file per device.
+                // The run/device identity preserves earlier charts and links; the page placeholder also supports onefile=FALSE.
+                // Explicit devices in the script and the separate SVG report-chart path keep their own formats.
+                // dev.new() keeps only arguments named in the device's formals, so expose pdf's formals instead of just (...).
+                // Forward only supplied arguments: pdf itself resolves its defaults, including those depending on other arguments.
+                tw.WriteLine($$"""
+                    options(device = local({
+                      n <- 0
+                      device <- function() {
+                        n <<- n + 1
+                        args <- mget(as.character(names(as.list(match.call())[-1L])), envir = environment(), inherits = FALSE)
+                        if (!"file" %in% names(args))
+                          args$file <- file.path(userdir, sprintf("Rplot-{{runId:N}}-%d-%%03d.pdf", n))
+                        do.call(grDevices::pdf, args)
+                      }
+                      formals(device) <- formals(grDevices::pdf)
+                      device
+                    }))
+                    """);
                 tw.WriteLine(repairedScriptBody);
             }
             try
