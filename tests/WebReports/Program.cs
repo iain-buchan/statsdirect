@@ -29,7 +29,12 @@ internal static partial class Program
         int exit = 1;
         form.Shown += async (_, _) =>
         {
-        try { await CheckLegacyReports(); await Run(); await InteroperabilityChecks(); await CheckToolbar(); await CheckChartAlignment(); Console.WriteLine($"PASS {checks} Windows WebView2 checks"); exit = 0; }
+        try
+        {
+            if (!args.Contains("--svg-import-only")) { await CheckLegacyReports(); await Run(); await InteroperabilityChecks(); await CheckToolbar(); await CheckChartAlignment(); }
+            await CheckSvgImportIsolation();
+            Console.WriteLine($"PASS {checks} Windows WebView2 checks"); exit = 0;
+        }
             catch (Exception ex) { Console.WriteLine("FAIL " + ex); }
             finally { form.Close(); }
         };

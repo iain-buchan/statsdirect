@@ -6,6 +6,7 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
 ### Fixed
 - Automatic R chart filenames include a unique run identity as well as device and page numbers, preserving charts and their file links across reruns, concurrent script windows and application restarts. Each script window shows only its own automatic charts, and temporary runner scripts are excluded from output links.
+- Imported and pasted report charts preserve their own SVG glyphs, colours, clipping and gradients, including repeated charts and R identifiers containing `=`. Chart styles and local drawing references remain separate through editing, HTML reopening and Word/PDF export.
 
 ##[v5.2.2] 2026-10-16
 

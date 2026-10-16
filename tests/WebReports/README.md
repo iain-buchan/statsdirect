@@ -1,5 +1,17 @@
 # Windows WebView2 report integration checks
 
+16 October 2026 shared SVG import/paste correction: **298 checks pass** with
+`STATSDIRECT_SKIP_CLIPBOARD=1` (five native clipboard checks skipped).
+`SvgImportIsolation.cs` reproduces the prior duplicate-definition failure, then
+checks actual rendered glyph colours and clipping geometry for repeated charts,
+including local SVG identifiers containing `=`. Import, typed multi-chart paste,
+undo/redo and HTML reopening retain separate chart definitions; external drawing
+resources remain excluded. The six-chart DOCX contains six separate SVG drawings
+and PNG fallback references, and PDF export leaves the editable report unchanged.
+The three shared source files match Mac commit `d1494f2ac214f04bd8252f17c6c232be60612ae8`.
+The Windows release build and all **105 WindowsShell checks** also pass.
+Run only these SVG checks by adding `--svg-import-only` after the output directory.
+
 16 October 2026 RTF startup regression: **275 checks pass** with
 `STATSDIRECT_SKIP_CLIPBOARD=1` (five native clipboard checks skipped).
 `LegacyReports.cs` runs first in a fresh process, before any spreadsheet importer

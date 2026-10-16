@@ -24,6 +24,8 @@ PDF and DOCX are exports; they do not change the editable document's path or mar
 
 Source baseline: **iain-buchan/statsdirect-mac**, commit **4e9f9d10a7dbf795c28fc3dc3e5924476a3bc1d6**, “Report editor: a saved SVG chart as other programs read it; a marker click selects its chart”. Five chart-alignment modules were then ported from the Mac chat's 12 October 2026 changes, now committed as **71fd32193a00e88d96616a0ea538c0fd042c038e**. See `chart-alignment-port.md`; the current sources and bundles are not a pristine copy of the earlier baseline.
 
+The SVG import/paste correction from Mac commit **d1494f2ac214f04bd8252f17c6c232be60612ae8** is also included: `fragment.mjs`, `import.mjs` and the new `svg-isolation.mjs` are exact copies from that commit. The importer gives each chart separate drawing identifiers; each SVG's own stylesheet is resolved in an isolated tree before its drawing styles are inlined. Local glyph references and identifiers containing `=` survive, while external glyph references remain blocked. The Windows build adapters still apply. Native regressions reproduce the old duplicate-ID failure and verify rendered colours and geometry, multi-chart paste/undo/redo, HTML reopening, and six separate Word SVGs with PNG fallbacks and PDF export.
+
 - `upstream/Report` contains the baseline plus the recorded shared changes, locked dependency manifest and JavaScript tests; `upstream/Tests/Fixtures/Reports` contains their fixtures.
 - `upstream/LICENSE` retains the Mac repository licence.
 - `StatsDirectUI/Assets/ReportEditor/vendor` contains offline browser bundles and their third-party notices. `workspace.css` is based on the same Mac commit, with two chart-default selectors excluding the Windows importer's temporary container.
