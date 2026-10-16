@@ -38,8 +38,19 @@ internal static partial class Program
         }
         finally
         {
-            if (report != null) { report.GetType().GetProperty("Dirty", Internal)!.SetValue(report, false); report.Close(); report.Dispose(); }
+            if (report != null) await CloseReportForTest(report);
             File.Delete(source); File.Delete(saved);
         }
+    }
+
+    static async Task CloseReportForTest(Form report)
+    {
+        report.GetType().GetProperty("Dirty", Internal)!.SetValue(report, false);
+        report.Close();
+        // Report closing awaits a browser snapshot. Let that normal close finish
+        // before disposal, so MDI cannot still be using the report's icon.
+        var until = DateTime.UtcNow.AddSeconds(10);
+        while (!report.IsDisposed && DateTime.UtcNow < until) await Task.Delay(30);
+        if (!report.IsDisposed) throw new Exception("The report did not finish closing.");
     }
 }

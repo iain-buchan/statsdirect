@@ -101,16 +101,17 @@ namespace StatsDirect.UI
                 SetupUserInterface();
 
                 // Get ready to show the main window...
-                ConfigureStartupCommand(args, SdApplication.SoleInstance.CreateMainWindow());
+                frmMain mainWindow = SdApplication.SoleInstance.CreateMainWindow();
+                loader.CloseWhenShown(mainWindow);
+                ConfigureStartupCommand(args, mainWindow);
 
-                // ... and go!
-                loader.Hide();
+                // Keep the logo visible through launch-file loading and the main
+                // window's Load/Shown work. It closes once the workspace is visible.
+                if (args.Length >= 2)
+                    if ("FileOpen".Equals(args[0]) && null != args[1])
+                        SdApplication.SoleInstance.OpenFile(args[1], true);
+                SdApplication.SoleInstance.Run();
             }
-
-            if (args.Length >= 2)
-                if ("FileOpen".Equals(args[0]) && null != args[1])
-                    SdApplication.SoleInstance.OpenFile(args[1], true);
-            SdApplication.SoleInstance.Run();
         }
 
         private static void SetupUserInterface()

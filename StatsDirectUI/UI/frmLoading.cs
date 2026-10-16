@@ -22,5 +22,17 @@ namespace StatsDirect.UI
             }
             BackgroundImageLayout = ImageLayout.Zoom;
         }
+
+        internal void CloseWhenShown(Form mainWindow)
+        {
+            void MainWindowShown(object sender, EventArgs e)
+            {
+                mainWindow.Shown -= MainWindowShown;
+                // Paint the ready workspace before removing the startup logo.
+                mainWindow.Update();
+                Close();
+            }
+            mainWindow.Shown += MainWindowShown;
+        }
     }
 }

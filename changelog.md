@@ -4,6 +4,10 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
 ##[Unreleased]
 
+### Fixed
+- The startup logo stays visible until the main window has finished opening and painted, avoiding an empty interval while the workspace loads.
+- Closing the last report window no longer encounters a disposed-icon error while Windows rebuilds its document controls.
+
 ##[v5.2.1] 2026-10-16
 
 Version 5.2.1 shows the charts an R script draws in the script window, corrects the tabs of the document windows and fixes opening older RTF reports. The statistical engine, its operations, the Continue in R recipes and the help are unchanged from 5.2.0.

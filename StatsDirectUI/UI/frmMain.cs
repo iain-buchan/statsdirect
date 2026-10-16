@@ -603,6 +603,9 @@ namespace StatsDirect.UI
                 string childName = child.Text + " " + SdApplication.SoleInstance.GetReportNumber();
                 child.Text = childName;
                 SetUpForm(child);
+                // Set the icon on the created MDI window, so WinForms can still
+                // resolve it when rebuilding controls as the last report closes.
+                child.Icon = Icon;
                 return child;
             }
         }

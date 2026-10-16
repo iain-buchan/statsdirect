@@ -1,5 +1,16 @@
 # Production Windows shell checks
 
+16 October 2026 startup logo and report closing: **73 checks pass**, with UI-thread
+exceptions captured and failing the run. The real loading window stays visible
+during main-window construction, Load and earlier Shown handlers, then closes
+after the main window is visible. The splash remains alive through launch-file
+loading in production. The broader checks exposed a pre-existing disposed-icon
+error when the last report closed, reproduced without the splash change; assigning
+the application icon after creating the report's native MDI window fixes it.
+Report fixtures now await the normal asynchronous close instead of disposing a
+window while its browser snapshot is pending. The Release build succeeds with
+the existing NU1701 and CS0252 warnings; no installer was rebuilt.
+
 16 October 2026 report Save As formats: **70 checks pass**. The Save As dialog
 offers HTML, Word and PDF with HTML selected by default. Tests save genuine DOCX
 and PDF files from both new and previously saved reports, inspect Word's editable

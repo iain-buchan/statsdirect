@@ -67,7 +67,7 @@ internal static partial class Program
         }
         finally
         {
-            report.GetType().GetProperty("Dirty", Internal)!.SetValue(report, false); report.Close(); report.Dispose();
+            await CloseReportForTest(report);
             foreach (string name in new[] { "new-report.docx", "new-report.pdf", "existing-report.docx", "existing-report.pdf", "editable.html" }) File.Delete(Path.Combine(folder, name));
             Directory.Delete(folder);
         }

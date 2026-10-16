@@ -4,7 +4,7 @@ using StatsDirect.UI;
 internal static partial class Program
 {
     const BindingFlags Internal = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance;
-    static int checks;
+    static int checks, unhandled;
     static object Get(object obj, string name) => obj.GetType().GetProperty(name, Internal)!.GetValue(obj)!;
     static object Field(object obj, string name) => obj.GetType().GetField(name, Internal)!.GetValue(obj)!;
     static object Call(object obj, string name, params object[] args) => obj.GetType().GetMethods(Internal).Single(m => m.Name == name && m.GetParameters().Length == args.Length).Invoke(obj, args)!;
@@ -13,6 +13,12 @@ internal static partial class Program
     static int Main()
     {
         ApplicationConfiguration.Initialize();
+        // Configure error capture before the loading window creates a handle.
+        Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+        Application.ThreadException += (_, e) => { unhandled++; Console.WriteLine("UNHANDLED exception on the UI thread: " + e.Exception); };
+        using var loader = new frmLoading { StartPosition = FormStartPosition.Manual, Location = new Point(-16000, -16000) };
+        loader.Show(); Application.DoEvents();
+        bool logoVisibleBeforeMain = loader.Visible;
         var assembly = typeof(frmMain).Assembly;
         var license = assembly.GetCustomAttributes().Single(a => a.GetType().Name == "SpreadsheetGearLicenseAttribute");
         Assembly.Load("SpreadsheetGear").GetType("SpreadsheetGear.Factory")!.GetMethod("SetSignedLicense")!.Invoke(null, new[] { Get(license, "LicenseString") });
@@ -29,14 +35,26 @@ internal static partial class Program
         assembly.GetType("StatsDirect.UI.Program")!.GetMethod("ConfigureStartupCommand", BindingFlags.NonPublic | BindingFlags.Static)!
             .Invoke(null, new object[] { new[] { "-calculator" }, main });
         main.StartPosition = FormStartPosition.Manual; main.Location = new Point(-16000, -16000); main.Size = new Size(1800, 1200); main.ShowInTaskbar = false;
+        bool logoVisibleDuringLoad = false, logoVisibleDuringShown = false, mainVisibleWhenLogoClosed = false;
+        main.Load += (_, _) => logoVisibleDuringLoad = loader.Visible;
+        main.Shown += (_, _) => logoVisibleDuringShown = loader.Visible;
+        loader.FormClosed += (_, _) => mainVisibleWhenLogoClosed = main.Visible;
+        Call(loader, "CloseWhenShown", main);
         int exit = 1;
         main.Shown += async (_, _) =>
         {
-            try { await Run(main, app); Console.WriteLine($"PASS {checks} production Windows shell checks"); exit = 0; }
+            try
+            {
+                Check(logoVisibleBeforeMain && logoVisibleDuringLoad, "startup logo remains visible through main-window construction and Load");
+                Check(logoVisibleDuringShown, "startup logo remains visible while earlier main-window Shown handlers run");
+                Check(loader.IsDisposed && mainVisibleWhenLogoClosed && main.Visible, "startup logo closes only after the main window is visible, without closing the application");
+                await Run(main, app); Console.WriteLine($"PASS {checks} production Windows shell checks"); exit = 0;
+            }
             catch (Exception ex) { Console.WriteLine("FAIL " + ex); }
             finally { foreach (var child in main.MdiChildren) child.Dispose(); ((IDisposable)Field(app, "calculator")).Dispose(); main.Close(); }
         };
         Application.Run(main);
+        if (unhandled > 0) { Console.WriteLine($"FAIL {unhandled} unhandled exception(s) on the UI thread"); return 1; }
         return exit;
     }
     static async Task Run(frmMain main, object app)
