@@ -46,7 +46,7 @@ internal sealed class frmReportWebView : StatsDirectForm, IReport, IFindTarget
             else if (command == "find") EditFind();
             else if (command == "continueInR") await ContinueCurrentInRAsync();
             else if (command == "ai") (MdiParent as frmMain)?.Learning.ShowReportAI(this);
-            else if (command is "save" or "saveAs") await SaveHtmlAsync(command == "saveAs");
+            else if (command is "save" or "saveAs") await SaveReportAsync(command == "saveAs");
         });
         Shown += async (_, _) => await Guard(async () => { await view.Ready; status.Text = "Ready"; });
         Activated += (_, _) =>
@@ -75,8 +75,8 @@ internal sealed class frmReportWebView : StatsDirectForm, IReport, IFindTarget
             {
                 Name = name, MergeAction = MergeAction.Replace, ShortcutKeys = shortcut
             };
-        file.DropDownItems.Add(Command("webReportSave", "&Save", async () => await SaveHtmlAsync(false), Keys.Control | Keys.S));
-        file.DropDownItems.Add(Command("webReportSaveAs", "S&ave As...", async () => await SaveHtmlAsync(true), Keys.Control | Keys.Shift | Keys.S));
+        file.DropDownItems.Add(Command("webReportSave", "&Save", async () => await SaveReportAsync(false), Keys.Control | Keys.S));
+        file.DropDownItems.Add(Command("webReportSaveAs", "S&ave As...", async () => await SaveReportAsync(true), Keys.Control | Keys.Shift | Keys.S));
         file.DropDownItems.Add(Command("webReportClose", "&Close", () => { Close(); return Task.CompletedTask; }));
         file.DropDownItems.Add(Command("webReportPrintPreview", "Print Preview", () => { Print(); return Task.CompletedTask; }));
         file.DropDownItems.Add(Command("webReportPrint", "&Print...", () => { Print(); return Task.CompletedTask; }, Keys.Control | Keys.P));
@@ -232,32 +232,55 @@ internal sealed class frmReportWebView : StatsDirectForm, IReport, IFindTarget
 
     // The existing File/Save hooks are synchronous. Do not block WebView2's UI
     // thread waiting for script replies. Closing uses the awaited path below.
-    internal override bool SaveContents() { _ = Guard(async () => await SaveHtmlAsync(false)); return false; }
-    internal override bool SaveAsContents() { _ = Guard(async () => await SaveHtmlAsync(true)); return false; }
+    internal override bool SaveContents() { _ = Guard(async () => await SaveReportAsync(false)); return false; }
+    internal override bool SaveAsContents() { _ = Guard(async () => await SaveReportAsync(true)); return false; }
 
-    private async Task<bool> SaveHtmlAsync(bool choose)
+    private SaveFileDialog CreateSaveReportDialog(bool allowExports) => new()
+    {
+        Filter = "Editable HTML report (*.html)|*.html" + (allowExports ? "|Word document (*.docx)|*.docx|PDF document (*.pdf)|*.pdf" : ""),
+        FilterIndex = 1, DefaultExt = "html", FileName = path ?? "StatsDirect report.html", AddExtension = true
+    };
+
+    private async Task<bool> SaveReportAsync(bool choose)
     {
         if (saving || opening) return false;
         saving = true;
         try
         {
             string destination = path;
+            int formatIndex = 1;
             if (choose || string.IsNullOrEmpty(destination))
             {
-                using var dialog = new SaveFileDialog { Filter = "Editable HTML report (*.html)|*.html", DefaultExt = "html", FileName = destination ?? "StatsDirect report.html", AddExtension = true };
+                // Ordinary Save (including the close prompt) retains the editable
+                // HTML report. Explicit Save As also offers Word and PDF copies.
+                using var dialog = CreateSaveReportDialog(choose);
                 if (dialog.ShowDialog(this) != DialogResult.OK) return false;
                 destination = dialog.FileName;
+                formatIndex = dialog.FilterIndex;
             }
-            long revision = await view.SaveAsync(destination, Text, "html");
-            Path = destination; Text = System.IO.Path.GetFileName(destination);
-            SdApplication.SoleInstance.NoteRecentFile(destination, true);
-            // A user may continue typing while export awaits image conversion.
-            // Such edits must not be marked as saved by an earlier snapshot.
-            Dirty = view.Revision != revision;
-            status.Text = Dirty ? "Saved; newer edits remain unsaved." : "Saved " + destination;
-            return !Dirty;
+            return await SaveReportFileAsync(destination, formatIndex);
         }
         finally { saving = false; }
+    }
+
+    private async Task<bool> SaveReportFileAsync(string destination, int formatIndex)
+    {
+        string format = formatIndex switch { 1 => "html", 2 => "docx", 3 => "pdf", _ => throw new ArgumentOutOfRangeException(nameof(formatIndex)) };
+        long revision = await view.SaveAsync(destination, Text, format);
+        if (format != "html")
+        {
+            // Exporting must not redirect Ctrl+S to a Word/PDF file or discard
+            // unsaved edits and analysis records from the editable HTML report.
+            status.Text = "Exported " + destination + ". Use Save to retain an editable report.";
+            return false;
+        }
+        Path = destination; Text = System.IO.Path.GetFileName(destination);
+        SdApplication.SoleInstance.NoteRecentFile(destination, true);
+        // A user may continue typing while export awaits image conversion.
+        // Such edits must not be marked as saved by an earlier snapshot.
+        Dirty = view.Revision != revision;
+        status.Text = Dirty ? "Saved; newer edits remain unsaved." : "Saved " + destination;
+        return !Dirty;
     }
 
     private async Task ExportAsync(string format)
@@ -319,7 +342,7 @@ internal sealed class frmReportWebView : StatsDirectForm, IReport, IFindTarget
         {
             // the same question, in the program's message banner, as a workbook or a script asks on closing
             DialogResult answer = AskToSaveChanges();
-            return answer == DialogResult.No || (answer == DialogResult.Yes && await SaveHtmlAsync(false));
+            return answer == DialogResult.No || (answer == DialogResult.Yes && await SaveReportAsync(false));
         }
         finally { closePrompts.Release(); }
     }

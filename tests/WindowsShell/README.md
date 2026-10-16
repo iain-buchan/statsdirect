@@ -1,5 +1,14 @@
 # Production Windows shell checks
 
+16 October 2026 report Save As formats: **70 checks pass**. The Save As dialog
+offers HTML, Word and PDF with HTML selected by default. Tests save genuine DOCX
+and PDF files from both new and previously saved reports, inspect Word's editable
+table and values, and verify that exports retain the report title, HTML save path
+and unsaved edits. A subsequent ordinary Save updates the HTML without touching
+the exported Word file. Ordinary first Save and save-on-close keep the editable
+HTML format. The Release application builds with the existing NU1701 and CS0252
+warnings; no installer was rebuilt for this change.
+
 16 October 2026 RTF startup regression: **53 checks pass**. The compiled
 application's RTF importer is called before any spreadsheet import in a fresh
 process, then the actual File > Open path displays accented and Unicode report

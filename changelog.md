@@ -4,6 +4,9 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
 ##[Unreleased]
 
+### Added
+- Report Save As offers Word documents (.docx) and PDF alongside the default editable HTML format. Word and PDF save a copy, preserving the report's HTML save location and any unsaved edits.
+
 ##[v5.2.1] 2026-10-16
 
 Version 5.2.1 shows the charts an R script draws in the script window, corrects the tabs of the document windows and fixes opening older RTF reports. The statistical engine, its operations, the Continue in R recipes and the help are unchanged from 5.2.0.
