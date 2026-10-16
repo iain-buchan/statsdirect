@@ -4,6 +4,9 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
 ##[Unreleased]
 
+### Fixed
+- Automatic R chart filenames include a unique run identity as well as device and page numbers, preserving charts and their file links across reruns, concurrent script windows and application restarts. Each script window shows only its own automatic charts, and temporary runner scripts are excluded from output links.
+
 ##[v5.2.2] 2026-10-16
 
 Version 5.2.2 corrects the display of multiple R charts in the script output pane, preserving each chart's lettering and drawing styles.

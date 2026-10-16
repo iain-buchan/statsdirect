@@ -9,10 +9,9 @@ internal static partial class Program
     static async Task CheckScriptCharts(frmMain main, Form grid)
     {
         string folder = SDConfiguration.MyStatsDirectRFolder;
-        string svgFile = Path.Combine(folder, "shell-chart-check.svg"), pngFile = Path.Combine(folder, "shell-chart-check.png"), pdfFile = Path.Combine(folder, "shell-chart-check.pdf"), defaultFile = Path.Combine(folder, "Rplot1-001.svg"), secondFile = Path.Combine(folder, "Rplot2-001.svg"), textFile = Path.Combine(folder, "shell-chart-check.txt");
-        string[] files = { svgFile, pngFile, pdfFile, defaultFile, secondFile, textFile };
-        // Default plot names can already belong to the user. Preserve their bytes
-        // and timestamps before exercising the real R runner in its normal folder.
+        string svgFile = Path.Combine(folder, "shell-chart-check.svg"), pngFile = Path.Combine(folder, "shell-chart-check.png"), pdfFile = Path.Combine(folder, "shell-chart-check.pdf"), textFile = Path.Combine(folder, "shell-chart-check.txt");
+        List<string> files = new() { svgFile, pngFile, pdfFile, textFile };
+        // Preserve any pre-existing explicitly named outputs. Automatic charts now get fresh run identities.
         var previous = files.Where(File.Exists).ToDictionary(f => f, f => (Bytes: File.ReadAllBytes(f), Modified: File.GetLastWriteTimeUtc(f)));
         using var script = (Form)Call(main, "CreateScriptWindow");
         try
@@ -26,9 +25,13 @@ internal static partial class Program
             while (!pane.Text.Contains("End of run") && DateTime.UtcNow < until) await Task.Delay(100);
             await (Task)Call(pane, "SettledAsync");
             string text = pane.Text;
+            string[] defaultNames = System.Text.RegularExpressions.Regex.Matches(text, @"Chart: (Rplot-[0-9a-f]{32}-[0-9]+-[0-9]+\.svg)")
+                .Select(m => m.Groups[1].Value).ToArray();
+            files.AddRange(defaultNames.Select(name => Path.Combine(folder, name)));
             Check(text.Contains("End of run") && File.Exists(svgFile) && File.Exists(pngFile) && File.Exists(pdfFile), "the script runs in R and writes an SVG, a PNG and a PDF chart to the R folder");
-            Check(File.Exists(defaultFile) && File.Exists(secondFile) && text.Contains("Chart: Rplot1-001.svg") && text.Contains("Chart: Rplot2-001.svg") && !text.Contains("Rplots.pdf"),
+            Check(defaultNames.Length == 2 && defaultNames[0].EndsWith("-1-001.svg", StringComparison.Ordinal) && defaultNames[1].EndsWith("-2-001.svg", StringComparison.Ordinal) && defaultNames.All(name => File.Exists(Path.Combine(folder, name))) && !text.Contains("Rplots.pdf"),
                   "a plot without a device of its own goes to an SVG file in the R folder, not to R's default PDF, and a second default device gets its own file");
+            string defaultFile = Path.Combine(folder, defaultNames[0]), secondFile = Path.Combine(folder, defaultNames[1]);
             var browser = (Microsoft.Web.WebView2.WinForms.WebView2)Field(pane, "browser");
             async Task<string> Eval(string js) => JsonSerializer.Deserialize<string>(await browser.CoreWebView2.ExecuteScriptAsync("String(" + js + ")"))!;
             Check(await Eval("document.querySelectorAll('img.svg-chart').length") == "3" && await Eval("document.querySelectorAll('img:not(.svg-chart)').length") == "1" && await Eval("document.querySelectorAll('iframe.pdf').length") == "1",
@@ -36,7 +39,7 @@ internal static partial class Program
             string pngLink = new Uri(pngFile).AbsoluteUri, svgLink = new Uri(svgFile).AbsoluteUri, pdfLink = new Uri(pdfFile).AbsoluteUri, defaultLink = new Uri(defaultFile).AbsoluteUri, secondLink = new Uri(secondFile).AbsoluteUri;
             string textLink = new Uri(textFile).AbsoluteUri;
             string order = await Eval("Array.from(document.querySelectorAll('#t a')).map(function(a){return a.textContent+'='+a.getAttribute('href')}).join('|')");
-            Check(order == $"Chart: Rplot1-001.svg={defaultLink}|Chart: Rplot2-001.svg={secondLink}|Chart: shell-chart-check.pdf={pdfLink}|Chart: shell-chart-check.png={pngLink}|Chart: shell-chart-check.svg={svgLink}|{textLink}={textLink}" && text.IndexOf("Files written", StringComparison.Ordinal) > text.IndexOf("Chart: shell-chart-check.svg", StringComparison.Ordinal),
+            Check(order == $"Chart: {defaultNames[0]}={defaultLink}|Chart: {defaultNames[1]}={secondLink}|Chart: shell-chart-check.pdf={pdfLink}|Chart: shell-chart-check.png={pngLink}|Chart: shell-chart-check.svg={svgLink}|{textLink}={textLink}" && text.IndexOf("Files written", StringComparison.Ordinal) > text.IndexOf("Chart: shell-chart-check.svg", StringComparison.Ordinal),
                   "each chart's caption, in file-name order, is its one link, and the list of files written that follows names only the file not shown as a chart");
             // sizes: the SVG at its svg element's 5 by 4 inches (480 by 384 pixels) or narrowed to the pane keeping its shape; the PNG at its 300 by 200
             int paneWidth = (int)Math.Round(pane.ClientSize.Width * 96.0 / pane.DeviceDpi) - 16;

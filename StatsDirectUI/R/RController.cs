@@ -144,10 +144,6 @@ namespace StatsDirect.R
             return Process.Start(startInfo);
         }
 
-        /// <summary>The number of the last run started here: each run's files are named after it, so that runs going at the same time
-        /// (several script windows) do not read one another's.</summary>
-        private static int runSerial;
-
         /// <summary>
         /// Runs an R script with the installed R and returns what it printed, as the script window shows it: the script of a result that
         /// the user continues in R.  The working folder is the user's R folder, so the files a script writes, charts among them, land there.
@@ -171,14 +167,17 @@ namespace StatsDirect.R
         /// <param name="echo">As an R session shows a script: each command after R's prompt, its output under it, and messages and errors in
         /// their place rather than gathered at the end.  Without it the script runs as a batch and prints only what it prints.</param>
         public static string RunScriptCapturingOutput(string scriptBody, RVersion preferredVersion, System.Threading.CancellationToken stop = default, bool echo = false)
+            => RunScriptCapturingOutput(scriptBody, preferredVersion, stop, echo, Guid.NewGuid());
+
+        /// <summary>The script window supplies the run identity so it can recognise this run's automatic charts among concurrent runs.</summary>
+        internal static string RunScriptCapturingOutput(string scriptBody, RVersion preferredVersion, System.Threading.CancellationToken stop, bool echo, Guid runId)
         {
             string rFolder = SDConfiguration.MyStatsDirectRFolder;
             if (!Directory.Exists(rFolder))
                 Directory.CreateDirectory(rFolder);
-            // the run's own files, removed when it is over: a run going at the same time as another must not read the other's script
-            string runId = System.Threading.Interlocked.Increment(ref runSerial) + "-" + Environment.ProcessId;
-            string scriptPath = Path.Combine(rFolder, "continue-" + runId + ".r");
-            string sourcePath = Path.Combine(rFolder, "script-" + runId + ".r");
+            // A random identity stays unique across concurrent runs, app restarts and processes whose Windows IDs are reused.
+            string scriptPath = Path.Combine(rFolder, "continue-" + runId.ToString("N") + ".r");
+            string sourcePath = Path.Combine(rFolder, "script-" + runId.ToString("N") + ".r");
             string repairedScriptBody = scriptBody.Replace("\r", string.Empty).Replace("\n", "\r\n");
             if (echo)
             {
@@ -192,10 +191,9 @@ namespace StatsDirect.R
                 tw.Write(SCRIPT_HEAD, rFolder.Replace(@"\", @"\\"));
                 tw.WriteLine();
                 // a plot drawn without a device of its own goes to an SVG file in the R folder, one per page, which the script window shows;
-                // R's own default for a run is a PDF, which it cannot draw.  The file is named by the device and the page (Rplot1-001.svg),
-                // because R's page numbers start again with each device: a script that plots, closes the device and plots again would
-                // otherwise write over its first chart
-                tw.WriteLine("options(device = local({ n <- 0; function(...) { n <<- n + 1; svg(filename = file.path(userdir, sprintf(\"Rplot%d-%%03d.svg\", n)), ...) } }))");
+                // R's own default for a run is a PDF. Name SVGs by run, device and page: both counters restart in another R process,
+                // and page numbers restart when a device is reopened. Earlier charts and their file links must keep their original contents.
+                tw.WriteLine("options(device = local({ n <- 0; function(...) { n <<- n + 1; svg(filename = file.path(userdir, sprintf(\"Rplot-" + runId.ToString("N") + "-%d-%%03d.svg\", n)), ...) } }))");
                 tw.WriteLine(repairedScriptBody);
             }
             try

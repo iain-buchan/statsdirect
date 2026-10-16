@@ -588,14 +588,23 @@ namespace StatsDirect.UI
             catch (Exception ex) { outputPane.AppendText("Could not open " + link + ": " + ex.Message + "\n"); }
         }
 
-        /// <summary>The files a run wrote to the R folder, charts among them, by name.</summary>
-        private static List<FileInfo> FilesWritten(DateTime started)
+        // These names are reserved for the controller's automatic charts and temporary scripts. Match the complete name so that
+        // an explicitly named output such as Rplot-results.svg or script-results.r is still discovered normally.
+        private static readonly System.Text.RegularExpressions.Regex AutomaticChartName = new(@"^Rplot-[0-9a-f]{32}-[0-9]+-[0-9]+\.svg$", System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.CultureInvariant);
+        private static readonly System.Text.RegularExpressions.Regex TemporaryRScriptName = new(@"^(?:continue|script)-[0-9a-f]{32}\.r$", System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.CultureInvariant);
+
+        /// <summary>The files a run wrote to the R folder, charts among them, by name. Automatic charts belong only to their own run;
+        /// explicitly named script outputs retain the working folder's timestamp-based discovery.</summary>
+        private static List<FileInfo> FilesWritten(DateTime started, Guid runId)
         {
             string folder = SDConfiguration.MyStatsDirectRFolder;
             if (!Directory.Exists(folder))
                 return new List<FileInfo>();
+            string chartPrefix = "Rplot-" + runId.ToString("N") + "-";
             return new DirectoryInfo(folder).GetFiles()
-                .Where(f => f.LastWriteTime >= started.AddSeconds(-1) && !f.Name.Equals("continue.r", StringComparison.OrdinalIgnoreCase))
+                .Where(f => AutomaticChartName.IsMatch(f.Name)
+                    ? f.Name.StartsWith(chartPrefix, StringComparison.OrdinalIgnoreCase)
+                    : f.LastWriteTime >= started.AddSeconds(-1) && !TemporaryRScriptName.IsMatch(f.Name) && !f.Name.Equals("continue.r", StringComparison.OrdinalIgnoreCase))
                 .OrderBy(f => f.Name, StringComparer.OrdinalIgnoreCase).ToList();
         }
 
@@ -617,7 +626,7 @@ namespace StatsDirect.UI
         /// Shows a run as it ends: R's transcript, then each chart the run wrote, drawn in the pane as the Mac's script pane shows its plots,
         /// then the files written as links.  A run stopped by a later run, whose output follows, or by the window closing shows nothing more.
         /// </summary>
-        private async Task ShowRunAsync(Task<string> running, System.Threading.CancellationTokenSource stop, DateTime started, int generation)
+        private async Task ShowRunAsync(Task<string> running, System.Threading.CancellationTokenSource stop, DateTime started, int generation, Guid runId)
         {
             string transcript = await running;
             stop.Dispose();
@@ -625,7 +634,7 @@ namespace StatsDirect.UI
                 return;
             runningR = false;
             outputPane.AppendTranscript(transcript);
-            List<FileInfo> written = FilesWritten(started);
+            List<FileInfo> written = FilesWritten(started, runId);
             List<FileInfo> shown = new();
             foreach (FileInfo file in written.Where(f => ChartExtensions.Contains(f.Extension)))
             {
@@ -659,16 +668,17 @@ namespace StatsDirect.UI
             }
             string script = rtbDoc.Text;
             DateTime started = DateTime.Now;
+            Guid runId = Guid.NewGuid();
             runningR = true;
             int generation = ++rGeneration;
             System.Threading.CancellationTokenSource run = rRun = new();
             outputPane.AppendText("\n======== Running in R ========\n");
             System.Threading.Tasks.Task<string> running = System.Threading.Tasks.Task.Run(() =>
             {
-                try { return RController.RunScriptCapturingOutput(script, version, run.Token, echo: true); }
+                try { return RController.RunScriptCapturingOutput(script, version, run.Token, echo: true, runId); }
                 catch (Exception ex) { return "Error: " + ex.Message; }
             });
-            _ = ShowRunAsync(running, run, started, generation);
+            _ = ShowRunAsync(running, run, started, generation, runId);
         }
 
         /// <summary>Appends R's transcript to the output pane as an R session shows it: the commands after their prompts in a colour of their
