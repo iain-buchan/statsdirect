@@ -83,12 +83,33 @@ internal static partial class Program
             """, Path.Combine(folder, label));
         Check(outputR.Contains("POLYNOMIAL ACQUISITION VERIFIED"),
             "polynomial " + label + " explicitly preprocesses originals in R and matches native coefficients, Durbin-Watson and trapezoidal area");
-        var (follow, _) = Run("PolynomialRegressionChangeDegree", new() { ["degree"] = "3" }, output.ParameterBag);
+        var (follow, followOutput) = Run("PolynomialRegressionChangeDegree", new() { ["degree"] = "3" }, output.ParameterBag);
         JsonElement followRecord = Record(follow);
+        string followSaved = Path.Combine(folder, label + "-degree3.json");
+        File.WriteAllText(followSaved, followRecord.GetRawText());
+        JsonElement followReopened = JsonDocument.Parse(File.ReadAllText(followSaved)).RootElement.Clone();
+        RScript followScript = RScriptWriter.Write(followReopened, null, Read);
         Check(AcquisitionInput(followRecord, "x").GetProperty("inherited").GetBoolean()
               && AcquisitionInput(followRecord, "x").GetProperty("columns")[0].GetProperty("hash").GetString() == AcquisitionHash(originalX)
-              && !RScriptWriter.Write(followRecord, null, Read).Text.Contains("has changed in the workbook"),
+              && !followScript.Text.Contains("has changed in the workbook"),
             "polynomial " + label + " degree-change follow-on carries the original acquisition rather than transformed fit arrays");
+        // The continued context also contains an entered frame of predictor names. A positional recipe can take that
+        // string column instead of Y; compare the reopened child's complete numeric pairs and its actual degree-three fit.
+        double[] followExpected = AcquisitionCoefficients(followOutput.ParameterBag);
+        int[] completePairs = Enumerable.Range(0, count)
+            .Where(i => !RunRecord.Missing(originalX[i]) && !RunRecord.Missing(originalY[i])).OrderBy(i => originalX[i]).ToArray();
+        string followR = RunR(followScript.Text + $$"""
+
+            expected <- c({{string.Join(",", followExpected.Select(value => value.ToString("R", inv)))}})
+            expected_x <- c({{string.Join(",", completePairs.Select(i => originalX[i].ToString("R", inv)))}})
+            expected_y <- c({{string.Join(",", completePairs.Select(i => originalY[i].ToString("R", inv)))}})
+            stopifnot(degree == 3L, is.numeric(size), is.numeric(kwh),
+                      identical(as.numeric(size), expected_x), identical(as.numeric(kwh), expected_y),
+                      length(coef(fit)) == length(expected), all(abs(coef(fit) - expected) < 1e-7 * pmax(1, abs(expected))))
+            cat("POLYNOMIAL DEGREE CHANGE VERIFIED\n")
+            """, Path.Combine(folder, label + "-degree3"));
+        Check(followScript.HasRecipe && !followScript.DataUnavailable && followR.Contains("POLYNOMIAL DEGREE CHANGE VERIFIED"),
+            "polynomial " + label + " reopened degree-change R replay binds original X/Y pairs rather than predictor labels and matches native degree-three coefficients");
         if (!embedded)
         {
             changed = true;

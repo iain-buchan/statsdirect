@@ -88,6 +88,11 @@ internal static partial class Program
         string path = Path.Combine(folder, "script.R");
         File.WriteAllText(path, script);
         ProcessStartInfo start = new(Rscript(), $"--vanilla --encoding=UTF-8 \"{path}\"") { WorkingDirectory = folder, RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false, CreateNoWindow = true };
+        // The Codex shell can supply a POSIX locale that Windows R cannot load;
+        // keep that invalid test-host setting from breaking UTF-8 chart titles.
+        if (OperatingSystem.IsWindows())
+            foreach (string name in new[] { "LC_ALL", "LC_CTYPE" })
+                if (start.Environment.TryGetValue(name, out string locale) && locale == "C.UTF-8") start.Environment.Remove(name);
         using Process p = Process.Start(start);
         Task<string> errors = p.StandardError.ReadToEndAsync();
         string output = p.StandardOutput.ReadToEnd();

@@ -74,8 +74,8 @@ if (length(control_digits) != 1L || is.na(control_digits)) control_digits <- 3L
 control_digits <- max(0L, min(15L, control_digits))
 control_band_labels <- paste0(formatC(round(control_bands, control_digits), digits = control_digits,
                                      format = "f", drop0trailing = TRUE), " (", control_band_names, ")")
-control_font <- sd_chart_font("legendFont", 10)
 control_old_family <- par("family")
+control_font <- sd_chart_font("legendFont", 10)
 par(family = control_font$family)
 control_right_margin <- if (length(control_band_labels) || nzchar(control_context))
   max(strwidth(c(control_band_labels, control_context), units = "inches",

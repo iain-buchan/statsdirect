@@ -34,25 +34,25 @@ for (i in seq_along(error_series)) {
   safe_x <- s$x
   # As in the native chart, avoid overlapping bars in device coordinates.
   # This is a line width plus a gap, never one unit of the selected data.
-  offset <- abs(grconvertX(max(1, m$lwd) + 1, from = "device", to = "user") -
-                grconvertX(0, from = "device", to = "user"))
   for (j in seq_along(safe_x)) {
     if (error_offsets) repeat {
-      key <- as.character(round(grconvertX(safe_x[j], from = "user", to = "device")))
+      pixel <- grconvertX(safe_x[j], from = "user", to = "device")
+      key <- as.character(round(pixel))
       prior <- error_used[[key]]
       overlap <- !is.null(prior) && any(s$lower[j] < prior[, 2L] & s$upper[j] > prior[, 1L])
       if (!overlap) {
         error_used[[key]] <- rbind(prior, c(s$lower[j], s$upper[j]))
         break
       }
-      safe_x[j] <- safe_x[j] + offset
+      safe_x[j] <- grconvertX(pixel + max(1, m$lwd) + 1, from = "device", to = "user")
     }
   }
-  cap <- abs(grconvertX(10, from = "device", to = "user") -
-             grconvertX(0, from = "device", to = "user"))
+  pixels <- grconvertX(safe_x, from = "user", to = "device")
+  cap_left <- grconvertX(pixels - 10, from = "device", to = "user")
+  cap_right <- grconvertX(pixels + 10, from = "device", to = "user")
   segments(safe_x, s$lower, safe_x, s$upper, col = m$col, lwd = m$lwd)
-  segments(safe_x - cap, s$lower, safe_x + cap, s$lower, col = m$col, lwd = m$lwd)
-  segments(safe_x - cap, s$upper, safe_x + cap, s$upper, col = m$col, lwd = m$lwd)
+  segments(cap_left, s$lower, cap_right, s$lower, col = m$col, lwd = m$lwd)
+  segments(cap_left, s$upper, cap_right, s$upper, col = m$col, lwd = m$lwd)
   if (error_markers)
     sd_chart_points(safe_x, s$y, m)
   # Error-bar connecting lines follow the selected row order, including safe offsets.

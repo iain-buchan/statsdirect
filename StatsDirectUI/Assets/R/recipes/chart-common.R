@@ -216,12 +216,18 @@ sd_chart_points <- function(x, y, marker) {
   invisible(NULL)
 }
 sd_chart_legend <- function(labels, markers = NULL, fill = FALSE) {
+  before_flag <- sd_chart_state$drawing_legend
+  sd_chart_state$drawing_legend <- TRUE
+  sd_chart_state$legend_keys <- NULL
+  on.exit(sd_chart_state$drawing_legend <- before_flag, add = TRUE)
   if (!isTRUE(sd_chart_get("showLegend", length(labels) > 1L)) || !length(labels)) return(invisible(NULL))
   font <- sd_chart_font("legendFont", 10)
   if (is.null(markers)) markers <- lapply(seq_along(labels), sd_chart_marker)
-  before <- par("family"); on.exit(par(family = before)); par(family = font$family)
+  before <- par(c("family", "xpd")); on.exit(par(before), add = TRUE)
+  par(family = font$family, xpd = NA)
   layout <- sd_chart_state$legend
   if (is.null(layout)) return(invisible(NULL))
+  markers <- rep_len(markers, length(layout$labels))
   figure <- par("fig"); device <- dev.size("in")
   if (layout$side == "left") {
     x <- figure[1L] * device[1L] + 0.05
@@ -236,10 +242,49 @@ sd_chart_legend <- function(labels, markers = NULL, fill = FALSE) {
     y.intersp = layout$line_count, xpd = NA, bty = "n", cex = font$size / par("ps"), text.font = font$font,
     col = vapply(markers, function(m) m$col, character(1)))
   if (fill) {
-    args$fill <- vapply(markers, function(m) m$col, character(1))
-    args$border <- vapply(markers, function(m) m$lineColor, character(1))
-  } else args$pch <- vapply(markers, function(m) m$pch, numeric(1))
-  invisible(do.call(legend, args))
+    args$fill <- rep(NA_character_, length(markers))
+    args$border <- NA
+  } else {
+    args$pch <- rep(NA_integer_, length(markers))
+    args$x.intersp <- 2
+  }
+  # Base graphics supplies text and layout. Draw the keys ourselves from the
+  # public returned text positions so they use the same symbols and fill
+  # patterns as the plot, including compound symbols and monochrome hatching.
+  result <- do.call(legend, args)
+  text_x <- result$text$x; text_y <- result$text$y
+  if (par("xlog")) text_x <- 10^text_x
+  if (par("ylog")) text_y <- 10^text_y
+  text_x <- grconvertX(text_x, "user", "inches")
+  text_y <- grconvertY(text_y, "user", "inches")
+  character_width <- par("cin")[1L] * font$size / par("ps")
+  character_height <- par("cin")[2L] * font$size / par("ps")
+  sd_chart_state$legend_keys <- vector("list", length(markers))
+  for (i in seq_along(markers)) {
+    marker <- markers[[i]]
+    if (fill) {
+      left <- grconvertX(text_x[i] - 1.8 * character_width, "inches", "user")
+      right <- grconvertX(text_x[i] - character_width, "inches", "user")
+      bottom <- grconvertY(text_y[i] - 0.25 * character_height, "inches", "user")
+      top <- grconvertY(text_y[i] + 0.25 * character_height, "inches", "user")
+      style <- if (isTRUE(sd_chart_get("useColour", TRUE))) 1L else marker$fillStyle
+      if (length(style) != 1L || is.na(style) || !style %in% 0:4) style <- 0L
+      colour <- if (style == 0L) NA else marker$col
+      rect(left, bottom, right, top, col = colour, border = marker$lineColor,
+           lwd = marker$lwd, lty = marker$lty, density = if (style %in% 2:4) 16 else NULL,
+           angle = if (style == 3L) 135 else 45)
+      if (style == 4L)
+        rect(left, bottom, right, top, col = colour, border = NA, density = 16, angle = 135)
+      sd_chart_state$legend_keys[[i]] <- list(type = "fill", left = left, right = right,
+        bottom = bottom, top = top, fillStyle = style)
+    } else {
+      x <- grconvertX(text_x[i] - character_width, "inches", "user")
+      y <- grconvertY(text_y[i], "inches", "user")
+      sd_chart_points(x, y, marker)
+      sd_chart_state$legend_keys[[i]] <- list(type = "point", x = x, y = y, shape = marker$shape)
+    }
+  }
+  invisible(result)
 }
 sd_chart_finish <- function() {
   if (!is.null(sd_chart_state$old)) { par(sd_chart_state$old); sd_chart_state$old <- NULL }

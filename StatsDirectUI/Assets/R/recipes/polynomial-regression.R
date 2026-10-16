@@ -1,6 +1,6 @@
 # StatsDirect recipe: Polynomial regression, as the help shows it in R.
 # From the help's R code (regression_and_correlation/polynomial.htm); the data and settings above come from the run.
-# data: kwh, size
+# data: kwh = y, size = x
 # settings: degree = degree
 # hand-edited: preserve native complete-pair and predictor-order preprocessing explicitly.
 

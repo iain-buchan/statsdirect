@@ -57,7 +57,7 @@ internal static partial class Program
             CheckChartBR(frequencyScript, Path.Combine(folder, "frequency"), horizontalBar, frequencyChecks,
                 "multiple categorical columns reproduce native proportions and chosen horizontal bar settings");
             CheckChartBR(frequencyScript, Path.Combine(folder, "frequency-pdf"), horizontalBar, frequencyChecks,
-                "selected frequency bars on the Mac PDF device", pdf: true);
+                "selected frequency bars open the default Mac PDF device", pdf: true, lazyDevice: true);
             BarOptions singleBar = null;
             var (singleBarRun, _) = Run("BarPlotFrequency", new() { ["rawValues"] = new DataFrame(raw.Variables[0]) }, amend: fillable =>
             {
@@ -67,6 +67,45 @@ internal static partial class Program
             CheckChartBR(RScriptWriter.Write(Record(singleBarRun), null, null).Text, Path.Combine(folder, "frequency-single"), singleBar,
                 "stopifnot(identical(as.double(frequency_values),c(2,1,3)),identical(as.double(bar_values),c(2,1,3)),nrow(bar_values)==1L)\n",
                 "a single categorical column retains native counts instead of converting them to proportions");
+            DataFrame fillRaw = new();
+            string[] fillLabels = { "No fill", "Solid", "Forward", "Backward", "Crosshatch" };
+            foreach (string label in fillLabels) fillRaw.Variables.Add(Categories(label, "A", "A", "B", "B"));
+            foreach (bool horizontal in new[] { false, true })
+            {
+                BarOptions fillBar = null;
+                var (fillRun, _) = Run("BarPlotFrequency", new() { ["rawValues"] = fillRaw }, amend: fillable =>
+                {
+                    fillBar = (BarOptions)((ChartDefinition)fillable).ChartOptions;
+                    ChooseChartC(fillBar, "Selected monochrome frequencies", "Categories", "Proportions");
+                    fillBar.UseColour = false;
+                    fillBar.ShowLegend = true;
+                    fillBar.Orientation = horizontal ? ChartOrientation.Horizontal : ChartOrientation.Vertical;
+                    fillBar.SeriesTitles = new[] { "Group A", "Group B" };
+                    fillBar.ShouldForceFillStyle = false;
+                    fillBar.MarkerTypes = Enumerable.Range(0, 5).Select(i => new MarkerType
+                    {
+                        MarkerShape = MarkerShape.Circle, MarkerColor = ColorDescriptor.Black, LineColor = ColorDescriptor.Black,
+                        Width = 1, MarkerSize = 6, MarkerFillStyle = (FillStyle)i
+                    }).ToList();
+                });
+                GenericOptions fillChosen = (GenericOptions)fillBar.Clone();
+                if (horizontal) { fillChosen.XAxisTitle = fillBar.YAxisTitle; fillChosen.YAxisTitle = fillBar.XAxisTitle; }
+                string fillScript = TraceChartBLegendState(RScriptWriter.Write(Record(fillRun), null, null).Text);
+                const string fillChecks = """
+                    stopifnot(length(.b_legend_rectangles)==6L,length(.b_legend_points)==0L,
+                              identical(.b_legend_before,.b_legend_after),!isTRUE(sd_chart_state$drawing_legend))
+                    keys <- .b_legend_rectangles
+                    stopifnot(is.na(keys[[1L]]$col),is.null(keys[[1L]]$density),
+                              all(col2rgb(keys[[2L]]$col)==0L),is.null(keys[[2L]]$density),
+                              identical(vapply(keys[3:6],function(z)as.double(z$density),double(1)),rep(16,4)),
+                              identical(vapply(keys[3:6],function(z)as.double(z$angle),double(1)),c(45,135,45,135)))
+                    stopifnot(all(vapply(keys,function(z)all(is.finite(c(z$npcLeft,z$npcRight,z$npcBottom,z$npcTop))) &&
+                              z$npcLeft>=-0.2 && z$npcRight<=1.2 && z$npcTop<0,logical(1))))
+                    """;
+                foreach (bool pdf in new[] { false, true })
+                    CheckChartBR(fillScript, Path.Combine(folder, "frequency-five-fills-" + horizontal + (pdf ? "-pdf" : "")), fillChosen, fillChecks,
+                        "five monochrome frequency fills have distinct matching legend keys below the chart without leaking graphics state", pdf);
+            }
 
             foreach (bool totals in new[] { false, true })
             {
@@ -95,7 +134,7 @@ internal static partial class Program
                 CheckChartBR(script, Path.Combine(folder, "pyramid-" + totals), pyramid, expected,
                     totals ? "a selected total population splits evenly about the centre and preserves labelled missing-row positions" : "a selected two-column pyramid preserves its counts, labels and chosen scale");
                 CheckChartBR(script, Path.Combine(folder, "pyramid-pdf-" + totals), pyramid, expected,
-                    "selected " + (totals ? "total" : "paired") + " population pyramid on the Mac PDF device", pdf: true);
+                    "selected " + (totals ? "total" : "paired") + " population pyramid opens the default Mac PDF device", pdf: true, lazyDevice: true);
             }
 
             foreach (string mode in new[] { "first", "moments", "limits", "dates" })
@@ -147,6 +186,10 @@ internal static partial class Program
                 if (mode == "moments" || mode == "dates")
                     CheckChartBR(script, Path.Combine(folder, "control-pdf-" + mode), control, expected,
                         "selected control chart " + mode + " on the Mac PDF device", pdf: true);
+                if (mode == "first")
+                    CheckChartBR(script, Path.Combine(folder, "control-pdf-fresh-device"), control,
+                        expected + "stopifnot(identical(control_font$family,'sans'))\n",
+                        "a control chart opens the default PDF device from a null device before choosing its portable font", pdf: true, lazyDevice: true);
             }
             passed = true;
         }
