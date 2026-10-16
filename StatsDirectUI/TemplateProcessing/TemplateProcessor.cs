@@ -6,6 +6,7 @@ using StatsDirect.Numerics;
 using StatsDirect.UI;
 using StatsDirect.Utilities;
 using System.Globalization;
+using System.Linq;
 using StatsDirect.Templates;
 
 namespace StatsDirect.TemplateProcessing
@@ -39,7 +40,7 @@ namespace StatsDirect.TemplateProcessing
         StepOutput ITemplateProcessor.Execute(Operation operation, ParameterBag startingParameters)
         {
             host.Operation = operation;
-            currentRun = new OperationRun(operation);
+            currentRun = new OperationRun(operation, startingParameters);
             ParameterBag filledParameters = startingParameters ?? new ParameterBag();
 
             // Check preconditions; fail if any fail.
@@ -211,6 +212,9 @@ namespace StatsDirect.TemplateProcessing
             ParameterBag results = ChartRendererFactory.PlotForResultsOnly(host, definition);
             results.AddOutput(step.ChartName, definition);
             SaveChartDefinition(step, results, definition);
+            if (host.Operation?.Name == "BarPlotFrequency" && parameters.TryGetValue("labels", out FilledParameter labels)
+                && labels?.IsDataFrame == true && labels.AsDataFrame.Variables.FirstOrDefault() is StringVariable categories)
+                ((ParameterBag)results["chartSettings"].AsObject).AddInput("frequencyCategories", categories.Data.ToArray());
             return new StepOutput(results);
         }
 
@@ -218,6 +222,7 @@ namespace StatsDirect.TemplateProcessing
         {
             results.AddInput(STATSDIRECT_CHART_OPTIONS + (step.ChartName ?? string.Empty), definition.ChartOptions);
             results.AddInput(STATSDIRECT_CHART_SCALE_PARAMETERS + (step.ChartName ?? string.Empty), definition.ScaleParameters);
+            results.AddInput("chartSettings", StatsDirect.R.ChartRunSettings.Capture(definition));
             if (definition.ChartOptions is BoxWhiskerOptions box)
             {
                 // Keep the final dialog choices as ordinary portable values. RunRecord deliberately omits the internal chart
@@ -480,7 +485,7 @@ namespace StatsDirect.TemplateProcessing
             try { prompt = parameter.Prompt(this, context, parameter.Title ?? parameter.Name); }
             catch (Exception) { prompt = parameter.Title ?? parameter.Name; }
             FilledParameter value = filled != null && !string.IsNullOrEmpty(parameter.Name) && filled.ContainsKey(parameter.Name) ? filled[parameter.Name] : null;
-            currentRun.Note(parameter, prompt, string.Join(".", loopPasses), value);
+            currentRun.Note(parameter, prompt, string.Join(".", loopPasses), value, filled);
         }
 
         /// <summary>The passes of the loops being run, outermost first: a parameter asked in each pass is noted once per pass.</summary>

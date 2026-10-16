@@ -27,6 +27,76 @@ namespace StatsDirect.Templates
         public const int EmbeddingThreshold = 5000;
         private const int LongestText = 2000;
         private static readonly CultureInfo inv = CultureInfo.InvariantCulture;
+        internal const string AcquisitionKey = "statsdirect-acquisition-snapshots";
+
+        /// <summary>An acquisition-time copy of the record's JSON, independent of arrays that an analysis may sort or filter.</summary>
+        internal sealed class InputSnapshot
+        {
+            internal JsonElement Content;
+            internal JsonElement Held;
+            internal JsonElement Source;
+            internal int PointerCount;
+            internal InputSnapshot Copy() => new() { Content = Content, Held = Held, Source = Source, PointerCount = PointerCount };
+        }
+
+        private static JsonElement Json(Action<Utf8JsonWriter> write)
+        {
+            using MemoryStream stream = new();
+            using (Utf8JsonWriter writer = new(stream)) write(writer);
+            using JsonDocument document = JsonDocument.Parse(stream.ToArray());
+            return document.RootElement.Clone();
+        }
+
+        internal static InputSnapshot Capture(FilledParameter value, string kind)
+        {
+            if (value?.HasData != true) return null;
+            InputSnapshot snapshot = new();
+            snapshot.Content = Json(w =>
+            {
+                w.WriteStartObject();
+                if (value.IsDataFrame)
+                {
+                    DataFrame frame = value.AsDataFrame;
+                    if (IsPointerFrame(frame))
+                    {
+                        w.WriteString("kind", "frame");
+                        WritePointer(w, frame);
+                        snapshot.PointerCount = Count(frame);
+                        snapshot.Source = Json(source => WriteSource(source, ((WorksheetOrigin)frame.Variables[0].Origin).WorkbookPath));
+                        if (snapshot.PointerCount <= EmbeddingThreshold)
+                            snapshot.Held = Json(data =>
+                            {
+                                data.WriteStartObject();
+                                HashSet<string> titles = new();
+                                foreach (IVariable variable in frame.Variables)
+                                {
+                                    data.WritePropertyName(UniqueTitle(variable.Title, titles));
+                                    WriteValues(data, variable);
+                                }
+                                data.WriteEndObject();
+                            });
+                    }
+                    else
+                    {
+                        w.WriteString("kind", "entered");
+                        WriteColumns(w, frame);
+                    }
+                }
+                else
+                {
+                    w.WriteString("kind", kind);
+                    w.WritePropertyName("value");
+                    WriteValue(w, value.AsObject, 0, EmbeddingThreshold);
+                }
+                w.WriteEndObject();
+            });
+            return snapshot;
+        }
+
+        private static void WriteSnapshot(Utf8JsonWriter writer, InputSnapshot snapshot)
+        {
+            foreach (JsonProperty property in snapshot.Content.EnumerateObject()) property.WriteTo(writer);
+        }
 
         /// <summary>The kind of value a parameter takes, as the record names it.</summary>
         public static string KindOf(Parameter parameter) => parameter switch
@@ -63,21 +133,25 @@ namespace StatsDirect.Templates
                 w.WriteString("title", run.Operation?.FriendlyName ?? run.Operation?.Name ?? "");
                 w.WriteString("run", run.Started.ToString("o", inv));
                 // the data file: that of the first frame read from a workbook
-                WorksheetOrigin first = FirstOrigin(run, bag);
-                if (first != null)
+                JsonElement source = run.Inputs.Select(input => input.Snapshot?.Source ?? default)
+                    .Concat(run.InheritedInputs.Values.Where(snapshot => snapshot != null).Select(snapshot => snapshot.Source))
+                    .FirstOrDefault(element => element.ValueKind == JsonValueKind.Object);
+                WorksheetOrigin first = source.ValueKind == JsonValueKind.Object ? null : FirstOrigin(run, bag);
+                if (source.ValueKind == JsonValueKind.Object || first != null)
                 {
                     w.WritePropertyName("source");
-                    WriteSource(w, first.WorkbookPath);
+                    if (source.ValueKind == JsonValueKind.Object) source.WriteTo(w);
+                    else WriteSource(w, first.WorkbookPath);
                 }
                 // the inputs as they were asked
                 int pointerValues = 0;
-                List<KeyValuePair<string, DataFrame>> pointerFrames = new();
+                List<KeyValuePair<string, InputSnapshot>> pointerFrames = new();
                 RunInput table = null;
                 double[] counts = null;
                 w.WriteStartArray("inputs");
                 foreach (RunInput input in run.Inputs)
                 {
-                    if (input.Kind == "table" && input.Parts != null && TableCounts(input, bag) is double[] cells)
+                    if (input.Kind == "table" && input.Parts != null && (input.TableCounts ?? CaptureTableCounts(input, bag)) is double[] cells)
                     {
                         // a 2 by 2 table typed in: its columns as a frame, for a recipe that takes columns, and its rows of counts with their labels
                         if (table == null)
@@ -107,35 +181,20 @@ namespace StatsDirect.Templates
                     }
                     // the value as it was asked, else the bag's: a parameter asked in each pass of a loop keeps each pass's value
                     FilledParameter filled = input.Value ?? (bag.TryGetValue(input.Name, out FilledParameter current) ? current : null);
-                    if (filled == null || !filled.HasData)
+                    InputSnapshot snapshot = input.Snapshot ?? Capture(filled, input.Kind);
+                    if (snapshot == null)
                         continue;
                     w.WriteStartObject();
                     w.WriteString("name", input.Name);
                     w.WriteString("prompt", input.Prompt ?? "");
-                    if (filled.IsDataFrame)
+                    WriteSnapshot(w, snapshot);
+                    if (snapshot.Content.GetProperty("kind").GetString() == "frame")
                     {
-                        DataFrame frame = filled.AsDataFrame;
-                        if (IsPointerFrame(frame))
-                        {
-                            w.WriteString("kind", "frame");
-                            WritePointer(w, frame);
-                            pointerValues += Count(frame);
-                            // the values of a frame asked in each pass of a loop are held under a key of their own, "name#2" for the second
-                            string held = pointerFrames.Any(p => p.Key == input.Name) ? input.Name + "#" + (pointerFrames.Count(p => p.Key == input.Name || p.Key.StartsWith(input.Name + "#", StringComparison.Ordinal)) + 1) : input.Name;
-                            if (held != input.Name) w.WriteString("held", held);
-                            pointerFrames.Add(new KeyValuePair<string, DataFrame>(held, frame));
-                        }
-                        else
-                        {
-                            w.WriteString("kind", "entered");
-                            WriteColumns(w, frame);
-                        }
-                    }
-                    else
-                    {
-                        w.WriteString("kind", input.Kind);
-                        w.WritePropertyName("value");
-                        WriteValue(w, filled.AsObject, 0, threshold);
+                        pointerValues += snapshot.PointerCount;
+                        // A frame asked in each loop pass has its own held key.
+                        string held = pointerFrames.Any(p => p.Key == input.Name) ? input.Name + "#" + (pointerFrames.Count(p => p.Key == input.Name || p.Key.StartsWith(input.Name + "#", StringComparison.Ordinal)) + 1) : input.Name;
+                        if (held != input.Name) w.WriteString("held", held);
+                        pointerFrames.Add(new KeyValuePair<string, InputSnapshot>(held, snapshot));
                     }
                     w.WriteEndObject();
                 }
@@ -154,26 +213,13 @@ namespace StatsDirect.Templates
                     w.WriteString("name", pair.Key);
                     w.WriteString("prompt", "");
                     w.WriteBoolean("inherited", true);
-                    if (twoLevel)
+                    InputSnapshot snapshot = run.InheritedInputs.TryGetValue(pair.Key, out InputSnapshot acquired) ? acquired : null;
+                    snapshot ??= Capture(pair.Value, twoLevel ? "frame2d" : "frame");
+                    WriteSnapshot(w, snapshot);
+                    if (snapshot.Content.GetProperty("kind").GetString() == "frame")
                     {
-                        w.WriteString("kind", "frame2d");
-                        w.WritePropertyName("value");
-                        WriteValue(w, pair.Value.AsObject, 0, threshold);
-                        w.WriteEndObject();
-                        continue;
-                    }
-                    DataFrame frame = pair.Value.AsDataFrame;
-                    if (IsPointerFrame(frame))
-                    {
-                        w.WriteString("kind", "frame");
-                        WritePointer(w, frame);
-                        pointerValues += Count(frame);
-                        pointerFrames.Add(new KeyValuePair<string, DataFrame>(pair.Key, frame));
-                    }
-                    else
-                    {
-                        w.WriteString("kind", "entered");
-                        WriteColumns(w, frame);
+                        pointerValues += snapshot.PointerCount;
+                        pointerFrames.Add(new KeyValuePair<string, InputSnapshot>(pair.Key, snapshot));
                     }
                     w.WriteEndObject();
                 }
@@ -187,7 +233,12 @@ namespace StatsDirect.Templates
                         && !pair.Value.IsDataFrame && Writable(pair.Value.AsObject))
                     {
                         w.WritePropertyName(pair.Key);
-                        WriteValue(w, pair.Value.AsObject, 0, threshold);
+                        // Mutable structured settings (not recalculated scalar results) retain their acquired values too.
+                        InputSnapshot snapshot = run.Inputs.LastOrDefault(input => input.Name == pair.Key)?.Snapshot;
+                        if (snapshot == null) run.InheritedInputs.TryGetValue(pair.Key, out snapshot);
+                        if (snapshot != null && snapshot.Content.TryGetProperty("value", out JsonElement acquired)
+                            && acquired.ValueKind is JsonValueKind.Object or JsonValueKind.Array) acquired.WriteTo(w);
+                        else WriteValue(w, pair.Value.AsObject, 0, threshold);
                     }
                 if (!bag.ContainsKey("ci"))
                     foreach (KeyValuePair<string, FilledParameter> pair in bag.Pairs)
@@ -205,24 +256,21 @@ namespace StatsDirect.Templates
                     }
                 w.WriteEndObject();
                 // the values of the pointer frames, when few
-                if (pointerFrames.Count > 0 && pointerValues <= threshold)
+                if (pointerFrames.Count > 0 && pointerValues <= threshold && pointerFrames.All(frame => frame.Value.Held.ValueKind == JsonValueKind.Object))
                 {
                     w.WriteStartObject("data");
-                    foreach (KeyValuePair<string, DataFrame> pointerFrame in pointerFrames)
+                    foreach (KeyValuePair<string, InputSnapshot> pointerFrame in pointerFrames)
                     {
-                        w.WriteStartObject(pointerFrame.Key);
-                        HashSet<string> titles = new();
-                        foreach (IVariable variable in pointerFrame.Value.Variables)
-                        {
-                            w.WritePropertyName(UniqueTitle(variable.Title, titles));
-                            WriteValues(w, variable);
-                        }
-                        w.WriteEndObject();
+                        w.WritePropertyName(pointerFrame.Key);
+                        pointerFrame.Value.Held.WriteTo(w);
                     }
                     w.WriteEndObject();
                 }
                 w.WriteEndObject();
             }
+            // Follow-on operations receive the fitted frames, which may already be sorted or filtered. Carry their original
+            // acquisition provenance in the private context so the next run need not mistake those arrays for worksheet order.
+            bag[AcquisitionKey] = FilledParameterFactory.Input(run.AcquisitionSnapshots());
             return Encoding.UTF8.GetString(stream.ToArray());
         }
 
@@ -304,8 +352,9 @@ namespace StatsDirect.Templates
         public static bool Missing(double x) => Constant.MISSING == x || double.IsNaN(x) || double.IsInfinity(x);
 
         /// <summary>The four counts of a 2 by 2 table typed in, from the parameters that hold them, or null when any is missing.</summary>
-        private static double[] TableCounts(RunInput input, ParameterBag bag)
+        internal static double[] CaptureTableCounts(RunInput input, ParameterBag bag)
         {
+            if (bag == null) return null;
             double[] counts = new double[4];
             for (int i = 0; i < 4; i++)
             {
@@ -453,7 +502,7 @@ namespace StatsDirect.Templates
         private static bool IsScalar(object value) => value is double or int or long or bool || value is string s && s.Length <= LongestText;
 
         private static bool Writable(object value) =>
-            value is null or double or int or long or bool or string or IList<string> or IList<bool> or ParameterBag or IList<ParameterBag> or DataFrame2D;
+            value is null or double or int or long or bool or string or IList<string> or IList<bool> or IList<double> or ParameterBag or IList<ParameterBag> or DataFrame2D;
 
         private static void WriteScalar(Utf8JsonWriter w, object value)
         {
@@ -485,6 +534,11 @@ namespace StatsDirect.Templates
                     w.WriteStartArray();
                     foreach (bool flag in flags)
                         w.WriteBooleanValue(flag);
+                    w.WriteEndArray();
+                    break;
+                case IList<double> numbers:   // numeric chart settings such as histogram edges and counts
+                    w.WriteStartArray();
+                    foreach (double number in numbers) WriteScalar(w, number);
                     w.WriteEndArray();
                     break;
                 case ParameterBag bag:

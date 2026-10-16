@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Layout;
 using StatsDirect.Templates;
 
@@ -16,11 +17,18 @@ namespace StatsDirect.Charting.Renderer
         ScaleParameters IChartRenderer.GetScaleParameters()
         {
             IList<ISeries> seriesToUse = Definition.YSeries.Count > 0 ? Definition.YSeries : Definition.XSeries;
-            Layout.Range xRange = GetMinMaxSort(seriesToUse);
+            // Scale discovery must not reorder worksheet arrays shared by chart series and the analysis record.
+            double minimum = double.MaxValue, maximum = double.MinValue;
+            foreach (DoubleSeries series in seriesToUse)
+                foreach (double value in series.Data)
+                {
+                    if (value < minimum) minimum = value;
+                    if (value > maximum) maximum = value;
+                }
 
             return new ScaleParameters
             {
-                X = { AllowedScaleTypes = new[] { ScaleType.Linear }, Min = xRange.Min, MinGreaterThanZero = xRange.Min, Max = xRange.Max },
+                X = { AllowedScaleTypes = new[] { ScaleType.Linear }, Min = minimum, MinGreaterThanZero = minimum, Max = maximum },
                 Y = { AllowedScaleTypes = new[] { ScaleType.Category } }
             };
         }
@@ -47,7 +55,7 @@ namespace StatsDirect.Charting.Renderer
         private ParameterBag PlotSpreadHorizontal()
         {
             SpreadOptions sOptions = (SpreadOptions)Definition.ChartOptions;
-            IList<ISeries> seriesToUse = Definition.YSeries.Count > 0 ? Definition.YSeries : Definition.XSeries;
+            IList<ISeries> seriesToUse = SeriesForRendering();
 
             ScaleHeight(seriesToUse.Count);
 
@@ -56,7 +64,7 @@ namespace StatsDirect.Charting.Renderer
             DataMaxX = dataRangeX.Max;
 
             StartVectorPlot(sOptions);
-            AssignMarkersToSeries(sOptions);
+            AssignMarkersToSeries(seriesToUse, sOptions);
 
             LayoutChartAndDrawAxes(sOptions.Title,
                 new AxisDefinition(sOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType),
@@ -138,7 +146,7 @@ namespace StatsDirect.Charting.Renderer
         private ParameterBag PlotSpreadVertical()
         {
             SpreadOptions sOptions = (SpreadOptions)Definition.ChartOptions;
-            IList<ISeries> seriesToUse = Definition.YSeries.Count > 0 ? Definition.YSeries : Definition.XSeries;
+            IList<ISeries> seriesToUse = SeriesForRendering();
 
             ScaleWidth(seriesToUse.Count);
 
@@ -147,7 +155,7 @@ namespace StatsDirect.Charting.Renderer
             DataMaxY = dataRangeY.Max;
 
             StartVectorPlot(sOptions);
-            AssignMarkersToSeries(sOptions);
+            AssignMarkersToSeries(seriesToUse, sOptions);
 
             //  TODO: Should we be using the X axis title for something that will be shown vertically?
             LayoutChartAndDrawAxes(sOptions.Title,
@@ -225,5 +233,8 @@ namespace StatsDirect.Charting.Renderer
             EndVectorPlot();
             return new ParameterBag();
         }
+        private IList<ISeries> SeriesForRendering() => (Definition.YSeries.Count > 0 ? Definition.YSeries : Definition.XSeries)
+            .Select(series => (ISeries)new DoubleSeries((double[])((DoubleSeries)series).Data.Clone(), series.Title)
+                { MarkerType = ((DoubleSeries)series).MarkerType }).ToList();
     }
 }

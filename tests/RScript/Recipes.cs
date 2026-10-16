@@ -5,14 +5,13 @@ using StatsDirect.R;
 
 internal static partial class Program
 {
-    // The recipes come from the help's R code, which reproduces every figure of each worked example: each recipe, with the help's own
-    // example data and settings put in by the script writer as a run's record would give them, must print the figures the help's
-    // script prints (the labels of a table's rows may differ, since a run's frame of counts has none)
+    // Worked examples compare every numerical figure with their independent R reference. Graphical recipes probe the arrays they
+    // actually plotted, rather than requiring the extra demonstrations and teaching text that used to accompany the selected chart.
     private static void CheckRecipesAgainstHelp()
     {
         RRecipes.Folder = Metadata("Recipes");
         string examples = Metadata("Examples");
-        string folder = Path.Combine(Path.GetTempPath(), "statsdirect-rscript-checks", "recipes");
+        string folder = Path.Combine(Path.GetTempPath(), "statsdirect-rscript-recipes-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(folder);
         string[] operations = RRecipes.Operations.OrderBy(o => o, StringComparer.Ordinal).ToArray();
         Check(operations.Length >= 28 && operations.All(op => File.Exists(Path.Combine(examples, op + ".json")) && File.Exists(Path.Combine(examples, op + ".R"))),
@@ -29,6 +28,11 @@ internal static partial class Program
                 RScript script = RScriptWriter.Write(JsonDocument.Parse(record).RootElement, null, null);
                 string runFolder = Path.Combine(folder, op);
                 string scriptText = script.Text;
+                string chartProbe = SelectedChartExampleProbe(op);
+                if (chartProbe != null)
+                    scriptText = "options(device = function(...) grDevices::svg(filename = \"selected-chart-%03d.svg\", ...))\n"
+                        + "invisible(capture.output({\n" + scriptText + "\n}))\n"
+                        + "emit <- function(x) cat(formatC(as.double(x), digits = 8, format = 'f'), '\\n')\n" + chartProbe;
                 if (op == "BoxWhiskerPlot")
                 {
                     // This recipe now draws one selected chart instead of running the help's three teaching illustrations.
@@ -37,6 +41,9 @@ internal static partial class Program
                     scriptText = "options(device = function(...) grDevices::svg(filename = \"selected-box-%03d.svg\", ...))\n" + scriptText + BoxWhiskerExampleProbe;
                 }
                 string output = RunR(scriptText, runFolder);
+                if (chartProbe != null)
+                    Check(Directory.GetFiles(runFolder, "selected-chart-*.svg").Length == 1,
+                          op + " worked example draws one selected chart while every plotted value is compared independently");
                 if (op == "BoxWhiskerPlot")
                     Check(Directory.GetFiles(runFolder, "selected-box-*.svg").Length == 1,
                           "the Cuzick worked-example recipe draws exactly one chart from the selected columns and recorded settings");
@@ -73,8 +80,23 @@ internal static partial class Program
                 Console.WriteLine($"      {op}: {ex.Message.Replace("\r", "").Replace("\n", " | ").Substring(0, Math.Min(400, ex.Message.Length))}");
             }
         }
-        Check(failures.Count == 0, $"every recipe prints the figures the help's script prints on the help's example: {agreed} of {operations.Length} agree" + (failures.Count > 0 ? "; differing: " + string.Join(", ", failures) : ""));
+        Check(failures.Count == 0, $"every recipe matches its independent worked-example numerical reference: {agreed} of {operations.Length} agree" + (failures.Count > 0 ? "; differing: " + string.Join(", ", failures) : ""));
     }
+
+    private static string SelectedChartExampleProbe(string operation) => operation switch
+    {
+        "BarPlot" => "emit(c(dim(bar_values), as.vector(bar_values)))\nfor (s in bar_segments) emit(unlist(s, use.names = FALSE))\n",
+        "BarPlotFrequency" => "emit(c(dim(counts), as.vector(counts), as.vector(frequency_values), dim(bar_values), as.vector(bar_values)))\nfor (s in bar_segments) emit(unlist(s, use.names = FALSE))\n",
+        "HistogramPlot" => "emit(length(histograms))\nfor (h in histograms) emit(c(h$n, h$breaks, h$counts, h$mids, h$heights))\n",
+        "NormalPlot" => "emit(c(length(observed), normal_ranks, normal_scores, observed))\n",
+        "SpreadPlot" => "stopifnot(spread_tolerance > 0, spread_tolerance < 1)\nemit(length(groups))\nfor (i in seq_along(groups)) { emit(c(length(groups[[i]]), groups[[i]])); emit(unlist(spread_stacks[[i]], use.names = FALSE)) }\n",
+        "LinePlot" or "ScatterPlot" => "emit(length(xy_series))\nfor (s in xy_series) emit(c(length(s$x), s$x, s$y))\n",
+        "LadderPlot" => "emit(c(length(ladder_before), ladder_before, ladder_after, ladder_difference))\n",
+        "ErrorPlot" => "emit(length(error_series))\nfor (s in error_series) emit(c(length(s$x), s$x, s$y, s$lower, s$upper, s$plot_x))\n",
+        "PyramidPlot" => "emit(c(length(pyramid_rows), pyramid_rows, pyramid_males, pyramid_females, pyramid_scale))\n",
+        "ControlPlot" => "emit(c(length(control_y), control_x, control_y, control_mean, control_sd, control_bands))\n",
+        _ => null
+    };
 
     // Use the recipe's calculated summaries, rather than recomputing a second set for the numeric comparison.
     private const string BoxWhiskerExampleProbe = """

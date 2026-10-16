@@ -331,7 +331,11 @@ namespace StatsDirect.R
             s.Append('\n');
             // the analysis
             if (binding != null)
+            {
+                if (binding.Settings.Any(setting => setting.parameter == "chartSettings"))
+                    s.Append(RRecipes.Recipe("chart-common.R").TrimEnd('\n')).Append('\n');
                 s.Append(binding.Body.TrimEnd('\n')).Append('\n');
+            }
             else
                 s.Append("# Add your analysis here.\n");
             return new RScript { Text = s.ToString(), HasRecipe = recipe != null, Detail = detail ?? "Data and settings only: no R recipe of this method yet.", DataUnavailable = unavailable };

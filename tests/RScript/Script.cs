@@ -27,6 +27,7 @@ internal static partial class Program
                 string parent = Regex.Replace(File.ReadAllText(Path.Combine(Metadata("Operations"), inherits.Groups[1].Value + ".xml")), "<!--.*?-->", "", RegexOptions.Singleline);
                 parameters.UnionWith(Regex.Matches(parent, "<name>([^<]+)</name>").Select(m => m.Groups[1].Value.Trim()).Skip(1));
                 if (parent.Contains("<frame>")) xml += "<frame>";
+                if (parent.Contains("<chart-type>")) parameters.Add("chartSettings");
             }
             parameters.UnionWith(Regex.Matches(xml, "<(?:top-left|top-right|bottom-left|bottom-right)-name>([^<]+)</").Select(m => m.Groups[1].Value.Trim()));   // the cells of a 2 by 2 table typed in
             if (Regex.IsMatch(xml, "<builtin function-name=\"dist[A-Za-z]+\""))
@@ -34,6 +35,7 @@ internal static partial class Program
             if (xml.Contains("<grouped-covariance>")) parameters.Add("ci");   // its confidence level is asked through the grid and recorded as the setting ci
             // The chart dialog records its final settings as a neutral parameter bag after it closes; those settings are not XML inputs.
             if ((op is "BoxWhiskerPlot" or "BoxWhiskerPlotText") && xml.Contains("<chart-type>BoxWhisker</chart-type>")) parameters.Add("boxWhisker");
+            if (xml.Contains("<chart-type>")) parameters.Add("chartSettings");
             Match settings = Regex.Match(text, "^# settings:\\s*(.*)$", RegexOptions.Multiline);
             if (settings.Success)
                 foreach (string item in settings.Groups[1].Value.Split(',').Select(x => x.Trim()).Where(x => x.Contains('=')))

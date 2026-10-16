@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
+using System.Linq;
 
 namespace StatsDirect.Charting.Renderer
 {
@@ -63,7 +64,9 @@ namespace StatsDirect.Charting.Renderer
                 return new ParameterBag();
 
             HistogramOptions options = (HistogramOptions)Definition.ChartOptions;
-            IList<ISeries> seriesToUse = Definition.YSeries;
+            // Sorting for drawing must not change the acquired data or a subsequent R replay's provenance.
+            IList<ISeries> seriesToUse = Definition.YSeries.Select(series => (ISeries)new DoubleSeries(
+                (double[])((DoubleSeries)series).Data.Clone(), series.Title) { MarkerType = ((DoubleSeries)series).MarkerType }).ToList();
             MarkerType[] originalMarkerTypes = null;
             //  A space to save drawn ASCII plots until required
             List<string> savedLines = null;

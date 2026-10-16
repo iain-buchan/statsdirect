@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace StatsDirect.Templates
 {
@@ -18,12 +19,38 @@ namespace StatsDirect.Templates
         /// <summary>The JSON record of the run as it stood at the last report step, or null when none has been written.</summary>
         public string Record { get; set; }
 
-        public OperationRun(Operation operation)
+        // Snapshots contain pointer metadata and at most the embedding allowance, rather than copying large worksheets.
+        internal IDictionary<string, RunRecord.InputSnapshot> InheritedInputs { get; } = new Dictionary<string, RunRecord.InputSnapshot>();
+
+        public OperationRun(Operation operation, ParameterBag startingParameters = null)
         {
             Operation = operation;
+            IDictionary<string, RunRecord.InputSnapshot> previous = null;
+            if (startingParameters?.TryGetValue(RunRecord.AcquisitionKey, out FilledParameter carried) == true)
+                previous = carried?.AsObject as IDictionary<string, RunRecord.InputSnapshot>;
+            if (startingParameters != null)
+                foreach (KeyValuePair<string, FilledParameter> pair in startingParameters.Pairs)
+                    if (!pair.Key.StartsWith("statsdirect", StringComparison.OrdinalIgnoreCase)
+                        && pair.Value?.HasData == true && pair.Value.Direction != FilledParameterDirection.Output
+                        && (pair.Value.IsDataFrame || pair.Value.AsObject is StatsDirect.Data.DataFrame2D))
+                        try
+                        {
+                            InheritedInputs[pair.Key] = previous?.TryGetValue(pair.Key, out RunRecord.InputSnapshot original) == true
+                                ? original.Copy() : RunRecord.Capture(pair.Value, pair.Value.IsDataFrame ? "frame" : "frame2d");
+                        }
+                        catch (Exception) { }   // keeping provenance must not prevent the analysis
+            LimitHeldValues();
         }
 
-        public void Note(Parameter parameter, string prompt, string pass = "", FilledParameter value = null)
+        internal IDictionary<string, RunRecord.InputSnapshot> AcquisitionSnapshots()
+        {
+            Dictionary<string, RunRecord.InputSnapshot> snapshots = new(InheritedInputs);
+            foreach (RunInput input in Inputs)
+                if (input.Snapshot != null) snapshots[input.Name] = input.Snapshot;
+            return snapshots;
+        }
+
+        public void Note(Parameter parameter, string prompt, string pass = "", FilledParameter value = null, ParameterBag acquisitionParameters = null)
         {
             if (string.IsNullOrEmpty(parameter?.Name))
                 return;
@@ -31,6 +58,8 @@ namespace StatsDirect.Templates
                 if (Inputs[i].Name == parameter.Name && Inputs[i].Pass == pass)
                     Inputs.RemoveAt(i);
             RunInput input = new(parameter.Name, prompt, RunRecord.KindOf(parameter)) { Pass = pass, Value = value };
+            try { input.Snapshot = RunRecord.Capture(value, input.Kind); }
+            catch (Exception) { }   // the report can still attempt its previous best-effort capture
             if (parameter is Double2By2Parameter table)
             {
                 // a 2 by 2 table is held as four named counts: the record puts them back together with the labels of its rows and columns
@@ -39,8 +68,21 @@ namespace StatsDirect.Templates
                 input.ColumnLabels = new[] { table.LeftColumnPrompt ?? "", table.RightColumnPrompt ?? "" };
                 input.RowsTitle = Title(table.RowsPrompt);
                 input.ColumnsTitle = Title(table.ColumnsPrompt);
+                input.TableCounts = RunRecord.CaptureTableCounts(input, acquisitionParameters);
             }
             Inputs.Add(input);
+            LimitHeldValues();
+        }
+
+        private void LimitHeldValues()
+        {
+            List<RunRecord.InputSnapshot> snapshots = new();
+            foreach (RunInput input in Inputs)
+                if (input.Snapshot != null) snapshots.Add(input.Snapshot);
+            foreach (KeyValuePair<string, RunRecord.InputSnapshot> pair in InheritedInputs)
+                if (!Inputs.Any(input => input.Name == pair.Key) && pair.Value != null) snapshots.Add(pair.Value);
+            if (snapshots.Sum(snapshot => (long)snapshot.PointerCount) > RunRecord.EmbeddingThreshold)
+                foreach (RunRecord.InputSnapshot snapshot in snapshots) snapshot.Held = default;
         }
 
         /// <summary>A dialog's prompt as a name for a table's rows or columns: without a trailing colon or an aside in brackets.</summary>
@@ -71,6 +113,8 @@ namespace StatsDirect.Templates
         public string Pass { get; set; } = "";
         /// <summary>The value as it was asked, when the processor had it to hand; the bag's current value stands in otherwise.</summary>
         public FilledParameter Value { get; set; }
+        internal RunRecord.InputSnapshot Snapshot { get; set; }
+        internal double[] TableCounts { get; set; }
 
         public RunInput(string name, string prompt, string kind)
         {

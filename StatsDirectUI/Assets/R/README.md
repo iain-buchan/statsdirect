@@ -4,7 +4,8 @@ The analyses that "Continue in R" writes for a result. `analysis-recipes.json` m
 `recipes/`. A script for a result is short: the run's data as named vectors (or a matrix of counts), the settings as named values,
 then the recipe's analysis, so that the user can run it, edit it, or take it to R or RStudio.
 
-A recipe is the analysis as the help's R code shows it for that method, which reproduces the figures of the help's worked example. It
+A recipe reproduces the selected analysis, using the help's worked example as a numerical reference. Teaching comparisons, additional
+transformations and unrelated example plots are not part of a result's replay. It
 starts with a header that names the variables it takes; the script writer (`StatsDirectUI/R/RScriptWriter.cs`) writes the run's values
 under those names before the body:
 
@@ -17,7 +18,7 @@ under those names before the body:
 The recipes were generated from the help's R sections (the topic of each operation, through `Data/Alias.xml`), with the example's data
 and settings taken out and the confidence level taken from the run; files marked `# hand-edited` were adjusted by hand after that. The
 checks in `tests/RScript` run every recipe on the help's own example, through a run's record, and compare its output with the help's
-script, and run the paired t test and the 2 by 2 chi-square against the engine. The files are shared with the Mac version of
+script (or compare the complete plotted arrays with an independent reference), and run the paired t test and the 2 by 2 chi-square against the engine. The files are shared with the Mac version of
 StatsDirect, which keeps them the same.
 
 Two kinds of recipe are written by hand rather than generated, and are marked `# hand-edited`. The Distributions calculator has no
@@ -65,3 +66,23 @@ its own.
 A column that is not at its recorded place when the script is written, because the analysis wrote its result columns to the left of
 its data or a column was inserted or removed by hand, is found again by its hash and its title within 64 columns to either side
 (`ColumnLocator`); the script notes the move, and the column's comment gives its new place.
+
+Inputs are recorded at acquisition, before an engine routine can sort observations, remove incomplete pairs or overwrite an origin.
+The immutable internal snapshot retains the original worksheet pointer and hash; up to 5,000 pointer values per run are retained as
+before. Larger selections retain metadata rather than a second complete dataset. A private context carries these original snapshots
+into follow-on operations without adding private objects to the version-1 JSON record. Reacquiring an input replaces its snapshot.
+Recipes apply the analysis's preprocessing explicitly: polynomial regression, for example, removes incomplete pairs and sorts by X
+before calculating its fit, Durbin-Watson statistic and trapezoidal area. A genuine worksheet edit still generates a changed-data note.
+
+Graphical recipes bind `# settings: chart = chartSettings`. The final chart dialog records a portable bag containing titles, series
+labels, orientation, fonts, markers, axes and the options specific to that chart. Axis bags `x` and `y` are in the chart definition's
+original orientation; recipes swap them when the native renderer swaps axes. Histogram panels retain their selected bin edges and
+titles; R recomputes the counts from the selected observations. Chart data are still supplied by the recipe's named input bindings.
+The writer embeds `recipes/chart-common.R` before these recipes, so exported scripts are self-contained and need no installed helper
+file. That helper supplies font fallback for PDF, measured title wrapping, axis formatting and the selected drawing styles.
+
+One native graphical chart produces one R page. Multiple selected histograms occupy panels on that page. Legitimate multi-chart
+analyses retain their separate charts. An older saved result without chart choices reports that it is using standard options; past
+choices cannot be reconstructed. These graphical recipes are marked `# hand-edited` and must be preserved during regeneration.
+Their tests cover native dialog-to-record-to-R binding, edited data and labels, settings, SVG/PDF page counts and every plotted value,
+as well as the help examples. Text-chart recipes retain their existing output conventions.

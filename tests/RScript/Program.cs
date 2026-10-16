@@ -32,7 +32,16 @@ internal static partial class Program
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "options3") { CheckOptions3(); Console.WriteLine($"PASS {checks} Continue in R checks (the confidence levels alone)"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "box") { CheckBoxWhisker(); Console.WriteLine($"PASS {checks} box and whisker Continue in R checks"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "recipes") { CheckRecipes(); CheckRecipesAgainstHelp(); Console.WriteLine($"PASS {checks} R recipe checks"); return 0; }
+            if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "acquisition") { CheckAcquisition(); Console.WriteLine($"PASS {checks} acquisition checks"); return 0; }
+            if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "charts-a") { CheckChartRecipesA(); Console.WriteLine($"PASS {checks} chart recipe A checks"); return 0; }
+            if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "charts-b") { CheckChartRecipesB(); Console.WriteLine($"PASS {checks} chart recipe B checks"); return 0; }
+            if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "charts-c") { CheckChartRecipesC(); Console.WriteLine($"PASS {checks} chart recipe C checks"); return 0; }
+            if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "records") { CheckRecord(); CheckThreshold(); CheckHash(); CheckScript(); CheckTable(); CheckFollowOn(); CheckRealRuns(); CheckRegressionFollowOn(); CheckTwoLevel(); CheckColumnLocator(); Console.WriteLine($"PASS {checks} saved record checks"); return 0; }
             CheckRecord();
+            CheckAcquisition();
+            CheckChartRecipesA();
+            CheckChartRecipesB();
+            CheckChartRecipesC();
             CheckThreshold();
             CheckHash();
             CheckRecipes();
