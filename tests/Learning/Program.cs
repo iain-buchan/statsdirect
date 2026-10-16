@@ -8,7 +8,7 @@ using System.Text.Json.Nodes;
 internal static partial class Program
 {
     const BindingFlags Members = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
-    static int checks;
+    static int checks, unhandled;
     static readonly string root = Path.Combine(Path.GetTempPath(), "StatsDirect-learning-checks-" + Guid.NewGuid().ToString("N"));
     static readonly string artifacts = Environment.GetEnvironmentVariable("STATSDIRECT_LEARNING_ARTIFACTS") ?? root;
     static object Field(object o,string n)=>o.GetType().GetField(n,Members)!.GetValue(o)!;
@@ -18,6 +18,9 @@ internal static partial class Program
     [STAThread] static int Main()
     {
         ApplicationConfiguration.Initialize();Directory.CreateDirectory(root);Directory.CreateDirectory(artifacts);
+        // an exception that escapes to the UI thread is a defect: printed and failed here, not shown in WinForms' Continue/Quit dialog
+        Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+        Application.ThreadException += (_, e) => { unhandled++; Console.WriteLine("UNHANDLED exception on the UI thread: " + e.Exception); };
         var assembly=typeof(frmMain).Assembly;
         var license=assembly.GetCustomAttributes().Single(a=>a.GetType().Name=="SpreadsheetGearLicenseAttribute");
         SpreadsheetGear.Factory.SetSignedLicense((string)license.GetType().GetProperty("LicenseString")!.GetValue(license)!);
@@ -29,7 +32,9 @@ internal static partial class Program
         main.StartPosition=FormStartPosition.Manual;main.Location=new(-16000,-16000);main.Size=new(1500,1000);main.ShowInTaskbar=false;
         int exit=1;
         main.Shown+=async(_,_)=>{try{await Run(main);Console.WriteLine($"PASS {checks} Windows Learning/AI/R setup checks");exit=0;}catch(Exception ex){Console.WriteLine("FAIL "+ex);}finally{foreach(var child in main.MdiChildren)child.Dispose();main.Close();}};
-        Application.Run(main);return exit;
+        Application.Run(main);
+        if (unhandled > 0) { Console.WriteLine($"FAIL {unhandled} unhandled exception(s) on the UI thread"); return 1; }
+        return exit;
     }
     static async Task Run(frmMain main)
     {

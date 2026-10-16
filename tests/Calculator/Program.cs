@@ -4,7 +4,7 @@ using StatsDirect.UI.HtmlHelp;
 
 internal static partial class Program
 {
-    static int checks;
+    static int checks, unhandled;
     static string output;
     static void Check(bool value, string message) { if (!value) throw new Exception(message); checks++; Console.WriteLine("PASS " + message); }
     [STAThread]
@@ -19,6 +19,9 @@ internal static partial class Program
             Application.SetCompatibleTextRenderingDefault(false);
         }
         else ApplicationConfiguration.Initialize();
+        // an exception that escapes to the UI thread is a defect: printed and failed here, not shown in WinForms' Continue/Quit dialog
+        Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+        Application.ThreadException += (_, e) => { unhandled++; Console.WriteLine("UNHANDLED exception on the UI thread: " + e.Exception); };
         using var host = new Form { IsMdiContainer = true, Width = 1600, Height = 1100, StartPosition = FormStartPosition.Manual, Location = new Point(-16000, -16000), ShowInTaskbar = false };
         int exit = 1;
         host.Shown += async (_, _) =>
@@ -28,6 +31,7 @@ internal static partial class Program
             finally { host.Close(); }
         };
         Application.Run(host);
+        if (unhandled > 0) { Console.WriteLine($"FAIL {unhandled} unhandled exception(s) on the UI thread"); return 1; }
         return exit;
     }
     static async Task Run(Form host)
