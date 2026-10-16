@@ -4,6 +4,10 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
 ##[Unreleased]
 
+##[v5.2.2] 2026-10-16
+
+Version 5.2.2 corrects the display of multiple R charts in the script output pane, preserving each chart's lettering and drawing styles.
+
 ### Fixed
 - R charts in the script output pane display in separate SVG documents, preventing lettering, clipping and other drawing definitions from one chart corrupting later charts on the same page.
 
