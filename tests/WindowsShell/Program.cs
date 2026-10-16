@@ -44,6 +44,7 @@ internal static partial class Program
         await Task.Delay(100); // run the real startup-command callback after Shown
         Check(Get(app, "CalculatorView") is Control startupView && startupView.ContainsFocus && main.ActiveMdiChild == null && !(bool)Get(main, "ShowOpeningDialog"),
             "legacy -calculator startup opens the integrated pane without a document");
+        await CheckLegacyReportOpening(main);
         var grid = (Form)Call(main, "CreateGrid");
         await Task.Delay(150); // let the production post-tab activation timer finish
         var workbook = (SpreadsheetGear.Windows.Forms.WorkbookView)Field(grid, "workbookView");

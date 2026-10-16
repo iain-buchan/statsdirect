@@ -1,5 +1,14 @@
 # Production Windows shell checks
 
+16 October 2026 RTF startup regression: **53 checks pass**. The compiled
+application's RTF importer is called before any spreadsheet import in a fresh
+process, then the actual File > Open path displays accented and Unicode report
+text, retains the imported file's name and Save As semantics, and saves/reopens
+the converted HTML without changing the original RTF. The same new test against
+the installed 5.2.0 application reproduced the reported `RtfPipe.TextEncoding`
+failure, with Windows-1252 unavailable. The Release application builds with the
+existing NU1701 and CS0252 warnings; no installer was rebuilt.
+
 16 October 2026, later: **48 checks pass**. The script window's output pane is a WebView2 page, so the new
 chart checks run a real R script that writes an SVG and a PNG, then read the page: both charts drawn (the SVG
 as it is, the PNG as an image) after their names and before the list of files written, the SVG at its svg

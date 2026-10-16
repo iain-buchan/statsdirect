@@ -1,5 +1,15 @@
 # Windows WebView2 report integration checks
 
+16 October 2026 RTF startup regression: **275 checks pass** with
+`STATSDIRECT_SKIP_CLIPBOARD=1` (five native clipboard checks skipped).
+`LegacyReports.cs` runs first in a fresh process, before any spreadsheet importer
+can register legacy code pages. The unchanged importer reproduced Barry's exact
+`RtfPipe.TextEncoding` initializer error: Windows-1252 was unavailable. With the
+fix, Windows-1252 accented text, Unicode, Windows-1251 Cyrillic, table contents,
+WMF/EMF/binary charts, raster pictures and damaged-chart placeholders all pass.
+The compiled-application File > Open and HTML roundtrip are checked separately by
+WindowsShell. No installer was rebuilt.
+
 14 October 2026 Report AI/offline-maths parity: **260 checks pass** with
 `STATSDIRECT_SKIP_CLIPBOARD=1`. The five native clipboard assertions are explicitly
 skipped; exact browser selection is still checked. The shared renderer retains

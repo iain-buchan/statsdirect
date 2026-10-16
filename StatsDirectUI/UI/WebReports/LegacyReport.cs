@@ -11,6 +11,10 @@ namespace StatsDirect.UI.WebReports;
 /// <summary>Convert legacy reports to the same sanitized HTML/SVG import path as the Mac host.</summary>
 internal static class LegacyReport
 {
+    // RtfPipe initializes its default Windows-1252 encoding on first use.
+    // Register here so opening a report never depends on a prior CSV/XLSB import.
+    static LegacyReport() => Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
     internal sealed record PictureData(string marker, string format, string data, double width, double height);
     internal sealed record Document(string html, List<PictureData> pictures);
 

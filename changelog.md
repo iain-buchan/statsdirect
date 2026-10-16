@@ -4,6 +4,9 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
 ##[Unreleased]
 
+### Fixed
+- Opening an older RTF report immediately after starting StatsDirect could fail with a `RtfPipe.TextEncoding` error and leave an empty report. The importer now enables legacy text encodings itself; it no longer depends on first importing a CSV or XLSB file.
+
 ##[v5.2.1] 2026-10-16
 
 Version 5.2.1 shows the charts an R script draws in the script window and corrects the tabs of the document windows. The statistical engine, its operations, the Continue in R recipes and the help are unchanged from 5.2.0.

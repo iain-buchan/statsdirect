@@ -14,6 +14,7 @@
     <Content Include="../../StatsDirectUI/Assets/Tutor/conversation.*" Link="Tutor/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="../../StatsDirectUI/Assets/Learn/katex/**" Link="Tutor/katex/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="../../StatsDirectUI/Assets/Template/m_paired.creole;../../StatsDirectUI/Assets/Template/charts.creole" Link="Template/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../ReportEditor/upstream/Tests/Fixtures/Reports/*.rtf" Link="Fixtures/Reports/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <Target Name="RemoveUnusedWebView2WpfReference" BeforeTargets="ResolveAssemblyReferences"><ItemGroup><Reference Remove="@(Reference)" Condition="'%(Reference.Filename)' == 'Microsoft.Web.WebView2.Wpf'" /></ItemGroup></Target>
 </Project>
