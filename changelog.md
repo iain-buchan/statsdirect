@@ -4,6 +4,13 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
 ##[Unreleased]
 
+##[v5.2.1] 2026-10-16
+
+Version 5.2.1 corrects the tabs of the document windows. The statistical engine, its operations, the Continue in R recipes and the help are unchanged from 5.2.0.
+
+### Fixed
+- Help > Example workbook opened with its tab blank, because the workbook is named after its tab is made; the tab of every document now follows its title, so the example, an imported file and a renamed report show their names, and the tab's tooltip gives the saved file's path, or the name of an unsaved copy.
+
 ##[v5.2.0] 2026-10-13
 
 Version 5.2.0 brings the Windows workspace into step with the Mac version and adds learning. Reports, scripts and data grids share one document toolbar in the Mac's order and with the same symbols, report charts align and keep their alignment, and start-up opens a worksheet without a chooser. Help > Learning offers lessons, provider courses and practice with records kept on the computer, and an AI tutor that works through the learner's own ChatGPT account, with the connection component downloaded and verified on first use rather than installed. R scripts gain a read-only AI assistant, and a missing R is installed from CRAN's verified installer when first needed. The statistical engine, its operations, the Continue in R recipes and the help are unchanged from 5.1.1.
