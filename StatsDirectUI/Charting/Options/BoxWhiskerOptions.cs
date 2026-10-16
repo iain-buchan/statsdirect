@@ -55,16 +55,16 @@ namespace StatsDirect.Charting
                     if (UseInnerFence)
                     {
                         if (UseOuterFence)
-                            XAxisTitle = "min < mean%MEDIAN% ? " + ci + " > max, fences (1.96 SD, 2.58 SD)";
+                            XAxisTitle = "min < mean%MEDIAN% \u00b1 " + ci + " > max, fences (1.96 SD, 2.58 SD)";
                         else
-                            XAxisTitle = "min < mean%MEDIAN% ? " + ci + " > max, fence (1.96 SD)";
+                            XAxisTitle = "min < mean%MEDIAN% \u00b1 " + ci + " > max, fence (1.96 SD)";
                     }
                     else
                     {
                         if (UseOuterFence)
-                            XAxisTitle = "min < mean%MEDIAN% ? " + ci + " > max, fence (2.58 SD)";
+                            XAxisTitle = "min < mean%MEDIAN% \u00b1 " + ci + " > max, fence (2.58 SD)";
                         else
-                            XAxisTitle = "min < mean%MEDIAN% ? " + ci + " > max";
+                            XAxisTitle = "min < mean%MEDIAN% \u00b1 " + ci + " > max";
                     }
                     break;
                 case BoxWhiskerMethod.SevenNumberSummary:

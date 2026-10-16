@@ -196,15 +196,59 @@ sd_box_draw <- function() {
   if (box_horizontal) margins[2] <- max(margins[2], label_width + gap) else
     margins[1] <- max(margins[1], label_height + gap)
   par(mai = margins)
+  # Wrap text using this device's font metrics; keep the recorded text intact
+  # in box_title/box_axis_title and preserve the chosen typeface and point size.
+  wrap_title <- function(text, width, descriptor) {
+    previous_family <- par("family")
+    on.exit(par(family = previous_family))
+    par(family = device_family(descriptor$family))
+    paragraphs <- strsplit(text, "\n", fixed = TRUE)[[1L]]
+    if (!length(paragraphs)) return("")
+    lines <- unlist(lapply(paragraphs, function(paragraph) {
+      words <- strsplit(trimws(paragraph), "[[:space:]]+")[[1L]]
+      result <- character()
+      current <- ""
+      for (word in words) {
+        candidate <- if (nzchar(current)) paste(current, word) else word
+        if (nzchar(current) && strwidth(candidate, units = "inches",
+            cex = descriptor$size / par("ps"), font = descriptor$font) > width) {
+          result <- c(result, current)
+          current <- word
+        } else current <- candidate
+      }
+      c(result, current)
+    }), use.names = FALSE)
+    paste(lines, collapse = "\n")
+  }
+  base_margins <- margins
+  # Extra text lines consume margin space, which can shorten the other axis.
+  # Recheck without creating a plot page as those margins settle.
+  for (pass in 1:3) {
+    device_size <- dev.size("in")
+    plot_width <- device_size[1] - sum(margins[c(2, 4)])
+    plot_height <- device_size[2] - sum(margins[c(1, 3)])
+    centre <- margins[2] + plot_width / 2
+    display_title <- wrap_title(box_title,
+      max(0.5, 2 * min(centre, device_size[1] - centre) - 0.2), box_title_font)
+    display_axis_title <- wrap_title(box_axis_title,
+      max(0.5, if (box_horizontal) plot_width else plot_height), box_axis_title_font)
+    title_lines <- length(strsplit(display_title, "\n", fixed = TRUE)[[1L]])
+    axis_lines <- length(strsplit(display_axis_title, "\n", fixed = TRUE)[[1L]])
+    margins <- base_margins
+    margins[3] <- margins[3] + max(0, title_lines - 1) * par("csi") * box_title_font$size / par("ps")
+    label_side <- if (box_horizontal) 1L else 2L
+    margins[label_side] <- margins[label_side] + max(0, axis_lines - 1) * par("csi") * box_axis_title_font$size / par("ps")
+    par(mai = margins)
+  }
   plot(if (box_horizontal) limits else c(0, k),
        if (box_horizontal) c(0, k) else limits, type = "n", axes = FALSE,
        xlab = "", ylab = "", main = "",
        log = if (logarithmic) { if (box_horizontal) "x" else "y" } else "",
        xaxs = "i", yaxs = "i")
-  title(main = box_title, family = device_family(box_title_font$family),
+  title(main = display_title, family = device_family(box_title_font$family),
         cex.main = box_title_font$size / par("ps"), font.main = box_title_font$font)
-  title(xlab = if (box_horizontal) box_axis_title else "",
-        ylab = if (box_horizontal) "" else box_axis_title,
+  title(xlab = if (box_horizontal) display_axis_title else "",
+        ylab = if (box_horizontal) "" else display_axis_title,
         family = device_family(box_axis_title_font$family),
         cex.lab = box_axis_title_font$size / par("ps"), font.lab = box_axis_title_font$font)
   # Linear scales carry the user's interval and first tick. Native natural-log

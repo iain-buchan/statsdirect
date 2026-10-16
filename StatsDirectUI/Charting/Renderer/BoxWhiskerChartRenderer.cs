@@ -29,12 +29,18 @@ namespace StatsDirect.Charting.Renderer
                 throw new ArgumentException("Must have at least one series to plot a box+whisker plot");
             if (Definition.XSeries.Count > 0 && Definition.YSeries.Count > 0)
                 throw new ArgumentException("Cannot plot a box+whisker plot with both X and Y series");
-            IList<ISeries> SeriesToUse = Definition.YSeries.Count > 0 ? Definition.YSeries : Definition.XSeries;
+            IList<ISeries> seriesToUse = Definition.YSeries.Count > 0 ? Definition.YSeries : Definition.XSeries;
 
-            // sort the array and get the min, max values
-            Layout.Range dataRangeX = GetMinMaxSort(SeriesToUse);
-            DataMinX = dataRangeX.Min;
-            DataMaxX = dataRangeX.Max;
+            // A series can share the selected variable's array. Finding the scale must not sort those values before the run
+            // records their order and hash; Continue in R reads that same selection in its original worksheet order.
+            DataMinX = double.MaxValue;
+            DataMaxX = double.MinValue;
+            foreach (DoubleSeries series in seriesToUse)
+                foreach (double value in series.Data)
+                {
+                    if (value < DataMinX) DataMinX = value;
+                    if (value > DataMaxX) DataMaxX = value;
+                }
 
             return new ScaleParameters
             {
@@ -57,7 +63,10 @@ namespace StatsDirect.Charting.Renderer
                 throw new ArgumentException("Must have at least one series to plot a box+whisker plot");
             if (Definition.XSeries.Count > 0 && Definition.YSeries.Count > 0)
                 throw new ArgumentException("Cannot plot a box+whisker plot with both X and Y series");
-            IList<ISeries> seriesToUse = Definition.YSeries.Count > 0 ? Definition.YSeries : Definition.XSeries;
+            // Rendering needs sorted observations, but must not reorder the selected variables that the chart series can share.
+            IList<ISeries> seriesToUse = (Definition.YSeries.Count > 0 ? Definition.YSeries : Definition.XSeries)
+                .Select(series => (ISeries)new DoubleSeries((double[])((DoubleSeries)series).Data.Clone(), series.Title)
+                    { MarkerType = ((DoubleSeries)series).MarkerType }).ToList();
 
             BoxWhiskerOptions bwOptions = (BoxWhiskerOptions)Definition.ChartOptions;
 

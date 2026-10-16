@@ -13,6 +13,7 @@ internal static partial class Program
     private static void CheckBoxWhisker()
     {
         RRecipes.Folder = Metadata("Recipes");
+        CheckBoxWhiskerDataOrder();
         CheckBoxWhiskerAxes();
         string folder = Path.Combine(Path.GetTempPath(), "statsdirect-box-r-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(folder);
@@ -70,6 +71,23 @@ internal static partial class Program
             CheckBoxR(script.Text, Path.Combine(folder, "michelson"), michelson, chosen, title, label, axis, "the selected Michelson plot");
             CheckBoxR(script.Text, Path.Combine(folder, "michelson-pdf"), michelson, chosen, title, label, axis,
                 "the same selected Michelson plot on Mac's default PDF device", pdf: true);
+            BoxWhiskerOptions automatic = null;
+            var (automaticRun, _) = Run("BoxWhiskerPlot", new() { ["data"] = SheetFrame(Workbook, "Parametric", 6, 0, ("Michelson", (double[])michelson.Clone())) }, amend: fillable =>
+            {
+                automatic = (BoxWhiskerOptions)((ChartDefinition)fillable).ChartOptions;
+                automatic.Method = BoxWhiskerOptions.BoxWhiskerMethod.MeanConfidenceIntervalRange;
+                automatic.Cco = 0.99;
+                automatic.UseInnerFence = true;
+                automatic.UseOuterFence = true;
+                automatic.Orientation = ChartOrientation.Horizontal;
+                automatic.Title = "Michelson 99% confidence interval";
+                automatic.SetDefaultXAxisTitle();
+            });
+            Check(automatic.XAxisTitle.Contains('\u00b1') && !automatic.XAxisTitle.Contains('?'),
+                "the automatic confidence-interval axis title uses the intended plus/minus symbol");
+            CheckBoxR(RScriptWriter.Write(Record(automaticRun), null, null).Text, Path.Combine(folder, "automatic-ci99-pdf"),
+                michelson, automatic, automatic.Title, "Michelson", automatic.XAxisTitle,
+                "the automatic 99% confidence-interval title on one seven-inch PDF page", pdf: true);
 
             // A saved record is self-contained; later changes to the live chart cannot rewrite the earlier report's settings.
             string recordPath = Path.Combine(folder, "saved-run.json");
@@ -251,6 +269,9 @@ internal static partial class Program
         string assertions = $$"""
 
             stopifnot(.box_pages == 1L, length(box_summaries) == {{values.Length}}L)
+            same_text <- function(x, y) identical(trimws(gsub("[[:space:]]+", " ", paste(x, collapse = " "))),
+                                                  trimws(gsub("[[:space:]]+", " ", paste(y, collapse = " "))))
+            stopifnot(identical(box_title, {{RScriptWriter.Quote(title)}}), identical(box_axis_title, {{RScriptWriter.Quote(axis)}}))
             expected_groups <- {{expected}}
             expected_counts <- {{counts}}
             expected_data <- {{observations}}
@@ -276,8 +297,8 @@ internal static partial class Program
                                         (inner && max(x) > expected[6]) || (outer && max(x) > expected[8]))
               stopifnot(identical(s$brackets, brackets))
             }
-            stopifnot(any(vapply(.box_titles, function(z) identical(z$main, {{RScriptWriter.Quote(title)}}), logical(1))))
-            stopifnot(any(vapply(.box_titles, function(z) identical(z[[{{RScriptWriter.Quote(options.Orientation == ChartOrientation.Horizontal ? "xlab" : "ylab")}}]], {{RScriptWriter.Quote(axis)}}), logical(1))))
+            stopifnot(any(vapply(.box_titles, function(z) same_text(z$main, {{RScriptWriter.Quote(title)}}), logical(1))))
+            stopifnot(any(vapply(.box_titles, function(z) same_text(z[[{{RScriptWriter.Quote(options.Orientation == ChartOrientation.Horizontal ? "xlab" : "ylab")}}]], {{RScriptWriter.Quote(axis)}}), logical(1))))
             stopifnot(any(vapply(.box_axes, function(z) identical(as.integer(z$side), {{(options.Orientation == ChartOrientation.Horizontal ? 2 : 1)}}L) && identical(as.character(z$labels), {{names}}), logical(1))))
             font_family <- function(family) if ({{(pdf ? "TRUE" : "FALSE")}} && !family %in% names(pdfFonts())) "sans" else family
             font_matches <- function(z, prefix, family, size, style) {
@@ -285,9 +306,9 @@ internal static partial class Program
                 isTRUE(all.equal(z$details[[paste0("cex.", prefix)]] * z$settings$ps, size)) &&
                 identical(as.integer(z$details[[paste0("font.", prefix)]]), as.integer(style))
             }
-            stopifnot(any(vapply(.box_titles, function(z) identical(z$main, {{RScriptWriter.Quote(title)}}) &&
+            stopifnot(any(vapply(.box_titles, function(z) same_text(z$main, {{RScriptWriter.Quote(title)}}) &&
               font_matches(z, "main", {{RScriptWriter.Quote(mainFont.FontFamily)}}, {{mainFont.SizeInPoints.ToString("R", inv)}}, {{(mainFont.Style & 3) + 1}}L), logical(1))))
-            stopifnot(any(vapply(.box_titles, function(z) identical(z[[{{RScriptWriter.Quote(options.Orientation == ChartOrientation.Horizontal ? "xlab" : "ylab")}}]], {{RScriptWriter.Quote(axis)}}) &&
+            stopifnot(any(vapply(.box_titles, function(z) same_text(z[[{{RScriptWriter.Quote(options.Orientation == ChartOrientation.Horizontal ? "xlab" : "ylab")}}]], {{RScriptWriter.Quote(axis)}}) &&
               font_matches(z, "lab", {{RScriptWriter.Quote(titleFont.FontFamily)}}, {{titleFont.SizeInPoints.ToString("R", inv)}}, {{(titleFont.Style & 3) + 1}}L), logical(1))))
             stopifnot(any(vapply(.box_axes, function(z) identical(as.character(z$labels), {{names}}) &&
               font_matches(z, "axis", {{RScriptWriter.Quote(labelFont.FontFamily)}}, {{labelFont.SizeInPoints.ToString("R", inv)}}, {{(labelFont.Style & 3) + 1}}L), logical(1))))
