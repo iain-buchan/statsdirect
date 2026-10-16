@@ -61,6 +61,7 @@ internal static partial class Program
         });
         await CheckWorkbookTabs(main, grid, workbook);
         await CheckDocumentToolbars(main, grid, workbook);
+        await CheckScriptCharts(main, grid);
         await CheckTutorEncoding();
         Call(app, "ShowCalculator");
         var view = (Control)Get(app, "CalculatorView");
@@ -221,12 +222,14 @@ internal static partial class Program
         var language = (ComboBox)Field(script,"cboLanguage");
         Check(language.Visible && language.AccessibleName=="Script language" && editor.SelectionLength==8, "More exposes the existing language selector without losing the script selection");
         scriptToolbar.OverflowButton.HideDropDown();
-        var output = (RichTextBox)Field(script,"rtbOutput");
-        output.Text="Results to copy"; output.SelectAll(); output.Focus();
-        await Task.Delay(30);
+        var output = (Control)Field(script,"outputPane");
+        await (Task)Get(output,"Ready");
+        Call(output,"Clear"); Call(output,"AppendText","Results to copy");
+        await (Task)Call(output,"SelectAllAsync"); output.Focus();
+        await Task.Delay(200);
         scriptToolbar.OverflowButton.ShowDropDown();
         await Task.Delay(30);
-        Check(ReferenceEquals(Field(script,"editTarget"),output) && scriptToolbar.Items["copyToolStripButton"].Enabled && output.SelectedText=="Results to copy", "Copy from output retains its selection and target when More takes focus");
+        Check(ReferenceEquals(Field(script,"editTarget"),output) && scriptToolbar.Items["copyToolStripButton"].Enabled && await (Task<string>)Call(output,"SelectedTextAsync")=="Results to copy", "Copy from output retains its selection and target when More takes focus");
         scriptToolbar.OverflowButton.HideDropDown();
         main.Width = oldWidth; main.MinimumSize = oldMinimum;
         script.Dispose(); grid.Activate();

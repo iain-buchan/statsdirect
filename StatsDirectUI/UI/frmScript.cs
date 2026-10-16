@@ -30,7 +30,7 @@ namespace StatsDirect.UI
 
             public void Print(string Message)
             {
-                frmScript.rtbOutput.AppendText(Message + "\n");
+                frmScript.outputPane.AppendText(Message + "\n");
                 Application.DoEvents(); // Force a display update
             }
         }
@@ -40,7 +40,9 @@ namespace StatsDirect.UI
             InitializeComponent();
             editTarget = rtbDoc;
             rtbDoc.Enter += (_, _) => editTarget = rtbDoc;
-            rtbOutput.Enter += (_, _) => editTarget = rtbOutput;
+            outputPane.Enter += (_, _) => editTarget = outputPane;
+            outputPane.Activated += () => editTarget = outputPane;
+            outputPane.LinkClicked += OpenLink;
             SaveToolStripMenuItem.Click += SaveToolStripMenuItem_Click;
             SaveAsToolStripMenuItem.Click +=SaveAsToolStripMenuItem_Click;
             SelectAllToolStripMenuItem.Click += SelectAllToolStripMenuItem_Click;
@@ -65,7 +67,6 @@ namespace StatsDirect.UI
             PrintDocument1.PrintPage += PrintScriptPage;
             BuildFindBar();
             BuildPreview();
-            rtbOutput.Font = new System.Drawing.Font("Consolas", rtbOutput.Font.Size);   // R's transcript in a monospace face, as an R session shows it
             // The same document command order as worksheets and the web report. File actions remain in File.
             var undo = DocumentToolbar.Button("Undo", "undo", mnuUndo_Click, "Ctrl+Z");
             var redo = DocumentToolbar.Button("Redo", "redo", mnuRedo_Click, "Ctrl+Y");
@@ -91,14 +92,18 @@ namespace StatsDirect.UI
             });
             DocumentToolbar.Configure(ToolStrip1, () => {
                 undo.Enabled = CanUndo; redo.Enabled = CanRedo;
-                copy.Enabled = editTarget.SelectionLength > 0;
-                cut.Enabled = copy.Enabled && !editTarget.ReadOnly;
-                paste.Enabled = !editTarget.ReadOnly;
+                copy.Enabled = HasSelection;
+                cut.Enabled = copy.Enabled && Editable;
+                paste.Enabled = Editable;
             });
         }
 
         private string currentFile;
-        private RichTextBox editTarget; // retained when the toolbar or its More dropdown takes keyboard focus
+        private Control editTarget; // the script editor or the output pane, retained when the toolbar or its More dropdown takes keyboard focus
+        /// <summary>The editor when it is the edit target; the output pane, a page, is read and copied, not edited.</summary>
+        private RichTextBox Editor => editTarget as RichTextBox;
+        private bool Editable => Editor != null && !Editor.ReadOnly;
+        private bool HasSelection => Editor != null ? Editor.SelectionLength > 0 : outputPane.HasSelection;
         private string printRemaining;   // what is left to print of the script, page by page
 
         /// <summary>Prints the script as the editor shows it, as many pages as its lines wrapped to the page take.</summary>
@@ -511,16 +516,14 @@ namespace StatsDirect.UI
                 ai.ToolTipText = "Ask about this R script";
                 ToolStrip1.Items.Add(ai);
                 ToolStrip1.Items.Add(DocumentToolbar.Button("Open in R", "rPlus", (_, _) => OpenInR()));
-                ToolStrip1.Items.Add(new ToolStripButton("Clear output", null, (_, _) => rtbOutput.Clear()) { Overflow = ToolStripItemOverflow.Always, ToolTipText = "Clear what R has printed below" });
+                ToolStrip1.Items.Add(new ToolStripButton("Clear output", null, (_, _) => outputPane.Clear()) { Overflow = ToolStripItemOverflow.Always, ToolTipText = "Clear what R has printed below" });
                 ToolStrip1.Items.Add(new ToolStripButton("Output folder", null, (_, _) => OpenRFolder()) { Overflow = ToolStripItemOverflow.Always, ToolTipText = "Open the folder the script writes its files to" });
-                rtbOutput.DetectUrls = true;
-                rtbOutput.LinkClicked += (_, e) => OpenLink(e.LinkText);
             }
         }
 
         internal string LearningScript => rtbDoc.Text;
         internal string LearningLanguage => ScriptLanguageForScript();
-        internal string LearningOutput => rtbOutput.Text;
+        internal string LearningOutput => outputPane.Text;
         internal bool LearningRunning => runningR;
 
         private bool rTools, runningR;
@@ -547,7 +550,7 @@ namespace StatsDirect.UI
                 if (rstudio != null)
                 {
                     Process.Start(new ProcessStartInfo(rstudio, "\"" + path + "\"") { UseShellExecute = false, WorkingDirectory = SDConfiguration.MyStatsDirectRFolder });
-                    rtbOutput.AppendText("(the script is saved as " + path + " and opened in RStudio)\n");
+                    outputPane.AppendText("(the script is saved as " + path + " and opened in RStudio)\n");
                     return;
                 }
                 // R's own window: the script run in its console as a session shows it, and open in its editor
@@ -559,11 +562,11 @@ namespace StatsDirect.UI
                     version = RController.PreferredRVersion();
                 }
                 RController.OpenInRGui(version, path);
-                rtbOutput.AppendText("(the script is saved as " + path + ", run in R's own window and opened in its editor)\n");
+                outputPane.AppendText("(the script is saved as " + path + ", run in R's own window and opened in its editor)\n");
             }
             catch (Exception ex)
             {
-                rtbOutput.AppendText("Could not open the script in R: " + ex.Message + "\n(the script is saved as " + path + "; open it from there)\n");
+                outputPane.AppendText("Could not open the script in R: " + ex.Message + "\n(the script is saved as " + path + "; open it from there)\n");
             }
         }
 
@@ -582,24 +585,54 @@ namespace StatsDirect.UI
                 string target = link.StartsWith("file:", StringComparison.OrdinalIgnoreCase) ? new Uri(link).LocalPath : link;
                 Process.Start(new ProcessStartInfo(target) { UseShellExecute = true });
             }
-            catch (Exception ex) { rtbOutput.AppendText("Could not open " + link + ": " + ex.Message + "\n"); }
+            catch (Exception ex) { outputPane.AppendText("Could not open " + link + ": " + ex.Message + "\n"); }
         }
 
-        /// <summary>The files a run wrote to the R folder, charts among them, as links the user can open.</summary>
-        private static string FilesWritten(DateTime started)
+        /// <summary>The files a run wrote to the R folder, charts among them, by name.</summary>
+        private static List<FileInfo> FilesWritten(DateTime started)
         {
             string folder = SDConfiguration.MyStatsDirectRFolder;
             if (!Directory.Exists(folder))
-                return string.Empty;
-            List<FileInfo> files = new DirectoryInfo(folder).GetFiles()
+                return new List<FileInfo>();
+            return new DirectoryInfo(folder).GetFiles()
                 .Where(f => f.LastWriteTime >= started.AddSeconds(-1) && !f.Name.Equals("continue.r", StringComparison.OrdinalIgnoreCase))
                 .OrderBy(f => f.Name, StringComparer.OrdinalIgnoreCase).ToList();
+        }
+
+        /// <summary>The files written as links the user can open.</summary>
+        private static string FilesWrittenText(List<FileInfo> files)
+        {
             if (files.Count == 0)
                 return string.Empty;
             System.Text.StringBuilder s = new("\nFiles written, to open with a click:\n");
             foreach (FileInfo f in files)
                 s.Append(new Uri(f.FullName).AbsoluteUri).Append('\n');
             return s.ToString();
+        }
+
+        /// <summary>The files a run writes that the output pane draws: SVG, as the scripts of the program draw, and the raster formats.</summary>
+        private static readonly HashSet<string> ChartExtensions = new(StringComparer.OrdinalIgnoreCase) { ".svg", ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".tif", ".tiff" };
+
+        /// <summary>
+        /// Shows a run as it ends: R's transcript, then each chart the run wrote, drawn in the pane as the Mac's script pane shows its plots,
+        /// then the files written as links.  A run stopped by a later run, whose output follows, or by the window closing shows nothing more.
+        /// </summary>
+        private async Task ShowRunAsync(Task<string> running, System.Threading.CancellationTokenSource stop, DateTime started, int generation)
+        {
+            string transcript = await running;
+            stop.Dispose();
+            if (generation != rGeneration || IsDisposed)
+                return;
+            runningR = false;
+            outputPane.AppendTranscript(transcript);
+            List<FileInfo> written = FilesWritten(started);
+            foreach (FileInfo file in written.Where(f => ChartExtensions.Contains(f.Extension)))
+            {
+                try { outputPane.AppendChart(file); }
+                catch (Exception ex) { outputPane.AppendText("(" + file.Name + " is not shown here: " + ex.Message + ")\n"); }
+            }
+            outputPane.AppendText(FilesWrittenText(written));
+            outputPane.AppendText("\n======== End of run ========\n");
         }
 
         /// <summary>
@@ -620,47 +653,25 @@ namespace StatsDirect.UI
             if (runningR)
             {
                 rRun.Cancel();
-                rtbOutput.AppendText("(stopped: the script runs again as it is now)\n");
+                outputPane.AppendText("(stopped: the script runs again as it is now)\n");
             }
             string script = rtbDoc.Text;
             DateTime started = DateTime.Now;
             runningR = true;
             int generation = ++rGeneration;
             System.Threading.CancellationTokenSource run = rRun = new();
-            rtbOutput.AppendText("\n======== Running in R ========\n");
-            System.Threading.Tasks.Task.Run(() =>
+            outputPane.AppendText("\n======== Running in R ========\n");
+            System.Threading.Tasks.Task<string> running = System.Threading.Tasks.Task.Run(() =>
             {
                 try { return RController.RunScriptCapturingOutput(script, version, run.Token, echo: true); }
                 catch (Exception ex) { return "Error: " + ex.Message; }
-            }).ContinueWith(t =>
-            {
-                run.Dispose();
-                if (generation != rGeneration || IsDisposed)
-                    return;   // stopped by a later run, whose output follows, or by the window closing
-                runningR = false;
-                AppendTranscript(t.Result);
-                rtbOutput.AppendText(FilesWritten(started));
-                rtbOutput.AppendText("\n======== End of run ========\n");
-                rtbOutput.SelectionStart = rtbOutput.TextLength;
-                rtbOutput.ScrollToCaret();
-            }, System.Threading.Tasks.TaskScheduler.FromCurrentSynchronizationContext());
+            });
+            _ = ShowRunAsync(running, run, started, generation);
         }
 
         /// <summary>Appends R's transcript to the output pane as an R session shows it: the commands after their prompts in a colour of their
         /// own, what R printed in the pane's colour.</summary>
-        internal void AppendTranscript(string transcript)
-        {
-            foreach (string line in (transcript ?? "").Replace("\r", "").Split('\n'))
-            {
-                rtbOutput.SelectionStart = rtbOutput.TextLength;
-                rtbOutput.SelectionLength = 0;
-                rtbOutput.SelectionColor = line.StartsWith("> ", StringComparison.Ordinal) || line.StartsWith("+ ", StringComparison.Ordinal) || line == ">" ? PromptColour : rtbOutput.ForeColor;
-                rtbOutput.AppendText(line + "\n");
-            }
-            rtbOutput.SelectionColor = rtbOutput.ForeColor;
-        }
-
-        internal static readonly System.Drawing.Color PromptColour = System.Drawing.Color.FromArgb(0, 0, 160);
+        internal void AppendTranscript(string transcript) => outputPane.AppendTranscript(transcript);
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string TextInRtfBox
@@ -712,7 +723,7 @@ namespace StatsDirect.UI
                     RunR();
                     return;
                 }
-                rtbOutput.AppendText("\n======== Start of run ========\n");
+                outputPane.AppendText("\n======== Start of run ========\n");
                 try
                 {
                     string script = rtbDoc.Text;
@@ -721,35 +732,37 @@ namespace StatsDirect.UI
                     object output = engine.Run(Language, script, ScriptType.Method, SdApplication.SoleInstance, null, null, null);
                     if (null != output)
                     {
-                        if (output is ParameterBag)
+                        if (output is ParameterBag bag)
                         {
-                            DumpParameterBag(rtbOutput, (ParameterBag)output, 0);
+                            System.Text.StringBuilder dump = new();
+                            DumpParameterBag(dump, bag, 0);
+                            outputPane.AppendText(dump.ToString());
                         }
                         else
                         {
-                            rtbOutput.AppendText(output.ToString());
-                            rtbOutput.AppendText("\n");
+                            outputPane.AppendText(output.ToString());
+                            outputPane.AppendText("\n");
                         }
                     }
                 }
                 catch (Exception ex)
                 {
-                    rtbOutput.AppendText("Error: " + ex.Message + "\n");
+                    outputPane.AppendText("Error: " + ex.Message + "\n");
                 }
-                rtbOutput.AppendText("======== End of run ========\n");
+                outputPane.AppendText("======== End of run ========\n");
             }, "Couldn't run script");
         }
 
-        private static void DumpParameterBag(RichTextBox rtb, ParameterBag output, int depth)
+        private static void DumpParameterBag(System.Text.StringBuilder rtb, ParameterBag output, int depth)
         {
             foreach (KeyValuePair<string, FilledParameter> pair in output.Pairs)
             {
-                rtb.AppendText(new string(' ', depth * 3));
-                rtb.AppendText(pair.Key);
-                rtb.AppendText(" <- ");
+                rtb.Append(new string(' ', depth * 3));
+                rtb.Append(pair.Key);
+                rtb.Append(" <- ");
                 if (null == pair.Value || !pair.Value.HasData)
                 {
-                    rtb.AppendText("null");
+                    rtb.Append("null");
                 }
                 else if (pair.Value.IsParameterBag)
                     DumpParameterBag(rtb, pair.Value.AsParameterBag, depth + 1);
@@ -764,9 +777,9 @@ namespace StatsDirect.UI
                 }
                 else
                 {
-                    rtb.AppendText(pair.Value.AsObject.ToString());
+                    rtb.Append(pair.Value.AsObject.ToString());
                 }
-                rtb.AppendText("\n");
+                rtb.Append("\n");
             }
         }
 
@@ -803,24 +816,26 @@ namespace StatsDirect.UI
 
         internal override void ShowHelp() => SdApplication.SoleInstance.ShowHelp(this, HelpTopic);
 
-        internal override bool CanUndo => editTarget.CanUndo;
-        internal override bool CanRedo => editTarget.CanRedo;
-        internal override void EditUndo() { if (CanUndo) editTarget.Undo(); }
-        internal override void EditRedo() { if (CanRedo) editTarget.Redo(); }
+        // the Edit commands act on the editor; the output pane, a page, only copies
+        internal override bool CanUndo => Editor != null && Editor.CanUndo;
+        internal override bool CanRedo => Editor != null && Editor.CanRedo;
+        internal override void EditUndo() { if (CanUndo) Editor.Undo(); }
+        internal override void EditRedo() { if (CanRedo) Editor.Redo(); }
 
         internal override void EditCut()
         {
-            if (!editTarget.ReadOnly) editTarget.Cut();
+            if (Editable) Editor.Cut();
         }
 
         internal override void EditCopy()
         {
-            editTarget.Copy();
+            if (Editor != null) Editor.Copy();
+            else _ = outputPane.CopyAsync();
         }
 
         internal override void EditPaste()
         {
-            if (!editTarget.ReadOnly) editTarget.Paste();
+            if (Editable) Editor.Paste();
         }
 
         #region Print preview

@@ -1,5 +1,11 @@
 # Production Windows shell checks
 
+16 October 2026, later: **48 checks pass**. The script window's output pane is a WebView2 page, so the new
+chart checks run a real R script that writes an SVG and a PNG, then read the page: both charts drawn (the SVG
+as it is, the PNG as an image) after their names and before the list of files written, the SVG at its svg
+element's size or the pane's width keeping its shape, and R's prompts in their own colour in a monospace face.
+The Copy-from-output check selects on the page and reads the page's selection. Each needs R installed.
+
 16 October 2026: **43 checks pass**, including the example-workbook tab regression.
 After entering data in a blank workbook, the harness opens Help > Example workbook,
 runs a real paired analysis from its Agreement sheet into the HTML report and returns

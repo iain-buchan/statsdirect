@@ -90,12 +90,12 @@ internal static partial class Program
             Check(pages.Length >= 2 && Dark(pages[0].Image) > 200 && Dark(pages[1].Image) > 200, $"printing draws the script on {pages.Length} pages, each with text on it");
         }
         else Console.WriteLine("      (no printer is set up on this PC, so the printed pages are not checked)");
-        // the output pane as an R session: a monospace face, the commands after their prompts in a colour of their own
-        RichTextBox pane = (RichTextBox)script.GetField("rtbOutput", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(first.window);
-        script.GetMethod("AppendTranscript", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(first.window, new object[] { "> x <- 1\n[1] 1\n" });
-        pane.Select(pane.Text.IndexOf("> x <- 1", StringComparison.Ordinal), 1); System.Drawing.Color promptColour = pane.SelectionColor;
-        pane.Select(pane.Text.IndexOf("[1] 1", StringComparison.Ordinal), 1); System.Drawing.Color outputColour = pane.SelectionColor;
-        Check(pane.Font.Name == "Consolas" && promptColour.ToArgb() == System.Drawing.Color.FromArgb(0, 0, 160).ToArgb() && outputColour.ToArgb() == pane.ForeColor.ToArgb(),
+        // the output pane as an R session: a monospace face, the commands after their prompts in a colour of their own (the page's own
+        // style and markup; the shell checks see them drawn)
+        Type outputView = program.GetType("StatsDirect.UI.ScriptOutputView");
+        string transcriptMarkup = (string)outputView.GetMethod("TranscriptHtml", BindingFlags.Static | BindingFlags.NonPublic).Invoke(null, new object[] { "> x <- 1\n[1] 1\n" });
+        string outputPage = (string)outputView.GetField("Page", BindingFlags.Static | BindingFlags.NonPublic).GetRawConstantValue();
+        Check(transcriptMarkup.StartsWith("<span class=\"prompt\">&gt; x &lt;- 1</span>\n[1] 1\n", StringComparison.Ordinal) && outputPage.Contains("Consolas") && outputPage.Contains(".prompt{color:#0000a0}"),
               "the output pane is monospace, with R's prompts and commands in their own colour and R's output in the pane's");
         // Open in R: the script as an R file named after the window, for RStudio when it is installed
         MethodInfo fileName = script.GetMethod("ScriptFileName", BindingFlags.Static | BindingFlags.NonPublic);

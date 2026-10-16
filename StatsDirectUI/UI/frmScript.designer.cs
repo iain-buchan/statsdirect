@@ -53,7 +53,7 @@ namespace StatsDirect.UI
             this.cboLanguage = new System.Windows.Forms.ComboBox();
             this.cmdRun = new System.Windows.Forms.Button();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-            this.rtbOutput = new System.Windows.Forms.RichTextBox();
+            this.outputPane = new StatsDirect.UI.ScriptOutputView();
             this.MenuStrip1.SuspendLayout();
             this.ToolStrip1.SuspendLayout();
             this.pnlActions.SuspendLayout();
@@ -329,19 +329,18 @@ namespace StatsDirect.UI
             // 
             // splitContainer1.Panel2
             // 
-            this.splitContainer1.Panel2.Controls.Add(this.rtbOutput);
+            this.splitContainer1.Panel2.Controls.Add(this.outputPane);
             this.splitContainer1.Size = new System.Drawing.Size(657, 406);
             this.splitContainer1.SplitterDistance = 221;
             this.splitContainer1.TabIndex = 5;
             // 
-            // rtbOutput
+            // outputPane
             // 
-            this.rtbOutput.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.rtbOutput.Location = new System.Drawing.Point(0, 0);
-            this.rtbOutput.Name = "rtbOutput";
-            this.rtbOutput.Size = new System.Drawing.Size(657, 181);
-            this.rtbOutput.TabIndex = 1;
-            this.rtbOutput.Text = string.Empty;
+            this.outputPane.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.outputPane.Location = new System.Drawing.Point(0, 0);
+            this.outputPane.Name = "outputPane";
+            this.outputPane.Size = new System.Drawing.Size(657, 181);
+            this.outputPane.TabIndex = 1;
             // 
             // frmScript
             // 
@@ -408,7 +407,7 @@ namespace StatsDirect.UI
         private Panel pnlActions;
         private Button cmdRun;
         private SplitContainer splitContainer1;
-        private RichTextBox rtbOutput;
+        private ScriptOutputView outputPane;
         private ComboBox cboLanguage;
         private ToolStripMenuItem closeToolStripMenuItem; 
         
