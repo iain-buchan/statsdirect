@@ -4,15 +4,13 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
 ##[Unreleased]
 
-### Added
-- Report Save As offers Word documents (.docx) and PDF alongside the default editable HTML format. Word and PDF save a copy, preserving the report's HTML save location and any unsaved edits.
-
 ##[v5.2.1] 2026-10-16
 
 Version 5.2.1 shows the charts an R script draws in the script window, corrects the tabs of the document windows and fixes opening older RTF reports. The statistical engine, its operations, the Continue in R recipes and the help are unchanged from 5.2.0.
 
 ### Added
 - The R script window shows the charts a run writes, SVG as the program's scripts draw and PNG or other pictures, in its output under R's transcript, each after its name and with its file as a link, as the Mac's script window shows them; the output pane is a web page, so a chart is drawn at its own size or narrowed to the pane, and the pane scrolls, selects and copies as a page does. The files written are still listed as links.
+- Report Save As offers Word documents (.docx) and PDF alongside the default editable HTML format. Word and PDF save a copy, preserving the report's HTML save location and any unsaved edits.
 
 ### Fixed
 - Help > Example workbook opened with its tab blank, because the workbook is named after its tab is made; the tab of every document now follows its title, so the example, an imported file and a renamed report show their names, and the tab's tooltip gives the saved file's path, or the name of an unsaved copy.
