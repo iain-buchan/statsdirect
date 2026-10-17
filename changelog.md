@@ -7,13 +7,16 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 ##[v5.2.3] 2026-10-17
 
 ### Changed
-- Box-and-whisker plots offer Tukey hinges, alongside the existing interpolated quartiles. Continue in R for this option uses a compact native `boxplot()` recipe; the existing default remains unchanged.
+- Box-and-whisker plots offer Tukey hinges, alongside the existing interpolated quartiles. Continue in R for this option emits a direct native `boxplot()` call, adding only the code needed for the selected options; the existing default remains unchanged.
 - File > New R session opens a blank, editable R script window.
 - Report and Script AI use one "Share open workbook data" option for all open workbooks, with workbook identities retained in data reads and R snapshots. The workbook chooser is removed; sharing remains explicit and is confirmed again when the open-workbook scope changes.
 - Continue in R uses standard R graphics and statistical results where equivalent, with compact, readable plotting code. It omits unrelated help demonstrations and duplicate analyses while retaining StatsDirect's advanced intervals, exact and mid-P inference, and selected analysis settings.
 - Ordinary R-session plots on Windows default to SVG, with one uniquely named file per page and isolated chart drawing definitions. Explicit devices, filenames and SVG options remain effective. Mac ordinary R output retains its PDF default; integrated report charts use SVG on both platforms.
 
 ### Fixed
+- The R script editor has a standard right-click menu for Undo, Redo, Cut, Copy, Paste, Delete and Select All, acting on the selected code.
+- A single selected report picture copies into chat and Office as an image, preserving SVG for applications that support it. Picture selection remains stable after a click in a short report window; text and mixed-content copies retain their formatting.
+- The paired t-test R agreement chart places its caption above the plotting area so it cannot overlap the agreement limits.
 - Enter after a chart or picture creates a normal paragraph in the same report result, including when the picture is selected. Typing, undo and redo work without adding a separate text section.
 - SVG, PNG and bitmap pictures copied from an R session or another Windows application paste into editable report text, with images embedded for saving and undo/redo. R's Copy image preserves SVG vectors and supplies a PNG fallback for other applications.
 - Chart axes omit insignificant decimal zeros while retaining genuine fractional values and local decimal separators. Automatic axis selection also handles very small ranges without a decimal underflow error.

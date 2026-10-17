@@ -95,7 +95,7 @@ namespace StatsDirect.R
     /// matrix; the settings are plain assignments; the analysis is the recipe of the operation, derived from the R code in the help,
     /// whose header names the variables it takes.  Without a recipe the script holds the data and settings for the user's own analysis.
     /// </summary>
-    public static class RScriptWriter
+    public static partial class RScriptWriter
     {
         private static readonly CultureInfo inv = CultureInfo.InvariantCulture;
 
@@ -318,6 +318,15 @@ namespace StatsDirect.R
             }
             // the settings
             JsonElement parameters = record.TryGetProperty("parameters", out JsonElement p) && p.ValueKind == JsonValueKind.Object ? p : default;
+            if (recipe?.File == "box-whisker-tukey-plot.R" && parameters.ValueKind == JsonValueKind.Object &&
+                parameters.TryGetProperty("boxWhisker", out JsonElement tukey))
+            {
+                // The selected Tukey plot is an ordinary boxplot, not a general-purpose settings interpreter.
+                // Resolve its few arguments here so the user receives only the choices this result actually used.
+                AppendTukeyBoxPlot(s, tukey, groups.Where(g => g.name == "data")
+                    .SelectMany(g => Enumerable.Range(g.start, g.count)).Select(i => columns[i]).ToList());
+                return new RScript { Text = s.ToString(), HasRecipe = true, Detail = detail, DataUnavailable = unavailable };
+            }
             if (binding != null)
             {
                 foreach ((string variable, string parameter) in binding.Settings)

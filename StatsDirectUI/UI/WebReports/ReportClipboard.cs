@@ -16,6 +16,32 @@ internal static class ReportClipboard
     internal const string FragmentFormat = "StatsDirect.ReportFragment.HTML.v1";
     internal const string SvgFormat = "image/svg+xml";
 
+    // Keep the image resources alive until Windows has materialised every
+    // clipboard format. Rich HTML and the private vector fragment stay intact.
+    internal static void Publish(DataObject contents, string svg = null, string png = null)
+    {
+        const int maximumBytes = 20_000_000;
+        const string pngPrefix = "data:image/png;base64,";
+        if (png != null && (!png.StartsWith(pngPrefix, StringComparison.Ordinal) || png.Length > 27_000_000))
+            throw new InvalidDataException("The selected picture could not be copied as a PNG smaller than 20 MB.");
+        byte[] bytes = png == null ? null : Convert.FromBase64String(png[pngPrefix.Length..]);
+        byte[] vector = svg == null ? null : Encoding.UTF8.GetBytes(svg);
+        if ((bytes?.Length ?? 0) > maximumBytes || (vector?.Length ?? 0) > maximumBytes)
+            throw new InvalidDataException("The selected picture is too large to copy.");
+        using var raster = bytes == null ? null : new MemoryStream(bytes, writable: false);
+        using var bitmap = raster == null ? null : new Bitmap(raster);
+        using var pngData = bytes == null ? null : new MemoryStream(bytes, writable: false);
+        using var svgData = vector == null ? null : new MemoryStream(vector, writable: false);
+        if (bitmap != null)
+        {
+            if (bitmap.RawFormat.Guid != ImageFormat.Png.Guid) throw new InvalidDataException("The clipboard PNG picture is invalid.");
+            contents.SetData("PNG", false, pngData);
+            contents.SetData(DataFormats.Bitmap, true, bitmap);
+        }
+        if (svgData != null) contents.SetData(SvgFormat, false, svgData);
+        Clipboard.SetDataObject(contents, true, 5, 100);
+    }
+
     // Embed native clipboard pictures. SVG stays vector; the report's existing
     // fragment sanitizer removes active content and gives drawing IDs a fresh scope.
     internal static string ImageHtml(IDataObject contents)

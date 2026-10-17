@@ -306,7 +306,13 @@ internal sealed class ReportView : UserControl
                 data.SetData(ReportClipboard.FragmentFormat, false, html);
                 data.SetData(DataFormats.Html, ReportClipboard.EncodeHtml(office.RootElement.GetProperty("html").GetString()));
                 data.SetData(DataFormats.UnicodeText, fragment.GetProperty("text").GetString());
-                Clipboard.SetDataObject(data, true, 5, 100);
+                string svg = null, png = null;
+                if (office.RootElement.TryGetProperty("image", out var picture))
+                {
+                    png = picture.GetProperty("png").GetString();
+                    if (picture.TryGetProperty("svg", out var vector)) svg = vector.GetString();
+                }
+                ReportClipboard.Publish(data, svg, png);
                 // A failed clipboard write never removes the selected content.
                 if (command == "cut") await CallAsync("cut", new { token = token.GetString() });
             }

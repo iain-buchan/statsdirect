@@ -172,6 +172,18 @@ internal static partial class Program
                         Check(rendered, kind + " reopened picture renders independently of its source file");
                     }
                     finally { if (heldPath != null && File.Exists(heldPath)) File.Move(heldPath, sourcePath); }
+                    if (kind is "SVG-only" or "PNG-only")
+                    {
+                        async Task<bool> PublishReportClipboard(string command)
+                        {
+                            if (ImagePasteClipboardSequence() != ownedSequence)
+                            { Console.WriteLine("SKIP remaining report image-copy checks: another application changed the clipboard."); return false; }
+                            await (Task)Call(view, "ClipboardCommandAsync", command);
+                            ownedSequence = ImagePasteClipboardSequence();
+                            return true;
+                        }
+                        if (!await CheckReportPictureCopy(report, view, browser, vector, folder, PublishReportClipboard)) return;
+                    }
                 }
                 finally { await CloseReportForTest(report); }
             }
@@ -189,6 +201,124 @@ internal static partial class Program
             foreach (string file in Directory.GetFiles(folder)) File.Delete(file);
             Directory.Delete(folder);
         }
+    }
+
+    private static async Task<bool> CheckReportPictureCopy(Form report, object view, WebView2 browser, bool vector,
+        string folder, Func<string, Task<bool>> publish)
+    {
+        string kind = vector ? "SVG" : "PNG", selector = vector ? "#results svg" : "#results img";
+        async Task<bool> True(string expression) => await browser.CoreWebView2.ExecuteScriptAsync(expression) == "true";
+        async Task<int> Pictures() => int.Parse(await browser.CoreWebView2.ExecuteScriptAsync("document.querySelectorAll('#results .report-media').length"));
+        async Task SelectPicture()
+        {
+            browser.ZoomFactor = 1;
+            report.Activate(); browser.Focus();
+            await browser.CoreWebView2.ExecuteScriptAsync("document.querySelector(" + JsonSerializer.Serialize(selector) + ").scrollIntoView({block:'center'})");
+            await Task.Delay(75); // Let MDI activation, focus and the scroll settle before native pointer input.
+            using var rectangle = JsonDocument.Parse(await browser.CoreWebView2.ExecuteScriptAsync("""
+                (()=>{
+                  const i=document.querySelector(SELECTOR),r=i.getBoundingClientRect(),toolbar=document.getElementById('report-toolbar').getBoundingClientRect();
+                  const left=Math.max(1,r.left),right=Math.min(innerWidth-2,r.right),top=Math.max(toolbar.bottom+2,1,r.top),bottom=Math.min(innerHeight-2,r.bottom);
+                  const x=left+Math.min((right-left)/2,50),y=(top+bottom)/2,hit=document.elementFromPoint(x,y);
+                  window.reportImageCopyClicks=[];
+                  for(const type of ['pointerdown','pointerup','click'])document.addEventListener(type,e=>reportImageCopyClicks.push({type,target:e.target.tagName,media:!!e.target.closest('.report-media')}),{capture:true,once:true});
+                  return {x,y,visible:right>left&&bottom>top,hit:hit?.tagName,correctTarget:hit?.closest('.report-media')===i.closest('.report-media'),
+                    rect:{left:r.left,top:r.top,width:r.width,height:r.height},viewport:{width:innerWidth,height:innerHeight},toolbarBottom:toolbar.bottom,
+                    editing:document.body.classList.contains('report-editing'),active:document.activeElement?.tagName,focus:document.hasFocus()};
+                })()
+                """.Replace("SELECTOR", JsonSerializer.Serialize(selector))));
+            Console.WriteLine("      " + kind + " report copy click: " + rectangle.RootElement.GetRawText()
+                + "; active MDI=" + (report.MdiParent?.ActiveMdiChild == report) + "; browserFocus=" + browser.ContainsFocus);
+            Check(rectangle.RootElement.GetProperty("visible").GetBoolean() && rectangle.RootElement.GetProperty("correctTarget").GetBoolean(),
+                kind + " report image has a visible native click target outside the toolbar");
+            foreach (string type in new[] { "mousePressed", "mouseReleased" })
+            {
+                await browser.CoreWebView2.CallDevToolsProtocolMethodAsync("Input.dispatchMouseEvent", JsonSerializer.Serialize(new
+                {
+                    type, x = rectangle.RootElement.GetProperty("x").GetDouble(), y = rectangle.RootElement.GetProperty("y").GetDouble(),
+                    button = "left", buttons = type == "mousePressed" ? 1 : 0, clickCount = 1
+                }));
+                Console.WriteLine("      " + kind + " report " + type + ": " + await browser.CoreWebView2.ExecuteScriptAsync("(()=>{const i=document.querySelector(" + JsonSerializer.Serialize(selector) + "),r=i.getBoundingClientRect(),s=getSelection();return {scrollY,rectTop:r.top,selectionCount:s?.rangeCount,selected:!!StatsDirectReportEditor.selectedPicture(),clicks:window.reportImageCopyClicks};})()"));
+            }
+            var until = DateTime.UtcNow.AddSeconds(2);
+            bool selected;
+            do { selected = await True("!!StatsDirectReportEditor.selectedPicture()"); if (!selected) await Task.Delay(30); }
+            while (!selected && DateTime.UtcNow < until);
+            if (!selected) Console.WriteLine("      " + kind + " report copy selection: " + await browser.CoreWebView2.ExecuteScriptAsync("(()=>{const s=getSelection(),r=s?.rangeCount?s.getRangeAt(0):null;return {clicks:window.reportImageCopyClicks,active:document.activeElement?.outerHTML?.slice(0,150),focus:document.hasFocus(),editing:document.body.classList.contains('report-editing'),selection:r?{collapsed:r.collapsed,start:r.startContainer.nodeName,startParent:r.startContainer.parentElement?.tagName,startOffset:r.startOffset,end:r.endContainer.nodeName,endOffset:r.endOffset}:null};})()"));
+            Check(selected, kind + " report image is selected through an actual browser click");
+        }
+        async Task History(string command)
+        {
+            await (Task)Call(view, "CallAsync", "command", new { name = command });
+            await (Task)Call(view, "CallAsync", "snapshot", null);
+        }
+        void ImageConsumerContract(string command)
+        {
+            using var image = Clipboard.GetImage();
+            var contents = Clipboard.GetDataObject();
+            Check(Clipboard.ContainsImage() && image != null && image.Width > 0 && image.Height > 0
+                && contents?.GetDataPresent("PNG", false) == true,
+                kind + " report " + command + " supplies a native image and PNG for chat/image consumers");
+            Check(contents?.GetData("StatsDirect.ReportFragment.HTML.v1", false) is string fragment
+                && fragment.Contains(vector ? "<svg" : "data:image/png", StringComparison.OrdinalIgnoreCase)
+                && contents.GetDataPresent("image/svg+xml", false) == vector,
+                kind + " report " + command + " retains the private picture and SVG vector format where applicable");
+            Check(contents?.GetData(DataFormats.Html) is string html && html.Contains("data:image/png", StringComparison.Ordinal)
+                && contents.GetDataPresent(DataFormats.UnicodeText),
+                kind + " report " + command + " keeps its Office HTML and text formats");
+        }
+
+        await SelectPicture();
+        if (!await publish("copy")) return false;
+        ImageConsumerContract("Copy");
+        Check(await Pictures() == 1, kind + " report Copy leaves its selected image in place");
+        string copiedFragment = (string)Clipboard.GetDataObject().GetData("StatsDirect.ReportFragment.HTML.v1", false);
+        foreach (var (label, fragment) in new[]
+        {
+            ("picture and text", copiedFragment + "<p>Editable caption</p>"),
+            ("table containing a picture", "<table><tr><td>" + copiedFragment + "</td></tr></table>")
+        })
+        {
+            var exported = (Task<JsonElement>)Call(view, "CallAsync", "officeClipboard", new { html = fragment });
+            using var payload = JsonDocument.Parse((await exported).GetString());
+            Check(!payload.RootElement.TryGetProperty("image", out _),
+                kind + " " + label + " stays rich content rather than becoming a native single-image selection");
+        }
+        await SelectPicture();
+        if (!await publish("cut")) return false;
+        ImageConsumerContract("Cut");
+        Check(await Pictures() == 0, kind + " report Cut removes its image after publishing native clipboard formats");
+        await History("undo");
+        Check(await Pictures() == 1, kind + " report image Cut undoes as one transaction");
+        await browser.CoreWebView2.ExecuteScriptAsync("document.querySelector('[data-command=addText]').click()");
+        await browser.CoreWebView2.ExecuteScriptAsync("(()=>{const p=[...document.querySelectorAll('#results .report-entry p')].at(-1),r=document.createRange();document.getElementById('results').focus();r.selectNodeContents(p);getSelection().removeAllRanges();getSelection().addRange(r);})()");
+        await (Task)Call(view, "ClipboardCommandAsync", "paste");
+        Check(await Pictures() == 2 && await True(vector
+            ? "document.querySelectorAll('#results svg').length===2&&new Set([...document.querySelectorAll('#results svg [id]')].map(n=>n.id)).size===document.querySelectorAll('#results svg [id]').length"
+            : "document.querySelectorAll('#results img[src^=\"data:image/png\"]').length===2"),
+            kind + " copied report image repastes with vector identity isolation or embedded PNG");
+        await History("undo");
+        Check(await Pictures() == 1, kind + " copied report image Paste undoes in one step");
+        await History("redo");
+        string path = Path.Combine(folder, "report-copy-" + kind + ".html");
+        await (Task)Call(view, "SaveAsync", path, "Copied picture", "html");
+        await (Task)Call(view, "OpenHtmlAsync", File.ReadAllText(path), "Reopened copied picture");
+        Check(await Pictures() == 2, kind + " copied report pictures survive redo, HTML saving and reopening");
+
+        await (Task)Call(view, "AppendAsync", "<p>Text kept as editable text</p>", "Text copy check", "", 0, null, null);
+        await browser.CoreWebView2.ExecuteScriptAsync("(()=>{const p=document.querySelector('#results .report-entry:last-child p'),r=document.createRange();document.getElementById('results').focus();r.selectNodeContents(p);getSelection().removeAllRanges();getSelection().addRange(r);})()");
+        if (!await publish("copy")) return false;
+        Check(!Clipboard.ContainsImage() && Clipboard.GetDataObject()?.GetDataPresent("PNG", false) != true
+            && Clipboard.GetText().Contains("Text kept as editable text", StringComparison.Ordinal),
+            kind + " report text-only Copy remains editable text without a native image representation");
+        await (Task)Call(view, "CallAsync", "selectAll", null);
+        if (!await publish("copy")) return false;
+        Check(!Clipboard.ContainsImage() && Clipboard.GetDataObject()?.GetDataPresent("PNG", false) != true
+            && Clipboard.GetDataObject()?.GetData("StatsDirect.ReportFragment.HTML.v1", false) is string mixed
+            && mixed.Contains("Text kept as editable text", StringComparison.Ordinal)
+            && mixed.Contains(vector ? "<svg" : "data:image/png", StringComparison.OrdinalIgnoreCase),
+            kind + " report mixed picture/text Copy remains rich report content without being labelled a single image");
+        return true;
     }
 
     private static async Task CopyRChartImage(WebView2 browser, string selector)

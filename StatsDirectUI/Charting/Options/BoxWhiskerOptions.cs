@@ -40,11 +40,11 @@ namespace StatsDirect.Charting
                         XAxisTitle = UseOuterFence ? "min < LQ < median%MEAN% > UQ > max, fence (3.0 IQR)" : "min < LQ < median%MEAN% > UQ > max";
                     break;
                 case BoxWhiskerMethod.TukeyHinges:
-                    XAxisTitle = "Tukey hinges: min < lower hinge < median%MEAN% > upper hinge > max";
+                    XAxisTitle = "Tukey hinges" + (MarkMeanAndMedian ? " and mean" : "");
                     if (UseInnerFence)
-                        XAxisTitle += UseOuterFence ? ", fences (1.5 & 3.0 IQR)" : ", fence (1.5 IQR)";
+                        XAxisTitle += UseOuterFence ? " (1.5 and 3 IQR fences)" : " (1.5 IQR fence)";
                     else if (UseOuterFence)
-                        XAxisTitle += ", fence (3.0 IQR)";
+                        XAxisTitle += " (3 IQR fence)";
                     break;
                 case BoxWhiskerMethod.MeanStandardDeviationRange:
                     if (UseInnerFence)

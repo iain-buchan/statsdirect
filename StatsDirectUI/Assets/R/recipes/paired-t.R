@@ -42,4 +42,5 @@ plot((before + after) / 2, d, xlab = "Mean ((PEFR Before + PEFR After) / 2)",
      ylab = "Difference (PEFR Before - PEFR After)", ylim = range(d, loa))
 abline(h = mean(d))
 abline(h = loa, col = "red")
-legend("topright", paste0("mean difference +/- ", pct, " limits of agreement"), bty = "n")
+mtext(paste0("Mean difference and ", pct, " limits of agreement"),
+      side = 3, line = 0.5, cex = 0.8)

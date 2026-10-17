@@ -63,6 +63,7 @@ namespace StatsDirect.UI
             MenuStrip1.Visible = false;
             rtbDoc.KeyDown += ScriptKeyDown;
             rtbDoc.HideSelection = false;   // what Find selects stays highlighted while the Find dialog has the focus
+            BuildScriptContextMenu();
             PrintDocument1.BeginPrint += (_, _) => printRemaining = rtbDoc.Text;
             PrintDocument1.PrintPage += PrintScriptPage;
             BuildFindBar();

@@ -63,6 +63,7 @@ internal static partial class Program
         Check(Get(app, "CalculatorView") is Control startupView && startupView.ContainsFocus && main.ActiveMdiChild == null && !(bool)Get(main, "ShowOpeningDialog"),
             "legacy -calculator startup opens the integrated pane without a document");
         await CheckNewRSession(main);
+        await CheckScriptContextMenu(main);
         await CheckLegacyReportOpening(main);
         await CheckReportSaveAs(main);
         var grid = (Form)Call(main, "CreateGrid");

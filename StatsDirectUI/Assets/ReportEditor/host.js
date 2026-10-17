@@ -109,7 +109,7 @@ window.WindowsReport={async run(request){
         }value={content:value,revision:state.revision};break;
       }
       case 'prepareClipboard':value=StatsDirectReportEditor.prepareClipboard(!!request.args.cut);break;
-      case 'officeClipboard':value=await StatsDirectReportExport.clipboard({fragment:request.args.html});break;
+      case 'officeClipboard':value=await StatsDirectReportExport.clipboard({fragment:request.args.html,nativeImage:true});break;
       case 'cut':value=StatsDirectReportEditor.cutPrepared(request.args.token);break;
       case 'preparePaste':value=StatsDirectReportEditor.preparePaste();break;
       case 'paste':value=StatsDirectReportEditor.pastePrepared(request.args.token,request.args.payload);break;
