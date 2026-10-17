@@ -30,7 +30,7 @@ internal static partial class Program
             // and the Wei-Lachin test's frames are asked once per group or repeat, and the record kept the last ask only
             ("KappaScreen", new() { ["method"] = "1", ["doExactP"] = false, ["iterations"] = 1000, ["seed"] = 1 }, "", null),   // the dialog asks for the iterations and seed whatever doExactP says
             ("LogisticRegression", new() { ["grouping"] = "grouped", ["accuracy"] = "0.0000001", ["intercept"] = true, ["weights"] = false, ["gamma"] = 0.95 }, "", null),
-            ("SurvivalPlot", new() { ["group-count"] = 2, ["ydatlNew"] = null, ["ydatuNew"] = null }, "", new[] { "xdatNew", "cdatNew" }),
+            ("SurvivalPlot", new() { ["group-count"] = 2 }, "", new[] { "xdatNew", "cdatNew", "ydatNew", "ydatlNew", "ydatuNew" }),
             ("WeiLachin", new() { ["nr"] = 4 }, "", new[] { "scrapTimes", "scrapCensor" }),
             // (Crosstabs and LogRank are not run here: their classifiers and group identifiers are built by the worksheet's data
             // acquisition, which these checks do not have)
@@ -44,7 +44,7 @@ internal static partial class Program
                 Dictionary<string, object> answers = new(extra);
                 int column = 1;
                 DataFrame Sheet(params (string title, double[] values)[] columns) { DataFrame f = SheetFrame("test.xlsx", op, column, 1, columns); column += columns.Length; return f; }
-                (string title, double[] values) Column(JsonElement c) => (c.GetProperty("title").GetString(), c.GetProperty("values").EnumerateArray().Select(v => v.GetDouble()).ToArray());
+                (string title, double[] values) Column(JsonElement c) => (c.GetProperty("title").GetString(), c.GetProperty("values").EnumerateArray().Select(v => v.ValueKind == JsonValueKind.Null ? StatsDirect.Numerics.Constant.MISSING : v.GetDouble()).ToArray());
                 if (example.TryGetProperty("inputs", out JsonElement inputs))
                     foreach (JsonElement input in inputs.EnumerateArray())
                     {
@@ -53,8 +53,6 @@ internal static partial class Program
                         if (repeats != null && repeats.Contains(name))
                         {
                             answers[name] = new Queue<object>(columns.Select(c => (object)Sheet(c)));   // one column for each pass of the loop
-                            if (op == "SurvivalPlot" && name == "xdatNew")   // the survival proportion the plot also asks for each group: not the script's business, so any values of the length
-                                answers["ydatNew"] = new Queue<object>(columns.Select(c => (object)Sheet(("S", Enumerable.Repeat(1.0, c.values.Length).ToArray()))));
                         }
                         else if (op == "WeiLachin" && name == "gid")
                         {
@@ -79,7 +77,12 @@ internal static partial class Program
                 var (run, _) = Run(op, answers);
                 RScript script = RScriptWriter.Write(Record(run), null, null);
                 if (!script.HasRecipe) { failures.Add(op + ": the run's script has no recipe"); continue; }
-                string ours = Figures(RunR(script.Text, Path.Combine(folder, op)));
+                string scriptText = script.Text;
+                string chartProbe = SelectedChartExampleProbe(op);
+                if (chartProbe != null)
+                    scriptText = "invisible(capture.output({\n" + scriptText + "\n}))\n"
+                        + "emit <- function(x) cat(formatC(as.double(x), digits = 8, format = 'f'), '\\n')\n" + chartProbe;
+                string ours = Figures(RunR(scriptText, Path.Combine(folder, op)));
                 string expected = Figures(RunR(File.ReadAllText(Path.Combine(examples, op + ".R")).Replace("\r", ""), Path.Combine(folder, op + "-help")));
                 bool cut = example.TryGetProperty("cut", out JsonElement c2) && c2.ValueKind == JsonValueKind.True;
                 bool subset = mode == "subset" || (example.TryGetProperty("subset", out JsonElement sb) && sb.ValueKind == JsonValueKind.True);

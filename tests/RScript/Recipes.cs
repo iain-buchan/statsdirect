@@ -16,7 +16,7 @@ internal static partial class Program
         string[] operations = RRecipes.Operations.OrderBy(o => o, StringComparer.Ordinal).ToArray();
         Check(operations.Length >= 28 && operations.All(op => File.Exists(Path.Combine(examples, op + ".json")) && File.Exists(Path.Combine(examples, op + ".R"))),
               $"every operation of the manifest ({operations.Length}) has the help's script and its example to check against");
-        Dictionary<string, string> gold = new();   // the help script's figures, by file
+        Dictionary<string, string> gold = new();   // independent figures per operation, including shared-recipe continuations
         int agreed = 0;
         List<string> failures = new();
         foreach (string op in operations)
