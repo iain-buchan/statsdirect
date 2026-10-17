@@ -86,3 +86,25 @@ analyses retain their separate charts. An older saved result without chart choic
 choices cannot be reconstructed. These graphical recipes are marked `# hand-edited` and must be preserved during regeneration.
 Their tests cover native dialog-to-record-to-R binding, edited data and labels, settings, SVG/PDF page counts and every plotted value,
 as well as the help examples. Text-chart recipes retain their existing output conventions.
+
+The version-1 record also carries an additive `rootOperation` field. A private context entry preserves that analysis through follow-ons
+and resets it when a new root analysis starts. Manifest `parentFiles` selects the appropriate recipe for commands shared by several
+analyses, such as regression ANOVA or probit/logit continuations. Legacy ambiguous dose-response continuations provide data with a
+rerun explanation instead of silently selecting logit. A recipe can bind `statsdirectOperation` or `statsdirectRootOperation` in its
+settings header to obtain this provenance without adding private context objects to JSON.
+
+Probit/logit replay uses the selected link, native coefficient scale, confidence, logged doses and interpolation requests. More prints
+the selected observations and fitted counts; Plot draws the selected fitted curve. Positive-response control adjustments and the native
+heterogeneity-adjusted interval convention are explicitly unsupported: these cases stop with an explanation rather than substituting
+ordinary binomial intervals. This limitation concerns the R replay, not the native analysis.
+
+Survival charts use the selected survival and interval columns. Small curves may travel with chart settings, within the 5,000-value
+limit; larger selections use worksheet bindings and per-group shape metadata. Optional bounds stay with their own group. Forest charts
+retain the chosen scale and optional weights/pooling labels. ROC charts retain comparison direction, confidence, weight and the final
+per-series cutoffs; redraws reuse those choices. Friedman/Cochran recipes use only the selected blocks; multiple comparisons retain
+confidence and sidedness. Quantiles and descriptive summaries process every selected column and preserve the report options.
+
+The `analysis-replay`, `routed-replay`, `probit-replay` and `charts-d` groups in `tests/RScript` run actual native analyses through saved
+and reopened records into installed R. They vary data, missing observations, selected columns, confidence, model and follow-on paths.
+Graphical tests additionally check native and R drawing primitives, SVG and automatic PDF devices. Independent worked references are
+compared per operation, so two continuations using one recipe file cannot accidentally share the wrong reference output.

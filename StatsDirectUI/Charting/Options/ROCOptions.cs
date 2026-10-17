@@ -13,6 +13,12 @@ namespace StatsDirect.Charting
         public Comparison Comparison;
         private readonly bool showLegendIsRelevant;
 
+        // The results pass asks the cutoff calculator once. Rendering that result
+        // must keep its choices, including when the report requests another image.
+        [NonSerialized] internal IList<ROCSeriesRecord> FinalSeriesRecords;
+        [NonSerialized] internal bool FinalSeriesShowOptimum;
+        [NonSerialized] internal bool FinalSeriesShowCalculator;
+
         public ROCOptions(IList<ISeries> seriesToUse)
         {
 

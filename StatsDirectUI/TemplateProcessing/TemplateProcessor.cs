@@ -148,7 +148,7 @@ namespace StatsDirect.TemplateProcessing
 
         void FillChartDefinition(ChartStep step, ParameterBag parameters, ChartDefinition definition, string dataName)
         {
-            definition.ChartOptions = ChartOptionProcessor.PreprocessChartOptions(step, parameters, definition, dataName, host);
+            definition.ChartOptions = ChartOptionProcessor.PreprocessChartOptions(step, parameters, definition, dataName, host, currentRun?.Inputs);
             definition.IsAscii = step.IsAscii;
 
             // TODO: Gross hack (see #993): Forest lin/log depends on the chart options for the data.

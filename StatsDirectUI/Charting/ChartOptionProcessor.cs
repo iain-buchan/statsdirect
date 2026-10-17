@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using StatsDirect.Data;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
@@ -11,6 +12,9 @@ namespace StatsDirect.Charting
     public static class ChartOptionProcessor
     {
         public static ChartOptions PreprocessChartOptions(ChartStep step, ParameterBag parameters, ChartDefinition definition, string dataName, ITemplateHost host)
+            => PreprocessChartOptions(step, parameters, definition, dataName, host, null);
+
+        internal static ChartOptions PreprocessChartOptions(ChartStep step, ParameterBag parameters, ChartDefinition definition, string dataName, ITemplateHost host, IList<RunInput> acquired)
         {
             // Chart options
             // TODO: This is very poor placement of this logic.  It's an unpleasant mash of setting options (some of which should be defaults), data preparation and mapping from values in particular operations.  How much of this should be moved out to the XML?
@@ -53,7 +57,7 @@ namespace StatsDirect.Charting
                 case ChartType.Spread:
                     return PreprocessSpreadOptions(definition, dataName);
                 case ChartType.Survival:
-                    return PreprocessSurvivalOptions(parameters, dataName);
+                    return PreprocessSurvivalOptions(parameters, dataName, acquired);
                 default:
                     throw new ArgumentOutOfRangeException(nameof(step), step, "step.ChartType: Not all types can be plotted yet");
             }
@@ -65,7 +69,7 @@ namespace StatsDirect.Charting
             return null;
         }
 
-        private static SurvivalOptions PreprocessSurvivalOptions(ParameterBag parameters, string dataName)
+        private static SurvivalOptions PreprocessSurvivalOptions(ParameterBag parameters, string dataName, IList<RunInput> acquired)
         {
             SurvivalOptions survivalOptions = new()
             {
@@ -101,6 +105,23 @@ namespace StatsDirect.Charting
             if (parameters.ContainsKey("ydatu") && null != parameters["ydatu"])
                 ydatuFrame = parameters["ydatu"].AsDataFrame;
 
+            // Optional append-to-frame inputs are compacted when a group skips its limits.
+            // Match the original acquisition pass instead of treating that compact list as one column per group.
+            List<RunInput> times = acquired?.Where(input => input.Name == "xdatNew").ToList();
+            double[] Limits(string name, DataFrame combined, int group)
+            {
+                if (times?.Count == groupCount)
+                {
+                    FilledParameter value = acquired.LastOrDefault(input => input.Name == name && input.Pass == times[group].Pass)?.Value;
+                    return value?.IsDataFrame == true && value.AsDataFrame.VariableCount > 0
+                        ? ((DoubleVariable)value.AsDataFrame.Variables[0]).Data : null;
+                }
+                if (combined == null || combined.VariableCount == 0) return null;
+                if (combined.VariableCount != groupCount)
+                    throw new ArgumentException("The survival confidence limits do not identify their groups. Reselect the limits for this chart.");
+                return ((DoubleVariable)combined.Variables[group]).Data;
+            }
+
             for (int i = 0; i < groupCount; i++)
             {
                 SurvivalOptions.SurvivalSeries ser = new();
@@ -122,17 +143,9 @@ namespace StatsDirect.Charting
                 DoubleVariable ydatVariable = (DoubleVariable)ydatFrame.Variables[i];
                 ser.YDat = ydatVariable.Data;
                 // ... ydatl...
-                if (null != ydatlFrame)
-                {
-                    DoubleVariable ydatlVariable = (DoubleVariable)ydatlFrame.Variables[i];
-                    ser.YDatL = ydatlVariable.Data;
-                }
+                ser.YDatL = Limits("ydatlNew", ydatlFrame, i);
                 // ... and ydatu
-                if (null != ydatuFrame)
-                {
-                    DoubleVariable ydatuVariable = (DoubleVariable)ydatuFrame.Variables[i];
-                    ser.YDatU = ydatuVariable.Data;
-                }
+                ser.YDatU = Limits("ydatuNew", ydatuFrame, i);
                 survivalOptions.Series.Add(ser);
             }
             survivalOptions.SeriesTitles = new string[groupCount];

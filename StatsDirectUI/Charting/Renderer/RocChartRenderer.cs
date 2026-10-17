@@ -37,7 +37,7 @@ namespace StatsDirect.Charting.Renderer
         ///  Plot a ROC chart.
         ///  </summary>
         /// <param name="host"></param>
-        ParameterBag IChartRenderer.Plot(ITemplateHost host, bool _)
+        ParameterBag IChartRenderer.Plot(ITemplateHost host, bool isForReturnedParametersOnly)
         {
             ROCOptions rOptions = (ROCOptions)Definition.ChartOptions;
             double gamma = rOptions.GAMMA;
@@ -47,7 +47,7 @@ namespace StatsDirect.Charting.Renderer
 
             //  Assume data passed as series - X is positive, Y is negative.
 
-            IList<ROCSeriesRecord> seriesRecords = MakeAndMaybeAmendSeriesRecords(host, Definition);
+            IList<ROCSeriesRecord> seriesRecords = MakeAndMaybeAmendSeriesRecords(host, Definition, isForReturnedParametersOnly);
 
             AssignMarkersToSeries(rOptions);
             Legend legend = new();
@@ -329,14 +329,38 @@ namespace StatsDirect.Charting.Renderer
             return results;
         }
 
-        private static IList<ROCSeriesRecord> MakeAndMaybeAmendSeriesRecords(ITemplateHost host, ChartDefinition definition)
+        private static ROCSeriesRecord SnapshotSeries(ROCSeriesRecord record)
+        {
+            ROCSeriesRecord snapshot = record.Clone();
+            snapshot.pdata = (double[])record.pdata.Clone();
+            snapshot.adata = (double[])record.adata.Clone();
+            snapshot.tdata = (double[])record.tdata.Clone();
+            return snapshot;
+        }
+
+        private static IList<ROCSeriesRecord> MakeAndMaybeAmendSeriesRecords(ITemplateHost host, ChartDefinition definition, bool newResultsPass)
         {
             ROCOptions rOptions = (ROCOptions)definition.ChartOptions;
             double gamma = rOptions.GAMMA;
             if (gamma <= 0)
                 return null;
 
-            //  Assume data passed as series - X is positive, Y is negative.
+            // A report can render the chart repeatedly. Reuse the final calculator
+            // choices for that result; changing data or statistical options invalidates them.
+            double weight = rOptions.Weight <= 0 ? 1 : rOptions.Weight;
+            bool reusable = !newResultsPass && rOptions.FinalSeriesRecords?.Count == definition.XSeries.Count
+                && rOptions.FinalSeriesShowOptimum == rOptions.ShowOptimumCutOff
+                && rOptions.FinalSeriesShowCalculator == rOptions.ShowCutOffCalculator;
+            if (reusable)
+                for (int cs = 0; cs < definition.XSeries.Count; cs++)
+                {
+                    ROCSeriesRecord record = rOptions.FinalSeriesRecords[cs];
+                    if (record.comparison != rOptions.Comparison || record.weight != weight
+                        || !record.pdata.SequenceEqual(((DoubleSeries)definition.XSeries[cs]).Data)
+                        || !record.adata.SequenceEqual(((DoubleSeries)definition.YSeries[cs]).Data))
+                    { reusable = false; break; }
+                }
+            if (reusable) return rOptions.FinalSeriesRecords.Select(SnapshotSeries).ToList();
 
             IList<ROCSeriesRecord> seriesRecords = MakeSeriesRecords(definition);
 
@@ -353,6 +377,9 @@ namespace StatsDirect.Charting.Renderer
                     seriesRecords[cs] = seriesRecord;
                 }
             }
+            rOptions.FinalSeriesRecords = seriesRecords.Select(SnapshotSeries).ToList();
+            rOptions.FinalSeriesShowOptimum = rOptions.ShowOptimumCutOff;
+            rOptions.FinalSeriesShowCalculator = rOptions.ShowCutOffCalculator;
             return seriesRecords;
         }
 

@@ -13,18 +13,20 @@ internal static partial class Program
         string[] operations = RRecipes.Operations.ToArray();
         Check(operations.Length >= 28 && operations.All(op => File.Exists(Path.Combine(Metadata("Operations"), op + ".xml"))), $"every operation of the manifest ({operations.Length}) has a definition here");
         List<string> mismatches = new();
+        using JsonDocument recipeManifest = JsonDocument.Parse(File.ReadAllText(Path.Combine(RRecipes.Folder, "analysis-recipes.json")));
         foreach (string op in operations)
         {
             RRecipe recipe = RRecipes.Find(op);
             string text = RRecipes.Recipe(recipe.File);
             string xml = Regex.Replace(File.ReadAllText(Path.Combine(Metadata("Operations"), op + ".xml")), "<!--.*?-->", "", RegexOptions.Singleline);   // a parameter commented out is not asked, so no run records it
             HashSet<string> parameters = Regex.Matches(xml, "<name>([^<]+)</name>").Select(m => m.Groups[1].Value.Trim()).Skip(1).ToHashSet();
+            parameters.UnionWith(new[] { "statsdirectOperation", "statsdirectRootOperation" });
             parameters.UnionWith(Regex.Matches(xml, "<option name=\"([^\"]+)\"").Select(m => m.Groups[1].Value));   // the options of a set of options, which the dialog records one by one under their names
             // a follow-on operation continues an earlier run and may take that operation's parameters and frames
-            Match inherits = Regex.Match(File.ReadAllText(Path.Combine(RRecipes.Folder, "analysis-recipes.json")), "\"" + Regex.Escape(op) + "\":\\s*\\{[^}]*\"inherits\":\\s*\"([^\"]+)\"");
-            if (inherits.Success)
+            JsonElement manifestEntry = recipeManifest.RootElement.GetProperty(op);
+            if (manifestEntry.TryGetProperty("inherits", out JsonElement inheritedOperation))
             {
-                string parent = Regex.Replace(File.ReadAllText(Path.Combine(Metadata("Operations"), inherits.Groups[1].Value + ".xml")), "<!--.*?-->", "", RegexOptions.Singleline);
+                string parent = Regex.Replace(File.ReadAllText(Path.Combine(Metadata("Operations"), inheritedOperation.GetString() + ".xml")), "<!--.*?-->", "", RegexOptions.Singleline);
                 parameters.UnionWith(Regex.Matches(parent, "<name>([^<]+)</name>").Select(m => m.Groups[1].Value.Trim()).Skip(1));
                 if (parent.Contains("<frame>")) xml += "<frame>";
                 if (parent.Contains("<chart-type>")) parameters.Add("chartSettings");
@@ -36,6 +38,8 @@ internal static partial class Program
             // The chart dialog records its final settings as a neutral parameter bag after it closes; those settings are not XML inputs.
             if ((op is "BoxWhiskerPlot" or "BoxWhiskerPlotText") && xml.Contains("<chart-type>BoxWhisker</chart-type>")) parameters.Add("boxWhisker");
             if (xml.Contains("<chart-type>")) parameters.Add("chartSettings");
+            if (op is "Probit" or "Logit" || op.StartsWith("Probit", StringComparison.Ordinal)) parameters.Add("doseResponseModel");
+            if (op == "ROCPlot") parameters.Add("rocCutoffs");
             Match settings = Regex.Match(text, "^# settings:\\s*(.*)$", RegexOptions.Multiline);
             if (settings.Success)
                 foreach (string item in settings.Groups[1].Value.Split(',').Select(x => x.Trim()).Where(x => x.Contains('=')))

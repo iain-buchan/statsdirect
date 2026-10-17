@@ -32,16 +32,25 @@ internal static partial class Program
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "options3") { CheckOptions3(); Console.WriteLine($"PASS {checks} Continue in R checks (the confidence levels alone)"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "box") { CheckBoxWhisker(); Console.WriteLine($"PASS {checks} box and whisker Continue in R checks"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "recipes") { CheckRecipes(); CheckRecipesAgainstHelp(); Console.WriteLine($"PASS {checks} R recipe checks"); return 0; }
+            if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "recipe-bindings") { CheckRecipes(); Console.WriteLine($"PASS {checks} recipe binding checks"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "acquisition") { CheckAcquisition(); Console.WriteLine($"PASS {checks} acquisition checks"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "charts-a") { CheckChartRecipesA(); Console.WriteLine($"PASS {checks} chart recipe A checks"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "charts-b") { CheckChartRecipesB(); Console.WriteLine($"PASS {checks} chart recipe B checks"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "charts-c") { CheckChartRecipesC(); Console.WriteLine($"PASS {checks} chart recipe C checks"); return 0; }
+            if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "charts-d") { CheckChartReplayD(); Console.WriteLine($"PASS {checks} chart replay D checks"); return 0; }
+            if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "probit-replay") { CheckProbitReplay(); Console.WriteLine($"PASS {checks} dose-response replay checks"); return 0; }
+            if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "analysis-replay") { CheckAnalysisReplay(); Console.WriteLine($"PASS {checks} analysis replay checks"); return 0; }
+            if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "routed-replay") { CheckRoutedReplay(); Console.WriteLine($"PASS {checks} routed replay checks"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "records") { CheckRecord(); CheckThreshold(); CheckHash(); CheckScript(); CheckTable(); CheckFollowOn(); CheckRealRuns(); CheckRegressionFollowOn(); CheckTwoLevel(); CheckColumnLocator(); Console.WriteLine($"PASS {checks} saved record checks"); return 0; }
             CheckRecord();
             CheckAcquisition();
             CheckChartRecipesA();
             CheckChartRecipesB();
             CheckChartRecipesC();
+            CheckChartReplayD();
+            CheckProbitReplay();
+            CheckAnalysisReplay();
+            CheckRoutedReplay();
             CheckThreshold();
             CheckHash();
             CheckRecipes();
@@ -131,6 +140,15 @@ internal sealed class Host : ITemplateHost, IProgressBar
     public ParameterBag FillParameter(ITemplateProcessor processor, Parameter parameter, ParameterBag context, bool shouldCombine)
     {
         if (parameter.HasAcquireIfTrue && !parameter.AcquireIfTrue(processor, context)) return new ParameterBag();   // not acquired, as the dialog leaves such a parameter
+        if (parameter is OptionsParameter unnamed && string.IsNullOrEmpty(parameter.Name))
+        {
+            answers.TryGetValue("options", out object selection);
+            var unnamedChoices = selection as Dictionary<string, bool>;
+            ParameterBag ticks = new();
+            foreach (OptionsOption option in unnamed.Options)
+                ticks.AddInput(option.Name, unnamedChoices != null && unnamedChoices.TryGetValue(option.Name, out bool enabled) ? enabled : option.Selected);
+            return ticks;
+        }
         if (!answers.TryGetValue(parameter.Name, out object value)) throw new Exception($"the operation asked for {parameter.Name}, which these checks do not answer");
         if (value is Queue<object> passes) value = passes.Count > 0 ? passes.Dequeue() : throw new Exception($"the operation asked for {parameter.Name} more times than these checks answer");   // a prompt asked in each pass of a loop
         if (value == null) { ParameterBag skipped = new(); skipped[parameter.Name] = null; return skipped; }   // an optional parameter skipped: the dialog notes it as a null entry

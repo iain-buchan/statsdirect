@@ -29,10 +29,11 @@ internal static partial class Program
                 string runFolder = Path.Combine(folder, op);
                 string scriptText = script.Text;
                 string chartProbe = SelectedChartExampleProbe(op);
-                if (chartProbe != null)
+                string numericProbe = chartProbe ?? SelectedAnalysisExampleProbe(op);
+                if (numericProbe != null)
                     scriptText = "options(device = function(...) grDevices::svg(filename = \"selected-chart-%03d.svg\", ...))\n"
                         + "invisible(capture.output({\n" + scriptText + "\n}))\n"
-                        + "emit <- function(x) cat(formatC(as.double(x), digits = 8, format = 'f'), '\\n')\n" + chartProbe;
+                        + "emit <- function(x) cat(formatC(as.double(x), digits = 8, format = 'f'), '\\n')\n" + numericProbe;
                 if (op == "BoxWhiskerPlot")
                 {
                     // This recipe now draws one selected chart instead of running the help's three teaching illustrations.
@@ -55,9 +56,8 @@ internal static partial class Program
                     if (ours.Length > 0) agreed++; else failures.Add(op + " (printed no figure)");
                     continue;
                 }
-                string file = RRecipes.Find(op).File;
-                if (!gold.TryGetValue(file, out string expected))
-                    gold[file] = expected = Figures(RunR(File.ReadAllText(Path.Combine(examples, op + ".R")).Replace("\r", ""), Path.Combine(folder, op + "-help")));
+                if (!gold.TryGetValue(op, out string expected))
+                    gold[op] = expected = Figures(RunR(File.ReadAllText(Path.Combine(examples, op + ".R")).Replace("\r", ""), Path.Combine(folder, op + "-help")));
                 // the recipe's figures are the help's, or the start of them where a second example at the end of the help's script was left
                 // out ("cut"), or every one of them is among the help's where the recipe covers one part of the help's script ("subset")
                 bool cut = example.TryGetProperty("cut", out JsonElement c) && c.ValueKind == JsonValueKind.True;
@@ -83,6 +83,15 @@ internal static partial class Program
         Check(failures.Count == 0, $"every recipe matches its independent worked-example numerical reference: {agreed} of {operations.Length} agree" + (failures.Count > 0 ? "; differing: " + string.Join(", ", failures) : ""));
     }
 
+    private static string SelectedAnalysisExampleProbe(string operation) => operation switch
+    {
+        "Friedman" or "CochranQ" or "FriedmanSimulateExactP" => "emit(friedman_result)\nemit(R/b)\n",
+        "FriedmanMulti" => "emit(c(critical_t,critical_difference))\nemit(c(friedman_comparisons$difference,friedman_comparisons$p,as.integer(friedman_comparisons$significant)))\n",
+        "Ranv" => "emit(regression_anova)\n",
+        "LinearizedEstimates" or "LinearizedEstimatesWithModel" or "LinearizedEstimatePlot" or "LinearizedEstimateInterpolation" => "emit(linearized_result)\n",
+        _ => null
+    };
+
     private static string SelectedChartExampleProbe(string operation) => operation switch
     {
         "BarPlot" => "emit(c(dim(bar_values), as.vector(bar_values)))\nfor (s in bar_segments) emit(unlist(s, use.names = FALSE))\n",
@@ -95,6 +104,9 @@ internal static partial class Program
         "ErrorPlot" => "emit(length(error_series))\nfor (s in error_series) emit(c(length(s$x), s$x, s$y, s$lower, s$upper, s$plot_x))\n",
         "PyramidPlot" => "emit(c(length(pyramid_rows), pyramid_rows, pyramid_males, pyramid_females, pyramid_scale))\n",
         "ControlPlot" => "emit(c(length(control_y), control_x, control_y, control_mean, control_sd, control_bands))\n",
+        "SurvivalPlot" => "emit(length(survival_curves))\nfor(s in survival_curves) emit(c(length(s$x),s$x,s$y,s$lower,s$upper,s$event))\n",
+        "CochranePlot" => "emit(c(nrow(forest_rows),forest_rows$effect,forest_rows$lower,forest_rows$upper,forest_rows$weight,forest_rows$pooling,forest_rows$y))\n",
+        "ROCPlot" => "emit(length(roc_series))\nfor(s in roc_series) emit(c(length(s$cuts),s$cuts,s$sensitivity,s$specificity,s$auc,s$theta,s$se,s$confidence,s$comparison,s$weight,s$cutoff,s$optimum,s$a,s$b,s$c,s$d,as.vector(s$proportions)))\n",
         _ => null
     };
 
@@ -148,7 +160,8 @@ for (name in names(box_summaries)) {
             inputs.Add("{\"name\":\"data\",\"prompt\":\"Select the table\",\"kind\":\"entered\",\"columns\":" + columnsOf + "}");
         }
         string parameters = example.TryGetProperty("settings", out JsonElement settings) ? settings.GetRawText() : "{}";
-        return "{\"version\":1,\"operation\":" + example.GetProperty("operation").GetRawText() + ",\"title\":\"Example\",\"run\":\"2026-10-11T03:00:00+01:00\",\"inputs\":[" + string.Join(",", inputs) + "],\"parameters\":" + parameters + ",\"values\":{}}";
+        string root = example.TryGetProperty("rootOperation", out JsonElement origin) ? ",\"rootOperation\":" + origin.GetRawText() : "";
+        return "{\"version\":1,\"operation\":" + example.GetProperty("operation").GetRawText() + root + ",\"title\":\"Example\",\"run\":\"2026-10-11T03:00:00+01:00\",\"inputs\":[" + string.Join(",", inputs) + "],\"parameters\":" + parameters + ",\"values\":{}}";
     }
 
     /// <summary>The figures of an output, in order: every number, so that a difference in a label alone does not count; the row and

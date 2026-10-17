@@ -81,14 +81,8 @@ namespace StatsDirect.Charting.Renderer
             DataMaxX = double.MinValue;
             DataMinY = double.MaxValue;
             DataMaxY = double.MinValue;
-            bool doCi = true;
             foreach (SurvivalOptions.SurvivalSeries ss in sOptions.Series)
             {
-                //  If any series doesn't have both confidence intervals, we don't plot them at all.
-                if (ss.YDatL == null || ss.YDatU == null)
-                {
-                    doCi = false;
-                }
                 foreach (double d in ss.XDat)
                 {
                     if (d != Constant.MISSING)
@@ -180,7 +174,7 @@ namespace StatsDirect.Charting.Renderer
                 }
 
                 //  overlay confidence intervals
-                if (doCi)
+                if (ydatL != null && ydatU != null)
                 {
                     ColorDescriptor ciPenColour = sOptions.UseSeriesColourForConfidenceIntervals ? p.Color : ciMarkerType.LineColor;
                     PenDescriptor ciPen = new(ciPenColour, ciMarkerType.Width) { DashStyle = ciMarkerType.LineDashStyle };
