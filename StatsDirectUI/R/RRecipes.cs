@@ -11,6 +11,7 @@ namespace StatsDirect.R
     {
         public string File { get; set; }
         public string Detail { get; set; }
+        public Dictionary<string, string> ParentFiles { get; set; }
     }
 
     /// <summary>
@@ -48,6 +49,24 @@ namespace StatsDirect.R
         public static IEnumerable<string> Operations => Manifest.Keys;
         public static bool Has(string operation) => !string.IsNullOrEmpty(operation) && Manifest.ContainsKey(operation);
         public static RRecipe Find(string operation) => Has(operation) ? Manifest[operation] : null;
+
+        /// <summary>Shared follow-ons select the recipe of the analysis actually continued, rather than their first possible prerequisite.</summary>
+        public static RRecipe Find(JsonElement record)
+        {
+            string operation = RScriptWriter.Text(record, "operation") ?? "";
+            RRecipe recipe = Find(operation);
+            if (recipe?.ParentFiles == null || recipe.ParentFiles.Count == 0) return recipe;
+            string parent = RScriptWriter.Text(record, "rootOperation");
+            if (string.IsNullOrEmpty(parent) && record.TryGetProperty("parameters", out JsonElement parameters))
+            {
+                // Legacy records already retain the explicit linearized model choice, while simple regression has none.
+                if (operation == "Ranv") parent = parameters.TryGetProperty("model", out _) ? "LinearizedEstimates" : "SimpleLinearRegression";
+                else if (parameters.TryGetProperty("doseResponseModel", out JsonElement model) && model.ValueKind == JsonValueKind.String)
+                    parent = model.GetString() == "probit" ? "Probit" : model.GetString() == "logit" ? "Logit" : null;
+            }
+            return parent != null && recipe.ParentFiles.TryGetValue(parent, out string file)
+                ? new RRecipe { File = file, Detail = recipe.Detail } : null;
+        }
 
         /// <summary>A recipe file: a header naming the variables it takes, then the analysis as the help shows it in R.</summary>
         public static string Recipe(string file)

@@ -191,7 +191,9 @@ namespace StatsDirect.Builtins
         /// </remarks>
         public static StepOutput RptSimpleLinearRegression(ParameterBag parameters)
         {
-            SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext(parameters);
+            // This entry point acquires X and Y for a new fit. A context carried by an earlier result may describe other data;
+            // only operations that continue that fitted result should reuse it.
+            SimpleLinearRegressionContext context = GetSimpleLinearRegressionContextWithData(parameters);
 
             double reggamma = parameters["gamma"].AsDouble;
             if (reggamma <= 0.0)
@@ -5735,6 +5737,7 @@ namespace StatsDirect.Builtins
             double nohetulm = 0; double hetllm = 0; double hetulm = 0; double nohetllq = 0; double nohetulq = 0; double hetllq = 0; double hetulq = 0; double TM = 0; double ym = 0; double del = 0; double s4 = 0; double s6 = 0;
 
             ParameterBag outputParameters = new();
+            outputParameters.AddInput("doseResponseModel", model == ProbitModel.Probit ? "probit" : "logit");
             int nx = 0;
 
             int k = rows;

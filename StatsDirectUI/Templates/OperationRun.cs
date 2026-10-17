@@ -12,6 +12,8 @@ namespace StatsDirect.Templates
     public sealed class OperationRun
     {
         public Operation Operation { get; }
+        /// <summary>The analysis that supplied the context of a continued operation.</summary>
+        public string RootOperation { get; }
         public DateTime Started { get; } = DateTime.Now;
         /// <summary>The parameters as they were asked, in order; a parameter asked again in the same pass replaces its earlier note, and one
         /// asked in each pass of a loop (the groups of a survival plot) is noted once per pass with the value of that pass.</summary>
@@ -25,6 +27,9 @@ namespace StatsDirect.Templates
         public OperationRun(Operation operation, ParameterBag startingParameters = null)
         {
             Operation = operation;
+            RootOperation = operation?.Name ?? "";
+            if (operation?.HasPrerequisites == true && startingParameters?.TryGetValue(RunRecord.RootOperationKey, out FilledParameter parent) == true
+                && parent?.AsObject is string parentName && !string.IsNullOrEmpty(parentName)) RootOperation = parentName;
             IDictionary<string, RunRecord.InputSnapshot> previous = null;
             if (startingParameters?.TryGetValue(RunRecord.AcquisitionKey, out FilledParameter carried) == true)
                 previous = carried?.AsObject as IDictionary<string, RunRecord.InputSnapshot>;

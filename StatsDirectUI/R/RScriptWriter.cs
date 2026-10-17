@@ -135,9 +135,11 @@ namespace StatsDirect.R
         {
             string operation = Text(record, "operation") ?? "";
             string analysisTitle = string.IsNullOrEmpty(title) ? Text(record, "title") ?? operation : title;
-            RRecipe recipe = RRecipes.Find(operation);
+            RRecipe recipe = RRecipes.Find(record);
             Binding binding = recipe != null ? Parse(RRecipes.Recipe(recipe.File)) : null;
-            string detail = recipe?.Detail;
+            string detail = recipe?.Detail ?? (RRecipes.Find(operation)?.ParentFiles?.Count > 0
+                ? "The saved result does not identify its original analysis. Rerun that analysis to reproduce this follow-on in R."
+                : null);
             List<string> notes = new();
             List<Column> columns = new();
             List<(string[][] counts, string[] rows, string[] cols, string rowsTitle, string colsTitle)> tables = new();
@@ -319,10 +321,16 @@ namespace StatsDirect.R
             if (binding != null)
             {
                 foreach ((string variable, string parameter) in binding.Settings)
-                    if (parameters.ValueKind == JsonValueKind.Object && parameters.TryGetProperty(parameter, out JsonElement value) && (IsScalar(value) || value.ValueKind is JsonValueKind.Array or JsonValueKind.Object or JsonValueKind.Null))
+                {
+                    JsonElement value = default;
+                    bool found = parameter == "statsdirectOperation" ? record.TryGetProperty("operation", out value)
+                        : parameter == "statsdirectRootOperation" ? record.TryGetProperty("rootOperation", out value)
+                        : parameters.ValueKind == JsonValueKind.Object && parameters.TryGetProperty(parameter, out value);
+                    if (found && (IsScalar(value) || value.ValueKind is JsonValueKind.Array or JsonValueKind.Object or JsonValueKind.Null))
                         s.Append(variable).Append(" <- ").Append(Literal(value)).Append('\n');
                     else
                         s.Append(variable).Append(" <- NULL   # the run had no ").Append(Plain(parameter)).Append('\n');   // an option the run was not asked, or skipped
+                }
             }
             else if (parameters.ValueKind == JsonValueKind.Object)
                 foreach (JsonProperty property in parameters.EnumerateObject())

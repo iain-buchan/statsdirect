@@ -3475,41 +3475,29 @@ namespace StatsDirect.Builtins
         /// All pairwise comparisons of the treatments after the Friedman test: the difference of two treatments' rank sums is
         /// compared with t on (n - 1)(k - 1) degrees of freedom times sqrt(2 n (A - B) / ((n - 1)(k - 1))), two sided at the level
         /// of the confidence given (t at half of 1 - confidence), or one sided (the direction of the difference is given), with
-        /// the P of each difference. The rank sums, n, A and B are those that the test cached, or are worked out again.
+        /// the P of each difference. The rank sums, n, A and B are calculated from the selected frame, which may differ from the
+        /// frame of the preceding test.
         /// </summary>
         public static StepOutput RptFrMultiple(ParameterBag parameters)
         {
             DataFrame frame = parameters["data"].AsDataFrame;
             double confidence = XLevel(parameters["confidence"].AsDouble);
 
-            double[] w2;
-            int n;
             double a2 = 0;
             double b2 = 0;
-            // moved variable nd definition here so can be used in mean value calculations;
             double nd = 0;
-            if (parameters.ContainsKey("w2") && parameters.ContainsKey("N") && parameters.ContainsKey("A2") && parameters.ContainsKey("B2"))
-            {
-                w2 = (double[])parameters["w2"].AsObject;
-                n = parameters["N"].AsInt32;
-
-                // added as part of #27 
-                nd = Convert.ToDouble(parameters["N"].AsInt32);
-
-                a2 = parameters["A2"].AsDouble;
-                b2 = parameters["B2"].AsDouble;
-            }
-            else
-            {
-                //  Calculate parameters
-                double t1 = 0;
-                double t2 = 0;
-
-                CalcFriedman(frame, out w2, out n, ref a2, ref b2, ref t1, ref t2, ref nd, out bool allAreBinary, out bool numbersAreSmall);
-            }
+            double t1 = 0;
+            double t2 = 0;
+            // The comparisons operation can acquire another frame while retaining the preceding test's parameter bag.
+            // Its rank sums and block count must describe the frame now selected, even when the dimensions happen to match.
+            CalcFriedman(frame, out double[] w2, out int n, ref a2, ref b2, ref t1, ref t2, ref nd, out bool _, out bool _);
             XCheckFriedman(n, frame.VariableCount, a2, "Friedman");
 
             ParameterBag outputParameters = new();
+            outputParameters.AddInput("w2", w2);
+            outputParameters.AddInput("N", n);
+            outputParameters.AddInput("A2", a2);
+            outputParameters.AddInput("B2", b2);
             double dfq = (n - 1) * (frame.VariableCount - 1);
             double p = confidence;
 

@@ -77,6 +77,18 @@ namespace StatsDirect.Charting.Renderer
             OffY = YAxisCanvas;
 
             ParameterBag results = new();
+            // Keep the calculator's final choices with the run, separately for each series.
+            // The chart dialog's defaults alone cannot replay a manually moved cutoff.
+            results.AddInput("rocCutoffs", seriesRecords.Select(record =>
+            {
+                ParameterBag selected = new();
+                selected.AddInput("comparison", (int)record.comparison);
+                selected.AddInput("weight", record.weight);
+                selected.AddInput("cutoff", record.cutoff);
+                selected.AddInput("a", record.a); selected.AddInput("b", record.b);
+                selected.AddInput("c", record.c); selected.AddInput("d", record.d);
+                return selected;
+            }).ToList());
             IList<ParameterBag> allResults = new List<ParameterBag>();
             results.AddOutput("*datasets", allResults);
             for (int cs = 0; cs < Definition.XSeries.Count; cs++)
@@ -103,9 +115,9 @@ namespace StatsDirect.Charting.Renderer
                 for (int r = 0; r < stps; r++)
                 {
                     cutoff = seriesRecord.tdata[r];
-                    a = CountValuesSingleSided(seriesRecord.comparison, seriesRecord.pdata, cutoff);
+                    a = seriesRecord.pdata.Count(value => seriesRecord.comparisonFunction(value, cutoff));
                     c = seriesRecord.pdata.Length - a;
-                    b = CountValuesSingleSided(seriesRecord.comparison, seriesRecord.adata, cutoff);
+                    b = seriesRecord.adata.Count(value => seriesRecord.comparisonFunction(value, cutoff));
                     d = seriesRecord.adata.Length - b;
                     sens = a / (double)(a + c);
                     ry[r] = sens;
@@ -135,16 +147,16 @@ namespace StatsDirect.Charting.Renderer
                     lastY2 = y2;
                 }
 
-                // Mark cutoff point.  This is reversed if the chart requires reversal.
-                double x = 1.0 - seriesRecord.spec;
-                double y = seriesRecord.sens;
-                if (seriesRecord.comparison == Comparison.LessThan || seriesRecord.comparison == Comparison.LessEqual)
+                bool lowerIsPositive = seriesRecord.comparison == Comparison.LessThan || seriesRecord.comparison == Comparison.LessEqual;
+                // Sensitivity and specificity already use the selected comparison.
+                if (rOptions.ShowOptimumCutOff)
                 {
-                    x = 1.0 - x;
-                    y = 1.0 - y;
+                    DrawMarkerInChartCoordinates(1.0 - seriesRecord.spec, seriesRecord.sens,
+                        rOptions.MarkerTypes[Definition.XSeries.Count + cs].MarkerSize, rOptions.MarkerTypes[Definition.XSeries.Count + cs]);
                 }
-                DrawMarkerInChartCoordinates(x, y, rOptions.MarkerTypes[Definition.XSeries.Count + cs].MarkerSize, rOptions.MarkerTypes[Definition.XSeries.Count + cs]);
-
+                // The integrator expects decreasing false-positive and true-positive rates.
+                // Ascending cutoffs give the opposite order when lower values are positive.
+                if (lowerIsPositive) { Array.Reverse(rx); Array.Reverse(ry); }
                 seriesRecord.auc = MathDbl.trapezoid_xy_roc(rx, ry, 0, stps);
 
                 if (rOptions.ShowOptimumCutOff)
@@ -171,7 +183,10 @@ namespace StatsDirect.Charting.Renderer
                     else
                     {
                         theta = u / (seriesRecord.pdata.Length * seriesRecord.adata.Length);
+                        // DeLong's placements are written for higher-positive values. Their
+                        // variance is unchanged when both placements and the mean are complemented.
                         sew = DeLongSE(seriesRecord.pdata, seriesRecord.adata, theta);
+                        if (lowerIsPositive) theta = 1.0 - theta;
                         if (sew == Constant.MISSING)
                         {
                             ll = Constant.MISSING;
@@ -427,27 +442,6 @@ namespace StatsDirect.Charting.Renderer
                 default:
                     return (value, threshold) => value >= threshold;
             }
-        }
-
-        private static int CountValuesSingleSided(Comparison showopt, double[] data, double cutoff)
-        {
-            int a = 0;
-            for (int j = 0; j < data.Length; j++)
-            {
-                switch (showopt)
-                {
-                    case Comparison.LessThan:
-                    case Comparison.GreaterThan:
-                        if (data[j] > cutoff)
-                            a++;
-                        break;
-                    default:
-                        if (data[j] >= cutoff)
-                            a++;
-                        break;
-                }
-            }
-            return a;
         }
 
         private static double DeLongSE(double[] x, double[] y, double auc)

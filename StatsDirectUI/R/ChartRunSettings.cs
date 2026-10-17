@@ -53,8 +53,9 @@ namespace StatsDirect.R
             switch (options)
             {
                 case BarOptions bar:
-                    foreach (ParameterBag marker in (IList<ParameterBag>)result["markers"].AsObject)
-                        marker["dashStyle"] = FilledParameterFactory.Input(0); // Native bar outlines use solid pens.
+                    if (bar.Orientation == ChartOrientation.Horizontal)
+                        foreach (ParameterBag marker in (IList<ParameterBag>)result["markers"].AsObject)
+                            marker["dashStyle"] = FilledParameterFactory.Input(0); // Native horizontal outlines use solid pens.
                     Add("stacked", bar.Stacked); Add("rotateWhenStacked", bar.RotateWhenStacked);
                     Add("stacked100Percent", bar.Stacked100Percent); Add("maxBarWidth", bar.MaxBarWidth);
                     break;
@@ -97,6 +98,39 @@ namespace StatsDirect.R
                     Add("lowerWarningLimit", control.LowerWarningLimit); Add("upperWarningLimit", control.UpperWarningLimit);
                     Add("lowerControlLimit", control.LowerControlLimit); Add("upperControlLimit", control.UpperControlLimit);
                     Add("observationsToUse", control.ObservationsToUse); Add("rightHandDecimalPlaces", control.RightHandDecimalPlaces);
+                    break;
+                case SurvivalOptions survival:
+                    Add("showCensorshipTics", survival.ShowCensorshipTics); Add("showEventMarkers", survival.ShowEventMarkers);
+                    Add("useSeriesColourForConfidenceIntervals", survival.UseSeriesColourForConfidenceIntervals);
+                    Add("curveShapes", survival.Series.Select(series =>
+                    {
+                        ParameterBag shape = new();
+                        shape.AddInput("length", series.XDat?.Length ?? 0);
+                        shape.AddInput("hasLower", series.YDatL != null); shape.AddInput("hasUpper", series.YDatU != null);
+                        shape.AddInput("hasEvent", series.CDat != null);
+                        return shape;
+                    }).ToList());
+                    if (survival.Series.Sum(series => (long)(series.XDat?.Length ?? 0) + (series.YDat?.Length ?? 0)
+                        + (series.YDatL?.Length ?? 0) + (series.YDatU?.Length ?? 0) + (series.CDat?.Length ?? 0)) <= RunRecord.EmbeddingThreshold)
+                    Add("curves", survival.Series.Select(series =>
+                    {
+                        ParameterBag curve = new();
+                        curve.AddInput("x", (series.XDat ?? Array.Empty<double>()).ToList());
+                        curve.AddInput("y", (series.YDat ?? Array.Empty<double>()).ToList());
+                        if (series.YDatL != null) curve.AddInput("lower", series.YDatL.ToList());
+                        if (series.YDatU != null) curve.AddInput("upper", series.YDatU.ToList());
+                        if (series.CDat != null) curve.AddInput("event", series.CDat.Select(value => (double)value).ToList());
+                        return curve;
+                    }).ToList());
+                    break;
+                case ForestOptions forest:
+                    Add("forestTitles", (forest.Titles ?? Array.Empty<string>()).ToArray());
+                    Add("effectDecimals", forest.EffectSizeAndIntervalDecimalPlaces); Add("confidence", forest.cco);
+                    Add("markCentres", forest.MarkCentres);
+                    break;
+                case ROCOptions roc:
+                    Add("comparison", (int)roc.Comparison); Add("confidence", roc.GAMMA); Add("weight", roc.Weight);
+                    Add("showOptimumCutOff", roc.ShowOptimumCutOff);
                     break;
             }
             return result;

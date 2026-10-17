@@ -28,6 +28,7 @@ namespace StatsDirect.Templates
         private const int LongestText = 2000;
         private static readonly CultureInfo inv = CultureInfo.InvariantCulture;
         internal const string AcquisitionKey = "statsdirect-acquisition-snapshots";
+        internal const string RootOperationKey = "statsdirect-root-operation";
 
         /// <summary>An acquisition-time copy of the record's JSON, independent of arrays that an analysis may sort or filter.</summary>
         internal sealed class InputSnapshot
@@ -130,6 +131,7 @@ namespace StatsDirect.Templates
                 w.WriteStartObject();
                 w.WriteNumber("version", Version);
                 w.WriteString("operation", run.Operation?.Name ?? "");
+                w.WriteString("rootOperation", run.RootOperation);
                 w.WriteString("title", run.Operation?.FriendlyName ?? run.Operation?.Name ?? "");
                 w.WriteString("run", run.Started.ToString("o", inv));
                 // the data file: that of the first frame read from a workbook
@@ -271,6 +273,7 @@ namespace StatsDirect.Templates
             // Follow-on operations receive the fitted frames, which may already be sorted or filtered. Carry their original
             // acquisition provenance in the private context so the next run need not mistake those arrays for worksheet order.
             bag[AcquisitionKey] = FilledParameterFactory.Input(run.AcquisitionSnapshots());
+            bag[RootOperationKey] = FilledParameterFactory.Input(run.RootOperation);
             return Encoding.UTF8.GetString(stream.ToArray());
         }
 
