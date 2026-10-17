@@ -141,12 +141,19 @@ internal static partial class Program
                     foreach (var (key, code) in new[] { ("z", 90), ("y", 89) })
                     {
                         report.Activate(); browser.Focus();
+                        await browser.CoreWebView2.ExecuteScriptAsync("window.__imagePasteKeys=[];document.addEventListener('keydown',e=>window.__imagePasteKeys.push({key:e.key,ctrl:e.ctrlKey,target:e.target.id,prevented:e.defaultPrevented}),{once:true});");
                         await browser.CoreWebView2.ExecuteScriptAsync("document.getElementById('results').focus({preventScroll:true})");
                         foreach (string type in new[] { "keyDown", "keyUp" })
                             await browser.CoreWebView2.CallDevToolsProtocolMethodAsync("Input.dispatchKeyEvent", JsonSerializer.Serialize(new { type, key, windowsVirtualKeyCode = code, modifiers = 2 }));
+                        string received = await browser.CoreWebView2.ExecuteScriptAsync("JSON.stringify(window.__imagePasteKeys)");
+                        using (var events = JsonDocument.Parse(JsonSerializer.Deserialize<string>(received)!))
+                            Check(events.RootElement.EnumerateArray().Any(e => e.GetProperty("key").GetString() == key && e.GetProperty("ctrl").GetBoolean() && e.GetProperty("prevented").GetBoolean()),
+                                kind + " report receives and handles the native Ctrl+" + key.ToUpperInvariant() + " shortcut: " + received);
                         await (Task)Call(view, "CallAsync", "snapshot", null);
                         var changedBy = DateTime.UtcNow.AddSeconds(10);
                         while (await Present() != (key == "y") && DateTime.UtcNow < changedBy) await Task.Delay(30);
+                        if (await Present() != (key == "y"))
+                            Console.WriteLine("      Image history diagnostic: " + await browser.CoreWebView2.ExecuteScriptAsync("JSON.stringify({keys:window.__imagePasteKeys,focus:document.activeElement?.outerHTML?.slice(0,180),focused:document.hasFocus(),undo:document.querySelector('[data-format=undo]')?.disabled,redo:document.querySelector('[data-format=redo]')?.disabled,body:document.getElementById('results').innerHTML})"));
                         Check(await Present() == (key == "y"), kind + (key == "z" ? " image paste is undone in one step" : " image paste can be redone"));
                     }
                     string savedPath = Path.Combine(folder, kind + ".html");

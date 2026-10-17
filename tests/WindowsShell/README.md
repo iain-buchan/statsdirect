@@ -1,5 +1,12 @@
 # Production Windows shell checks
 
+17 October 2026 decoded chart images: **285 checks pass**. Native Report
+Copy/Cut supplies SVG and standard image representations, and SVG/PNG/bitmap
+paste retains one-step undo/redo. The fixture verifies that the actual
+Ctrl+Z/Ctrl+Y events reach the report and are handled; failures retain keyboard,
+focus and document diagnostics. The report JavaScript bundles await image
+decoding before preparing PNGs.
+
 16 October 2026 R SVG chart isolation: **80 checks pass**. Native browser captures
 verify that charts with deliberately conflicting glyph, clipping, gradient and
 CSS definitions retain their own shapes and colours, including a repeated chart.

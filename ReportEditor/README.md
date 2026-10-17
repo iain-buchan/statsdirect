@@ -34,6 +34,10 @@ The SVG import/paste correction from Mac commit **d1494f2ac214f04bd8252f17c6c232
 - `host.js` implements the report-entry model, bounded transaction history and typed browser commands over the editor's block API (`replace`, `replaceEntries`, `extend`, `reveal`, `selectResult`, `selectAll`, `serialize`). It builds each result as `<article class="report-entry" id="result-ID" data-result-id="ID" aria-label="title">` in the `#results` region, takes `editBody`/`editBodies {edits, remove}` from the editor, and records the right-click target the editor posts (`context`: result, selection, editable place, chart). `ReportView.cs` owns the native WebView2 boundary, files, clipboard, printing and the context menu. `frmReportWebView.cs` integrates that control with the existing `IReport`/MDI window contract.
 - Selection-aware Delete/Backspace, result selection and Ctrl+A are the shared editor's (`deletion.mjs` upstream); whole-result deletions are recorded alongside HTML changes by the host.
 
+The shared chart and Office export paths wait for image decoding before drawing
+their PNG representations. Native report checks verify nonblank engine output
+and distinct uncached SVGs through both paths.
+
 Rebuild the Windows editor bundle after changing its pinned source or adapter:
 
 ```powershell

@@ -1,5 +1,13 @@
 # Windows WebView2 report integration checks
 
+17 October 2026 image-decoding readiness: **347 checks pass** with
+`STATSDIRECT_SKIP_CLIPBOARD=1`. Save Chart PNG contains real engine drawing
+pixels at a positive displayed size. Twelve distinct, uncached SVGs retain
+their expected pixels through both Save PNG and native/Office clipboard
+preparation. Both shared raster paths await decoding before drawing; export
+retains its existing timeout. The eight JavaScript tests also pass. The Mac
+hosted-CI blank-PNG failure has not been reproduced locally on Windows.
+
 16 October 2026 shared SVG import/paste correction: **298 checks pass** with
 `STATSDIRECT_SKIP_CLIPBOARD=1` (five native clipboard checks skipped).
 `SvgImportIsolation.cs` reproduces the prior duplicate-definition failure, then

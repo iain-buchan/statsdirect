@@ -35,7 +35,31 @@ internal static partial class Program
         byte[] bytes = Convert.FromBase64String(png[(png.IndexOf(',') + 1)..]);
         int width = (bytes[16] << 24) | (bytes[17] << 16) | (bytes[18] << 8) | bytes[19], height = (bytes[20] << 24) | (bytes[21] << 16) | (bytes[22] << 8) | bytes[23];
         double shownWidth = (await Js("document.querySelector('#results svg').getBoundingClientRect().width")).GetDouble(), shownHeight = (await Js("document.querySelector('#results svg').getBoundingClientRect().height")).GetDouble();
-        Check(bytes[0] == 0x89 && bytes[1] == (byte)'P' && bytes[2] == (byte)'N' && bytes[3] == (byte)'G' && width == 2 * Math.Round(shownWidth) && height == 2 * Math.Round(shownHeight), $"the PNG is a PNG at twice the chart's size on the page: {width} by {height} for {shownWidth} by {shownHeight}");
+        Check(shownWidth > 0 && shownHeight > 0 && bytes[0] == 0x89 && bytes[1] == (byte)'P' && bytes[2] == (byte)'N' && bytes[3] == (byte)'G' && width == 2 * Math.Round(shownWidth) && height == 2 * Math.Round(shownHeight), $"the PNG is a PNG at twice the chart's positive size on the page: {width} by {height} for {shownWidth} by {shownHeight}");
+        using (var stream = new MemoryStream(bytes))
+        using (var bitmap = new Bitmap(stream))
+        {
+            int darkPixels = 0;
+            for (int y = 0; y < bitmap.Height; y++)
+                for (int x = 0; x < bitmap.Width; x++)
+                {
+                    var colour = bitmap.GetPixel(x, y);
+                    if (colour.A > 0 && Math.Min(colour.R, Math.Min(colour.G, colour.B)) < 240) darkPixels++;
+                }
+            Check(darkPixels > 50, $"the saved engine chart PNG contains drawing content: {darkPixels} dark pixels");
+        }
+        // Different, uncached SVGs must produce actual pixels through both Save
+        // Chart and the native/Office clipboard path, including their first draw.
+        for (int i = 0; i < 12; i++)
+        {
+            var colour = Color.FromArgb(40 + i * 12, 90 + i * 5, 150 - i * 6);
+            string fresh = $"<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 60' width='120' height='60'><rect width='120' height='60' fill='#{colour.R:X2}{colour.G:X2}{colour.B:X2}'/><text x='4' y='14' fill='white'>Fresh chart {i}</text></svg>";
+            await view.CallAsync("load", new { entries = new[] { new { id = "cold-chart-" + i, title = "Fresh chart", operation = "", helpContextId = 0, html = "<p>Fresh result</p>" + fresh } } });
+            await Js("document.querySelector('#results svg').dispatchEvent(new MouseEvent('contextmenu',{bubbles:true,cancelable:true}))");
+            CheckExportedChartPixels((await view.CallAsync("chartImage", new { format = "png", scale = 2 })).GetString(), colour, $"fresh-chart-{i}");
+            using var copied = JsonDocument.Parse((await view.CallAsync("officeClipboard", new { html = fresh })).GetString());
+            CheckExportedChartPixels(copied.RootElement.GetProperty("image").GetProperty("png").GetString(), colour, $"fresh-clipboard-{i}");
+        }
         await Js("document.querySelector('#results p').dispatchEvent(new MouseEvent('contextmenu',{bubbles:true,cancelable:true}))");
         Check(!(await view.CallAsync("contextTarget")).GetProperty("chart").GetBoolean(), "a right-click on text reports no chart");
         const string pixel = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=";
@@ -47,5 +71,16 @@ internal static partial class Program
         bool refused = false;
         try { await view.CallAsync("chartImage", new { format = "svg", scale = 1 }); } catch (Exception) { refused = true; }
         Check(refused, "a raster picture gives no SVG");
+    }
+
+    private static void CheckExportedChartPixels(string dataUrl, Color expected, string name)
+    {
+        byte[] bytes = Convert.FromBase64String(dataUrl[(dataUrl.IndexOf(',') + 1)..]);
+        File.WriteAllBytes(Path.Combine(output, name + ".png"), bytes);
+        using var stream = new MemoryStream(bytes);
+        using var bitmap = new Bitmap(stream);
+        var actual = bitmap.GetPixel(bitmap.Width / 2, bitmap.Height / 2);
+        Check(bitmap.Width > 10 && bitmap.Height > 10 && actual.A == 255 && actual.R == expected.R && actual.G == expected.G && actual.B == expected.B,
+            $"{name} has decoded chart pixels: {bitmap.Width} by {bitmap.Height}, centre {actual} expected {expected}");
     }
 }
