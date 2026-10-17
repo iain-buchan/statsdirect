@@ -4,6 +4,8 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
 ##[Unreleased]
 
+##[v5.2.3] 2026-10-17
+
 ### Changed
 - Ordinary R-session plots on Windows default to SVG, with one uniquely named file per page and isolated chart drawing definitions. Explicit devices, filenames and SVG options remain effective. Mac ordinary R output retains its PDF default; integrated report charts use SVG on both platforms.
 
@@ -15,7 +17,7 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 - Fresh simple regressions rebuild their fit from newly selected observations, and Friedman multiple comparisons refresh ranks when their selected data change.
 - Continue in R preserves acquired input order, worksheet hashes, missing rows and original origins even when an analysis sorts or filters its working data, including polynomial regression follow-ons. Large selections retain worksheet references, and genuine worksheet changes remain detectable. Spread and histogram drawing sort private copies.
 - Graphical R recipes use the selected chart data, titles, labels and recorded choices instead of extra help illustrations. Bar, frequency bar, histogram, normal-score, spread, line, scatter, ladder, error-bar, pyramid and control plots reproduce the requested chart; histograms keep their selected bins without an unrequested logarithm, frequency bars use native proportions for multiple columns, and pyramids made from totals split the counts equally. Selected fonts, axes and styles travel with new results and exported scripts.
-- Continue in R for a box-and-whisker plot produces one chart from the selected columns, preserving the chosen summary method, fences, confidence level, orientation, titles, labels, fonts and axis settings. Chart choices are stored with new report results; older results use standard options with a notice when their original choices were not recorded. Native box-and-whisker charts also honour the Box axes option in both orientations.
+- Continue in R for a box-and-whisker plot uses R's native `bxp()` drawing and standard statistical functions, preserving the selected columns, summary method, fences, confidence level, orientation, titles, labels and numeric axes. Readable R font sizes and wrapped captions replace the desktop drawing emulation. Chart choices are stored with new report results; older results use standard options with a notice when their original choices were not recorded. Native box-and-whisker charts also honour the Box axes option in both orientations.
 - Finding box-and-whisker chart scales and drawing charts preserve the selected data's original order. Large worksheet selections no longer falsely report changed data in Continue in R after the chart options sorted the recorded values. Long R chart titles and axis descriptions wrap to fit the page, and the default mean-confidence-interval label uses the intended plus/minus sign.
 - Automatic R chart filenames include a unique run identity as well as device and page numbers, preserving charts and their file links across reruns, concurrent script windows and application restarts. Each script window shows only its own automatic charts, and temporary runner scripts are excluded from output links.
 - Imported and pasted report charts preserve their own SVG glyphs, colours, clipping and gradients, including repeated charts and R identifiers containing `=`. Chart styles and local drawing references remain separate through editing, HTML reopening and Word/PDF export.

@@ -58,12 +58,10 @@ internal static partial class Program
                   && chart.GetProperty("title").GetString() == title && chart.GetProperty("axisTitle").GetString() == axis
                   && chart.GetProperty("seriesTitles")[0].GetString() == label && chart.GetProperty("boxAxes").GetBoolean(),
                 "the report's run record captures the final box plot dialog choices, edited title and series label");
-            Check(chart.GetProperty("titleFontFamily").GetString() == "Arial" && chart.GetProperty("titleFontSize").GetDouble() == 18
-                  && chart.GetProperty("titleFontStyle").GetInt32() == 3 && chart.GetProperty("axisTitleFontSize").GetDouble() == 12
-                  && chart.GetProperty("axisLabelFontSize").GetDouble() == 9 && chart.GetProperty("valueMinimum").GetDouble() == 299.5
+            Check(chart.GetProperty("valueMinimum").GetDouble() == 299.5
                   && chart.GetProperty("valueMaximum").GetDouble() == 300.2 && chart.GetProperty("valueGrid").GetBoolean()
                   && chart.GetProperty("valueGridStyle").GetInt32() == (int)DashStyleDescriptor.Dot && chart.GetProperty("valueMarker").GetDouble() == 299.85,
-                "the final chosen fonts and numeric-axis limits survive capture for a vertical box plot");
+                "the chosen numeric-axis limits, grid and marker survive capture for a vertical box plot");
             RScript script = RScriptWriter.Write(record, null, null);
             Check(script.HasRecipe && !script.DataUnavailable && script.Text.Contains("mets <- list(\"Michelson\" = c(")
                   && !script.Text.Contains("Number of metastases") && !script.Text.Contains("boxplot() of the same columns"),
@@ -71,6 +69,19 @@ internal static partial class Program
             CheckBoxR(script.Text, Path.Combine(folder, "michelson"), michelson, chosen, title, label, axis, "the selected Michelson plot");
             CheckBoxR(script.Text, Path.Combine(folder, "michelson-pdf"), michelson, chosen, title, label, axis,
                 "the same selected Michelson plot on Mac's default PDF device", pdf: true);
+
+            const string longTitle = "Michelson measurements of the speed of light: selected observations and their confidence interval";
+            const string longLabel = "Michelson measurements recorded in the Parametric worksheet";
+            const string longAxis = "Speed of light in thousands of kilometres per second, with the selected confidence interval and fences";
+            JsonNode longText = JsonNode.Parse(record.GetRawText());
+            longText["parameters"]["boxWhisker"]["title"] = longTitle;
+            longText["parameters"]["boxWhisker"]["axisTitle"] = longAxis;
+            longText["parameters"]["boxWhisker"]["seriesTitles"] = new JsonArray(longLabel);
+            string longScript = RScriptWriter.Write(JsonDocument.Parse(longText.ToJsonString()).RootElement, null, null).Text;
+            CheckBoxR(longScript, Path.Combine(folder, "long-text-svg"), michelson, chosen, longTitle, longLabel, longAxis,
+                "long selected text on one seven-inch SVG chart");
+            CheckBoxR(longScript, Path.Combine(folder, "long-text-pdf"), michelson, chosen, longTitle, longLabel, longAxis,
+                "long selected text on one seven-inch PDF page", pdf: true);
             BoxWhiskerOptions automatic = null;
             var (automaticRun, _) = Run("BoxWhiskerPlot", new() { ["data"] = SheetFrame(Workbook, "Parametric", 6, 0, ("Michelson", (double[])michelson.Clone())) }, amend: fillable =>
             {
@@ -239,9 +250,6 @@ internal static partial class Program
         string names = "c(" + string.Join(",", labels.Select(RScriptWriter.Quote)) + ")";
         string counts = "c(" + string.Join(",", values.Select(v => v.Length)) + ")";
         string observations = "list(" + string.Join(",", values.Select(v => "c(" + string.Join(",", v.Select(x => x.ToString("R", inv))) + ")")) + ")";
-        FontDescriptor mainFont = options.TitleFontDescriptor ?? new FontDescriptor("Arial", 0, 12);
-        FontDescriptor titleFont = options.AxisTitleFontDescriptor ?? new FontDescriptor("Arial", 0, 10);
-        FontDescriptor labelFont = options.AxisLabelFontDescriptor ?? new FontDescriptor("Arial", 0, 10);
         string preamble = """
             .box_pages <- 0L
             .box_titles <- list()
@@ -252,12 +260,12 @@ internal static partial class Program
             trace('plot.new', where = asNamespace('graphics'), print = FALSE,
                   tracer = quote(.GlobalEnv$.box_pages <- .GlobalEnv$.box_pages + 1L))
             title_trace <- quote(.GlobalEnv$.box_titles[[length(.GlobalEnv$.box_titles) + 1L]] <-
-              list(main = main, xlab = xlab, ylab = ylab, details = list(...), settings = par(c("ps", "usr", "lwd"))))
+              list(main = main, xlab = xlab, ylab = ylab, details = list(...), settings = par(c("ps", "usr", "lwd", "cex", "cex.main", "cex.lab", "cex.axis"))))
             trace('title', where = asNamespace('graphics'), print = FALSE, tracer = title_trace)
             trace('title', where = as.environment('package:graphics'), print = FALSE, tracer = title_trace)
             trace('axis', where = as.environment('package:graphics'), print = FALSE,
                   tracer = quote(.GlobalEnv$.box_axes[[length(.GlobalEnv$.box_axes) + 1L]] <-
-                    list(side = side, at = at, labels = labels, details = list(...), settings = par(c("ps", "usr", "lwd")))))
+                    list(side = side, at = at, labels = labels, details = list(...), settings = par(c("ps", "usr", "lwd", "cex", "cex.main", "cex.lab", "cex.axis")))))
             trace('abline', where = as.environment('package:graphics'), print = FALSE,
                   tracer = quote(.GlobalEnv$.box_lines[[length(.GlobalEnv$.box_lines) + 1L]] <- list(h = h, v = v, details = list(...))))
             trace('box', where = as.environment('package:graphics'), print = FALSE,
@@ -265,7 +273,7 @@ internal static partial class Program
             trace('points.default', where = asNamespace('graphics'), print = FALSE,
                   tracer = quote(.GlobalEnv$.box_marks[[length(.GlobalEnv$.box_marks) + 1L]] <- list(x = x, y = y, pch = list(...)$pch)))
             """;
-        preamble += pdf ? "\npdf('box.pdf')\n" : "\nsvg('box-%03d.svg')\n";
+        preamble += pdf ? "\npdf('box.pdf', width = 7, height = 7)\n" : "\nsvg('box-%03d.svg', width = 7, height = 7)\n";
         string assertions = $$"""
 
             stopifnot(.box_pages == 1L, length(box_summaries) == {{values.Length}}L)
@@ -293,25 +301,24 @@ internal static partial class Program
               outside_outer <- (centile | outer) & (x < expected[7] | x > expected[8])
               stopifnot(identical(as.double(s$hollow), x[outside_inner & !outside_outer]),
                         identical(as.double(s$filled), x[outside_outer]))
-              brackets <- !centile & !c((inner && min(x) < expected[5]) || (outer && min(x) < expected[7]),
-                                        (inner && max(x) > expected[6]) || (outer && max(x) > expected[8]))
-              stopifnot(identical(s$brackets, brackets))
             }
             stopifnot(any(vapply(.box_titles, function(z) same_text(z$main, {{RScriptWriter.Quote(title)}}), logical(1))))
             stopifnot(any(vapply(.box_titles, function(z) same_text(z[[{{RScriptWriter.Quote(options.Orientation == ChartOrientation.Horizontal ? "xlab" : "ylab")}}]], {{RScriptWriter.Quote(axis)}}), logical(1))))
-            stopifnot(any(vapply(.box_axes, function(z) identical(as.integer(z$side), {{(options.Orientation == ChartOrientation.Horizontal ? 2 : 1)}}L) && identical(as.character(z$labels), {{names}}), logical(1))))
-            font_family <- function(family) if ({{(pdf ? "TRUE" : "FALSE")}} && !family %in% names(pdfFonts())) "sans" else family
-            font_matches <- function(z, prefix, family, size, style) {
-              identical(z$details$family, font_family(family)) &&
-                isTRUE(all.equal(z$details[[paste0("cex.", prefix)]] * z$settings$ps, size)) &&
-                identical(as.integer(z$details[[paste0("font.", prefix)]]), as.integer(style))
+            same_labels <- function(x) length(x) == length({{names}}) &&
+              all(mapply(same_text, as.character(x), {{names}}))
+            stopifnot(any(vapply(.box_axes, function(z) identical(as.integer(z$side), {{(options.Orientation == ChartOrientation.Horizontal ? 2 : 1)}}L) && same_labels(z$labels), logical(1))))
+            font_at_most <- function(z, prefix, maximum) {
+              scale <- z$details[[paste0("cex.", prefix)]]
+              if (is.null(scale)) scale <- z$settings[[paste0("cex.", prefix)]]
+              size <- scale * z$settings$ps * z$settings$cex
+              length(size) == 1L && is.finite(size) && size > 0 && size <= maximum + 1e-8
             }
             stopifnot(any(vapply(.box_titles, function(z) same_text(z$main, {{RScriptWriter.Quote(title)}}) &&
-              font_matches(z, "main", {{RScriptWriter.Quote(mainFont.FontFamily)}}, {{mainFont.SizeInPoints.ToString("R", inv)}}, {{(mainFont.Style & 3) + 1}}L), logical(1))))
+              font_at_most(z, "main", 12), logical(1))))
             stopifnot(any(vapply(.box_titles, function(z) same_text(z[[{{RScriptWriter.Quote(options.Orientation == ChartOrientation.Horizontal ? "xlab" : "ylab")}}]], {{RScriptWriter.Quote(axis)}}) &&
-              font_matches(z, "lab", {{RScriptWriter.Quote(titleFont.FontFamily)}}, {{titleFont.SizeInPoints.ToString("R", inv)}}, {{(titleFont.Style & 3) + 1}}L), logical(1))))
-            stopifnot(any(vapply(.box_axes, function(z) identical(as.character(z$labels), {{names}}) &&
-              font_matches(z, "axis", {{RScriptWriter.Quote(labelFont.FontFamily)}}, {{labelFont.SizeInPoints.ToString("R", inv)}}, {{(labelFont.Style & 3) + 1}}L), logical(1))))
+              font_at_most(z, "lab", 10), logical(1))))
+            stopifnot(any(vapply(.box_axes, function(z) same_labels(z$labels) &&
+              font_at_most(z, "axis", 9), logical(1))))
             stopifnot(.box_boxes == {{(options.ShouldBoxAxes ? 1 : 0)}}L)
             if (!is.null(box_settings$valueMinimum)) {
               # This selected Michelson case deliberately fixes the numeric scale, ticks, grid and marker in the native dialog.
