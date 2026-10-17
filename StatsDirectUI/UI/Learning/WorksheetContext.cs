@@ -13,7 +13,7 @@ internal partial class frmSpreadsheetGear
     internal JsonObject LearningInfo() => workbookView.WithLock(() =>
     {
         var book = workbookView.ActiveWorkbook;
-        return new JsonObject { ["activeSheet"] = workbookView.ActiveWorksheet.Index,
+        return new JsonObject { ["documentId"] = Id(), ["workbook"] = Text, ["activeSheet"] = workbookView.ActiveWorksheet.Index,
             ["sheets"] = new JsonArray(book.Worksheets.Cast<SpreadsheetGear.IWorksheet>().Select(s => (JsonNode)new JsonObject { ["index"] = s.Index, ["name"] = s.Name }).ToArray()),
             ["selection"] = workbookView.RangeSelection.Address,
             ["usedRange"] = workbookView.ActiveWorksheet.UsedRange.Address,
@@ -52,7 +52,7 @@ internal partial class frmSpreadsheetGear
             string title = sheet.Cells[0, column].Value is string heading ? heading.Limit(200) : "Column " + (column + 1);
             data.Add(new JsonObject { ["index"] = column, ["title"] = title, ["values"] = values, ["text"] = texts });
         }
-        return new JsonObject { ["columns"] = data, ["rowCount"] = count, ["firstRow"] = first, ["lastRow"] = last, ["sheetIndex"] = sheetIndex, ["sheet"] = sheet.Name, ["workbook"] = Text, ["range"] = sheet.Cells[first - 1, columns.Min(), last - 1, columns.Max()].Address,
+        return new JsonObject { ["documentId"] = Id(), ["columns"] = data, ["rowCount"] = count, ["firstRow"] = first, ["lastRow"] = last, ["sheetIndex"] = sheetIndex, ["sheet"] = sheet.Name, ["workbook"] = Text, ["range"] = sheet.Cells[first - 1, columns.Min(), last - 1, columns.Max()].Address,
             ["complete"] = true, ["hasErrors"] = errors, ["hasStaleFormulas"] = workbookView.ActiveWorkbookSet.Calculation != SpreadsheetGear.Calculation.Automatic,
             ["headerRow"] = false, ["note"] = "Rows are literal worksheet rows; select firstRow 2 to exclude row-1 headings where appropriate." };
     });

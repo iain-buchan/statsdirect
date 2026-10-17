@@ -30,7 +30,13 @@ internal static partial class Program
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "options") { CheckOptions(); Console.WriteLine($"PASS {checks} Continue in R checks (the options alone)"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "options2") { CheckOptions2(); Console.WriteLine($"PASS {checks} Continue in R checks (the second batch of options alone)"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "options3") { CheckOptions3(); Console.WriteLine($"PASS {checks} Continue in R checks (the confidence levels alone)"); return 0; }
-            if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "box") { CheckBoxWhisker(); Console.WriteLine($"PASS {checks} box and whisker Continue in R checks"); return 0; }
+            if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "box") { CheckBoxWhisker(); CheckTukeyHinges(); Console.WriteLine($"PASS {checks} box and whisker Continue in R checks"); return 0; }
+            if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "tukey") { CheckTukeyHinges(); Console.WriteLine($"PASS {checks} Tukey hinges checks"); return 0; }
+            if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "axis-labels") { CheckNativeAxisLabels(); Console.WriteLine($"PASS {checks} native axis label checks"); return 0; }
+            if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "general-simplicity") { CheckRecipeGeneralSimplicity(); Console.WriteLine($"PASS {checks} general recipe simplification checks"); return 0; }
+            if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "advanced-simplicity") { CheckRecipeAdvancedSimplicity(); Console.WriteLine($"PASS {checks} advanced recipe simplification checks"); return 0; }
+            if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "charts-simplicity") { CheckChartRecipeSimplicity(); Console.WriteLine($"PASS {checks} chart recipe simplification checks"); return 0; }
+            if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "survival-method-simplicity") { CheckRecipeSurvivalMethodSimplicity(); Console.WriteLine($"PASS {checks} survival/method recipe checks"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "recipes") { CheckRecipes(); CheckRecipesAgainstHelp(); Console.WriteLine($"PASS {checks} R recipe checks"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "recipe-bindings") { CheckRecipes(); Console.WriteLine($"PASS {checks} recipe binding checks"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "acquisition") { CheckAcquisition(); Console.WriteLine($"PASS {checks} acquisition checks"); return 0; }
@@ -43,6 +49,11 @@ internal static partial class Program
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "routed-replay") { CheckRoutedReplay(); Console.WriteLine($"PASS {checks} routed replay checks"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "records") { CheckRecord(); CheckThreshold(); CheckHash(); CheckScript(); CheckTable(); CheckFollowOn(); CheckRealRuns(); CheckRegressionFollowOn(); CheckTwoLevel(); CheckColumnLocator(); Console.WriteLine($"PASS {checks} saved record checks"); return 0; }
             CheckRecord();
+            CheckNativeAxisLabels();
+            CheckRecipeGeneralSimplicity();
+            CheckRecipeAdvancedSimplicity();
+            CheckChartRecipeSimplicity();
+            CheckRecipeSurvivalMethodSimplicity();
             CheckAcquisition();
             CheckChartRecipesA();
             CheckChartRecipesB();
@@ -71,6 +82,7 @@ internal static partial class Program
             CheckTwoLevel();
             CheckColumnLocator();
             CheckBoxWhisker();
+            CheckTukeyHinges();
             Console.WriteLine($"PASS {checks} Continue in R checks");
             return 0;
         }

@@ -1493,11 +1493,11 @@ namespace StatsDirect.UI
         {
             try
             {
-                CreateScriptWindow();
+                ((frmScript)CreateScriptWindow()).ShowR(string.Empty, "R session", runImmediately: false);
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Creating a script window failed due to an internal error", ex, false);
+                SdApplication.SoleInstance.FriendlyError("Creating an R session failed due to an internal error", ex, false);
             }
         }
 

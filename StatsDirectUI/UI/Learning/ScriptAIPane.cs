@@ -5,7 +5,6 @@ using System.IO;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
@@ -25,9 +24,8 @@ internal sealed class ScriptAIPane : IDisposable
     internal readonly ConversationView Transcript;   // the conversation as a page: Markdown rendered, code blocks with their buttons
     internal readonly TextBox Composer = new() { Multiline = true, Dock = DockStyle.Fill, ScrollBars = ScrollBars.Vertical, WordWrap = true, MaxLength = 4000, AccessibleName = "Question for the script assistant" };
     internal readonly CheckBox ShareScript = new() { AutoSize = true, Text = "Share this script and its R output" };
-    internal readonly CheckBox ShareWorkbook = new() { AutoSize = true, Text = "Share the chosen workbook" };
-    internal readonly CheckBox Acknowledge = new() { AutoSize = true, Text = "I have checked the selected content contains no person identifiers. Remember this for this session, until I choose different data." };
-    internal readonly ComboBox Workbook = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 290 };
+    internal readonly CheckBox ShareWorkbook = new() { AutoSize = true, Text = "Share open workbook data" };
+    internal readonly CheckBox Acknowledge = new() { AutoSize = true, Text = "I have checked the shared content contains no person identifiers. Remember this for this session, until the open workbooks change." };
     internal readonly Button Send = new() { AutoSize = true, Text = "Send" };
     private readonly Button stop = new() { AutoSize = true, Text = "Stop", Enabled = false }, connection = new() { AutoSize = true, Text = "Use my ChatGPT" };
     internal readonly LinkLabel SharingOptions = new() { AutoSize = true, Text = "Sharing for this session ▾", Dock = DockStyle.Fill };
@@ -40,16 +38,18 @@ internal sealed class ScriptAIPane : IDisposable
     private Conversation renderedChat;
     private CancellationTokenSource pending;
     private bool refreshing, disposed;
+    private HashSet<string> openWorkbookIds;
     private string partial = "";
     internal bool IsOpen => session.IsVisible;
     private sealed class Conversation
-    { internal JsonArray Messages = new(); internal string Draft = "", WorkbookId; internal bool ShareScript, ShareWorkbook; }
-    private IEnumerable<string> SharedDataIds => ShareWorkbook.Checked && Workbook.SelectedItem is WorkbookChoice selected ? new[] { selected.Id } : Array.Empty<string>();
+    { internal JsonArray Messages = new(); internal string Draft = ""; internal bool ShareScript, ShareWorkbook; }
+    internal frmSpreadsheetGear[] SharedWorkbooks => ShareWorkbook.Checked ? service.Documents.OfType<frmSpreadsheetGear>().Where(g => !g.IsDisposed && !g.Disposing && g.MdiParent != null).ToArray() : Array.Empty<frmSpreadsheetGear>();
+    private IEnumerable<string> SharedDataIds => SharedWorkbooks.Select(g => g.Id());
     private bool ReportMode => script is frmReportWebView;
-    private sealed record WorkbookChoice(string Id, string Title) { public override string ToString() => Title; }
     internal ScriptAIPane(frmMain main, LearningService service)
     {
         this.service = service;
+        openWorkbookIds = service.Documents.OfType<frmSpreadsheetGear>().Select(g => g.Id()).ToHashSet();
         Transcript = new ConversationView(Path.Combine(Configuration.SDConfiguration.InstallationDirectory, "Tutor"), Path.Combine(service.Storage, "WebView")) { Dock = DockStyle.Fill };
         Transcript.CodeRequested += (what, code, messageIndex, blockIndex) => { if (what == "copy") Clipboard.SetText(code); else OpenCode(messageIndex, blockIndex); };
         Transcript.Notice += text => { if (!disposed) status.Text = text; };
@@ -58,8 +58,8 @@ internal sealed class ScriptAIPane : IDisposable
         heading.Items.AddRange([title, new ToolStripButton("New conversation", null, (_, _) => NewConversation()), pop, close]);
         for (int row = 0; row < 10; row++) layout.RowStyles.Add(new RowStyle(row == 8 ? SizeType.Percent : row == 4 ? SizeType.Absolute : SizeType.AutoSize, row == 8 ? 100 : row == 4 ? 100 : 0));
         layout.Controls.Add(connection, 0, 0); layout.Controls.Add(SharingOptions, 0, 1);
-        var warning = new Label { AutoSize = true, Text = "Share workbook data or scripts with ChatGPT? Do not share person-identifiable data: remove names, dates of birth, patient IDs and identifying free text." };
-        sharing.Controls.AddRange([warning, ShareScript, ShareWorkbook, Workbook, Acknowledge]); layout.Controls.Add(sharing, 0, 2);
+        var warning = new Label { AutoSize = true, Text = "Workbook sharing includes every open workbook. Do not share person-identifiable data: remove names, dates of birth, patient IDs and identifying free text." };
+        sharing.Controls.AddRange([warning, ShareScript, ShareWorkbook, Acknowledge]); layout.Controls.Add(sharing, 0, 2);
         layout.Controls.Add(new Label { AutoSize = true, Text = "Your question (Enter sends; Shift+Enter adds a line)", Dock = DockStyle.Fill }, 0, 3);
         layout.Controls.Add(Composer, 0, 4);
         var actions = new FlowLayoutPanel { AutoSize = true, Dock = DockStyle.Fill };
@@ -74,12 +74,12 @@ internal sealed class ScriptAIPane : IDisposable
             (floating, canDock) => { pop.Text = floating ? "Dock" : "Pop out"; pop.Enabled = !floating || canDock; }, () => Composer.Focus(), text => status.Text = text, minimumDockLength: 330);
         pop.Click += async (_, _) => await session.ToggleModeAsync(); close.Click += (_, _) => Hide();
         connection.Click += async (_, _) => { try { await service.ConfigureTutorAsync(view); } catch (Exception ex) { status.Text = ex.Message; } };
-        ShareScript.CheckedChanged += (_, _) => ScopeChanged(); ShareWorkbook.CheckedChanged += (_, _) => ScopeChanged(); Workbook.SelectedIndexChanged += (_, _) => ScopeChanged();
+        ShareScript.CheckedChanged += (_, _) => ScopeChanged(); ShareWorkbook.CheckedChanged += (_, _) => ScopeChanged();
         Acknowledge.CheckedChanged += (_, _) => {
             if (refreshing) return;
             if (Acknowledge.Checked) {
                 service.Sharing.Approve(SharedDataIds); sharing.Visible = false;
-                if (status.Text == "Review the selected content and confirm sharing for this session.") status.Text = "";
+                if (status.Text == "Review the selected content and confirm sharing for this session." || status.Text == "The open workbooks changed. Review their data and confirm sharing again.") status.Text = "";
                 Composer.Focus();
             } else service.RevokeAISharing();
             UpdateControls();
@@ -92,7 +92,7 @@ internal sealed class ScriptAIPane : IDisposable
         void FitContent()
         {
             int width = Math.Max(120, viewport.ClientSize.Width - SystemInformation.VerticalScrollBarWidth - layout.Padding.Horizontal - 12);
-            warning.MaximumSize = status.MaximumSize = new Size(width, 0); Workbook.Width = width;
+            warning.MaximumSize = status.MaximumSize = new Size(width, 0);
             // AutoSize checkboxes can clip wrapped text at high DPI. Measure the full label
             // and keep a scrollable minimum height for the conversation in small panes.
             foreach (var box in new[] { ShareScript, ShareWorkbook, Acknowledge })
@@ -115,8 +115,9 @@ internal sealed class ScriptAIPane : IDisposable
             SaveDraft(); Stop();
             if (script != null) script.FormClosed -= ScriptClosed;
             script = document; script.FormClosed += ScriptClosed;
-            if (!conversations.TryGetValue(document.Id(), out chat)) conversations[document.Id()] = chat = new Conversation { WorkbookId = service.Sharing.DataDocumentId, ShareScript = service.ShareAIDocument, ShareWorkbook = service.ShareAIWorkbook };
+            if (!conversations.TryGetValue(document.Id(), out chat)) conversations[document.Id()] = chat = new Conversation { ShareScript = service.ShareAIDocument, ShareWorkbook = service.ShareAIWorkbook };
             refreshing = true; Composer.Text = chat.Draft; ShareScript.Checked = chat.ShareScript; ShareWorkbook.Checked = chat.ShareWorkbook; refreshing = false;
+            service.ShareAIDocument = ShareScript.Checked; service.ShareAIWorkbook = ShareWorkbook.Checked;
             sharing.Visible = true; partial = "";
         }
         focusedResultId = resultId;
@@ -125,74 +126,32 @@ internal sealed class ScriptAIPane : IDisposable
         ShareScript.Text = ReportMode ? "Share this report and its displayed results" : "Share this script and its output";
         Composer.AccessibleName = ReportMode ? "Question for the report assistant" : "Question for the script assistant";
         RefreshWorkbooks(); SyncAcceptance(); Render(); session.Show(true); UpdateConnection();
-        if (document is frmReportWebView report) _ = OfferResultWorkbookAsync(report, resultId);
         _ = Transcript.ReopenAsync();
         _ = RefreshAccountAsync();
     }
     private async Task RefreshAccountAsync() { try { if (!ChatGPTTutor.Disabled) await service.Tutor.RefreshAccountAsync(); } catch (Exception ex) { if (!disposed) status.Text = ex.Message; } }
-    /// <summary>
-    /// The workbook offered for sharing is the one the result came from: the result the pane was opened on, else the result the
-    /// cursor is in, else the latest with a record, found among the open workbooks as Continue in R finds it, by the path or name its
-    /// record gives.  The workbook last activated stands when the result has no record or names no open workbook.  The selection is
-    /// made as a choice by hand would be, so the session's data document follows it and the sharing is confirmed again.
-    /// </summary>
-    private async Task OfferResultWorkbookAsync(frmReportWebView report, string resultId)
-    {
-        try
-        {
-            var view = report.LearningReport;
-            await view.Ready;
-            if (string.IsNullOrEmpty(resultId))
-            {
-                var target = await view.CurrentResultAsync();
-                resultId = Text(target, "resultId");
-            }
-            if (string.IsNullOrEmpty(resultId)) return;
-            var entry = await view.RecordAsync(resultId);
-            if (entry.ValueKind != JsonValueKind.Object || !entry.TryGetProperty("record", out var record) || record.ValueKind != JsonValueKind.Object) return;
-            var workbook = RecordWorkbook(record);
-            if (disposed || script != report || workbook == null) return;
-            var choice = Workbook.Items.Cast<WorkbookChoice>().FirstOrDefault(c => c.Id == workbook.Id());
-            if (choice == null || Workbook.SelectedItem == choice) return;
-            Workbook.SelectedItem = choice;
-            status.Text = "The workbook offered for sharing is the result's: " + workbook.Text;
-        }
-        catch (Exception ex) { if (!disposed) status.Text = ex.Message; }
-    }
-    /// <summary>The open workbook a record points to, by the paths and names of its inputs and its source; null when none is open.</summary>
-    private static frmSpreadsheetGear RecordWorkbook(JsonElement record)
-    {
-        var names = new List<string>();
-        if (record.TryGetProperty("inputs", out var inputs) && inputs.ValueKind == JsonValueKind.Array)
-            foreach (var input in inputs.EnumerateArray()) { names.Add(Text(input, "path")); names.Add(Text(input, "file")); }
-        if (record.TryGetProperty("source", out var source)) { names.Add(Text(source, "path")); names.Add(Text(source, "file")); }
-        foreach (string name in names.Where(n => !string.IsNullOrEmpty(n)))
-            foreach (WindowInformation wi in SdApplication.SoleInstance.Windows)
-                if (wi.IsFile(name) && wi.Window is frmSpreadsheetGear grid && !grid.IsDisposed) return grid;
-        return null;
-    }
-    private static string Text(JsonElement o, string key) => o.ValueKind == JsonValueKind.Object && o.TryGetProperty(key, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString() : null;
     internal void RefreshWorkbooks()
     {
         if (disposed || chat == null) return;
-        var choices = service.Documents.OfType<frmSpreadsheetGear>().Select(d => new WorkbookChoice(d.Id(), d.Text)).ToArray();
-        if (choices.SequenceEqual(Workbook.Items.Cast<WorkbookChoice>())) return;
-        string id = (Workbook.SelectedItem as WorkbookChoice)?.Id ?? chat.WorkbookId;
-        refreshing = true; Workbook.Items.Clear(); Workbook.Items.AddRange(choices);
-        var selected = choices.FirstOrDefault(c => c.Id == id); Workbook.SelectedItem = selected;
-        if (selected == null) { ShareWorkbook.Checked = false; chat.ShareWorkbook = false; }
-        refreshing = false; SyncAcceptance(); UpdateControls();
+        var ids = service.Documents.OfType<frmSpreadsheetGear>().Where(g => !g.IsDisposed && !g.Disposing && g.MdiParent != null).Select(g => g.Id()).ToHashSet();
+        bool changed = !openWorkbookIds.SetEquals(ids);
+        openWorkbookIds = ids;
+        if (changed && ShareWorkbook.Checked)
+        {
+            service.RevokeAISharing();
+            status.Text = "The open workbooks changed. Review their data and confirm sharing again.";
+            return;
+        }
+        SyncAcceptance(); UpdateControls();
     }
     internal void SessionSharingChanged() { Stop(); SyncAcceptance(); sharing.Visible = true; UpdateControls(); }
     private void SyncAcceptance() { refreshing = true; Acknowledge.Checked = service.Sharing.Accepts(SharedDataIds); refreshing = false; }
     private void ScopeChanged()
     {
         if (refreshing) return;
-        string selected = (Workbook.SelectedItem as WorkbookChoice)?.Id;
-        if (selected != null && selected != chat?.WorkbookId) service.SelectAIDataDocument(selected);
         service.ShareAIDocument = ShareScript.Checked; service.ShareAIWorkbook = ShareWorkbook.Checked;
         SyncAcceptance(); sharing.Visible = !Acknowledge.Checked;
-        if (chat != null) { chat.ShareScript = ShareScript.Checked; chat.ShareWorkbook = ShareWorkbook.Checked; chat.WorkbookId = (Workbook.SelectedItem as WorkbookChoice)?.Id; }
+        if (chat != null) { chat.ShareScript = ShareScript.Checked; chat.ShareWorkbook = ShareWorkbook.Checked; }
         UpdateControls();
     }
     internal void UpdateConnection()
@@ -207,9 +166,9 @@ internal sealed class ScriptAIPane : IDisposable
         Send.Enabled = !busy && !ChatGPTTutor.Disabled && (!share || Acknowledge.Checked);
         Send.Text = service.Tutor.Email == null ? "Use my ChatGPT" : "Send"; stop.Enabled = busy;
         connection.Enabled = !busy && !ChatGPTTutor.Disabled;
-        ShareScript.Enabled = ShareWorkbook.Enabled = Workbook.Enabled = Acknowledge.Enabled = !busy;
+        ShareScript.Enabled = ShareWorkbook.Enabled = Acknowledge.Enabled = !busy;
         SharingOptions.Enabled = !busy;
-        SharingOptions.Text = sharing.Visible ? "Sharing for this session ▾" : share ? (Acknowledge.Checked ? "Confirmed: " + (ShareScript.Checked ? (ReportMode ? "report " : "script/output ") : "") + (ShareWorkbook.Checked ? "+ workbook " : "") + "· Review sharing ▸" : "Review sharing ▸") : "Question only · Sharing options ▸";
+        SharingOptions.Text = sharing.Visible ? "Sharing for this session ▾" : share ? (Acknowledge.Checked ? "Confirmed: " + (ShareScript.Checked ? (ReportMode ? "report " : "script/output ") : "") + (ShareWorkbook.Checked ? "+ all open workbooks " : "") + "· Review sharing ▸" : "Review sharing ▸") : "Question only · Sharing options ▸";
     }
     private void SaveDraft() { if (chat != null) chat.Draft = Composer.Text; }
     private void Render()
@@ -236,15 +195,11 @@ internal sealed class ScriptAIPane : IDisposable
             if (service.Tutor.Email == null) { try { await service.ConfigureTutorAsync(view); } catch (Exception ex) { status.Text = ex.Message; } return; }
         }
         string question = Composer.Text.Trim(); if (question.Length == 0) { status.Text = "Enter a question."; return; }
+        RefreshWorkbooks(); SyncAcceptance();
         if ((ShareScript.Checked || ShareWorkbook.Checked) && !Acknowledge.Checked) { status.Text = "Review the selected content and confirm sharing for this session."; return; }
         var approved = new List<StatsDirectForm>();
         if (ShareScript.Checked) approved.Add(script);
-        if (ShareWorkbook.Checked)
-        {
-            var grid = service.Documents.OfType<frmSpreadsheetGear>().FirstOrDefault(d => d.Id() == (Workbook.SelectedItem as WorkbookChoice)?.Id);
-            if (grid == null) { status.Text = "Choose the workbook again and confirm sharing."; ScopeChanged(); return; }
-            approved.Add(grid);
-        }
+        approved.AddRange(SharedWorkbooks);
         using var request = new CancellationTokenSource(); pending = request; var current = chat; bool reportMode = ReportMode;
         var context = new QuestionContext(approved, true, request.Token, service.Sharing);
         sharing.Visible = false; UpdateControls();
@@ -252,7 +207,7 @@ internal sealed class ScriptAIPane : IDisposable
         {
             await context.CaptureReportsAsync(focusedResultId);
             string reference = context.InitialContext().ToJsonString();
-            if (reference.Length > 28000) throw new InvalidOperationException("The selected context is too large. Choose less content for this question.");
+            if (reference.Length > 28000) throw new InvalidOperationException("The shared context is too large. Close some workbooks or turn off workbook sharing for this question.");
             current.Messages.Add(new JsonObject { ["role"] = "user", ["text"] = question, ["rSource"] = context.RSource }); Composer.Clear(); current.Draft = ""; partial = ""; Render();
             status.Text = approved.Count == 0 ? "Sending the question and conversation only…" : "Sending the confirmed context…";
             var reply = await service.Tutor.ConverseAsync(reference, current.Messages, context.Tools, true, text => { if (!disposed && pending == request && chat == current) { partial = text; Render(); } }, context.CallAsync, request.Token, report: reportMode);
@@ -282,7 +237,7 @@ internal sealed class ScriptAIPane : IDisposable
     private string LastCode()
     { return string.Join("\n\n", ConversationRScript.Blocks(chat?.Messages.LastOrDefault(m => m.S("role") == "assistant").S("text") ?? "")).Limit(100000); }
     internal void Hide() { SaveDraft(); Stop(); session.Hide(); script?.Activate(); }
-    internal void NewConversation() { Stop(); if (script == null) return; conversations[script.Id()] = chat = new() { WorkbookId = (Workbook.SelectedItem as WorkbookChoice)?.Id, ShareScript = ShareScript.Checked, ShareWorkbook = ShareWorkbook.Checked }; Composer.Clear(); partial = ""; SyncAcceptance(); sharing.Visible = !Acknowledge.Checked; Render(); UpdateControls(); }
+    internal void NewConversation() { Stop(); if (script == null) return; conversations[script.Id()] = chat = new() { ShareScript = ShareScript.Checked, ShareWorkbook = ShareWorkbook.Checked }; Composer.Clear(); partial = ""; SyncAcceptance(); sharing.Visible = !Acknowledge.Checked; Render(); UpdateControls(); }
     private void ScriptClosed(object sender, FormClosedEventArgs e)
     {
         if (sender != script) return;

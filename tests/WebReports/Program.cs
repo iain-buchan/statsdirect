@@ -168,6 +168,7 @@ internal static partial class Program
         await CheckStandardPresentation(real);
         await CheckTemplateStyles(real);
         await CheckDeletion();
+        await CheckImageParagraphs();
         await CheckRetirement();
         await CheckScrolling();
         await CheckContextMenu();

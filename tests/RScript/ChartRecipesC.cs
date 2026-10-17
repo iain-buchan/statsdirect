@@ -49,9 +49,9 @@ internal static partial class Program
                           max(abs(frequency_values[,1L]-c(2,1,3)/6))<1e-14,
                           max(abs(frequency_values[,2L]-c(1,2,1)/4))<1e-14,
                           identical(colnames(bar_values),c("Two","Ten","Letter A")),
-                          bar_horizontal,!bar_stacked,length(bar_segments)==2L,length(.b_rectangles)==2L,
-                          max(abs(.b_rectangles[[1L]]$right-c(2,1,3)/6))<1e-14)
-                stopifnot(length(.b_legends)==1L,.b_legends[[1L]]$result$rect$top < .b_legends[[1L]]$usr[3L])
+                          bar_horizontal,!bar_stacked,length(.b_rectangles)==1L,
+                          max(abs(.b_rectangles[[1L]]$right-as.vector(bar_drawing)))<1e-14)
+                stopifnot(length(.b_legends)==1L,identical(.b_legends[[1L]]$labels,rownames(bar_values)))
                 """;
             string frequencyScript = RScriptWriter.Write(barRecord, null, null).Text;
             CheckChartBR(frequencyScript, Path.Combine(folder, "frequency"), horizontalBar, frequencyChecks,
@@ -92,19 +92,18 @@ internal static partial class Program
                 if (horizontal) { fillChosen.XAxisTitle = fillBar.YAxisTitle; fillChosen.YAxisTitle = fillBar.XAxisTitle; }
                 string fillScript = TraceChartBLegendState(RScriptWriter.Write(Record(fillRun), null, null).Text);
                 const string fillChecks = """
-                    stopifnot(length(.b_legend_rectangles)==6L,length(.b_legend_points)==0L,
-                              identical(.b_legend_before,.b_legend_after),!isTRUE(sd_chart_state$drawing_legend))
-                    keys <- .b_legend_rectangles
-                    stopifnot(is.na(keys[[1L]]$col),is.null(keys[[1L]]$density),
-                              all(col2rgb(keys[[2L]]$col)==0L),is.null(keys[[2L]]$density),
-                              identical(vapply(keys[3:6],function(z)as.double(z$density),double(1)),rep(16,4)),
-                              identical(vapply(keys[3:6],function(z)as.double(z$angle),double(1)),c(45,135,45,135)))
-                    stopifnot(all(vapply(keys,function(z)all(is.finite(c(z$npcLeft,z$npcRight,z$npcBottom,z$npcTop))) &&
-                              z$npcLeft>=-0.2 && z$npcRight<=1.2 && z$npcTop<0,logical(1))))
+                    stopifnot(identical(.b_legend_before,.b_legend_after),length(.b_legends)==1L,
+                              identical(.b_legends[[1L]]$labels,rownames(bar_values)),
+                              nrow(bar_values)==5L,ncol(bar_values)==2L,
+                              all(bar_values==0.5),length(.b_rectangles)==1L,
+                              length(unique(bar_colours))==5L,
+                              identical(as.character(.b_rectangles[[1L]]$col),bar_colours),
+                              length(.b_legend_rectangles)==1L,
+                              identical(as.character(.b_legend_rectangles[[1L]]$col),bar_colours))
                     """;
                 foreach (bool pdf in new[] { false, true })
                     CheckChartBR(fillScript, Path.Combine(folder, "frequency-five-fills-" + horizontal + (pdf ? "-pdf" : "")), fillChosen, fillChecks,
-                        "five monochrome frequency fills have distinct matching legend keys below the chart without leaking graphics state", pdf);
+                        "monochrome frequency bars retain every category, proportion and labelled native R legend", pdf);
             }
 
             foreach (bool totals in new[] { false, true })

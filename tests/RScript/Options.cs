@@ -149,10 +149,10 @@ internal static partial class Program
         string bar = "{\"operation\":\"BarPlot\",\"file\":\"bar-plot.R\",\"inputs\":[{\"name\":\"labels\",\"columns\":[{\"title\":\"Blood group\",\"values\":[\"O\",\"A\",\"B\",\"AB\"]}]}," +
             "{\"name\":\"values\",\"columns\":[{\"title\":\"First\",\"values\":[44,45,8,3]},{\"title\":\"Second\",\"values\":[79,16,4,1]},{\"title\":\"Third\",\"values\":[61,39,0,0]},{\"title\":\"Fourth\",\"values\":[50,30,15,5]}]}]}";
         string barScript = RScriptWriter.Write(JsonDocument.Parse(RecordOf(JsonDocument.Parse(bar).RootElement)).RootElement, null, null).Text;
-        RunR(barScript, Path.Combine(folder, "bar"));
+        string barResult = RunR(barScript + "\nstopifnot(identical(unname(bar_values),rbind(c(44,45,8,3),c(79,16,4,1),c(61,39,0,0),c(50,30,15,5))),identical(colnames(bar_values),c('O','A','B','AB')))\ncat('FOUR_SERIES_OK\\n')\n", Path.Combine(folder, "bar"));
         string box = "{\"operation\":\"BoxWhiskerPlotText\",\"file\":\"box-whisker-plot-text.R\",\"list\":[{\"title\":\"One\",\"values\":[12,15,11,19,22,14,30]},{\"title\":\"Two\",\"values\":[20,25,21,29,32,24,27]},{\"title\":\"Three\",\"values\":[5,8,11,9,6,40,7]}]}";
         script = RScriptWriter.Write(JsonDocument.Parse(RecordOf(JsonDocument.Parse(box).RootElement)).RootElement, null, null).Text;
         r = RunR(script, Path.Combine(folder, "box"));
-        Check(barScript.Contains("rep_len(shade, nrow(values))") && Regex.Matches(r, "^\\S+ \\(n = 7\\)", RegexOptions.Multiline).Count == 3, "the bar chart of four series and the box plot of three groups draw the run's series and groups");
+        Check(barResult.Contains("FOUR_SERIES_OK") && Regex.Matches(r, "^\\S+ \\(n = 7\\)", RegexOptions.Multiline).Count == 3, "the bar chart of four series and the box plot of three groups draw the run's series and groups");
     }
 }

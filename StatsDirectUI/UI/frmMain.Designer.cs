@@ -247,8 +247,7 @@ namespace StatsDirect.UI
             this.newScriptToolStripMenuItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.newScriptToolStripMenuItem.Name = "newScriptToolStripMenuItem";
             this.newScriptToolStripMenuItem.Size = new System.Drawing.Size(183, 22);
-            this.newScriptToolStripMenuItem.Text = "Ne&w Script";
-            this.newScriptToolStripMenuItem.Visible = false;
+            this.newScriptToolStripMenuItem.Text = "New R session";
             this.newScriptToolStripMenuItem.Click += new System.EventHandler(this.newScriptToolStripMenuItem_Click);
             // 
             // openToolStripMenuItem

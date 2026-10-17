@@ -1,13 +1,78 @@
 using System;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.Globalization;
+using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Windows.Forms;
+using System.Xml;
+using System.Xml.Linq;
 
 namespace StatsDirect.UI.WebReports;
 
 internal static class ReportClipboard
 {
     internal const string FragmentFormat = "StatsDirect.ReportFragment.HTML.v1";
+    internal const string SvgFormat = "image/svg+xml";
+
+    // Embed native clipboard pictures. SVG stays vector; the report's existing
+    // fragment sanitizer removes active content and gives drawing IDs a fresh scope.
+    internal static string ImageHtml(IDataObject contents)
+    {
+        const int maximumBytes = 20_000_000; // Base64 stays within the report's 30 MB paste limit.
+        static string SvgText(byte[] bytes)
+        {
+            using var reader = new StreamReader(new MemoryStream(bytes, writable: false), Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
+            return reader.ReadToEnd();
+        }
+        foreach (string format in new[] { SvgFormat, "image/x-svg+xml", "SVG" })
+        {
+            object data = contents?.GetData(format, false);
+            string svg = data switch
+            {
+                string value => value,
+                MemoryStream stream when stream.Length <= maximumBytes => SvgText(stream.ToArray()),
+                byte[] bytes when bytes.Length <= maximumBytes => SvgText(bytes),
+                MemoryStream or byte[] => throw new InvalidDataException("The clipboard picture is too large."),
+                _ => null
+            };
+            if (string.IsNullOrWhiteSpace(svg)) continue;
+            if (Encoding.UTF8.GetByteCount(svg) > maximumBytes) throw new InvalidDataException("The clipboard picture is too large.");
+            using var source = new StringReader(svg.Trim('\uFEFF', '\0'));
+            using var reader = XmlReader.Create(source, new XmlReaderSettings { DtdProcessing = DtdProcessing.Ignore, XmlResolver = null, MaxCharactersInDocument = maximumBytes });
+            XElement root = XElement.Load(reader);
+            if (root.Name.LocalName != "svg" || root.Name.NamespaceName is not ("" or "http://www.w3.org/2000/svg"))
+                throw new InvalidDataException("The clipboard picture has no SVG element.");
+            return root.ToString(SaveOptions.DisableFormatting);
+        }
+        byte[] png = contents?.GetData("PNG", false) switch
+        {
+            MemoryStream stream when stream.Length <= maximumBytes => stream.ToArray(),
+            byte[] bytes when bytes.Length <= maximumBytes => bytes,
+            MemoryStream or byte[] => throw new InvalidDataException("The clipboard picture is too large."),
+            _ => null
+        };
+        if (png == null)
+        {
+            Image bitmap = contents?.GetData(DataFormats.Bitmap) as Image ?? contents?.GetData(typeof(Bitmap)) as Image;
+            if (bitmap != null)
+            {
+                using var buffer = new MemoryStream();
+                bitmap.Save(buffer, ImageFormat.Png);
+                if (buffer.Length > maximumBytes) throw new InvalidDataException("The clipboard picture is too large.");
+                png = buffer.ToArray();
+            }
+        }
+        if (png == null) return null;
+        using (var buffer = new MemoryStream(png, writable: false))
+        using (Image decoded = Image.FromStream(buffer, useEmbeddedColorManagement: false, validateImageData: true))
+        {
+            if (decoded.RawFormat.Guid != ImageFormat.Png.Guid)
+                throw new InvalidDataException("The clipboard PNG picture is invalid.");
+        }
+        return "<img alt=\"Pasted image\" src=\"data:image/png;base64," + Convert.ToBase64String(png) + "\">";
+    }
     // CF_HTML offsets count UTF-8 BYTES, not .NET UTF-16 characters.
     internal static string EncodeHtml(string html)
     {

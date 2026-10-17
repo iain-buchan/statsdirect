@@ -1,6 +1,7 @@
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.WinForms;
 using StatsDirect.R;
+using StatsDirect.UI.WebReports;
 using System;
 using System.IO;
 using System.Text;
@@ -24,6 +25,7 @@ namespace StatsDirect.UI
         private readonly TaskCompletionSource ready = new(TaskCreationOptions.RunContinuationsAsynchronously);
         private Task queue = Task.CompletedTask;
         private bool starting, failed;
+        private const string SvgDataPrefix = "data:image/svg+xml;base64,";
         private static readonly Regex Url = new(@"(https?://[^\s<>""']+|file:///[^\s<>""']+)", RegexOptions.Compiled);
 
         /// <summary>A link in the output was clicked: the address of a file the script wrote, or a web address.</summary>
@@ -84,10 +86,34 @@ namespace StatsDirect.UI
                 core.DownloadStarting += (_, e) => e.Cancel = true;
                 core.PermissionRequested += (_, e) => e.State = CoreWebView2PermissionState.Deny;
                 // the browser's menu kept to copying: the rest, reloading among it, would lose the output
-                core.ContextMenuRequested += (_, e) =>
+                core.ContextMenuRequested += async (_, e) =>
                 {
-                    for (int i = e.MenuItems.Count - 1; i >= 0; i--)
-                        if (e.MenuItems[i].Name is not ("copy" or "selectAll" or "copyImage")) e.MenuItems.RemoveAt(i);
+                    var deferral = e.GetDeferral();
+                    try
+                    {
+                        // WebView2 omits SourceUri for some data-URI images. The
+                        // page records the actual right-click target before this event.
+                        string source = e.ContextMenuTarget.HasSourceUri ? e.ContextMenuTarget.SourceUri :
+                            JsonSerializer.Deserialize<string>(await core.ExecuteScriptAsync("contextChartSource()"));
+                        for (int i = e.MenuItems.Count - 1; i >= 0; i--)
+                        {
+                            var item = e.MenuItems[i];
+                            if (item.Name is not ("copy" or "selectAll" or "copyImage")) { e.MenuItems.RemoveAt(i); continue; }
+                            if (item.Name != "copyImage" || source?.StartsWith(SvgDataPrefix, StringComparison.OrdinalIgnoreCase) != true) continue;
+                            // Chromium's Copy image rasterizes SVG. Keep its familiar menu
+                            // label, adding the vector formats alongside the Office bitmap.
+                            var copy = environment.CreateContextMenuItem(item.Label, null, CoreWebView2ContextMenuItemKind.Command);
+                            copy.IsEnabled = item.IsEnabled;
+                            copy.CustomItemSelected += async (_, _) =>
+                            {
+                                try { await CopySvgChartAsync(source); }
+                                catch (Exception ex) { AppendText("\nCould not copy chart: " + ex.Message + "\n"); }
+                            };
+                            e.MenuItems.RemoveAt(i); e.MenuItems.Insert(i, copy);
+                        }
+                    }
+                    catch (Exception ex) { AppendText("\nCould not prepare chart copying: " + ex.Message + "\n"); }
+                    finally { deferral.Complete(); }
                 };
                 core.WebMessageReceived += (_, e) => Receive(e);
                 core.ProcessFailed += (_, _) => Fail("The output page stopped. Close and reopen the script window.");
@@ -211,6 +237,54 @@ namespace StatsDirect.UI
             Enqueue("append(" + Json("\n<div class=\"chart\"><a href=\"" + link + "\">Chart: " + Escape(file.Name) + "</a></div>" + picture + "\n") + ")");
         }
 
+        /// <summary>Copies an embedded chart as SVG, with a standard PNG/bitmap for applications that need it.</summary>
+        internal async Task CopySvgChartAsync(string sourceUri)
+        {
+            if (sourceUri?.StartsWith(SvgDataPrefix, StringComparison.OrdinalIgnoreCase) != true || sourceUri.Length > 27_000_000)
+                throw new InvalidDataException("Choose an embedded SVG chart smaller than 20 MB.");
+            await SettledAsync(); await Ready;
+            // Only copy an image already in this output page. Drawing that loaded
+            // image on a canvas requires no file access or additional network load.
+            string result = await browser.CoreWebView2.ExecuteScriptAsync($$"""
+                (()=>{
+                  const image=[...document.images].find(i=>i.classList.contains('svg-chart')&&i.getAttribute('src')==={{Json(sourceUri)}});
+                  if(!image||!image.complete||!image.naturalWidth||!image.naturalHeight)return null;
+                  let png=null;
+                  try {
+                    const canvas=document.createElement('canvas'),scale=Math.min(2,4096/Math.max(image.naturalWidth,image.naturalHeight));
+                    canvas.width=Math.max(1,Math.round(image.naturalWidth*scale));canvas.height=Math.max(1,Math.round(image.naturalHeight*scale));
+                    const context=canvas.getContext('2d');context.fillStyle='white';context.fillRect(0,0,canvas.width,canvas.height);
+                    context.drawImage(image,0,0,canvas.width,canvas.height);png=canvas.toDataURL('image/png');
+                  } catch {} // The original SVG remains useful if raster conversion is unavailable.
+                  return {png,alt:image.alt};
+                })()
+                """);
+            using JsonDocument image = JsonDocument.Parse(result);
+            if (image.RootElement.ValueKind != JsonValueKind.Object) throw new InvalidOperationException("The chart is no longer available.");
+            byte[] original = Convert.FromBase64String(sourceUri[SvgDataPrefix.Length..]);
+            if (original.Length > 20_000_000) throw new InvalidDataException("The SVG chart is too large to copy.");
+            var vector = RResultsParser.VectorPicture(Sanitised(Encoding.UTF8.GetString(original)));
+            var data = new DataObject();
+            data.SetData(ReportClipboard.FragmentFormat, false, vector.Svg);
+            data.SetData("image/svg+xml", false, new MemoryStream(Encoding.UTF8.GetBytes(vector.Svg), writable: false));
+            string publicHtml = vector.Svg;
+            string png = image.RootElement.GetProperty("png").GetString();
+            byte[] pngBytes = png?.StartsWith("data:image/png;base64,", StringComparison.Ordinal) == true && png.Length <= 27_000_000
+                ? Convert.FromBase64String(png["data:image/png;base64,".Length..]) : null;
+            if (pngBytes != null && pngBytes.Length > 20_000_000) pngBytes = null;
+            using var raster = pngBytes == null ? null : new MemoryStream(pngBytes, writable: false);
+            using var bitmap = raster == null ? null : new System.Drawing.Bitmap(raster);
+            if (bitmap != null)
+            {
+                data.SetData("PNG", false, new MemoryStream(pngBytes, writable: false));
+                data.SetData(DataFormats.Bitmap, true, bitmap);
+                publicHtml = "<img width=\"" + vector.Width + "\" height=\"" + vector.Height + "\" alt=\"" + Escape(image.RootElement.GetProperty("alt").GetString()) + "\" src=\"" + png + "\">";
+            }
+            data.SetData(DataFormats.Html, ReportClipboard.EncodeHtml(publicHtml));
+            data.SetData(DataFormats.UnicodeText, image.RootElement.GetProperty("alt").GetString() ?? "R chart");
+            Clipboard.SetDataObject(data, true, 5, 100);
+        }
+
         /// <summary>An SVG with nothing that runs: scripts, event handlers and script links go.</summary>
         internal static string Sanitised(string svg)
         {
@@ -259,11 +333,13 @@ svg,img{display:block;max-width:100%;height:auto;margin:2px 0 4px;background:#ff
 iframe.pdf{display:block;width:100%;height:520px;border:1px solid #ccc;margin:2px 0 4px;background:#fff}
 </style></head><body><div id=""t""></div><script>
 (function(){
-var t=document.getElementById('t');
+var t=document.getElementById('t'),contextImage=null;
 function post(m){if(window.chrome&&chrome.webview)chrome.webview.postMessage(m);}
 window.append=function(h){t.insertAdjacentHTML('beforeend',h);window.scrollTo(0,document.body.scrollHeight);};
-window.clearAll=function(){t.innerHTML='';};
+window.clearAll=function(){t.innerHTML='';contextImage=null;};
+window.contextChartSource=function(){return contextImage&&t.contains(contextImage)?contextImage.getAttribute('src'):null;};
 window.selectAll=function(){var r=document.createRange();r.selectNodeContents(t);var s=getSelection();s.removeAllRanges();s.addRange(r);post({selection:s.toString().length});};
+document.addEventListener('contextmenu',function(e){contextImage=e.target.closest?e.target.closest('img.svg-chart'):null;},true);
 document.addEventListener('selectionchange',function(){post({selection:getSelection().toString().length});});
 document.addEventListener('mousedown',function(){post({focus:true});},true);
 document.addEventListener('click',function(e){var a=e.target.closest&&e.target.closest('a');if(a){e.preventDefault();post({link:a.href});}},true);

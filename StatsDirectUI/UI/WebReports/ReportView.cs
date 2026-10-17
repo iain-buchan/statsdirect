@@ -278,7 +278,20 @@ internal sealed class ReportView : UserControl
                 if (target.ValueKind != JsonValueKind.Object || !target.TryGetProperty("token", out var token)) return;
                 IDataObject contents = Clipboard.GetDataObject();
                 string html = contents?.GetData(ReportClipboard.FragmentFormat, false) as string;
+                if (html == null && new[] { ReportClipboard.SvgFormat, "image/x-svg+xml", "SVG" }.Any(format => contents?.GetDataPresent(format, false) == true))
+                    html = ReportClipboard.ImageHtml(contents);
                 if (html == null && contents?.GetData(DataFormats.Html) is string publicHtml) html = ReportClipboard.DecodeHtml(publicHtml);
+                if (string.IsNullOrWhiteSpace(html))
+                {
+                    html = ReportClipboard.ImageHtml(contents);
+                    if (html == null)
+                    {
+                        // Some native bitmap providers are readable through GetImage
+                        // even when IDataObject cannot materialise their Bitmap format.
+                        using var bitmap = Clipboard.GetImage();
+                        if (bitmap != null) html = ReportClipboard.ImageHtml(new DataObject(DataFormats.Bitmap, bitmap));
+                    }
+                }
                 string text = contents?.GetData(DataFormats.UnicodeText) as string ?? "";
                 if ((html?.Length ?? 0) + text.Length > 30_000_000) throw new InvalidDataException("The clipboard content is too large.");
                 await CallAsync("paste", new { token = token.GetString(), payload = new { html, text } });

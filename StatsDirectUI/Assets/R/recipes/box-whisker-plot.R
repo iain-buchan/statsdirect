@@ -147,7 +147,7 @@ sd_box_draw <- function() {
     if (box_horizontal) abline(v = ticks, col = "grey80", lty = if (style == 4L) "311111" else style + 1L) else
       abline(h = ticks, col = "grey80", lty = if (style == 4L) "311111" else style + 1L)
   }
-  axis(side, at = ticks, labels = format(ticks, trim = TRUE), las = 1, cex.axis = 9 / par("ps"))
+  axis(side, at = ticks, labels = format(ticks, trim = TRUE, drop0trailing = TRUE), las = 1, cex.axis = 9 / par("ps"))
   axis(if (box_horizontal) 2 else 1, at = positions, labels = displayed_names,
        las = 1, tick = FALSE, cex.axis = 9 / par("ps"))
   marker <- sd_box_setting("valueMarker", NULL)

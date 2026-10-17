@@ -13,7 +13,8 @@ namespace StatsDirect.Charting
             MeanConfidenceIntervalRange = 3,
             SevenNumberSummary = 4,
             BowleySummary = 5,
-            MeanStandardErrorRange = 6
+            MeanStandardErrorRange = 6,
+            TukeyHinges = 7
         }
 
         public BoxWhiskerMethod Method = BoxWhiskerMethod.MedianQuartilesRange;
@@ -37,6 +38,13 @@ namespace StatsDirect.Charting
                         XAxisTitle = UseOuterFence ? "min < LQ < median%MEAN% > UQ > max, fences (1.5 & 3.0 IQR)" : "min < LQ < median%MEAN% > UQ > max, fence (1.5 IQR)";
                     else
                         XAxisTitle = UseOuterFence ? "min < LQ < median%MEAN% > UQ > max, fence (3.0 IQR)" : "min < LQ < median%MEAN% > UQ > max";
+                    break;
+                case BoxWhiskerMethod.TukeyHinges:
+                    XAxisTitle = "Tukey hinges: min < lower hinge < median%MEAN% > upper hinge > max";
+                    if (UseInnerFence)
+                        XAxisTitle += UseOuterFence ? ", fences (1.5 & 3.0 IQR)" : ", fence (1.5 IQR)";
+                    else if (UseOuterFence)
+                        XAxisTitle += ", fence (3.0 IQR)";
                     break;
                 case BoxWhiskerMethod.MeanStandardDeviationRange:
                     if (UseInnerFence)

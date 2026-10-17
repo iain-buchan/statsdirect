@@ -53,6 +53,9 @@ internal static class ConversationRScript
         return "if (!exists(\".statsdirect_data\", inherits = FALSE)) .statsdirect_data <- list()\n" +
             ".statsdirect_data[[" + key + "]] <- setNames(list(\n" +
             string.Join(",\n", columns.Select(c => "  c(" + string.Join(", ", c.A("values").Select(Literal)) + ")")) +
-            "\n), c(" + string.Join(", ", columns.Select(c => RScriptWriter.Quote("column_" + c.I("index")))) + "))\n";
+            "\n), c(" + string.Join(", ", columns.Select(c => RScriptWriter.Quote("column_" + c.I("index")))) + "))\n" +
+            "attr(.statsdirect_data[[" + key + "]], \"statsdirect\") <- list(documentId = " + RScriptWriter.Quote(data.S("documentId")) +
+            ", workbook = " + RScriptWriter.Quote(data.S("workbook")) + ", sheet = " + RScriptWriter.Quote(data.S("sheet")) +
+            ", range = " + RScriptWriter.Quote(data.S("range")) + ")\n";
     }
 }

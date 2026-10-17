@@ -24,7 +24,7 @@ public partial class frmMain
         helpToolStripMenuItem.DropDownItems.Insert(updatesIndex, new ToolStripSeparator());
         MdiChildActivate += (_, _) =>
         {
-            if (ActiveMdiChild is frmSpreadsheetGear grid) learning?.SelectAIDataDocument(grid.Id());
+            if (ActiveMdiChild is frmSpreadsheetGear grid) learning?.ActiveAIDataDocument(grid.Id());
             learning?.RefreshWorkspace();
             if (ActiveMdiChild is frmScript script) learning?.ActiveScriptChanged(script);
             if (ActiveMdiChild is frmReportWebView report) learning?.ActiveReportChanged(report);

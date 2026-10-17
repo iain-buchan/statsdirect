@@ -51,6 +51,7 @@ internal static partial class Program
             // the transcript's look, drawn by the page: R's prompts and commands in their own colour, in a monospace face
             string look = await Eval("getComputedStyle(document.querySelector('.prompt')).color+'|'+getComputedStyle(document.body).fontFamily");
             Check(look.StartsWith("rgb(0, 0, 160)|Consolas", StringComparison.Ordinal), "R's prompts and commands are drawn in their own colour, in a monospace face (" + look + ")");
+            await CheckScriptImagePaste(main, browser, svgFile, pngFile);
         }
         finally
         {

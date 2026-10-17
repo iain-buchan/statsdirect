@@ -645,7 +645,7 @@ namespace StatsDirect.Charting.Renderer
             for (int c = 0; c < seriesToUse.Count; c++)
             {
                 DoubleSeries s = (DoubleSeries)seriesToUse[c];
-                PlotBoxWhiskerCalc(s, bwOptions.Method, p, out double mdn, out double q1, out double q3, out double innerFenceL, out double innerFenceR, bwOptions.UseInnerFence, out double outerFenceL, out double outerFenceR, bwOptions.UseOuterFence, out double _, out bool _);
+                PlotBoxWhiskerCalc(s, bwOptions.Method, p, out double mdn, out double q1, out double q3, out double innerFenceL, out double innerFenceR, bwOptions.UseInnerFence, out double outerFenceL, out double outerFenceR, bwOptions.UseOuterFence, out double otherCentre, out bool _);
 
                 //  As in the graphical plot, a fence gates the whisker when it is in use and a value lies beyond it: the whisker then ends with a bar at
                 //  the innermost such fence, and the values beyond it are points: "o" beyond the inner fence, "." beyond the outer fence.
@@ -698,6 +698,8 @@ namespace StatsDirect.Charting.Renderer
                 }
 
                 //  The median last, so that it shows when it shares a column with a quartile
+                if (bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.TukeyHinges && bwOptions.MarkMeanAndMedian)
+                    WriteAsciiYX(y2, ToAsciiX(otherCentre), "x");
                 WriteAsciiYX(y2, xm, "*");
             }
             return new ParameterBag();
@@ -726,21 +728,33 @@ namespace StatsDirect.Charting.Renderer
             switch (method)
             {
                 case BoxWhiskerOptions.BoxWhiskerMethod.MedianQuartilesRange:
+                case BoxWhiskerOptions.BoxWhiskerMethod.TukeyHinges:
                 case BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary:
                 case BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary:
                     {
 
                         //  Median
                         centre = Quantile(s, 0.5);
-                        //  Lower quartile
-                        boxL = Quantile(s, 0.25);
-                        //  Upper quartile
-                        boxR = Quantile(s, 0.75);
+                        if (method == BoxWhiskerOptions.BoxWhiskerMethod.TukeyHinges)
+                        {
+                            // R's fivenum: hinges are medians of the two halves,
+                            // including the middle observation when n is odd.
+                            double h = Math.Floor((count + 3.0) / 2.0) / 2.0;
+                            double At(double position) => 0.5 * (s.Data[(int)Math.Floor(position) - 1] + s.Data[(int)Math.Ceiling(position) - 1]);
+                            boxL = At(h);
+                            boxR = At(count + 1.0 - h);
+                        }
+                        else
+                        {
+                            boxL = Quantile(s, 0.25);
+                            boxR = Quantile(s, 0.75);
+                        }
 
                         //  Inner fence
                         switch (method)
                         {
                             case BoxWhiskerOptions.BoxWhiskerMethod.MedianQuartilesRange:
+                            case BoxWhiskerOptions.BoxWhiskerMethod.TukeyHinges:
                                 double interQuartileRange = Math.Abs(boxR - boxL);
                                 if (useInnerFence)
                                 {
@@ -776,6 +790,7 @@ namespace StatsDirect.Charting.Renderer
                         switch (method)
                         {
                             case BoxWhiskerOptions.BoxWhiskerMethod.MedianQuartilesRange:
+                            case BoxWhiskerOptions.BoxWhiskerMethod.TukeyHinges:
                                 if (useOuterFence)
                                 {
                                     double interQuartileRange = Math.Abs(boxR - boxL);

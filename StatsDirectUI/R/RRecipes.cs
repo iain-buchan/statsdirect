@@ -55,6 +55,11 @@ namespace StatsDirect.R
         {
             string operation = RScriptWriter.Text(record, "operation") ?? "";
             RRecipe recipe = Find(operation);
+            if (recipe != null && operation == "BoxWhiskerPlot" &&
+                record.TryGetProperty("parameters", out JsonElement boxParameters) &&
+                boxParameters.TryGetProperty("boxWhisker", out JsonElement box) && box.ValueKind == JsonValueKind.Object &&
+                box.TryGetProperty("method", out JsonElement method) && method.ValueKind == JsonValueKind.Number && method.TryGetInt32(out int selected) && selected == 7)
+                return new RRecipe { File = "box-whisker-tukey-plot.R", Detail = "Tukey hinges box plot using R's standard boxplot()." };
             if (recipe?.ParentFiles == null || recipe.ParentFiles.Count == 0) return recipe;
             string parent = RScriptWriter.Text(record, "rootOperation");
             if (string.IsNullOrEmpty(parent) && record.TryGetProperty("parameters", out JsonElement parameters))

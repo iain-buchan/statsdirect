@@ -227,24 +227,24 @@ internal static partial class Program
             "{\"name\":\"referenceData\",\"columns\":[{\"title\":\"reference\",\"values\":[1,2,3,4,5,6,7,8,9,10,11,12]}]}],\"settings\":{\"error-ratio\":1,\"ci\":0.95,\"seed\":3,\"do.deming.jackknife\":false,\"do.deming.analytical\":true}}";
         script = Built(mcr);
         r = Rr(script, Path.Combine(folder, "mcr"));
-        Check(script.Contains("do.deming.analytical <- TRUE") && Regex.IsMatch(r, "^Slope: ", RegexOptions.Multiline) && !r.Contains("jackknife"), "the method comparison script runs the regression the run chose, the Deming line with Wald limits, and not the help's jackknife");
+        Check(script.Contains("do.deming.analytical <- TRUE") && Regex.IsMatch(r, "^Slope[ :\\t]+", RegexOptions.Multiline) && !r.Contains("jackknife"), "the method comparison script runs the regression the run chose, the Deming line with Wald limits, and not the help's jackknife");
         // the same through the engine, which records the regressions as one boolean under each option's name, as the dialog fills them
         double[] test = { 1.1, 2.3, 2.9, 4.2, 5.1, 5.8, 7.2, 8.1, 8.8, 10.3, 11.1, 12.4 }, reference = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
         (run, output) = Run("MethodComparisonRegression", new() { ["error-ratio"] = 1.0, ["ci"] = 0.95, ["seed"] = 3, ["saveRScript"] = false, ["methods"] = new Dictionary<string, bool> { ["do.deming.analytical"] = true }, ["desired-charts"] = new Dictionary<string, bool>(), ["testData"] = Sheet(("test", test)), ["referenceData"] = Sheet(("reference", reference)) });
         script = Script(run);
-        r = Rr(script, Path.Combine(folder, "mcr-run"));
-        double rSlope = Numbers(r, "^Slope: (-?[0-9.]+) ")[0], engineSlope = Found(output.ParameterBag, "slope")[0];
+        r = Rr(script + "\ncat('Selected slope:', mcr::getCoefficients(fits[[1]])['Slope','EST'], '\\n')\n", Path.Combine(folder, "mcr-run"));
+        double rSlope = Numbers(r, "^Selected slope: (-?[0-9.]+) ")[0], engineSlope = Found(output.ParameterBag, "slope")[0];
         Console.WriteLine($"      method comparison through the engine: engine slope {engineSlope:G7}, R {rSlope:G7}");
         Check(script.Contains("do.deming.analytical <- TRUE") && script.Contains("do.paba <- FALSE") && Near(rSlope, engineSlope), "a real method comparison run's script runs the regression the run ticked and gives the engine's slope");
-        string linearized = "{\"operation\":\"LinearizedEstimates\",\"file\":\"linearized-estimates.R\",\"data\":[{\"title\":\"kwh\",\"values\":[2,4,9,16,26,38]},{\"title\":\"size\",\"values\":[1,2,3,4,5,6]}],\"settings\":{\"model\":\"1\"}}";
+        string linearized = "{\"operation\":\"LinearizedEstimates\",\"file\":\"linearized-estimates.R\",\"inputs\":[{\"name\":\"y\",\"columns\":[{\"title\":\"kwh\",\"values\":[2,4,9,16,26,38]}]},{\"name\":\"x\",\"columns\":[{\"title\":\"size\",\"values\":[1,2,3,4,5,6]}]}],\"settings\":{\"model\":\"1\"}}";
         r = Rr(Built(linearized), Path.Combine(folder, "linearized"));
-        Check(r.Contains("The model fitted in StatsDirect: Geometric / power"), "the linearized estimates script names the model the run chose");
+        Check(r.Contains("Selected model: Geometric / power"), "the linearized estimates script names the model the run chose");
         // a real normal plot run records no score method (it is asked in the chart options): the script draws the default and keeps the
         // help's remark on its own example to that example
         (run, _) = Run("NormalPlot", new() { ["X"] = Sheet(("pimax", new double[] { 40, 55, 62, 70, 76, 81, 88, 95, 103, 120 })) });
         script = Script(run);
-        r = Rr(script, Path.Combine(folder, "normal-plot-run"));
-        Check(script.Contains("method <- \"1\"") && script.Contains("\"2\" = blom") && r.Contains("van der Waerden scores from") && !r.Contains("The four values of 75"), "a real normal plot run, which records no score method, has a script that draws the default scores and keeps the help's remark on its example to that example");
+        r = Rr(script + "\nstopifnot(normal_method==1L,isTRUE(all.equal(normal_scores,qnorm(rank(observed)/(length(observed)+1)))))\ncat('NORMAL_METHOD_OK\\n')\n", Path.Combine(folder, "normal-plot-run"));
+        Check(r.Contains("NORMAL_METHOD_OK") && !r.Contains("The four values of 75"), "a real normal plot run, which records no score method, draws the default scores without the help's teaching example");
         string summary = "{\"operation\":\"UnivariateSummary\",\"file\":\"univariate-summary.R\",\"data\":[{\"title\":\"speed\",\"values\":[12,15,11,19,22,14,30,25,17,21,16,18]}],\"settings\":{\"gamma\":0.95,\"report-udca\":0.1,\"report-udcb\":0.9}}";
         r = Rr(Built(summary), Path.Combine(folder, "summary"));
         Check(r.Contains("Centile 90 ") && r.Contains("Centile 10 ") && !r.Contains("Centile 95"), "the summary's script gives the two centiles the run chose");

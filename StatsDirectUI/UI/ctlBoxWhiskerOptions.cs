@@ -72,6 +72,8 @@ namespace StatsDirect.UI
                 options.Method = BoxWhiskerOptions.BoxWhiskerMethod.MeanStandardErrorRange;
             else if (rdoMethodMQR.Checked)
                 options.Method = BoxWhiskerOptions.BoxWhiskerMethod.MedianQuartilesRange;
+            else if (rdoMethodTukey.Checked)
+                options.Method = BoxWhiskerOptions.BoxWhiskerMethod.TukeyHinges;
             else if (rdoMethodSevenNumberSummary.Checked)
                 options.Method = BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary;
             else if (rdoMethodBowley.Checked)
@@ -116,6 +118,9 @@ namespace StatsDirect.UI
                 case BoxWhiskerOptions.BoxWhiskerMethod.MedianQuartilesRange:
                     rdoMethodMQR.Checked = true;
                     break;
+                case BoxWhiskerOptions.BoxWhiskerMethod.TukeyHinges:
+                    rdoMethodTukey.Checked = true;
+                    break;
                 case BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary:
                     rdoMethodSevenNumberSummary.Checked = true;
                     break;
@@ -153,6 +158,7 @@ namespace StatsDirect.UI
         }
 
         private bool FencesAreAvailable => BoxWhiskerOptions.BoxWhiskerMethod.MedianQuartilesRange == options.Method
+                                           || BoxWhiskerOptions.BoxWhiskerMethod.TukeyHinges == options.Method
                                            || BoxWhiskerOptions.BoxWhiskerMethod.MeanStandardDeviationRange == options.Method
                                            || BoxWhiskerOptions.BoxWhiskerMethod.MeanStandardErrorRange == options.Method
                                            || BoxWhiskerOptions.BoxWhiskerMethod.MeanConfidenceIntervalRange == options.Method;

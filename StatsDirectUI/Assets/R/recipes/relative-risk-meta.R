@@ -134,12 +134,10 @@ cat("Begg-Mazumdar: Kendall's tau =", six(kt$estimate), "", pv(kt$p.value),
 # interval, the level the test is conventionally reported at
 egger <- function(y, x, label) {
   fit <- lm(y ~ x)
-  bias <- coef(fit)[1]
-  se <- sqrt(vcov(fit)[1, 1])
-  t <- bias / se
-  cat(label, ": bias = ", six(bias), " (90% CI = ", six(bias - qt(0.95, k - 2) * se),
-      " to ", six(bias + qt(0.95, k - 2) * se), ") ",
-      pv(2 * pt(-abs(t), k - 2)), "\n", sep = "")
+  bias <- coef(summary(fit))[1, ]
+  ci <- confint(fit, level = 0.9)[1, ]
+  cat(label, ": bias = ", six(bias["Estimate"]), " (90% CI = ", six(ci[1]),
+      " to ", six(ci[2]), ") ", pv(bias["Pr(>|t|)"]), "\n", sep = "")
 }
 egger(lrr / se_i, 1 / se_i, "Egger")
 

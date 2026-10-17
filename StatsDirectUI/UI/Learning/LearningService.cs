@@ -54,6 +54,13 @@ internal sealed partial class LearningService : IDisposable
     internal void ShowReportAI(frmReportWebView report, string resultId = null) { ai ??= new ScriptAIPane(main, this); ai.Open(report, resultId); }
     internal void ActiveScriptChanged(frmScript script) { if (ai?.IsOpen == true) ai.Open(script); }
     internal void ActiveReportChanged(frmReportWebView report) { if (ai?.IsOpen == true) ai.Open(report); }
+    internal void ActiveAIDataDocument(string id)
+    {
+        // The AI pane shares the whole open-workbook set; changing focus within
+        // that set does not choose different data. Explicit Learning choices
+        // continue to use SelectAIDataDocument and its existing revocation.
+        if (!ShareAIWorkbook) SelectAIDataDocument(id);
+    }
     internal void SelectAIDataDocument(string id)
     {
         if (!Sharing.SelectDataDocument(id)) return;

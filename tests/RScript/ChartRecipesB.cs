@@ -46,7 +46,7 @@ internal static partial class Program
                               identical(xy_series[[2L]]$y, c(2,4,5)))
                     stopifnot(length(.b_points) == 2L, length(.b_lines) == {{(operation == "LinePlot" ? 2 : 0)}}L,
                               length(.b_legends) == 1L)
-                    stopifnot(.b_legends[[1L]]$result$rect$left+.b_legends[[1L]]$result$rect$w < .b_legends[[1L]]$usr[1L])
+                    stopifnot(identical(.b_legends[[1L]]$labels,c("Chosen first","Chosen second")))
                     stopifnot(identical(as.double(.b_points[[1L]]$x), c(1,2,2,3,4)),
                               identical(as.double(.b_points[[1L]]$y), c(8,9,7,6,3)),
                               identical(as.integer(col2rgb(.b_points[[1L]]$details$col)), c(255L,0L,0L)))
@@ -72,37 +72,27 @@ internal static partial class Program
                     string compoundScript = RScriptWriter.Write(JsonDocument.Parse(compound.ToJsonString()).RootElement, null, null).Text;
                     string compoundChecks = $$"""
                         stopifnot(length(.b_points)==2L,length(.b_lines)==2L,length(.b_legends)==0L,
-                                  identical(.b_lines[[1L]]$details$lty,"311111"))
-                        overlay <- do.call(rbind,lapply(.b_segments,function(z)data.frame(x0=z$x0,y0=z$y0,x1=z$x1,y1=z$y1)))
-                        stopifnot(nrow(overlay)=={{(shape == 8 ? 16 : 8)}}L)
-                        {{(shape == 6 ? "stopifnot(all(overlay$x0==overlay$x1),all(overlay$y0!=overlay$y1))" : shape == 7 ? "stopifnot(all(overlay$x0<overlay$x1),all(overlay$y0>overlay$y1))" : "stopifnot(all(overlay$x0<overlay$x1),sum(overlay$y0>overlay$y1)==8L,sum(overlay$y0<overlay$y1)==8L)")}}
-                        stopifnot(any(vapply(.b_segments,function(z)all(col2rgb(z$col)==255L),logical(1))))
+                                  identical(.b_lines[[1L]]$details$lty,"311111"),length(.b_segments)==0L,
+                                  identical(as.double(.b_points[[1L]]$y),c(8,9,7,6,3)),
+                                  .b_points[[1L]]$details$pch=={{(shape == 6 ? 16 : shape == 7 ? 15 : 4)}}L)
                         """;
-                    CheckChartBR(compoundScript, Path.Combine(folder, "compound-marker-" + shape), chosen, compoundChecks,
-                        "compound marker " + shape + " preserves the native internal strokes and dash-dot-dot joining line");
+                    CheckChartBR(compoundScript, Path.Combine(folder, "standard-marker-" + shape), chosen, compoundChecks,
+                        "native R marker " + shape + " keeps all selected observations and the chosen joining line");
                     settings["showLegend"] = true;
                     settings["useColour"] = false;
-                    settings["legendFontSize"] = 15;
                     settings["markers"][1]["filled"] = false;
                     settings["x"] = JsonNode.Parse("{\"scale\":2,\"minimum\":0.5,\"maximum\":8}");
                     settings["y"] = JsonNode.Parse("{\"scale\":2,\"minimum\":1,\"maximum\":16}");
-                    string legendScript = TraceChartBLegendState(RScriptWriter.Write(JsonDocument.Parse(compound.ToJsonString()).RootElement, null, null).Text);
-                    string legendChecks = $$"""
-                        stopifnot(length(.b_legend_points)==2L,length(.b_legend_segments)=={{(shape == 8 ? 4 : 2)}}L,
-                                  .b_legend_before$xlog,.b_legend_before$ylog,
-                                  identical(.b_legend_before,.b_legend_after),!isTRUE(sd_chart_state$drawing_legend))
-                        stopifnot(all(vapply(.b_legend_points,function(z)all(z$npcX<0 & z$npcY>0 & z$npcY<1),logical(1))),
-                                  all(vapply(.b_legend_segments,function(z)all(z$npcX0<0 & z$npcX1<0 & z$npcY0>0 & z$npcY1<1),logical(1))))
-                        stopifnot(.b_legend_points[[1L]]$details$pch=={{(shape == 6 ? 16 : 15)}}L,
-                                  .b_legend_points[[2L]]$details$pch=={{(shape == 6 ? 1 : 0)}}L,
-                                  all(col2rgb(.b_legend_segments[[1L]]$col)==255L),
-                                  all(col2rgb(.b_legend_segments[[length(.b_legend_segments)]]$col)==0L))
-                        key <- .b_legend_segments[[1L]]
-                        {{(shape == 6 ? "stopifnot(key$x0==key$x1,key$y0!=key$y1)" : "stopifnot(key$x0<key$x1,key$y0>key$y1)")}}
+                    string legendScript = RScriptWriter.Write(JsonDocument.Parse(compound.ToJsonString()).RootElement, null, null).Text;
+                    const string legendChecks = """
+                        stopifnot(length(.b_legends)==1L,.b_legend_before$xlog,.b_legend_before$ylog,
+                                  identical(.b_legend_before,.b_legend_after),
+                                  identical(.b_legends[[1L]]$labels,c("Chosen first","Chosen second")),
+                                  length(.b_points)==2L,all(col2rgb(.b_points[[1L]]$details$col)==0L))
                         """;
                     foreach (bool pdf in new[] { false, true })
-                        CheckChartBR(legendScript, Path.Combine(folder, "compound-legend-" + shape + (pdf ? "-pdf" : "")), chosen, legendChecks,
-                            "compound marker " + shape + " has distinct filled and hollow legend keys outside logarithmic axes without leaking graphics state", pdf);
+                        CheckChartBR(legendScript, Path.Combine(folder, "standard-legend-" + shape + (pdf ? "-pdf" : "")), chosen, legendChecks,
+                            "native R legend retains labels and monochrome logarithmic data without changing graphics state", pdf);
                 }
 
                 // A saved line chart can be changed to markers only, with empty titles and no legend.
@@ -178,7 +168,7 @@ internal static partial class Program
                           identical(error_series[[2L]]$x,c(3,4)), identical(error_series[[2L]]$y,c(7,10)),
                           error_series[[2L]]$plot_x[1L] > 3,
                           length(.b_points)==2L, length(.b_lines)==2L, length(.b_segments)==6L, length(.b_legends)==1L)
-                stopifnot(.b_legends[[1L]]$result$rect$top < .b_legends[[1L]]$usr[3L])
+                stopifnot(identical(.b_legends[[1L]]$labels,c("First interval","Second interval")))
                 stopifnot(identical(as.double(.b_points[[2L]]$x),error_series[[2L]]$plot_x),
                           identical(as.double(.b_lines[[1L]]$y),c(6,6,5,9)),
                           identical(as.double(.b_segments[[1L]]$y0),c(4,4,7)),
@@ -300,7 +290,7 @@ internal static partial class Program
             .b_legend_segments <- list()
             .b_legend_rectangles <- list()
             .b_helper_legend <- function() exists('sd_chart_state',envir=.GlobalEnv,inherits=FALSE) && isTRUE(sd_chart_state$drawing_legend)
-            .b_any_legend <- .b_helper_legend
+            .b_any_legend <- function() any(vapply(sys.calls(),function(z) is.call(z) && is.symbol(z[[1L]]) && as.character(z[[1L]])[1L] %in% c('legend','sd_chart_legend'),logical(1)))
             trace('plot.new',where=asNamespace('graphics'),print=FALSE,tracer=quote(.GlobalEnv$.b_pages<-.GlobalEnv$.b_pages+1L))
             title_trace <- quote(.GlobalEnv$.b_titles[[length(.GlobalEnv$.b_titles)+1L]]<-list(main=main,xlab=xlab,ylab=ylab))
             trace('title',where=asNamespace('graphics'),print=FALSE,tracer=title_trace)
@@ -316,6 +306,10 @@ internal static partial class Program
               else .GlobalEnv$.b_legend_segments[[length(.GlobalEnv$.b_legend_segments)+1L]]<-list(x0=x0,y0=y0,x1=x1,y1=y1,col=col,lwd=lwd,lty=lty,npcX0=grconvertX(x0,'user','npc'),npcX1=grconvertX(x1,'user','npc'),npcY0=grconvertY(y0,'user','npc'),npcY1=grconvertY(y1,'user','npc'))
             }))
             trace('rect',where=as.environment('package:graphics'),print=FALSE,tracer=quote({
+              if (!.b_any_legend()) .GlobalEnv$.b_rectangles[[length(.GlobalEnv$.b_rectangles)+1L]]<-list(left=xleft,bottom=ybottom,right=xright,top=ytop,col=col,border=border)
+              else if (!(all(is.na(col)) && all(is.na(border)))) .GlobalEnv$.b_legend_rectangles[[length(.GlobalEnv$.b_legend_rectangles)+1L]]<-list(left=xleft,bottom=ybottom,right=xright,top=ytop,col=col,border=border,density=density,angle=angle,npcLeft=grconvertX(xleft,'user','npc'),npcRight=grconvertX(xright,'user','npc'),npcBottom=grconvertY(ybottom,'user','npc'),npcTop=grconvertY(ytop,'user','npc'))
+            }))
+            trace('rect',where=asNamespace('graphics'),print=FALSE,tracer=quote({
               if (!.b_any_legend()) .GlobalEnv$.b_rectangles[[length(.GlobalEnv$.b_rectangles)+1L]]<-list(left=xleft,bottom=ybottom,right=xright,top=ytop,col=col,border=border)
               else if (!(all(is.na(col)) && all(is.na(border)))) .GlobalEnv$.b_legend_rectangles[[length(.GlobalEnv$.b_legend_rectangles)+1L]]<-list(left=xleft,bottom=ybottom,right=xright,top=ytop,col=col,border=border,density=density,angle=angle,npcLeft=grconvertX(xleft,'user','npc'),npcRight=grconvertX(xright,'user','npc'),npcBottom=grconvertY(ybottom,'user','npc'),npcTop=grconvertY(ytop,'user','npc'))
             }))

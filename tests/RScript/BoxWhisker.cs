@@ -142,7 +142,7 @@ internal static partial class Program
                     CheckBoxR(RScriptWriter.Write(Record(run), null, null).Text, Path.Combine(folder, caseName + "-method-" + (int)method + "-fences-" + fences),
                         data, options, caption, "Selected group", "Chosen units", caption);
             }
-            foreach (BoxWhiskerOptions.BoxWhiskerMethod method in Enum.GetValues<BoxWhiskerOptions.BoxWhiskerMethod>())
+            foreach (BoxWhiskerOptions.BoxWhiskerMethod method in Enum.GetValues<BoxWhiskerOptions.BoxWhiskerMethod>().Where(method => (int)method <= 6))
             {
                 for (int fences = 0; fences < 4; fences++) ChartCase(method, fences, sparse, "Sparse");
                 ChartCase(method, 3, new[] { 7.0, 7, 7, 7, 7 }, "Constant");

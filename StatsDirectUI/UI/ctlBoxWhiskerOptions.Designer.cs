@@ -29,6 +29,7 @@ namespace StatsDirect.UI
         private void InitializeComponent()
         {
             this.rdoMethodMQR = new System.Windows.Forms.RadioButton();
+            this.rdoMethodTukey = new System.Windows.Forms.RadioButton();
             this.rdoMethodMSDR = new System.Windows.Forms.RadioButton();
             this.rdoMethodMCIR = new System.Windows.Forms.RadioButton();
             this.grpMethod = new System.Windows.Forms.GroupBox();
@@ -56,15 +57,28 @@ namespace StatsDirect.UI
             this.rdoMethodMQR.Text = "Median, quartiles and range (min, 25, 50, 75, max)";
             this.rdoMethodMQR.UseVisualStyleBackColor = true;
             this.rdoMethodMQR.CheckedChanged += new System.EventHandler(this.rdoMethod_CheckedChanged);
+            //
+            // rdoMethodTukey
+            //
+            this.rdoMethodTukey.AutoSize = true;
+            this.rdoMethodTukey.Location = new System.Drawing.Point(6, 39);
+            this.rdoMethodTukey.Margin = new System.Windows.Forms.Padding(3, 0, 3, 3);
+            this.rdoMethodTukey.Name = "rdoMethodTukey";
+            this.rdoMethodTukey.Size = new System.Drawing.Size(239, 17);
+            this.rdoMethodTukey.TabIndex = 1;
+            this.rdoMethodTukey.TabStop = true;
+            this.rdoMethodTukey.Text = "Tukey hinges (median of each half)";
+            this.rdoMethodTukey.UseVisualStyleBackColor = true;
+            this.rdoMethodTukey.CheckedChanged += new System.EventHandler(this.rdoMethod_CheckedChanged);
             // 
             // rdoMethodMSDR
             // 
             this.rdoMethodMSDR.AutoSize = true;
-            this.rdoMethodMSDR.Location = new System.Drawing.Point(6, 39);
+            this.rdoMethodMSDR.Location = new System.Drawing.Point(6, 59);
             this.rdoMethodMSDR.Margin = new System.Windows.Forms.Padding(3, 0, 3, 3);
             this.rdoMethodMSDR.Name = "rdoMethodMSDR";
             this.rdoMethodMSDR.Size = new System.Drawing.Size(196, 17);
-            this.rdoMethodMSDR.TabIndex = 1;
+            this.rdoMethodMSDR.TabIndex = 2;
             this.rdoMethodMSDR.TabStop = true;
             this.rdoMethodMSDR.Text = "Mean, standard deviation and range";
             this.rdoMethodMSDR.UseVisualStyleBackColor = true;
@@ -73,11 +87,11 @@ namespace StatsDirect.UI
             // rdoMethodMCIR
             // 
             this.rdoMethodMCIR.AutoSize = true;
-            this.rdoMethodMCIR.Location = new System.Drawing.Point(6, 79);
+            this.rdoMethodMCIR.Location = new System.Drawing.Point(6, 99);
             this.rdoMethodMCIR.Margin = new System.Windows.Forms.Padding(3, 0, 3, 3);
             this.rdoMethodMCIR.Name = "rdoMethodMCIR";
             this.rdoMethodMCIR.Size = new System.Drawing.Size(55, 17);
-            this.rdoMethodMCIR.TabIndex = 3;
+            this.rdoMethodMCIR.TabIndex = 4;
             this.rdoMethodMCIR.TabStop = true;
             this.rdoMethodMCIR.Text = "Mean,";
             this.rdoMethodMCIR.UseVisualStyleBackColor = true;
@@ -85,6 +99,7 @@ namespace StatsDirect.UI
             // 
             // grpMethod
             // 
+            this.grpMethod.Controls.Add(this.rdoMethodTukey);
             this.grpMethod.Controls.Add(this.rdoMethodMSER);
             this.grpMethod.Controls.Add(this.rdoMethodBowley);
             this.grpMethod.Controls.Add(this.rdoMethodSevenNumberSummary);
@@ -95,7 +110,7 @@ namespace StatsDirect.UI
             this.grpMethod.Controls.Add(this.rdoMethodMCIR);
             this.grpMethod.Location = new System.Drawing.Point(3, 3);
             this.grpMethod.Name = "grpMethod";
-            this.grpMethod.Size = new System.Drawing.Size(276, 143);
+            this.grpMethod.Size = new System.Drawing.Size(276, 163);
             this.grpMethod.TabIndex = 19;
             this.grpMethod.TabStop = false;
             this.grpMethod.Text = "Type of plot";
@@ -103,11 +118,11 @@ namespace StatsDirect.UI
             // rdoMethodBowley
             // 
             this.rdoMethodBowley.AutoSize = true;
-            this.rdoMethodBowley.Location = new System.Drawing.Point(6, 119);
+            this.rdoMethodBowley.Location = new System.Drawing.Point(6, 139);
             this.rdoMethodBowley.Margin = new System.Windows.Forms.Padding(3, 0, 3, 3);
             this.rdoMethodBowley.Name = "rdoMethodBowley";
             this.rdoMethodBowley.Size = new System.Drawing.Size(243, 17);
-            this.rdoMethodBowley.TabIndex = 6;
+            this.rdoMethodBowley.TabIndex = 7;
             this.rdoMethodBowley.TabStop = true;
             this.rdoMethodBowley.Text = "Bowley summary (min, 10, 25, 50, 75, 90, max)";
             this.rdoMethodBowley.UseVisualStyleBackColor = true;
@@ -116,11 +131,11 @@ namespace StatsDirect.UI
             // rdoMethodSevenNumberSummary
             // 
             this.rdoMethodSevenNumberSummary.AutoSize = true;
-            this.rdoMethodSevenNumberSummary.Location = new System.Drawing.Point(6, 99);
+            this.rdoMethodSevenNumberSummary.Location = new System.Drawing.Point(6, 119);
             this.rdoMethodSevenNumberSummary.Margin = new System.Windows.Forms.Padding(3, 0, 3, 3);
             this.rdoMethodSevenNumberSummary.Name = "rdoMethodSevenNumberSummary";
             this.rdoMethodSevenNumberSummary.Size = new System.Drawing.Size(255, 17);
-            this.rdoMethodSevenNumberSummary.TabIndex = 5;
+            this.rdoMethodSevenNumberSummary.TabIndex = 6;
             this.rdoMethodSevenNumberSummary.TabStop = true;
             this.rdoMethodSevenNumberSummary.Text = "Seven number summary (2, 9, 25, 50, 75, 91, 98)";
             this.rdoMethodSevenNumberSummary.UseVisualStyleBackColor = true;
@@ -141,17 +156,17 @@ namespace StatsDirect.UI
             "92",
             "91",
             "90"});
-            this.cboCco.Location = new System.Drawing.Point(58, 78);
+            this.cboCco.Location = new System.Drawing.Point(58, 98);
             this.cboCco.Name = "cboCco";
             this.cboCco.Size = new System.Drawing.Size(45, 21);
-            this.cboCco.TabIndex = 4;
+            this.cboCco.TabIndex = 5;
             this.cboCco.SelectedIndexChanged += new System.EventHandler(this.cboCco_SelectedIndexChanged);
             this.cboCco.TextUpdate += new System.EventHandler(this.cboCco_TextUpdate);
             // 
             // lblCIRange
             // 
             this.lblCIRange.AutoSize = true;
-            this.lblCIRange.Location = new System.Drawing.Point(105, 81);
+            this.lblCIRange.Location = new System.Drawing.Point(105, 101);
             this.lblCIRange.Name = "lblCIRange";
             this.lblCIRange.Size = new System.Drawing.Size(159, 13);
             this.lblCIRange.TabIndex = 11;
@@ -160,10 +175,10 @@ namespace StatsDirect.UI
             // chkMarkMeanAndMedian
             // 
             this.chkMarkMeanAndMedian.AutoSize = true;
-            this.chkMarkMeanAndMedian.Location = new System.Drawing.Point(9, 226);
+            this.chkMarkMeanAndMedian.Location = new System.Drawing.Point(9, 246);
             this.chkMarkMeanAndMedian.Name = "chkMarkMeanAndMedian";
             this.chkMarkMeanAndMedian.Size = new System.Drawing.Size(161, 17);
-            this.chkMarkMeanAndMedian.TabIndex = 9;
+            this.chkMarkMeanAndMedian.TabIndex = 10;
             this.chkMarkMeanAndMedian.Text = "Mark both mean and median";
             this.chkMarkMeanAndMedian.UseVisualStyleBackColor = true;
             this.chkMarkMeanAndMedian.CheckedChanged += new System.EventHandler(this.chkMarkMeanAndMedian_CheckedChanged);
@@ -172,7 +187,7 @@ namespace StatsDirect.UI
             // 
             this.grpFences.Controls.Add(this.chkUseOuterFence);
             this.grpFences.Controls.Add(this.chkUseInnerFence);
-            this.grpFences.Location = new System.Drawing.Point(3, 152);
+            this.grpFences.Location = new System.Drawing.Point(3, 172);
             this.grpFences.Name = "grpFences";
             this.grpFences.Size = new System.Drawing.Size(276, 68);
             this.grpFences.TabIndex = 21;
@@ -185,7 +200,7 @@ namespace StatsDirect.UI
             this.chkUseOuterFence.Location = new System.Drawing.Point(7, 44);
             this.chkUseOuterFence.Name = "chkUseOuterFence";
             this.chkUseOuterFence.Size = new System.Drawing.Size(153, 17);
-            this.chkUseOuterFence.TabIndex = 8;
+            this.chkUseOuterFence.TabIndex = 9;
             this.chkUseOuterFence.Text = "Use outer fence for outliers";
             this.chkUseOuterFence.UseVisualStyleBackColor = true;
             this.chkUseOuterFence.CheckedChanged += new System.EventHandler(this.chkUseOuterFence_CheckedChanged);
@@ -196,7 +211,7 @@ namespace StatsDirect.UI
             this.chkUseInnerFence.Location = new System.Drawing.Point(7, 20);
             this.chkUseInnerFence.Name = "chkUseInnerFence";
             this.chkUseInnerFence.Size = new System.Drawing.Size(152, 17);
-            this.chkUseInnerFence.TabIndex = 7;
+            this.chkUseInnerFence.TabIndex = 8;
             this.chkUseInnerFence.Text = "Use inner fence for outliers";
             this.chkUseInnerFence.UseVisualStyleBackColor = true;
             this.chkUseInnerFence.CheckedChanged += new System.EventHandler(this.chkUseInnerFence_CheckedChanged);
@@ -204,11 +219,11 @@ namespace StatsDirect.UI
             // rdoMethodMSER
             // 
             this.rdoMethodMSER.AutoSize = true;
-            this.rdoMethodMSER.Location = new System.Drawing.Point(6, 59);
+            this.rdoMethodMSER.Location = new System.Drawing.Point(6, 79);
             this.rdoMethodMSER.Margin = new System.Windows.Forms.Padding(3, 0, 3, 3);
             this.rdoMethodMSER.Name = "rdoMethodMSER";
             this.rdoMethodMSER.Size = new System.Drawing.Size(174, 17);
-            this.rdoMethodMSER.TabIndex = 2;
+            this.rdoMethodMSER.TabIndex = 3;
             this.rdoMethodMSER.TabStop = true;
             this.rdoMethodMSER.Text = "Mean, standard error and range";
             this.rdoMethodMSER.UseVisualStyleBackColor = true;
@@ -223,7 +238,7 @@ namespace StatsDirect.UI
             this.Controls.Add(this.grpMethod);
             this.Controls.Add(this.grpFences);
             this.Name = "ctlBoxWhiskerOptions";
-            this.Size = new System.Drawing.Size(282, 246);
+            this.Size = new System.Drawing.Size(282, 266);
             this.grpMethod.ResumeLayout(false);
             this.grpMethod.PerformLayout();
             this.grpFences.ResumeLayout(false);
@@ -236,6 +251,7 @@ namespace StatsDirect.UI
         #endregion
 
         private System.Windows.Forms.RadioButton rdoMethodMQR;
+        private System.Windows.Forms.RadioButton rdoMethodTukey;
         private System.Windows.Forms.RadioButton rdoMethodMSDR;
         private System.Windows.Forms.RadioButton rdoMethodMCIR;
         private System.Windows.Forms.GroupBox grpMethod;

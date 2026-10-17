@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 // using Layout.Formatters;
 
@@ -94,15 +95,19 @@ namespace Layout.AxisLabelers
 
         protected double Coverage(decimal dmin, decimal dmax, decimal lmin, decimal lmax)
         {
-            return 1 - 0.5 * (double)(((dmax - lmax) * (dmax - lmax) + (dmin - lmin) * (dmin - lmin)) / (0.1m * (dmax - dmin) * 0.1m * (dmax - dmin)));
+            // Normalize before squaring: squaring a small decimal data range can underflow to zero.
+            decimal range = dmax - dmin;
+            double upper = (double)((dmax - lmax) / range);
+            double lower = (double)((dmin - lmin) / range);
+            return 1 - 50 * (upper * upper + lower * lower);
         }
 
         protected double MaxCoverage(decimal dataRange, decimal span)
         {
             if (span > dataRange)
             {
-                decimal half = (span - dataRange) / 2;
-                return 1 - 0.5 * (double)((half * half + half * half) / (0.1m * dataRange * 0.1m * dataRange));
+                double excess = (double)((span - dataRange) / dataRange);
+                return 1 - 25 * excess * excess;
             }
             return 1;
         }
@@ -184,7 +189,8 @@ namespace Layout.AxisLabelers
                                 Axis option = options.DefaultAxis();
 
                                 List<decimal> stepSequence = Enumerable.Range(0, k).Select(x => lmin + x * step).ToList();
-                                List<Tuple<decimal, string>> newlabels = stepSequence.Select(value => new Tuple<decimal, string>(value, value.ToString())).ToList();
+                                // Decimal steps can carry a scale such as 25.0; that is not meaningful axis precision.
+                                List<Tuple<decimal, string>> newlabels = stepSequence.Select(value => new Tuple<decimal, string>(value, value.ToString("G29", CultureInfo.CurrentCulture))).ToList();
 
                                 option.Labels = newlabels;
                                 option.Density = d;
