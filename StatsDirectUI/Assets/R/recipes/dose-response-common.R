@@ -15,10 +15,20 @@ sd_dose_response_fit <- function(dose, subjects, responses, model, nc = 0, nrc =
     fit <- glm(cbind(responses, subjects - responses) ~ age, family = binomial(link = model), start = coef(fit))
     if (!isTRUE(fit$converged) || any(!is.finite(coef(fit))) || any(!is.finite(vcov(fit))))
       stop("The selected binomial model did not give a converged, identifiable dose-response fit.")
+    a <- unname(coef(fit)[1L]) / link$scale; b <- unname(coef(fit)[2L]) / link$scale
+    centre <- mean(dose); scale <- sqrt(mean((dose - centre)^2))
+    probability <- link$probability(a + b * dose); density <- link$density(a + b * dose)
+    informative <- probability > 0 & probability < 1 & density > 0
+    design <- cbind(1, (dose - centre) / scale)
+    weights <- subjects[informative] * density[informative]^2 / (probability[informative] * (1 - probability[informative]))
+    information <- crossprod(design[informative, , drop = FALSE] * sqrt(weights))
+    transformation <- rbind(c(1, -centre / scale), c(0, 1 / scale))
+    exact_covariance <- tryCatch(transformation %*% solve(information) %*% t(transformation), error = function(e) NULL)
+    if (is.null(exact_covariance) || any(!is.finite(exact_covariance)))
+      stop("The final binomial fit has singular Fisher information.")
     covariance <- matrix(0, 3L, 3L, dimnames = list(c("a", "b", "natural"), c("a", "b", "natural")))
-    covariance[1:2, 1:2] <- vcov(fit) / link$scale^2
-    return(list(fit = fit, a = unname(coef(fit)[1L]) / link$scale,
-      b = unname(coef(fit)[2L]) / link$scale, natural_response = 0, covariance = covariance))
+    covariance[1:2, 1:2] <- exact_covariance
+    return(list(fit = fit, a = a, b = b, natural_response = 0, covariance = covariance))
   }
   if (nrc >= nc) stop("A natural-response model needs at least one responding and one nonresponding control subject.")
   centre <- mean(dose); scale <- sqrt(mean((dose - centre)^2))

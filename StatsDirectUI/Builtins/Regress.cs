@@ -6278,14 +6278,68 @@ namespace StatsDirect.Builtins
             if (c > 0.0)
             {
             }
-            s1 = s1L;
-            s2 = s2L;
-            s3 = s3L;
-            s4 = s4L;
-            s6 = s6L;
-            sw = swl;
-            del = dell;
+            // The last scoring step updated a,b,c after calculating its weights.
+            // Refresh information at the actual final estimates, particularly
+            // important for Fieller intervals near the bounded/unbounded limit.
+            if (!RefreshProbitInformation(model, k, nc, c, a, b, s, r, x,
+                out s1, out s2, out s3, out s4, out s6, out del,
+                out tm, out xm, out ym, out sw, out icount))
+            {
+                ifault = 7;
+                return;
+            }
             ifault = 0;
+        }
+
+        private static bool RefreshProbitInformation(ProbitModel model, int k, int controlSubjects,
+            double naturalResponse, double a, double b, double[] subjects, double[] responses, double[] doses,
+            out double s1, out double s2, out double s3, out double s4, out double s6, out double determinant,
+            out double meanAuxiliary, out double meanDose, out double meanWorking, out double totalWeight, out int zeroWeights)
+        {
+            double[] weights = new double[k + 1], auxiliary = new double[k + 1], working = new double[k + 1];
+            double sumDose = 0, sumAuxiliary = 0, sumWorking = 0;
+            totalWeight = 0;
+            zeroWeights = 0;
+            for (int i = 1; i <= k; i++)
+            {
+                double eta = a + b * doses[i];
+                double excess = ProbitResponse(model, eta);
+                double density = model == ProbitModel.Probit ? Math.Exp(-eta * eta / 2) / Math.Sqrt(2 * Math.PI) : 2 * excess * (1 - excess);
+                if (excess <= 0 || excess >= 1 || density <= 0)
+                {
+                    zeroWeights++;
+                    continue;
+                }
+                double probability = naturalResponse + (1 - naturalResponse) * excess;
+                double derivative = (1 - naturalResponse) * density;
+                weights[i] = subjects[i] * derivative * derivative / (probability * (1 - probability));
+                auxiliary[i] = (1 - excess) / density;
+                working[i] = eta + (responses[i] / subjects[i] - probability) / derivative;
+                totalWeight += weights[i];
+                sumDose += weights[i] * doses[i];
+                sumAuxiliary += weights[i] * auxiliary[i];
+                sumWorking += weights[i] * working[i];
+            }
+            meanDose = sumDose / totalWeight;
+            meanAuxiliary = sumAuxiliary / totalWeight;
+            meanWorking = sumWorking / totalWeight;
+            s1 = s2 = s3 = s4 = s6 = 0;
+            for (int i = 1; i <= k; i++)
+            {
+                if (weights[i] <= 0)
+                    continue;
+                double x = doses[i] - meanDose, y = working[i] - meanWorking, t = auxiliary[i] - meanAuxiliary;
+                s1 += weights[i] * x * x;
+                s2 += weights[i] * x * y;
+                s3 += weights[i] * y * y;
+                s4 += weights[i] * t * t;
+                s6 += weights[i] * x * t;
+            }
+            if (naturalResponse > 0)
+                s4 += controlSubjects * (1 - naturalResponse) / naturalResponse;
+            determinant = s1 * s4 - s6 * s6;
+            return totalWeight > 0 && double.IsFinite(totalWeight) && s1 > 0 && k - zeroWeights > 2
+                && (naturalResponse <= 0 || determinant > 0 && double.IsFinite(determinant));
         }
 
         /// <summary>

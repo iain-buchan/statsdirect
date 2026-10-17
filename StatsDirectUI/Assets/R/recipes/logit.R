@@ -122,6 +122,9 @@ if (identical(replay_operation, "ProbitMore")) {
   expected_counts <- dose_response_rows$subjects * observed_response_for(a + b * table_doses)
   dose_response_table <- data.frame(index = seq_len(nrow(dose_response_rows)), subjects = dose_response_rows$subjects,
     responses = dose_response_rows$responses, expected = expected_counts, deviation = dose_response_rows$responses - expected_counts)
+  cat("Weighted Sxx =", six(dose_response_diagnostics$sxx), "; Sxy =", six(dose_response_diagnostics$sxy), "; Syy =", six(dose_response_diagnostics$syy), "\n")
+  cat("Variance of slope =", six(dose_response_diagnostics$var_b), "; standard error =", six(dose_response_diagnostics$seb), "\n")
+  if (nc > 0) cat("Natural response =", six(natural_response), "; standard error =", six(dose_response_diagnostics$natural_se), "\n")
   print(dose_response_table, row.names = FALSE)
 }
 if (identical(replay_operation, "ProbitPlot")) {
