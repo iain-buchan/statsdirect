@@ -38,6 +38,8 @@ if (isTRUE(log_doses)) {
 back <- if (isTRUE(log_doses)) function(v) 10^v else identity
 link <- sd_dose_response_link(model)
 estimated <- sd_dose_response_fit(age, girls, menses, model, nc, nrc)
+# Finney's logit uses half the ordinary R log odds. The a/b summaries use that
+# native scale; the fit object's coefficients retain R's scale for predict/coef.
 fit <- estimated$fit; a <- estimated$a; b <- estimated$b
 natural_response <- estimated$natural_response
 covariance_full <- estimated$covariance
@@ -50,7 +52,8 @@ expected_probability <- observed_response_for(a + b * age)
 chi_doses <- sum(sd_dose_response_pearson(menses, girls, expected_probability))
 chi_controls <- if (natural_response > 0 && nc > 0) sd_dose_response_pearson(nrc, nc, natural_response) else 0
 chi <- chi_doses + chi_controls
-zero_weight <- link$density(a + b * age) == 0 | response_for(a + b * age) %in% c(0, 1)
+# At F=0 a controlled group still informs the estimated background probability.
+zero_weight <- if (natural_response > 0) expected_probability %in% c(0, 1) else link$density(a + b * age) == 0 | response_for(a + b * age) %in% c(0, 1)
 df <- length(age) - 2L - sum(zero_weight)
 if (df <= 0) stop("The model needs more informative dose levels to estimate its residual variation.")
 heterogeneity_p <- pchisq(chi, df, lower.tail = FALSE)
@@ -131,6 +134,8 @@ if (identical(replay_operation, "ProbitPlot")) {
   curve_transformed_doses <- seq(min(age), max(age), length.out = 401L)
   eta <- a + b * curve_transformed_doses
   curve_se <- if (is.infinite(selected_dispersion)) rep(Inf, length(eta)) else sqrt(pmax(0, selected_covariance[1L, 1L] + 2 * curve_transformed_doses * selected_covariance[1L, 2L] + curve_transformed_doses^2 * selected_covariance[2L, 2L]))
+  # response is the observed probability; adjusted_response and its lower/upper
+  # bands use the background-adjusted scale of the native chart.
   dose_response_curve <- data.frame(dose = back(curve_transformed_doses), response = observed_response_for(eta),
     adjusted_response = response_for(eta), lower = response_for(eta - critical * curve_se), upper = response_for(eta + critical * curve_se))
   dose_response_adjusted_response <- (menses / girls - natural_response) / (1 - natural_response)

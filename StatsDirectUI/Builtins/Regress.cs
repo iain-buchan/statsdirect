@@ -6132,6 +6132,7 @@ namespace StatsDirect.Builtins
             do
             {
                 icount = 0;
+                double backgroundSubjects = 0, backgroundResponders = 0;
                 for (i = 1; i <= k; i++)
                 {
                     double v = y[i];
@@ -6151,7 +6152,16 @@ namespace StatsDirect.Builtins
                     }
                     if (q <= 0.0 | q >= 1.0)
                     {
-                        icount += 1;
+                        if (c > 0 && q >= 1)
+                        {
+                            // At the lower asymptote this row still informs c:
+                            // its binomial probability is c, not zero. Retain
+                            // that score/information once, and retain its df.
+                            backgroundSubjects += s[i];
+                            backgroundResponders += r[i];
+                        }
+                        else
+                            icount += 1;
                         w[i] = 0.0;
                         t2[i] = 0.0;
                     }
@@ -6205,6 +6215,8 @@ namespace StatsDirect.Builtins
                 double swty = 0.0;
                 for (i = 1; i <= k; i++)
                 {
+                    if (w[i] <= 0)
+                        continue;
                     swxt += s[i] * w[i] * x[i] * t2[i];
                     swt += s[i] * w[i] * t2[i];
                     swtt += s[i] * w[i] * t2[i] * t2[i];
@@ -6221,8 +6233,9 @@ namespace StatsDirect.Builtins
                 s3L = swyy - swy * swy / swl;
                 if (c > 0)
                 {
-                    s4L = swtt - swt * swt / swl + Convert.ToDouble(nc) * (1.0 - c) / c;
-                    s5 = swty - swt * swy / swl + Convert.ToDouble(nc) * (c1 - c) / c;
+                    s4L = swtt - swt * swt / swl + (nc + backgroundSubjects) * (1.0 - c) / c;
+                    s5 = swty - swt * swy / swl + Convert.ToDouble(nc) * (c1 - c) / c
+                        + (backgroundResponders - backgroundSubjects * c) / c;
                     s6L = swxt - swx * swt / swl;
                     double s7 = s6L * s6L;
                     dell = s1L * s4L - s7;
@@ -6298,6 +6311,7 @@ namespace StatsDirect.Builtins
         {
             double[] weights = new double[k + 1], auxiliary = new double[k + 1], working = new double[k + 1];
             double sumDose = 0, sumAuxiliary = 0, sumWorking = 0;
+            double backgroundInformation = 0;
             totalWeight = 0;
             zeroWeights = 0;
             for (int i = 1; i <= k; i++)
@@ -6305,9 +6319,12 @@ namespace StatsDirect.Builtins
                 double eta = a + b * doses[i];
                 double excess = ProbitResponse(model, eta);
                 double density = model == ProbitModel.Probit ? Math.Exp(-eta * eta / 2) / Math.Sqrt(2 * Math.PI) : 2 * excess * (1 - excess);
-                if (excess <= 0 || excess >= 1 || density <= 0)
+                if (1 - excess >= 1 || excess >= 1 || density <= 0)
                 {
-                    zeroWeights++;
+                    if (naturalResponse > 0 && excess < 0.5)
+                        backgroundInformation += subjects[i] * (1 - naturalResponse) / naturalResponse;
+                    else
+                        zeroWeights++;
                     continue;
                 }
                 double probability = naturalResponse + (1 - naturalResponse) * excess;
@@ -6336,7 +6353,7 @@ namespace StatsDirect.Builtins
                 s6 += weights[i] * x * t;
             }
             if (naturalResponse > 0)
-                s4 += controlSubjects * (1 - naturalResponse) / naturalResponse;
+                s4 += controlSubjects * (1 - naturalResponse) / naturalResponse + backgroundInformation;
             determinant = s1 * s4 - s6 * s6;
             return totalWeight > 0 && double.IsFinite(totalWeight) && s1 > 0 && k - zeroWeights > 2
                 && (naturalResponse <= 0 || determinant > 0 && double.IsFinite(determinant));
