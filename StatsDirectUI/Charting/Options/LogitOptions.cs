@@ -11,6 +11,9 @@ namespace StatsDirect.Charting
         public double s1;
         public double a;
         public double b;
+        public double? VarianceIntercept;
+        public double? CovarianceInterceptSlope;
+        public double? VarianceSlope;
         public bool modelIsLog10;
         public override bool ShowLegendIsRelevant => false;
 

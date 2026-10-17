@@ -101,7 +101,7 @@ namespace StatsDirect.Charting.Renderer
             {
                 double x = FromCanvasWidth(calcxCanvas);
                 double calcX = options.modelIsLog10 ? Math.Log10(x) : x;
-                cl = options.t * Math.Sqrt(1.0 / options.sw + Math.Pow(calcX - xm, 2.0) / options.s1);
+                cl = options.t * CurveStandardError(options, calcX, xm);
                 double calcY = options.a + options.b * calcX + cl;
                 calcY = Remodel(options.model, calcY);
                 MaybeDrawLineInChartCoordinates(axisScales, GrMagenta, x, calcY, oldx, oldy);
@@ -115,7 +115,7 @@ namespace StatsDirect.Charting.Renderer
             {
                 double x = FromCanvasWidth(calcxCanvas);
                 double calcX = options.modelIsLog10 ? Math.Log10(x) : x;
-                cl = options.t * Math.Sqrt(1.0 / options.sw + Math.Pow(calcX - xm, 2.0) / options.s1);
+                cl = options.t * CurveStandardError(options, calcX, xm);
                 double calcY = options.a + options.b * calcX - cl;
                 calcY = Remodel(options.model, calcY);
                 MaybeDrawLineInChartCoordinates(axisScales, GrMagenta, x, calcY, oldx, oldy);
@@ -126,11 +126,22 @@ namespace StatsDirect.Charting.Renderer
             return new ParameterBag();
         }
 
+        private static double CurveStandardError(LogitOptions options, double dose, double legacyMean)
+        {
+            if (options.VarianceIntercept.HasValue && options.CovarianceInterceptSlope.HasValue && options.VarianceSlope.HasValue)
+                return Math.Sqrt(Math.Max(0, options.VarianceIntercept.Value
+                    + 2 * dose * options.CovarianceInterceptSlope.Value + dose * dose * options.VarianceSlope.Value));
+            return Math.Sqrt(1.0 / options.sw + Math.Pow(dose - legacyMean, 2.0) / options.s1);
+        }
+
         private static double Remodel(int model, double calcY)
         {
             if (model == 1)
                 return PDF.alnorm(calcY);
-            return Math.Exp(calcY * 2.0) / (1.0 + Math.Exp(calcY * 2.0));
+            if (calcY >= 0)
+                return 1 / (1 + Math.Exp(-2 * calcY));
+            double e = Math.Exp(2 * calcY);
+            return e / (1 + e);
         }
     }
 }

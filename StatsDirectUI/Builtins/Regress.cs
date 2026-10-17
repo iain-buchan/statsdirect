@@ -5795,13 +5795,28 @@ namespace StatsDirect.Builtins
             double[] y = new double[k + 1];
             double[] pob = new double[k + 1];
             double[] x = new double[k + 1];
+            // The further-statistics table follows worksheet order, after the
+            // same missing-row/control filtering used for the fitted data.
+            double[] observedDoses = (double[])d.Clone();
+            double[] observedSubjects = (double[])s.Clone();
+            double[] observedResponders = (double[])r.Clone();
             x_sortbydose(d, s, r, k);
             double c = 0;
             x_probits(model, k, ref C1, ref c, ref nc, nrc, clog, qld, d, s, r, P, w, y, pob, x, ref a, ref b, ref laps, ref S1, ref S2, ref s3, ref s4, ref s6, ref del, ref TM, ref XM, ref ym, ref sw, ref icount, out int ifault);
             if (ifault != 0)
                 throw new TemplateOperationCancelledException(ProbitFaultToString(ifault), "Fault in Probit Analysis");
 
-            x_qdcl(model, k, out C2, ici, clog, qld, ref dose50, ref doseq, a, b, ref nohetllm, ref nohetulm, ref hetllm, ref hetulm, ref nohetllq, ref nohetulq, ref hetllq, ref hetulq, ref c, out se, ref cse, out seh, ref cseh, ref I1, ref S1, ref S2, ref s3, s4, s6, del, TM, XM, sw, out varb, icount, out ifault2);
+            // Pearson goodness of fit includes each independent binomial group
+            // once, including the controls when their background rate is fitted.
+            double pearson = 0;
+            for (int i = 1; i <= k; i++)
+            {
+                double fitted = c + (1 - c) * ProbitResponse(model, y[i]);
+                pearson += ProbitPearsonTerm(r[i], s[i], fitted);
+            }
+            if (nc > 0 && c > 0)
+                pearson += ProbitPearsonTerm(nrc, nc, c);
+            x_qdcl(model, k, out C2, ici, clog, qld, ref dose50, ref doseq, a, b, ref nohetllm, ref nohetulm, ref hetllm, ref hetulm, ref nohetllq, ref nohetulq, ref hetllq, ref hetulq, ref c, out se, ref cse, out seh, ref cseh, ref I1, ref S1, ref S2, ref s3, s4, s6, del, TM, XM, sw, pearson, out varb, icount, out ifault2);
             if (ifault2 != 0)
                 throw new TemplateOperationCancelledException(ProbitFaultToString(ifault2), "Fault in Probit Analysis");
 
@@ -5854,7 +5869,7 @@ namespace StatsDirect.Builtins
             if (tp > 0.05)
                 outputParameters.AddOutput("*warn", new List<ParameterBag>() { new ParameterBag() });
 
-            MultipleLinearRegressionContext context = new() { Arg = new double[18 + 1] };
+            MultipleLinearRegressionContext context = new() { Arg = new double[21 + 1] };
 
             context.Arg[1] = a;
             context.Arg[2] = b;
@@ -5874,6 +5889,12 @@ namespace StatsDirect.Builtins
             context.Arg[16] = ici;
             context.Arg[17] = C1;
             context.Arg[18] = C2;
+            ProbitCoefficientCovariance(C2, S1, s4, s6, del, TM, XM, sw,
+                out double varianceA, out double covarianceAB, out double varianceB);
+            double dispersion = hetp < 0.05 ? c / I1 : 1;
+            context.Arg[19] = varianceA * dispersion;
+            context.Arg[20] = covarianceAB * dispersion;
+            context.Arg[21] = varianceB * dispersion;
             context.M = (int)model;
             context.X1 = d;
             context.Y = s;
@@ -5883,9 +5904,9 @@ namespace StatsDirect.Builtins
             context.DoC = clog;
             context.P = laps;
             context.DF = k;
-            context.DV = dv;
-            context.SV = sv;
-            context.RV = rv;
+            context.DV = observedDoses;
+            context.SV = observedSubjects;
+            context.RV = observedResponders;
             context.Labels = new string[3];
             context.Labels[0] = doseVariable.Title;
             context.Labels[1] = subjectsVariable.Title;
@@ -6050,13 +6071,16 @@ namespace StatsDirect.Builtins
             }
             if (j > 0)
             {
+                int startingSubjects = nc;
+                double startingResponses = rc;
                 for (i = 1; i <= j; i++)
                 {
-                    nc += Convert.ToInt32(s[i]);
-                    rc += r[i];
+                    startingSubjects += Convert.ToInt32(s[i]);
+                    startingResponses += r[i];
                 }
-                c1 = rc / Convert.ToDouble(nc);
-                c = c1;
+                // Pool only to obtain a starting rate. These treatment groups
+                // remain in the fit and must not also count as control subjects.
+                c = startingResponses / startingSubjects;
                 ifault = 6;
                 if (k - j <= 2)
                 {
@@ -6121,7 +6145,7 @@ namespace StatsDirect.Builtins
                     }
                     else
                     {
-                        pp = Math.Exp(v * 2.0) / (1.0 + Math.Exp(v * 2.0));
+                        pp = ProbitResponse(model, v);
                         q = 1.0 - pp;
                         dd = 2.0 * q * pp;
                     }
@@ -6297,193 +6321,134 @@ namespace StatsDirect.Builtins
 
 
         /// <summary>
-        /// The median effective dose and the dose for qld per cent of response, with their confidence limits, from the line that x_probits fitted.
+        /// The fitted excess-response probability, before adding the natural response rate.
         /// </summary>
-        /// <remarks>
-        /// A dose is (z - a) / b, z being the probit or logit of the percentage, taken back from its logarithm if logarithms were used.  c comes in
-        /// as the natural rate, which is returned in c2, and goes out as the chi-square for heterogeneity, s3 - b s2, on k - 2 degrees of freedom less
-        /// the doses of zero weight.  The limits of a dose are those of a ratio of two estimates (Fieller's theorem), with g = t^2 var(b) / b^2: if g
-        /// is more than 1 the slope is not significantly different from zero, and there are no limits (fault 9).  Each pair of limits is worked out
-        /// twice: without heterogeneity, from the normal deviate; and with it, from Student's t, the variances being multiplied by the chi-square over
-        /// its degrees of freedom.
-        /// </remarks>
-        private static void x_qdcl(ProbitModel model, int k, out double c2, double ici, bool clog, double qld, ref double dose50, ref double doseq, double a, double b, ref double nohetllm, ref double nohetulm, ref double hetllm, ref double hetulm, ref double nohetllq, ref double nohetulq, ref double hetllq, ref double hetulq, ref double c, out double se, ref double cse, out double seh, ref double cseh, ref double i1, ref double s1, ref double s2, ref double s3, double s4, double s6, double del, double tm, double xm, double sw, out double varb, int icount, out int ifault)
+        private static double ProbitResponse(ProbitModel model, double eta)
         {
-            double covar = 0;
-            double vardcb = 0;
-            double g = 0;
+            if (model == ProbitModel.Probit)
+                return PDF.alnorm(eta);
+            // The two forms avoid overflow in the ordinary logistic expression.
+            if (eta >= 0)
+                return 1 / (1 + Math.Exp(-2 * eta));
+            double e = Math.Exp(2 * eta);
+            return e / (1 + e);
+        }
 
-            int ibit = 0;
-            //  ***  PUT C2 = C, NATURAL MORTALITY. (C BECOMES THE CHI-SQUARED VALUE)
-            c2 = c;
-            c = s3 - b * s2;
-            //  ***  CALCULATE THE VARIANCE OF B (VARB),(THE FORMULA IS DIFFERENT IF
-            //  ***  THERE IS CONTROL DATA). CALCULATE THE DEGREES OF FREEDOM (I).
-            varb = c2 <= 0.0
-                ? 1.0 / s1
-                : s4 / del;
-            int i = k - 2 - icount;
-            //  ***  WRITE CHI-SQUARE VALUE, AND STANDARD ERROR OF B FOR HETEROGENEITY
-            //  ***  AND NO HETEROGENEITY
-            se = Math.Sqrt(varb);
-            seh = se * Math.Sqrt(c / Convert.ToDouble(i));
-            //  ***  IF THERE ARE CONTROL DATA CALCULATE AND PRINT THE STANDARD ERROR
-            //  ***  OF C FOR NO HETEROGENEITY AND HETEROGENEITY
-            if (c2 > 0.0)
+        private static double ProbitPearsonTerm(double responses, double subjects, double probability)
+        {
+            double residual = responses - subjects * probability;
+            if (residual == 0)
+                return 0;
+            double variance = subjects * probability * (1 - probability);
+            return variance > 0 ? residual * residual / variance : double.PositiveInfinity;
+        }
+
+        private static void ProbitCoefficientCovariance(double naturalResponse, double s1, double s4,
+            double s6, double del, double tm, double xm, double sw,
+            out double varianceA, out double covarianceAB, out double varianceB)
+        {
+            varianceB = 1 / s1;
+            double varianceBackground = 0, covarianceSlopeBackground = 0;
+            if (naturalResponse > 0)
             {
-                cse = (1.0 - c2) * Math.Sqrt(s1 / del);
-                cseh = cse * Math.Sqrt(c / Convert.ToDouble(i));
+                varianceB = s4 / del;
+                varianceBackground = s1 / del;
+                covarianceSlopeBackground = -s6 / del;
             }
-            //  ***  CALCULATE  AND PRINT THE VALUES FOR LETHAL DOSES 50 OR 90 (Z).
-            //  ***  CONVERT IT IF LOGS HAVE BEEN USED. (IBIT RECORDS WHETHER LETHAL
-            //  ***  DOSE 50 OR LETHAL DOSE Q IS BEING CALCULATED)
-            do
+            // The centered working intercept is orthogonal to the centered
+            // slope/background terms. Transform its inverse Fisher information
+            // back to a,b; estimating the background must remain in this matrix.
+            varianceA = 1 / sw + xm * xm * varianceB + tm * tm * varianceBackground
+                + 2 * xm * tm * covarianceSlopeBackground;
+            covarianceAB = -xm * varianceB - tm * covarianceSlopeBackground;
+        }
+
+        /// <summary>
+        /// Effective doses and Fieller limits from the full coefficient covariance,
+        /// including uncertainty in a fitted natural response rate. Significant
+        /// joint Pearson heterogeneity scales the covariance and selects Student's t.
+        /// </summary>
+        private static void x_qdcl(ProbitModel model, int k, out double c2, double ici, bool clog, double qld, ref double dose50, ref double doseq, double a, double b, ref double nohetllm, ref double nohetulm, ref double hetllm, ref double hetulm, ref double nohetllq, ref double nohetulq, ref double hetllq, ref double hetulq, ref double c, out double se, ref double cse, out double seh, ref double cseh, ref double i1, ref double s1, ref double s2, ref double s3, double s4, double s6, double del, double tm, double xm, double sw, double pearson, out double varb, int icount, out int ifault)
+        {
+            double naturalResponse = c;
+            c2 = naturalResponse;
+            c = pearson;
+            double df = k - 2 - icount;
+            i1 = df;  // one extra control group and one fitted background cancel
+            bool useHeterogeneity = PDF.chivalp(pearson, df) < 0.05;
+            double dispersion = pearson / df;
+            ProbitCoefficientCovariance(naturalResponse, s1, s4, s6, del, tm, xm, sw,
+                out double varianceA, out double covarianceAB, out double varianceB);
+            se = Math.Sqrt(varianceB);
+            seh = se * Math.Sqrt(dispersion);
+            varb = varianceB * (useHeterogeneity ? dispersion : 1);
+            if (naturalResponse > 0)
             {
-                int ifa;
-                double qldz;
-                if (ibit == 1)
-                {
-                    if (model == ProbitModel.Probit)
-                    {
-                        qldz = PDF.gauinv(qld / 100.0, out ifa);
-                    }
-                    else
-                    {
-                        qldz = qld / 100.0;
-                        qldz = 0.5 * Math.Log(qldz / (1.0 - qldz));
-                    }
-                }
-                else
-                {
-                    qldz = 0.0;
-                }
-                double pdose = (qldz - a) / b;
-                double dose = clog ? Math.Exp(pdose * Math.Log(10.0)) : pdose;
-                //  ***  FOR BOTH LETHAL DOSES CALCULATE THE CONFIDENCE LIMITS FOR
-                //  ***  NO HETEROGENEITY AND HETEROGENEITY (HET RECORDS WHETHER NO
-                //  ***  HETEROGENEITY OR HETEROGENEITY BEING PERFORMED) ***************
-                //  ***  RECORD in ICL AND PRINT WHICH CONFIDENCE LIMITS ARE BEING
-                //  ***  CALCULATED AND PUT THE NORMAL DEVIATE FOR THOSE LIMITS in T.
-                double t = PDF.gauinv(ici + (1.0 - ici) / 2.0, out ifa);
-                int het = 1;
-                double vx = pdose - xm;
-                varb = 1.0 / s1;
-                //  ***  IF THERE IS CONTROL DATA THE FORMULA FOR CONFIDENCE LIMITS IS
-                //  ***  MORE COMPLICATED, CALCULATE SOME EXTRA TERMS HERE
-                if (c2 > 0.0)
-                {
-                    varb = s4 / del;
-                    vardcb = s1 / del;
-                    covar = -s6 / del;
-                }
-                //  ***  IF HETEROGENEITY CONFIDENCE LIMITS BEING CALCULATED, MULTIPLY
-                //  ***  VALUES in EQUATION BY THE CHI-SQUARE VALUE DIVIDED BY THE DEGREES
-                //  ***  OF FREEDOM AND PUT T VALUE FOR CONFIDENCE LIMITS INT.
-                do
-                {
-                    if (het == 2)
-                    {
-                        varb = varb * c / Convert.ToDouble(i);
-                        i1 = Convert.ToDouble(i);
-                        t = PDF.tfromp((1.0 - ici) / 2.0, i1);
-                    }
-                    else
-                    {
-                        g = t * t * varb / (b * b);
-                    }
-                    //  ***  TEST FOR INSIGNIFICANCE OF SLOPE, IF IT IS PRESENT PRINT MESSAGE
-                    //  ***  AND DISCONTINUE CALCULATIONS FOR THIS LETHAL DOSE
-                    ifault = 9;
-                    if (g - 1.0 > 0.0)
-                        return;
+                cse = (1 - naturalResponse) * Math.Sqrt(s1 / del);
+                cseh = cse * Math.Sqrt(dispersion);
+            }
+            double normalCritical = PDF.gauinv((1 + ici) / 2);
+            double tCritical = Math.Abs(PDF.tfromp((1 - ici) / 2, df));
 
-                    //  ***  CALCULATE MORE TERMS in THE EQUATIONS FOR CONFIDENCE LIMITS
-                    double gi = 1.0 - g;
-                    double pf1 = pdose + g * vx / gi;
-                    double pf2 = t / (Math.Abs(b) * gi);
-                    double pf3 = gi / sw + varb * vx * vx;
-                    if (het == 2)
-                    {
-                        pf3 = gi * c / (sw * i) + varb * vx * vx;
-                    }
-                    if (c2 > 0.0)
-                    {
-                        if (het == 2)
-                        {
-                            vardcb = vardcb * c / i;
-                            covar = covar * c / i;
-                        }
-                        pf1 -= g * tm * covar / (varb * gi);
-                        double pf3A = 1.0 / sw + tm * tm * vardcb;
-                        if (het == 2)
-                            pf3A = c / (sw * i) + tm * tm * vardcb;
-                        pf3 = pf3A - 2 * vx * tm * covar + vx * vx * varb - g * (pf3A - tm * tm * covar * covar / varb);
-                    }
-                    ifault = 8;
-                    if (pf3 < 0.0)
-                        return;
-
-                    double pf4 = pf2 * Math.Sqrt(pf3);
-                    double ans1 = pf1 + pf4;
-                    double ans2 = pf1 - pf4;
-                    //  ***  IF LOG CONVERSION HAS BEEN USED CONVERT THE VALUES OF THE
-                    //  ***  CONFIDENCE LIMITS
-                    if (clog)
-                    {
-                        ans1 = Math.Exp(ans1 * Math.Log(10.0));
-                        ans2 = Math.Exp(ans2 * Math.Log(10.0));
-                    }
-                    //  ***  SET THE CONFIDENCE LIMITS FOR NO HETEROGENEITY. PUT HET=2
-                    //  ***  THEN GO BACK AND CALCULATE CONFIDENCE LIMITS FOR HETEROGENEITY
-                    if (ibit == 0)
-                    {
-                        if (het == 1)
-                        {
-                            het = 2;
-                            nohetllm = ans2;
-                            nohetulm = ans1;
-                        }
-                        else
-                        {
-                            hetllm = ans2;
-                            hetulm = ans1;
-                            break;
-                        }
-                    }
-                    else
-                    {
-                        if (het == 1)
-                        {
-                            het = 2;
-                            nohetllq = ans2;
-                            nohetulq = ans1;
-                        }
-                        else
-                        {
-                            hetllq = ans2;
-                            hetulq = ans1;
-                            break;
-                        }
-                    }
+            bool Limits(double estimate, double scale, double critical, out double lower, out double upper, out int fault)
+            {
+                lower = upper = Constant.MISSING;
+                fault = 9;
+                double vb = varianceB * scale;
+                double va = varianceA * scale;
+                double cov = covarianceAB * scale;
+                // Fieller uses the same adjusted covariance and critical value
+                // in every term, including g. A finite interval requires g < 1.
+                double g = critical * critical * vb / (b * b);
+                if (!double.IsFinite(g) || g >= 1 || vb <= 0)
+                    return false;
+                double vm = va + 2 * estimate * cov + estimate * estimate * vb;
+                double radicand = vm - g * (va - cov * cov / vb);
+                fault = 8;
+                if (!double.IsFinite(radicand) || radicand < -1e-12 * Math.Max(1, Math.Abs(vm)))
+                    return false;
+                double centre = estimate + g * (estimate + cov / vb) / (1 - g);
+                double halfWidth = critical * Math.Sqrt(Math.Max(0, radicand)) / (Math.Abs(b) * (1 - g));
+                lower = centre - halfWidth;
+                upper = centre + halfWidth;
+                if (clog)
+                {
+                    lower = Math.Pow(10, lower);
+                    upper = Math.Pow(10, upper);
                 }
-                while (true);
-                //  ***  IF LETHAL DOSE 50 HAS JUST BEEN CALCULATED THEN GO BACK AND
-                //  ***  DO LETHAL DOSE 90
-                if (ibit == 0)
+                return true;
+            }
+
+            for (int which = 0; which < 2; which++)
+            {
+                double p = which == 0 ? 0.5 : qld / 100;
+                double z = model == ProbitModel.Probit ? PDF.gauinv(p) : 0.5 * Math.Log(p / (1 - p));
+                double estimate = (z - a) / b;
+                double dose = clog ? Math.Pow(10, estimate) : estimate;
+                bool normalOk = Limits(estimate, 1, normalCritical, out double normalLower, out double normalUpper, out int normalFault);
+                bool heterogeneityOk = Limits(estimate, dispersion, tCritical, out double adjustedLower, out double adjustedUpper, out int adjustedFault);
+                if (!useHeterogeneity && !normalOk || useHeterogeneity && !heterogeneityOk)
+                {
+                    ifault = useHeterogeneity ? adjustedFault : normalFault;
+                    return;
+                }
+                // An unavailable pair for the unused convention must not cancel
+                // a valid selected interval or masquerade as finite limits.
+                if (which == 0)
                 {
                     dose50 = dose;
-                    ibit = 1;
+                    nohetllm = normalLower; nohetulm = normalUpper;
+                    hetllm = adjustedLower; hetulm = adjustedUpper;
                 }
                 else
                 {
                     doseq = dose;
-                    break;
+                    nohetllq = normalLower; nohetulq = normalUpper;
+                    hetllq = adjustedLower; hetulq = adjustedUpper;
                 }
             }
-            while (true);
             ifault = 0;
         }
-
 
         /// <summary>
         /// The plot of the proportions responding against dose, with the fitted curve and its confidence interval.
@@ -6500,7 +6465,7 @@ namespace StatsDirect.Builtins
             double s1 = context.Arg[6];
             double ici = context.Arg[16];
             bool clog = context.DoC;
-            double t = context.Arg[13] < 0.05 ? PDF.tfromp(ici + (1.0 - ici) / 2.0, context.Arg[14]) : PDF.gauinv(ici + (1.0 - ici) / 2.0);
+            double t = context.Arg[13] < 0.05 ? Math.Abs(PDF.tfromp((1.0 - ici) / 2.0, context.Arg[14])) : PDF.gauinv((1.0 + ici) / 2.0);
 
             string yAxisTitle = context.Labels[2] + " / " + context.Labels[1];
             string xAxisTitle = context.Labels[0];
@@ -6508,7 +6473,14 @@ namespace StatsDirect.Builtins
             x[0] = Constant.MISSING;
 
             ParameterBag outputParameters = new();
-            outputParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Logit, new LogitOptions("Proportional Response with " + Formatting.XRound(ici * 100, 1) + "% CI", model, t, sw, s1, a, b, xAxisTitle, yAxisTitle, clog), new DoubleSeries(x, xAxisTitle), new DoubleSeries(y, yAxisTitle)));
+            var options = new LogitOptions("Proportional Response with " + Formatting.XRound(ici * 100, 1) + "% CI", model, t, sw, s1, a, b, xAxisTitle, yAxisTitle, clog);
+            if (context.Arg.Length > 21)
+            {
+                options.VarianceIntercept = context.Arg[19];
+                options.CovarianceInterceptSlope = context.Arg[20];
+                options.VarianceSlope = context.Arg[21];
+            }
+            outputParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Logit, options, new DoubleSeries(x, xAxisTitle), new DoubleSeries(y, yAxisTitle)));
             return new StepOutput(outputParameters);
         }
 
@@ -6541,7 +6513,7 @@ namespace StatsDirect.Builtins
             if (model == 1)
                 yval = PDF.alnorm(yval);
             else
-                yval = Math.Exp(yval * 2.0) / (1.0 + Math.Exp(yval * 2.0));
+                yval = ProbitResponse(ProbitModel.Logit, yval);
             outputParameters.AddOutput("resp", yval);
             if (c2 > 0)
             {
@@ -6676,7 +6648,7 @@ namespace StatsDirect.Builtins
                 if (model == 1)
                     yval = PDF.alnorm(yval);
                 else
-                    yval = Math.Exp(yval * 2.0) / (1.0 + Math.Exp(yval * 2.0));
+                    yval = ProbitResponse(ProbitModel.Logit, yval);
                 yval = c2 + yval * (1.0 - c2);
                 double ex = yval * sv[i];
                 ParameterBag obsParameters = new();

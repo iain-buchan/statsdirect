@@ -342,6 +342,8 @@ namespace StatsDirect.R
             {
                 if (binding.Settings.Any(setting => setting.parameter == "chartSettings"))
                     s.Append(RRecipes.Recipe("chart-common.R").TrimEnd('\n')).Append('\n');
+                if (binding.Settings.Any(setting => setting.parameter == "doseResponseModel"))
+                    s.Append(RRecipes.Recipe("dose-response-common.R").TrimEnd('\n')).Append('\n');
                 s.Append(binding.Body.TrimEnd('\n')).Append('\n');
             }
             else
