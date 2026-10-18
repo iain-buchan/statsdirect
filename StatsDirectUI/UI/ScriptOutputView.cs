@@ -238,9 +238,11 @@ namespace StatsDirect.UI
         }
 
         /// <summary>
-        /// Copies an embedded chart as SVG, with a standard PNG/bitmap for applications that need a raster.  There is no HTML form:
-        /// PowerPoint and Word insert the image/svg+xml form as a vector graphic and take it before the PNG and the text, but Word
-        /// takes an HTML form before it, and the HTML could only carry the raster.
+        /// Copies an embedded chart as a chart copied from a report is copied: the report window's private fragment (the SVG as the
+        /// pane shows it), an HTML form and the name, then through the report's publication the PNG, the bitmap and the SVG form
+        /// with its root in plain numbers.  Published that way, PowerPoint and Word paste the SVG as a vector graphic with the PNG
+        /// and the bitmap in Paste Special, as they do for a report's chart; published by the pane's own data object, as before,
+        /// PowerPoint took the PNG.
         /// </summary>
         internal async Task CopySvgChartAsync(string sourceUri)
         {
@@ -268,40 +270,77 @@ namespace StatsDirect.UI
             byte[] original = Convert.FromBase64String(sourceUri[SvgDataPrefix.Length..]);
             if (original.Length > 20_000_000) throw new InvalidDataException("The SVG chart is too large to copy.");
             var vector = RResultsParser.VectorPicture(Sanitised(Encoding.UTF8.GetString(original)));
-            var data = new DataObject();
-            data.SetData(ReportClipboard.FragmentFormat, false, vector.Svg);
+            string alt = image.RootElement.GetProperty("alt").GetString() ?? "R chart";
             string png = image.RootElement.GetProperty("png").GetString();
-            byte[] pngBytes = png?.StartsWith("data:image/png;base64,", StringComparison.Ordinal) == true && png.Length <= 27_000_000
-                ? Convert.FromBase64String(png["data:image/png;base64,".Length..]) : null;
-            if (pngBytes != null && pngBytes.Length > 20_000_000) pngBytes = null;
-            using var raster = pngBytes == null ? null : new MemoryStream(pngBytes, writable: false);
-            using var bitmap = raster == null ? null : new System.Drawing.Bitmap(raster);
-            if (bitmap != null)
+            if (png?.StartsWith("data:image/png;base64,", StringComparison.Ordinal) != true) png = null;
+            if (png != null && png.Length > 27_000_000) png = null;   // an oversize raster is dropped, not the copy
+            string flattened = FlattenedGlyphs(vector.Svg);
+            if (Encoding.UTF8.GetByteCount(flattened) > 20_000_000) flattened = vector.Svg;   // too large flattened: the references stay
+            string plain = PlainSized(flattened, vector.Width, vector.Height);
+            var data = new DataObject();
+            data.SetData(ReportClipboard.FragmentFormat, false, flattened);
+            if (png != null)
             {
-                data.SetData("PNG", false, new MemoryStream(pngBytes, writable: false));
-                data.SetData(DataFormats.Bitmap, true, bitmap);
+                // The HTML form as the report writes it: the picture at its display width, at most 640 px, in points as attributes and in
+                // pixels as style, for Word and Excel; without a raster there is no HTML form, so that Word takes the SVG form.
+                int shown = Math.Min(640, vector.Width), shownHeight = (int)Math.Round((double)vector.Height * shown / Math.Max(1, vector.Width));
+                data.SetData(DataFormats.Html, ReportClipboard.EncodeHtml("<img width=\"" + (int)Math.Round(shown * .75) + "\" height=\"" + (int)Math.Round(shownHeight * .75)
+                    + "\" alt=\"" + Escape(alt) + "\" style=\"width:" + shown + "px;height:" + shownHeight + "px\" src=\"" + png + "\">"));
             }
-            data.SetData(DataFormats.UnicodeText, image.RootElement.GetProperty("alt").GetString() ?? "R chart");
-            // The SVG last, in the order of the report's copy, which PowerPoint's Paste command takes as an SVG graphic.
-            data.SetData("image/svg+xml", false, new MemoryStream(Encoding.UTF8.GetBytes(PlainSized(vector.Svg, vector.Width, vector.Height)), writable: false));
-            Clipboard.SetDataObject(data, true, 5, 100);
+            data.SetData(DataFormats.UnicodeText, alt);
+            ReportClipboard.Publish(data, plain, png);
         }
 
         /// <summary>
-        /// The SVG with its root's width and height as plain numbers, the picture's size in pixels: PowerPoint's Paste command took
-        /// a root sized in points, as R's devices write it, as the PNG, and takes this as the SVG graphic at the chart's intended
-        /// size.  The root's attributes are read as XML quotes them, with either quote; a root this does not read, such as one
-        /// with a namespace prefix, is left as it is.
+        /// The SVG with its root's width and height as plain numbers, the viewBox's, as the report's copy writes them, or the
+        /// picture's size in pixels when there is no viewBox, each attribute left where it is: PowerPoint's Paste command took a
+        /// root sized in points, as R's devices write it, as the PNG, takes this as the SVG graphic, and refused the same root
+        /// with the size moved to the front or with the pixel size beside an unchanged viewBox.  The root's attributes are read
+        /// as XML quotes them, with either quote; a root this does not read, such as one with a namespace prefix or one with a
+        /// width and no height, is left as it is.
         /// </summary>
         internal static string PlainSized(string svg, int width, int height)
         {
             Match root = Regex.Match(svg ?? "", @"<svg(?=[\s/>])(?:\s+[^\s=/>]+\s*=\s*(?:""[^""]*""|'[^']*'))*\s*/?>");
             if (!root.Success) return svg;
-            string tag = Regex.Replace(root.Value, @"\s+(?:width|height)\s*=\s*(?:""[^""]*""|'[^']*')", "");
-            if (Regex.IsMatch(tag, @"\s(?:width|height)\s*=")) return svg;
-            tag = "<svg width=\"" + width.ToString(System.Globalization.CultureInfo.InvariantCulture)
-                + "\" height=\"" + height.ToString(System.Globalization.CultureInfo.InvariantCulture) + "\"" + tag[4..];
+            string tag = root.Value;
+            Match box = Regex.Match(tag, @"\sviewBox\s*=\s*([""'])\s*[-+\d.eE]+[\s,]+[-+\d.eE]+[\s,]+([+\d.eE]+)[\s,]+([+\d.eE]+)\s*\1");
+            string w = box.Success ? box.Groups[2].Value : width.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            string h = box.Success ? box.Groups[3].Value : height.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            int sized = 0;
+            tag = Regex.Replace(tag, @"(\s(?:width|height)\s*=\s*)(?:""[^""]*""|'[^']*')",
+                m => { sized++; return m.Groups[1].Value + "\"" + (m.Groups[1].Value.Contains("width") ? w : h) + "\""; });
+            if (sized == 0)
+            {
+                string close = tag.EndsWith("/>", StringComparison.Ordinal) ? "/>" : ">";
+                tag = tag[..^close.Length].TrimEnd() + " width=\"" + w + "\" height=\"" + h + "\"" + close;
+            }
+            else if (sized != 2) return svg;
             return svg[..root.Index] + tag + svg[(root.Index + root.Length)..];
+        }
+
+        /// <summary>
+        /// The SVG with each reference to a glyph symbol replaced by the symbol's own drawing, translated to the reference's
+        /// position, and a reference to an empty symbol (a space) dropped.  R's SVG device draws every label as such references,
+        /// whose offsets PowerPoint's conversion of a pasted graphic to shapes drops, so that the labels sat at the wrong places;
+        /// the definitions stay, unused, for any reference this does not read, and a definition holding a group of its own, as a
+        /// bitmap glyph is, is left to its references.
+        /// </summary>
+        internal static string FlattenedGlyphs(string svg)
+        {
+            if (string.IsNullOrEmpty(svg) || !svg.Contains("<use", StringComparison.Ordinal)) return svg;
+            var glyphs = new System.Collections.Generic.Dictionary<string, string>(StringComparer.Ordinal);
+            foreach (Match definition in Regex.Matches(svg, @"<g\s+id=""(glyph-[^""]+)""\s*>(.*?)</g>", RegexOptions.Singleline))
+            {
+                string drawing = definition.Groups[2].Value.Trim();
+                if (!drawing.Contains("<g", StringComparison.Ordinal)) glyphs[definition.Groups[1].Value] = drawing;
+            }
+            if (glyphs.Count == 0) return svg;
+            return Regex.Replace(svg, @"<use\s+(?:xlink:)?href=""#(glyph-[^""]+)""\s+x=""([-+\d.eE]+)""\s+y=""([-+\d.eE]+)""\s*/>", reference =>
+            {
+                if (!glyphs.TryGetValue(reference.Groups[1].Value, out string drawing)) return reference.Value;
+                return drawing.Length == 0 ? "" : "<g transform=\"translate(" + reference.Groups[2].Value + " " + reference.Groups[3].Value + ")\">" + drawing + "</g>";
+            });
         }
 
         /// <summary>An SVG with nothing that runs: scripts, event handlers and script links go.</summary>

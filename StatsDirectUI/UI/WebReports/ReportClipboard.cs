@@ -16,6 +16,14 @@ internal static class ReportClipboard
     internal const string FragmentFormat = "StatsDirect.ReportFragment.HTML.v1";
     internal const string SvgFormat = "image/svg+xml";
 
+    /// <summary>The report fragment on the clipboard: a string from a data object, or bytes from a Win32 write, or null.</summary>
+    internal static string Fragment(IDataObject contents) => contents?.GetData(FragmentFormat, false) switch
+    {
+        string text => text,
+        MemoryStream bytes => Encoding.UTF8.GetString(bytes.ToArray()).TrimEnd('\0'),
+        _ => null
+    };
+
     // Keep the image resources alive until Windows has materialised every
     // clipboard format. Rich HTML and the private vector fragment stay intact.
     internal static void Publish(DataObject contents, string svg = null, string png = null)

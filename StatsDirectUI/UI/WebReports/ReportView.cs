@@ -277,7 +277,7 @@ internal sealed class ReportView : UserControl
                 var target = await CallAsync("preparePaste");
                 if (target.ValueKind != JsonValueKind.Object || !target.TryGetProperty("token", out var token)) return;
                 IDataObject contents = Clipboard.GetDataObject();
-                string html = contents?.GetData(ReportClipboard.FragmentFormat, false) as string;
+                string html = ReportClipboard.Fragment(contents);
                 if (html == null && new[] { ReportClipboard.SvgFormat, "image/x-svg+xml", "SVG" }.Any(format => contents?.GetDataPresent(format, false) == true))
                     html = ReportClipboard.ImageHtml(contents);
                 if (html == null && contents?.GetData(DataFormats.Html) is string publicHtml)
