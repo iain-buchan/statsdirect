@@ -20,6 +20,7 @@ Version 5.2.4 makes the document tabs easier to tell apart and corrects four fau
 - The automatic chart files of R runs, named by run, device and page, accumulated in the R folder; those a week old or more are removed when a run starts.
 - A Tukey box-and-whisker plot drawn horizontally in R takes its exact value-axis limits; the axis option R ignores for that orientation is no longer used.
 - When the open workbooks change after sharing was confirmed in the AI pane, Send keeps the explanation that they changed instead of the general reminder.
+- Help from the Learning window opens the Learning topic, and Help from a report whose cursor is in no result opens the Report window topic, rather than the help's contents page.
 
 ##[v5.2.3] 2026-10-17
 
