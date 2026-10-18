@@ -95,6 +95,9 @@ Version 5.2.0 brings the Windows workspace into step with the Mac version and ad
 - Script AI groups sharing, question entry and Send/Stop at the top, with the conversation and code actions below. Help > Example workbook opens an editable unsaved copy of the supplied workbook.
 - The Learning assistant can run ten supported analyses through the unchanged StatsDirect engine on approved worksheet ranges, adding normal HTML/SVG report results with Continue in R. Stale, cancelled, unapproved and duplicate requests are checked before publication.
 - The ChatGPT connection component, OpenAI's app server, is downloaded on the first Use my ChatGPT rather than installed: the pinned release is fetched from OpenAI's GitHub over HTTPS, checked against its pinned size and hashes and OpenAI's publisher signature, and kept in the user's local application data, where a damaged copy is repaired without touching account data. Opening Learning or the AI pane downloads nothing, and a policy value under Software\Policies\StatsDirect, DisableOnlineTutor, turns the online tutor off while the lessons, practice and R examples remain.
+- AI assistance on the report toolbar as well as the script window: it answers questions about the result the cursor is in and offers that result's workbook for sharing; Enter sends the question and Shift+Enter adds a line.
+- Mathematics in the assistant's replies is rendered offline, and sharing, once confirmed, holds for the application session until the shared documents change.
+- R data files (.rds, .RData) open and save through R, Excel data are imported with their column types, earlier RTF reports open as new reports with their charts converted, and C#, VB and R scripts open in the script window.
 
 ##[v5.1.1] 2026-10-11
 
