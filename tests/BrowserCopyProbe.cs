@@ -13,6 +13,15 @@ internal static class BrowserCopyProbe
         if (original != null)
             foreach (string format in original.GetFormats(false))
             {
+                // A bitmap from another process comes only through the converting read; it goes back as the one Bitmap format.
+                if (format == DataFormats.Bitmap || format == typeof(System.Drawing.Bitmap).FullName)
+                {
+                    if (saved.GetDataPresent(DataFormats.Bitmap)) continue;
+                    System.Drawing.Image kept = (original.GetData(DataFormats.Bitmap) as System.Drawing.Image ?? Clipboard.GetImage())?.Clone() as System.Drawing.Image
+                        ?? throw new InvalidOperationException("Cannot preserve clipboard format: " + format);
+                    saved.SetData(DataFormats.Bitmap, true, kept);
+                    continue;
+                }
                 object value = original.GetData(format, false);
                 if (value == null) throw new InvalidOperationException("Cannot preserve clipboard format: " + format);
                 if (value is MemoryStream stream) value = new MemoryStream(stream.ToArray());

@@ -55,7 +55,8 @@ internal static partial class Program
                     if (format == DataFormats.Bitmap || format == typeof(Bitmap).FullName)
                     {
                         if (saved.GetDataPresent(DataFormats.Bitmap)) continue;
-                        Image kept = (original.GetData(DataFormats.Bitmap) as Image)?.Clone() as Image ?? throw new InvalidOperationException("Unavailable clipboard format: " + format);
+                        // a plain CF_BITMAP from a Win32 write comes only through GetImage, as the report window knows
+                    Image kept = (original.GetData(DataFormats.Bitmap) as Image ?? Clipboard.GetImage())?.Clone() as Image ?? throw new InvalidOperationException("Unavailable clipboard format: " + format);
                         saved.SetData(DataFormats.Bitmap, true, kept); retained.Add(kept); continue;
                     }
                     object value = original.GetData(format, false) ?? throw new InvalidOperationException("Unavailable clipboard format: " + format);
@@ -129,32 +130,48 @@ internal static partial class Program
                         : " uses the real output browser's native Copy image command"));
                     if (kind == "R-SVG")
                     {
+                        // As a chart copied from a report: the private fragment with R's root in points (a report keeps the pane's size),
+                        // the SVG form with plain numbers, the PNG, the bitmap, the HTML with the PNG, and the text, published the
+                        // report's way, which Office pastes as the SVG with the rasters in Paste Special
                         Check(Clipboard.GetDataObject()?.GetData("StatsDirect.ReportFragment.HTML.v1", false) is string fragment
-                            && fragment.Contains("<svg", StringComparison.OrdinalIgnoreCase),
-                            "R SVG Copy image provides the private vector report fragment");
-                        // The SVG form's root is sized in plain numbers, the picture's pixels (5 by 4 inches at 96 dpi): PowerPoint's
-                        // Paste command took a root sized in points as the PNG.
+                            && fragment.StartsWith("<svg", StringComparison.Ordinal) && fragment.Contains("width=\"360pt\"", StringComparison.Ordinal)
+                            && Clipboard.GetDataObject()?.GetData("image/svg+xml", false) is MemoryStream svgStream
+                            && Encoding.UTF8.GetString(svgStream.ToArray()).Contains("<svg", StringComparison.OrdinalIgnoreCase)
+                            && Clipboard.GetDataObject()?.GetDataPresent("PNG", false) == true && Clipboard.ContainsImage()
+                            && Clipboard.GetDataObject()?.GetData(DataFormats.Html) is string html && html.Contains("data:image/png", StringComparison.Ordinal)
+                            && Clipboard.GetDataObject()?.GetDataPresent(DataFormats.UnicodeText) == true,
+                            "R SVG Copy image is published as a report's chart copy: fragment, SVG form, PNG, bitmap, HTML and text");
+                        // R's labels as positioned paths, not glyph references, for PowerPoint's conversion of the graphic to shapes
+                        Check(Clipboard.GetDataObject()?.GetData("StatsDirect.ReportFragment.HTML.v1", false) is string flatFragment
+                            && !flatFragment.Contains("<use ", StringComparison.Ordinal) && flatFragment.Contains("<g transform=\"translate(", StringComparison.Ordinal)
+                            && Clipboard.GetDataObject()?.GetData("image/svg+xml", false) is MemoryStream flatSvg
+                            && !Encoding.UTF8.GetString(flatSvg.ToArray()).Contains("<use ", StringComparison.Ordinal),
+                            "R SVG Copy image carries its labels as positioned paths, with no glyph references, in the fragment and the SVG form");
+                        // The SVG form's root is sized in plain numbers, the viewBox's, each attribute left where R wrote it, xmlns first:
+                        // PowerPoint's Paste command took a root sized in points as the PNG, and refused the size moved to the front.
                         string svgRoot = Clipboard.GetDataObject()?.GetData("image/svg+xml", false) is MemoryStream svgForm
                             ? Regex.Match(Encoding.UTF8.GetString(svgForm.ToArray()), "<svg\\b[^>]*>").Value : "";
-                        Check(svgRoot.Contains("viewBox=\"0 0 360 288\"", StringComparison.Ordinal) && svgRoot.Contains(" width=\"480\"", StringComparison.Ordinal)
-                            && svgRoot.Contains(" height=\"384\"", StringComparison.Ordinal) && !svgRoot.Contains("pt\"", StringComparison.Ordinal),
-                            "the R SVG copy's SVG form is sized in plain pixel numbers");
-                        // A RichEdit paste, as the script editor's, takes the copy's picture, as it did before Office formats were
-                        // rearranged, rather than embedding anything as an object.
+                        Check(svgRoot.StartsWith("<svg xmlns=\"http://www.w3.org/2000/svg\"", StringComparison.Ordinal) && svgRoot.Contains("viewBox=\"0 0 360 288\"", StringComparison.Ordinal) && svgRoot.Contains(" width=\"360\"", StringComparison.Ordinal)
+                            && svgRoot.Contains(" height=\"288\"", StringComparison.Ordinal) && !svgRoot.Contains("pt\"", StringComparison.Ordinal),
+                            "the R SVG copy's SVG form is sized in its viewBox's plain numbers");
+                        // A RichEdit paste, as the script editor's, takes the copy's bitmap as its picture, as a report's chart copy gives
+                        // it, rather than embedding anything as an object.
                         using (var editor = new RichTextBox())
                         {
                             _ = editor.Handle;
                             editor.Paste();
                             Check(editor.Rtf.Contains("\\pict", StringComparison.Ordinal) && !editor.Rtf.Contains("\\object", StringComparison.Ordinal),
-                                "a RichEdit paste of the R SVG copy still inserts its picture, not an embedded file object");
+                                "a RichEdit paste of the R SVG copy inserts its picture, not an embedded object");
                         }
                     }
                     string probe = Environment.GetEnvironmentVariable("STATSDIRECT_PASTE_PROBE");
                     if (!string.IsNullOrEmpty(probe))
                     {
                         // An opt-in probe of another application's paste while the clipboard holds this copy: a PowerShell script, such
-                        // as one driving PowerPoint and Word through COM, exits 0 when the paste keeps a vector and 2 for a raster. The
-                        // SVG copy must paste as a vector; the native PNG copy shows the probe telling a raster apart.
+                        // as one driving PowerPoint and Word through COM (the developer's tools, outside the repository), that exits 0 when
+                        // both pastes keep a vector, 2 when either is a raster, 4 when Office is absent, and prints a line "PowerPoint: vector"
+                        // or "PowerPoint: raster only", and the same for Word. The SVG copy must be a vector in PowerPoint (Word's COM paste
+                        // takes the HTML form); the native PNG copy shows the probe telling a raster apart.
                         var start = new System.Diagnostics.ProcessStartInfo("powershell.exe", "-NoProfile -ExecutionPolicy Bypass -File \"" + probe + "\"")
                         { UseShellExecute = false, RedirectStandardOutput = true, RedirectStandardError = true, CreateNoWindow = true };
                         using var run = System.Diagnostics.Process.Start(start)!;
@@ -168,8 +185,10 @@ internal static partial class Program
                         else
                         {
                             Check(run.ExitCode is 0 or 2, "the paste probe " + Path.GetFileName(probe) + " completes its pastes (exit " + run.ExitCode + ")");
-                            Check(run.ExitCode == (kind == "R-SVG" ? 0 : 2), kind == "R-SVG"
-                                ? "the paste probe " + Path.GetFileName(probe) + " receives the R SVG copy as a vector"
+                            // PowerPoint takes the SVG copy as a vector (its own Paste does too); Word's COM paste takes the HTML form the
+                            // report-style copy carries, which its own Paste may not: the probe reports it, the check does not require it
+                            Check(kind == "R-SVG" ? probeOutput.Contains("PowerPoint: vector", StringComparison.Ordinal) : run.ExitCode == 2, kind == "R-SVG"
+                                ? "the paste probe " + Path.GetFileName(probe) + " receives the R SVG copy as a vector in PowerPoint"
                                 : "the paste probe " + Path.GetFileName(probe) + " reports the native PNG copy as a raster");
                         }
                     }
@@ -190,6 +209,9 @@ internal static partial class Program
                     string imageSelector = vector ? "#results svg" : "#results img[src^='data:image/png;base64,']";
                     async Task<bool> Present() => await browser.CoreWebView2.ExecuteScriptAsync("!!document.querySelector(" + JsonSerializer.Serialize(imageSelector) + ")") == "true";
                     Check(await Present(), kind + " pastes into the newly added report text area as " + (vector ? "vector SVG" : "an embedded picture"));
+                    if (kind == "R-SVG")
+                        Check(await browser.CoreWebView2.ExecuteScriptAsync("document.querySelector('#results svg').getAttribute('width')") == "\"360pt\"",
+                            "R-SVG pastes into the report at the size the pane shows, its root in R's points");
                     foreach (var (key, code) in new[] { ("z", 90), ("y", 89) })
                     {
                         report.Activate(); browser.Focus();

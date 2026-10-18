@@ -106,7 +106,8 @@ internal static partial class Program
                         if (format == DataFormats.Bitmap || format == typeof(Bitmap).FullName)
                         {
                             if (saved.GetDataPresent(DataFormats.Bitmap)) continue;
-                            Image kept = (original.GetData(DataFormats.Bitmap) as Image)?.Clone() as Image ?? throw new InvalidOperationException("Unavailable clipboard format: " + format);
+                            // a plain CF_BITMAP from a Win32 write comes only through GetImage, as the report window knows
+                    Image kept = (original.GetData(DataFormats.Bitmap) as Image ?? Clipboard.GetImage())?.Clone() as Image ?? throw new InvalidOperationException("Unavailable clipboard format: " + format);
                             saved.SetData(DataFormats.Bitmap, true, kept); retained.Add(kept); continue;
                         }
                         object value = original.GetData(format, false) ?? throw new InvalidOperationException("Unavailable clipboard format: " + format);
