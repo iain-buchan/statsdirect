@@ -22,8 +22,10 @@ print(f)
 
 # The report's other lines, to 6 decimal places
 six <- function(x) formatC(x, digits = 6, format = "f", drop0trailing = TRUE)
-cat(sprintf("Mean of High Protein = %s  (n = %d)\n", six(mean(high)), length(high)))
-cat(sprintf("Mean of Low Protein = %s  (n = %d)\n", six(mean(low)), length(low)))
+if (!exists("high_title")) high_title <- "high"
+if (!exists("low_title")) low_title <- "low"
+cat(sprintf("Mean of %s = %s  (n = %d)\n", high_title, six(mean(high)), length(high)))
+cat(sprintf("Mean of %s = %s  (n = %d)\n", low_title, six(mean(low)), length(low)))
 delta <- mean(high) - mean(low)
 report <- function(r, label) {
   cat(label, "\n")

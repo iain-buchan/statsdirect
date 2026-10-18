@@ -152,8 +152,10 @@ egger(score / sqrt(info), sqrt(info), "Harbord-Egger")
 # The report's L'Abbe plot: the risk in the exposed group of each study against
 # the risk in its control group, the symbol growing with the study size, with the
 # line of equal risks and the line of the pooled relative risk
+# the axes reach the largest risk, rounded up to a multiple of 5, from 25% up to 100%
+labbe_top <- min(100, max(25, 5 * ceiling(max(c(100 * b / (b + d), 100 * a / (a + cx)), na.rm = TRUE) / 5)))
 plot(100 * b / (b + d), 100 * a / (a + cx), cex = 0.5 + 2 * sqrt(n / max(n)),
-     xlim = c(0, 25), ylim = c(0, 25), xlab = "control percent",
+     xlim = c(0, labbe_top), ylim = c(0, labbe_top), xlab = "control percent",
      ylab = "experimental percent",
      main = "L'Abbe plot (symbol size represents sample size)")
 abline(0, 1)

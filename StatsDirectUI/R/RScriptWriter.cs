@@ -374,6 +374,9 @@ namespace StatsDirect.R
             if (column.Unavailable)
                 s.Append(": not read, see above");
             s.Append('\n');
+            // the column's title, for a recipe's labels: the help example's names must not label the user's data
+            s.Append(variable).Append("_title <- ").Append(Quote(column.Title)).Append('\n');
+            names.Add(variable + "_title");
         }
 
         private static string Where(FramePointer pointer, int index)
