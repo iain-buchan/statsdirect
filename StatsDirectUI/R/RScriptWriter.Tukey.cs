@@ -74,7 +74,7 @@ namespace StatsDirect.R
             if (limits)
             {
                 arguments.Add("ylim = " + Values(new[] { minimum.Value, maximum.Value }));
-                arguments.Add(valueAxis + "axs = \"i\"");
+                arguments.Add("yaxs = \"i\"");   // bxp applies yaxs to the value axis in either orientation, and ignores xaxs
             }
             if (scale is 1 or 2) arguments.Add("log = \"" + valueAxis + "\"");
 

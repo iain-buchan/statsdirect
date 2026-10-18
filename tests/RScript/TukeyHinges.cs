@@ -166,8 +166,9 @@ internal static partial class Program
             string selectedScript = RScriptWriter.Write(JsonDocument.Parse(selected.ToJsonString()).RootElement, null, null).Text;
             Check(selectedScript.Contains("value_title <- \"Custom measurement units\"") && selectedScript.Contains("names = c(\"Edited Before\", \"Edited After\")")
                 && selectedScript.Contains("lwd = 2") && !selectedScript.Contains("frame.plot = FALSE")
-                && selectedScript.Contains("abline(" + (horizontal ? "v" : "h") + " = 299)"),
-                "the concise Tukey call preserves selected labels, boxed axes, line width, marker and orientation");
+                && selectedScript.Contains("abline(" + (horizontal ? "v" : "h") + " = 299)")
+                && selectedScript.Contains("yaxs = \"i\"") && !selectedScript.Contains("xaxs = \"i\""),   // bxp applies yaxs to the value axis in either orientation
+                "the concise Tukey call preserves selected labels, boxed axes, line width, marker, orientation and exact value limits");
             string output = RunR("svg('selected.svg')\ntrace('bxp',tracer=quote(.tukey_draw<<-list(at=if(is.null(at))seq_along(z$n)else at,horizontal=horizontal)),print=FALSE,where=asNamespace('graphics'))\n" + selectedScript + $$"""
 
                 stopifnot(identical(as.numeric(ticks),seq(200,400,by=25)))
