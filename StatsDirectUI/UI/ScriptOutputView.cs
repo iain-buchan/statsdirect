@@ -270,7 +270,6 @@ namespace StatsDirect.UI
             var vector = RResultsParser.VectorPicture(Sanitised(Encoding.UTF8.GetString(original)));
             var data = new DataObject();
             data.SetData(ReportClipboard.FragmentFormat, false, vector.Svg);
-            data.SetData("image/svg+xml", false, new MemoryStream(Encoding.UTF8.GetBytes(vector.Svg), writable: false));
             string png = image.RootElement.GetProperty("png").GetString();
             byte[] pngBytes = png?.StartsWith("data:image/png;base64,", StringComparison.Ordinal) == true && png.Length <= 27_000_000
                 ? Convert.FromBase64String(png["data:image/png;base64,".Length..]) : null;
@@ -283,7 +282,26 @@ namespace StatsDirect.UI
                 data.SetData(DataFormats.Bitmap, true, bitmap);
             }
             data.SetData(DataFormats.UnicodeText, image.RootElement.GetProperty("alt").GetString() ?? "R chart");
+            // The SVG last, in the order of the report's copy, which PowerPoint's Paste command takes as an SVG graphic.
+            data.SetData("image/svg+xml", false, new MemoryStream(Encoding.UTF8.GetBytes(PlainSized(vector.Svg, vector.Width, vector.Height)), writable: false));
             Clipboard.SetDataObject(data, true, 5, 100);
+        }
+
+        /// <summary>
+        /// The SVG with its root's width and height as plain numbers, the picture's size in pixels, as the report's copy writes
+        /// them: PowerPoint's Paste command took a root sized in points as the PNG, and takes this as the SVG graphic at the
+        /// chart's intended size.
+        /// </summary>
+        internal static string PlainSized(string svg, int width, int height)
+        {
+            Match root = Regex.Match(svg ?? "", @"<svg\b[^>]*>");
+            if (!root.Success) return svg;
+            string tag = root.Value;
+            string w = width.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            string h = height.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            tag = Regex.Replace(tag, @"\s(?:width|height)=""[^""]*""", "");
+            tag = "<svg width=\"" + w + "\" height=\"" + h + "\"" + tag[4..];
+            return svg[..root.Index] + tag + svg[(root.Index + root.Length)..];
         }
 
         /// <summary>An SVG with nothing that runs: scripts, event handlers and script links go.</summary>
