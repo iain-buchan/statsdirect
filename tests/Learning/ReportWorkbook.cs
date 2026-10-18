@@ -34,7 +34,7 @@ internal static partial class Program
             var paneView = (Control)Field(pane, "view");
             Check(pane.ShareWorkbook.Text == "Share open workbook data" && !Descendants(paneView).OfType<ComboBox>().Any(),
                 "AI has one Share open workbook data choice and no workbook selector");
-            Check(a.Text == b.Text && aId != bId, "same-title workbooks retain different document identities");
+            Check(aId != bId && main.MdiChildren.Count(c => c.Text == a.Text) == 2, "same-title workbooks retain different document identities");
             var unshared = new QuestionContext(pane.SharedWorkbooks, true, CancellationToken.None, service.Sharing);
             Check(pane.SharedWorkbooks.Length == 0 && Ids(unshared.Overview()).Length == 0 && unshared.Tools.All(tool => tool.S("name") != "statsdirect_read_data"),
                 "unchecked workbook sharing exposes no workbook names, IDs, values or data-reading tool");
@@ -80,7 +80,7 @@ internal static partial class Program
             string frozenRData = lastReply.S("rData");
             a.LoadLearningExample(new JsonArray(new JsonObject { ["title"] = "Replacement", ["values"] = new JsonArray(999) }));
             var exported = ConversationRScript.Build(new JsonArray(new JsonObject { ["role"] = "assistant", ["rData"] = frozenRData, ["text"] = "```r\ninvisible(.statsdirect_data)\n```" }), 0);
-            Check(lastReply.S("rData") == frozenRData && exported.Contains(aId) && exported.Contains(bId) && exported.Contains(frozenRData) && exported.Contains("101"),
+            Check(exported.Contains(aId) && exported.Contains(bId) && exported.Contains(frozenRData) && exported.Contains("101") && !exported.Contains("999"),
                 "Open in R retains original literal snapshots and workbook identities after one workbook is edited");
             await Reject(() => context.CallAsync("statsdirect_read_data", Read(aId)), "a question captured before a worksheet edit cannot reread changed values");
             service.ShowReportAI(report, note); b.Activate(); a.Activate(); service.RefreshWorkspace();

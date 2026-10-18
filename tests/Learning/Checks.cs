@@ -7,8 +7,17 @@ using System.Text.Json.Nodes;
 
 internal static partial class Program
 {
+    // a rejection is the program refusing, not the program failing: a null reference, a cast or a JSON shape error would also throw here
     static async Task Reject(Func<Task> action,string label)
-    { try{await action();}catch(Exception){Check(true,label);return;}throw new Exception("Expected rejection: "+label); }
+    {
+        try{await action();}
+        catch(Exception ex)
+        {
+            if(ex is NullReferenceException or InvalidCastException or ArgumentNullException or IndexOutOfRangeException or System.Text.Json.JsonException)throw new Exception("Expected a refusal for: "+label+"; got "+ex.GetType().Name+": "+ex.Message);
+            Check(true,label);return;
+        }
+        throw new Exception("Expected rejection: "+label);
+    }
     static JsonArray Message(string text)=>new(new JsonObject{["role"]="user",["text"]=text});
     static async Task TestCourses(LearningService service,LearningView view)
     {
@@ -148,6 +157,12 @@ internal static partial class Program
         viewport.ScrollControlIntoView(pane.Composer);pane.Composer.Focus();CapturePane("script-ai-small");
         await session.ToggleModeAsync();await Task.Delay(60);
         Check(pane.Composer.Text=="Keep this question while moving the pane."&&(await pane.Transcript.TextAsync()).Contains("Mock answer")&&pane.Composer.Focused,"dock and pop-out preserve the draft, replies and typing focus");
+        // a workbook opened after sharing was confirmed: Send says the open workbooks changed, not the general reminder
+        pane.ShareWorkbook.Checked=true;pane.Acknowledge.Checked=true;await Task.Delay(20);
+        var opened=(frmSpreadsheetGear)main.CreateGrid("Opened after confirmation");service.RefreshWorkspace();await Task.Delay(60);
+        pane.Composer.Text="After a new workbook";await pane.SendAsync();
+        Check(((Label)Field(pane,"status")).Text.StartsWith("The open workbooks changed"),"a question after the open workbooks changed says so, not the general sharing reminder");
+        pane.ShareWorkbook.Checked=false;pane.Composer.Text="";opened.Dispose();service.RefreshWorkspace();await Task.Delay(60);
         await TestScriptReplyStability(pane);
         pane.Hide();
     }

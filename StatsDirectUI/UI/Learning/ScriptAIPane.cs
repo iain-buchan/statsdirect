@@ -196,7 +196,12 @@ internal sealed class ScriptAIPane : IDisposable
         }
         string question = Composer.Text.Trim(); if (question.Length == 0) { status.Text = "Enter a question."; return; }
         RefreshWorkbooks(); SyncAcceptance();
-        if ((ShareScript.Checked || ShareWorkbook.Checked) && !Acknowledge.Checked) { status.Text = "Review the selected content and confirm sharing for this session."; return; }
+        if ((ShareScript.Checked || ShareWorkbook.Checked) && !Acknowledge.Checked)
+        {
+            // the reason the confirmation lapsed, when the open workbooks changed, stands; the general reminder otherwise
+            if (status.Text != "The open workbooks changed. Review their data and confirm sharing again.") status.Text = "Review the selected content and confirm sharing for this session.";
+            return;
+        }
         var approved = new List<StatsDirectForm>();
         if (ShareScript.Checked) approved.Add(script);
         approved.AddRange(SharedWorkbooks);
