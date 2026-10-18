@@ -93,7 +93,9 @@ internal static partial class Program
             grid.Activate();
             // Retain screenshots when the default artifact folder is used.
             File.Delete(red); File.Delete(blue);
-            if (!Directory.EnumerateFileSystemEntries(folder).Any()) Directory.Delete(folder);
+            // the captures stay only where an artifact folder was asked for; the check's own folder goes
+            if (artifactFolder == folder) Directory.Delete(folder, true);
+            else if (!Directory.EnumerateFileSystemEntries(folder).Any()) Directory.Delete(folder);
         }
     }
 }

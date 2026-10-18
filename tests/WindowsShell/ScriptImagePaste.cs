@@ -13,6 +13,7 @@ internal static partial class Program
 
     static async Task CheckScriptImagePaste(frmMain main, WebView2 source, string svgFile, string pngFile)
     {
+        if (Environment.GetEnvironmentVariable("STATSDIRECT_SKIP_CLIPBOARD") == "1") { Console.WriteLine("SKIP ScriptImagePaste clipboard checks (STATSDIRECT_SKIP_CLIPBOARD=1 preserves the user's clipboard)"); return; }
         Type converter = typeof(frmMain).Assembly.GetType("StatsDirect.UI.WebReports.ReportClipboard")!;
         string ImageHtml(IDataObject data) => (string)converter.GetMethod("ImageHtml", BindingFlags.Static | BindingFlags.NonPublic)!.Invoke(null, new object[] { data })!;
         using var picture = new Bitmap(17, 11);

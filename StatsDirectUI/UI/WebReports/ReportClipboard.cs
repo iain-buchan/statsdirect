@@ -81,7 +81,7 @@ internal static class ReportClipboard
         };
         if (png == null)
         {
-            Image bitmap = contents?.GetData(DataFormats.Bitmap) as Image ?? contents?.GetData(typeof(Bitmap)) as Image;
+            Image bitmap = contents?.GetData(DataFormats.Bitmap) as Image ?? contents?.GetData(typeof(Bitmap)) as Image;   // the data object owns the image: not disposed here
             if (bitmap != null)
             {
                 using var buffer = new MemoryStream();

@@ -8,6 +8,7 @@ internal static partial class Program
 
     static async Task CheckScriptContextMenu(frmMain main)
     {
+        if (Environment.GetEnvironmentVariable("STATSDIRECT_SKIP_CLIPBOARD") == "1") { Console.WriteLine("SKIP ScriptContextMenu clipboard checks (STATSDIRECT_SKIP_CLIPBOARD=1 preserves the user's clipboard)"); return; }
         using var script = (Form)Call(main, "CreateScriptWindow");
         Call(script, "ShowR", "before <- 1\nafter <- 2", "Context menu check", null, false);
         var editor = (RichTextBox)Field(script, "rtbDoc");
