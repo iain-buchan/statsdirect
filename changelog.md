@@ -4,6 +4,19 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
 ##[Unreleased]
 
+##[v5.2.4] 2026-10-18
+
+Version 5.2.4 makes the document tabs easier to tell apart and corrects four faults found in a review of 5.2.3. The statistical engine's results are unchanged.
+
+### Changed
+- The document tabs are drawn by the program: a gap between tabs, a border, and a coloured bar on the selected tab, in the system's colours and in high contrast, so that the open documents are easier to distinguish.
+
+### Fixed
+- Continue in R for a probit or logit analysis with a control group stopped with "did not converge" on ordinary data although the fit had reached its optimum: the script's polishing step, which used the expected information, walked away from the optimum when the natural response was small. The script now polishes with Newton's method on the observed curvature; the expected information still gives the standard errors, and the results in the cases that did converge are unchanged.
+- Pasting a picture copied from Word, PowerPoint or a browser into a report gave "[External image omitted]"; the picture on the clipboard is now taken when the copied fragment is nothing but a picture pointing at a file or a web address.
+- Chart axes labelled ticks below 0.0001 as 2E-05 beside plain decimals on the same axis; one notation now labels the whole axis, plain decimals unless a label would be much longer so.
+- Continue in R labelled the user's data with the help example's names in the paired t test's agreement plot and the unpaired t test's means; the scripts now carry each column's title, as <variable>_title, and the recipes use it. The relative-risk meta-analysis L'Abbe plot's axes follow the data instead of the help example's 0 to 25%.
+
 ##[v5.2.3] 2026-10-17
 
 ### Changed
