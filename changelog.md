@@ -5,7 +5,7 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 ##[Unreleased]
 
 ### Fixed
-- Copy image on an SVG chart in the R script output pastes into PowerPoint and Word as a vector graphic. The SVG's width and height go as plain pixel numbers, as the report's copy writes them, where PowerPoint's Paste took a size in points as the PNG; and the copy no longer carries an HTML form, which Word took before the SVG. The PNG and bitmap forms remain for applications that need a raster
+- Copy image on an SVG chart in the R script output pastes into PowerPoint and Word as a vector graphic. The SVG's width and height go as plain pixel numbers, where PowerPoint's Paste took a size in points as the PNG; and the copy no longer carries an HTML form, which Word took before the SVG. The PNG and bitmap forms remain for applications that need a raster
 
 ##[v5.2.4] 2026-10-18
 

@@ -288,19 +288,19 @@ namespace StatsDirect.UI
         }
 
         /// <summary>
-        /// The SVG with its root's width and height as plain numbers, the picture's size in pixels, as the report's copy writes
-        /// them: PowerPoint's Paste command took a root sized in points as the PNG, and takes this as the SVG graphic at the
-        /// chart's intended size.
+        /// The SVG with its root's width and height as plain numbers, the picture's size in pixels: PowerPoint's Paste command took
+        /// a root sized in points, as R's devices write it, as the PNG, and takes this as the SVG graphic at the chart's intended
+        /// size.  The root's attributes are read as XML quotes them, with either quote; a root this does not read, such as one
+        /// with a namespace prefix, is left as it is.
         /// </summary>
         internal static string PlainSized(string svg, int width, int height)
         {
-            Match root = Regex.Match(svg ?? "", @"<svg\b[^>]*>");
+            Match root = Regex.Match(svg ?? "", @"<svg(?=[\s/>])(?:\s+[^\s=/>]+\s*=\s*(?:""[^""]*""|'[^']*'))*\s*/?>");
             if (!root.Success) return svg;
-            string tag = root.Value;
-            string w = width.ToString(System.Globalization.CultureInfo.InvariantCulture);
-            string h = height.ToString(System.Globalization.CultureInfo.InvariantCulture);
-            tag = Regex.Replace(tag, @"\s(?:width|height)=""[^""]*""", "");
-            tag = "<svg width=\"" + w + "\" height=\"" + h + "\"" + tag[4..];
+            string tag = Regex.Replace(root.Value, @"\s+(?:width|height)\s*=\s*(?:""[^""]*""|'[^']*')", "");
+            if (Regex.IsMatch(tag, @"\s(?:width|height)\s*=")) return svg;
+            tag = "<svg width=\"" + width.ToString(System.Globalization.CultureInfo.InvariantCulture)
+                + "\" height=\"" + height.ToString(System.Globalization.CultureInfo.InvariantCulture) + "\"" + tag[4..];
             return svg[..root.Index] + tag + svg[(root.Index + root.Length)..];
         }
 
