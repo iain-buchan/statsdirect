@@ -139,7 +139,7 @@ internal sealed class LearningView : StatsDirectForm
     internal override void EditCut() => Browser.CoreWebView2?.ExecuteScriptAsync("document.execCommand('cut')");
     internal override void EditPaste() => Browser.CoreWebView2?.ExecuteScriptAsync("document.execCommand('paste')");
     internal override void Print() => Browser.CoreWebView2?.ShowPrintUI();
-    internal override void ShowHelp() => SdApplication.SoleInstance.ShowHelp(this, "1000");
+    internal override void ShowHelp() => SdApplication.SoleInstance.ShowHelp(this, "1403");   // the Learning topic
     public override IList<Pane> AvailablePanes => new[] { SelectedPane };
     public override Pane SelectedPane => new("Learning", Tag as WindowInformation, this);
     public override bool SelectPane(Pane pane) { Activate(); return true; }

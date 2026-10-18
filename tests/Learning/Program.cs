@@ -94,6 +94,7 @@ internal static partial class Program
         await TestRSetup(main);
         await TestReportWorkbookDefault(main,service,grid);
         await TestComposerKeys(service);
+        await TestHelpTopics(main,service);
         view.Close();await Task.Delay(80);service.Show(true);await service.View.Ready.Task.WaitAsync(TimeSpan.FromSeconds(40));await Task.Delay(100);
         Check((await JS(service.View,"document.getElementById('statisticalSkills').value")).GetValue<string>()=="advanced","reopening Learning restores learner settings from disk");
         service.View.Close();await Task.Delay(80);

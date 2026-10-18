@@ -227,7 +227,7 @@ internal sealed class frmReportWebView : StatsDirectForm, IReport, IFindTarget
     private void ShowTopic(int context)
     {
         if (context > 0) SdApplication.SoleInstance.ShowHelp(this, context.ToString(System.Globalization.CultureInfo.InvariantCulture));
-        else SdApplication.SoleInstance.ShowHelp(this);
+        else SdApplication.SoleInstance.ShowHelp(this, "1405");   // the Report window topic, when the cursor is in no result
     }
 
     // The existing File/Save hooks are synchronous. Do not block WebView2's UI
