@@ -102,6 +102,13 @@ internal static partial class Program
                 if (original != null)
                     foreach (string format in original.GetFormats(false))
                     {
+                        // A bitmap from another process comes only through the converting read; it goes back as the one Bitmap format.
+                        if (format == DataFormats.Bitmap || format == typeof(Bitmap).FullName)
+                        {
+                            if (saved.GetDataPresent(DataFormats.Bitmap)) continue;
+                            Image kept = (original.GetData(DataFormats.Bitmap) as Image)?.Clone() as Image ?? throw new InvalidOperationException("Unavailable clipboard format: " + format);
+                            saved.SetData(DataFormats.Bitmap, true, kept); retained.Add(kept); continue;
+                        }
                         object value = original.GetData(format, false) ?? throw new InvalidOperationException("Unavailable clipboard format: " + format);
                         value = value switch
                         {
