@@ -237,7 +237,11 @@ namespace StatsDirect.UI
             Enqueue("append(" + Json("\n<div class=\"chart\"><a href=\"" + link + "\">Chart: " + Escape(file.Name) + "</a></div>" + picture + "\n") + ")");
         }
 
-        /// <summary>Copies an embedded chart as SVG, with a standard PNG/bitmap for applications that need it.</summary>
+        /// <summary>
+        /// Copies an embedded chart as SVG, with a standard PNG/bitmap for applications that need a raster.  There is no HTML form:
+        /// PowerPoint and Word insert the image/svg+xml form as a vector graphic and take it before the PNG and the text, but Word
+        /// takes an HTML form before it, and the HTML could only carry the raster.
+        /// </summary>
         internal async Task CopySvgChartAsync(string sourceUri)
         {
             if (sourceUri?.StartsWith(SvgDataPrefix, StringComparison.OrdinalIgnoreCase) != true || sourceUri.Length > 27_000_000)
@@ -267,7 +271,6 @@ namespace StatsDirect.UI
             var data = new DataObject();
             data.SetData(ReportClipboard.FragmentFormat, false, vector.Svg);
             data.SetData("image/svg+xml", false, new MemoryStream(Encoding.UTF8.GetBytes(vector.Svg), writable: false));
-            string publicHtml = vector.Svg;
             string png = image.RootElement.GetProperty("png").GetString();
             byte[] pngBytes = png?.StartsWith("data:image/png;base64,", StringComparison.Ordinal) == true && png.Length <= 27_000_000
                 ? Convert.FromBase64String(png["data:image/png;base64,".Length..]) : null;
@@ -278,9 +281,7 @@ namespace StatsDirect.UI
             {
                 data.SetData("PNG", false, new MemoryStream(pngBytes, writable: false));
                 data.SetData(DataFormats.Bitmap, true, bitmap);
-                publicHtml = "<img width=\"" + vector.Width + "\" height=\"" + vector.Height + "\" alt=\"" + Escape(image.RootElement.GetProperty("alt").GetString()) + "\" src=\"" + png + "\">";
             }
-            data.SetData(DataFormats.Html, ReportClipboard.EncodeHtml(publicHtml));
             data.SetData(DataFormats.UnicodeText, image.RootElement.GetProperty("alt").GetString() ?? "R chart");
             Clipboard.SetDataObject(data, true, 5, 100);
         }

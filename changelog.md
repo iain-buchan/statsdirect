@@ -4,6 +4,9 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
 ##[Unreleased]
 
+### Fixed
+- Copy image on an SVG chart in the R script output pastes into PowerPoint and Word as a vector graphic. The copy no longer carries an HTML form, which Word took before the SVG; the PNG and bitmap forms remain for applications that need a raster
+
 ##[v5.2.4] 2026-10-18
 
 Version 5.2.4 makes the document tabs easier to tell apart and corrects four faults found in a review of 5.2.3. The statistical engine's results are unchanged.
