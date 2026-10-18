@@ -6411,7 +6411,8 @@ namespace StatsDirect.Builtins
             if (residual == 0)
                 return 0;
             double variance = subjects * probability * (1 - probability);
-            return variance > 0 ? residual * residual / variance : double.PositiveInfinity;
+            // a group the model fits as all-or-none has no weight and no degree of freedom in the fit, so it adds nothing here either
+            return variance > 0 ? residual * residual / variance : 0;
         }
 
         private static void ProbitCoefficientCovariance(double naturalResponse, double s1, double s4,

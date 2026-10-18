@@ -45,6 +45,7 @@ internal static partial class Program
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "charts-c") { CheckChartRecipesC(); Console.WriteLine($"PASS {checks} chart recipe C checks"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "charts-d") { CheckChartReplayD(); Console.WriteLine($"PASS {checks} chart replay D checks"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "probit-replay") { CheckProbitReplay(); Console.WriteLine($"PASS {checks} dose-response replay checks"); return 0; }
+            if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "probit-extreme") { CheckProbitExtremeGroup(); Console.WriteLine($"PASS {checks} dose-response extreme-group checks"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "analysis-replay") { CheckAnalysisReplay(); Console.WriteLine($"PASS {checks} analysis replay checks"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "routed-replay") { CheckRoutedReplay(); Console.WriteLine($"PASS {checks} routed replay checks"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "records") { CheckRecord(); CheckThreshold(); CheckHash(); CheckScript(); CheckTable(); CheckFollowOn(); CheckRealRuns(); CheckRegressionFollowOn(); CheckTwoLevel(); CheckColumnLocator(); Console.WriteLine($"PASS {checks} saved record checks"); return 0; }
@@ -60,6 +61,7 @@ internal static partial class Program
             CheckChartRecipesC();
             CheckChartReplayD();
             CheckProbitReplay();
+            CheckProbitExtremeGroup();
             CheckAnalysisReplay();
             CheckRoutedReplay();
             CheckThreshold();
