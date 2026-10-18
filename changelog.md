@@ -17,6 +17,9 @@ Version 5.2.4 makes the document tabs easier to tell apart and corrects four fau
 - Chart axes labelled ticks below 0.0001 as 2E-05 beside plain decimals on the same axis; one notation now labels the whole axis, plain decimals unless a label would be much longer so.
 - Continue in R labelled the user's data with the help example's names in the paired t test's agreement plot and the unpaired t test's means; the scripts now carry each column's title, as <variable>_title, and the recipes use it. The relative-risk meta-analysis L'Abbe plot's axes follow the data instead of the help example's 0 to 25%.
 - Report pictures exported or copied as PNG are drawn on a canvas prepared for reading back, shared with the Mac version, so that an exported picture cannot come out blank.
+- The automatic chart files of R runs, named by run, device and page, accumulated in the R folder; those a week old or more are removed when a run starts.
+- A Tukey box-and-whisker plot drawn horizontally in R takes its exact value-axis limits; the axis option R ignores for that orientation is no longer used.
+- When the open workbooks change after sharing was confirmed in the AI pane, Send keeps the explanation that they changed instead of the general reminder.
 
 ##[v5.2.3] 2026-10-17
 
