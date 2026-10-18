@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using System.Globalization;
 using System.Reflection;
 using StatsDirect.R;
@@ -86,6 +87,27 @@ static class Program
             Say(lite.Width == 576 && lite.Height == 384, $"svglite's single quotes and decimals read the same: {lite.Width} by {lite.Height}");
             ReportVectorPicture liteBox = (ReportVectorPicture)vector.Invoke(null, new object[] { "<svg viewBox='0 0 300.00 150.00'><g/></svg>" });
             Say(liteBox.Width == 300 && liteBox.Height == 150, $"and so does a single-quoted viewBox: {liteBox.Width} by {liteBox.Height}");
+        }
+        // Copy image's SVG form: the root sized in plain pixel numbers however it is quoted; a root the method does not read, unchanged
+        MethodInfo plain = typeof(CreoleHtmlReportRenderer).Assembly.GetTypes().FirstOrDefault(t => t.Name == "ScriptOutputView")
+            ?.GetMethod("PlainSized", BindingFlags.NonPublic | BindingFlags.Static);
+        if (plain == null) Say(false, "the program has no PlainSized");
+        else
+        {
+            string Plain(string svg, int w, int h) => (string)plain.Invoke(null, new object[] { svg, w, h });
+            static bool WellFormed(string svg) { try { System.Xml.Linq.XElement.Parse(svg); return true; } catch { return false; } }
+            string cairo = Plain("<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" width=\"360pt\" height=\"288pt\" viewBox=\"0 0 360 288\"><g/></svg>", 480, 384);
+            Say(cairo.StartsWith("<svg width=\"480\" height=\"384\" xmlns=\"http://www.w3.org/2000/svg\"") && !cairo.Contains("pt\"") && WellFormed(cairo),
+                "a cairo root, sized in points, is sized in plain pixels: " + cairo[..Math.Min(72, cairo.Length)]);
+            string lite = Plain("<svg xmlns='http://www.w3.org/2000/svg' width='432.00pt' height='288.00pt' viewBox='0 0 432.00 288.00'><g/></svg>", 576, 384);
+            Say(Regex.Matches(lite, "width=").Count == 1 && Regex.Matches(lite, "height=").Count == 1 && lite.Contains("width=\"576\" height=\"384\"") && WellFormed(lite),
+                "an svglite root, single-quoted, is sized once and stays well formed: " + lite[..Math.Min(72, lite.Length)]);
+            string spaced = Plain("<svg xmlns=\"http://www.w3.org/2000/svg\" width = \"360pt\" height = \"288pt\" aria-label=\"a > b\"><g/></svg>", 480, 384);
+            Say(Regex.Matches(spaced, "width").Count == 1 && spaced.Contains("aria-label=\"a > b\"") && WellFormed(spaced),
+                "spaces around = and a > inside a value are read as XML reads them");
+            string prefixed = "<svg:svg xmlns:svg=\"http://www.w3.org/2000/svg\" width=\"360pt\" height=\"288pt\"><svg:g/></svg:svg>";
+            Say(Plain(prefixed, 480, 384) == prefixed, "a namespace-prefixed root is left as it is");
+            Say(Plain("no chart", 480, 384) == "no chart" && Plain(null, 1, 1) == null, "text with no root is left as it is");
         }
         Console.WriteLine(failures == 0 ? "ALL CHECKS PASS" : $"{failures} CHECKS FAILED");
         return failures == 0 ? 0 : 1;

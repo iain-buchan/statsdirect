@@ -132,13 +132,13 @@ internal static partial class Program
                         Check(Clipboard.GetDataObject()?.GetData("StatsDirect.ReportFragment.HTML.v1", false) is string fragment
                             && fragment.Contains("<svg", StringComparison.OrdinalIgnoreCase),
                             "R SVG Copy image provides the private vector report fragment");
-                        // The SVG form's root is sized in plain numbers, the picture's pixels (5 by 4 inches at 96 dpi), as the report's
-                        // copy writes it: PowerPoint's Paste command took a root sized in points as the PNG.
+                        // The SVG form's root is sized in plain numbers, the picture's pixels (5 by 4 inches at 96 dpi): PowerPoint's
+                        // Paste command took a root sized in points as the PNG.
                         string svgRoot = Clipboard.GetDataObject()?.GetData("image/svg+xml", false) is MemoryStream svgForm
                             ? Regex.Match(Encoding.UTF8.GetString(svgForm.ToArray()), "<svg\\b[^>]*>").Value : "";
                         Check(svgRoot.Contains("viewBox=\"0 0 360 288\"", StringComparison.Ordinal) && svgRoot.Contains(" width=\"480\"", StringComparison.Ordinal)
                             && svgRoot.Contains(" height=\"384\"", StringComparison.Ordinal) && !svgRoot.Contains("pt\"", StringComparison.Ordinal),
-                            "the R SVG copy's SVG form is sized in plain pixel numbers, as the report's copy is");
+                            "the R SVG copy's SVG form is sized in plain pixel numbers");
                         // A RichEdit paste, as the script editor's, takes the copy's picture, as it did before Office formats were
                         // rearranged, rather than embedding anything as an object.
                         using (var editor = new RichTextBox())
