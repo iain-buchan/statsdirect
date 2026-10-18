@@ -4,6 +4,10 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
 ##[Unreleased]
 
+##[v5.2.5] 2026-10-18
+
+Version 5.2.5 makes a chart copied from the R script output paste into PowerPoint and Word as a vector graphic. The statistical engine's results are unchanged.
+
 ### Fixed
 - Copy image on an SVG chart in the R script output pastes into PowerPoint and Word as a vector graphic. The SVG's width and height go as plain pixel numbers, where PowerPoint's Paste took a size in points as the PNG; and the copy no longer carries an HTML form, which Word took before the SVG. The PNG and bitmap forms remain for applications that need a raster
 
