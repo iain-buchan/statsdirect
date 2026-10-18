@@ -26,6 +26,8 @@ Source baseline: **iain-buchan/statsdirect-mac**, commit **4e9f9d10a7dbf795c28fc
 
 The SVG import/paste correction from Mac commit **d1494f2ac214f04bd8252f17c6c232be60612ae8** is also included: `fragment.mjs`, `import.mjs` and the new `svg-isolation.mjs` are exact copies from that commit. The importer gives each chart separate drawing identifiers; each SVG's own stylesheet is resolved in an isolated tree before its drawing styles are inlined. Local glyph references and identifiers containing `=` survive, while external glyph references remain blocked. The Windows build adapters still apply. Native regressions reproduce the old duplicate-ID failure and verify rendered colours and geometry, multi-chart paste/undo/redo, HTML reopening, and six separate Word SVGs with PNG fallbacks and PDF export.
 
+The readback canvases of Mac commit **8ed33c3** (18 Oct 2026, "Use readback canvases for reliable report image exports") are included: the three `getContext('2d')` calls that are read back for a PNG take `{willReadFrequently:true}` in `editor.mjs` and `export.mjs`.
+
 - `upstream/Report` contains the baseline plus the recorded shared changes, locked dependency manifest and JavaScript tests; `upstream/Tests/Fixtures/Reports` contains their fixtures.
 - `upstream/LICENSE` retains the Mac repository licence.
 - `StatsDirectUI/Assets/ReportEditor/vendor` contains offline browser bundles and their third-party notices. `workspace.css` is based on the same Mac commit, with two chart-default selectors excluding the Windows importer's temporary container.
