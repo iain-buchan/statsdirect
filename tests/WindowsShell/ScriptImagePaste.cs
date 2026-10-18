@@ -119,9 +119,44 @@ internal static partial class Program
                         ? " offers its SVG copy command and its production handler publishes the clipboard"
                         : " uses the real output browser's native Copy image command"));
                     if (kind == "R-SVG")
+                    {
                         Check(Clipboard.GetDataObject()?.GetData("StatsDirect.ReportFragment.HTML.v1", false) is string fragment
                             && fragment.Contains("<svg", StringComparison.OrdinalIgnoreCase),
                             "R SVG Copy image provides the private vector report fragment");
+                        // A RichEdit paste, as the script editor's, takes the copy's picture, as it did before Office formats were
+                        // rearranged, rather than embedding anything as an object.
+                        using (var editor = new RichTextBox())
+                        {
+                            _ = editor.Handle;
+                            editor.Paste();
+                            Check(editor.Rtf.Contains("\\pict", StringComparison.Ordinal) && !editor.Rtf.Contains("\\object", StringComparison.Ordinal),
+                                "a RichEdit paste of the R SVG copy still inserts its picture, not an embedded file object");
+                        }
+                    }
+                    string probe = Environment.GetEnvironmentVariable("STATSDIRECT_PASTE_PROBE");
+                    if (!string.IsNullOrEmpty(probe))
+                    {
+                        // An opt-in probe of another application's paste while the clipboard holds this copy: a PowerShell script, such
+                        // as one driving PowerPoint and Word through COM, exits 0 when the paste keeps a vector and 2 for a raster. The
+                        // SVG copy must paste as a vector; the native PNG copy shows the probe telling a raster apart.
+                        var start = new System.Diagnostics.ProcessStartInfo("powershell.exe", "-NoProfile -ExecutionPolicy Bypass -File \"" + probe + "\"")
+                        { UseShellExecute = false, RedirectStandardOutput = true, RedirectStandardError = true, CreateNoWindow = true };
+                        using var run = System.Diagnostics.Process.Start(start)!;
+                        Task<string> output = run.StandardOutput.ReadToEndAsync(), errors = run.StandardError.ReadToEndAsync();
+                        using var patience = new CancellationTokenSource(TimeSpan.FromMinutes(3));
+                        try { await run.WaitForExitAsync(patience.Token); }
+                        catch (OperationCanceledException) { run.Kill(entireProcessTree: true); }
+                        string probeOutput = await output + await errors;
+                        Console.WriteLine("      " + kind + " paste probe (exit " + run.ExitCode + "): " + probeOutput.Trim().Replace("\n", "\n      "));
+                        if (run.ExitCode == 4) Console.WriteLine("SKIP paste probe: Office is not available here.");
+                        else
+                        {
+                            Check(run.ExitCode is 0 or 2, "the paste probe " + Path.GetFileName(probe) + " completes its pastes (exit " + run.ExitCode + ")");
+                            Check(run.ExitCode == (kind == "R-SVG" ? 0 : 2), kind == "R-SVG"
+                                ? "the paste probe " + Path.GetFileName(probe) + " receives the R SVG copy as a vector"
+                                : "the paste probe " + Path.GetFileName(probe) + " reports the native PNG copy as a raster");
+                        }
+                    }
                 }
                 else await WriteClipboard(kind == "SVG-only" ? svgOnly : kind == "PNG-only" ? pngOnly : bitmapOnly);
 
