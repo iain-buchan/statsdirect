@@ -16,7 +16,8 @@ internal static partial class Program
                 foreach ((double low, double high) in new[]
                 {
                     (201.0, 402.0), (0.0, 2.0), (-3.2, 2.1),
-                    (0.000125, 0.00055), (1e-20, 6e-20), (225.5, 228.0)
+                    (0.000125, 0.00055), (1e-20, 6e-20), (225.5, 228.0),
+                    (0.00002, 0.0001), (0.0000002, 0.000001)
                 })
                 foreach (bool vertical in new[] { false, true })
                 {
@@ -28,8 +29,11 @@ internal static partial class Program
                         !System.Text.RegularExpressions.Regex.IsMatch(t.Label,
                             System.Text.RegularExpressions.Regex.Escape(separator) + "0+$") &&
                         double.TryParse(t.Label, NumberStyles.Float, CultureInfo.CurrentCulture, out double parsed) &&
-                        Math.Abs(parsed - t.Value) <= 2e-15 * Math.Max(Math.Abs(t.Value), 1e-300)),
-                        $"automatic {(vertical ? "vertical" : "horizontal")} axis {low:R}..{high:R} in {name} keeps its values without redundant decimal zeros");
+                        Math.Abs(parsed - t.Value) <= 2e-15 * Math.Max(Math.Abs(t.Value), 1e-300))
+                        // one notation for the whole axis, plain decimals unless a tick needs more than six (0.00002 stays plain, 0.0000002 goes scientific)
+                        && ticks.Where(t => t.Value != 0).Select(t => t.Label.Contains('E')).Distinct().Count() <= 1
+                        && (low != 0.00002 || ticks.All(t => !t.Label.Contains('E'))) && (low != 0.0000002 || ticks.Where(t => t.Value != 0).All(t => t.Label.Contains('E'))),
+                        $"automatic {(vertical ? "vertical" : "horizontal")} axis {low:R}..{high:R} in {name} keeps its values without redundant decimal zeros, in one notation");
                 }
             }
 

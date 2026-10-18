@@ -127,6 +127,38 @@ namespace Layout.AxisLabelers
             return W[0] * simplicity + W[1] * coverage + W[2] * density + W[3] * legibility;
         }
 
+        /// <summary>A tick value in plain decimals without trailing zeros, in the current culture; a decimal's own scale, such as 25.0, is not axis precision.</summary>
+
+        private static string Plain(decimal value) => value.ToString("0.############################", CultureInfo.CurrentCulture);
+
+
+        /// <summary>The decimals a plain label carries, after the current culture's separator.</summary>
+
+
+        private static int Decimals(string plain)
+
+
+        {
+
+
+            string separator = CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
+
+
+            int at = plain.IndexOf(separator, StringComparison.Ordinal);
+
+
+            return at < 0 ? 0 : plain.Length - at - separator.Length;
+
+
+        }
+
+
+
+        /// <summary>A tick value in scientific notation, such as 2E-7, in the current culture.</summary>
+
+        private static string Scientific(decimal value) => value.ToString("0.############E+0", CultureInfo.CurrentCulture);
+
+
         public override Axis Generate(Options options, double density)
         {
             double space = options.Direction == AxisDirection.Horizontal ? options.Screen.Width : options.Screen.Height;
@@ -190,7 +222,10 @@ namespace Layout.AxisLabelers
 
                                 List<decimal> stepSequence = Enumerable.Range(0, k).Select(x => lmin + x * step).ToList();
                                 // Decimal steps can carry a scale such as 25.0; that is not meaningful axis precision.
-                                List<Tuple<decimal, string>> newlabels = stepSequence.Select(value => new Tuple<decimal, string>(value, value.ToString("G29", CultureInfo.CurrentCulture))).ToList();
+                                // One notation labels the whole axis, as R labels its axes: plain decimals, or scientific for every tick when a plain
+                                // label would need more than six decimals.
+                                bool scientific = stepSequence.Any(value => value != 0 && Decimals(Plain(value)) > 6);
+                                List<Tuple<decimal, string>> newlabels = stepSequence.Select(value => new Tuple<decimal, string>(value, scientific && value != 0 ? Scientific(value) : Plain(value))).ToList();
 
                                 option.Labels = newlabels;
                                 option.Density = d;
