@@ -96,7 +96,7 @@ internal static partial class Program
     {
         "BarPlot" => "emit(c(dim(bar_values), as.vector(bar_values)))\n",
         "BarPlotFrequency" => "emit(c(dim(counts), as.vector(counts), as.vector(frequency_values), dim(bar_values), as.vector(bar_values)))\n",
-        "HistogramPlot" => "emit(length(histograms))\nfor (h in histograms) emit(c(h$n, h$breaks, h$counts, h$mids, h$heights))\n",
+        "HistogramPlot" => "emit(length(histograms))\nfor (h in histograms) emit(c(h$n, h$breaks, h$counts, h$mids, h$heights))\nemit(sd_histogram_doane(series[[1]]))\n",
         "NormalPlot" => "emit(c(length(observed), normal_ranks, normal_scores, observed))\n",
         "SpreadPlot" => "stopifnot(spread_tolerance > 0, spread_tolerance < 1)\nemit(length(groups))\nfor (i in seq_along(groups)) { emit(c(length(groups[[i]]), groups[[i]])); emit(unlist(spread_stacks[[i]], use.names = FALSE)) }\n",
         "LinePlot" or "ScatterPlot" => "emit(length(xy_series))\nfor (s in xy_series) emit(c(length(s$x), s$x, s$y))\n",

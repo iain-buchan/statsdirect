@@ -136,15 +136,19 @@ internal static partial class Program
         finally { MetaExact = earlierExact; }
 
         // Existing independent worked examples still compare every printed figure.
-        // Here verify the simplified regression CI extraction against direct lm algebra.
+        // Here the recipe's Egger regression is checked against the same regression worked out by hand from the data vectors, with
+        // no lm: slope, intercept, its standard error and its 90% interval on k - 2 degrees of freedom.
         foreach (string operation in new[] { "Effect", "MetaSummary", "RelativeRiskMeta" })
         {
             string example = File.ReadAllText(Path.Combine(Metadata("Examples"), operation + ".json"));
             string script = RScriptWriter.Write(JsonDocument.Parse(RecordOf(JsonDocument.Parse(example).RootElement)).RootElement, null, null).Text;
-            string fitName = operation == "Effect" ? "egger" : operation == "MetaSummary" ? "fit" : "NULL";
-            string assertion = fitName != "NULL"
-                ? $"fit_check <- {fitName}\nse_check <- sqrt(vcov(fit_check)[1,1])\nstopifnot(near(confint(fit_check,level=.9)[1,],coef(fit_check)[1]+c(-1,1)*qt(.95,df.residual(fit_check))*se_check))"
-                : "test_fit <- lm(I(lrr/se_i)~I(1/se_i))\nse_check <- sqrt(vcov(test_fit)[1,1])\nstopifnot(near(confint(test_fit,level=.9)[1,],coef(test_fit)[1]+c(-1,1)*qt(.95,df.residual(test_fit))*se_check))";
+            string hand = "hand_check <- function(y, x) { n <- length(y); xbar <- mean(x); ybar <- mean(y); sxx <- sum((x - xbar)^2); slope <- sum((x - xbar) * (y - ybar)) / sxx; intercept <- ybar - slope * xbar; s2 <- sum((y - intercept - slope * x)^2) / (n - 2); se <- sqrt(s2 * (1 / n + xbar^2 / sxx)); c(intercept, intercept + c(-1, 1) * qt(.95, n - 2) * se) }\n";
+            string assertion = operation switch
+            {
+                "Effect" => hand + "h <- hand_check(d / se, 1 / se)\nstopifnot(near(coef(egger)[1], h[1]), near(confint(egger, level = .9)[1,], h[2:3]))",
+                "MetaSummary" => hand + "h <- hand_check(y / se, 1 / se)\nstopifnot(near(coef(fit)[1], h[1]), near(confint(fit, level = .9)[1,], h[2:3]))",
+                _ => hand + "h <- hand_check(lrr / se_i, 1 / se_i)\nprinted <- capture.output(egger(lrr / se_i, 1 / se_i, \"Egger\"))\nstopifnot(any(grepl(paste0(\"bias = \", six(h[1]), \" (90% CI = \", six(h[2]), \" to \", six(h[3]), \")\"), printed, fixed = TRUE)))"
+            };
             RunScript(operation + "-standard-lm", script, assertion, 3);
         }
 

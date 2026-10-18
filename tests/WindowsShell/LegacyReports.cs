@@ -19,8 +19,9 @@ internal static partial class Program
             var importer = typeof(frmMain).Assembly.GetType("StatsDirect.UI.WebReports.LegacyReport")!;
             // Fail directly in the harness instead of leaving a modal error
             // prompt open if the application's importer regresses.
-            importer.GetMethod("Read", BindingFlags.NonPublic | BindingFlags.Static)!.Invoke(null, new object[] { source });
-            Check(true, "compiled application imports RTF before any spreadsheet in a fresh process");
+            object imported = importer.GetMethod("Read", BindingFlags.NonPublic | BindingFlags.Static)!.Invoke(null, new object[] { source })!;
+            string importedHtml = (string)imported.GetType().GetProperty("html")!.GetValue(imported)!;
+            Check(importedHtml.Contains("Legacy report:") && importedHtml.Contains("Caf"), "compiled application imports RTF before any spreadsheet in a fresh process, with its text");
             Check((bool)Call(main, "OpenFile", source, false) && main.ActiveMdiChild?.GetType().Name == "frmReportWebView", "File Open dispatches RTF to the report editor");
             report = main.ActiveMdiChild!;
             var view = Field(report, "view");
