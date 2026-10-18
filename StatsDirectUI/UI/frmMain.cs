@@ -24,6 +24,7 @@ using System.IO;
 using SpreadsheetGear.Windows.Forms;
 using SpreadsheetGear;
 using Color = System.Drawing.Color;
+using SystemColors = System.Drawing.SystemColors;
 using StatsDirect.R;
 using InvalidDataException = StatsDirect.Templates.InvalidDataException;
 using System.Globalization;
@@ -152,6 +153,9 @@ namespace StatsDirect.UI
         {
             currentScaleFactor = new SizeF(1f, 1f);
             InitializeComponent();
+            tabWindows.DrawMode = TabDrawMode.OwnerDrawFixed;
+            tabWindows.DrawItem += DrawWindowTab;
+            tabWindows.SelectedIndexChanged += (_, _) => tabWindows.Invalidate();
             InitializeLearningCommands();
             // A menu temporarily owns keyboard focus. Remember its edit target
             // until Click has run, instead of editing the underlying worksheet.
@@ -736,6 +740,49 @@ namespace StatsDirect.UI
             }
         }
 
+        private void DrawWindowTab(object sender, DrawItemEventArgs e)
+        {
+            if (e.Index < 0 || e.Index >= tabWindows.TabCount) return;
+
+            // Leave a gap inside the native tab bounds: selected tabs otherwise
+            // overlap their neighbours, obscuring the dividing lines.
+            Rectangle bounds = e.Bounds;
+            int gap = tabWindows.LogicalToDeviceUnits(2);
+            bounds.Inflate(-gap, -gap);
+            if (bounds.Width <= 0 || bounds.Height <= 0) return;
+
+            bool selected = e.Index == tabWindows.SelectedIndex;
+            bool highContrast = SystemInformation.HighContrast;
+            Color background = selected
+                ? (highContrast ? SystemColors.Highlight : SystemColors.Window)
+                : SystemColors.Control;
+            Color foreground = selected
+                ? (highContrast ? SystemColors.HighlightText : SystemColors.WindowText)
+                : SystemColors.ControlText;
+            Color border = selected ? SystemColors.Highlight
+                : (highContrast ? SystemColors.WindowText : SystemColors.ControlDark);
+            int lineWidth = tabWindows.LogicalToDeviceUnits(1);
+
+            using (var fill = new SolidBrush(background))
+                e.Graphics.FillRectangle(fill, bounds);
+            using (var pen = new Pen(border, lineWidth))
+                e.Graphics.DrawRectangle(pen, bounds.X, bounds.Y, bounds.Width - lineWidth, bounds.Height - lineWidth);
+            if (selected)
+            {
+                using var accent = new SolidBrush(border);
+                e.Graphics.FillRectangle(accent, bounds.X, bounds.Y, bounds.Width, tabWindows.LogicalToDeviceUnits(3));
+            }
+
+            Rectangle textBounds = Rectangle.Inflate(bounds, -tabWindows.LogicalToDeviceUnits(4), -lineWidth);
+            var flags = TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter
+                | TextFormatFlags.SingleLine | TextFormatFlags.EndEllipsis
+                | TextFormatFlags.NoPrefix | TextFormatFlags.NoPadding | TextFormatFlags.PreserveGraphicsClipping;
+            if (tabWindows.RightToLeft == RightToLeft.Yes) flags |= TextFormatFlags.RightToLeft;
+            TextRenderer.DrawText(e.Graphics, tabWindows.TabPages[e.Index].Text, e.Font, textBounds, foreground, flags);
+            if (tabWindows.Focused && (e.State & (DrawItemState.Focus | DrawItemState.NoFocusRect)) == DrawItemState.Focus)
+                ControlPaint.DrawFocusRectangle(e.Graphics, textBounds, foreground, background);
+        }
+
         private void tabWindows_Selecting(object sender, TabControlCancelEventArgs e)
         {
             try
@@ -1057,6 +1104,7 @@ namespace StatsDirect.UI
             const int designedGapAboveTabs = 6;
 
             int tabHeight = Math.Max(designedTabHeight, (int)Math.Ceiling(tabWindows.Font.Height * (double)designedTabHeight / designedFontHeight));
+            tabWindows.Padding = new Point(LogicalToDeviceUnits(12), LogicalToDeviceUnits(3));
             tabWindows.ItemSize = new Size(0, tabHeight);
             tabWindows.MaximumSize = Size.Empty;
             tabWindows.MinimumSize = new Size(0, tabHeight);
