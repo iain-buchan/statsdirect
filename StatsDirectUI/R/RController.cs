@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace StatsDirect.R
 {
@@ -169,12 +170,35 @@ namespace StatsDirect.R
         public static string RunScriptCapturingOutput(string scriptBody, RVersion preferredVersion, System.Threading.CancellationToken stop = default, bool echo = false)
             => RunScriptCapturingOutput(scriptBody, preferredVersion, stop, echo, Guid.NewGuid());
 
+        private static bool housekept;
+        private static readonly Regex AutomaticChart = new("^Rplot-[0-9a-f]{32}-[0-9]+-[0-9]{3}\\.svg$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+        /// <summary>
+        /// Removes the automatic chart files of earlier runs, Rplot-&lt;run&gt;-&lt;device&gt;-&lt;page&gt;.svg, that are a week old or more from the R
+        /// folder: every run writes its own and nothing else removed them, and a run draws its charts again.  Files named by the user or
+        /// by R itself are not touched.  Once per process, before the first run.
+        /// </summary>
+        internal static void HousekeepAutomaticCharts(string folder, DateTime now)
+        {
+            if (!Directory.Exists(folder))
+                return;
+            foreach (string path in Directory.EnumerateFiles(folder, "Rplot-*.svg"))
+            {
+                if (!AutomaticChart.IsMatch(Path.GetFileName(path)))
+                    continue;
+                try { if (now - File.GetLastWriteTime(path) >= TimeSpan.FromDays(7)) File.Delete(path); }
+                catch (IOException) { }
+                catch (UnauthorizedAccessException) { }
+            }
+        }
+
         /// <summary>The script window supplies the run identity so it can recognise this run's automatic charts among concurrent runs.</summary>
         internal static string RunScriptCapturingOutput(string scriptBody, RVersion preferredVersion, System.Threading.CancellationToken stop, bool echo, Guid runId)
         {
             string rFolder = SDConfiguration.MyStatsDirectRFolder;
             if (!Directory.Exists(rFolder))
                 Directory.CreateDirectory(rFolder);
+            if (!housekept) { housekept = true; HousekeepAutomaticCharts(rFolder, DateTime.Now); }
             // A random identity stays unique across concurrent runs, app restarts and processes whose Windows IDs are reused.
             string scriptPath = Path.Combine(rFolder, "continue-" + runId.ToString("N") + ".r");
             string sourcePath = Path.Combine(rFolder, "script-" + runId.ToString("N") + ".r");

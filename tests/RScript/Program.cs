@@ -17,11 +17,21 @@ internal static partial class Program
     internal static bool MetaExact;   // whether the host's preferences ask the meta-analyses for their exact methods
     private static readonly CultureInfo inv = CultureInfo.InvariantCulture;
     private static void Check(bool ok, string description) { if (!ok) throw new Exception("FAIL " + description); checks++; Console.WriteLine("PASS " + description); }
+    /// <summary>The folders the checks made under the temporary folder, statsdirect-*, removed when every check passed; kept for a look when one failed.</summary>
+    private static void CleanTemporaryFolders(DateTime since)
+    {
+        foreach (string folder in Directory.EnumerateDirectories(Path.GetTempPath(), "statsdirect-*"))
+            try { if (Directory.GetCreationTime(folder) >= since) Directory.Delete(folder, true); }
+            catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
+    }
+
     private static string Metadata(string key) => typeof(Program).Assembly.GetCustomAttributes<AssemblyMetadataAttribute>().First(a => a.Key == key).Value;
 
     [STAThread]
     static int Main()
     {
+        DateTime started = DateTime.Now;
         try
         {
             _ = typeof(StatsDirect.R.RScriptWriter).Assembly.GetType("StatsDirect.UI.SdApplication").GetProperty("SoleInstance", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null);   // the application object, whose making registers the engine's functions, as the program does at its start
@@ -46,6 +56,7 @@ internal static partial class Program
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "charts-d") { CheckChartReplayD(); Console.WriteLine($"PASS {checks} chart replay D checks"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "probit-replay") { CheckProbitReplay(); Console.WriteLine($"PASS {checks} dose-response replay checks"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "probit-extreme") { CheckProbitExtremeGroup(); Console.WriteLine($"PASS {checks} dose-response extreme-group checks"); return 0; }
+            if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "housekeeping") { CheckChartHousekeeping(); Console.WriteLine($"PASS {checks} chart housekeeping checks"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "analysis-replay") { CheckAnalysisReplay(); Console.WriteLine($"PASS {checks} analysis replay checks"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "routed-replay") { CheckRoutedReplay(); Console.WriteLine($"PASS {checks} routed replay checks"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "records") { CheckRecord(); CheckThreshold(); CheckHash(); CheckScript(); CheckTable(); CheckFollowOn(); CheckRealRuns(); CheckRegressionFollowOn(); CheckTwoLevel(); CheckColumnLocator(); Console.WriteLine($"PASS {checks} saved record checks"); return 0; }
@@ -62,6 +73,7 @@ internal static partial class Program
             CheckChartReplayD();
             CheckProbitReplay();
             CheckProbitExtremeGroup();
+            CheckChartHousekeeping();
             CheckAnalysisReplay();
             CheckRoutedReplay();
             CheckThreshold();
@@ -85,6 +97,7 @@ internal static partial class Program
             CheckColumnLocator();
             CheckBoxWhisker();
             CheckTukeyHinges();
+            CleanTemporaryFolders(started);
             Console.WriteLine($"PASS {checks} Continue in R checks");
             return 0;
         }
