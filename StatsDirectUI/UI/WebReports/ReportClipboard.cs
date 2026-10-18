@@ -113,6 +113,20 @@ internal static class ReportClipboard
             header + Encoding.UTF8.GetByteCount(html[..from]), header + Encoding.UTF8.GetByteCount(html[..to])) + html;
     }
 
+    /// <summary>
+    /// Whether an HTML fragment is nothing but pictures that are not embedded as data, as Word, PowerPoint and browsers write a copied
+    /// picture: an img with a file or web address and no text.  Such a fragment yields to the picture formats beside it on the clipboard.
+    /// </summary>
+    internal static bool OnlyExternalPictures(string html)
+    {
+        if (string.IsNullOrEmpty(html) || !System.Text.RegularExpressions.Regex.IsMatch(html, "<img\\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase))
+            return false;
+        if (System.Text.RegularExpressions.Regex.IsMatch(html, "<img\\b[^>]*\\bsrc\\s*=\\s*[\"']?\\s*data:image/", System.Text.RegularExpressions.RegexOptions.IgnoreCase))
+            return false;
+        string text = System.Net.WebUtility.HtmlDecode(System.Text.RegularExpressions.Regex.Replace(html, "<[^>]+>", " ")).Replace('\u00a0', ' ');
+        return string.IsNullOrWhiteSpace(text);
+    }
+
     internal static string DecodeHtml(string value)
     {
         byte[] bytes = Encoding.UTF8.GetBytes(value);

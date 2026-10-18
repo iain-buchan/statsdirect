@@ -280,7 +280,13 @@ internal sealed class ReportView : UserControl
                 string html = contents?.GetData(ReportClipboard.FragmentFormat, false) as string;
                 if (html == null && new[] { ReportClipboard.SvgFormat, "image/x-svg+xml", "SVG" }.Any(format => contents?.GetDataPresent(format, false) == true))
                     html = ReportClipboard.ImageHtml(contents);
-                if (html == null && contents?.GetData(DataFormats.Html) is string publicHtml) html = ReportClipboard.DecodeHtml(publicHtml);
+                if (html == null && contents?.GetData(DataFormats.Html) is string publicHtml)
+                {
+                    html = ReportClipboard.DecodeHtml(publicHtml);
+                    // Word, PowerPoint and browsers copy a picture as an HTML fragment whose img points at a file or a web address, with
+                    // the picture itself in PNG or bitmap form beside it: the picture is taken when the fragment is nothing but pictures
+                    if (ReportClipboard.OnlyExternalPictures(html)) html = ReportClipboard.ImageHtml(contents) ?? html;
+                }
                 if (string.IsNullOrWhiteSpace(html))
                 {
                     html = ReportClipboard.ImageHtml(contents);
