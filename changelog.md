@@ -4,13 +4,20 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
 ##[Unreleased]
 
-##[v5.2.5] 2026-10-18
+##[v5.2.6] 2026-10-18
 
-Version 5.2.5 makes a chart copied from the R script output paste into PowerPoint and Word as a vector graphic. The statistical engine's results are unchanged.
+Version 5.2.6 makes a chart copied from the R script output paste into PowerPoint and Word as a vector graphic, as a chart copied from a report does, and keeps the labels of either chart in place when PowerPoint converts the graphic to shapes. The statistical engine's results are unchanged.
 
 ### Fixed
 - Copy image on an SVG chart in the R script output pastes into PowerPoint and Word as a vector graphic, which Office can convert to shapes, with the PNG and bitmap forms in Paste Special, as a chart copied from a report does: the copy is now published as the report publishes a chart, in the same forms, order and lifetimes, where the pane's own publication had PowerPoint taking the PNG. The copy's SVG root carries plain numbers in place of points, as the report's copy does, and its labels go as positioned paths rather than R's references to glyph symbols, whose offsets PowerPoint's Convert to Shape drops
 - A chart copied from a report, or saved as an SVG file, positions its labels by their measured left edges, as PowerPoint's conversion of a graphic to shapes places them whatever the alignment says, so that the labels keep their places after Convert to Shape
+
+##[v5.2.5] 2026-10-18
+
+Version 5.2.5 changed the chart copy from the R script output for PowerPoint and Word; the change proved insufficient, and 5.2.6 completes it. The statistical engine's results are unchanged.
+
+### Changed
+- Copy image on an SVG chart in the R script output no longer carries an HTML form, and its SVG root carries plain numbers in place of points; PowerPoint's Paste still took the PNG
 
 ##[v5.2.4] 2026-10-18
 
