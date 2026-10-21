@@ -137,6 +137,9 @@ namespace StatsDirect.R
             string analysisTitle = string.IsNullOrEmpty(title) ? Text(record, "title") ?? operation : title;
             RRecipe recipe = RRecipes.Find(record);
             Binding binding = recipe != null ? Parse(RRecipes.Recipe(recipe.File)) : null;
+            // a chart follow-on's plots, drawn after its parent's analysis; the section's header may bind settings of its own
+            Binding plots = binding != null && !string.IsNullOrEmpty(recipe.After) ? Parse(RRecipes.Recipe(recipe.After)) : null;
+            if (plots != null) binding.Settings.AddRange(plots.Settings);
             string detail = recipe?.Detail ?? (RRecipes.Find(operation)?.ParentFiles?.Count > 0
                 ? "The saved result does not identify its original analysis. Rerun that analysis to reproduce this follow-on in R."
                 : null);
@@ -354,6 +357,7 @@ namespace StatsDirect.R
                 if (binding.Settings.Any(setting => setting.parameter == "doseResponseModel"))
                     s.Append(RRecipes.Recipe("dose-response-common.R").TrimEnd('\n')).Append('\n');
                 s.Append(binding.Body.TrimEnd('\n')).Append('\n');
+                if (plots != null) s.Append('\n').Append(plots.Body.TrimEnd('\n')).Append('\n');
             }
             else
                 s.Append("# Add your analysis here.\n");

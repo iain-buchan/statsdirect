@@ -12,6 +12,8 @@ namespace StatsDirect.R
         public string File { get; set; }
         public string Detail { get; set; }
         public Dictionary<string, string> ParentFiles { get; set; }
+        /// <summary>A chart follow-on's plots section, appended after the recipe: the plots the program draws after its parent's analysis.</summary>
+        public string After { get; set; }
     }
 
     /// <summary>
@@ -70,7 +72,7 @@ namespace StatsDirect.R
                     parent = model.GetString() == "probit" ? "Probit" : model.GetString() == "logit" ? "Logit" : null;
             }
             return parent != null && recipe.ParentFiles.TryGetValue(parent, out string file)
-                ? new RRecipe { File = file, Detail = recipe.Detail } : null;
+                ? new RRecipe { File = file, Detail = recipe.Detail, After = recipe.After } : null;
         }
 
         /// <summary>A recipe file: a header naming the variables it takes, then the analysis as the help shows it in R.</summary>
