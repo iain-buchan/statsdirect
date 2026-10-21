@@ -166,10 +166,16 @@ internal static partial class Program
         combo.DroppedDown = false; await Task.Delay(100);
         int x = combo.Width - 8, y = combo.Height / 2;
         IntPtr at = (IntPtr)((y << 16) | (x & 0xFFFF));
-        PostMessage(combo.Handle, WM_LBUTTONDOWN, (IntPtr)1, at); PostMessage(combo.Handle, WM_LBUTTONUP, IntPtr.Zero, at);
-        await Task.Delay(200);
-        bool byClick = combo.DroppedDown;
-        combo.DroppedDown = false; await Task.Delay(100);
+        async Task<bool> Clicked()
+        {
+            PostMessage(combo.Handle, WM_LBUTTONDOWN, (IntPtr)1, at); PostMessage(combo.Handle, WM_LBUTTONUP, IntPtr.Zero, at);
+            await Task.Delay(200);
+            bool open = combo.DroppedDown;
+            combo.DroppedDown = false; await Task.Delay(100);
+            return open;
+        }
+        bool byClick = await Clicked();
+        if (!byClick) { main.Activate(); await Task.Delay(100); byClick = await Clicked(); }   // the click opens the list only while the window is active, which another application may have taken
         PostMessage(combo.Handle, WM_KEYDOWN, (IntPtr)VK_F4, IntPtr.Zero); PostMessage(combo.Handle, WM_KEYUP, (IntPtr)VK_F4, IntPtr.Zero);
         await Task.Delay(200);
         bool byKey = combo.DroppedDown;
