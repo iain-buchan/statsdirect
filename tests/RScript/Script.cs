@@ -47,6 +47,20 @@ internal static partial class Program
                     string parameter = item[(item.IndexOf('=') + 1)..].Trim();
                     if (!parameters.Contains(parameter)) mismatches.Add($"{op}: {recipe.File} takes the setting \"{parameter}\"");
                 }
+            // a chart follow-on's plots section: present, taking only settings the operation asks for, and binding no data of its own
+            if (!string.IsNullOrEmpty(recipe.After))
+            {
+                if (!File.Exists(Path.Combine(RRecipes.Folder, "recipes", recipe.After))) mismatches.Add($"{op}: the plots section {recipe.After} is not in the recipes folder");
+                string section = RRecipes.Recipe(recipe.After);
+                Match more = Regex.Match(section, "^# settings:\\s*(.*)$", RegexOptions.Multiline);
+                if (more.Success)
+                    foreach (string item in more.Groups[1].Value.Split(',').Select(x => x.Trim()).Where(x => x.Contains('=')))
+                    {
+                        string parameter = item[(item.IndexOf('=') + 1)..].Trim();
+                        if (!parameters.Contains(parameter)) mismatches.Add($"{op}: {recipe.After} takes the setting \"{parameter}\"");
+                    }
+                if (Regex.IsMatch(section, "^# (?:data|table|matrix|nested):", RegexOptions.Multiline)) mismatches.Add($"{op}: {recipe.After} binds data, which a plots section cannot");
+            }
             // every input a recipe binds by name must be a parameter the operation, or the operation it continues, asks for
             foreach (Match header in Regex.Matches(text, "^# (?:data|nested):[ ]*(.*)$", RegexOptions.Multiline))
                 foreach (string item in header.Groups[1].Value.Split(',').Select(x => x.Trim()).Where(x => x.Contains('=')))

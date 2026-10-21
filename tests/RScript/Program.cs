@@ -60,6 +60,7 @@ internal static partial class Program
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "analysis-replay") { CheckAnalysisReplay(); Console.WriteLine($"PASS {checks} analysis replay checks"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "routed-replay") { CheckRoutedReplay(); Console.WriteLine($"PASS {checks} routed replay checks"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "records") { CheckRecord(); CheckThreshold(); CheckHash(); CheckScript(); CheckTable(); CheckFollowOn(); CheckRealRuns(); CheckRegressionFollowOn(); CheckTwoLevel(); CheckColumnLocator(); Console.WriteLine($"PASS {checks} saved record checks"); return 0; }
+            if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "follow-on-plots") { CheckFollowOnPlots(); Console.WriteLine($"PASS {checks} follow-on plot checks"); return 0; }
             CheckRecord();
             CheckNativeAxisLabels();
             CheckRecipeGeneralSimplicity();
@@ -87,6 +88,7 @@ internal static partial class Program
             CheckMethodComparisonCharts();
             CheckInverseRecipes();
             CheckFollowOn();
+            CheckFollowOnPlots();
             CheckRealRuns();
             CheckOptions();
             CheckOptions2();
