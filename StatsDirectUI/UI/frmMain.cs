@@ -1657,7 +1657,10 @@ namespace StatsDirect.UI
 
             // Set a constraint on the maximum height of the table so that it's never off the bottom of the window
             int constrainedHeight = Math.Min(contentHeight, Height - HEIGHT_BREATHING_SPACE);
-            if (enforceHeightOnOperations)
+            // A bar shorter than its content clips it: the Further analysis row suggested after a run was laid out below the visible edge
+            // once the bar had shrunk to the default panel, which is short while a report is in front.  The heights are set whenever they
+            // are too small, and otherwise only when the caller enforces them, which also lets them shrink.
+            if (enforceHeightOnOperations || pnlTop.Height < constrainedHeight)
             {
                 pnlTop.Height = constrainedHeight;
                 pnlOperations.Height = constrainedHeight;

@@ -4,6 +4,9 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
 ##[Unreleased]
 
+### Fixed
+- The Further analysis drop-down shows after an analysis whose first follow-on waits for Run, such as multiple linear regression and logistic regression: the top bar grows to its content whenever it is too short for it. Since 5.2.0, when the report's toolbar took the main toolbar's place, the main toolbar hides while a report is in front and the bar had shrunk to the window tabs, so the row holding the drop-down was laid out below its visible edge; a follow-on that starts on its own, such as the simple linear regression's interpolation, re-sized the bar and so hid the fault
+
 ##[v5.2.6] 2026-10-18
 
 Version 5.2.6 makes a chart copied from the R script output paste into PowerPoint and Word as a vector graphic, as a chart copied from a report does, and keeps the labels of either chart in place when PowerPoint converts the graphic to shapes. The statistical engine's results are unchanged.
