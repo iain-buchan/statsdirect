@@ -4,15 +4,13 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
 ##[Unreleased]
 
-### Fixed
-- Continue in R from a chart follow-on of a simple or multiple linear regression draws the chart in R after the regression: the residual plots, the regression line through the data, the line with its standard error and confidence bands, and the line with its prediction interval; the R script window had shown the regression's tables and no chart
-
 ##[v5.2.7] 2026-10-21
 
-Version 5.2.7 restores the Further analysis drop-down after an analysis whose first follow-on waits for Run, such as multiple linear regression, logistic regression, Cox regression and Poisson regression. The statistical engine's results are unchanged.
+Version 5.2.7 restores the Further analysis drop-down after an analysis whose first follow-on waits for Run, such as multiple linear regression, logistic regression, Cox regression and Poisson regression, and makes Continue in R draw the plots of a simple or multiple linear regression's chart follow-ons. The statistical engine's results are unchanged.
 
 ### Fixed
 - The Further analysis drop-down shows after an analysis whose first follow-on waits for Run, such as multiple linear regression and logistic regression: the top bar grows to its content whenever it is too short for it. Since 5.2.0, when the report's toolbar took the main toolbar's place, the main toolbar hides while a report is in front and the bar had shrunk to the window tabs, so the row holding the drop-down was laid out below its visible edge; a follow-on that starts on its own, such as the simple linear regression's interpolation, re-sized the bar and so hid the fault
+- Continue in R from a chart follow-on of a simple or multiple linear regression draws the chart in R after the regression: the residual plots, the regression line through the data, the line with its standard error and confidence bands, and the line with its prediction interval; the R script window had shown the regression's tables and no chart
 
 ##[v5.2.6] 2026-10-18
 
