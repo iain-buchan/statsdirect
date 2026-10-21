@@ -86,6 +86,7 @@ internal static partial class Program
         await CheckScriptCharts(main, grid);
         await CheckScriptChartRuns(main, grid);
         await CheckScriptSvgIsolation(main, grid, Environment.GetEnvironmentVariable("STATSDIRECT_SVG_ARTIFACTS"));
+        await CheckFurtherAnalysis(main, grid);
         CheckPasteDecision();
         await CheckTutorEncoding();
         Call(app, "ShowCalculator");
