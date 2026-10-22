@@ -94,7 +94,8 @@
   },
   "CoxHazardPlots": {
     "file": "cox-regression.R",
-    "detail": "Cox proportional hazards regression, as the help shows it in R.",
+    "after": "cox-regression-plots.R",
+    "detail": "Cox proportional hazards regression, as the help shows it in R, then its survival and cumulative hazard plots.",
     "inherits": "CoxRegression"
   },
   "CoxHazardRatios": {
@@ -340,7 +341,8 @@
   },
   "LinearizedEstimatePlot": {
     "file": "linearized-estimates.R",
-    "detail": "Linearized regression estimates, as the help shows them in R.",
+    "after": "linearized-estimate-plot.R",
+    "detail": "Linearized regression estimates, as the help shows them in R, then the selected model drawn through the data.",
     "inherits": "LinearizedEstimates"
   },
   "LinearizedEstimates": {
@@ -372,7 +374,8 @@
   },
   "LogisticRegressionDiagnostics": {
     "file": "logistic-regression.R",
-    "detail": "Logistic regression of grouped counts, as the help shows it in R.",
+    "after": "logistic-regression-diagnostic-plots.R",
+    "detail": "Logistic regression of grouped counts, as the help shows it in R, then its diagnostic plots.",
     "inherits": "LogisticRegression"
   },
   "LogisticRegressionFitToReport": {
@@ -612,6 +615,12 @@
     "file": "polynomial-regression.R",
     "detail": "Polynomial regression, as the help shows it in R."
   },
+  "PolynomialRegressionPlot": {
+    "file": "polynomial-regression.R",
+    "after": "polynomial-regression-plots.R",
+    "detail": "Polynomial regression, as the help shows it in R, then the fitted curve with its confidence and prediction bands.",
+    "inherits": "PolynomialRegression"
+  },
   "Preferences": {
     "file": "preferences.R",
     "detail": "Allocation to groups by stated preferences, as the help shows it in R."
@@ -623,25 +632,37 @@
   "ProbitInterpolateX": {
     "file": "logit.R",
     "detail": "Dose-response model from the original probit or logit analysis.",
-    "parentFiles": { "Probit": "probit.R", "Logit": "logit.R" },
+    "parentFiles": {
+      "Probit": "probit.R",
+      "Logit": "logit.R"
+    },
     "inherits": "Logit"
   },
   "ProbitInterpolateY": {
     "file": "logit.R",
     "detail": "Dose-response model from the original probit or logit analysis.",
-    "parentFiles": { "Probit": "probit.R", "Logit": "logit.R" },
+    "parentFiles": {
+      "Probit": "probit.R",
+      "Logit": "logit.R"
+    },
     "inherits": "Logit"
   },
   "ProbitMore": {
     "file": "logit.R",
     "detail": "Dose-response model from the original probit or logit analysis.",
-    "parentFiles": { "Probit": "probit.R", "Logit": "logit.R" },
+    "parentFiles": {
+      "Probit": "probit.R",
+      "Logit": "logit.R"
+    },
     "inherits": "Logit"
   },
   "ProbitPlot": {
     "file": "logit.R",
     "detail": "Dose-response model from the original probit or logit analysis.",
-    "parentFiles": { "Probit": "probit.R", "Logit": "logit.R" },
+    "parentFiles": {
+      "Probit": "probit.R",
+      "Logit": "logit.R"
+    },
     "inherits": "Logit"
   },
   "PropPairs": {
@@ -695,7 +716,10 @@
   "Ranv": {
     "file": "linearized-regression-anova.R",
     "detail": "Analysis of variance for the original simple or selected linearized regression.",
-    "parentFiles": { "SimpleLinearRegression": "simple-regression-anova.R", "LinearizedEstimates": "linearized-regression-anova.R" },
+    "parentFiles": {
+      "SimpleLinearRegression": "simple-regression-anova.R",
+      "LinearizedEstimates": "linearized-regression-anova.R"
+    },
     "inherits": "LinearizedEstimates"
   },
   "RateCompareTwo": {
