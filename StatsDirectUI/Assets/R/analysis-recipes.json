@@ -632,37 +632,25 @@
   "ProbitInterpolateX": {
     "file": "logit.R",
     "detail": "Dose-response model from the original probit or logit analysis.",
-    "parentFiles": {
-      "Probit": "probit.R",
-      "Logit": "logit.R"
-    },
+    "parentFiles": { "Probit": "probit.R", "Logit": "logit.R" },
     "inherits": "Logit"
   },
   "ProbitInterpolateY": {
     "file": "logit.R",
     "detail": "Dose-response model from the original probit or logit analysis.",
-    "parentFiles": {
-      "Probit": "probit.R",
-      "Logit": "logit.R"
-    },
+    "parentFiles": { "Probit": "probit.R", "Logit": "logit.R" },
     "inherits": "Logit"
   },
   "ProbitMore": {
     "file": "logit.R",
     "detail": "Dose-response model from the original probit or logit analysis.",
-    "parentFiles": {
-      "Probit": "probit.R",
-      "Logit": "logit.R"
-    },
+    "parentFiles": { "Probit": "probit.R", "Logit": "logit.R" },
     "inherits": "Logit"
   },
   "ProbitPlot": {
     "file": "logit.R",
     "detail": "Dose-response model from the original probit or logit analysis.",
-    "parentFiles": {
-      "Probit": "probit.R",
-      "Logit": "logit.R"
-    },
+    "parentFiles": { "Probit": "probit.R", "Logit": "logit.R" },
     "inherits": "Logit"
   },
   "PropPairs": {
@@ -716,10 +704,7 @@
   "Ranv": {
     "file": "linearized-regression-anova.R",
     "detail": "Analysis of variance for the original simple or selected linearized regression.",
-    "parentFiles": {
-      "SimpleLinearRegression": "simple-regression-anova.R",
-      "LinearizedEstimates": "linearized-regression-anova.R"
-    },
+    "parentFiles": { "SimpleLinearRegression": "simple-regression-anova.R", "LinearizedEstimates": "linearized-regression-anova.R" },
     "inherits": "LinearizedEstimates"
   },
   "RateCompareTwo": {

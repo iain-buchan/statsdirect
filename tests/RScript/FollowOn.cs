@@ -56,9 +56,10 @@ internal static partial class Program
         var (regression, regressionOutput) = Run("LogisticRegression", answers);
         var (diagnostics, _) = Run("LogisticRegressionDiagnostics", new(), regressionOutput.ParameterBag);
         RScript regressionScript = RScriptWriter.Write(Record(regression), null, null), diagnosticsScript = RScriptWriter.Write(Record(diagnostics), null, null);
-        string[] ra = Body(regressionScript), da = Body(diagnosticsScript);
-        int differsAt = Enumerable.Range(0, Math.Max(ra.Length, da.Length)).FirstOrDefault(i => i >= ra.Length || i >= da.Length || ra[i] != da[i], -1);
-        if (differsAt >= 0) Console.WriteLine($"      the scripts differ at line {differsAt + 2}: regression \"{(differsAt < ra.Length ? ra[differsAt] : "(end)")}\", follow-on \"{(differsAt < da.Length ? da[differsAt] : "(end)")}\"");
-        Check(diagnosticsScript.HasRecipe && differsAt < 0, "the logistic regression's diagnostics follow-on has the regression's script, on the frames it inherited");
+        // the header's detail line names the follow-on's plots, and the follow-on's script goes on to its plots section (22 October 2026)
+        string[] ra = Body(regressionScript).Where(line => line != "# " + regressionScript.Detail).ToArray(), da = Body(diagnosticsScript).Where(line => line != "# " + diagnosticsScript.Detail).ToArray();
+        int differsAt = Enumerable.Range(0, ra.Length).FirstOrDefault(i => i >= da.Length || ra[i] != da[i], -1);
+        if (differsAt >= 0) Console.WriteLine($"      the scripts differ at line {differsAt + 2}: regression \"{ra[differsAt]}\", follow-on \"{(differsAt < da.Length ? da[differsAt] : "(end)")}\"");
+        Check(diagnosticsScript.HasRecipe && differsAt < 0 && da.Length > ra.Length, "the logistic regression's diagnostics follow-on begins with the regression's script, on the frames it inherited, and goes on to its plots");
     }
 }
