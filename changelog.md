@@ -4,6 +4,9 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
 ##[Unreleased]
 
+### Fixed
+- Continue in R from the remaining chart follow-ons draws their charts in R after the analysis: the Cox regression's survival and cumulative hazard plots, split by the strata or by a binary predictor as chosen, with the log-log plot for a split; the logistic regression's eight diagnostic plots; the linearized estimates' selected model through the data; and the polynomial regression's curve alone and with its confidence and prediction bands, which had no R recipe at all
+
 ##[v5.2.7] 2026-10-21
 
 Version 5.2.7 restores the Further analysis drop-down after an analysis whose first follow-on waits for Run, such as multiple linear regression, logistic regression, Cox regression and Poisson regression, and makes Continue in R draw the plots of a simple or multiple linear regression's chart follow-ons. The statistical engine's results are unchanged.
