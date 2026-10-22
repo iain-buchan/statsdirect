@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using StatsDirect.Data;
 using StatsDirect.R;
@@ -25,6 +26,38 @@ internal static partial class Program
         string seCi = Plots("PlotSeCi", simple, simpleOutput, new() { ["reggamma"] = 0.9 }, "simple-linear-regression-se-ci-plot.R", 1, folder);
         Check(seCi.Contains("\nlevel <- 0.9\n", StringComparison.Ordinal), "the standard error and confidence bands plot takes the level the follow-on was given, 90%, as its own setting");
         Plots("PlotPredictionInterval", simple, simpleOutput, new(), "simple-linear-regression-prediction-plot.R", 1, folder);
+        // the four chart follow-ons that drew nothing until 22 October 2026, each on its parent's run of the help's example: the Cox
+        // regression's survival and hazard plots split by its one binary predictor, which adds the log-log plot; the logistic
+        // regression's eight diagnostic plots; the linearized estimates' selected model through the data; the polynomial's curve
+        // alone and with its confidence and prediction bands, at the level the follow-on is given
+        var coxAnswers = ExampleAnswers("CoxRegression.json", new() { ["accuracy"] = 0.000000001, ["centre-continuous-covariates"] = true, ["useTimesAdjustment"] = false, ["strata"] = null });
+        var (cox, coxOutput) = Run("CoxRegression", coxAnswers);
+        Plots("CoxHazardPlots", cox, coxOutput, new() { ["use-tics"] = true, ["use-markers"] = true, ["group"] = new[] { true, false } }, "cox-regression-plots.R", 3, folder);
+        var logisticAnswers = ExampleAnswers("LogisticRegression.json", new() { ["grouping"] = "grouped", ["accuracy"] = "0.0000001", ["intercept"] = true, ["weights"] = false, ["gamma"] = 0.95 });
+        var (logistic, logisticOutput) = Run("LogisticRegression", logisticAnswers);
+        Plots("LogisticRegressionDiagnostics", logistic, logisticOutput, new(), "logistic-regression-diagnostic-plots.R", 8, folder);
+        var linearizedAnswers = ExampleAnswers("LinearizedEstimatePlot.json", new() { ["model"] = "2" });
+        var (linearized, linearizedOutput) = Run("LinearizedEstimates", linearizedAnswers);
+        Plots("LinearizedEstimatePlot", linearized, linearizedOutput, new() { ["y"] = linearizedAnswers["y"], ["x"] = linearizedAnswers["x"] }, "linearized-estimate-plot.R", 1, folder);
+        var polynomialAnswers = ExampleAnswers("PolynomialRegression.json", new() { ["degree"] = "2" });
+        var (polynomial, polynomialOutput) = Run("PolynomialRegression", polynomialAnswers);
+        string bands = Plots("PolynomialRegressionPlot", polynomial, polynomialOutput, new() { ["y"] = polynomialAnswers["y"], ["x"] = polynomialAnswers["x"], ["gamma"] = 0.9 }, "polynomial-regression-plots.R", 3, folder);
+        Check(bands.Contains("\nlevel <- 0.9\n", StringComparison.Ordinal), "the polynomial's bands take the level the follow-on was given, 90%, as its own setting");
+    }
+    /// <summary>The answers a run of the help's example takes: its frames from the example file, with the settings given.</summary>
+    private static Dictionary<string, object> ExampleAnswers(string example, Dictionary<string, object> settings)
+    {
+        JsonElement root = JsonDocument.Parse(File.ReadAllText(Path.Combine(Metadata("Examples"), example))).RootElement;
+        Dictionary<string, object> answers = new(settings);
+        foreach (JsonElement input in root.GetProperty("inputs").EnumerateArray())
+        {
+            DataFrame f = new();
+            foreach (JsonElement c in input.GetProperty("columns").EnumerateArray())
+                f.Variables.Add(Column(c.GetProperty("title").GetString(), c.GetProperty("values").EnumerateArray().Select(v => v.GetDouble()).ToArray()));
+            string name = input.GetProperty("name").GetString();
+            if (f.Variables.Count > 0 || !answers.ContainsKey(name)) answers[name] = f.Variables.Count > 0 ? f : null;   // an input the example leaves empty is skipped
+        }
+        return answers;
     }
 
     /// <summary>Runs the follow-on on its parent's run, checks its script against the parent's and the plots section, runs it in R and
