@@ -4,6 +4,10 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
 ##[Unreleased]
 
+##[v5.2.8] 2026-10-22
+
+Version 5.2.8 completes the charts of Continue in R: every chart follow-on now draws its plots in the script, the Cox regression's survival and hazard plots, the logistic regression's diagnostic plots, the linearized estimate plot and the polynomial regression's curve with its bands joining the regression plots of 5.2.7. The statistical engine's results are unchanged.
+
 ### Fixed
 - Continue in R from the remaining chart follow-ons draws their charts in R after the analysis: the Cox regression's survival and cumulative hazard plots, split by the strata or by a binary predictor as chosen, with the log-log plot for a split; the logistic regression's eight diagnostic plots; the linearized estimates' selected model through the data; and the polynomial regression's curve alone and with its confidence and prediction bands, which had no R recipe at all
 
