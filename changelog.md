@@ -6,6 +6,7 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
 ### Added
 - File > Export Jupyter notebook saves a report as a portable `.ipynb` with its edited narrative, original StatsDirect tables and charts, complete recorded analysis inputs and available R replay. The R cells are unexecuted, with empty outputs; running them in an R Jupyter kernel leaves the original report cells in place. Missing or changed required input data stops export with recovery guidance.
+- File > Open imports StatsDirect-exported R notebooks into new, unsaved report, R script and data documents. It restores the notebook's current report cells, notes, supported saved R outputs and current R code without running it; embedded typed data also support Continue in R when the original workbook is absent. Save the components separately as HTML, R and XLSX: opening leaves the `.ipynb` unchanged. Unsupported notebooks or incomplete data are refused, and a failed import removes only its own new documents.
 
 ### Changed
 - The report File menu replaces the duplicate Word/PDF Export submenu with Export Jupyter notebook. Word and PDF remain available through Save As; exporting a notebook preserves the editable HTML report's path and unsaved edits.

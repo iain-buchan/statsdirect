@@ -1,5 +1,7 @@
 # Production Windows shell checks
 
+`NotebookOpening.cs` exercises the actual File > Open `.ipynb` dispatcher. It checks current report/code restoration, typed data in new worksheets, no automatic R execution, new unsaved documents without notebook save paths, the unchanged original file, and rollback of a failed import while existing work stays open. The full shell suite passes **183 checks** with STATSDIRECT_SKIP_CLIPBOARD=1, including tab names and strict UTF-8 validation; the export totals below describe the earlier run.
+
 24 October 2026 notebook export: **170 shell checks pass** with `STATSDIRECT_SKIP_CLIPBOARD=1`, including the menu, file-state and atomic-export checks below. No installer was rebuilt.
 
 `NotebookExport.cs` covers the merged report File menu's single **Export Jupyter notebook...** command, the `.ipynb` dialog, and retained Word/PDF Save As choices. It checks export of current unsaved narrative, preservation of the HTML source, title, save path and dirty state, refusal to overwrite the source or replace an existing notebook when required data are missing, and temporary-file cleanup. These checks belong to the shell run below; no new full-suite total is claimed here.
