@@ -53,6 +53,7 @@ def validate(path, html_path=None):
             continue
         report_count += 1
         require(cell.cell_type == "markdown", f"Original report cell {index} is not Markdown")
+        require(not re.search(r"\n[ \t]*\n", cell.source), f"Report cell {index} has a blank line, at which a Markdown renderer ends the HTML block")
         require(role.get("entryId") in entry_ids, f"Report cell {index} has no original entry")
         source = BeautifulSoup(cell.source, "html.parser")
         # Render each original report cell on its own, avoiding dependence on
@@ -84,6 +85,10 @@ def validate(path, html_path=None):
         for name, bundle in attachments.items():
             if "image/svg+xml" in bundle:
                 require("image/png" in bundle, f"Attachment {name} lacks its PNG fallback")
+                # Jupyter renderers decode an attachment as base64, and JupyterLab takes the bundle's first key, rasters only
+                require(list(bundle)[0] == "image/png", f"Attachment {name} does not list its PNG first")
+                require(base64.b64decode(bundle["image/svg+xml"], validate=True).lstrip().startswith(b"<svg"),
+                        f"Attachment {name} is not the base64 of SVG text")
             if "image/png" in bundle:
                 require(base64.b64decode(bundle["image/png"], validate=True).startswith(b"\x89PNG\r\n\x1a\n"),
                         f"Attachment {name} is not a PNG")
@@ -94,8 +99,12 @@ def validate(path, html_path=None):
         images = parsed.find_all("img")
         require(len(images) == expected_images, f"Report cell {index} lost an image")
         for picture in images:
-            require(picture.get("src", "").startswith("data:image/"),
-                    f"Report cell {index} has an unresolved or external image")
+            src = picture.get("src", "")
+            require(src.startswith("data:image/"), f"Report cell {index} has an unresolved or external image")
+            mime, _, payload = src[len("data:"):].partition(";base64,")
+            decoded = base64.b64decode(payload, validate=True)   # text passed off as base64 would not decode
+            if mime == "image/svg+xml":
+                require(decoded.lstrip().startswith(b"<svg"), f"Report cell {index} has an SVG image that is not SVG text")
         image_count += len(images)
         preserved[role["entryId"]][0] += len(expected_tables)
         preserved[role["entryId"]][1] += len(images)

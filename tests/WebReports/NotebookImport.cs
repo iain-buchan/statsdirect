@@ -37,9 +37,28 @@ internal static partial class Program
         return Sorted(copy);
     }
 
+    /// <summary>Notebooks written by real Jupyter tooling from a StatsDirect export, kept as fixtures: one saved by JupyterLab 4.6.4 after an
+    /// edit (its sources as line arrays), one executed by nbconvert 7 with the R kernel (outputs added, the kernel's language_info).  Each
+    /// must import through the editor with its text, its tables and its chart vector, and the executed one with the R output as text.</summary>
+    private static async Task CheckNotebookFixtures()
+    {
+        foreach (string file in Directory.GetFiles(Path.Combine(AppContext.BaseDirectory, "notebooks"), "*.ipynb").OrderBy(f => f, StringComparer.Ordinal))
+        {
+            string name = Path.GetFileNameWithoutExtension(file);
+            var plan = ReportNotebookImport.Read(await File.ReadAllTextAsync(file, new UTF8Encoding(false, true)), name);
+            await view.OpenNotebookAsync(plan.Entries);
+            string html = (await Js("document.getElementById('results').innerHTML")).GetString()!;
+            Check(plan.Tables.Length == 1 && html.Contains("<table") && html.Contains("<svg") && html.Contains("Original paired result"),
+                name + " imports through the editor with its data, its tables and its chart vector");
+            if (name.Contains("jupyterlab")) Check(html.Contains("Edited and saved in JupyterLab"), name + " keeps the edit made in JupyterLab");
+            if (name.Contains("executed")) Check(html.Contains("Paired t-test") && plan.Warnings.Any(w => w.Contains("Saved notebook R outputs")), name + " shows the R kernel's saved output as text, labelled as not recomputed");
+        }
+    }
+
     private static async Task CheckNotebookImport()
     {
         CheckNotebookImportData();
+        await CheckNotebookFixtures();
         var notebook = JsonNode.Parse(await File.ReadAllTextAsync(Path.Combine(output, "review.ipynb")))!.AsObject();
         // A notebook saved by Jupyter tooling comes back with its object keys sorted and its text split into lines, as nbformat's writer
         // does both: the import must read it as the original, held data included (it compared the held data by position until 24 Oct 2026).
@@ -60,11 +79,11 @@ internal static partial class Program
         var code = cells.First(c => c!["cell_type"]!.GetValue<string>() == "code")!;
         code["source"] = "# Colleague's current R edits\n" + code["source"]!.GetValue<string>();
         cells.Add(new JsonObject { ["id"] = "colleague-advice", ["cell_type"] = "markdown", ["metadata"] = new JsonObject(),
-            ["source"] = new JsonArray("## Colleague’s advice\n\n", "Keep **all nine pairs**. <script>window.notebookExecuted=true</script><img src='https://example.invalid/external.png'><iframe src='file:///C:/private'></iframe>") });
+            ["source"] = new JsonArray("## Colleague’s advice\n\n", "Keep **all nine pairs**. <script>window.notebookExecuted=true</script><img src='https://example.invalid/external.png'><iframe src='file:///C:/private'></iframe><video poster='https://example.invalid/p.png'></video><blockquote cite='https://example.invalid/q'>quoted</blockquote>") });
         string Svg(string colour) => "<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20'><defs><clipPath id='same'><rect width='20' height='20'/></clipPath></defs><rect width='20' height='20' fill='" + colour + "' clip-path='url(#same)' onload='window.notebookExecuted=true'/></svg>";
         foreach (string colour in new[] { "red", "blue" })
             cells.Add(new JsonObject { ["id"] = "attachment-" + colour, ["cell_type"] = "markdown", ["metadata"] = new JsonObject(),
-                ["source"] = "![" + colour + "](attachment:shared.svg)", ["attachments"] = new JsonObject { ["shared.svg"] = new JsonObject { ["image/svg+xml"] = Svg(colour) } } });
+                ["source"] = "![" + colour + "](attachment:shared.svg)", ["attachments"] = new JsonObject { ["shared.svg"] = new JsonObject { ["image/svg+xml"] = colour == "blue" ? Convert.ToBase64String(Encoding.UTF8.GetBytes(Svg(colour))) : Svg(colour) } } });   // one as base64, as the export and the IDEs write it; one as text, as an R kernel's output is
         const string gif = "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
         string jpeg = (await Js("(()=>{const c=document.createElement('canvas');c.width=c.height=2;c.getContext('2d').fillRect(0,0,2,2);return c.toDataURL('image/jpeg').split(',')[1];})()")).GetString()!;
         foreach (var image in new[] { (Mime: "image/gif", Data: gif, Name: "gif"), (Mime: "image/jpeg", Data: jpeg, Name: "jpeg") })
@@ -79,6 +98,9 @@ internal static partial class Program
         string html = (await Js("document.getElementById('results').innerHTML")).GetString()!;
         Check(html.Contains("Colleague’s revised interpretation") && html.Contains("Colleague’s advice") && html.Contains("<strong") && !html.Contains("Reviewer’s note: café"),
             "opened report uses current notebook cells and added Markdown rather than stale export metadata");
+        Check(await True("[...document.querySelectorAll('#results pre')].some(p=>p.textContent.includes('line one\\n\\nline three'))"), "a preformatted block keeps its blank line through the notebook and back");
+        Check(html.Contains("quoted") && !html.Contains("poster=") && !html.Contains("cite=") && !html.Contains("<video", StringComparison.OrdinalIgnoreCase), "media elements and the poster and cite URL attributes do not pass the notebook sanitizer");
+        Check(!html.Contains("Exported from StatsDirect") && !html.Contains("has no saved analysis run record"), "the exporter's own notes, written afresh at each export, do not come back as report sections");
         Check(!html.Contains("<script", StringComparison.OrdinalIgnoreCase) && !html.Contains("<iframe", StringComparison.OrdinalIgnoreCase)
             && !html.Contains("onload=", StringComparison.OrdinalIgnoreCase) && !html.Contains("src=\"https://", StringComparison.OrdinalIgnoreCase)
             && await True("window.notebookExecuted!==true"), "notebook HTML and SVG pass the report sanitizer and external images are not loaded");
@@ -92,6 +114,13 @@ internal static partial class Program
         var replay = RScriptWriter.Write(recorded.GetProperty("record"), "Restored paired test", _ => throw new Exception("Restored inputs must be held in the imported record"));
         Check(!replay.DataUnavailable && replay.Text.Contains("312") && replay.Text.Contains("t.test"), "Continue in R can use restored recorded data without accessing the old workbook");
         Check(recorded.GetProperty("record").TryGetProperty("notebookImport", out _), "saved report records retain the notebook's original-record provenance");
+        Check(state.GetProperty("entries").EnumerateArray().Any(e => e.TryGetProperty("helpContextId", out var topic) && topic.GetInt32() == 1150), "a result's help topic survives the round trip, so F1 on the reopened result opens it");
+        // A record's run stamp is a date; a notebook's record may carry anything there, and it must stay inside the comment line
+        var hostile = JsonNode.Parse(recorded.GetProperty("record").GetRawText())!.AsObject();
+        hostile["run"] = "not a date\nsystem('calc')";
+        string hostileScript = RScriptWriter.Write(JsonSerializer.SerializeToElement(hostile), "Hostile record", null!).Text;
+        Check(hostileScript.Contains("system('calc')") && hostileScript.Split('\n').Where(line => line.Contains("system('calc')")).All(line => line.StartsWith("# ")),
+            "a run stamp that is not a date stays in its comment line: a notebook's record cannot add R code to the script that Continue in R runs");
         string reopened = Path.Combine(output, "notebook-imported-report.html");
         await view.SaveAsync(reopened, plan.Title, "html");
         await view.OpenHtmlAsync(await File.ReadAllTextAsync(reopened), plan.Title);

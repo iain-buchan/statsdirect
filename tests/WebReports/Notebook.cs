@@ -25,6 +25,13 @@ internal static partial class Program
         } }
     };
 
+    /// <summary>An SVG attachment's text: decoded when it is base64, as the export writes it, else as it is.</summary>
+    private static string SvgText(JsonElement svg)
+    {
+        string value = svg.GetString()!;
+        try { return Encoding.UTF8.GetString(Convert.FromBase64String(value)); } catch (FormatException) { return value; }
+    }
+
     private static async Task CheckNotebook()
     {
         await view.Ready.WaitAsync(TimeSpan.FromSeconds(45));
@@ -36,8 +43,8 @@ internal static partial class Program
         {
             new { id="one", title="PEFR β", operation="TPaired", helpContextId=1150,
                 html="<h2>Original paired result</h2><p>Reviewer’s note: café &amp; β</p><table><tr><th>Estimate</th><th>Value</th></tr><tr><td>Native difference</td><td>56</td></tr></table>" + chart + "<p>After the chart</p>", record=(JsonElement?)JsonSerializer.SerializeToElement(record) },
-            new { id="two", title="Manual notes", operation="", helpContextId=0,
-                html="<p>Second result without a record</p><img width='12' height='12' src='"+pixel+"'/><table><tr><td>Chart in table</td><td>"+chart+"</td></tr></table>" +
+            new { id="two", title="Manual notes $5 ~ish", operation="", helpContextId=0,
+                html="<p>Second result without a record</p><pre>line one\n\nline three</pre><img width='12' height='12' src='"+pixel+"'/><table><tr><td>Chart in table</td><td>"+chart+"</td></tr></table>" +
                     "<ol start='3'><li>First numbered point</li><li>**literal**"+chart+"Tail after list picture</li></ol><p style='color:rgb(160,0,0)'>![literal](https://example.invalid/not-an-image.png)<img src='"+pixel+"'/>Caption</p>", record=(JsonElement?)null }
         } });
         string before = (await Js("document.getElementById('results').innerHTML")).GetString()!;
@@ -68,7 +75,7 @@ internal static partial class Program
         Check(markdown.Contains("Reviewer’s note") && markdown.Contains("<table") && markdown.Contains("Native difference") && markdown.Contains("After the chart") && markdown.Contains("Second result without a record"),
             "notebook retains edited narrative, Unicode, original tables and text after charts");
         var attachments = cells.EnumerateArray().Where(c => c.TryGetProperty("attachments", out _)).SelectMany(c => c.GetProperty("attachments").EnumerateObject()).ToArray();
-        Check(attachments.Any(a => a.Value.TryGetProperty("image/svg+xml", out var svg) && svg.GetString()!.Contains("Original β") && a.Value.TryGetProperty("image/png", out _)),
+        Check(attachments.Any(a => a.Value.TryGetProperty("image/svg+xml", out var svg) && SvgText(svg).Contains("Original β") && a.Value.TryGetProperty("image/png", out _)),
             "notebook chart attachments retain SVG vectors and PNG fallback together");
         foreach (var a in attachments)
             if (a.Value.TryGetProperty("image/png", out var png))
@@ -76,11 +83,27 @@ internal static partial class Program
                 byte[] bytes = Convert.FromBase64String(png.GetString()!);
                 Check(bytes.Length > 8 && bytes[0] == 0x89 && Encoding.ASCII.GetString(bytes, 1, 3) == "PNG", "each notebook PNG fallback contains real PNG bytes");
             }
+        // Jupyter renderers read an attachment as base64, and JupyterLab takes the bundle's first key and renders rasters only: so the PNG
+        // comes first and the SVG is the base64 of its text, which nbconvert prefers and decodes
+        foreach (var a in attachments)
+            if (a.Value.TryGetProperty("image/svg+xml", out var vector))
+            {
+                string decoded; try { decoded = Encoding.UTF8.GetString(Convert.FromBase64String(vector.GetString()!)); } catch (FormatException) { decoded = ""; }
+                Check(decoded.TrimStart().StartsWith("<svg", StringComparison.Ordinal), "each notebook SVG attachment is the base64 of its SVG text, as Jupyter renderers read it");
+                Check(a.Value.EnumerateObject().First().Name == "image/png", "each notebook chart attachment lists its PNG first, which JupyterLab renders");
+            }
         Check(markdown.Contains("Chart in table") && markdown.Contains("<img"), "pictures nested in report tables retain their table layout");
         Check(markdown.Contains("<ol") && markdown.Contains("start=\"3\"") && markdown.Contains("<li") && markdown.Contains("**literal**") && markdown.Contains("Tail after list picture"),
             "pictures inside numbered lists preserve numbering, surrounding text and literal punctuation");
-        Check(cells.EnumerateArray().Where(c => c.GetProperty("cell_type").GetString() == "markdown" && c.GetProperty("source").GetString()!.Contains("![literal]")).All(c => c.GetProperty("source").GetString()!.StartsWith("<div>\n")),
+        var literal = cells.EnumerateArray().Where(c => c.GetProperty("cell_type").GetString() == "markdown" && c.GetProperty("source").GetString()!.Contains("![literal]")).ToArray();
+        Check(literal.Length > 0 && literal.All(c => c.GetProperty("source").GetString()!.StartsWith("<div>\n")),
             "report text beside images remains a raw HTML block instead of becoming Markdown links or formatting");
+        // A Markdown renderer ends a raw HTML block at a blank line: no report cell has one, and a preformatted block's blank line is
+        // written as a character reference, which reads back as the newline itself
+        var reportCells = cells.EnumerateArray().Where(c => c.GetProperty("metadata").GetProperty("statsdirect").GetProperty("role").GetString() == "original StatsDirect report").ToArray();
+        Check(reportCells.Length > 0 && reportCells.All(c => c.GetProperty("source").GetString()!.Split('\n').All(line => line.Trim().Length > 0)) && markdown.Contains("line one&#10;\nline three</pre>"),
+            "no report cell carries a blank line, and a preformatted block's blank line is written as a character reference");
+        Check(markdown.Contains("**Manual notes \\$5 \\~ish:**"), "dollar signs and tildes in titles are escaped, so a renderer neither typesets them as mathematics nor strikes through");
         Check(notebook.Contains("PEFR.xlsx") && notebook.Contains("5.2.8-test"), "notebook records source provenance and the actual exporting application version");
         CheckNotebookDataValidation(snapshot);
         CheckNotebookMoreData(snapshot);
