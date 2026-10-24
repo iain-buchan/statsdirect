@@ -4,6 +4,10 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
 ##[Unreleased]
 
+##[v5.2.9] 2026-10-24
+
+Version 5.2.9 exports a report as a Jupyter notebook and opens StatsDirect notebooks again, including notebooks saved by Jupyter tooling such as JupyterLab, VS Code and nbconvert. The statistical engine's results are unchanged.
+
 ### Fixed
 - A StatsDirect notebook saved by Jupyter tooling, which writes JSON objects with sorted keys and splits text into line arrays, opens again: File > Open matched a dataset's columns with the run's held data by position in the saved object and refused such a notebook as conflicting with the held values; it now matches by column title
 
