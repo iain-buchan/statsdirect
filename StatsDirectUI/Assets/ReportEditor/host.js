@@ -79,6 +79,12 @@ window.WindowsReport={async run(request){
       case 'record':{const e=entryOf(request.args.id);if(!e)throw Error('No such result.');value={title:e.title,operation:e.operation,record:isRecord(e.record)?e.record:null};break;}
       case 'chartImage':value=await StatsDirectReportEditor.chartImage(request.args.format,request.args.scale);break;
       case 'snapshot':value=snapshot();break;
+      case 'notebook':{
+        const state=snapshot(),portable=await StatsDirectReportExport.notebook({title:request.args.title});
+        if(portable.entries.length!==state.entries.length)throw Error('The report sections could not be exported.');
+        state.entries.forEach((entry,index)=>Object.assign(entry,portable.entries[index]));
+        value={...state,reportHtml:portable.html};break;
+      }
       case 'contextTarget':value=contextTarget;break;
       // The result for the toolbar's R button: the one the selection or focus is in, else the latest with a record of its run; none in a report with neither
       case 'currentTarget':{const sel=getSelection();const at=resultAt(sel?.rangeCount?sel.anchorNode:null)??resultAt(document.activeElement);const latest=entries.findLast(e=>isRecord(e.record))?.id??null;const e=entryOf(at??latest);value={resultId:e?e.id:null,how:e?(at?'selection':'latest'):'none',title:e?.title??null,operation:e?.operation??'',hasRecord:isRecord(e?.record)};break;}

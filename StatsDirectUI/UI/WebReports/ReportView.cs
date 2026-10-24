@@ -263,6 +263,12 @@ internal sealed class ReportView : UserControl
         return exported.GetProperty("revision").GetInt64();
     }
 
+    internal async Task<JsonElement> NotebookSnapshotAsync(string title)
+    {
+        await mutations;
+        return await CallAsync("notebook", new { title });
+    }
+
     private static string TemporaryName(string filename) => System.IO.Path.Combine(System.IO.Path.GetDirectoryName(System.IO.Path.GetFullPath(filename)), ".statsdirect-" + Guid.NewGuid().ToString("N") + System.IO.Path.GetExtension(filename));
 
     internal async Task ClipboardCommandAsync(string command)

@@ -66,6 +66,7 @@ internal static partial class Program
         await CheckScriptContextMenu(main);
         await CheckLegacyReportOpening(main);
         await CheckReportSaveAs(main);
+        await CheckReportNotebook(main);
         var grid = (Form)Call(main, "CreateGrid");
         await Task.Delay(150); // let the production post-tab activation timer finish
         var workbook = (SpreadsheetGear.Windows.Forms.WorkbookView)Field(grid, "workbookView");

@@ -85,9 +85,8 @@ internal sealed class frmReportWebView : StatsDirectForm, IReport, IFindTarget
         var open = Command("webReportOpenHtml", "Open HTML...", OpenDialogAsync);
         open.MergeAction = MergeAction.Insert; open.MergeIndex = 5;
         file.DropDownItems.Add(open);
-        var export = new ToolStripMenuItem("Export report") { Name = "webReportExport", MergeAction = MergeAction.Insert, MergeIndex = 8 };
-        export.DropDownItems.Add(Command("webReportExportWord", "Word document...", () => ExportAsync("docx")));
-        export.DropDownItems.Add(Command("webReportExportPdf", "PDF...", () => ExportAsync("pdf")));
+        var export = Command("webReportExportNotebook", "Export Jupyter notebook...", ExportNotebookAsync);
+        export.MergeAction = MergeAction.Insert; export.MergeIndex = 8;
         file.DropDownItems.Add(export);
         Controls.Add(menu);
         MainMenuStrip = menu;
@@ -283,14 +282,34 @@ internal sealed class frmReportWebView : StatsDirectForm, IReport, IFindTarget
         return !Dirty;
     }
 
-    private async Task ExportAsync(string format)
+    private SaveFileDialog CreateNotebookDialog() => new()
     {
-        using var dialog = new SaveFileDialog { Filter = format == "pdf" ? "PDF report (*.pdf)|*.pdf" : "Word document (*.docx)|*.docx", DefaultExt = format, FileName = "StatsDirect report." + format };
-        if (dialog.ShowDialog(this) == DialogResult.OK)
+        Title = "Export Jupyter notebook", Filter = "Jupyter notebook (*.ipynb)|*.ipynb",
+        DefaultExt = "ipynb", FileName = System.IO.Path.GetFileNameWithoutExtension(path ?? Text) + ".ipynb", AddExtension = true
+    };
+
+    private async Task ExportNotebookAsync()
+    {
+        if (saving || opening) return;
+        saving = true;
+        try
         {
-            await view.SaveAsync(dialog.FileName, Text, format);
-            status.Text = "Exported " + dialog.FileName + ". Use Save to retain an editable report.";
+            using var dialog = CreateNotebookDialog();
+            if (dialog.ShowDialog(this) == DialogResult.OK) await ExportNotebookFileAsync(dialog.FileName);
         }
+        finally { saving = false; }
+    }
+
+    private async Task ExportNotebookFileAsync(string destination)
+    {
+        if (!string.IsNullOrEmpty(path) && string.Equals(System.IO.Path.GetFullPath(path), System.IO.Path.GetFullPath(destination), StringComparison.OrdinalIgnoreCase))
+            throw new IOException("Choose a separate .ipynb file so the editable HTML report is retained.");
+        JsonElement snapshot = await view.NotebookSnapshotAsync(Text);
+        string notebook = ReportNotebook.Write(snapshot, Text, FrameReader.Read, Application.ProductVersion);
+        string temporary = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(System.IO.Path.GetFullPath(destination)), ".statsdirect-" + Guid.NewGuid().ToString("N") + ".ipynb");
+        try { await File.WriteAllTextAsync(temporary, notebook, new System.Text.UTF8Encoding(false)); File.Move(temporary, destination, true); }
+        finally { if (File.Exists(temporary)) File.Delete(temporary); }
+        status.Text = "Exported notebook with report, analysis data and R code: " + destination;
     }
 
     private async Task OpenDialogAsync()
