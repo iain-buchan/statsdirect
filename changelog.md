@@ -4,6 +4,12 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
 ##[Unreleased]
 
+### Added
+- File > Export Jupyter notebook saves a report as a portable `.ipynb` with its edited narrative, original StatsDirect tables and charts, complete recorded analysis inputs and available R replay. The R cells are unexecuted, with empty outputs; running them in an R Jupyter kernel leaves the original report cells in place. Missing or changed required input data stops export with recovery guidance.
+
+### Changed
+- The report File menu replaces the duplicate Word/PDF Export submenu with Export Jupyter notebook. Word and PDF remain available through Save As; exporting a notebook preserves the editable HTML report's path and unsaved edits.
+
 ##[v5.2.8] 2026-10-22
 
 Version 5.2.8 completes the charts of Continue in R: every chart follow-on now draws its plots in the script, the Cox regression's survival and hazard plots, the logistic regression's diagnostic plots, the linearized estimate plot and the polynomial regression's curve with its bands joining the regression plots of 5.2.7. The statistical engine's results are unchanged.

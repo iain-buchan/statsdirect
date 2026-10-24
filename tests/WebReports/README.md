@@ -1,5 +1,18 @@
 # Windows WebView2 report integration checks
 
+24 October 2026 notebook export: **405 checks pass** in the full report suite with `STATSDIRECT_SKIP_CLIPBOARD=1`; the separate focused run passes **54 checks**. The Release application builds with zero errors and the existing NU1701 warnings. Standard nbformat validation, nbconvert HTML rendering and independent execution of the exported R replay pass. No installer was rebuilt.
+
+Jupyter notebook export: **54 notebook-specific checks have passed** in the current development run; this is not a full-suite total. `Notebook.cs` and `NotebookData.cs` cover report order and edits, lists and literal text, tables and attached SVG/PNG charts (including a chart inside a table), nbformat 4.5 cells, original run records and engine versions, complete typed datasets, workbook identity and verification, repeated inputs, missing recipes, and refusals for incomplete or changed data. The exported R cell is also run independently in installed R; export itself leaves every code cell unexecuted.
+
+Run the focused checks after building the application:
+
+```powershell
+dotnet run --project tests/WebReports -c Release -p:StatsDirectBin=C:\path\to\app -- C:\path\to\test-artifacts --notebook-only
+python tests/WebReports/validate-notebook.py C:\path\to\test-artifacts\review.ipynb --html C:\path\to\test-artifacts\review-rendered.html
+```
+
+The optional Python check requires `nbformat`, `nbconvert` and `beautifulsoup4`. It validates the notebook schema, R kernel and unexecuted code, then uses nbconvert and BeautifulSoup to check that original report tables and self-contained images survive HTML rendering. It derives expectations from report cells rather than particular fixture labels or cell counts, and never executes notebook code. The native fixture also writes `notebook-replay.R`, its output and a PDF for inspection.
+
 17 October 2026 image-decoding readiness: **347 checks pass** with
 `STATSDIRECT_SKIP_CLIPBOARD=1`. Save Chart PNG contains real engine drawing
 pixels at a positive displayed size. Twelve distinct, uncached SVGs retain
