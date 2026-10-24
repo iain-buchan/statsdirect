@@ -64,6 +64,7 @@ internal static partial class Program
             Check(refusedData && File.ReadAllBytes(notebook).SequenceEqual(savedNotebook),
                 "omitted analysis data aborts export without overwriting an existing notebook");
             Check(!Directory.EnumerateFiles(folder, ".statsdirect-*").Any(), "notebook export leaves no partial temporary files after success or refusal");
+            await CheckNotebookOpening(main, notebook);
         }
         finally
         {

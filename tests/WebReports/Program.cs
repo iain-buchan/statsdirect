@@ -31,10 +31,10 @@ internal static partial class Program
         {
         try
         {
-            if (args.Contains("--notebook-only")) await CheckNotebook();
+            if (args.Contains("--notebook-only")) { await CheckNotebook(); await CheckNotebookImport(); }
             else
             {
-                if (!args.Contains("--svg-import-only")) { await CheckLegacyReports(); await Run(); await InteroperabilityChecks(); await CheckToolbar(); await CheckChartAlignment(); await CheckNotebook(); }
+                if (!args.Contains("--svg-import-only")) { await CheckLegacyReports(); await Run(); await InteroperabilityChecks(); await CheckToolbar(); await CheckChartAlignment(); await CheckNotebook(); await CheckNotebookImport(); }
                 await CheckSvgImportIsolation();
             }
             Console.WriteLine($"PASS {checks} Windows WebView2 checks"); exit = 0;

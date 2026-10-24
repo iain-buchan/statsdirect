@@ -349,6 +349,28 @@ internal sealed class frmReportWebView : StatsDirectForm, IReport, IFindTarget
         finally { opening = false; }
     }
 
+    internal async Task LoadNotebookAsync(ReportNotebookImport.ImportPlan plan)
+    {
+        opening = true;
+        try
+        {
+            string[] warnings = await view.OpenNotebookAsync(plan.Entries);
+            Path = null;
+            Text = plan.Title + " report";
+            Dirty = true;
+            status.Text = "Imported notebook. Save to retain an editable HTML report." +
+                (warnings.Length == 0 ? "" : " " + string.Join(" ", warnings)) +
+                (plan.Warnings.Length == 0 ? "" : " " + string.Join(" ", plan.Warnings));
+        }
+        finally { opening = false; }
+    }
+
+    internal override void DiscardNotebookImport()
+    {
+        allowClosing = true;
+        base.DiscardNotebookImport();
+    }
+
     private async Task<bool> ConfirmDiscardAsync()
     {
         if (saving || opening) return false;

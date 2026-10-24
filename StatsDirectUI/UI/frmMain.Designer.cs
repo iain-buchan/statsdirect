@@ -1434,7 +1434,7 @@ namespace StatsDirect.UI
             // openFileDialog
             // 
             this.openFileDialog.DefaultExt = "xlsx";
-            this.openFileDialog.Filter = "Supported files|*.xls;*.xlsx;*.xlsm;*.xlsb;*.xlt;*.xltx;*.xltm;*.csv;*.tsv;*.tab;*.rds;*.rdata;*.rda;*.html;*.htm;*.rtf;*.txt;*.sdw;*.cs;*.vb;*.r|Excel workbooks and templates|*.xls;*.xlsx;*.xlsm;*.xlsb;*.xlt;*.xltx;*.xltm|Delimited data|*.csv;*.tsv;*.tab|R data files|*.rds;*.rdata;*.rda|Reports|*.htm;*.html;*.rtf;*.txt|Script files (*.cs, *.vb, *.r)|*.cs;*.vb;*.r|All files|*.*";
+            this.openFileDialog.Filter = "Supported files|*.xls;*.xlsx;*.xlsm;*.xlsb;*.xlt;*.xltx;*.xltm;*.csv;*.tsv;*.tab;*.rds;*.rdata;*.rda;*.ipynb;*.html;*.htm;*.rtf;*.txt;*.sdw;*.cs;*.vb;*.r|Excel workbooks and templates|*.xls;*.xlsx;*.xlsm;*.xlsb;*.xlt;*.xltx;*.xltm|Delimited data|*.csv;*.tsv;*.tab|R data files|*.rds;*.rdata;*.rda|StatsDirect Jupyter notebooks (*.ipynb)|*.ipynb|Reports|*.htm;*.html;*.rtf;*.txt|Script files (*.cs, *.vb, *.r)|*.cs;*.vb;*.r|All files|*.*";
             // 
             // postTabTimer
             // 

@@ -91,6 +91,13 @@ window.WindowsReport={async run(request){
       case 'currentTarget':{const sel=getSelection();const at=resultAt(sel?.rangeCount?sel.anchorNode:null)??resultAt(document.activeElement);const latest=entries.findLast(e=>isRecord(e.record))?.id??null;const e=entryOf(at??latest);value={resultId:e?e.id:null,how:e?(at?'selection':'latest'):'none',title:e?.title??null,operation:e?.operation??'',hasRecord:isRecord(e?.record)};break;}
       case 'selectResult':StatsDirectReportEditor.selectResult(request.args.id);value=true;break;
       case 'selectAll':StatsDirectReportEditor.selectAll();value=true;break;
+      case 'loadNotebook':{
+        const imported=JSON.parse(await StatsDirectReportImport.notebook(request.args));
+        // notebook() sanitizes all sections before any live report is replaced.
+        const clean=imported.entries.map(e=>({id:crypto.randomUUID(),title:String(e.title??'Report'),operation:String(e.operation??''),helpContextId:Number.isSafeInteger(e.helpContextId)?e.helpContextId:0,html:e.html,...(isRecord(e.record)?{record:e.record}:{})}));
+        entries.splice(0,entries.length,...clean);undo.length=redo.length=0;render();StatsDirectReportEditor.setEditing(true);revision=0;
+        value={...snapshot(),importWarnings:imported.warnings};break;
+      }
       case 'preview':StatsDirectReportEditor.setEditing(false);document.body.classList.add('chart-preview');value=true;break;
       case 'command':StatsDirectReportEditor.command(request.args.name,request.args.value);value=true;break;
       case 'load':{

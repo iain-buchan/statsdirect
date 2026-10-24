@@ -1386,6 +1386,11 @@ namespace StatsDirect.UI
                 // User wants to open the file - but which file type?
                 string extension = Path.GetExtension(path);
                 extension = extension?.ToLower(CultureInfo.InvariantCulture);
+                if (extension == ".ipynb")
+                {
+                    PendingNotebookOpen = OpenNotebookSafelyAsync(path);
+                    return true;
+                }
                 if (SpreadsheetFiles.CanOpen(extension) || RDataFiles.IsRData(extension))
                 {
                     return CreateGrid(path, isTempFile, null) != null;

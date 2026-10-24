@@ -228,6 +228,14 @@ internal sealed class ReportView : UserControl
         Revision = 0;
     }
 
+    internal async Task<string[]> OpenNotebookAsync(JsonElement entries)
+    {
+        await mutations;
+        var result = await CallAsync("loadNotebook", new { entries });
+        Revision = 0;
+        return result.GetProperty("importWarnings").EnumerateArray().Select(w => w.GetString()).ToArray();
+    }
+
     internal async Task OpenLegacyAsync(LegacyReport.Document document, string title)
     {
         await mutations;

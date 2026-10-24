@@ -76,6 +76,14 @@ namespace StatsDirect.UI
 
         internal bool SafeToClose => dirtyButSafeToClose || !Dirty;
 
+        // Only documents created by a failed notebook import use this rollback.
+        internal virtual void DiscardNotebookImport()
+        {
+            Dirty = false;
+            dirtyButSafeToClose = true;
+            Close();
+        }
+
         /// <summary>
         /// Return true if the form is allowed to close, false if it is not
         /// </summary>
