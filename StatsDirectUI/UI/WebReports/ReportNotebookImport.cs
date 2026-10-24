@@ -330,6 +330,7 @@ internal static class ReportNotebookImport
                     var data = new JsonObject();
                     var names = new HashSet<string>(StringComparer.Ordinal);
                     var pointerTitles = new HashSet<string>(StringComparer.Ordinal);
+                    var heldTitles = new HashSet<string>(StringComparer.Ordinal);   // the held object's keys: the columns' titles made unique in column order, as the run record writes them
                     var verified = new JsonArray();
                     for (int column = 0; column < columns.Length; column++)
                     {
@@ -343,7 +344,8 @@ internal static class ReportNotebookImport
                         if (!string.IsNullOrEmpty(hash) && !string.Equals(hash, RunRecord.Hash(columns[column].Values), StringComparison.OrdinalIgnoreCase))
                             throw Error(context + " contains values that differ from the recorded analysis hash");
                         if (string.IsNullOrEmpty(hash) && !hasHeld) reader.Warn("Some historical workbook inputs have no recorded verification hash; their included notebook values cannot be verified against the original analysis.");
-                        if (hasHeld && (prior[column].Name != columns[column].Title || !Equal(prior[column].Value, JsonSerializer.SerializeToElement(columns[column].Values))))
+                        // By key, not by position: a JSON object carries no order, and Jupyter tooling re-saves a notebook with its keys sorted.
+                        if (hasHeld && (!savedHeld.TryGetProperty(UniqueTitle(columns[column].Title, heldTitles), out JsonElement priorValue) || !Equal(priorValue, JsonSerializer.SerializeToElement(columns[column].Values))))
                             throw Error(context + " conflicts with the original held input values or titles");
                         string unique = UniqueTitle(columns[column].Title, names);
                         data[unique] = JsonSerializer.SerializeToNode(columns[column].Values);
