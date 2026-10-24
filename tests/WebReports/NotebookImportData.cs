@@ -82,6 +82,9 @@ internal static partial class Program
         Check(!restoredSources.Contains("Exported from StatsDirect") && !restoredSources.Contains("An R analysis recipe is unavailable")
             && plan.Entries.EnumerateArray().Count(entry => entry.GetProperty("title").GetString()!.StartsWith("Notebook note ", StringComparison.Ordinal)) == 2,
             "the exporter's own notes, written afresh at each export, are not re-imported as report sections, and only the user's notes are numbered");
+        Check(Cells(notebook).OfType<JsonObject>().Where(cell => cell["metadata"]?["statsdirect"]?["role"]?.GetValue<string>() == "export note")
+            .All(cell => cell["metadata"]!["statsdirect"]!["digest"]?.GetValue<string>()?.Length == 64),
+            "each note the export writes carries the digest of its text, by which an unchanged note is told from an edited one");
         var thousand = new JsonArray();
         for (int index = 0; index < 1000; index++) thousand.Add(new JsonObject
         {

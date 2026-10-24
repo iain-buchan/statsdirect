@@ -78,6 +78,9 @@ internal static partial class Program
         reportCell["source"] = reportCell["source"]!.GetValue<string>().Replace("Reviewer’s note: café", "Colleague’s revised interpretation: café");
         var code = cells.First(c => c!["cell_type"]!.GetValue<string>() == "code")!;
         code["source"] = "# Colleague's current R edits\n" + code["source"]!.GetValue<string>();
+        // The export's opening note, rewritten in a notebook editor, which keeps the cell's metadata: the text is the user's now
+        var opening = cells.First(c => c!["metadata"]?["statsdirect"]?["role"]?.GetValue<string>() == "export note")!;
+        opening["source"] = "## Summary\n\nThe paired difference is clinically meaningful.";
         cells.Add(new JsonObject { ["id"] = "colleague-advice", ["cell_type"] = "markdown", ["metadata"] = new JsonObject(),
             ["source"] = new JsonArray("## Colleague’s advice\n\n", "Keep **all nine pairs**. <script>window.notebookExecuted=true</script><img src='https://example.invalid/external.png'><iframe src='file:///C:/private'></iframe><video poster='https://example.invalid/p.png'></video><blockquote cite='https://example.invalid/q'>quoted</blockquote>") });
         string Svg(string colour) => "<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20'><defs><clipPath id='same'><rect width='20' height='20'/></clipPath></defs><rect width='20' height='20' fill='" + colour + "' clip-path='url(#same)' onload='window.notebookExecuted=true'/></svg>";
@@ -101,6 +104,8 @@ internal static partial class Program
         Check(await True("[...document.querySelectorAll('#results pre')].some(p=>p.textContent.includes('line one\\n\\nline three'))"), "a preformatted block keeps its blank line through the notebook and back");
         Check(html.Contains("quoted") && !html.Contains("poster=") && !html.Contains("cite=") && !html.Contains("<video", StringComparison.OrdinalIgnoreCase), "media elements and the poster and cite URL attributes do not pass the notebook sanitizer");
         Check(!html.Contains("Exported from StatsDirect") && !html.Contains("has no saved analysis run record"), "the exporter's own notes, written afresh at each export, do not come back as report sections");
+        Check(html.Contains("clinically meaningful") && plan.Warnings.Any(w => w.Contains("kept as a report note")),
+            "a note the export wrote and the user rewrote in a notebook editor comes back as a report note, with a warning");
         Check(!html.Contains("<script", StringComparison.OrdinalIgnoreCase) && !html.Contains("<iframe", StringComparison.OrdinalIgnoreCase)
             && !html.Contains("onload=", StringComparison.OrdinalIgnoreCase) && !html.Contains("src=\"https://", StringComparison.OrdinalIgnoreCase)
             && await True("window.notebookExecuted!==true"), "notebook HTML and SVG pass the report sanitizer and external images are not loaded");

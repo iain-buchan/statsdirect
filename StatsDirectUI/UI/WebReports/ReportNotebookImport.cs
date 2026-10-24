@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
@@ -231,12 +232,13 @@ internal static class ReportNotebookImport
                 if (type is not ("markdown" or "raw")) throw Error("notebook cell type \"" + type + "\" is unsupported");
                 var reportCell = new JsonObject { ["source"] = source, ["cellType"] = type };
                 if (cell.TryGetProperty("attachments", out JsonElement attachments)) reportCell["attachments"] = ReadAttachments(attachments);
-                string role = null, sourceEntry = null;
+                string role = null, sourceEntry = null, digest = null;
                 if (cellMetadata.TryGetProperty("statsdirect", out JsonElement label))
                 {
                     RequireObject(label, "StatsDirect cell metadata");
                     role = String(label, "role", "StatsDirect cell metadata", false);
                     sourceEntry = String(label, "entryId", "StatsDirect cell metadata", false);
+                    digest = String(label, "digest", "StatsDirect cell metadata", false);
                 }
                 if (role == "original StatsDirect report")
                 {
@@ -248,7 +250,16 @@ internal static class ReportNotebookImport
                     }
                     AddCell(active, reportCell);
                 }
-                else if (role != "export note") Note("Notebook note " + (++noteNumber), reportCell);   // the exporter's own notes are written afresh at each export: not report content
+                else if (role == "export note" && digest != null && string.Equals(digest, Digest(source), StringComparison.OrdinalIgnoreCase))
+                {
+                    // the export's own note, unchanged since it was written: written afresh at each export, so not report content
+                }
+                else
+                {
+                    // a notebook editor keeps a cell's metadata through an edit: a note of the export's own that reads differently is the user's now
+                    if (role == "export note") reader.Warn("A note written by the export and edited since was kept as a report note.");
+                    Note("Notebook note " + (++noteNumber), reportCell);
+                }
             }
             if (codeCount > 0) reader.Warn("Current notebook R code is available for review. It has not been run, and edits to it do not establish how the saved native StatsDirect results were produced.");
             if (outputCount > 0) reader.Warn("Saved notebook R outputs are labelled separately from native StatsDirect results; none were recomputed during import.");
@@ -555,6 +566,7 @@ internal static class ReportNotebookImport
         JsonValueKind.Number when value.TryGetDouble(out double number) && double.IsFinite(number) => number,
         _ => throw Error(context + " contains a non-finite or unsupported worksheet value")
     };
+    private static string Digest(string text) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(text ?? "")));
     // Text destined for one worksheet cell: longer than Excel's limit, the grid would write it cut short or not at all
     private static string CellText(string text, string context)
     {

@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -98,7 +99,8 @@ internal static class ReportNotebook
             else if (attachments != null) cell["attachments"] = attachments;
             return cell;
         }
-        void Note(string text, string entryId = null) => cells.Add(Cell("markdown", text, new JsonObject { ["role"] = "export note", ["entryId"] = entryId }));
+        // A note of the export's own, with the digest of its text: the import skips it when it is unchanged, and keeps it when the user has edited it
+        void Note(string text, string entryId = null) => cells.Add(Cell("markdown", text, new JsonObject { ["role"] = "export note", ["entryId"] = entryId, ["digest"] = Digest(text) }));
 
         Note("# " + Markdown(title) + "\n\nExported from StatsDirect" + (string.IsNullOrWhiteSpace(appVersion) ? "." : " " + Markdown(appVersion) + ".") +
             "\n\nThe report cells preserve saved report content, including native StatsDirect results and your edits. " +
@@ -509,6 +511,7 @@ internal static class ReportNotebook
         if (value.ValueKind != JsonValueKind.Object) throw Failure(context + " is missing or malformed", "Reopen the report or rerun the affected analysis.");
     }
     private static JsonNode Copy(JsonElement value) => JsonNode.Parse(value.GetRawText());
+    private static string Digest(string text) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(text ?? "")));
     private static string Markdown(string value) => string.Concat((value ?? "").Select(character => character < ' ' ? " " : "\\`*_{}[]<>#!|$~".Contains(character) ? "\\" + character : character.ToString()));   // $ and ~ too: mathematics and strikethrough in a renderer
     private static InvalidOperationException Failure(string detail, string recovery) => new("Cannot export a complete Jupyter notebook: " + detail + ". " + recovery);
 }
