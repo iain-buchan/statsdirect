@@ -4,6 +4,9 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
 ##[Unreleased]
 
+### Fixed
+- The report editor's third-party notice names marked (MIT), bundled since 5.2.9 for a notebook's Markdown, in its opening line with the project's address, and lists its licence in order as the notice builder writes it; the builder finds the bundled packages on Windows as on other systems
+
 ##[v5.2.9] 2026-10-24
 
 Version 5.2.9 exports a report as a Jupyter notebook and opens StatsDirect notebooks again, including notebooks saved by Jupyter tooling such as JupyterLab, VS Code and nbconvert. The statistical engine's results are unchanged.

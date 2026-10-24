@@ -3,12 +3,12 @@ import {build} from 'esbuild';
 import {readFile,writeFile,readdir,realpath} from 'node:fs/promises';
 await build({entryPoints:[fileURLToPath(new URL('./export.mjs',import.meta.url))],bundle:true,format:'iife',globalName:'StatsDirectReportExport',target:'safari17',outfile:fileURLToPath(new URL('../Content/Report/export.js',import.meta.url)),legalComments:'eof',minify:true});
 for (const [name,globalName] of [['import','StatsDirectReportImport'],['editor','StatsDirectReportEditor']]) await build({entryPoints:[fileURLToPath(new URL('./'+name+'.mjs',import.meta.url))],bundle:true,format:'iife',globalName,target:'safari17',outfile:fileURLToPath(new URL('../Content/Report/'+name+'.js',import.meta.url)),legalComments:'eof',minify:true});
-let notice='StatsDirect reports use docx (MIT), DOMPurify (Apache-2.0 or MPL-2.0), and emf-converter (Apache-2.0), bundled for offline use.\nhttps://github.com/dolanmiu/docx\nhttps://github.com/cure53/DOMPurify\nhttps://github.com/ChristopherVR/emf-converter\n\n';
+let notice='StatsDirect reports use docx (MIT), DOMPurify (Apache-2.0 or MPL-2.0), emf-converter (Apache-2.0), and marked (MIT), bundled for offline use.\nhttps://github.com/dolanmiu/docx\nhttps://github.com/cure53/DOMPurify\nhttps://github.com/ChristopherVR/emf-converter\nhttps://github.com/markedjs/marked\n\n';
 // Follow the installed production graph, excluding stale versions left in pnpm's
 // virtual store after upgrades. This keeps notices reproducible on a clean CI install.
 const included=new Map();
 async function visit(directory) {
-  const canonical=await realpath(directory).catch(()=>null);
+  const canonical=(await realpath(directory).catch(()=>null))?.replace(/\\/g,'/');   // forward slashes on Windows too, so the node_modules root is found
   if(!canonical||included.has(canonical))return;
   const pkg=JSON.parse(await readFile(canonical+'/package.json','utf8'));
   if(pkg.name.startsWith('@types/'))return;
