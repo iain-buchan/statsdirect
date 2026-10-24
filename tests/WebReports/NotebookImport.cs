@@ -6,10 +6,54 @@ using System.Text.Json.Nodes;
 
 internal static partial class Program
 {
+    /// <summary>The notebook as nbformat writes it: every object's keys sorted, and cell sources and output texts split into lines.</summary>
+    private static JsonNode AsJupyterSaves(JsonNode notebook)
+    {
+        static JsonNode Lines(JsonNode text)
+        {
+            if (text is not JsonValue value || !value.TryGetValue(out string s)) return text;
+            string[] parts = s.Split('\n');
+            var lines = parts.Take(parts.Length - 1).Select(p => (JsonNode)(p + "\n")).ToList();
+            if (parts[^1].Length > 0) lines.Add(parts[^1]);
+            return new JsonArray(lines.ToArray());
+        }
+        static JsonNode Sorted(JsonNode node) => node switch
+        {
+            JsonObject o => new JsonObject(o.OrderBy(p => p.Key, StringComparer.Ordinal).Select(p => KeyValuePair.Create(p.Key, Sorted(p.Value)))),
+            JsonArray a => new JsonArray(a.Select(Sorted).ToArray()),
+            null => null,
+            _ => node.DeepClone(),
+        };
+        var copy = notebook.AsObject();
+        foreach (var cell in copy["cells"]!.AsArray())
+        {
+            cell!["source"] = Lines(cell["source"]);
+            foreach (var output in cell["outputs"]?.AsArray() ?? new JsonArray())
+            {
+                if (output!["text"] != null) output["text"] = Lines(output["text"]);
+                foreach (var mime in output["data"]?.AsObject().Where(d => d.Key.StartsWith("text/", StringComparison.Ordinal)).Select(d => d.Key).ToList() ?? new List<string>()) output["data"]![mime] = Lines(output["data"]![mime]);
+            }
+        }
+        return Sorted(copy);
+    }
+
     private static async Task CheckNotebookImport()
     {
         CheckNotebookImportData();
         var notebook = JsonNode.Parse(await File.ReadAllTextAsync(Path.Combine(output, "review.ipynb")))!.AsObject();
+        // A notebook saved by Jupyter tooling comes back with its object keys sorted and its text split into lines, as nbformat's writer
+        // does both: the import must read it as the original, held data included (it compared the held data by position until 24 Oct 2026).
+        {
+            var pristine = ReportNotebookImport.Read(notebook.ToJsonString(), "Review notebook");
+            ReportNotebookImport.ImportPlan resaved = null; string refusal = null;
+            try { resaved = ReportNotebookImport.Read(AsJupyterSaves(notebook.DeepClone()).ToJsonString(), "Review notebook"); }
+            catch (InvalidOperationException ex) { refusal = ex.Message; }
+            if (refusal != null) Console.WriteLine("      the re-saved notebook was refused: " + refusal);
+            Check(resaved != null && resaved.Script == pristine.Script && resaved.Tables.Length == pristine.Tables.Length && pristine.Tables.Length > 0
+                && resaved.Tables.Zip(pristine.Tables).All(t => t.First.Title == t.Second.Title && t.First.Columns.Length == t.Second.Columns.Length
+                    && t.First.Columns.Zip(t.Second.Columns).All(c => c.First.Title == c.Second.Title && c.First.Values.SequenceEqual(c.Second.Values))),
+                "a notebook re-saved by Jupyter tooling, keys sorted and text split into lines, imports as the original with its held data");
+        }
         var cells = notebook["cells"]!.AsArray();
         var reportCell = cells.First(c => c!["metadata"]?["statsdirect"]?["role"]?.GetValue<string>() == "original StatsDirect report")!;
         reportCell["source"] = reportCell["source"]!.GetValue<string>().Replace("Reviewer’s note: café", "Colleague’s revised interpretation: café");

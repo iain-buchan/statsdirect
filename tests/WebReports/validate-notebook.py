@@ -25,7 +25,8 @@ def text(node):
 
 
 def validate(path, html_path=None):
-    notebook = nbformat.from_dict(json.loads(path.read_text(encoding="utf-8-sig")))
+    # nbformat.reads rejoins the line arrays Jupyter tooling writes for sources and text outputs; from_dict would hand lists to nbconvert
+    notebook = nbformat.reads(path.read_text(encoding="utf-8-sig"), as_version=4)
     ids = [cell.get("id") for cell in notebook.cells]
     require(all(ids) and len(ids) == len(set(ids)), "Cell identifiers must be present and unique")
     nbformat.validate(notebook)
