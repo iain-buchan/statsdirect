@@ -452,7 +452,7 @@ namespace StatsDirect.R
         private static string RunTime(JsonElement record)
         {
             string run = Text(record, "run");
-            return run != null && DateTime.TryParse(run, inv, DateTimeStyles.RoundtripKind, out DateTime time) ? time.ToLocalTime().ToString("d MMM yyyy HH:mm", inv) : run ?? "";
+            return run != null && DateTime.TryParse(run, inv, DateTimeStyles.RoundtripKind, out DateTime time) ? time.ToLocalTime().ToString("d MMM yyyy HH:mm", inv) : Plain(run ?? "");   // not a date, as a notebook's record may carry: kept to the comment line
         }
 
         private static string[][] Rows(JsonElement input, string property)

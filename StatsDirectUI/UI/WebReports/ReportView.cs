@@ -102,8 +102,16 @@ internal sealed class ReportView : UserControl
         if (!Trusted(e.Source)) return;
         try
         {
-            if (e.WebMessageAsJson.Length > 90_000_000) throw new InvalidDataException("The report response is too large.");
-            using var json = JsonDocument.Parse(e.WebMessageAsJson);
+            string text = e.WebMessageAsJson;
+            if (text.Length > 90_000_000)
+            {
+                // The caller waiting for an oversize reply gets the size as its answer rather than a 45-second timeout: a reply's id heads it
+                var oversize = new InvalidDataException("The report response is too large. Export or save a smaller report.");
+                Match reply = Regex.Match(text.Substring(0, Math.Min(text.Length, 200)), "^\\{\"action\":\"reply\",\"id\":\"([0-9a-f]{32})\"");
+                if (reply.Success && requests.Remove(reply.Groups[1].Value, out var waiting)) { waiting.TrySetException(oversize); return; }
+                throw oversize;
+            }
+            using var json = JsonDocument.Parse(text);
             var m = json.RootElement;
             string action = m.GetProperty("action").GetString();
             switch (action)
@@ -228,12 +236,19 @@ internal sealed class ReportView : UserControl
         Revision = 0;
     }
 
-    internal async Task<string[]> OpenNotebookAsync(JsonElement entries)
+    internal Task<string[]> OpenNotebookAsync(JsonElement entries)
     {
-        await mutations;
-        var result = await CallAsync("loadNotebook", new { entries });
-        Revision = 0;
-        return result.GetProperty("importWarnings").EnumerateArray().Select(w => w.GetString()).ToArray();
+        async Task<string[]> LoadAfter(Task prior)
+        {
+            await prior;
+            var result = await CallAsync("loadNotebook", new { entries });
+            Revision = 0;
+            return result.GetProperty("importWarnings").EnumerateArray().Select(w => w.GetString()).ToArray();
+        }
+        // In the chain of edits, as an append is: a result that a running operation appends meanwhile queues behind the load rather than being lost to it
+        Task<string[]> loaded = LoadAfter(mutations);
+        mutations = loaded.ContinueWith(_ => { }, TaskScheduler.Default);
+        return loaded;
     }
 
     internal async Task OpenLegacyAsync(LegacyReport.Document document, string title)

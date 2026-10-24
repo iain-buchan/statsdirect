@@ -23,8 +23,19 @@ public partial class frmMain
 
     internal async Task ImportNotebookAsync(string filename)
     {
-        if (new FileInfo(filename).Length > 90_000_000) throw new IOException("This notebook exceeds the 90 MB notebook limit.");
-        var plan = ReportNotebookImport.Read(await File.ReadAllTextAsync(filename, new UTF8Encoding(false, true)), System.IO.Path.GetFileNameWithoutExtension(filename));
+        ReportNotebookImport.ImportPlan plan;
+        try
+        {
+            if (new FileInfo(filename).Length > 90_000_000) throw new IOException("This notebook exceeds the 90 MB notebook limit.");
+            plan = ReportNotebookImport.Read(await File.ReadAllTextAsync(filename, new UTF8Encoding(false, true)), System.IO.Path.GetFileNameWithoutExtension(filename));
+        }
+        catch
+        {
+            // The file itself cannot be opened, so it leaves the recent files, as a report or workbook that cannot be read does.  A failure
+            // of the report editor below says nothing about the file, which stays listed, as a report does in the same failure.
+            SdApplication.SoleInstance.NoteRecentFile(filename, false);
+            throw;
+        }
         string displayName = System.IO.Path.GetFileNameWithoutExtension(filename);
         if (!string.IsNullOrWhiteSpace(displayName)) plan.Title = displayName;
         var created = new List<StatsDirectForm>();

@@ -42,10 +42,12 @@ internal static class ReportNotebookImport
     private const int MaximumDataRows = 1048575; // One worksheet row is reserved for the titles.
     private const long MaximumExpandedRecords = 30_000_000;
     private const long MaximumExpandedContent = 60_000_000;
+    private const int MaximumCellCharacters = 32767;   // Excel's limit for the text of one cell
 
     private sealed class SavedEntry
     {
         internal string Id, Title, Operation;
+        internal int HelpContextId;
         internal JsonNode Record;
         internal long RecordCost;
     }
@@ -65,7 +67,7 @@ internal static class ReportNotebookImport
             foreach (JsonElement column in columns.EnumerateArray())
             {
                 RequireObject(column, context + " column");
-                result.Add(new Column { Title = String(column, "title", context, false) ?? "", Values = Values(Property(column, "values", context), context) });
+                result.Add(new Column { Title = CellText(String(column, "title", context, false) ?? "", context), Values = Values(Property(column, "values", context), context) });
             }
             return result.ToArray();
         }
@@ -119,20 +121,21 @@ internal static class ReportNotebookImport
         if (json.Length > MaximumJsonBytes || Encoding.UTF8.GetByteCount(json) > MaximumJsonBytes) throw Error("the file exceeds the 90 MB notebook import limit");
         try
         {
-            using JsonDocument document = JsonDocument.Parse(json, new JsonDocumentOptions { MaxDepth = 64 });
+            // The plan nests a record one level deeper than the file, and the report browser receives it at the default depth of 64
+            using JsonDocument document = JsonDocument.Parse(json, new JsonDocumentOptions { MaxDepth = 60 });
             JsonElement notebook = document.RootElement;
             int nodes = 0;
             ValidateJson(notebook, ref nodes);
             RequireObject(notebook, "the notebook");
             if (Integer(notebook, "nbformat", "the notebook") != 4) throw Error("only Jupyter nbformat 4 notebooks are supported");
             int minor = Integer(notebook, "nbformat_minor", "the notebook");
-            if (minor < 0 || minor > 5) throw Error("this notebook's nbformat minor version is unsupported");
+            if (minor < 0) throw Error("this notebook's nbformat minor version is unsupported");   // a later minor, as a newer IDE may write, is compatible by definition
             JsonElement metadata = Property(notebook, "metadata", "the notebook");
             RequireObject(metadata, "notebook metadata");
-            ValidateKernel(metadata);
             if (!metadata.TryGetProperty("statsdirect", out JsonElement provenance))
                 throw Error("this file is not a StatsDirect-exported notebook; general notebook import is not supported");
             RequireObject(provenance, "StatsDirect metadata");
+            ValidateKernel(metadata);   // after the StatsDirect check: a notebook of another kernel without StatsDirect metadata is a general notebook, refused as one
             if (Integer(provenance, "version", "StatsDirect metadata") != 1) throw Error("the StatsDirect notebook metadata version is unsupported");
             JsonElement savedEntries = Property(provenance, "entries", "StatsDirect metadata");
             RequireArray(savedEntries, "StatsDirect entries");
@@ -166,16 +169,16 @@ internal static class ReportNotebookImport
                 do { id = prefix + (++sectionNumber).ToString("D6", CultureInfo.InvariantCulture); } while (!entryIds.Add(id));
                 return id;
             }
-            JsonObject NewSection(string title, string operation, JsonNode record, string sourceId = null, long recordCost = 0)
+            JsonObject NewSection(string title, string operation, JsonNode record, string sourceId = null, long recordCost = 0, int helpContextId = 0)
             {
                 // A moved cell can start another section of the same analysis. Budget its record before DeepClone allocates it.
                 expandedRecords += recordCost;
                 if (expandedRecords > MaximumExpandedRecords) throw ExpandedError();
                 string sectionId = NewId("notebook-section-");
-                Reserve(120 + StringCost(sectionId) + StringCost(title) + StringCost(operation) + StringCost(sourceId) + recordCost);
+                Reserve(144 + StringCost(sectionId) + StringCost(title) + StringCost(operation) + StringCost(sourceId) + recordCost);
                 var entry = new JsonObject
                 {
-                    ["id"] = sectionId, ["title"] = title, ["operation"] = operation,
+                    ["id"] = sectionId, ["title"] = title, ["operation"] = operation, ["helpContextId"] = helpContextId,
                     ["record"] = record?.DeepClone(), ["cells"] = new JsonArray()
                 };
                 if (sourceId != null) entry["sourceEntryId"] = sourceId;
@@ -240,12 +243,12 @@ internal static class ReportNotebookImport
                     if (sourceEntry == null || !saved.TryGetValue(sourceEntry, out SavedEntry original)) throw Error("a report cell refers to an unknown StatsDirect analysis entry");
                     if (active == null || activeSource != sourceEntry)
                     {
-                        active = NewSection(original.Title, original.Operation, original.Record, sourceEntry, original.RecordCost);
+                        active = NewSection(original.Title, original.Operation, original.Record, sourceEntry, original.RecordCost, original.HelpContextId);
                         activeSource = sourceEntry;
                     }
                     AddCell(active, reportCell);
                 }
-                else Note("Notebook note " + (++noteNumber), reportCell);
+                else if (role != "export note") Note("Notebook note " + (++noteNumber), reportCell);   // the exporter's own notes are written afresh at each export: not report content
             }
             if (codeCount > 0) reader.Warn("Current notebook R code is available for review. It has not been run, and edits to it do not establish how the saved native StatsDirect results were produced.");
             if (outputCount > 0) reader.Warn("Saved notebook R outputs are labelled separately from native StatsDirect results; none were recomputed during import.");
@@ -277,10 +280,12 @@ internal static class ReportNotebookImport
         if (id.Length == 0 || id.Length > 200) throw Error("a StatsDirect analysis identifier is invalid");
         string title = String(entry, "title", "a StatsDirect analysis entry");
         string operation = String(entry, "operation", "a StatsDirect analysis entry");
+        // the result's help topic, saved since 5.2.9; a notebook without it opens with the report's own topic
+        int helpContextId = entry.TryGetProperty("helpContextId", out JsonElement help) && help.ValueKind == JsonValueKind.Number && help.TryGetInt32(out int topic) && topic >= 0 ? topic : 0;
         JsonElement datasets = Property(entry, "datasets", "analysis \"" + title + "\"");
         RequireArray(datasets, "analysis datasets");
         JsonElement originalRecord = Property(entry, "record", "analysis \"" + title + "\"");
-        var result = new SavedEntry { Id = id, Title = title, Operation = operation };
+        var result = new SavedEntry { Id = id, Title = title, Operation = operation, HelpContextId = helpContextId };
         if (originalRecord.ValueKind == JsonValueKind.Null)
         {
             if (datasets.GetArrayLength() != 0) throw Error("a report section without a run record has unexpected analysis datasets");
@@ -445,7 +450,7 @@ internal static class ReportNotebookImport
         }
         if (width + (rowLabels == null ? 0 : 1) > MaximumColumns) throw Error(context + " exceeds Excel's 16,384-column worksheet limit");
         var columns = new List<Column>();
-        if (rowLabels != null) columns.Add(new Column { Title = String(input, "rowsTitle", context, false) ?? "Row", Values = rowLabels.Cast<object>().ToArray() });
+        if (rowLabels != null) columns.Add(new Column { Title = CellText(String(input, "rowsTitle", context, false) ?? "Row", context), Values = rowLabels.Cast<object>().ToArray() });
         for (int column = 0; column < width; column++) columns.Add(new Column
         {
             Title = labels?[column] ?? "Column " + (column + 1), Values = rows.Select(row => row[column]).ToArray()
@@ -458,7 +463,7 @@ internal static class ReportNotebookImport
         if (!input.TryGetProperty(name, out JsonElement labels)) return null;
         RequireArray(labels, context + " " + name);
         if (labels.GetArrayLength() != count || labels.EnumerateArray().Any(label => label.ValueKind != JsonValueKind.String)) throw Error(context + " has incomplete table labels");
-        return labels.EnumerateArray().Select(label => label.GetString()).ToArray();
+        return labels.EnumerateArray().Select(label => CellText(label.GetString(), context)).ToArray();
     }
 
     private static IEnumerable<JsonObject> ReadOutput(JsonElement output, int number, Reader reader)
@@ -546,10 +551,16 @@ internal static class ReportNotebookImport
         JsonValueKind.Null => null,
         JsonValueKind.True => true,
         JsonValueKind.False => false,
-        JsonValueKind.String => value.GetString(),
+        JsonValueKind.String => CellText(value.GetString(), context),
         JsonValueKind.Number when value.TryGetDouble(out double number) && double.IsFinite(number) => number,
         _ => throw Error(context + " contains a non-finite or unsupported worksheet value")
     };
+    // Text destined for one worksheet cell: longer than Excel's limit, the grid would write it cut short or not at all
+    private static string CellText(string text, string context)
+    {
+        if (text != null && text.Length > MaximumCellCharacters) throw Error(context + " contains text longer than Excel's 32,767-character cell limit");
+        return text;
+    }
     private static string UniqueTitle(string title, HashSet<string> used)
     {
         string candidate = title;
