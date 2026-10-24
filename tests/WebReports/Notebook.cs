@@ -99,6 +99,21 @@ internal static partial class Program
         string printed = await stdout, errors = await stderr;
         Check(process.ExitCode == 0 && printed.Contains("Paired t-test") && !errors.Contains("Error"), "the exported R code runs independently in R on its embedded data");
         await File.WriteAllTextAsync(Path.Combine(output, "notebook-replay-output.txt"), printed);
+        // An edit while image preparation is pending must not pair old report HTML with newer metadata.
+        await Js("window.notebookExportOriginal=StatsDirectReportExport;window.StatsDirectReportExport={...notebookExportOriginal,notebook:async options=>{const result=await notebookExportOriginal.notebook(options);await new Promise(resolve=>window.notebookExportRelease=resolve);return result;}};");
+        try
+        {
+            Task<JsonElement> pending = view.NotebookSnapshotAsync("Concurrent edit");
+            var until = DateTime.UtcNow.AddSeconds(10);
+            while (!await True("typeof window.notebookExportRelease==='function'") && DateTime.UtcNow < until) await Task.Delay(10);
+            if (!await True("typeof window.notebookExportRelease==='function'")) throw new Exception("Notebook capture did not reach the image-preparation boundary");
+            await view.CallAsync("extend", new { id = snapshot.GetProperty("entries")[0].GetProperty("id").GetString(), html = "<p>New note during notebook export</p>" });
+            await Js("notebookExportRelease();");
+            bool refused = false;
+            try { await pending; } catch (InvalidOperationException ex) { refused = ex.Message.Contains("report changed", StringComparison.OrdinalIgnoreCase); }
+            Check(refused, "editing during notebook preparation refuses an inconsistent snapshot and asks for a retry");
+        }
+        finally { await Js("window.notebookExportRelease?.();window.StatsDirectReportExport=notebookExportOriginal;delete window.notebookExportOriginal;delete window.notebookExportRelease;"); }
     }
 
     private static void CheckNotebookDataValidation(JsonElement snapshot)

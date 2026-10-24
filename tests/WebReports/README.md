@@ -1,8 +1,8 @@
 # Windows WebView2 report integration checks
 
-24 October 2026 notebook export: **405 checks pass** in the full report suite with `STATSDIRECT_SKIP_CLIPBOARD=1`; the separate focused run passes **54 checks**. The Release application builds with zero errors and the existing NU1701 warnings. Standard nbformat validation, nbconvert HTML rendering and independent execution of the exported R replay pass. No installer was rebuilt.
+24 October 2026 notebook export: **406 checks pass** in the full report suite with `STATSDIRECT_SKIP_CLIPBOARD=1`; the separate focused run passes **57 checks**. The Release application builds with zero errors and the existing NU1701 warnings. Standard nbformat validation, nbconvert HTML rendering and independent execution of the exported R replay pass. No installer was rebuilt.
 
-Jupyter notebook export: **54 notebook-specific checks have passed** in the current development run; this is not a full-suite total. `Notebook.cs` and `NotebookData.cs` cover report order and edits, lists and literal text, tables and attached SVG/PNG charts (including a chart inside a table), nbformat 4.5 cells, original run records and engine versions, complete typed datasets, workbook identity and verification, repeated inputs, missing recipes, and refusals for incomplete or changed data. The exported R cell is also run independently in installed R; export itself leaves every code cell unexecuted.
+Jupyter notebook export: **57 notebook-specific checks have passed** in the current development run; this is not a full-suite total. `Notebook.cs` and `NotebookData.cs` cover report order and edits, lists and literal text, tables and attached SVG/PNG charts (including a chart inside a table), nbformat 4.5 cells, original run records and engine versions, complete typed datasets, workbook identity and verification, repeated inputs, missing recipes, and refusals for incomplete or changed data. The exported R cell is also run independently in installed R; export itself leaves every code cell unexecuted.
 
 Run the focused checks after building the application:
 

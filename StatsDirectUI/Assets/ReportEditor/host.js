@@ -81,6 +81,7 @@ window.WindowsReport={async run(request){
       case 'snapshot':value=snapshot();break;
       case 'notebook':{
         const state=snapshot(),portable=await StatsDirectReportExport.notebook({title:request.args.title});
+        if(state.revision!==revision)throw Error('The report changed while the notebook was being prepared. Please export again.');
         if(portable.entries.length!==state.entries.length)throw Error('The report sections could not be exported.');
         state.entries.forEach((entry,index)=>Object.assign(entry,portable.entries[index]));
         value={...state,reportHtml:portable.html};break;
