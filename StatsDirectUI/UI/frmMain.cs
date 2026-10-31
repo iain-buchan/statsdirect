@@ -2553,13 +2553,16 @@ namespace StatsDirect.UI
                     }
                 }
             }
-            lblSelectedVariables.Text = shouldShow
+            string summary = shouldShow
                 ? "Selected variables (" + variableCount.ToString(CultureInfo.CurrentCulture) + ")"
                     + Environment.NewLine + sb.ToString().TrimEnd()
                 : string.Empty;
+            bool summaryChanged = lblSelectedVariables.Text != summary;
+            lblSelectedVariables.Text = summary;
             lblSelectedVariables.AccessibleDescription = lblSelectedVariables.Text;
             pnlVariables.Visible = shouldShow;
             if (pnlOperations.Visible) ResizeContainer(true);
+            if (summaryChanged) pnlVariables.AutoScrollPosition = Point.Empty;
         }
 
         private IList<Operation> BuildOperationHistory(ParameterBag context)

@@ -9,6 +9,7 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -21,6 +22,7 @@ internal sealed class RChartWindow : Form
     private readonly string originalPath, directory, pagePath, mime;
     private readonly Action<string> notice;
     private readonly TaskCompletionSource ready = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    private readonly CancellationTokenSource lifetime = new();
     private readonly ContextMenuStrip chartMenu = new();
     private readonly ToolStripButton zoomOut = new("−"), percent = new("100%"), zoomIn = new("+"), fit = new("Fit");
     private readonly ToolStripLabel status = new("Loading chart…");
@@ -202,7 +204,7 @@ internal sealed class RChartWindow : Form
         string result = await Browser.CoreWebView2.CallDevToolsProtocolMethodAsync("Runtime.evaluate", JsonSerializer.Serialize(new
         {
             expression = "ChartViewer.renderPng()", awaitPromise = true, returnByValue = true
-        })).WaitAsync(TimeSpan.FromSeconds(15));
+        })).WaitAsync(TimeSpan.FromSeconds(15), lifetime.Token);
         CheckOpen();
         using var evaluation = JsonDocument.Parse(result);
         if (evaluation.RootElement.TryGetProperty("exceptionDetails", out _)) throw new IOException("The full chart could not be drawn as PNG.");
@@ -267,6 +269,7 @@ internal sealed class RChartWindow : Form
         if (disposing && !closed)
         {
             closed = true; ++copyRequest; ready.TrySetCanceled();
+            lifetime.Cancel(); lifetime.Dispose();
             chartMenu.Dispose(); Browser.Dispose();
             _ = Task.Run(async () =>
             {
