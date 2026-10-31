@@ -18,6 +18,7 @@ Version 5.3.0 brings an interactive R console into the R script window. Console 
 ### Changed
 - A compact Data info button replaces the trolley icon wherever data information was available. Hover or click to inspect the variables already supplied; current instructions and variable controls retain their original layout.
 - Calculator has a separate section in Analysis immediately before Options. The Tools menu, external program shortcuts and separate R launcher are retired; File > New R session and contextual R actions remain.
+- The R script window runs R through a worker built for one R series, 64-bit R 4.6.x: the newest installed R of that series is used, and when none is installed More > Set up R offers the current one, R 4.6.2, from CRAN. Earlier R releases are no longer accepted by the R window; R's own templates still run with any installed R.
 
 ### Fixed
 - The Windows R console no longer nests R's DLL REPL inside an incompatible error wrapper, which could underflow R's protection stack and cause intermittent heap corruption during startup. Balanced parsing and evaluation preserve Stop, errors, continuation, completed assignments, printing, warnings and charts.
@@ -27,6 +28,10 @@ Version 5.3.0 brings an interactive R console into the R script window. Console 
 - The R chart popup keeps its menu alive after closing, preventing a disposed-menu exception when Copy runs. It offers Copy, Save chart as SVG and Save chart as PNG, and targets the selected chart revision even when two cards contain identical pictures. Saved SVGs keep Office-compatible label positions; PNG exports preserve native pixels or render SVG at higher resolution.
 - The Learning and AI transcript bundles use DOMPurify 3.4.17, matching their pinned dependency manifests and licence notice.
 - The report editor's third-party notice names marked (MIT), bundled since 5.2.9 for a notebook's Markdown, in its opening line with the project's address, and lists its licence in order as the notice builder writes it; the builder finds the bundled packages on Windows as on other systems
+- A long script runs in time proportional to its length: the R worker parses a submission once, as R's source() does, and the functions it defines share one source reference rather than each keeping a copy of the text that follows them
+- A global calling handler installed by one console command still fires in the next, as in R's own console; a tilde in a path means what it means in Rscript and Rgui, the Documents folder by default; closing an R window asks R to end its session, so R removes its temporary folder, and the session's chart snapshots leave the R folder with it; the weekly housekeeping of automatic chart files covers the console's files and runs for the console too
+- An answered R question keeps its question in the transcript, and a screen reader hears the question; Stop shows as interrupting until R unwinds; a worker that cannot start or a console page that cannot load reports so at once rather than showing R running for ever; a file the console reports written opens if it is a document and is shown in its folder otherwise; a template's own R output files are not reported as a console command's
+- Report chart labels copied as vector outlines use the nonzero fill rule, so fonts with overlapping strokes stay solid, and a label with a character the font cannot draw keeps its text for the receiving program's own fallback; Help on Check for Updates opens the Help menu topic
 
 ##[v5.2.9] 2026-10-24
 
