@@ -12,8 +12,11 @@
 #include <string.h>
 #include <io.h>
 #include <fcntl.h>
+#define R_NO_REMAP
 #include <Rversion.h>
 #include <R_ext/RStartup.h>
+#include <Rinternals.h>
+#include <R_ext/Parse.h>
 
 #define MAX_FRAME (16u * 1024u * 1024u)
 typedef struct Message {
@@ -37,9 +40,28 @@ static size_t source_length, source_offset;
 static int (*r_defparams)(Rstart, int);
 static void (*r_setparams)(Rstart);
 static void (*r_setargs)(int, char **);
-static void (*r_starttime)(void), (*r_setup)(void), (*r_replinit)(void);
-static int (*r_repldo1)(void);
+static void (*r_starttime)(void), (*r_setup)(void);
 static int (*r_toplevelexec)(void (*)(void *), void *);
+static SEXP (*r_protect)(SEXP), (*r_utf8char)(const char *, cetype_t), (*r_scalarstring)(SEXP);
+static void (*r_unprotect)(int), (*r_print)(SEXP), (*r_definevar)(SEXP, SEXP, SEXP);
+static void (*r_printwarnings)(void);
+static void (*r_toplevelhandlers)(SEXP, SEXP, Rboolean, Rboolean);
+static Rboolean (*r_bindinglocked)(SEXP, SEXP);
+static void (*r_unlockbinding)(SEXP, SEXP), (*r_lockbinding)(SEXP, SEXP);
+static SEXP (*r_withcleanup)(SEXP (*)(void *), void *, void (*)(void *), void *);
+static SEXP (*r_parse)(SEXP, int, ParseStatus *, SEXP), (*r_eval)(SEXP, SEXP);
+static SEXP (*r_getattrib)(SEXP, SEXP), (*r_install)(const char *), (*r_vectorat)(SEXP, R_xlen_t);
+static SEXP (*r_lang3)(SEXP, SEXP, SEXP), (*r_getoption)(SEXP), (*r_aschar)(SEXP);
+static R_xlen_t (*r_length)(SEXP);
+static int *(*r_integer)(SEXP);
+static const char *(*r_utf8)(SEXP);
+static void (*r_error)(const char *, ...);
+static SEXP *r_nil, *r_global, *r_base;
+static Rboolean *r_visible;
+static const char *r_parse_error;
+#ifdef STATSDIRECT_R_PROTECTION_CHECKS
+static int *r_protection_top;
+#endif
 static void (*r_processevents)(void), (*r_checkinterrupt)(void);
 static void (*r_end)(int);
 static int (*r_ga_initapp)(int, char **);
@@ -240,49 +262,38 @@ static void prompt_event(const char *kind, const char *prompt, uint32_t request,
     string_field("text", prompt, strlen(prompt)); end_event();
 }
 
-/* Copy only one source line. Incomplete long lines are supplied on subsequent
- * ReadConsole calls. The user's script never enters the reply queue. */
-static int take_source(unsigned char *buffer, int length)
+static int adopt_source(Message *m, int is_new)
 {
-    size_t amount = 0;
-    while (source_offset < source_length && amount + 1 < (size_t)length) {
-        char c = source[source_offset++]; buffer[amount++] = (unsigned char)c;
-        if (c == '\n') break;
+    size_t pending = is_new ? 0 : source_length - source_offset;
+    if (pending > MAX_FRAME - m->length - 2) {
+        error_event("The incomplete R expression exceeds the command limit."); return 0;
     }
-    buffer[amount] = 0;
-    return amount != 0;
-}
-
-static void adopt_source(Message *m, int is_new)
-{
+    char *combined = malloc(pending + m->length + 2);
+    if (!combined) { error_event("Cannot allocate R source."); return 0; }
+    if (pending) memcpy(combined, source + source_offset, pending);
     if (is_new) {
         has_command = 1; command_id = m->id;
         command_error = command_interrupted = 0;
     }
-    free(source); source = m->text; m->text = NULL;
+    free(source); source = combined;
     /* Console buffers contain logical lines. Windows-authored .R files retain
      * their original text in the editor, but R's parser needs LF here. */
-    source_length = 0;
+    source_length = pending;
     for (size_t i = 0; i < m->length; ++i) {
-        char c = source[i];
+        char c = m->text[i];
         if (c == '\r') {
-            if (i + 1 < m->length && source[i + 1] == '\n') ++i;
+            if (i + 1 < m->length && m->text[i + 1] == '\n') ++i;
             c = '\n';
         }
         source[source_length++] = c;
     }
     if (!source_length || source[source_length - 1] != '\n') source[source_length++] = '\n';
     source[source_length] = 0; source_offset = 0;
+    return 1;
 }
 
-static int read_console(const char *prompt, unsigned char *buffer, int length, int history)
+static int read_request(const char *prompt, unsigned char *buffer, int length, int is_input)
 {
-    /* Busy=1 and/or history=0 describes nested input, including readline/menu.
-     * Main-loop continuation comes from R_ReplDLLdo1, never matching prompt text. */
-    int is_input = busy || !history;
-    if (!is_input && has_command && source_offset < source_length)
-        return take_source(buffer, length);
-    if (!is_input && prompt_type == 1) completed();
     uint32_t request = ++next_request_id;
     const char *kind = is_input ? "input" : prompt_type == 2 ? "continuation" : "top";
     InterlockedExchange(&accepting_submit, !is_input && prompt_type == 1);
@@ -298,13 +309,15 @@ static int read_console(const char *prompt, unsigned char *buffer, int length, i
         Message *m = dequeue();
         if (m) {
             if (!is_input && prompt_type == 1 && m->opcode == 1) {
-                adopt_source(m, 1); free_message(m);
-                return take_source(buffer, length);
+                int accepted = adopt_source(m, 1); free_message(m);
+                if (accepted) return 1;
+                InterlockedExchange(&accepting_submit, 1); continue;
             }
             if (m->opcode == 2 && m->id == request) {
                 if (!is_input && prompt_type == 2) {
-                    adopt_source(m, 0); free_message(m);
-                    return take_source(buffer, length);
+                    int accepted = adopt_source(m, 0); free_message(m);
+                    if (accepted) return 1;
+                    continue;
                 }
                 if (is_input) {
                     if (m->length + 2 > (size_t)length) {
@@ -323,6 +336,14 @@ static int read_console(const char *prompt, unsigned char *buffer, int length, i
     }
 }
 
+static int read_console(const char *prompt, unsigned char *buffer, int length, int history)
+{
+    (void)history;
+    /* Only R's nested input uses this callback. Top and continuation requests
+     * come from our parser's status, even when their visible prompts match. */
+    return read_request(prompt, buffer, length, 1);
+}
+
 static void show_message(const char *text) { output(text, (int)strlen(text), 1); }
 static void noop(void) { }
 static int yes_no_cancel(const char *text)
@@ -331,8 +352,101 @@ static int yes_no_cancel(const char *text)
     if (!read_console(text, answer, (int)sizeof(answer), 0)) return 0;
     return answer[0] == 'y' || answer[0] == 'Y' ? 1 : answer[0] == 'n' || answer[0] == 'N' ? -1 : 0;
 }
-static int repl_result;
-static void iteration(void *unused) { (void)unused; repl_result = r_repldo1(); }
+static const char *console_prompt(const char *name, const char *fallback)
+{
+    SEXP value = r_getoption(r_install(name));
+    return value == *r_nil ? fallback : r_utf8(r_aschar(value));
+}
+
+typedef struct LastValueUpdate { SEXP symbol, value; int locked; } LastValueUpdate;
+static SEXP assign_last_value(void *data)
+{
+    LastValueUpdate *update = data;
+    if (update->locked) r_unlockbinding(update->symbol, *r_base);
+    r_definevar(update->symbol, update->value, *r_base);
+    return *r_nil;
+}
+static void restore_last_value_lock(void *data)
+{
+    LastValueUpdate *update = data;
+    if (update->locked) r_lockbinding(update->symbol, *r_base);
+}
+
+/* Parse one expression at a time, letting R tell us exactly which bytes it
+ * consumed, including the delimiter and any trailing comment. This preserves
+ * completed expressions before a later syntax error or incomplete expression.
+ * No R syntax or prompt text is interpreted by the host. */
+static size_t consumed_source(SEXP expressions, const char *text, size_t length)
+{
+    SEXP ref = r_getattrib(expressions, r_install("wholeSrcref"));
+    if (r_length(ref) < 8) r_error("R did not return a source position.");
+    const int *position = r_integer(ref);
+    if (position[7] < 1 || position[5] < 0) r_error("R returned an invalid source position.");
+    size_t offset = 0;
+    /* R's logical line can be changed by #line. Its physical line and UTF-8
+     * column remain usable; its byte counter can overcount multibyte text.
+     * Match R's documented column counting, including eight-column tabs. */
+    for (int line = 1; line < position[7] && offset < length; ++line) {
+        while (offset < length && text[offset++] != '\n') { }
+    }
+    int column = 0;
+    while (offset < length && column < position[5]) {
+        unsigned char c = (unsigned char)text[offset++];
+        if (c == '\n') r_error("R returned a source column beyond its line.");
+        if (c == '\t') column = (column + 8) & ~7;
+        else if (c < 0x80 || c >= 0xc0) ++column;
+    }
+    while (offset < length && ((unsigned char)text[offset] & 0xc0) == 0x80) ++offset;
+    if (!offset) r_error("R did not consume the parsed expression.");
+    return offset;
+}
+
+static void evaluate_command(void *unused)
+{
+    (void)unused;
+    prompt_type = 1;
+    if (!read_request(console_prompt("prompt", "> "), NULL, 0, 0)) return;
+    while (source_offset < source_length) {
+        process_control();
+        SEXP chars = r_protect(r_utf8char(source + source_offset, CE_UTF8));
+        SEXP text = r_protect(r_scalarstring(chars));
+        SEXP filename = r_protect(r_scalarstring(r_utf8char("<console>", CE_UTF8)));
+        SEXP call = r_protect(r_lang3(r_install("srcfilecopy"), filename, text));
+        SEXP srcfile = r_protect(r_eval(call, *r_base));
+        ParseStatus status;
+        SEXP expressions = r_protect(r_parse(text, 1, &status, srcfile));
+        if (status == PARSE_INCOMPLETE) {
+            r_unprotect(6);
+            prompt_type = 2;
+            if (!read_request(console_prompt("continue", "+ "), NULL, 0, 0)) return;
+            continue;
+        }
+        if (status != PARSE_OK && status != PARSE_NULL && status != PARSE_EOF)
+            r_error("%s", *r_parse_error ? r_parse_error : "Invalid R syntax.");
+        if (r_length(expressions)) {
+            source_offset += consumed_source(expressions, source + source_offset, source_length - source_offset);
+            set_busy(1);
+            SEXP value = r_protect(r_eval(r_vectorat(expressions, 0), *r_global));
+            /* R's REPL updates this base binding directly. Use public binding
+             * APIs and restore its original lock even if an R error unwinds. */
+            LastValueUpdate update = { r_install(".Last.value"), value, 0 };
+            update.locked = r_bindinglocked(update.symbol, *r_base);
+            r_withcleanup(assign_last_value, &update, restore_last_value_lock, &update);
+            Rboolean visible = *r_visible;
+            if (visible) r_print(value);
+            r_printwarnings();
+            r_toplevelhandlers(r_vectorat(expressions, 0), value, TRUE, visible);
+            r_unprotect(1);
+            set_busy(0);
+        } else source_offset = source_length;
+        r_unprotect(6);
+        /* A user's interrupt handler can return normally. Stop still cancels
+         * the remaining expressions of this submitted command. */
+        if (command_interrupted) { source_offset = source_length; break; }
+    }
+    prompt_type = 1;
+    completed();
+}
 
 static char *utf8(const wchar_t *value)
 {
@@ -391,8 +505,24 @@ int wmain(int argc, wchar_t **argv)
     if (!dll) { error_event("Cannot load R.dll from the requested R installation."); return 2; }
     LOAD(r_defparams, "R_DefParamsEx"); LOAD(r_setparams, "R_SetParams");
     LOAD(r_setargs, "R_set_command_line_arguments"); LOAD(r_starttime, "R_setStartTime");
-    LOAD(r_setup, "setup_Rmainloop"); LOAD(r_replinit, "R_ReplDLLinit"); LOAD(r_repldo1, "R_ReplDLLdo1");
+    LOAD(r_setup, "setup_Rmainloop");
     LOAD(r_toplevelexec, "R_ToplevelExec"); LOAD(r_processevents, "R_ProcessEvents");
+    LOAD(r_protect, "Rf_protect"); LOAD(r_unprotect, "Rf_unprotect");
+    LOAD(r_utf8char, "Rf_mkCharCE"); LOAD(r_scalarstring, "Rf_ScalarString");
+    LOAD(r_parse, "R_ParseVector"); LOAD(r_eval, "Rf_eval"); LOAD(r_print, "Rf_PrintValue");
+    LOAD(r_printwarnings, "Rf_PrintWarnings"); LOAD(r_toplevelhandlers, "Rf_callToplevelHandlers");
+    LOAD(r_getattrib, "Rf_getAttrib"); LOAD(r_install, "Rf_install"); LOAD(r_vectorat, "VECTOR_ELT");
+    LOAD(r_length, "Rf_xlength"); LOAD(r_integer, "INTEGER"); LOAD(r_lang3, "Rf_lang3");
+    LOAD(r_getoption, "Rf_GetOption1"); LOAD(r_aschar, "Rf_asChar"); LOAD(r_utf8, "Rf_translateCharUTF8");
+    LOAD(r_error, "Rf_error"); LOAD(r_definevar, "Rf_defineVar");
+    LOAD(r_bindinglocked, "R_BindingIsLocked"); LOAD(r_unlockbinding, "R_unLockBinding");
+    LOAD(r_lockbinding, "R_LockBinding"); LOAD(r_withcleanup, "R_ExecWithCleanup");
+    r_nil = (SEXP *)required(dll, "R_NilValue");
+    r_global = (SEXP *)required(dll, "R_GlobalEnv"); r_base = (SEXP *)required(dll, "R_BaseEnv");
+    r_visible = (Rboolean *)required(dll, "R_Visible"); r_parse_error = (const char *)required(dll, "R_ParseErrorMsg");
+#ifdef STATSDIRECT_R_PROTECTION_CHECKS
+    r_protection_top = (int *)required(dll, "R_PPStackTop");
+#endif
     LOAD(r_checkinterrupt, "R_CheckUserInterrupt"); LOAD(r_end, "Rf_endEmbeddedR");
     HMODULE graphapp = GetModuleHandleW(L"Rgraphapp.dll");
     r_ga_initapp = (void *)required(graphapp, "GA_initapp");
@@ -431,19 +561,26 @@ int wmain(int argc, wchar_t **argv)
     r_setargs(3, r_args); r_ga_initapp(0, NULL); r_readconfig();
     uintptr_t reader = _beginthreadex(NULL, 0, read_control, NULL, 0, NULL);
     if (!reader) { error_event("Cannot start the control reader."); return 2; }
-    r_setup(); r_replinit();
+    r_setup();
     begin_event("ready"); number_field("protocol", 1); number_field("pid", GetCurrentProcessId());
     string_field("rVersion", r_version(), strlen(r_version())); end_event();
     while (!InterlockedCompareExchange(&shutdown_requested, 0, 0)) {
-        if (!r_toplevelexec(iteration, NULL)) {
+#ifdef STATSDIRECT_R_PROTECTION_CHECKS
+        int expected_top = *r_protection_top;
+        if (expected_top < 0) { error_event("R protection stack is negative before evaluation."); return 70; }
+#endif
+        /* Unlike R_ReplDLLdo1, our callback keeps R_ToplevelExec's protected
+         * roots intact. R owns the longjmp boundary for errors and Stop. */
+        if (!r_toplevelexec(evaluate_command, NULL)) {
             command_error = !command_interrupted;
             source_offset = source_length; busy = 0; prompt_type = 1;
             *r_userbreak = 0; InterlockedExchange(&interrupted, 0);
-            r_replinit(); completed();
-        } else {
-            if (repl_result < 0) break;
-            prompt_type = repl_result;
+            completed();
         }
+#ifdef STATSDIRECT_R_PROTECTION_CHECKS
+        if (*r_protection_top != expected_top) { error_event("R protection stack changed across evaluation."); return 70; }
+        fprintf(stderr, "STATSDIRECT_PROTECTION_CHECK_OK top=%d\n", *r_protection_top); fflush(stderr);
+#endif
     }
     InterlockedExchange(&interrupted, 0); *r_userbreak = 0;
     r_end(0);

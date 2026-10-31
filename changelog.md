@@ -18,6 +18,7 @@ Version 5.3.0 brings an interactive R console into the R script window. Console 
 - Calculator has a separate section in Analysis immediately before Options. The Tools menu, external program shortcuts and separate R launcher are retired; File > New R session and contextual R actions remain.
 
 ### Fixed
+- The Windows R console no longer nests R's DLL REPL inside an incompatible error wrapper, which could underflow R's protection stack and cause intermittent heap corruption during startup. Balanced parsing and evaluation preserve Stop, errors, continuation, completed assignments, printing, warnings and charts.
 - The R console follows charts through image loading and input resizing when the reader is at the end; scrolling up, selecting text or holding a chart button preserves the reader's position. Open and Copy remain beneath each chart.
 - Console Up/Down command recall includes code run from Script or Continue in R, including the startup script. Multi-line submissions stay intact and are not appended to Script a second time; opening unexecuted code and answers to R questions do not enter command history.
 - Native report charts copied as SVG carry their labels as positioned vector outlines, matching the reliable R-chart copy in Word's Convert to Shape. Label sizes and rotations survive conversion; the original report and its private clipboard fragment retain their text.

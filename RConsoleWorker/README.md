@@ -5,6 +5,26 @@ selected installed 64-bit R; StatsDirect and WebView2 never load R.dll. Each R
 script window owns one persistent R workspace. Stop requests an R interrupt on
 the worker's R thread; Restart or closing the window ends the worker process.
 
+The evaluator uses R's parser and evaluator within a balanced `R_ToplevelExec`
+error boundary. It does not call `R_ReplDLLdo1`: that DLL REPL resets R's
+protection stack and cannot safely be nested within `R_ToplevelExec`.
+Expressions are parsed individually, so a complete prefix runs before an
+incomplete or invalid suffix. R's `wholeSrcref` supplies the consumed physical
+line and Unicode column, including delimiters; the worker maps that position
+back to the original UTF-8 input rather than interpreting R syntax. The byte
+counter is unsuitable for this because it can overcount multibyte input.
+Errors and Stop discard the remaining submitted expressions while keeping
+completed assignments. Normal printing, warnings, task callbacks and the base
+`.Last.value` binding retain ordinary Console behaviour; its original binding
+lock is restored through `R_ExecWithCleanup`.
+
+The correction is verified against the remaining installed R 4.6.2: 80 native
+checks (81 in the checked build), 92 production-session checks, 121 actual
+Windows Console checks, 1,000 fresh checked-worker startups and 201 application
+adapter startup/restart cycles. All 2,000 standalone and 603 adapter protection
+boundaries remain at zero. R 4.6.1 was removed from this machine and has not been
+retested with the correction. The source fix does not update existing installers.
+
 The protocol, interrupt handling and display-list plot capture were first tested
 in `prototypes/InteractiveR`. The production session adapter is now
 `StatsDirectUI/R/Interactive/RConsoleSession.cs`. The shared web console is based on Mac commit
@@ -44,12 +64,23 @@ python RConsoleWorker\test-native.py 'C:\Program Files\R\R-4.6.2'
 dotnet run --project RConsoleWorker\Tests -c Release -- RConsoleWorker\bin\StatsDirect.RConsole.Native.exe 'C:\Program Files\R\R-4.6.2'
 ```
 
+For the protection-stack regression, build a separate checked worker and require
+its diagnostic markers. This test-only build verifies a nonnegative, unchanged
+stack across every evaluation, including errors and interrupts. Normal builds
+do not access the diagnostic stack export or emit these markers.
+
+```powershell
+& .\RConsoleWorker\build-native.ps1 -RHome 'C:\Program Files\R\R-4.6.2' -OutputDirectory C:\temp\RConsoleChecks -ProtectionChecks
+python RConsoleWorker\test-native.py 'C:\Program Files\R\R-4.6.2' C:\temp\RConsoleChecks\StatsDirect.RConsole.Native.exe --require-protection-checks
+```
+
 The tests exercise real prompt answers, loops, sleep, incomplete input, errors,
 UTF-8, persisted assignments, invalid/stale replies, input framing and shutdown.
 The worker accepts only the selected R installation and a session working folder.
 It does not install packages or execute source supplied by a notebook merely
 because that notebook was opened.
 
+Original integration baseline, before the protection-stack correction:
 31 October 2026 verification: 43 native checks pass on each of R 4.6.1 and
 4.6.2. The production session suite passes 92 checks on each version, covering
 explicit device dimensions, SVG/PNG/PDF outputs, immutable older assets, variables

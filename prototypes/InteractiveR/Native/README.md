@@ -1,9 +1,11 @@
 # Isolated native R console helper
 
 Prototype only. This executable loads the selected installation's `R.dll`; the
-StatsDirect process does not load R. Build with `build-native.ps1`. The default
+StatsDirect process does not load R. Its C entry point includes the production
+`RConsoleWorker/console.c`, so the archived prototype shares the corrected evaluator.
+Build with `build-native.ps1`. The default
 output is `bin/StatsDirect.RConsole.Native.exe`. The headers and selected R
-runtime must match, currently R 4.6.1. No R source is incorporated.
+runtime must use the same major/minor series, currently R 4.6.x. No R source is incorporated.
 
 Run with `--r-home <R installation> --working-directory <session directory>`.
 If Visual Studio has no C++ workload, run `fetch-native-tools.ps1` first to fetch

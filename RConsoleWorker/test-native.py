@@ -1,7 +1,9 @@
 """Focused real-R transport and interrupt tests; never loads R into Python."""
 import json
+import os
 import pathlib
 import queue
+import re
 import struct
 import subprocess
 import sys
@@ -11,22 +13,36 @@ import time
 
 ROOT = pathlib.Path(__file__).resolve().parent
 RHOME = sys.argv[1] if len(sys.argv) > 1 else r"C:\Program Files\R\R-4.6.1"
+REQUIRE_PROTECTION_CHECKS = "--require-protection-checks" in sys.argv[2:]
+helper_args = [arg for arg in sys.argv[2:] if arg != "--require-protection-checks"]
+if len(helper_args) > 1:
+    raise SystemExit("Usage: test-native.py [R-home] [native-helper] [--require-protection-checks]")
+HELPER = pathlib.Path(helper_args[0]).resolve() if helper_args else ROOT / "bin" / "StatsDirect.RConsole.Native.exe"
 checks = 0
 
 
 def check(value, description):
     global checks
+    if not value:
+        print("Recent native events:", json.dumps(all_events[-20:], ensure_ascii=False), flush=True)
+        print("Native stderr:", "".join(raw[-30:]), flush=True)
     assert value, description
     checks += 1
     print("PASS", description, flush=True)
 
 
 with tempfile.TemporaryDirectory(prefix="native-r-", dir=ROOT / "bin") as working:
+    # Match the production adapter: Unix UTF-8 locale names inherited by the
+    # test runner are unsupported by Windows R and can invalidate re-encoding.
+    child_environment = os.environ.copy()
+    child_environment.pop("LC_ALL", None)
+    child_environment.pop("LC_CTYPE", None)
     process = subprocess.Popen(
-        [str(ROOT / "bin" / "StatsDirect.RConsole.Native.exe"), "--r-home", RHOME,
+        [str(HELPER), "--r-home", RHOME,
          "--working-directory", working],
         stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
         creationflags=subprocess.CREATE_NO_WINDOW,
+        env=child_environment,
     )
     events = queue.Queue()
     raw = []
@@ -92,6 +108,111 @@ with tempfile.TemporaryDirectory(prefix="native-r-", dir=ROOT / "bin") as workin
         seen = top()
         check(any(event["type"] == "completed" and event["status"] == "interrupted" for event in seen), "Stop cancels " + kind + " without a reply")
 
+    def parse_eval_regressions():
+        # A complete prefix must run before a following incomplete expression
+        # asks for continuation, as in R's ordinary interactive console.
+        prefix_path = pathlib.Path(working) / "prefix-before-continuation.txt"
+        send(1, 100, 'cat("prefix ran\\n", file="prefix-before-continuation.txt", append=TRUE)\nif (TRUE) {')
+        request = until(lambda e: e["type"] == "prompt" and e["kind"] == "continuation")[-1]
+        check(prefix_path.read_text().strip() == "prefix ran", "a complete batch prefix executes before an incomplete suffix requests continuation")
+        send(2, request["requestId"], 'cat("CONTINUED-PREFIX\\n")\n}')
+        seen = top()
+        check("CONTINUED-PREFIX" in output(seen) and prefix_path.read_text().splitlines() == ["prefix ran"]
+              and sum(e["type"] == "completed" and e["commandId"] == 100 and e["status"] == "ok" for e in seen) == 1,
+              "continuing the suffix finishes the original batch once without replaying its completed prefix")
+
+        seen = submit(101, 'syntax_prefix <- 17L\nsyntax_bad <- )\nsyntax_following <- TRUE')
+        check(any(e["type"] == "completed" and e["status"] == "error" for e in seen), "a syntax error after a valid prefix reports error completion")
+        seen = submit(102, 'cat("SYNTAX-PREFIX", syntax_prefix, exists("syntax_following"), "\\n")')
+        check("SYNTAX-PREFIX 17 FALSE" in output(seen), "syntax errors preserve completed prefix assignments and discard following statements")
+
+        # Straddle the old 4096-byte callback boundary with multibyte UTF-8,
+        # including a four-byte character, on one physical source line. A tab
+        # distinguishes physical byte offsets from displayed source columns.
+        prefix = '\tlong_utf8 <- "'
+        for ident, boundary in enumerate((4094, 4095, 4096), 103):
+            value = "x" * (boundary - len(prefix.encode("utf-8"))) + "α😀" + "y" * 200
+            source = prefix + value + '"; stopifnot(nchar(long_utf8,type="bytes")==%dL, grepl("α😀",long_utf8,fixed=TRUE)); cat("LONG-UTF8-%d\\n")' % (len(value.encode("utf-8")), boundary)
+            seen = submit(ident, source)
+            check("LONG-UTF8-%d" % boundary in output(seen) and any(e["type"] == "completed" and e["status"] == "ok" for e in seen),
+                  "one long UTF-8 line survives a multibyte character at byte " + str(boundary))
+
+        # Prompt kind is semantic: users may give top/continuation/readline
+        # exactly the same visible text.
+        submit(106, 'old_prompts <- options(prompt="SAME> ", continue="SAME> ")')
+        send(1, 107, 'if (TRUE) {')
+        request = until(lambda e: e["type"] == "prompt" and e["kind"] == "continuation")[-1]
+        check(request["text"] == "SAME> ", "equal custom top and continuation text still yields a typed continuation prompt")
+        send(2, request["requestId"], 'cat("CUSTOM-CONTINUATION\\n")\n}')
+        seen = top()
+        check(seen[-1]["text"] == "SAME> " and "CUSTOM-CONTINUATION" in output(seen), "the completed custom continuation returns to the typed top prompt")
+        send(1, 108, 'same_answer <- readline("SAME> "); cat("SAME-ANSWER", same_answer, "\\n")')
+        request = until(lambda e: e["type"] == "prompt" and e["kind"] == "input")[-1]
+        check(request["text"] == "SAME> ", "readline remains typed input even when its text equals the top prompt")
+        send(2, request["requestId"], "chosen answer")
+        check("SAME-ANSWER chosen answer" in output(top()), "the equal-text readline receives only its explicit reply")
+        submit(109, 'options(old_prompts)')
+
+        seen = submit(110, 'hidden_assignment <- "ASSIGNMENT-NOT-PRINTED"; invisible("INVISIBLE-NOT-PRINTED"); "VISIBLE-AUTO-PRINT"; cat("LAST-VALUE=", identical(.Last.value, "VISIBLE-AUTO-PRINT"), "\\n", sep=""); cat("LAST-BINDING=", bindingIsLocked(".Last.value", baseenv()) && !exists(".Last.value", envir=.GlobalEnv, inherits=FALSE), "\\n", sep="")')
+        check(re.search(r'\[1\]\s+"VISIBLE-AUTO-PRINT"', output(seen)) is not None
+              and "INVISIBLE-NOT-PRINTED" not in output(seen) and "ASSIGNMENT-NOT-PRINTED" not in output(seen)
+              and "LAST-VALUE=TRUE" in output(seen) and "LAST-BINDING=TRUE" in output(seen),
+              "interactive auto-print preserves visibility and the locked base last-value binding without global pollution")
+
+        # Force frequent collection while evaluating closures and returned lists.
+        # The existing error/Stop cases separately verify that later statements
+        # in a failed batch are discarded and prior workspace values survive.
+        seen = submit(111, 'local({on.exit(gctorture(FALSE)); gctorture2(10L); x <- lapply(1:12, function(i) list(i=i, value=as.character(i))); stopifnot(identical(x[[12L]]$i, 12L))}); cat("GC-TORTURE-SAFE\\n")')
+        check("GC-TORTURE-SAFE" in output(seen) and any(e["type"] == "completed" and e["status"] == "ok" for e in seen),
+              "frequent garbage collection preserves parsed expressions and evaluated objects")
+
+    def console_compatibility_regressions():
+        seen = submit(112, 'options(warn=0); {warning("DEFERRED-NATIVE-WARNING"); cat("WARN0-BODY\\n")}')
+        text = output(seen)
+        check(text.count("DEFERRED-NATIVE-WARNING") == 1 and "WARN0-BODY" in text
+              and text.index("WARN0-BODY") < text.index("DEFERRED-NATIVE-WARNING"),
+              "warn=0 displays the deferred warning once after its expression finishes")
+        seen = submit(113, 'options(warn=1); {warning("IMMEDIATE-NATIVE-WARNING"); cat("WARN1-BODY\\n")}')
+        text = output(seen)
+        check(text.count("IMMEDIATE-NATIVE-WARNING") == 1 and "WARN1-BODY" in text
+              and text.index("IMMEDIATE-NATIVE-WARNING") < text.index("WARN1-BODY"),
+              "warn=1 displays its immediate warning once without a duplicate deferred warning")
+        seen = submit(114, 'options(warn=-1); warning("SILENT-NATIVE-WARNING"); cat("WARN-SILENT-BODY\\n")')
+        check("SILENT-NATIVE-WARNING" not in output(seen) and "WARN-SILENT-BODY" in output(seen),
+              "warn=-1 suppresses warning text while continuing execution")
+        seen = submit(115, 'options(warn=2); warning("ERROR-NATIVE-WARNING"); after_warning_error <- TRUE')
+        check(any(e["type"] == "completed" and e["status"] == "error" for e in seen),
+              "warn=2 converts its warning to typed error completion")
+        seen = submit(116, 'options(warn=0); cat("WARN2-SAFE", exists("after_warning_error"), bindingIsLocked(".Last.value",baseenv()), "\\n")')
+        check("WARN2-SAFE FALSE TRUE" in output(seen),
+              "a warning converted to an error discards its tail and restores the locked last-value binding")
+
+        seen = submit(117, '''task_calls <- 0L
+addTaskCallback(function(expr, value, ok, visible) {
+  if (identical(expr, quote(731L + 29L))) {
+    task_calls <<- task_calls + 1L
+    cat("TASK-CALLBACK", task_calls, ok, visible, identical(value, 760L), "\\n")
+    return(FALSE)
+  }
+  TRUE
+}, name="native-console-regression")
+731L + 29L
+cat("TASK-AFTER", task_calls, "\\n")''')
+        check(output(seen).count("TASK-CALLBACK 1 TRUE TRUE TRUE") == 1 and "TASK-AFTER 1" in output(seen),
+              "a top-level task callback receives its expression, value and visibility exactly once")
+
+        send(1, 118, 'tryCatch(repeat {}, interrupt=function(e) cat("INTERRUPT-CAUGHT\\n"))\nafter_caught_interrupt <- TRUE')
+        until(lambda e: e["type"] == "busy" and e["value"])
+        time.sleep(0.15)
+        send(3)
+        seen = top(5)
+        check("INTERRUPT-CAUGHT" in output(seen)
+              and sum(e["type"] == "completed" and e["commandId"] == 118 and e["status"] == "interrupted" for e in seen) == 1,
+              "Stop remains typed interruption even when R code catches the interrupt condition")
+        seen = submit(119, 'cat("CAUGHT-SAFE", exists("after_caught_interrupt"), bindingIsLocked(".Last.value",baseenv()), syntax_prefix, "\\n")')
+        check("CAUGHT-SAFE FALSE TRUE 17" in output(seen),
+              "a caught interrupt discards later expressions, restores the binding and retains earlier variables")
+
     try:
         seen = top()
         check(any(event["type"] == "ready" and event["protocol"] == 1 for event in seen), "ready precedes initial top prompt")
@@ -113,6 +234,8 @@ cat("DEFAULT-PACKAGES-AND-LAPACK-READY\\n")''')
         check("CRLF 6" in output(seen), "Windows CRLF source runs unchanged at the editor boundary")
         seen = submit(20, 'cronly <- 1:4\rcat("CRONLY", sum(cronly), "\\n")\r')
         check("CRONLY 10" in output(seen), "lone CR source normalizes to logical lines")
+        parse_eval_regressions()
+        console_compatibility_regressions()
         seen = submit(1, 'saved <- 42; cat("UTF8: café α 😀\\n")')
         check("UTF8: café α 😀" in output(seen), "UTF-8 console output survives")
 
@@ -174,6 +297,11 @@ cat("DEFAULT-PACKAGES-AND-LAPACK-READY\\n")''')
         until(lambda e: e["type"] == "stopped")
         check(process.wait(timeout=5) == 0, "graceful shutdown")
         check(not (pathlib.Path(working) / "shutdown-followon.txt").exists(), "shutdown during input does not answer a question or run following source")
+        if REQUIRE_PROTECTION_CHECKS:
+            markers = re.findall(r"STATSDIRECT_PROTECTION_CHECK_OK top=(-?\d+)", "".join(raw))
+            check(markers and all(int(top) == 0 for top in markers),
+                  "the diagnostic worker reports balanced, nonnegative protection-stack boundaries throughout the session")
+            print(f"Protection boundaries checked: {len(markers)}; all top=0", flush=True)
         print(f"{checks} native checks passed", flush=True)
     finally:
         if process.poll() is None:

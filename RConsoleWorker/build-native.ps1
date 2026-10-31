@@ -1,7 +1,8 @@
 param(
     [string] $RHome = $env:R_HOME,
     [string] $OutputDirectory = (Join-Path $PSScriptRoot 'bin'),
-    [string] $Zig = $env:STATSDIRECT_ZIG
+    [string] $Zig = $env:STATSDIRECT_ZIG,
+    [switch] $ProtectionChecks
 )
 $ErrorActionPreference = 'Stop'
 function FileSha256([string] $Path) {
@@ -32,7 +33,7 @@ $object = Join-Path $output 'console.obj'
 $stamp = Join-Path $output 'build.json'
 $sources = @($source, $manifest, (Join-Path $PSScriptRoot 'console.rc'), $PSCommandPath,
     (Join-Path $RHome 'include\Rversion.h'), (Join-Path $RHome 'include\R_ext\RStartup.h'))
-$fingerprint = ($sources | ForEach-Object { (FileSha256 $_) }) -join ':'
+$fingerprint = (($sources | ForEach-Object { (FileSha256 $_) }) -join ':') + ':protectionChecks=' + [bool]$ProtectionChecks
 if ((Test-Path -LiteralPath $exe) -and (Test-Path -LiteralPath $stamp)) {
     $previous = Get-Content -LiteralPath $stamp -Raw | ConvertFrom-Json
     if ($previous.fingerprint -eq $fingerprint -and $previous.rHome -eq $RHome -and
@@ -50,7 +51,8 @@ $installation = if (Test-Path -LiteralPath $vswhere) {
 # The import-library ABI does not depend on the chosen C compiler.
 if ($installation) {
     $developer = Join-Path $installation 'Common7\Tools\VsDevCmd.bat'
-    $command = 'call "{0}" -no_logo -arch=x64 -host_arch=x64 && cl /nologo /TC /std:c11 /W4 /O2 /MD /utf-8 /DUNICODE /D_UNICODE /I"{1}\include" "{2}" /Fo"{3}" /Fe"{4}" /link /STACK:16777216 /MANIFEST:EMBED /MANIFESTINPUT:"{5}"' -f $developer, $RHome, $source, $object, $exe, $manifest
+    $diagnosticDefine = if ($ProtectionChecks) { '/DSTATSDIRECT_R_PROTECTION_CHECKS' } else { '' }
+    $command = 'call "{0}" -no_logo -arch=x64 -host_arch=x64 && cl /nologo /TC /std:c11 /W4 /O2 /MD /utf-8 /DUNICODE /D_UNICODE {6} /I"{1}\include" "{2}" /Fo"{3}" /Fe"{4}" /link /STACK:16777216 /MANIFEST:EMBED /MANIFESTINPUT:"{5}"' -f $developer, $RHome, $source, $object, $exe, $manifest, $diagnosticDefine
     & $env:ComSpec /d /s /c $command
 } elseif (Test-Path -LiteralPath $Zig) {
     $res = Join-Path $output 'console.res'
@@ -58,7 +60,9 @@ if ($installation) {
     try {
         & $Zig rc /fo $res 'console.rc'
         if ($LASTEXITCODE) { throw "Manifest resource compilation failed ($LASTEXITCODE)." }
-        & $Zig cc -target x86_64-windows-gnu -std=c11 -O2 -Wall -Wextra -municode "-I$RHome\include" $source $res -o $exe '-Wl,--stack,16777216'
+        $diagnosticArguments = @()
+        if ($ProtectionChecks) { $diagnosticArguments = @('-DSTATSDIRECT_R_PROTECTION_CHECKS') }
+        & $Zig cc -target x86_64-windows-gnu -std=c11 -O2 -Wall -Wextra -municode @diagnosticArguments "-I$RHome\include" $source $res -o $exe '-Wl,--stack,16777216'
     } finally { Pop-Location }
 } else {
     throw 'Install Visual Studio C++ tools, or run RConsoleWorker/fetch-native-tools.ps1 for the verified portable Zig compiler. RConsoleZig / STATSDIRECT_ZIG can select an existing compiler.'
@@ -68,5 +72,6 @@ if ($LASTEXITCODE) { throw "Native helper build failed ($LASTEXITCODE)." }
     rHome = $RHome
     fingerprint = $fingerprint
     executableSha256 = (FileSha256 $exe)
+    protectionChecks = [bool]$ProtectionChecks
 } | ConvertTo-Json | Set-Content -LiteralPath $stamp -Encoding UTF8
 Write-Output $exe
