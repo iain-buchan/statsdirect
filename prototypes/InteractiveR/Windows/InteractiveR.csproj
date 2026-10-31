@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.17763.0</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>StatsDirect.InteractiveR.Prototype</AssemblyName>
+    <RootNamespace>StatsDirect.InteractiveR</RootNamespace>
+    <Version>0.0.0</Version>
+    <Description>Isolated interactive R console prototype; not a StatsDirect release</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4258.31" />
+    <Content Include="../Web/**" Link="Web/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../Native/bin/StatsDirect.RConsole.Native.exe" Link="StatsDirect.RConsole.Native.exe" CopyToOutputDirectory="PreserveNewest" Condition="Exists('../Native/bin/StatsDirect.RConsole.Native.exe')" />
+  </ItemGroup>
+  <Target Name="RemoveUnusedWebView2WpfReference" BeforeTargets="ResolveAssemblyReferences">
+    <ItemGroup><Reference Remove="@(Reference)" Condition="'%(Reference.Filename)' == 'Microsoft.Web.WebView2.Wpf'" /></ItemGroup>
+  </Target>
+</Project>
