@@ -48,8 +48,10 @@
         case 'inputEcho': {
           const source = text(event.text), origin = text(event.origin) || 'console';
           this.entries.push({kind: 'input', text: source, prompt: typeof event.prompt === 'string' ? event.prompt : '> ', origin, commandId: event.commandId || null});
+          // Recall submitted Script/Continue in R batches too, without
+          // duplicating their existing source in the editable Script.
+          if (['console', 'script', 'continueInR'].includes(origin) && source.trim()) this.remember(source);
           if (origin === 'console' && source.trim()) {
-            this.remember(source);
             this.script += (this.script && !this.script.endsWith('\n') ? '\n' : '') + source + (source.endsWith('\n') ? '' : '\n');
           }
           this.trim(); break;

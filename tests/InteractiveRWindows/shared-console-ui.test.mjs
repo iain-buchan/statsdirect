@@ -86,7 +86,7 @@ test('readline answers never enter script or command history; console commands r
   emit('inputEcho', {text: 'Alice', origin: 'input', prompt: 'Name? '});
   emit('inputEcho', {text: '', origin: 'input', prompt: 'Anything else? '});
   assert.equal(model.script, source + 'mean(before)\n');
-  assert.deepEqual(model.history, ['mean(before)']);
+  assert.deepEqual(model.history, [source, 'mean(before)']);
   assert.equal(model.navigateHistory(-1, 'draft <- 3'), 'mean(before)');
   assert.equal(model.navigateHistory(1, 'ignored'), 'draft <- 3');
 });

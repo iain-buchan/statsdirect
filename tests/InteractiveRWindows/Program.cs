@@ -134,6 +134,8 @@ internal static partial class Program
         Check((string)Get(host.Document, "LearningScript")! == "" && !(bool)Get(host.Document, "LearningRunning")! && (string)Get(host.Document, "LearningOutput")! == "",
             "a new R session has blank source and runs no user code automatically");
         Check(Get(host.View, "Session") == null, "opening a blank R session does not launch R before first use");
+        await CheckStartupHistory(main);
+        host.Document.Activate();
         await host.Start(); RememberWorker(host);
         await CheckCommandsAndPrompts(host);
         await CheckStopping(host);
