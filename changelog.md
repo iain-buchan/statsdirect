@@ -18,7 +18,7 @@ Version 5.3.0 brings an interactive R console into the R script window. Console 
 ### Changed
 - A compact Data info button replaces the trolley icon wherever data information was available. Hover or click to inspect the variables already supplied; current instructions and variable controls retain their original layout.
 - Calculator has a separate section in Analysis immediately before Options. The Tools menu, external program shortcuts and separate R launcher are retired; File > New R session and contextual R actions remain.
-- The R script window runs R through a worker built for one R series, 64-bit R 4.6.x: the newest installed R of that series is used, and when none is installed More > Set up R offers the current one, R 4.6.2, from CRAN. Earlier R releases are no longer accepted by the R window; R's own templates still run with any installed R.
+- The R script window runs R through a worker that takes any 64-bit R from 4.2 (April 2022, the first R for Windows with UTF-8 as its native encoding): the newest such R installed is used, and when none is installed More > Set up R offers the current one, R 4.6.2, from CRAN. R before 4.2 and 32-bit R are not taken by the R window, which says so; R's own templates still run with any installed R. Verified on R 4.6.2 and R 4.2.3.
 
 ### Fixed
 - The Windows R console no longer nests R's DLL REPL inside an incompatible error wrapper, which could underflow R's protection stack and cause intermittent heap corruption during startup. Balanced parsing and evaluation preserve Stop, errors, continuation, completed assignments, printing, warnings and charts.
