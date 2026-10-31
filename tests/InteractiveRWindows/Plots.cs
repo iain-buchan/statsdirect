@@ -42,6 +42,9 @@ internal static partial class Program
         await WaitImages(recipe, 1);
         Check(await recipe.JS("document.images.length===1&&document.images[0].complete&&document.images[0].naturalWidth>0") == "true",
             "Continue in R displays exactly one decoded SVG chart in the actual script window");
+        await recipe.TwoFrames();
+        Check(await recipe.JS("(()=>{const p=document.getElementById('transcript');return p.scrollHeight-p.scrollTop-p.clientHeight<=2})()") == "true",
+            "Continue in R remains at the bottom after its agreement chart decodes and the final input row is laid out");
         await CompareOrdinaryR(recipe, source, plots, "paired-agreement");
         Check(true, "the Continue-in-R SVG exactly matches the final ordinary-R drawing, including caption and mean/limit lines");
         Check(await recipe.JS("document.getElementById('help').disabled===false&&document.getElementById('ai').disabled===false") == "true",

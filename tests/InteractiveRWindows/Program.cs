@@ -141,6 +141,8 @@ internal static partial class Program
         await CheckStopping(host);
         await CheckScriptAndFiles(main, host);
         await CheckPlots(main, host);
+        await CheckScrollFollowing(main);
+        host.Document.Activate();
         await CheckDisplayRecovery(host);
         await CheckDomAndWheel(host);
         await CheckClearOutput(host);

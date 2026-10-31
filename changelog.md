@@ -18,6 +18,7 @@ Version 5.3.0 brings an interactive R console into the R script window. Console 
 - Calculator has a separate section in Analysis immediately before Options. The Tools menu, external program shortcuts and separate R launcher are retired; File > New R session and contextual R actions remain.
 
 ### Fixed
+- The R console follows charts through image loading and input resizing when the reader is at the end; scrolling up, selecting text or holding a chart button preserves the reader's position. Open and Copy remain beneath each chart.
 - Console Up/Down command recall includes code run from Script or Continue in R, including the startup script. Multi-line submissions stay intact and are not appended to Script a second time; opening unexecuted code and answers to R questions do not enter command history.
 - Native report charts copied as SVG carry their labels as positioned vector outlines, matching the reliable R-chart copy in Word's Convert to Shape. Label sizes and rotations survive conversion; the original report and its private clipboard fragment retain their text.
 - The R chart popup keeps its menu alive after closing, preventing a disposed-menu exception when Copy runs. It offers Copy, Save chart as SVG and Save chart as PNG, and targets the selected chart revision even when two cards contain identical pictures. Saved SVGs keep Office-compatible label positions; PNG exports preserve native pixels or render SVG at higher resolution.
