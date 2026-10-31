@@ -18,12 +18,13 @@ completed assignments. Normal printing, warnings, task callbacks and the base
 `.Last.value` binding retain ordinary Console behaviour; its original binding
 lock is restored through `R_ExecWithCleanup`.
 
-The correction is verified against the remaining installed R 4.6.2: 80 native
-checks (81 in the checked build), 92 production-session checks, 121 actual
-Windows Console checks, 1,000 fresh checked-worker startups and 201 application
-adapter startup/restart cycles. All 2,000 standalone and 603 adapter protection
-boundaries remain at zero. R 4.6.1 was removed from this machine and has not been
-retested with the correction. The source fix does not update existing installers.
+The correction is verified against the installed R 4.6.2 by the checks below:
+`test-native.py` (95 native checks, 96 in the checked build), `Tests/Program.cs`
+(the production-session checks) and `tests/InteractiveRWindows`. A soak of fresh
+start-ups and shutdowns, `test-native.py --startups N` against a checked build,
+writes its result to `test-output/soak.json` beside the counts it reports.
+R 4.6.1 was removed from this machine and has not been retested with the
+correction. The source fix does not update existing installers.
 
 The protocol, interrupt handling and display-list plot capture were first tested
 in `prototypes/InteractiveR`. The production session adapter is now
@@ -35,13 +36,18 @@ adapters; the shared toolbar scrolls horizontally in a narrow MDI window.
 
 Build the application project normally. Its build invokes `build-native.ps1` and
 copies the helper beside StatsDirect.exe, including for `dotnet publish`.
-Building requires R development headers plus either Visual Studio's C++ workload
-or the pinned portable Zig compiler. R itself is not redistributed. The default
+Building requires R development headers plus the pinned portable Zig compiler
+(`fetch-native-tools.ps1`), which the build prefers; Visual Studio's C++ compiler builds
+the worker too when Zig is absent, with two compatibility flags the script passes for
+R 4.6's headers (`msvc-rconfig.h`). R itself is not redistributed. The default
 headers are taken from the latest installed R under Program Files; set
-`RConsoleRHome` or `R_HOME` to choose another installation. Runtime patch versions
+`RConsoleRHome` or `R_HOME` to choose another installation; the series those
+headers belong to must be the one pinned in `target-r-series.txt`, so that a newer
+R on the build machine cannot change what a release accepts. Runtime patch versions
 in that same major/minor series are supported; another minor version is refused
-before its startup structure is used. Current verification covers R 4.6.1 and
-4.6.2, whose public startup headers are byte-identical.
+before its startup structure is used. Current verification covers R 4.6.2; R 4.6.1
+has byte-identical public startup headers but was last tested before the
+protection-stack correction.
 
 ```powershell
 # Optional; downloads and checks the compiler, without installing it globally.
@@ -60,7 +66,7 @@ with the other application binaries when installers are eventually built.
 Run the real-R native tests after building:
 
 ```powershell
-python RConsoleWorker\test-native.py 'C:\Program Files\R\R-4.6.2'
+python RConsoleWorker\test-native.py                    # the newest installed R; or name an R home first
 dotnet run --project RConsoleWorker\Tests -c Release -- RConsoleWorker\bin\StatsDirect.RConsole.Native.exe 'C:\Program Files\R\R-4.6.2'
 ```
 

@@ -12,13 +12,69 @@ import threading
 import time
 
 ROOT = pathlib.Path(__file__).resolve().parent
-RHOME = sys.argv[1] if len(sys.argv) > 1 else r"C:\Program Files\R\R-4.6.1"
-REQUIRE_PROTECTION_CHECKS = "--require-protection-checks" in sys.argv[2:]
-helper_args = [arg for arg in sys.argv[2:] if arg != "--require-protection-checks"]
+
+
+def newest_installed_r():
+    """The newest R under Program Files, as the build script takes its headers; the first argument chooses another."""
+    base = pathlib.Path(os.environ.get("ProgramFiles", r"C:\Program Files")) / "R"
+    homes = [home for home in base.glob("R-*") if (home / "bin" / "x64" / "R.dll").exists()]
+    if not homes:
+        raise SystemExit("No 64-bit R is installed under " + str(base) + "; pass the R home as the first argument.")
+    return str(max(homes, key=lambda home: tuple(int(part) for part in home.name[2:].split(".") if part.isdigit())))
+
+
+arguments = sys.argv[1:]
+RHOME = arguments.pop(0) if arguments and not arguments[0].startswith("--") else newest_installed_r()
+REQUIRE_PROTECTION_CHECKS = "--require-protection-checks" in arguments
+STARTUPS = int(arguments[arguments.index("--startups") + 1]) if "--startups" in arguments else 0
+helper_args = [arg for i, arg in enumerate(arguments) if not arg.startswith("--") and (i == 0 or arguments[i - 1] != "--startups")]
 if len(helper_args) > 1:
-    raise SystemExit("Usage: test-native.py [R-home] [native-helper] [--require-protection-checks]")
+    raise SystemExit("Usage: test-native.py [R-home] [native-helper] [--require-protection-checks] [--startups N]")
 HELPER = pathlib.Path(helper_args[0]).resolve() if helper_args else ROOT / "bin" / "StatsDirect.RConsole.Native.exe"
 checks = 0
+
+
+def soak(startups):
+    """Fresh starts and shutdowns of the worker, as the heap corruption the protection checks guard against showed only over
+    many of them: each must reach its top prompt, stop on request with exit code 0 and, in a checked build, report every
+    protection boundary at zero.  The result is written beside the test output for the README to cite."""
+    environment = os.environ.copy()
+    environment.pop("LC_ALL", None)
+    environment.pop("LC_CTYPE", None)
+    boundaries = 0
+    with tempfile.TemporaryDirectory(prefix="native-r-soak-", dir=ROOT / "bin") as working:
+        for i in range(startups):
+            child = subprocess.Popen([str(HELPER), "--r-home", RHOME, "--working-directory", working],
+                                     stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                     creationflags=subprocess.CREATE_NO_WINDOW, env=environment)
+            ready = False
+            for line in iter(child.stdout.readline, b""):
+                event = json.loads(line.decode("utf-8"))
+                if event["type"] == "prompt" and event["kind"] == "top":
+                    ready = True
+                    break
+            if not ready:
+                raise SystemExit("start-up %d of %d did not reach the top prompt" % (i + 1, startups))
+            child.stdin.write(struct.pack("<I", 1) + bytes([4]))
+            child.stdin.flush()
+            _, errors = child.communicate(timeout=30)
+            markers = re.findall(r"STATSDIRECT_PROTECTION_CHECK_OK top=(-?\d+)", errors.decode("utf-8", errors="replace"))
+            if child.returncode != 0 or any(int(top) != 0 for top in markers):
+                raise SystemExit("start-up %d of %d: exit %d, protection markers %s" % (i + 1, startups, child.returncode, markers))
+            if REQUIRE_PROTECTION_CHECKS and not markers:
+                raise SystemExit("start-up %d of %d reported no protection markers; build the worker with -ProtectionChecks" % (i + 1, startups))
+            boundaries += len(markers)
+    result = {"startups": startups, "protectionBoundaries": boundaries, "rHome": RHOME, "helper": str(HELPER),
+              "helperSha256": __import__("hashlib").sha256(HELPER.read_bytes()).hexdigest().upper(), "when": time.strftime("%Y-%m-%d %H:%M")}
+    out = ROOT / "test-output"
+    out.mkdir(exist_ok=True)
+    (out / "soak.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
+    print("PASS %d fresh worker start-ups and shutdowns, %d protection boundaries at zero; %s" % (startups, boundaries, out / "soak.json"), flush=True)
+
+
+if STARTUPS:
+    soak(STARTUPS)
+    raise SystemExit(0)
 
 
 def check(value, description):
@@ -291,6 +347,34 @@ cat("DEFAULT-PACKAGES-AND-LAPACK-READY\\n")''')
         send(2, request["requestId"], "typed answer")
         check("CONSOLE-STDIN typed answer" in output(top()), "R console stdin routes through a genuine input callback")
         submit(16, "")
+        # 5.3.0 review: a submission is parsed once, so a long script costs time in proportion to its length, and the functions
+        # it defines share one source reference rather than each keeping a copy of the text that follows them
+        long_script = "\n".join("v%d <- %d" % (i, i) for i in range(4000)) + '\ncat("LONG-SCRIPT", v3999, "\\n")'
+        started_long = time.monotonic()
+        seen = submit(30, long_script)
+        long_seconds = time.monotonic() - started_long
+        check("LONG-SCRIPT 3999" in output(seen) and long_seconds < 2.5, "a 4,000-line script runs in proportion to its length (%.2f s)" % long_seconds)
+        seen = submit(31, 'f_one <- function() 1\nf_two <- function() 2\ncat("SHARED-SRCFILE", identical(attr(attr(f_one, "srcref"), "srcfile"), attr(attr(f_two, "srcref"), "srcfile")), "\\n")')
+        check("SHARED-SRCFILE TRUE" in output(seen), "functions defined in one submission share one source reference")
+        seen = submit(36, 'syntax_before <- 5\nsyntax_bad_two <- )\nsyntax_after_two <- TRUE')
+        check(any(e["type"] == "completed" and e["status"] == "error" for e in seen), "a syntax error in a whole-parsed submission still reports error completion")
+        seen = submit(37, 'cat("PREFIX-STILL-RUNS", syntax_before, exists("syntax_after_two"), "\\n")')
+        check("PREFIX-STILL-RUNS 5 FALSE" in output(seen), "the complete expressions before a syntax error still run, and those after it do not")
+        # a global calling handler installed by one submission fires in the next, as in R's own console
+        submit(32, 'globalCallingHandlers(warning = function(w) cat("GLOBAL-HANDLER-SAW\\n"))')
+        seen = submit(33, 'warning("global handler check")')
+        check("GLOBAL-HANDLER-SAW" in output(seen), "a global calling handler installed by one submission still fires in the next")
+        submit(34, 'globalCallingHandlers(NULL)')
+        # ~ means what it means in Rscript and Rgui: R's own home, the Documents folder by default
+        seen = submit(35, 'cat("TILDE", path.expand("~"), "\\n")')
+        rscript = subprocess.run([str(pathlib.Path(RHOME) / "bin" / "x64" / "Rscript.exe"), "--vanilla", "-e", 'cat(path.expand("~"))'],
+                                 capture_output=True, text=True, env=child_environment, timeout=60)
+        check(("TILDE " + rscript.stdout.strip()) in output(seen), "~ expands to the folder Rscript expands it to: " + rscript.stdout.strip())
+        # --version names the R series the worker was built for, which the host uses to choose an installed R
+        version = subprocess.run([str(HELPER), "--version"], capture_output=True, text=True, timeout=30)
+        ready_version = next(e["rVersion"] for e in all_events if e["type"] == "ready")
+        check(version.returncode == 0 and re.fullmatch(r"\d+\.\d+", version.stdout.strip()) is not None and ready_version.startswith(version.stdout.strip() + "."),
+              "--version reports the R series the worker takes: " + version.stdout.strip())
         send(1, 17, 'shutdown_answer <- readline("Closing: "); writeLines("BAD", "shutdown-followon.txt")')
         until(lambda e: e["type"] == "prompt" and e["kind"] == "input")
         send(4)

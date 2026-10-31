@@ -67,6 +67,7 @@ static void (*r_end)(int);
 static int (*r_ga_initapp)(int, char **);
 static void (*r_readconfig)(void);
 static char *(*r_version)(void);
+static char *(*r_getruser)(void);
 static int *r_userbreak;
 
 static void write_bytes(const char *s, size_t n)
@@ -401,11 +402,28 @@ static size_t consumed_source(SEXP expressions, const char *text, size_t length)
     return offset;
 }
 
+/* Global calling handlers that a command installs live in the toplevel context R_ToplevelExec made for that command and
+ * discarded with it, while R's own record of them persists: they are re-armed from that record before the next command,
+ * as R's REPL keeps them.  Not under try(): globalCallingHandlers() refuses to run with a handler on the stack, and try()
+ * puts one there; the stack is empty at the start of a command, so nothing here can fail. */
+static void rearm_global_handlers(void)
+{
+    static const char code[] =
+        "local({ h <- globalCallingHandlers(); if (length(h)) { globalCallingHandlers(NULL); globalCallingHandlers(h) } })";
+    SEXP text = r_protect(r_scalarstring(r_utf8char(code, CE_UTF8)));
+    ParseStatus status;
+    SEXP expressions = r_protect(r_parse(text, -1, &status, *r_nil));
+    if (status == PARSE_OK && r_length(expressions)) r_eval(r_vectorat(expressions, 0), *r_base);
+    r_unprotect(2);
+}
+
 static void evaluate_command(void *unused)
 {
     (void)unused;
     prompt_type = 1;
     if (!read_request(console_prompt("prompt", "> "), NULL, 0, 0)) return;
+    rearm_global_handlers();
+    int incremental = 0;
     while (source_offset < source_length) {
         process_control();
         SEXP chars = r_protect(r_utf8char(source + source_offset, CE_UTF8));
@@ -414,30 +432,45 @@ static void evaluate_command(void *unused)
         SEXP call = r_protect(r_lang3(r_install("srcfilecopy"), filename, text));
         SEXP srcfile = r_protect(r_eval(call, *r_base));
         ParseStatus status;
-        SEXP expressions = r_protect(r_parse(text, 1, &status, srcfile));
+        /* The whole remaining text is parsed once, as source() parses a file: work in proportion to the text, and one
+         * source reference shared by the expressions.  Only text that does not parse whole goes one expression at a time,
+         * so that the complete expressions before a syntax error or an unfinished one still run first. */
+        SEXP expressions = r_protect(r_parse(text, incremental ? 1 : -1, &status, srcfile));
+        int whole = !incremental && (status == PARSE_OK || status == PARSE_NULL || status == PARSE_EOF);
+        if (!incremental && !whole) {
+            incremental = 1;
+            r_unprotect(1);
+            expressions = r_protect(r_parse(text, 1, &status, srcfile));
+        }
         if (status == PARSE_INCOMPLETE) {
             r_unprotect(6);
             prompt_type = 2;
             if (!read_request(console_prompt("continue", "+ "), NULL, 0, 0)) return;
+            incremental = 0;   /* the continuation may complete the text */
             continue;
         }
         if (status != PARSE_OK && status != PARSE_NULL && status != PARSE_EOF)
             r_error("%s", *r_parse_error ? r_parse_error : "Invalid R syntax.");
-        if (r_length(expressions)) {
-            source_offset += consumed_source(expressions, source + source_offset, source_length - source_offset);
-            set_busy(1);
-            SEXP value = r_protect(r_eval(r_vectorat(expressions, 0), *r_global));
-            /* R's REPL updates this base binding directly. Use public binding
-             * APIs and restore its original lock even if an R error unwinds. */
-            LastValueUpdate update = { r_install(".Last.value"), value, 0 };
-            update.locked = r_bindinglocked(update.symbol, *r_base);
-            r_withcleanup(assign_last_value, &update, restore_last_value_lock, &update);
-            Rboolean visible = *r_visible;
-            if (visible) r_print(value);
-            r_printwarnings();
-            r_toplevelhandlers(r_vectorat(expressions, 0), value, TRUE, visible);
-            r_unprotect(1);
-            set_busy(0);
+        R_xlen_t count = r_length(expressions);
+        if (count) {
+            if (whole) source_offset = source_length;
+            else source_offset += consumed_source(expressions, source + source_offset, source_length - source_offset);
+            for (R_xlen_t i = 0; i < count && !command_interrupted; ++i) {
+                if (i) process_control();
+                set_busy(1);
+                SEXP value = r_protect(r_eval(r_vectorat(expressions, i), *r_global));
+                /* R's REPL updates this base binding directly. Use public binding
+                 * APIs and restore its original lock even if an R error unwinds. */
+                LastValueUpdate update = { r_install(".Last.value"), value, 0 };
+                update.locked = r_bindinglocked(update.symbol, *r_base);
+                r_withcleanup(assign_last_value, &update, restore_last_value_lock, &update);
+                Rboolean visible = *r_visible;
+                if (visible) r_print(value);
+                r_printwarnings();
+                r_toplevelhandlers(r_vectorat(expressions, i), value, TRUE, visible);
+                r_unprotect(1);
+                set_busy(0);
+            }
         } else source_offset = source_length;
         r_unprotect(6);
         /* A user's interrupt handler can return normally. Stop still cancels
@@ -446,6 +479,15 @@ static void evaluate_command(void *unused)
     }
     prompt_type = 1;
     completed();
+}
+
+/* The R series this worker was built for, such as "4.6": patch releases of a series share its startup structure and are
+ * accepted; another series is refused before that structure is used. */
+static void compiled_series(char *buffer, size_t size)
+{
+    snprintf(buffer, size, "%s.%s", R_MAJOR, R_MINOR);
+    char *patch = strrchr(buffer, '.');
+    if (patch) *patch = '\0';
 }
 
 static char *utf8(const wchar_t *value)
@@ -466,6 +508,11 @@ static FARPROC required(HMODULE dll, const char *name)
 
 int wmain(int argc, wchar_t **argv)
 {
+    if (argc == 2 && !wcscmp(argv[1], L"--version")) {
+        /* the host asks which R series the worker takes, to choose that series among the installed Rs */
+        char series[32]; compiled_series(series, sizeof(series));
+        printf("%s\n", series); return 0;
+    }
     const wchar_t *rhome = NULL, *working = NULL;
     for (int i = 1; i + 1 < argc; i += 2) {
         if (!wcscmp(argv[i], L"--r-home")) rhome = argv[i + 1];
@@ -526,13 +573,10 @@ int wmain(int argc, wchar_t **argv)
     LOAD(r_checkinterrupt, "R_CheckUserInterrupt"); LOAD(r_end, "Rf_endEmbeddedR");
     HMODULE graphapp = GetModuleHandleW(L"Rgraphapp.dll");
     r_ga_initapp = (void *)required(graphapp, "GA_initapp");
-    LOAD(r_readconfig, "readconsolecfg"); LOAD(r_version, "getDLLVersion");
+    LOAD(r_readconfig, "readconsolecfg"); LOAD(r_version, "getDLLVersion"); LOAD(r_getruser, "getRUser");
     r_userbreak = (int *)required(dll, "UserBreak");
-    char compiled_version[32], compiled_minor[32];
-    snprintf(compiled_version, sizeof(compiled_version), "%s.%s", R_MAJOR, R_MINOR);
-    snprintf(compiled_minor, sizeof(compiled_minor), "%s", compiled_version);
-    char *patch = strrchr(compiled_minor, '.');
-    if (patch) *patch = '\0';
+    char compiled_minor[32];
+    compiled_series(compiled_minor, sizeof(compiled_minor));
     /* Use only the same major/minor startup ABI. Patch releases in this series
      * retain RSTART_VERSION and structRstart; both installed 4.6 patches are tested.
      * Do not assume a future minor version is compatible with these headers. */
@@ -546,8 +590,10 @@ int wmain(int argc, wchar_t **argv)
     structRstart params;
     r_starttime(); r_defparams(&params, RSTART_VERSION);
     char *home = utf8(rhome);
-    const wchar_t *user = _wgetenv(L"USERPROFILE");
-    char *user_home = utf8(user ? user : rhome);
+    /* The user's home as R's own front ends take it (R_USER, HOME, else the Documents folder), so that ~ means here
+     * what it means in Rscript and Rgui; the string lives as long as R does. */
+    char *user_home = r_getruser();
+    if (!user_home) { const wchar_t *user = _wgetenv(L"USERPROFILE"); user_home = utf8(user ? user : rhome); }
     params.rhome = home; params.home = user_home; params.CharacterMode = LinkDLL;
     params.R_Quiet = 1; params.R_Interactive = 1; params.R_NoEcho = 0;
     params.LoadSiteFile = params.LoadInitFile = 0; params.NoRenviron = 1;

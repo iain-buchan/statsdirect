@@ -10,7 +10,7 @@ You will need:
 * A trial or purchased license for [SpreadsheetGear for Windows](https://www.spreadsheetgear.com/) that allows you to use Hotfix 9.3.84, the version this project references, or later. Versions before 9.3.56 are not compatible with .Net 10.
 * The [Microsoft Edge WebView2 Evergreen Runtime](https://developer.microsoft.com/en-us/microsoft-edge/webview2/) for reports, and its x64 standalone installer in `DownloadedBinaries` when building setup.
 * [A current installer executable for the .Net 10 Windows Desktop runtime](DownloadedBinaries/README.md), to be included in the bundled executable installer.
-* 64-bit R development headers and a C compiler for the interactive R worker. Visual Studio's C++ workload is supported; alternatively run `RConsoleWorker/fetch-native-tools.ps1` for the verified portable Zig compiler. Nothing is installed globally by that script. See [RConsoleWorker/README.md](RConsoleWorker/README.md) for explicit header/compiler selection and runtime compatibility.
+* 64-bit R development headers and a C compiler for the interactive R worker. Run `RConsoleWorker/fetch-native-tools.ps1` for the verified portable Zig compiler, which the build prefers; Visual Studio's C++ compiler builds the worker too when Zig is absent, with two compatibility flags the script passes for R 4.6's headers. Nothing is installed globally by that script. See [RConsoleWorker/README.md](RConsoleWorker/README.md) for explicit header/compiler selection and runtime compatibility.
 
 You may want:
 * An IDE capable of working with C# and MSBuild, such as Visual Studio 2026 or Visual Studio Code.
@@ -99,8 +99,9 @@ The R Script window uses the shared offline `Assets/RConsole` page, with Console
 and Script views of one persistent R workspace. The native worker is built and
 copied by the application project; a separate R installation supplies R.dll. The
 Windows application never loads that DLL into its own process. The current
-worker is verified with 64-bit R 4.6.1 and 4.6.2, and requires the runtime to match
-the major/minor header series it was built against. More > Set up R opens the
+worker is verified with 64-bit R 4.6.2 and requires the runtime to match the
+major/minor header series it was built against, pinned in `RConsoleWorker/target-r-series.txt`;
+R 4.6.1 shares those headers but was last tested before the protection-stack correction. More > Set up R opens the
 existing official-R installation flow; R is not bundled into StatsDirect.
 
 Run `tests/InteractiveRWindows`, `tests/WindowsShell` and `tests/Learning` after
