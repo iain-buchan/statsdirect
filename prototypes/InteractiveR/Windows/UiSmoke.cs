@@ -15,6 +15,7 @@ internal sealed partial class MainForm
         string? failure = null;
         string? screenshot = null;
         JsonElement? browserMetrics = null;
+        object? recipeRegression = null;
         var elapsed = Stopwatch.StartNew();
         try
         {
@@ -141,6 +142,34 @@ internal sealed partial class MainForm
             var lastPlot = history.Last(item => item.TryGetProperty("type", out var type) && type.GetString() == "plot");
             var resolved = FindPlot(firstPlot.GetProperty("plotId").GetString()!, firstPlot.GetProperty("revision").GetInt64());
             await Check("earlier plot actions resolve the original revision's SVG asset", resolved.GetProperty("path").GetString() == firstPlot.GetProperty("path").GetString() && resolved.GetProperty("path").GetString() != lastPlot.GetProperty("path").GetString());
+
+            // Use the actual Continue-in-R recipe as one Script submission. Its
+            // plot/abline/abline/mtext calls must not become four partial charts.
+            int recipeStart = history.Count;
+            int imagesBeforeRecipe = JsonSerializer.Deserialize<int>(await browser.CoreWebView2.ExecuteScriptAsync("document.images.length"));
+            string recipe = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "Fixtures", "TPaired.R"));
+            await RunThroughUi(recipe, "script");
+            await Wait(() => nativeState == "ready" && history.Skip(recipeStart).Any(item => item.TryGetProperty("type", out var type) && type.GetString() == "commandFinished"), "the paired-t recipe did not finish");
+            var recipeEvents = history.Skip(recipeStart).ToArray();
+            bool EventType(JsonElement item, string name) => item.TryGetProperty("type", out var type) && type.GetString() == name;
+            int recipePlotCount = recipeEvents.Count(item => EventType(item, "plot"));
+            string recipeOutput = string.Concat(recipeEvents.Where(item => EventType(item, "output")).Select(item => item.GetProperty("text").GetString()));
+            int firstRecipePlot = Array.FindIndex(recipeEvents, item => EventType(item, "plot"));
+            int lastRecipeOutput = Array.FindLastIndex(recipeEvents, item => EventType(item, "output"));
+            bool numericOutputBeforePlot = recipeOutput.Contains("Mean of differences =", StringComparison.Ordinal) && recipeOutput.Contains("95% Limits of agreement =", StringComparison.Ordinal) && firstRecipePlot > lastRecipeOutput;
+            recipeRegression = new { fixture = "tests/RScript/examples/TPaired.R", completedPlotEvents = recipePlotCount, numericOutputBeforePlot, firstRecipePlot, lastRecipeOutput, output = recipeOutput, eventTypes = recipeEvents.Select(item => item.GetProperty("type").GetString()).ToArray() };
+            await Check("the full paired-t R recipe emits one completed chart after its numerical output", recipePlotCount == 1 && numericOutputBeforePlot);
+            var recipeImageWait = Stopwatch.StartNew();
+            int imagesAfterRecipe;
+            while (true)
+            {
+                imagesAfterRecipe = JsonSerializer.Deserialize<int>(await browser.CoreWebView2.ExecuteScriptAsync("document.images.length"));
+                if (imagesAfterRecipe >= imagesBeforeRecipe + 1 && await browser.CoreWebView2.ExecuteScriptAsync("[...document.images].every(i=>i.complete&&i.naturalWidth>0)") == "true") break;
+                if (recipeImageWait.ElapsedMilliseconds > 12000) throw new TimeoutException("The paired-t recipe's SVG preview did not load");
+                await Task.Delay(40);
+            }
+            recipeRegression = new { fixture = "tests/RScript/examples/TPaired.R", completedPlotEvents = recipePlotCount, imagesAdded = imagesAfterRecipe - imagesBeforeRecipe, numericOutputBeforePlot };
+            await Check("the paired-t Script run adds exactly one real WebView chart image", imagesAfterRecipe == imagesBeforeRecipe + 1);
             screenshot = Path.ChangeExtension(Path.GetFullPath(options.UiSmokeResult!), ".png");
             browserMetrics = JsonSerializer.Deserialize<JsonElement>(await browser.CoreWebView2.ExecuteScriptAsync("({width:innerWidth,height:innerHeight,devicePixelRatio,codeFont:getComputedStyle(document.getElementById('console-input')).fontSize})"));
             await browser.CoreWebView2.ExecuteScriptAsync("(()=>{const pane=document.getElementById('transcript');pane.scrollTop=pane.scrollHeight})()");
@@ -160,7 +189,7 @@ internal sealed partial class MainForm
         {
             string resultPath = Path.GetFullPath(options.UiSmokeResult!);
             Directory.CreateDirectory(Path.GetDirectoryName(resultPath)!);
-            await File.WriteAllTextAsync(resultPath, JsonSerializer.Serialize(new { passed = failure is null, elapsedSeconds = elapsed.Elapsed.TotalSeconds, checks, failure, screenshot, browserMetrics, hostDpi = DeviceDpi, browserZoom = browser.ZoomFactor, workingDirectory = options.WorkingDirectory }, new JsonSerializerOptions { WriteIndented = true }));
+            await File.WriteAllTextAsync(resultPath, JsonSerializer.Serialize(new { passed = failure is null, elapsedSeconds = elapsed.Elapsed.TotalSeconds, checks, failure, recipeRegression, screenshot, browserMetrics, hostDpi = DeviceDpi, browserZoom = browser.ZoomFactor, workingDirectory = options.WorkingDirectory }, new JsonSerializerOptions { WriteIndented = true }));
             Environment.ExitCode = failure is null ? 0 : 1;
             Close();
         }

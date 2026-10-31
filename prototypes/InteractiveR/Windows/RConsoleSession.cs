@@ -348,7 +348,14 @@ public sealed class RConsoleSession : IDisposable
           }
           begin <- function() if(!s$capturing) s$serial <- s$serial + 1L
           before <- function() if(!s$capturing) s$snapshot()
-          setHook('before.plot.new', before, 'append'); setHook('plot.new', begin, 'append')
+          # plot.new also starts each panel within mfrow/layout. par('page') distinguishes a new page.
+          s$newBasePage <- FALSE
+          beforeBase <- function() if(!s$capturing) {
+            s$newBasePage <- graphics::par('page')
+            if(s$newBasePage) s$snapshot()
+          }
+          beginBase <- function() if(!s$capturing && isTRUE(s$newBasePage)) begin()
+          setHook('before.plot.new', beforeBase, 'append'); setHook('plot.new', beginBase, 'append')
           setHook('before.grid.newpage', before, 'append'); setHook('grid.newpage', begin, 'append')
           n <- 0L
           device <- function() {

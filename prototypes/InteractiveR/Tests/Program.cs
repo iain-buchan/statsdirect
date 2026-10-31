@@ -1,6 +1,9 @@
 using System.Diagnostics;
+using System.Globalization;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
+using System.Xml.Linq;
 using StatsDirect.InteractiveR;
 
 // These checks use a real installed R, not mocked prompt strings. Every wait has
@@ -65,6 +68,48 @@ async Task stop(int mark)
     JsonElement finished = await events.Wait(mark, IsFinished);
     require(Text(finished, "status") == "interrupted", "Stop must finish as interrupted, not success/error.");
     await events.Wait(mark, IsReady);
+}
+async Task<FreshSubmission> submitFresh(string name, string source, string origin)
+{
+    string folder = Path.Combine(working, name);
+    using var isolated = new RConsoleSession(helper, rHome, folder);
+    var log = new EventLog(); isolated.Event += log.Add; extraLogs.Add(name, log);
+    await isolated.StartAsync();
+    File.WriteAllText(Path.Combine(folder, "submitted.R"), source, new UTF8Encoding(false));
+    File.WriteAllText(Path.Combine(folder, "submission.json"), JsonSerializer.Serialize(new { origin, sourceSha256 = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(Encoding.UTF8.GetBytes(source))) }));
+    int mark = log.Mark;
+    await isolated.SubmitAsync(source, origin);
+    var finished = await log.Wait(mark, IsFinished);
+    require(Text(finished, "status") == "ok", "The complete script failed: " + log.Output(mark));
+    await log.Wait(mark, IsReady);
+    var submitted = log.Slice(mark);
+    require(submitted.Count(e => Type(e) == "commandAccepted") == 1 && submitted.Count(IsFinished) == 1, "One source submission was split into multiple host commands.");
+    require(submitted.Single(e => Type(e) == "inputEcho").GetProperty("text").GetString() == source, "The submitted source was changed by the host.");
+    return new(folder, log.Output(mark), submitted.Where(e => Type(e) == "plot").ToArray());
+}
+async Task compareFinalSvg(FreshSubmission submitted)
+{
+    // Direct R writes its final page(s) only after the real source has run. This
+    // verifies outlined caption glyphs and all reference-line geometry, without
+    // depending on Cairo retaining literal text nodes in its SVG output.
+    string Q(string value) => JsonSerializer.Serialize(value.Replace('\\', '/'));
+    string source = $"grDevices::svg({Q(Path.Combine(submitted.Folder, "reference-%03d.svg"))}); source({Q(Path.Combine(submitted.Folder, "submitted.R"))}, encoding='UTF-8'); grDevices::dev.off()";
+    var start = new ProcessStartInfo(Path.Combine(rHome, "bin", "x64", "Rscript.exe"))
+    {
+        WorkingDirectory = submitted.Folder, UseShellExecute = false, CreateNoWindow = true,
+        RedirectStandardOutput = true, RedirectStandardError = true
+    };
+    start.ArgumentList.Add("--vanilla"); start.ArgumentList.Add("--encoding=UTF-8"); start.ArgumentList.Add("-e"); start.ArgumentList.Add(source);
+    foreach (string name in start.Environment.Keys.Where(name => name.StartsWith("LC_", StringComparison.Ordinal)).ToArray()) start.Environment.Remove(name);
+    using var process = Process.Start(start)!;
+    var output = process.StandardOutput.ReadToEndAsync(); var error = process.StandardError.ReadToEndAsync();
+    try { await process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(30)); }
+    catch (TimeoutException) { process.Kill(entireProcessTree: true); throw; }
+    require(process.ExitCode == 0, "Direct R reference rendering failed: " + await error + await output);
+    string[] expected = Directory.GetFiles(submitted.Folder, "reference-*.svg").Order(StringComparer.Ordinal).ToArray();
+    require(expected.Length == submitted.Plots.Length, $"Direct R wrote {expected.Length} complete pages; the console published {submitted.Plots.Length} plot events.");
+    for (int index = 0; index < expected.Length; index++)
+        require(CanonicalSvg(File.ReadAllText(expected[index])) == CanonicalSvg(File.ReadAllText(Text(submitted.Plots[index], "path"))), $"Console plot {index + 1} differs from the final ordinary-R drawing (including caption and reference lines).");
 }
 
 await check("start: real interactive R and persistent assignments", async () =>
@@ -234,6 +279,45 @@ await check("Script and Console use the same workspace", async () =>
     var result = await run("cat('SHARED=', script_value, '\\n', sep='')");
     require(result.Output.Contains("SHARED=16"), "Script and Console are using different R workspaces.");
 });
+string repository = Path.GetFullPath(Path.Combine(root, "../.."));
+string pairedExample = File.ReadAllText(Path.Combine(repository, "tests", "RScript", "examples", "TPaired.R"));
+foreach (string origin in new[] { "continueInR", "script" })
+    await check($"whole submission: exact TPaired.R ({origin}) publishes one complete agreement chart", async () =>
+    {
+        var submitted = await submitFresh("paired-example-" + origin, pairedExample, origin);
+        require(submitted.Output.Contains("Mean of differences = 56.111111  (n = 9)") && submitted.Output.Contains("t = 4.925774") && submitted.Output.Contains("95% Limits of agreement = -10.868665 to 123.090887"), "The actual paired-t example did not return its expected numerical results.");
+        require(submitted.Plots.Length == 1, $"The actual example published {submitted.Plots.Length} stages instead of one completed agreement chart.");
+        CheckAgreementLines(File.ReadAllText(Text(submitted.Plots[0], "path")));
+        await compareFinalSvg(submitted);
+    });
+await check("whole submission: current paired-t recipe publishes one complete agreement chart", async () =>
+{
+    string data = "before <- c(312, 242, 340, 388, 296, 254, 391, 402, 290)\nafter <- c(300, 201, 232, 312, 220, 256, 328, 330, 231)\nconfidence <- 0.95\nbefore_title <- 'PEFR Before'\nafter_title <- 'PEFR After'\n";
+    string recipe = File.ReadAllText(Path.Combine(repository, "StatsDirectUI", "Assets", "R", "recipes", "paired-t.R"));
+    var submitted = await submitFresh("paired-current-recipe", data + recipe, "continueInR");
+    require(submitted.Output.Contains("Mean of differences = 56.111111") && submitted.Output.Contains("95% Limits of agreement = -10.868665 to 123.090887"), "The current recipe failed or lost its paired results.");
+    require(submitted.Plots.Length == 1, $"The current recipe published {submitted.Plots.Length} chart stages.");
+    CheckAgreementLines(File.ReadAllText(Text(submitted.Plots[0], "path")));
+    await compareFinalSvg(submitted);
+});
+await check("whole submission: two intended pages each retain their final annotations", async () =>
+{
+    var submitted = await submitFresh("two-complete-pages", "plot(1:4, main='First page'); abline(h=2, col='red'); mtext('First complete caption', side=3, line=0.5)\nplot(4:1, main='Second page'); abline(h=3, col='blue'); mtext('Second complete caption', side=3, line=0.5)\n", "script");
+    require(submitted.Plots.Length == 2 && submitted.Plots.Select(e => Text(e, "plotId")).Distinct().Count() == 2, "Two intended pages were lost, duplicated or published as intermediate stages.");
+    await compareFinalSvg(submitted);
+});
+await check("whole submission: loop creates three completed pages", async () =>
+{
+    var submitted = await submitFresh("loop-complete-pages", "for (i in 1:3) {\n  plot(1:4, (1:4) * i, main=paste('Loop page', i))\n  abline(h=2*i, col='red')\n  mtext(paste('Complete page', i), side=3, line=0.5)\n}\n", "script");
+    require(submitted.Plots.Length == 3 && submitted.Plots.Select(e => Text(e, "plotId")).Distinct().Count() == 3, "The three loop pages were lost, duplicated or published as partial stages.");
+    await compareFinalSvg(submitted);
+});
+await check("whole submission: two mfrow panels form one completed page", async () =>
+{
+    var submitted = await submitFresh("two-panels-one-page", "par(mfrow=c(1,2))\nplot(1:4, main='Left panel'); abline(h=2, col='red')\nplot(4:1, main='Right panel'); abline(h=3, col='blue')\n", "script");
+    require(submitted.Plots.Length == 1, $"One page containing two panels was published as {submitted.Plots.Length} partial plots.");
+    await compareFinalSvg(submitted);
+});
 JsonElement firstDefaultPlot = default;
 byte[] firstDefaultBytes = [];
 await check("default plots: SVG snapshot is displayed", async () =>
@@ -398,7 +482,38 @@ static bool IsRedSvg(string svg)
     string compact = string.Concat(svg.Where(c => !char.IsWhiteSpace(c)));
     return compact.Contains("rgb(100%,0%,0%)") || compact.Contains("#FF0000", StringComparison.OrdinalIgnoreCase) || compact.Contains("rgb(255,0,0)");
 }
+static string CanonicalSvg(string svg)
+{
+    var document = XDocument.Parse(svg);
+    var ids = document.Descendants().Attributes("id").Select(a => a.Value).Distinct().Select((id, index) => (id, token: "id" + index)).ToDictionary(p => p.id, p => p.token);
+    foreach (var element in document.Descendants())
+    {
+        var attributes = element.Attributes().Select(a =>
+        {
+            string value = a.Value;
+            if (a.Name.LocalName == "id" && ids.TryGetValue(value, out var id)) value = id;
+            else if (value.StartsWith('#') && ids.TryGetValue(value[1..], out id)) value = "#" + id;
+            else if (value.StartsWith("url(#") && value.EndsWith(')') && ids.TryGetValue(value[5..^1], out id)) value = "url(#" + id + ")";
+            return new XAttribute(a.Name, value);
+        }).OrderBy(a => a.Name.ToString(), StringComparer.Ordinal).ToArray();
+        element.ReplaceAttributes(attributes);
+    }
+    return document.Root!.ToString(SaveOptions.DisableFormatting);
+}
+static void CheckAgreementLines(string svg)
+{
+    var number = @"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?";
+    var line = new Regex($@"^M\s*({number})\s+({number})\s+L\s*({number})\s+({number})\s*$");
+    var paths = XDocument.Parse(svg).Descendants().Where(e => e.Name.LocalName == "path").Select(e => (Stroke: e.Attribute("stroke")?.Value.Replace(" ", ""), Match: line.Match(e.Attribute("d")?.Value ?? ""))).Where(p => p.Match.Success).Select(p => (p.Stroke, X1: double.Parse(p.Match.Groups[1].Value, CultureInfo.InvariantCulture), Y1: double.Parse(p.Match.Groups[2].Value, CultureInfo.InvariantCulture), X2: double.Parse(p.Match.Groups[3].Value, CultureInfo.InvariantCulture), Y2: double.Parse(p.Match.Groups[4].Value, CultureInfo.InvariantCulture))).Where(p => Math.Abs(p.Y1-p.Y2) < 0.0001).ToArray();
+    var limits = paths.Where(p => p.Stroke == "rgb(100%,0%,0%)" || p.Stroke == "#FF0000").ToArray();
+    if (limits.Length != 2) throw new InvalidOperationException($"Agreement chart has {limits.Length} red limits rather than both completed LOA lines.");
+    double middle = (limits[0].Y1 + limits[1].Y1) / 2;
+    if (!paths.Any(p => p.Stroke == "rgb(0%,0%,0%)" && Math.Abs(p.Y1-middle) < 0.001 && Math.Abs(p.X1-limits[0].X1) < 0.001 && Math.Abs(p.X2-limits[0].X2) < 0.001))
+        throw new InvalidOperationException("Agreement chart is missing the full-width mean-difference line between its limits.");
+}
+
 record Run(string Output, JsonElement Finished);
+record FreshSubmission(string Folder, string Output, JsonElement[] Plots);
 
 sealed class EventLog
 {

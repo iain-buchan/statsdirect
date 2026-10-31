@@ -260,7 +260,17 @@ static void adopt_source(Message *m, int is_new)
         command_error = command_interrupted = 0;
     }
     free(source); source = m->text; m->text = NULL;
-    source_length = m->length;
+    /* Console buffers contain logical lines. Windows-authored .R files retain
+     * their original text in the editor, but R's parser needs LF here. */
+    source_length = 0;
+    for (size_t i = 0; i < m->length; ++i) {
+        char c = source[i];
+        if (c == '\r') {
+            if (i + 1 < m->length && source[i + 1] == '\n') ++i;
+            c = '\n';
+        }
+        source[source_length++] = c;
+    }
     if (!source_length || source[source_length - 1] != '\n') source[source_length++] = '\n';
     source[source_length] = 0; source_offset = 0;
 }
@@ -364,6 +374,18 @@ int wmain(int argc, wchar_t **argv)
     wchar_t dll_path[32768], bin_path[32768];
     swprintf_s(bin_path, 32768, L"%s\\bin\\x64", rhome);
     swprintf_s(dll_path, 32768, L"%s\\R.dll", bin_path);
+    /* R's package loader temporarily changes its DLL directory. Keep R's
+     * BLAS/LAPACK and other package dependencies discoverable afterwards too.
+     * This PATH change belongs only to this isolated helper and its children. */
+    const wchar_t *inherited_path = _wgetenv(L"PATH");
+    size_t path_size = wcslen(bin_path) + (inherited_path ? wcslen(inherited_path) : 0) + 2;
+    wchar_t *r_path = malloc(path_size * sizeof(wchar_t));
+    if (!r_path) { error_event("Cannot allocate the R process environment."); return 2; }
+    swprintf_s(r_path, path_size, L"%s;%s", bin_path, inherited_path ? inherited_path : L"");
+    if (_wputenv_s(L"PATH", r_path) || !SetEnvironmentVariableW(L"PATH", r_path)) {
+        free(r_path); error_event("Cannot prepare the R process PATH."); return 2;
+    }
+    free(r_path);
     SetDllDirectoryW(bin_path);
     HMODULE dll = LoadLibraryW(dll_path);
     if (!dll) { error_event("Cannot load R.dll from the requested R installation."); return 2; }

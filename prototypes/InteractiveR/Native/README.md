@@ -13,6 +13,11 @@ uses the Windows Universal C Runtime (UCRT).
 
 Startup disables profiles, environment files, workspace restoration and saving.
 The UTF-8 Windows manifest and a 16 MiB main stack are part of the build.
+R's `bin/x64` directory is prefixed to this helper's process-local PATH before
+loading R so default packages and their BLAS/LAPACK dependencies load normally.
+The parent process and system PATH are unchanged. Submitted source and
+continuations normalize CRLF/lone CR to LF within the helper; editor text remains
+unchanged.
 
 ## Native transport, version 1
 

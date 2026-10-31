@@ -14,6 +14,7 @@
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4258.31" />
     <Content Include="../Web/**" Link="Web/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="../Native/bin/StatsDirect.RConsole.Native.exe" Link="StatsDirect.RConsole.Native.exe" CopyToOutputDirectory="PreserveNewest" Condition="Exists('../Native/bin/StatsDirect.RConsole.Native.exe')" />
+    <Content Include="../../../tests/RScript/examples/TPaired.R" Link="Fixtures/TPaired.R" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <Target Name="RemoveUnusedWebView2WpfReference" BeforeTargets="ResolveAssemblyReferences">
     <ItemGroup><Reference Remove="@(Reference)" Condition="'%(Reference.Filename)' == 'Microsoft.Web.WebView2.Wpf'" /></ItemGroup>

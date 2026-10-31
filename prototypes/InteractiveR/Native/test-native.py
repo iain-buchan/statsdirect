@@ -95,6 +95,24 @@ with tempfile.TemporaryDirectory(prefix="native-r-", dir=ROOT / "bin") as workin
     try:
         seen = top()
         check(any(event["type"] == "ready" and event["protocol"] == 1 for event in seen), "ready precedes initial top prompt")
+        check("package 'stats'" not in output(seen) and 'package "stats"' not in output(seen), "stats package has no startup load warning")
+        seen = submit(18, '''stopifnot(all(paste0("package:", getOption("defaultPackages")) %in% search()))
+tt <- t.test(c(1, 2, 4, 5), mu=0)
+pw <- power.t.test(n=20, delta=1, sd=1)
+mat <- crossprod(matrix(c(1, 2, 3, 4, 6, 8), nrow=3))
+ch <- chol(mat)
+ss <- svd(mat)
+stopifnot(is.finite(tt$p.value), is.finite(pw$power),
+          max(abs(crossprod(ch) - mat)) < 1e-10,
+          max(abs(ss$u %*% diag(ss$d) %*% t(ss$v) - mat)) < 1e-10)
+cat("DEFAULT-PACKAGES-AND-LAPACK-READY\\n")''')
+        check("DEFAULT-PACKAGES-AND-LAPACK-READY" in output(seen), "all default packages, t.test, power.t.test, chol and SVD work immediately")
+        seen = submit(21, 'svg("native-startup.svg"); plot(1:10); abline(a=0, b=1); dev.off(); stopifnot(file.info("native-startup.svg")$size > 0); cat("SVG-STARTUP-READY\\n")')
+        check("SVG-STARTUP-READY" in output(seen), "graphics and Cairo SVG dependencies work in a fresh session")
+        seen = submit(19, 'crlf <- 1:3\r\ncat("CRLF", sum(crlf), "\\n")\r\n')
+        check("CRLF 6" in output(seen), "Windows CRLF source runs unchanged at the editor boundary")
+        seen = submit(20, 'cronly <- 1:4\rcat("CRONLY", sum(cronly), "\\n")\r')
+        check("CRONLY 10" in output(seen), "lone CR source normalizes to logical lines")
         seen = submit(1, 'saved <- 42; cat("UTF8: café α 😀\\n")')
         check("UTF8: café α 😀" in output(seen), "UTF-8 console output survives")
 
@@ -119,7 +137,7 @@ with tempfile.TemporaryDirectory(prefix="native-r-", dir=ROOT / "bin") as workin
 
         send(1, 7, "if (TRUE) {")
         request = until(lambda e: e["type"] == "prompt" and e["kind"] == "continuation")[-1]
-        send(2, request["requestId"], "saved <- saved + 1\n}")
+        send(2, request["requestId"], "saved <- saved + 1\r\n}")
         seen = top()
         check(any(e["type"] == "completed" and e["commandId"] == 7 for e in seen), "multiline continuation completes original command")
         stop_at_prompt(8, "if (TRUE) {", "continuation")
