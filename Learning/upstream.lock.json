@@ -173,6 +173,18 @@
         "StatsDirectUI/Assets/Tutor/script-instructions.txt": "956e1d82a6477805adb2387ccb08a5f0a7364f06ebc1a6a09c9e1afdd3329007",
         "StatsDirectUI/Assets/Tutor/report-instructions.txt": "fbe790bbf274babd3a7649ec4e623e5c50b1450e9d2fda582f5ebf6323a050ba"
       }
+    },
+    {
+      "description": "31 October 2026 Windows DOMPurify 3.4.17 dependency alignment after merging Dependabot commit 84e3b8145b26dd3c635eb767c36ed8f89f40de50. Both Learning dependency graphs were installed with their frozen lockfiles; the shipped Learning and Tutor bundles were rebuilt and their third-party licence notice refreshed. The original upstream provenance remains above; these hashes supersede the dependency manifests, lockfiles, bundles and notice for this patch update.",
+      "files": {
+        "Learning/package.json": "aa91e6dccb614b12d2774e1b2c9437816329d433f46dec8bac691fbc8f41f651",
+        "Learning/pnpm-lock.yaml": "6408475a76685a7408cbd132d07f9a9753f28e005501f397cc2c5021e5afe40a",
+        "Learning/upstream/Learn/package.json": "c42e7a618b1cd19144879b02d890db5400843979ad36824300ef69f8923c51ed",
+        "Learning/upstream/Learn/pnpm-lock.yaml": "bdf7e8d421a59819a1631bda6e60d361b2b0257dc1dd5a728be4148e3e861e0f",
+        "StatsDirectUI/Assets/Learn/app.js": "ee6202d8319ea6c8854c2e3eecce4f3c82fdf323e5e7d88ac794b1b69289860b",
+        "StatsDirectUI/Assets/Learn/THIRD-PARTY-LICENSES.txt": "7fba3b1c7135eb7000b0c77d7310ad2191f0bd8004c6dae52b217a53e01eec84",
+        "StatsDirectUI/Assets/Tutor/conversation.js": "4b553930dc8a94e433ece3c1e88789e04223a228700ba7c8f315bdb81e303d27"
+      }
     }
   ]
 }

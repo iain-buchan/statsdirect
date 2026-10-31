@@ -4,13 +4,21 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
 ##[Unreleased]
 
+##[v5.3.0] 2026-10-31
+
+Version 5.3.0 brings an interactive R console into the R script window. Console and Script share a persistent workspace, so users can explore results, answer R prompts and continue calculations without rerunning the whole script. The statistical engine's results are unchanged.
+
 ### Added
 - The R script window has Console and Script views of one persistent R workspace, with real input prompts, Stop and Restart. Console commands join the editable script, while opening an R file, notebook or AI suggestion leaves execution to the user.
+- Each R window runs R in its own native child process. Stop interrupts a calculation or question while retaining completed assignments; Restart explicitly clears the workspace while preserving the script.
+- R chart cards retain their own complete plot and earlier revisions, with Open and Copy actions; ordinary Windows plots use SVG with a PNG clipboard alternative. Saving and closing use the current editable script, and restoring the display does not rerun R code.
+- Desktop and web help describe the integrated console and the simplified Analysis menu.
 
 ### Changed
 - Calculator has a separate section in Analysis immediately before Options. The Tools menu, external program shortcuts and separate R launcher are retired; File > New R session and contextual R actions remain.
 
 ### Fixed
+- The Learning and AI transcript bundles use DOMPurify 3.4.17, matching their pinned dependency manifests and licence notice.
 - The report editor's third-party notice names marked (MIT), bundled since 5.2.9 for a notebook's Markdown, in its opening line with the project's address, and lists its licence in order as the notice builder writes it; the builder finds the bundled packages on Windows as on other systems
 
 ##[v5.2.9] 2026-10-24
