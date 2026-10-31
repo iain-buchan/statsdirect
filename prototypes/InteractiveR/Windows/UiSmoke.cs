@@ -7,8 +7,8 @@ internal sealed partial class MainForm
 {
     private bool smokeStarted;
 
-    // Exercises the actual WebView message bridge and native R session. It never
-    // calls the session methods directly and it uses an isolated prototype folder.
+    // R execution uses the actual WebView message bridge and native R session.
+    // Host presentation events also exercise clicking while the page updates.
     private async Task RunUiSmokeAsync()
     {
         var checks = new List<object>();
@@ -26,6 +26,16 @@ internal sealed partial class MainForm
                 {
                     if (wait.ElapsedMilliseconds > timeoutMs) throw new TimeoutException(description);
                     await Task.Delay(40);
+                }
+            }
+            async Task TwoFrames()
+            {
+                await browser.CoreWebView2.ExecuteScriptAsync("window.__statsDirectSmokeFrames=false;requestAnimationFrame(()=>requestAnimationFrame(()=>{window.__statsDirectSmokeFrames=true}))");
+                var wait = Stopwatch.StartNew();
+                while (await browser.CoreWebView2.ExecuteScriptAsync("window.__statsDirectSmokeFrames===true") != "true")
+                {
+                    if (wait.ElapsedMilliseconds > 12000) throw new TimeoutException("The console did not finish two animation frames");
+                    await Task.Delay(20);
                 }
             }
             bool HasOutput(string marker) => string.Concat(history.Where(item => item.TryGetProperty("type", out var type) && type.GetString() == "output")
@@ -170,6 +180,66 @@ internal sealed partial class MainForm
             }
             recipeRegression = new { fixture = "tests/RScript/examples/TPaired.R", completedPlotEvents = recipePlotCount, imagesAdded = imagesAfterRecipe - imagesBeforeRecipe, numericOutputBeforePlot };
             await Check("the paired-t Script run adds exactly one real WebView chart image", imagesAfterRecipe == imagesBeforeRecipe + 1);
+
+            // Retain the real controls: .click() on a newly looked-up node would
+            // miss a replacement between physical mousedown and mouseup.
+            try
+            {
+                await browser.CoreWebView2.ExecuteScriptAsync("""
+                    (() => {
+                      const figure = document.querySelector('.plot');
+                      const buttons = [...figure.querySelectorAll('.plot-actions button')];
+                      const open = buttons.find(button => button.textContent.startsWith('Open'));
+                      const copy = buttons.find(button => button.textContent === 'Copy chart');
+                      if (!open || !copy) throw new Error('The actual chart controls were not found');
+                      const bridge = window.chrome.webview, original = bridge.postMessage;
+                      const regression = window.__statsDirectPlotClickRegression = {open, copy, original, actions:[]};
+                      const intercept = message => {
+                        if (message.action === 'openPlot' || message.action === 'copyPlot') regression.actions.push(message);
+                        else original.call(bridge, message);
+                      };
+                      bridge.postMessage = intercept;
+                      if (bridge.postMessage !== intercept) throw new Error('The chart-action test interception could not be installed');
+                      open.focus(); window.getSelection().removeAllRanges();
+                      document.dispatchEvent(new Event('selectionchange'));
+                    })()
+                    """);
+                await TwoFrames();
+                await Check("focusing a chart action preserves the same Open and Copy DOM controls", await browser.CoreWebView2.ExecuteScriptAsync("(()=>{const r=window.__statsDirectPlotClickRegression,b=[...document.querySelector('.plot').querySelectorAll('.plot-actions button')];return r.open.isConnected&&r.copy.isConnected&&b.includes(r.open)&&b.includes(r.copy)})()") == "true");
+                await browser.CoreWebView2.ExecuteScriptAsync("""
+                    (() => {
+                      const r = window.__statsDirectPlotClickRegression;
+                      r.open.click();
+                      r.copy.dispatchEvent(new PointerEvent('pointerdown', {bubbles:true,pointerId:17,pointerType:'mouse',isPrimary:true,button:0,buttons:1}));
+                      r.copy.dispatchEvent(new MouseEvent('mousedown', {bubbles:true,button:0,buttons:1}));
+                      r.copy.focus(); window.getSelection().removeAllRanges();
+                      document.dispatchEvent(new Event('selectionchange'));
+                    })()
+                    """);
+                session.PublishState();
+                session.PublishNotice("Chart-control regression: output arrived while the pointer was down.");
+                await TwoFrames();
+                await Check("state and transcript updates do not replace a chart button while its pointer is down", await browser.CoreWebView2.ExecuteScriptAsync("(()=>{const r=window.__statsDirectPlotClickRegression;return r.copy.isConnected&&[...document.querySelector('.plot').querySelectorAll('.plot-actions button')].includes(r.copy)})()") == "true");
+                await browser.CoreWebView2.ExecuteScriptAsync("""
+                    (() => {
+                      const r = window.__statsDirectPlotClickRegression;
+                      r.copy.dispatchEvent(new PointerEvent('pointerup', {bubbles:true,pointerId:17,pointerType:'mouse',isPrimary:true,button:0,buttons:0}));
+                      r.copy.dispatchEvent(new MouseEvent('mouseup', {bubbles:true,button:0,buttons:0}));
+                      r.copy.click();
+                    })()
+                    """);
+                await TwoFrames();
+                using var actions = JsonDocument.Parse(await browser.CoreWebView2.ExecuteScriptAsync("window.__statsDirectPlotClickRegression.actions"));
+                string expectedPlot = firstPlot.GetProperty("plotId").GetString()!;
+                long expectedRevision = firstPlot.GetProperty("revision").GetInt64();
+                bool exactActions = actions.RootElement.GetArrayLength() == 2 && actions.RootElement[0].GetProperty("action").GetString() == "openPlot" && actions.RootElement[1].GetProperty("action").GetString() == "copyPlot" &&
+                    actions.RootElement.EnumerateArray().All(action => action.GetProperty("plotId").GetString() == expectedPlot && action.GetProperty("revision").GetInt64() == expectedRevision);
+                await Check("the original Open and Copy controls still dispatch their original plot revision after pointer release", exactActions);
+            }
+            finally
+            {
+                await browser.CoreWebView2.ExecuteScriptAsync("(()=>{const r=window.__statsDirectPlotClickRegression;if(r?.original)window.chrome.webview.postMessage=r.original;delete window.__statsDirectPlotClickRegression;delete window.__statsDirectSmokeFrames})()");
+            }
             screenshot = Path.ChangeExtension(Path.GetFullPath(options.UiSmokeResult!), ".png");
             browserMetrics = JsonSerializer.Deserialize<JsonElement>(await browser.CoreWebView2.ExecuteScriptAsync("({width:innerWidth,height:innerHeight,devicePixelRatio,codeFont:getComputedStyle(document.getElementById('console-input')).fontSize})"));
             await browser.CoreWebView2.ExecuteScriptAsync("(()=>{const pane=document.getElementById('transcript');pane.scrollTop=pane.scrollHeight})()");

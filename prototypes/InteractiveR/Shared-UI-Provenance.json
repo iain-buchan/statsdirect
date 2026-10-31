@@ -1,6 +1,6 @@
 {
   "repository": "iain-buchan/statsdirect-mac",
-  "ref": "25d03419e9c02ff6ddb4bd19f45775f5481fbfbf",
+  "ref": "09dcfcdc80604e7259d478983f9ea7ceb0e36f8a",
   "files": [
     {
       "path": "Content/RConsole/index.html",
@@ -12,7 +12,7 @@
     },
     {
       "path": "Content/RConsole/console.js",
-      "sha": "b0fd817854bb6c832052a28e293e7f17b23d3a0f"
+      "sha": "5e137975bf88bf9673063f50a750def587ff584c"
     },
     {
       "path": "Tests/r-console-ui.test.mjs",
@@ -20,7 +20,7 @@
     },
     {
       "path": "Docs/interactive-r-console-ui.md",
-      "sha": "038ac1e52df22806e5e437753cd9ac7b8133ff55"
+      "sha": "c9fe0a69650d0fdc2d9d031b92d130bd5cdd7824"
     }
   ],
   "testAdaptation": "Tests/r-console-ui.test.mjs changes only require('../Content/RConsole/console.js') to require('../Web/console.js') for this repository layout."
