@@ -1,5 +1,6 @@
 #nullable enable
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -16,6 +17,52 @@ internal sealed partial class RConsoleView
     private ContextMenuStrip? chartContextMenu;
     private string? contextPlotId;
     private long contextPlotRevision;
+    private readonly Dictionary<string, RChartWindow> chartWindows = new(StringComparer.Ordinal);
+
+    private bool IsChartAssetPath(string path)
+    {
+        foreach (var saved in plots.Values)
+            foreach (string field in new[] { "path", "previewPath" })
+                if (saved.TryGetProperty(field, out var asset) && string.Equals(path, Path.GetFullPath(asset.GetString()!), StringComparison.OrdinalIgnoreCase)) return true;
+        return chartWindows.Values.Any(window => string.Equals(path, window.AssetPath, StringComparison.OrdinalIgnoreCase));
+    }
+
+    internal static string SaveableChartSvg(string svg)
+    {
+        var vector = RResultsParser.VectorPicture(ScriptOutputView.Sanitised(svg));
+        string flattened = ScriptOutputView.FlattenedGlyphs(vector.Svg);
+        if (Encoding.UTF8.GetByteCount(flattened) > 20_000_000) flattened = vector.Svg;
+        return ScriptOutputView.PlainSized(flattened, vector.Width, vector.Height);
+    }
+
+    private void CloseChartWindows()
+    {
+        var windows = chartWindows.Values.ToArray();
+        chartWindows.Clear();
+        foreach (var window in windows) window.Dispose();
+    }
+
+    private void ShowChartWindow(string id, long revision, string path, string mime, string title)
+    {
+        string key = id + ":" + revision;
+        if (chartWindows.TryGetValue(key, out var existing) && !existing.IsDisposed)
+        {
+            if (existing.WindowState == FormWindowState.Minimized) existing.WindowState = FormWindowState.Normal;
+            existing.Show(); existing.Activate();
+            return;
+        }
+        var window = new RChartWindow(path, mime, title, message => { if (!closing) ReportNotice(message); })
+        {
+            IsProtectedSavePath = IsChartAssetPath
+        };
+        chartWindows[key] = window;
+        window.FormClosed += (_, _) =>
+        {
+            if (chartWindows.TryGetValue(key, out var current) && ReferenceEquals(current, window)) chartWindows.Remove(key);
+        };
+        var owner = FindForm();
+        window.Show(owner?.MdiParent ?? owner);
+    }
 
     internal void ShowChartContextMenu(string id, long revision, Point location)
     {
@@ -75,10 +122,7 @@ internal sealed partial class RConsoleView
         if (mime is not ("image/svg+xml" or "image/png") || (format == "svg" && mime != "image/svg+xml"))
             throw new InvalidOperationException("This chart is not a vector SVG. Save it as PNG instead.");
         path = Path.GetFullPath(path);
-        foreach (var saved in plots.Values)
-            foreach (string field in new[] { "path", "previewPath" })
-                if (saved.TryGetProperty(field, out var asset) && string.Equals(path, Path.GetFullPath(asset.GetString()!), StringComparison.OrdinalIgnoreCase))
-                    throw new InvalidOperationException("Choose a different filename to preserve the R chart's saved revision.");
+        if (IsChartAssetPath(path)) throw new InvalidOperationException("Choose a different filename to preserve the R chart's saved revision.");
 
         string source = plot.TryGetProperty("previewPath", out var previewPath) ? previewPath.GetString()! : plot.GetProperty("path").GetString()!;
         source = Path.GetFullPath(source);
@@ -90,10 +134,7 @@ internal sealed partial class RConsoleView
         {
             // Use the same positioned SVG glyphs and plain dimensions as Copy,
             // so Office can import the saved vector without displacing labels.
-            var vector = RResultsParser.VectorPicture(ScriptOutputView.Sanitised(await File.ReadAllTextAsync(source)));
-            string flattened = ScriptOutputView.FlattenedGlyphs(vector.Svg);
-            if (Encoding.UTF8.GetByteCount(flattened) > 20_000_000) flattened = vector.Svg;
-            bytes = Encoding.UTF8.GetBytes(ScriptOutputView.PlainSized(flattened, vector.Width, vector.Height));
+            bytes = Encoding.UTF8.GetBytes(SaveableChartSvg(await File.ReadAllTextAsync(source)));
         }
         else if (mime == "image/png") bytes = await File.ReadAllBytesAsync(source);
         else

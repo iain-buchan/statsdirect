@@ -76,8 +76,14 @@ internal sealed partial class RConsoleView
             ReportNotice("Chart copied as PNG, with a bitmap alternative.");
             return;
         }
-        var vector = RResultsParser.VectorPicture(ScriptOutputView.Sanitised(Encoding.UTF8.GetString(original)));
         string png = image.RootElement.GetProperty("png").GetString();
+        PublishVectorChart(Encoding.UTF8.GetString(original), png, alt);
+        ReportNotice("Chart copied as SVG, with PNG and bitmap alternatives.");
+    }
+
+    internal static void PublishVectorChart(string svg, string png, string alt)
+    {
+        var vector = RResultsParser.VectorPicture(ScriptOutputView.Sanitised(svg));
         if (png?.StartsWith("data:image/png;base64,", StringComparison.Ordinal) != true || png.Length > 27_000_000) png = null;
         string flattened = ScriptOutputView.FlattenedGlyphs(vector.Svg);
         if (Encoding.UTF8.GetByteCount(flattened) > 20_000_000) flattened = vector.Svg;
@@ -88,10 +94,9 @@ internal sealed partial class RConsoleView
             data.SetData(DataFormats.Html, ReportClipboard.EncodeHtml(ClipboardImageHtml(png, vector.Width, vector.Height, alt)));
         data.SetData(DataFormats.UnicodeText, alt);
         ReportClipboard.Publish(data, plain, png);
-        ReportNotice("Chart copied as SVG, with PNG and bitmap alternatives.");
     }
 
-    private static string ClipboardImageHtml(string png, int naturalWidth, int naturalHeight, string alt)
+    internal static string ClipboardImageHtml(string png, int naturalWidth, int naturalHeight, string alt)
     {
         int width = Math.Min(640, naturalWidth);
         int height = (int)Math.Round((double)naturalHeight * width / Math.Max(1, naturalWidth));

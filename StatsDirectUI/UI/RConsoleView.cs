@@ -59,7 +59,7 @@ internal sealed partial class RConsoleView : UserControl
     internal event Action<string>? CommandRequested;
     internal event Action<string>? Notice;
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-    internal Action<string> PlotOpener { get; set; } = path => Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
+    internal Action<string>? PlotOpener { get; set; }
 
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     internal string Script
@@ -256,6 +256,7 @@ internal sealed partial class RConsoleView : UserControl
         sessionId = item.GetProperty("sessionId").GetString()!; generation = incoming;
         if (type == "session")
         {
+            CloseChartWindows();
             history.Clear(); historySize = 0; plots.Clear(); latestPlots.Clear(); outputFiles.Clear(); transcript.Clear();
             sessionEnvelope = item.Clone(); NativeState = "starting";
             if (pageReady) SendSession();
@@ -370,10 +371,19 @@ internal sealed partial class RConsoleView : UserControl
     }
     internal void OpenPlot(string id, long? revision)
     {
-        string path = Path.GetFullPath(PlotMetadata(id, revision).GetProperty("path").GetString()!);
+        var plot = PlotMetadata(id, revision);
+        string path = Path.GetFullPath(plot.GetProperty("path").GetString()!);
         string relative = Path.GetRelativePath(Path.GetFullPath(WorkingDirectory), path);
-        if (Path.IsPathRooted(relative) || relative == ".." || relative.StartsWith(".." + Path.DirectorySeparatorChar, StringComparison.Ordinal) || !File.Exists(path)) throw new InvalidOperationException("The chart is outside this R session's output folder or has been removed.");
-        PlotOpener(path);
+        bool retained = PlotOpener == null && chartWindows.TryGetValue(id + ":" + plot.GetProperty("revision").GetInt64(), out var existing) && !existing.IsDisposed;
+        if (Path.IsPathRooted(relative) || relative == ".." || relative.StartsWith(".." + Path.DirectorySeparatorChar, StringComparison.Ordinal) || !retained && !File.Exists(path)) throw new InvalidOperationException("The chart is outside this R session's output folder or has been removed.");
+        if (PlotOpener is { } opener) { opener(path); return; }
+        string mime = plot.GetProperty("mime").GetString()!;
+        if (mime == "image/svg+xml" || mime == "image/png" && path.EndsWith(".png", StringComparison.OrdinalIgnoreCase))
+        {
+            string title = plot.TryGetProperty("label", out var label) ? label.GetString() ?? "R chart" : "R chart";
+            ShowChartWindow(id, plot.GetProperty("revision").GetInt64(), path, mime, title);
+        }
+        else Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
     }
     private async void ContextMenuRequested(object? sender, CoreWebView2ContextMenuRequestedEventArgs e)
     {
@@ -396,6 +406,7 @@ internal sealed partial class RConsoleView : UserControl
         if (disposing && !closing)
         {
             closing = true;
+            CloseChartWindows();
             chartContextMenu?.Dispose();
             if (Session != null) { Session.Event -= OnSessionEvent; Session.Dispose(); }
             ready.TrySetCanceled();

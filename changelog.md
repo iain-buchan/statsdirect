@@ -9,6 +9,7 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 Version 5.3.0 brings an interactive R console into the R script window. Console and Script share a persistent workspace, so users can explore results, answer R prompts and continue calculations without rerunning the whole script. The statistical engine's results are unchanged.
 
 ### Added
+- R SVG and PNG charts open in a separate viewer with zoom, pan and Fit controls. Copy and Save use the full retained chart independently of the visible area, and each chart revision keeps its own viewer.
 - The R script window has Console and Script views of one persistent R workspace, with real input prompts, Stop and Restart. Console commands join the editable script, while opening an R file, notebook or AI suggestion leaves execution to the user.
 - Each R window runs R in its own native child process. Stop interrupts a calculation or question while retaining completed assignments; Restart explicitly clears the workspace while preserving the script.
 - R chart cards retain their own complete plot and earlier revisions, with Open and Copy actions; ordinary Windows plots use SVG with a PNG clipboard alternative. Saving and closing use the current editable script, and restoring the display does not rerun R code.
