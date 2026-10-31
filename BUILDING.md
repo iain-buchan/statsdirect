@@ -10,6 +10,7 @@ You will need:
 * A trial or purchased license for [SpreadsheetGear for Windows](https://www.spreadsheetgear.com/) that allows you to use Hotfix 9.3.84, the version this project references, or later. Versions before 9.3.56 are not compatible with .Net 10.
 * The [Microsoft Edge WebView2 Evergreen Runtime](https://developer.microsoft.com/en-us/microsoft-edge/webview2/) for reports, and its x64 standalone installer in `DownloadedBinaries` when building setup.
 * [A current installer executable for the .Net 10 Windows Desktop runtime](DownloadedBinaries/README.md), to be included in the bundled executable installer.
+* 64-bit R development headers and a C compiler for the interactive R worker. Visual Studio's C++ workload is supported; alternatively run `RConsoleWorker/fetch-native-tools.ps1` for the verified portable Zig compiler. Nothing is installed globally by that script. See [RConsoleWorker/README.md](RConsoleWorker/README.md) for explicit header/compiler selection and runtime compatibility.
 
 You may want:
 * An IDE capable of working with C# and MSBuild, such as Visual Studio 2026 or Visual Studio Code.
@@ -30,7 +31,7 @@ You may want:
 * If you will sign builds:
   * Install the token's SafeNet Authentication Client and plug the token in. `certmgr.msc` (Personal > Certificates) should then list a certificate issued to `StatsDirect Ltd`.
   * `<repository-root>/Key/sign.cmd` selects that certificate by its name. If more than one certificate with that name is present, set the user environment variable `STATSDIRECT_SIGNING_THUMBPRINT` to the SHA-1 thumbprint of the right one.
-  * The token client asks for the token password when the first file is signed. A signing build signs six files (the program, its main library, the installer's helper `StatsDirectRetire.dll`, the .msi, the setup bundle's engine and the bundle), so consider enabling the client's single log-on option or you will be asked six times.
+  * The token client asks for the token password when the first file is signed. A signing build signs seven files (the program, its main library, the installer's helper `StatsDirectRetire.dll`, the native R worker, the .msi, the setup bundle's engine and the bundle), so consider enabling the client's single log-on option or you will be asked six times.
   * Signatures are timestamped at GlobalSign's RFC 3161 server; set `STATSDIRECT_SIGNING_TIMESTAMP_URL` to use a different one.
   * The older way of signing with a `.pfx` file still works: put it at `<repository-root>/Key/sdsign.pfx` and set `STATSDIRECT_SIGNING_PASSWORD` to its password. Certificate authorities no longer issue keys that way.
 * [Set environment variables](https://www.youtube.com/watch?v=5BTnfpIq5mI) for your SpreadsheetGear license string.
@@ -91,6 +92,26 @@ with existing operations and the Mac host. They resolve through the generated
 excludes CHM/CHW files and removes the old `StatsDirect.chm`/`StatsDirect.chw`
 during upgrades. `tests/HtmlHelp` covers the browser and context map; also test
 an upgrade on a clean Windows VM before release.
+
+### Interactive R script window
+
+The R Script window uses the shared offline `Assets/RConsole` page, with Console
+and Script views of one persistent R workspace. The native worker is built and
+copied by the application project; a separate R installation supplies R.dll. The
+Windows application never loads that DLL into its own process. The current
+worker is verified with 64-bit R 4.6.1 and 4.6.2, and requires the runtime to match
+the major/minor header series it was built against. More > Set up R opens the
+existing official-R installation flow; R is not bundled into StatsDirect.
+
+Run `tests/InteractiveRWindows`, `tests/WindowsShell` and `tests/Learning` after
+changing this integration, as well as the native/session tests documented in
+`RConsoleWorker/README.md`. The R window starts its worker on first execution;
+opening R files and notebooks never executes their code. File > Save captures
+current browser source without serialising or re-running the live workspace.
+Stop interrupts the current R calculation or prompt; Restart and closing the
+window end that workspace. Closing an R document uses the same asynchronous
+parent-close preparation as the web report, allowing WebView2 edits and saves
+to complete without blocking its UI thread.
 
 ### Calculator
 

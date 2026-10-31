@@ -10,15 +10,16 @@ internal static partial class Program
     {
         if (Environment.GetEnvironmentVariable("STATSDIRECT_SKIP_CLIPBOARD") == "1") { Console.WriteLine("SKIP ScriptContextMenu clipboard checks (STATSDIRECT_SKIP_CLIPBOARD=1 preserves the user's clipboard)"); return; }
         using var script = (Form)Call(main, "CreateScriptWindow");
-        Call(script, "ShowR", "before <- 1\nafter <- 2", "Context menu check", null, false);
+        // This fixture retains the non-R native editor context-menu contract.
         var editor = (RichTextBox)Field(script, "rtbDoc");
+        editor.Text = "before <- 1\nafter <- 2";
         var output = (Control)Field(script, "outputPane");
         await ((Task)Get(output, "Ready")).WaitAsync(TimeSpan.FromSeconds(45));
         Call(output, "AppendText", "Output selection must not replace selected code");
         await (Task)Call(output, "SettledAsync");
         var menu = editor.ContextMenuStrip;
         Check(menu != null && string.Join("|", menu.Items.Cast<ToolStripItem>().Select(item => item is ToolStripSeparator ? "-" : item.Text.Replace("&", "")))
-            == "Undo|Redo|-|Cut|Copy|Paste|Delete|-|Select All", "R code editor has the standard editing context menu in document order");
+            == "Undo|Redo|-|Cut|Copy|Paste|Delete|-|Select All", "native script editor has the standard editing context menu in document order");
         ToolStripMenuItem Item(string name) => (ToolStripMenuItem)menu.Items["script" + name];
         int openings = 0;
         menu.Opening += (_, _) => openings++;

@@ -32,8 +32,9 @@ internal static partial class Program
         string id="course:"+saved.S("id")+":"+saved.S("version")+":"+saved.A("lessons")[0].S("id");
         service.OpenExample(id,true);await Task.Delay(100);
         var script=service.Documents.OfType<frmScript>().Last();
-        Check(script.LearningScript==saved.A("lessons")[0].S("r")&&!script.LearningRunning&&(int)Field(script,"rGeneration")==0,"provider R code opens for review without execution");
-        Check(((ToolStrip)Field(script,"ToolStrip1")).Items["aiToolStripButton"]!=null,"R script has an AI command in the existing single toolbar");
+        var console=script.InteractiveConsole;await console.Ready;
+        Check(script.LearningScript==saved.A("lessons")[0].S("r")&&!script.LearningRunning&&console.Session==null,"provider R code opens for review without execution");
+        Check(await console.Browser.CoreWebView2.ExecuteScriptAsync("document.querySelectorAll('[role=toolbar]').length===1&&document.getElementById('ai')?.getAttribute('aria-label')==='AI assistance'")=="true","R script has an AI command in the existing single toolbar");
         string rFile=Path.Combine(root,"existing.R");File.WriteAllText(rFile,"# Read only test\nmean(c(1,2))\n");script.OpenFile(rFile,false,null);
         Check(((ComboBox)Field(script,"cboLanguage")).SelectedIndex==1,"opening an R file selects the R language and keeps R tools");
     }

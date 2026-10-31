@@ -38,6 +38,7 @@ namespace StatsDirect.UI
         public frmScript()
         {
             InitializeComponent();
+            cboLanguage.SelectedIndexChanged += (_, _) => RefreshScriptPresentation();
             editTarget = rtbDoc;
             rtbDoc.Enter += (_, _) => editTarget = rtbDoc;
             outputPane.Enter += (_, _) => editTarget = outputPane;
@@ -142,6 +143,7 @@ namespace StatsDirect.UI
 
         private void frmScript_FormClosing(object sender, FormClosingEventArgs e)
         {
+            if (IsInteractiveR) { ClosingInteractiveR(e); return; }
             DoOrWarn(() =>
             {
                 if (!AllowClose())
@@ -150,8 +152,6 @@ namespace StatsDirect.UI
                     return;
                 }
                 SdApplication.SoleInstance.NoteFormClosing(this, e);
-                if (runningR)
-                    rRun.Cancel();   // R still running the script: it goes with the window
                 Visible = false;
                 MdiParent = null;
             }, "Couldn't close form");
@@ -161,6 +161,7 @@ namespace StatsDirect.UI
         private void frmScript_TextChanged(object sender, EventArgs e)
         {
             Dirty = true;
+            if (InteractiveConsole != null && !mirroringRSource) InteractiveConsole.Script = rtbDoc.Text;
         }
 
         #region Menu Methods
@@ -221,6 +222,7 @@ namespace StatsDirect.UI
                 Path = filename;
             }
             rtbDoc.Modified = isTempFile;
+            Dirty = isTempFile;
             // Set the selected language according to the loaded file
             if (".vb".Equals(strExt))
                 cboLanguage.SelectedIndex = 2;
@@ -230,12 +232,14 @@ namespace StatsDirect.UI
             {
                 cboLanguage.SelectedIndex = 1;
                 EnsureRTools();
+                _ = GuardInteractiveAsync(() => InteractiveConsole.SetModeAsync("script"));
             }
             return true;
         }
 
         private void SaveToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (IsInteractiveR) { _ = GuardInteractiveAsync(async () => await SaveInteractiveAsync(false)); return; }
             if (null == currentFile)
             {
                 SaveAsToolStripMenuItem_Click(this, e);
@@ -258,16 +262,18 @@ namespace StatsDirect.UI
                 rtbDoc.Modified = false;
             }
             Path = currentFile;
+            Dirty = false;
         }
 
         private void SaveAsToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (IsInteractiveR) { _ = GuardInteractiveAsync(async () => await SaveInteractiveAsync(true)); return; }
             SaveFileDialog1.Title = "Save File";
             bool r = cboLanguage.SelectedIndex == 1;   // an R script is saved as plain text with the extension R
             SaveFileDialog1.DefaultExt = r ? "R" : "rtf";
             SaveFileDialog1.Filter = r ? "R scripts|*.R|Script Files|*.cs;*.vb|All Files|*.*" : "Script Files|*.cs;*.vb|All Files|*.*";
             SaveFileDialog1.FilterIndex = 1;
-            SaveFileDialog1.ShowDialog(SdApplication.SoleInstance.DialogOwner);
+            if (SaveFileDialog1.ShowDialog(SdApplication.SoleInstance.DialogOwner) != DialogResult.OK) return;
             if (SaveFileDialog1.FileName.Length == 0)
                 return;
             string strExt = System.IO.Path.GetExtension(SaveFileDialog1.FileName);
@@ -289,6 +295,7 @@ namespace StatsDirect.UI
             currentFile = SaveFileDialog1.FileName;
             rtbDoc.Modified = false;
             Path = currentFile;
+            Dirty = false;
             SdApplication.SoleInstance.NoteRecentFile(currentFile, true);
         }
 
@@ -296,6 +303,7 @@ namespace StatsDirect.UI
         {
             try
             {
+                if (IsInteractiveR) { _ = InteractiveConsole.ExecuteAsync("window.StatsDirectRHost.selectAll()"); return; }
                 rtbDoc.SelectAll();
             }
             catch (Exception)
@@ -379,22 +387,23 @@ namespace StatsDirect.UI
 
         internal override void EditFind() => ShowFindBar(false);
 
-        string IFindTarget.SelectedText => rtbDoc.SelectionLength > 0 && !rtbDoc.SelectedText.Contains('\n') ? rtbDoc.SelectedText : null;
+        string IFindTarget.SelectedText => IsInteractiveR ? InteractiveConsole.SelectedText : rtbDoc.SelectionLength > 0 && !rtbDoc.SelectedText.Contains('\n') ? rtbDoc.SelectedText : null;
 
-        void IFindTarget.FocusContent() => rtbDoc.Focus();
+        void IFindTarget.FocusContent() { if (IsInteractiveR) InteractiveConsole.FocusInput(); else rtbDoc.Focus(); }
 
-        Task<bool> IFindTarget.FindNextAsync(string term, bool matchCase) => Task.FromResult(FindNext(term, matchCase));
+        async Task<bool> IFindTarget.FindNextAsync(string term, bool matchCase) => IsInteractiveR ? System.Text.Json.JsonSerializer.Deserialize<bool>(await InteractiveConsole.ExecuteAsync("window.StatsDirectRHost.findNext(" + System.Text.Json.JsonSerializer.Serialize(term) + "," + (matchCase ? "true" : "false") + ")")) : FindNext(term, matchCase);
 
-        Task<bool> IFindTarget.ReplaceSelectionAsync(string term, string replacement, bool matchCase)
+        async Task<bool> IFindTarget.ReplaceSelectionAsync(string term, string replacement, bool matchCase)
         {
+            if (IsInteractiveR) return System.Text.Json.JsonSerializer.Deserialize<bool>(await InteractiveConsole.ExecuteAsync("window.StatsDirectRHost.replaceSelection(" + System.Text.Json.JsonSerializer.Serialize(term) + "," + System.Text.Json.JsonSerializer.Serialize(replacement) + "," + (matchCase ? "true" : "false") + ")"));
             StringComparison comparison = matchCase ? StringComparison.CurrentCulture : StringComparison.CurrentCultureIgnoreCase;
             if (term.Length == 0 || !string.Equals(rtbDoc.SelectedText, term, comparison))
-                return Task.FromResult(false);
+                return false;
             rtbDoc.SelectedText = replacement;
-            return Task.FromResult(true);
+            return true;
         }
 
-        Task<int> IFindTarget.ReplaceAllAsync(string term, string replacement, bool matchCase) => Task.FromResult(ReplaceAll(term, replacement, matchCase));
+        async Task<int> IFindTarget.ReplaceAllAsync(string term, string replacement, bool matchCase) => IsInteractiveR ? System.Text.Json.JsonSerializer.Deserialize<int>(await InteractiveConsole.ExecuteAsync("window.StatsDirectRHost.replaceAll(" + System.Text.Json.JsonSerializer.Serialize(term) + "," + System.Text.Json.JsonSerializer.Serialize(replacement) + "," + (matchCase ? "true" : "false") + ")")) : ReplaceAll(term, replacement, matchCase);
 
         /// <summary>Selects the next match after the selection, going round to the start when there is none after it; false when there is none at all.</summary>
         internal bool FindNext(string term, bool matchCase)
@@ -503,33 +512,15 @@ namespace StatsDirect.UI
             if (Tag is WindowInformation info && info.IsNew) info.FriendlyName = name; else Text = name;
             EnsureRTools();
             if (runImmediately) RunR();
+            else _ = GuardInteractiveAsync(() => InteractiveConsole.SetModeAsync("script"));
         }
 
-        private void EnsureRTools()
-        {
-            if (!rTools)
-            {
-                // the toolbar of an R script: run it again after editing, clear what earlier runs printed, and open the folder R writes to; the
-                // files a run writes are listed as links
-                rTools = true;
-                ToolStrip1.Items["runToolStripButton"].ToolTipText = "Run (Alt+R): run the current script in R; run again to restart with your latest edits";
-                var ai = DocumentToolbar.Button("AI assistance", "ai", (_, _) => (MdiParent as frmMain)?.Learning.ShowScriptAI(this));
-                ai.ToolTipText = "Ask about this R script";
-                ToolStrip1.Items.Add(ai);
-                ToolStrip1.Items.Add(DocumentToolbar.Button("Open in R", "rPlus", (_, _) => OpenInR()));
-                ToolStrip1.Items.Add(new ToolStripButton("Clear output", null, (_, _) => outputPane.Clear()) { Overflow = ToolStripItemOverflow.Always, ToolTipText = "Clear what R has printed below" });
-                ToolStrip1.Items.Add(new ToolStripButton("Output folder", null, (_, _) => OpenRFolder()) { Overflow = ToolStripItemOverflow.Always, ToolTipText = "Open the folder the script writes its files to" });
-            }
-        }
+        private void EnsureRTools() => EnsureInteractiveConsole();
 
-        internal string LearningScript => rtbDoc.Text;
+        internal string LearningScript => IsInteractiveR ? InteractiveConsole.Script : rtbDoc.Text;
         internal string LearningLanguage => ScriptLanguageForScript();
-        internal string LearningOutput => outputPane.Text;
-        internal bool LearningRunning => runningR;
-
-        private bool rTools, runningR;
-        private System.Threading.CancellationTokenSource rRun;   // stops the R process of the run in progress
-        private int rGeneration;                                   // counts the runs, so that a stopped run's output is dropped
+        internal string LearningOutput => IsInteractiveR ? InteractiveConsole.Transcript : outputPane.Text;
+        internal bool LearningRunning => IsInteractiveR && InteractiveConsole.NativeState is "starting" or "busy" or "input" or "continuation" or "interrupting";
 
         /// <summary>The name of the file a script is saved as for R: the window's title, with what a file name cannot hold replaced.</summary>
         internal static string ScriptFileName(string title)
@@ -540,18 +531,19 @@ namespace StatsDirect.UI
 
         /// <summary>Saves the script as an R file in the R folder and opens it in RStudio when that is installed, else in whatever opens R
         /// files here: a user at home in R goes on from there, with the data in the script.</summary>
-        private void OpenInR()
+        private async void OpenInR()
         {
             string path = System.IO.Path.Combine(SDConfiguration.MyStatsDirectRFolder, ScriptFileName(Text));
             try
             {
+                if (IsInteractiveR) await InteractiveConsole.GetScriptAsync();
                 Directory.CreateDirectory(SDConfiguration.MyStatsDirectRFolder);
                 File.WriteAllText(path, rtbDoc.Text.Replace("\r", "").Replace("\n", "\r\n"), new System.Text.UTF8Encoding(false));
                 string rstudio = RController.FindRStudio();
                 if (rstudio != null)
                 {
                     Process.Start(new ProcessStartInfo(rstudio, "\"" + path + "\"") { UseShellExecute = false, WorkingDirectory = SDConfiguration.MyStatsDirectRFolder });
-                    outputPane.AppendText("(the script is saved as " + path + " and opened in RStudio)\n");
+                    AppendScriptNotice("(the script is saved as " + path + " and opened in RStudio)\n");
                     return;
                 }
                 // R's own window: the script run in its console as a session shows it, and open in its editor
@@ -563,11 +555,11 @@ namespace StatsDirect.UI
                     version = RController.PreferredRVersion();
                 }
                 RController.OpenInRGui(version, path);
-                outputPane.AppendText("(the script is saved as " + path + ", run in R's own window and opened in its editor)\n");
+                AppendScriptNotice("(the script is saved as " + path + ", run in R's own window and opened in its editor)\n");
             }
             catch (Exception ex)
             {
-                outputPane.AppendText("Could not open the script in R: " + ex.Message + "\n(the script is saved as " + path + "; open it from there)\n");
+                AppendScriptNotice("Could not open the script in R: " + ex.Message + "\n(the script is saved as " + path + "; open it from there)\n");
             }
         }
 
@@ -622,65 +614,6 @@ namespace StatsDirect.UI
 
         /// <summary>The files a run writes that the output pane draws: SVG, as the scripts of the program draw, and the raster formats.</summary>
         private static readonly HashSet<string> ChartExtensions = new(StringComparer.OrdinalIgnoreCase) { ".svg", ".pdf", ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".tif", ".tiff" };
-
-        /// <summary>
-        /// Shows a run as it ends: R's transcript, then each chart the run wrote, drawn in the pane as the Mac's script pane shows its plots,
-        /// then the files written as links.  A run stopped by a later run, whose output follows, or by the window closing shows nothing more.
-        /// </summary>
-        private async Task ShowRunAsync(Task<string> running, System.Threading.CancellationTokenSource stop, DateTime started, int generation, Guid runId)
-        {
-            string transcript = await running;
-            stop.Dispose();
-            if (generation != rGeneration || IsDisposed)
-                return;
-            runningR = false;
-            outputPane.AppendTranscript(transcript);
-            List<FileInfo> written = FilesWritten(started, runId);
-            List<FileInfo> shown = new();
-            foreach (FileInfo file in written.Where(f => ChartExtensions.Contains(f.Extension)))
-            {
-                try { outputPane.AppendChart(file); shown.Add(file); }
-                catch (Exception ex) { outputPane.AppendText("(" + file.Name + " is not shown here: " + ex.Message + ")\n"); }
-            }
-            // a chart's caption is its link, so the list names the other files only
-            outputPane.AppendText(FilesWrittenText(written.Except(shown).ToList()));
-            outputPane.AppendText("\n======== End of run ========\n");
-        }
-
-        /// <summary>
-        /// Runs the script with the installed R on a background thread, the window staying responsive, and shows what R printed in the
-        /// output pane: at once when a result is continued in R, and on Run after edits.  Finding R, which may ask the user to install it,
-        /// happens here on the interface thread.  Run while R is still running the script as it was (the first run, before an edit) stops
-        /// that run, drops its output and runs the script as it is now.
-        /// </summary>
-        private void RunR()
-        {
-            RVersion version = RController.PreferredRVersion();
-            while (null == version)
-            {
-                if (!RController.UserMightHaveInstalledR())
-                    return;
-                version = RController.PreferredRVersion();
-            }
-            if (runningR)
-            {
-                rRun.Cancel();
-                outputPane.AppendText("(stopped: the script runs again as it is now)\n");
-            }
-            string script = rtbDoc.Text;
-            DateTime started = DateTime.Now;
-            Guid runId = Guid.NewGuid();
-            runningR = true;
-            int generation = ++rGeneration;
-            System.Threading.CancellationTokenSource run = rRun = new();
-            outputPane.AppendText("\n======== Running in R ========\n");
-            System.Threading.Tasks.Task<string> running = System.Threading.Tasks.Task.Run(() =>
-            {
-                try { return RController.RunScriptCapturingOutput(script, version, run.Token, echo: true, runId); }
-                catch (Exception ex) { return "Error: " + ex.Message; }
-            });
-            _ = ShowRunAsync(running, run, started, generation, runId);
-        }
 
         /// <summary>Appends R's transcript to the output pane as an R session shows it: the commands after their prompts in a colour of their
         /// own, what R printed in the pane's colour.</summary>
@@ -803,7 +736,7 @@ namespace StatsDirect.UI
 
         private void frmScript_Shown(object sender, EventArgs e)
         {
-            rtbDoc.Focus();
+            if (IsInteractiveR) InteractiveConsole.FocusInput(); else rtbDoc.Focus();
         }
 
         public override IList<Pane> AvailablePanes
@@ -830,25 +763,26 @@ namespace StatsDirect.UI
         internal override void ShowHelp() => SdApplication.SoleInstance.ShowHelp(this, HelpTopic);
 
         // the Edit commands act on the editor; the output pane, a page, only copies
-        internal override bool CanUndo => Editor != null && Editor.CanUndo;
-        internal override bool CanRedo => Editor != null && Editor.CanRedo;
-        internal override void EditUndo() { if (CanUndo) Editor.Undo(); }
-        internal override void EditRedo() { if (CanRedo) Editor.Redo(); }
+        internal override bool CanUndo => IsInteractiveR ? InteractiveConsole.CanUndo : Editor != null && Editor.CanUndo;
+        internal override bool CanRedo => IsInteractiveR ? InteractiveConsole.CanRedo : Editor != null && Editor.CanRedo;
+        internal override void EditUndo() { if (IsInteractiveR) _ = InteractiveEditAsync("undo"); else if (CanUndo) Editor.Undo(); }
+        internal override void EditRedo() { if (IsInteractiveR) _ = InteractiveEditAsync("redo"); else if (CanRedo) Editor.Redo(); }
 
         internal override void EditCut()
         {
-            if (Editable) Editor.Cut();
+            if (IsInteractiveR) _ = InteractiveEditAsync("cut"); else if (Editable) Editor.Cut();
         }
 
         internal override void EditCopy()
         {
-            if (Editor != null) Editor.Copy();
+            if (IsInteractiveR) _ = InteractiveEditAsync("copy");
+            else if (Editor != null) Editor.Copy();
             else _ = outputPane.CopyAsync();
         }
 
         internal override void EditPaste()
         {
-            if (Editable) Editor.Paste();
+            if (IsInteractiveR) _ = InteractiveEditAsync("paste"); else if (Editable) Editor.Paste();
         }
 
         #region Print preview
@@ -907,14 +841,16 @@ namespace StatsDirect.UI
 
         internal override bool SaveContents()
         {
-            // Nothing to save
-            return true;
+            if (IsInteractiveR) { _ = GuardInteractiveAsync(async () => await SaveInteractiveAsync(false)); return false; }
+            SaveToolStripMenuItem_Click(this, EventArgs.Empty);
+            return !Dirty;
         }
 
         internal override bool SaveAsContents()
         {
-            // Nothing to save
-            return true;
+            if (IsInteractiveR) { _ = GuardInteractiveAsync(async () => await SaveInteractiveAsync(true)); return false; }
+            SaveAsToolStripMenuItem_Click(this, EventArgs.Empty);
+            return !Dirty;
         }
 
         private static void DoOrWarn(Action func, string explanation)

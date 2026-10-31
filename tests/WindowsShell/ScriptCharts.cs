@@ -1,65 +1,65 @@
 using System.Text.Json;
-using StatsDirect.Configuration;
+using Microsoft.Web.WebView2.WinForms;
 using StatsDirect.UI;
 
 internal static partial class Program
 {
-    // The charts a run writes appear in the output pane, a WebView2 page: an SVG as it is, drawn by the browser at the size its svg element
-    // gives or narrowed to the pane, a PNG as an image, each after its name and with its file as a link, before the list of files written.
+    // The actual integrated console retains automatic and named file-device charts.
     static async Task CheckScriptCharts(frmMain main, Form grid)
     {
-        string folder = SDConfiguration.MyStatsDirectRFolder;
-        string svgFile = Path.Combine(folder, "shell-chart-check.svg"), pngFile = Path.Combine(folder, "shell-chart-check.png"), pdfFile = Path.Combine(folder, "shell-chart-check.pdf"), textFile = Path.Combine(folder, "shell-chart-check.txt");
-        List<string> files = new() { svgFile, pngFile, pdfFile, textFile };
-        // Preserve any pre-existing explicitly named outputs. Automatic charts now get fresh run identities.
-        var previous = files.Where(File.Exists).ToDictionary(f => f, f => (Bytes: File.ReadAllBytes(f), Modified: File.GetLastWriteTimeUtc(f)));
+        string folder = Path.Combine(Path.GetTempPath(), "StatsDirect-script-charts-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(folder);
+        string svgFile = Path.Combine(folder, "shell-chart-check.svg"), pngFile = Path.Combine(folder, "shell-chart-check.png");
+        string pdfFile = Path.Combine(folder, "shell-chart-check.pdf"), textFile = Path.Combine(folder, "shell-chart-check.txt");
         using var script = (Form)Call(main, "CreateScriptWindow");
         try
         {
-            foreach (string f in files) if (File.Exists(f)) File.Delete(f);
-            // A plot without a device of its own goes to the run's default SVG device, and a second
-            // default device after dev.off() gets a file of its own rather than writing over the first; a PDF a script writes is shown too
-            Call(script, "ShowR", "plot(c(2, 4, 3), main = \"default device\")\ndev.off()\nsvg(\"shell-chart-check.svg\", width = 5, height = 4)\nplot(1:3, main = \"shell\")\ndev.off()\npng(\"shell-chart-check.png\", width = 300, height = 200)\nplot(3:1)\ndev.off()\npdf(\"shell-chart-check.pdf\", width = 4, height = 3)\nplot(1:2)\ndev.off()\nwriteLines(\"x\", \"shell-chart-check.txt\")\nplot(c(2, 2), main = \"second default device\")\n", "Chart check", null, true);
-            var pane = (Control)Field(script, "outputPane");
-            var until = DateTime.UtcNow.AddSeconds(120);
-            while (!pane.Text.Contains("End of run") && DateTime.UtcNow < until) await Task.Delay(100);
-            await (Task)Call(pane, "SettledAsync");
-            string text = pane.Text;
-            string[] defaultNames = System.Text.RegularExpressions.Regex.Matches(text, @"Chart: (Rplot-[0-9a-f]{32}-[0-9]+-[0-9]+\.svg)")
-                .Select(m => m.Groups[1].Value).ToArray();
-            files.AddRange(defaultNames.Select(name => Path.Combine(folder, name)));
-            Check(text.Contains("End of run") && File.Exists(svgFile) && File.Exists(pngFile) && File.Exists(pdfFile), "the script runs in R and writes an SVG, a PNG and a PDF chart to the R folder");
-            Check(defaultNames.Length == 2 && defaultNames[0].EndsWith("-1-001.svg", StringComparison.Ordinal) && defaultNames[1].EndsWith("-2-001.svg", StringComparison.Ordinal) && defaultNames.All(name => File.Exists(Path.Combine(folder, name))) && !text.Contains("Rplots.pdf"),
-                  "a plot without an explicit device goes to a unique SVG in the R folder, and a reopened default device gets its own file");
-            string defaultFile = Path.Combine(folder, defaultNames[0]), secondFile = Path.Combine(folder, defaultNames[1]);
-            var browser = (Microsoft.Web.WebView2.WinForms.WebView2)Field(pane, "browser");
+            await PrepareRConsole(script, folder);
+            int before = RFinished(script);
+            Call(script, "ShowR", "plot(c(2,4,3),main='default device')\ndev.off()\nsvg('shell-chart-check.svg',width=5,height=4)\nplot(1:9,c(4,2,7,1,9,3,8,5,6),main='Owned nine-point Office fixture',xlab='Observation',ylab='Value')\ndev.off()\npng('shell-chart-check.png',width=300,height=200)\nplot(3:1)\ndev.off()\npdf('shell-chart-check.pdf',width=4,height=3)\nplot(1:2)\ndev.off()\nwriteLines('x','shell-chart-check.txt')\nplot(c(2,2),main='second default device')\n", "Chart check", null, true);
+            await CompleteRCommand(script, before);
+            var plots = RPlots(script);
+            var automatic = plots.Where(p => !p.TryGetProperty("originalPath", out _)).ToArray();
+            Check(File.Exists(svgFile) && File.Exists(pngFile) && File.Exists(pdfFile) && File.Exists(textFile),
+                "the integrated R script writes its named SVG, PNG, PDF and text outputs");
+            Check(automatic.Length == 2 && automatic.All(p => p.GetProperty("mime").GetString() == "image/svg+xml")
+                && automatic.Select(p => p.GetProperty("path").GetString()).Distinct().Count() == 2
+                && automatic.All(p => File.Exists(p.GetProperty("path").GetString()!))
+                && !((string)Get(RConsole(script), "Transcript")).Contains("Rplots.pdf"),
+                "default and reopened default devices retain separate, uniquely named SVG chart assets");
+            var named = plots.Where(p => p.TryGetProperty("originalPath", out _)).ToArray();
+            Check(named.Length == 3 && named.Select(p => p.GetProperty("originalPath").GetString()).ToHashSet(StringComparer.OrdinalIgnoreCase)
+                .SetEquals(new[] { svgFile, pngFile, pdfFile }),
+                "each explicit SVG, PNG and PDF appears once with its original filename and immutable saved asset");
+            var browser = RBrowser(script);
             async Task<string> Eval(string js) => JsonSerializer.Deserialize<string>(await browser.CoreWebView2.ExecuteScriptAsync("String(" + js + ")"))!;
-            Check(await Eval("document.querySelectorAll('img.svg-chart').length") == "3" && await Eval("document.querySelectorAll('img:not(.svg-chart)').length") == "1" && await Eval("document.querySelectorAll('iframe.pdf').length") == "1",
-                  "the pane draws three isolated SVG charts, the PNG chart as an image and the explicit PDF in its viewer");
-            string pngLink = new Uri(pngFile).AbsoluteUri, svgLink = new Uri(svgFile).AbsoluteUri, pdfLink = new Uri(pdfFile).AbsoluteUri, defaultLink = new Uri(defaultFile).AbsoluteUri, secondLink = new Uri(secondFile).AbsoluteUri;
-            string textLink = new Uri(textFile).AbsoluteUri;
-            string order = await Eval("Array.from(document.querySelectorAll('#t a')).map(function(a){return a.textContent+'='+a.getAttribute('href')}).join('|')");
-            Check(order == $"Chart: {defaultNames[0]}={defaultLink}|Chart: {defaultNames[1]}={secondLink}|Chart: shell-chart-check.pdf={pdfLink}|Chart: shell-chart-check.png={pngLink}|Chart: shell-chart-check.svg={svgLink}|{textLink}={textLink}" && text.IndexOf("Files written", StringComparison.Ordinal) > text.IndexOf("Chart: shell-chart-check.svg", StringComparison.Ordinal),
-                  "each chart's caption, in file-name order, is its one link, and the list of files written that follows names only the file not shown as a chart");
-            // sizes: the SVG at its svg element's 5 by 4 inches (480 by 384 pixels) or narrowed to the pane keeping its shape; the PNG at its 300 by 200
-            int paneWidth = (int)Math.Round(pane.ClientSize.Width * 96.0 / pane.DeviceDpi) - 16;
-            string[] svgBox = (await Eval("(function(){var r=document.querySelectorAll('img.svg-chart')[2].getBoundingClientRect();return Math.round(r.width)+','+Math.round(r.height)})()")).Split(',');
-            string[] imgBox = (await Eval("(function(){var i=document.querySelector('img:not(.svg-chart)');return i.naturalWidth+','+i.naturalHeight+','+Math.round(i.getBoundingClientRect().width)})()")).Split(',');
-            int svgWidth = int.Parse(svgBox[0]), svgHeight = int.Parse(svgBox[1]);
-            Check(Math.Abs(svgWidth - Math.Min(480, paneWidth)) <= 20 && Math.Abs(svgWidth * 384.0 / 480 - svgHeight) <= 2 && imgBox[0] == "300" && imgBox[1] == "200" && Math.Abs(int.Parse(imgBox[2]) - Math.Min(300, paneWidth)) <= 20,
-                  $"the SVG stands at its own size or the pane's width keeping its shape ({svgWidth} by {svgHeight}; pane {paneWidth}), the PNG at its 300 by 200");
-            // the transcript's look, drawn by the page: R's prompts and commands in their own colour, in a monospace face
-            string look = await Eval("getComputedStyle(document.querySelector('.prompt')).color+'|'+getComputedStyle(document.body).fontFamily");
-            Check(look.StartsWith("rgb(0, 0, 160)|Consolas", StringComparison.Ordinal), "R's prompts and commands are drawn in their own colour, in a monospace face (" + look + ")");
+            var until = DateTime.UtcNow.AddSeconds(10);
+            while (await Eval("[...document.images].every(i=>i.complete&&i.naturalWidth>0)") != "true" && DateTime.UtcNow < until) await Task.Delay(30);
+            Check(await Eval("document.querySelectorAll('figure.plot img[src^=\"data:image/svg+xml\"]').length") == "3"
+                && await Eval("document.querySelectorAll('figure.plot img[src^=\"data:image/png\"]').length") == "1"
+                && await Eval("[...document.querySelectorAll('figure.plot')].filter(f=>f.querySelector('button')?.textContent==='Open vector PDF').length") == "1",
+                "the console draws three isolated SVGs and one PNG and provides the explicit PDF's vector-open action");
+            string[] captions = JsonSerializer.Deserialize<string[]>(await browser.CoreWebView2.ExecuteScriptAsync(
+                "[...document.querySelectorAll('figure.plot figcaption')].map(c=>c.textContent)"))!;
+            Check(captions.SequenceEqual(plots.Select(p => p.GetProperty("label").GetString()))
+                && REvents(script).Count(e => e.GetProperty("type").GetString() == "notice" && e.TryGetProperty("filePath", out var path) && path.GetString() == textFile) == 1,
+                "chart captions retain event order and filenames while the non-chart file is reported once");
+            string svgBox = await Eval("(()=>{const i=[...document.images].find(i=>i.alt==='shell-chart-check.svg'),r=i.getBoundingClientRect();return [r.width,r.height,i.parentElement.clientWidth].join(',')})()");
+            string pngBox = await Eval("(()=>{const i=[...document.images].find(i=>i.alt==='shell-chart-check.png'),r=i.getBoundingClientRect();return [i.naturalWidth,i.naturalHeight,r.width].join(',')})()");
+            double[] svgSize = svgBox.Split(',').Select(double.Parse).ToArray(), pngSize = pngBox.Split(',').Select(double.Parse).ToArray();
+            Check(svgSize[0] > 0 && svgSize[0] <= Math.Min(480, svgSize[2]) + 2 && Math.Abs(svgSize[0] * .8 - svgSize[1]) <= 2
+                && pngSize[0] == 300 && pngSize[1] == 200 && pngSize[2] > 0 && pngSize[2] <= 300,
+                "the SVG fits its own size or console width without distortion and the PNG retains its 300 by 200 pixels");
+            string look = await Eval("getComputedStyle(document.getElementById('console-input')).color+'|'+getComputedStyle(document.getElementById('console-input')).fontFamily");
+            Check(look.StartsWith("rgb(6, 69, 173)|", StringComparison.Ordinal) && look.Contains("Consolas"),
+                "R commands use the shared blue code colour and a monospace face");
             await CheckScriptImagePaste(main, browser, svgFile, pngFile);
         }
         finally
         {
-            foreach (string f in files)
-                if (previous.TryGetValue(f, out var original)) { File.WriteAllBytes(f, original.Bytes); File.SetLastWriteTimeUtc(f, original.Modified); }
-                else if (File.Exists(f)) File.Delete(f);
-            grid.Activate();
-            await Task.Delay(150);
+            script.Dispose();
+            await DeleteRFixtureDirectory(folder, "StatsDirect-script-charts-");
+            grid.Activate(); await Task.Delay(150);
         }
     }
 }

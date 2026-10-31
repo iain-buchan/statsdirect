@@ -98,7 +98,10 @@ internal static partial class Program
                 {
                     source.FindForm()?.Activate(); source.Focus();
                     uint before = ImagePasteClipboardSequence();
-                    await CopyRChartImage(source, kind == "R-SVG" ? "img.svg-chart[alt='shell-chart-check.svg']" : "img:not(.svg-chart)[alt='shell-chart-check.png']");
+                    bool integrated = source.Parent?.GetType().Name == "RConsoleView";
+                    await CopyRChartImage(source, integrated
+                        ? "figure.plot img[alt='shell-chart-check." + (kind == "R-SVG" ? "svg" : "png") + "']"
+                        : kind == "R-SVG" ? "img.svg-chart[alt='shell-chart-check.svg']" : "img:not(.svg-chart)[alt='shell-chart-check.png']");
                     var until = DateTime.UtcNow.AddSeconds(10);
                     bool payloadReady = false;
                     do
@@ -404,6 +407,14 @@ internal static partial class Program
 
     private static async Task CopyRChartImage(WebView2 browser, string selector)
     {
+        if (browser.Parent?.GetType().Name == "RConsoleView")
+        {
+            // Click the integrated card's real shared UI action. The outer fixture
+            // waits for native SVG/PNG publication before reading the clipboard.
+            string invoked = await browser.CoreWebView2.ExecuteScriptAsync("(()=>{const i=document.querySelector(" + JsonSerializer.Serialize(selector) + "),b=i?.closest('figure.plot')?.querySelectorAll('button');const copy=b&&[...b].find(x=>x.textContent==='Copy chart');if(!copy)return false;copy.click();return true})()");
+            Check(invoked == "true", "the integrated R chart exposes and invokes its exact-revision Copy chart action");
+            return;
+        }
         var selected = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         async void Copy(object sender, CoreWebView2ContextMenuRequestedEventArgs args)
         {

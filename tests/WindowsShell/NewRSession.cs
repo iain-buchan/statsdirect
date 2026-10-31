@@ -17,6 +17,10 @@ internal static partial class Program
         Check(created.Length == 1 && created[0].GetType().Name == "frmScript" && main.ActiveMdiChild == created[0],
             "File > New R session creates and activates one script editor through the normal document workflow");
         using var session = created[0];
+        var console = RConsole(session);
+        await ((Task)Get(console, "Ready")).WaitAsync(TimeSpan.FromSeconds(45));
+        Check(Get(console, "Session") == null && (string)Get(console, "Script") == "",
+            "a blank R console is ready for input without starting R or executing code");
         Check((string)Get(session, "LearningLanguage") == "R"
             && ((RichTextBox)Field(session, "rtbDoc")).TextLength == 0
             && !(bool)Get(session, "LearningRunning") && (string)Get(session, "LearningOutput") == "",

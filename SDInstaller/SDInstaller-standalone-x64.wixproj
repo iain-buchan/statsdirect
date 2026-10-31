@@ -38,7 +38,7 @@
   <Target Name="SignStatsDirectBinaries" AfterTargets="_ConvertResolvedProjectReferencesIntoWixConstructs" BeforeTargets="CoreCompile" Condition="'$(SignOutput)' == 'true'">
     <ItemGroup>
       <_StatsDirectOutputDir Include="@(_WixReferencedProjectOutputs->'%(RootDir)%(Directory)')" Condition="'%(Filename)' == 'StatsDirect'" />
-      <_StatsDirectBinaryToSign Include="@(_StatsDirectOutputDir->'%(Identity)StatsDirect.exe');@(_StatsDirectOutputDir->'%(Identity)StatsDirect.dll');@(_StatsDirectOutputDir->'%(Identity)StatsDirectRetire.dll')" />
+      <_StatsDirectBinaryToSign Include="@(_StatsDirectOutputDir->'%(Identity)StatsDirect.exe');@(_StatsDirectOutputDir->'%(Identity)StatsDirect.dll');@(_StatsDirectOutputDir->'%(Identity)StatsDirectRetire.dll');@(_StatsDirectOutputDir->'%(Identity)StatsDirect.RConsole.Native.exe')" />
     </ItemGroup>
     <Error Condition="'@(_StatsDirectBinaryToSign)' == ''" Text="SignStatsDirectBinaries: the StatsDirectUI project reference was not resolved, so there is nothing to sign." />
     <Message Importance="high" Text="SignStatsDirectBinaries: @(_StatsDirectBinaryToSign)" />

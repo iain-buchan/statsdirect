@@ -932,6 +932,7 @@ namespace StatsDirect.UI
             var webReports = new List<System.Threading.Tasks.Task<bool>>();
             foreach (Form child in MdiChildren)
                 if (child is frmReportWebView web && web.PendingClose != null) webReports.Add(web.PendingClose);
+                else if (child is frmScript script && script.PendingInteractiveClose != null) webReports.Add(script.PendingInteractiveClose);
             if (webReports.Count > 0 && !awaitingWebReportsClose)
             {
                 e.Cancel = true;
@@ -950,11 +951,13 @@ namespace StatsDirect.UI
                     // retry; clear its pending marker to avoid repeating forever.
                     foreach (Form child in MdiChildren)
                         if (child is frmReportWebView web) web.CompleteParentClosePreparation();
+                        else if (child is frmScript script) script.CompleteInteractiveParentClosePreparation();
                     BeginInvoke(new Action(Close));
                 }
                 else
                     foreach (Form child in MdiChildren)
                         if (child is frmReportWebView web) web.CancelParentClose();
+                        else if (child is frmScript script) script.CancelInteractiveParentClose();
                         else (child as StatsDirectForm)?.NoteNonClosure();
                 return;
             }
@@ -975,7 +978,8 @@ namespace StatsDirect.UI
                 {
                     e.Cancel = true;
                     foreach (Form child in MdiChildren)
-                        if (child is frmReportWebView web) web.CancelParentClose();   // asked again at the next close, like the others
+                        if (child is frmReportWebView web) web.CancelParentClose();
+                        else if (child is frmScript script) script.CancelInteractiveParentClose();   // asked again at the next close, like the others
                         else (child as StatsDirectForm)?.NoteNonClosure();
                 }
                 else

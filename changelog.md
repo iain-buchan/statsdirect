@@ -4,6 +4,12 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
 ##[Unreleased]
 
+### Added
+- The R script window has Console and Script views of one persistent R workspace, with real input prompts, Stop and Restart. Console commands join the editable script, while opening an R file, notebook or AI suggestion leaves execution to the user.
+
+### Changed
+- Calculator has a separate section in Analysis immediately before Options. The Tools menu, external program shortcuts and separate R launcher are retired; File > New R session and contextual R actions remain.
+
 ### Fixed
 - The report editor's third-party notice names marked (MIT), bundled since 5.2.9 for a notebook's Markdown, in its opening line with the project's address, and lists its licence in order as the notice builder writes it; the builder finds the bundled packages on Windows as on other systems
 

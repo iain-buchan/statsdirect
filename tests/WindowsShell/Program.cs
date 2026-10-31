@@ -62,6 +62,22 @@ internal static partial class Program
         await Task.Delay(100); // run the real startup-command callback after Shown
         Check(Get(app, "CalculatorView") is Control startupView && startupView.ContainsFocus && main.ActiveMdiChild == null && !(bool)Get(main, "ShowOpeningDialog"),
             "legacy -calculator startup opens the integrated pane without a document");
+        string selectedCheck = Environment.GetEnvironmentVariable("STATSDIRECT_SHELL_CHECK");
+        if (selectedCheck is "interactive-charts" or "interactive-chart-toolbar")
+        {
+            using var selectedGrid = (Form)Call(main, "CreateGrid");
+            await Task.Delay(150);
+            if (selectedCheck == "interactive-chart-toolbar")
+            {
+                var selectedWorkbook = (SpreadsheetGear.Windows.Forms.WorkbookView)Field(selectedGrid, "workbookView");
+                selectedWorkbook.GetLock();
+                try { selectedWorkbook.ActiveWorksheet.Cells["A1"].Value = 123; selectedWorkbook.RangeSelection = selectedWorkbook.ActiveWorksheet.Cells["A1:B2"]; }
+                finally { selectedWorkbook.ReleaseLock(); }
+                await CheckDocumentToolbars(main, selectedGrid, selectedWorkbook);
+            }
+            await CheckScriptCharts(main, selectedGrid);
+            return;
+        }
         await CheckMenuSimplification(main, app);
         await CheckNewRSession(main, app);
         await CheckScriptContextMenu(main);
@@ -218,7 +234,7 @@ internal static partial class Program
         try { Check(workbook.ActiveWorksheet.Cells["A2"].Value?.ToString() == "123", "toolbar Redo replays the worksheet edit"); }
         finally { workbook.ReleaseLock(); }
         using var script = (Form)Call(main,"CreateScriptWindow");
-        Call(script,"ShowR","x <- 1","Toolbar check",null,true);
+        // Keep C# editing and native toolbar compatibility alongside the new R view.
         await Task.Delay(180);
         var scriptToolbar = (ToolStrip)Field(script,"ToolStrip1");
         Check(!toolbar.Visible && scriptToolbar.Visible, "switching to a script leaves exactly its own toolbar visible");
@@ -264,6 +280,7 @@ internal static partial class Program
         Check(ReferenceEquals(Field(script,"editTarget"),output) && scriptToolbar.Items["copyToolStripButton"].Enabled && await (Task<string>)Call(output,"SelectedTextAsync")=="Results to copy", "Copy from output retains its selection and target when More takes focus");
         scriptToolbar.OverflowButton.HideDropDown();
         main.Width = oldWidth; main.MinimumSize = oldMinimum;
+        await CheckInteractiveRToolbar(main, toolbar);
         script.Dispose(); grid.Activate();
         await Task.Delay(180);
         Check(toolbar.Visible, "returning to data restores its toolbar");

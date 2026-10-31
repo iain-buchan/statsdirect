@@ -112,6 +112,14 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DebugWatchExceptions|AnyCPU'">
     <DefineConstants>$(DefineConstants);WATCH_EXCEPTIONS</DefineConstants>
   </PropertyGroup>
+  <!-- The persistent R runtime is isolated in this native child process. Build it
+       before copying content; application-only builds do not sign it or build installers. -->
+  <ItemGroup>
+    <Content Include="../RConsoleWorker/bin/StatsDirect.RConsole.Native.exe" Link="StatsDirect.RConsole.Native.exe" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+  <Target Name="BuildRConsoleWorker" BeforeTargets="BeforeBuild" Condition="'$(DesignTimeBuild)' != 'true'">
+    <Exec Command="powershell.exe -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)/../RConsoleWorker/build-native.ps1&quot; -RHome &quot;$(RConsoleRHome)&quot; -Zig &quot;$(RConsoleZig)&quot;" />
+  </Target>
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
   </Target>
   <!-- Incremental builds can retain dependencies removed from the project. Do
