@@ -204,7 +204,6 @@ namespace StatsDirect.UI
             panelTypeStack = new Stack<PanelType>();
             ShowPanel(PanelType.Default, false);
             UpdateFileList();
-            UpdateToolsMenu();
             cboActiveReport.Items.Add(new ComboFormAdapter(null));
             cboActiveReport.SelectedIndex = 0;
         }
@@ -221,7 +220,7 @@ namespace StatsDirect.UI
             {
                 ToolStripItem menuItem = MakeMenuItem(sdMenuItem);
                 menuItem.MergeAction = MergeAction.Replace;
-                mnuMain.Items.Insert(mnuMain.Items.Count - 3, menuItem);
+                mnuMain.Items.Insert(mnuMain.Items.IndexOf(windowToolStripMenuItem), menuItem);
             }
 
             SDMenuItem userDefinedItem = UserMenuItems();
@@ -229,7 +228,7 @@ namespace StatsDirect.UI
             {
                 ToolStripItem userDefinedMenuItem = MakeMenuItem(userDefinedItem);
                 userDefinedMenuItem.MergeAction = MergeAction.Replace;
-                mnuMain.Items.Insert(mnuMain.Items.Count - 3, userDefinedMenuItem);
+                mnuMain.Items.Insert(mnuMain.Items.IndexOf(windowToolStripMenuItem), userDefinedMenuItem);
             }
 
             // #844: Templates can be loaded with windows open (the Excel link add-in did that, before it was retired).  Make sure that menus are set up for the active window if there is one.
@@ -342,7 +341,14 @@ namespace StatsDirect.UI
                 tags.Add("help", chmId.ToString());
             }
             menuItem.Tag = ToTagString(tags);
-            menuItem.Click += OperationMenuHandler;
+            if (sdMenuItem.Command == "calculator")
+            {
+                menuItem.Name = "calculatorMenuItem";
+                // Dismiss the menu before the pane takes focus or changes layout.
+                menuItem.Click += (_, _) => BeginInvoke(new Action(() => SdApplication.SoleInstance.ShowCalculator()));
+            }
+            else
+                menuItem.Click += OperationMenuHandler;
             menuItem.MouseEnter += menuItem_MouseEnter;
             menuItem.MouseLeave += menuItem_MouseLeave;
             if (null != sdMenuItem.SubItems)
@@ -3227,121 +3233,6 @@ namespace StatsDirect.UI
             OpenFile(fileName, true);
         }
 
-        private List<ToolStripMenuItem> toolsMenuItems;
-
-        /// <summary>
-        /// We have reason to believe the tools menu may not be populated (for example at the start of the program) or may not be up to date (for example after the list of tools has been changed by the user).  Set it up.
-        /// </summary>
-        /// <remarks>Precondition: We are on the UI thread.</remarks>
-        public void UpdateToolsMenu()
-        {
-            // Ensure the menu is blank
-            if (null == toolsMenuItems)
-            {
-                toolsMenuItems = new List<ToolStripMenuItem>();
-            }
-            else
-            {
-                // Remove current entries
-                foreach (ToolStripMenuItem item in toolsMenuItems)
-                    toolsToolStripMenuItem.DropDownItems.Remove(item);
-                toolsMenuItems.Clear();
-            }
-
-            // Set up the new items
-            IReadOnlyList<string> names = Settings.Default.ToolsNames;
-            IReadOnlyList<string> paths = Settings.Default.ToolsPrograms;
-            // Calculator is an optional in-process tool, always reachable here.
-            // Old saved Tools entries are filtered below instead of launching a second process.
-            var calculatorItem = new ToolStripMenuItem("Calculator") { Tag = "#{help=1020|cmd=%STATSDIRECT%\\StatsDirect.exe -calculator}" };
-            calculatorItem.Click += ToolsMenuItemHandler;
-            toolsToolStripMenuItem.DropDownItems.Insert(toolsToolStripMenuItem.DropDownItems.IndexOf(toolsToolStripSeparator), calculatorItem);
-            toolsMenuItems.Add(calculatorItem);
-            for (int i = 0; i < names.Count; i++)
-            {
-                string name = names[i];
-                string path = paths[i];
-                if (Calculator.CalculatorService.IsBuiltInCommand(path, Application.ExecutablePath)) continue;
-                ToolStripMenuItem menuItem = new()
-                {
-                    DisplayStyle = ToolStripItemDisplayStyle.Text,
-                    Size = new Size(167, 22),
-                    Text = name,
-                    Tag = "#{help=1156|cmd=" + path + "}"
-                };
-                // 167,22 is merely a convenient magic size that came from the VS2005 designer; it may not be "right", but it works.
-                menuItem.Click += ToolsMenuItemHandler;
-                menuItem.MergeAction = MergeAction.Replace;
-                toolsToolStripMenuItem.DropDownItems.Insert(toolsToolStripMenuItem.DropDownItems.IndexOf(toolsToolStripSeparator), menuItem);
-                toolsMenuItems.Add(menuItem);
-            }
-            fileListToolStripSeparator.Visible = true;
-        }
-
-        private void ToolsMenuItemHandler(object sender, EventArgs e)
-        {
-            ToolStripMenuItem menuItem = (ToolStripMenuItem)sender;
-            try
-            {
-                object tagObject = ToTagObject(menuItem);
-                if (tagObject is not Dictionary<string, string> tagDictionary)
-                    return;
-                if (!tagDictionary.TryGetValue("cmd", out string commandLine))
-                    return;
-                if (null == commandLine)
-                    return;
-
-                if (Calculator.CalculatorService.IsBuiltInCommand(commandLine, Application.ExecutablePath))
-                {
-                    // Let the Tools dropdown dismiss before changing the workspace layout.
-                    BeginInvoke(new Action(() => SdApplication.SoleInstance.ShowCalculator()));
-                    return;
-                }
-
-                // Split off any arguments
-                string arguments = string.Empty;
-                int firstSpace = commandLine.IndexOf(' ');
-                if (firstSpace >= 0)
-                {
-                    arguments = commandLine.Substring(firstSpace + 1);
-                    commandLine = commandLine.Substring(0, firstSpace);
-                }
-                // Perform any required substitutions
-                Assembly mainAssembly = GetType().Assembly;
-                string mainFileName = mainAssembly.Location;
-                string installPath = Path.GetDirectoryName(mainFileName);
-                commandLine = commandLine.Replace("%STATSDIRECT%", installPath);
-                Process.Start(commandLine, arguments);
-            }
-            catch (Win32Exception ex)
-            {
-                SdApplication.SoleInstance.FriendlyError("Couldn't start " + menuItem.Text, ex, false);
-            }
-            catch (IOException ex)
-            {
-                SdApplication.SoleInstance.FriendlyError("Couldn't start " + menuItem.Text, ex, false);
-            }
-            catch (Exception ex)
-            {
-                SdApplication.SoleInstance.FriendlyError("Couldn't start " + menuItem.Text, ex, false);
-            }
-        }
-
-        private void setupToolsToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                SdApplication.SoleInstance.ShowOrQueueDialog(new frmSetupTools(), (f, result) =>
-                {
-                    UpdateToolsMenu();
-                });
-            }
-            catch (Exception ex)
-            {
-                SdApplication.SoleInstance.FriendlyError("Couldn't show tools setup form due to an internal error", ex, false);
-            }
-        }
-
         private void aboutsStatsDirectToolStripMenuItem_Click(object sender, EventArgs e)
         {
             try
@@ -4347,31 +4238,6 @@ namespace StatsDirect.UI
             base.ScaleControl(factor, specified);
             // Record the running scale factor used, for sizing controls we add dynamically where they don't do it themselves
             currentScaleFactor = new SizeF(currentScaleFactor.Width * factor.Width, currentScaleFactor.Height * factor.Height);
-        }
-
-        private void rGuiToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            StartRGui();
-        }
-
-        private static void StartRGui()
-        {
-            try
-            {
-                RVersion preferredVersion = RController.PreferredRVersion();
-                while (null == preferredVersion)
-                {
-                    if (!RController.UserMightHaveInstalledR())
-                        return;
-                    preferredVersion = RController.PreferredRVersion();
-                }
-                string guiPath = preferredVersion.GuiPath;
-                Process.Start(new ProcessStartInfo(guiPath) { UseShellExecute = true });
-            }
-            catch (Exception ex)
-            {
-                SdApplication.SoleInstance.FriendlyError("Couldn't start R", ex, false);
-            }
         }
 
         internal ComboBox IntegratedConfidenceIntervalControl => cboConfidenceInterval;

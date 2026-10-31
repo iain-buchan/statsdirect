@@ -94,7 +94,7 @@ an upgrade on a clean Windows VM before release.
 
 ### Calculator
 
-Tools > Calculator opens a resizable pane below the workspace, created only on
+Analysis > Calculator opens a resizable pane below the workspace, created only on
 request. Close hides it without leaving a tab. Pop out and Dock move the same
 calculator view; its expression, result, saved calculations, size and presentation
 are retained for the current session. Help can remain open on the right.
@@ -110,9 +110,9 @@ the input control and its editing history. Input is plain text; the native
 Windows text control does not restore the retired DevExpress report editor.
 
 The shared tool-window infrastructure is used by Calculator and Help. Run
-`tests/Calculator` and `tests/HtmlHelp` after changing it. Existing saved Tools
-entries for this installation's `StatsDirect.exe -calculator` are deduplicated
-and routed to the pane. Old `-calculator` shortcuts now open the main application
+`tests/Calculator` and `tests/HtmlHelp` after changing it. Calculator is in its own
+Analysis menu section immediately before Options. External-program shortcuts and
+Setup Tools have been retired. Old `-calculator` shortcuts open the main application
 with this same pane; the separate calculator application has been removed.
 `tests/WindowsShell` checks the actual main form and merged worksheet commands.
 

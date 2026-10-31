@@ -6,7 +6,7 @@ using System.Xml.Linq;
 
 internal static partial class Program
 {
-    static async Task CheckReportSaveAs(frmMain main)
+    static async Task CheckReportSaveAs(frmMain main, object app)
     {
         string folder = Path.Combine(Path.GetTempPath(), "StatsDirect-save-as-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(folder);
@@ -17,6 +17,12 @@ internal static partial class Program
             await ((Task)Get(view, "Ready")).WaitAsync(TimeSpan.FromSeconds(45));
             await (Task)Call(view, "OpenHtmlAsync", "<p>Original report</p><table><tr><td>Estimate</td><td>1.25</td></tr></table>", "Save As check");
             var browser = (Microsoft.Web.WebView2.WinForms.WebView2)Field(view, "Browser");
+            bool dirtyBeforeCalculator = (bool)Get(report, "Dirty");
+            string reportBeforeCalculator = await browser.CoreWebView2.ExecuteScriptAsync("document.getElementById('results').innerHTML");
+            await CheckCalculatorMenuForDocument(main, app, report, "an active report");
+            Check((bool)Get(report, "Dirty") == dirtyBeforeCalculator
+                && await browser.CoreWebView2.ExecuteScriptAsync("document.getElementById('results').innerHTML") == reportBeforeCalculator,
+                "opening Calculator from a report preserves its content and saved state");
             using (var dialog = (SaveFileDialog)Call(report, "CreateSaveReportDialog", true))
                 Check(dialog.Filter.Split('|').Where((_, i) => i % 2 == 1).SequenceEqual(new[] { "*.html", "*.docx", "*.pdf" }) && dialog.FilterIndex == 1 && dialog.DefaultExt == "html" && dialog.AddExtension,
                     "report Save As offers HTML, Word and PDF, with HTML selected and extensions enabled");

@@ -1,5 +1,7 @@
 # Production Windows shell checks
 
+31 October 2026 menu simplification: **211 shell checks pass** with `STATSDIRECT_SKIP_CLIPBOARD=1`. The actual template menus retain their order without Tools; Calculator has a separate Analysis section before Options and reopens the same pane with no document, a worksheet, a report or an R session. Data, range selection, report content, calculator state and unexecuted R code are preserved. File > New R session and Help > Check for Updates remain available. The isolated application build succeeds with the existing NU1701 warning. The released checkout, version and installers are unchanged.
+
 `NotebookOpening.cs` exercises the actual File > Open `.ipynb` dispatcher. It checks current report/code restoration, typed data in new worksheets, no automatic R execution, new unsaved documents without notebook save paths, the unchanged original file, and rollback of a failed import while existing work stays open. The full shell suite passes **183 checks** with STATSDIRECT_SKIP_CLIPBOARD=1, including tab names and strict UTF-8 validation; the export totals below describe the earlier run.
 
 24 October 2026 notebook export: **170 shell checks pass** with `STATSDIRECT_SKIP_CLIPBOARD=1`, including the menu, file-state and atomic-export checks below. No installer was rebuilt.

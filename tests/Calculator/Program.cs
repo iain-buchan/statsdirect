@@ -50,10 +50,6 @@ internal static partial class Program
         using var help = new HelpService();
         using var calc = new CalculatorService();
         Check(calc.Session == null && calc.View == null && !host.Controls.OfType<TabControl>().Any(), "calculator is absent until explicitly opened; no permanent tab");
-        string app = @"C:\Program Files\StatsDirect\StatsDirect.exe";
-        foreach (string command in new[] { @"%STATSDIRECT%\StatsDirect.exe -calculator", '"' + app + '"' + " -calculator", app + " -calculator", "StatsDirect.exe -calculator" })
-            Check(CalculatorService.IsBuiltInCommand(command, app), "recognises saved Tools command: " + command);
-        Check(!CalculatorService.IsBuiltInCommand("calc.exe", app) && !CalculatorService.IsBuiltInCommand(@"C:\Other\StatsDirect.exe -calculator", app) && !CalculatorService.IsBuiltInCommand(app + " -calculator other", app), "custom tools and other installations retain their external launch path");
         calc.Show(host, () => help.Show(host, "1020", Path.Combine(AppContext.BaseDirectory, "Help")));
         var view = calc.View;
         var session = calc.Session;
@@ -61,7 +57,7 @@ internal static partial class Program
         Check(host.ActiveMdiChild == sheet && selection.SelectionStart == 2 && selection.SelectionLength == 7 && view.Expression.Focused, "opening Calculator focuses input and preserves active worksheet and range");
         Check(ribbon.Width == host.ClientSize.Width && mdi.Bottom <= session.DockHost.Divider.Top, "calculator and divider leave the ribbon and worksheet unobscured");
         calc.Show(host, () => { });
-        Check(ReferenceEquals(view, calc.View) && ReferenceEquals(session, calc.Session), "repeated Tools command reuses one calculator session");
+        Check(ReferenceEquals(view, calc.View) && ReferenceEquals(session, calc.Session), "repeated Calculator command reuses one calculator session");
         Check(view.Expression.Multiline && view.Expression.WordWrap && view.Expression.ScrollBars == RichTextBoxScrollBars.Vertical, "input wraps with vertical scrolling");
         double dockedLines = view.Expression.ClientSize.Height / (double)view.Expression.Font.Height;
         Check(dockedLines >= 2.5 && dockedLines <= 4.5, $"default docked input shows about three lines at {view.DeviceDpi} DPI ({dockedLines:F2})");

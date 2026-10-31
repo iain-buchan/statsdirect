@@ -11,11 +11,6 @@ namespace StatsDirect.UI.Properties
     internal sealed class Settings
     {
         public static Settings Default { get; } = new();
-        /// <summary>
-        /// Guaranteed a new copy each time, with no load of any other data on top.
-        /// </summary>
-        public static Settings InstallationDefaults => new();
-
         public int MainTop { get; set; }
         public int MainLeft { get; set; }
         public int MainWidth { get; set; }
@@ -34,8 +29,6 @@ namespace StatsDirect.UI.Properties
         public double DefaultConfidenceInterval { get; set; } = 0.95;
         public IReadOnlyList<string> RecentFileList { get; set; }
         public bool SelectGroupsByIdentifier { get; set; } = false;
-        public IReadOnlyList<string> ToolsNames { get; set; } = new string[] { "Calculator", "Notepad"};
-        public IReadOnlyList<string> ToolsPrograms { get; set; } = new string[] { "%STATSDIRECT%\\StatsDirect.exe -calculator", "notepad.exe" };
 
         [JsonIgnore]
         public string DataDirectory => "Data";

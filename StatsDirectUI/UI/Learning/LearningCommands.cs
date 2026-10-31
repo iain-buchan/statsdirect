@@ -17,7 +17,6 @@ public partial class frmMain
         helpToolStripMenuItem.DropDownItems.Insert(1, new ToolStripMenuItem("Learning &Options…", null, (_, _) => BeginInvoke(new Action(() => Learning.Show(true)))) { Name = "learningOptionsMenuItem" });
         helpToolStripMenuItem.DropDownItems.Insert(2, new ToolStripSeparator());
         int updatesIndex = helpToolStripMenuItem.DropDownItems.IndexOf(aboutsStatsDirectToolStripMenuItem);
-        toolsToolStripMenuItem.DropDownItems.Remove(checkForUpdatesToolStripMenuItem);
         helpToolStripMenuItem.DropDownItems.Insert(updatesIndex++, new ToolStripMenuItem("&Example workbook", null, (_, _) => BeginInvoke(new Action(OpenExampleWorkbook))) { Name = "exampleWorkbookMenuItem" });
         helpToolStripMenuItem.DropDownItems.Insert(updatesIndex++, new ToolStripSeparator());
         helpToolStripMenuItem.DropDownItems.Insert(updatesIndex++, checkForUpdatesToolStripMenuItem);

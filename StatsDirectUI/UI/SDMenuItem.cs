@@ -34,6 +34,9 @@ namespace StatsDirect.UI
             set => operation = value;
         }
 
+        [XmlAttribute(AttributeName = "command")]
+        public string Command { get; set; }
+
         [XmlAttribute(AttributeName = "tooltip")]
         public string Tooltip
         {

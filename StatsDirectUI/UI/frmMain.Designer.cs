@@ -52,10 +52,6 @@ namespace StatsDirect.UI
             this.insertToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.formatToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.pageSetupToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.rGuiToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolsToolStripSeparator = new System.Windows.Forms.ToolStripSeparator();
-            this.setupToolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.checkForUpdatesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.windowToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.cascadeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -189,7 +185,6 @@ namespace StatsDirect.UI
             this.EditToolStripMenuItem,
             this.insertToolStripMenuItem,
             this.formatToolStripMenuItem,
-            this.toolsToolStripMenuItem,
             this.windowToolStripMenuItem,
             this.helpToolStripMenuItem});
             this.mnuMain.Location = new System.Drawing.Point(0, 0);
@@ -391,38 +386,6 @@ namespace StatsDirect.UI
             this.pageSetupToolStripMenuItem.Size = new System.Drawing.Size(142, 22);
             this.pageSetupToolStripMenuItem.Tag = "#{help=1303}";
             this.pageSetupToolStripMenuItem.Text = "Page Setup...";
-            // 
-            // toolsToolStripMenuItem
-            // 
-            this.toolsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.rGuiToolStripMenuItem,
-            this.toolsToolStripSeparator,
-            this.setupToolsToolStripMenuItem,
-            this.checkForUpdatesToolStripMenuItem});
-            this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
-            this.toolsToolStripMenuItem.Size = new System.Drawing.Size(48, 20);
-            this.toolsToolStripMenuItem.Tag = "#{help=1156}";
-            this.toolsToolStripMenuItem.Text = "&Tools";
-            // 
-            // rGuiToolStripMenuItem
-            // 
-            this.rGuiToolStripMenuItem.Name = "rGuiToolStripMenuItem";
-            this.rGuiToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.rGuiToolStripMenuItem.Text = "R";
-            this.rGuiToolStripMenuItem.Click += new System.EventHandler(this.rGuiToolStripMenuItem_Click);
-            // 
-            // toolsToolStripSeparator
-            // 
-            this.toolsToolStripSeparator.Name = "toolsToolStripSeparator";
-            this.toolsToolStripSeparator.Size = new System.Drawing.Size(177, 6);
-            // 
-            // setupToolsToolStripMenuItem
-            // 
-            this.setupToolsToolStripMenuItem.Name = "setupToolsToolStripMenuItem";
-            this.setupToolsToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.setupToolsToolStripMenuItem.Tag = "#{help=1153}";
-            this.setupToolsToolStripMenuItem.Text = "Setup Tools...";
-            this.setupToolsToolStripMenuItem.Click += new System.EventHandler(this.setupToolsToolStripMenuItem_Click);
             // 
             // checkForUpdatesToolStripMenuItem
             // 
@@ -1561,9 +1524,6 @@ namespace StatsDirect.UI
         private System.Windows.Forms.ToolStripMenuItem exportDataToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator5;
         private System.Windows.Forms.ToolStripSeparator fileListToolStripSeparator;
-        private System.Windows.Forms.ToolStripMenuItem toolsToolStripMenuItem;
-        private System.Windows.Forms.ToolStripSeparator toolsToolStripSeparator;
-        private System.Windows.Forms.ToolStripMenuItem setupToolsToolStripMenuItem;
         private System.Windows.Forms.TableLayoutPanel tlpSelectOperation;
         private System.Windows.Forms.Button cmdHelp;
         private System.Windows.Forms.Button cmdClose;
@@ -1630,7 +1590,6 @@ namespace StatsDirect.UI
         private System.Windows.Forms.PictureBox picLinkArrow;
         private System.Windows.Forms.PictureBox picArrowAcross;
         private System.Windows.Forms.Label lblOkOrRightMouse;
-        private System.Windows.Forms.ToolStripMenuItem rGuiToolStripMenuItem;
         private System.Windows.Forms.TableLayoutPanel tlpUserArea;
         private System.Windows.Forms.Panel pnlFollowOnInstructions;
         private System.Windows.Forms.Label lblFollowOnInstructions;

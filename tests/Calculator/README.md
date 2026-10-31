@@ -1,5 +1,7 @@
 # Dockable calculator tests
 
+31 October 2026: **67 checks pass at both 96 and 240 DPI** after retiring the five saved-Tools-launcher checks. Calculator docking, focus, wrapping, evaluation and editing checks remain. The actual Analysis menu command is covered by `tests/WindowsShell`.
+
 Build the Windows application first, then run on Windows with WebView2 installed:
 
     dotnet run --project tests/Calculator -c Release -- C:/Temp/StatsDirectCalculatorTests

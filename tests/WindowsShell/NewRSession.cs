@@ -2,7 +2,7 @@ using StatsDirect.UI;
 
 internal static partial class Program
 {
-    static async Task CheckNewRSession(frmMain main)
+    static async Task CheckNewRSession(frmMain main, object app)
     {
         var file = (ToolStripMenuItem)Field(main, "fileToolStripMenuItem");
         var command = (ToolStripMenuItem)file.DropDownItems["newScriptToolStripMenuItem"]!;
@@ -21,5 +21,9 @@ internal static partial class Program
             && ((RichTextBox)Field(session, "rtbDoc")).TextLength == 0
             && !(bool)Get(session, "LearningRunning") && (string)Get(session, "LearningOutput") == "",
             "New R session opens a blank R editor without executing code or starting a result");
+        await CheckCalculatorMenuForDocument(main, app, session, "an active R session");
+        Check(!(bool)Get(session, "LearningRunning") && (string)Get(session, "LearningOutput") == ""
+            && ((RichTextBox)Field(session, "rtbDoc")).TextLength == 0,
+            "opening Calculator from an R session preserves its script and starts no R execution");
     }
 }

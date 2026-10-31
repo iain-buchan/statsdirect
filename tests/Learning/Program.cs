@@ -51,7 +51,9 @@ internal static partial class Program
         var helpItems=help.DropDownItems;int exampleIndex=helpItems.IndexOfKey("exampleWorkbookMenuItem");
         int aboutIndex=helpItems.IndexOfKey("aboutsStatsDirectToolStripMenuItem");
         Check(aboutIndex==helpItems.Count-1&&exampleIndex<helpItems.IndexOfKey("checkForUpdatesToolStripMenuItem")&&helpItems.IndexOfKey("checkForUpdatesToolStripMenuItem")<aboutIndex&&helpItems[aboutIndex-1] is ToolStripSeparator,"Help ends with Example workbook, Check for Updates and About StatsDirect last, matching Mac");
-        Check(!((ToolStripMenuItem)Field(main,"toolsToolStripMenuItem")).DropDownItems.ContainsKey("checkForUpdatesToolStripMenuItem"),"update checking is moved to Help without a duplicate in Tools");
+        Check(!menu.Items.OfType<ToolStripMenuItem>().Any(i=>i.Text.Replace("&","")=="Tools")
+            && menu.Items.OfType<ToolStripMenuItem>().Where(i=>i!=help).All(i=>!i.DropDownItems.ContainsKey("checkForUpdatesToolStripMenuItem")),
+            "Tools is retired and update checking remains only in Help");
         string examplePath=Path.Combine(AppContext.BaseDirectory,"Data","test.xlsx");
         byte[] exampleBytes=File.ReadAllBytes(examplePath);
         help.DropDownItems["exampleWorkbookMenuItem"]!.PerformClick();

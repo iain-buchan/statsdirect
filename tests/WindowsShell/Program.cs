@@ -62,10 +62,11 @@ internal static partial class Program
         await Task.Delay(100); // run the real startup-command callback after Shown
         Check(Get(app, "CalculatorView") is Control startupView && startupView.ContainsFocus && main.ActiveMdiChild == null && !(bool)Get(main, "ShowOpeningDialog"),
             "legacy -calculator startup opens the integrated pane without a document");
-        await CheckNewRSession(main);
+        await CheckMenuSimplification(main, app);
+        await CheckNewRSession(main, app);
         await CheckScriptContextMenu(main);
         await CheckLegacyReportOpening(main);
-        await CheckReportSaveAs(main);
+        await CheckReportSaveAs(main, app);
         await CheckReportNotebook(main);
         var grid = (Form)Call(main, "CreateGrid");
         await Task.Delay(150); // let the production post-tab activation timer finish
@@ -82,6 +83,10 @@ internal static partial class Program
             workbook.RangeSelection = workbook.ActiveWorksheet.Cells["A1:B2"];
             return workbook.RangeSelection.Address;
         });
+        await CheckCalculatorMenuForDocument(main, app, grid, "an active worksheet");
+        Check(Locked(() => workbook.RangeSelection.Address) == selected
+            && Locked(() => workbook.ActiveWorksheet.Cells["A1"].Value.ToString()) == "123",
+            "Analysis > Calculator preserves the worksheet selection and entered data");
         await CheckWorkbookTabs(main, grid, workbook);
         await CheckDocumentToolbars(main, grid, workbook);
         await CheckScriptCharts(main, grid);
