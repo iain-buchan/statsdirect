@@ -31,6 +31,8 @@ public partial class frmScript
             view.HelpRequested += ShowHelp;
             view.AIRequested += () => (MdiParent as frmMain)?.Learning.ShowScriptAI(this);
             view.MoreRequested += ShowRMoreMenu;
+            // Before the page is up nothing else can show a notice: a page that failed to load is reported here
+            view.Notice += message => { if (!IsDisposed && !view.Ready.IsCompletedSuccessfully) MessageBox.Show(this, message, "R"); };
             view.CommandRequested += command =>
             {
                 switch (command)
@@ -153,7 +155,9 @@ public partial class frmScript
         bool accepted = await PendingInteractiveClose;
         if (parentClosing) return;
         PendingInteractiveClose = null;
-        if (accepted && !IsDisposed) BeginInvoke(new Action(Close));
+        // The close is certain now, no other window can veto it: R ends its session and removes its temporary folder before the window goes.
+        // (When the main window closes, the window's disposal asks the worker to stop in the same way.)
+        if (accepted && !IsDisposed) { await InteractiveConsole.ShutdownAsync(); if (!IsDisposed) BeginInvoke(new Action(Close)); }
     }
 
     private async Task<bool> ConfirmInteractiveCloseAsync()

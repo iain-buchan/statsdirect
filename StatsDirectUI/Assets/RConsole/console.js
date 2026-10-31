@@ -228,7 +228,7 @@
     input.disabled = !model.acceptsInput(); byId('prompt').textContent = model.prompt;
     input.placeholder = model.state === 'input' ? 'Type your answer · Enter to send' : 'Enter R code · Enter to run · Shift+Enter for a new line';
     const status = {starting: 'Starting R…', ready: 'Ready · R workspace retained', continuation: 'Continue the R expression', input: 'R is waiting for your answer', busy: 'R is running…', submitting: 'Sending to R…', interrupting: 'Interrupting R…', restarting: 'Restarting R · workspace will be cleared', stopped: 'R session ended'};
-    byId('state').textContent = status[model.state] || 'R console';
+    byId('state').textContent = model.state === 'input' && model.prompt.trim() ? status.input + ': ' + model.prompt.trim() : status[model.state] || 'R console';   // the live status carries R's question
     byId('run').disabled = model.mode === 'script' ? model.state !== 'ready' || !model.script.trim() : !model.acceptsInput();
     byId('run').querySelector('span').textContent = model.mode === 'script' ? script.selectionStart !== script.selectionEnd ? 'Run selection' : 'Run script' : model.state === 'input' ? 'Reply' : 'Run';
     byId('stop').disabled = !['busy', 'input', 'continuation', 'submitting'].includes(model.state);

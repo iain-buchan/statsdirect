@@ -16,9 +16,10 @@ internal readonly record struct RDownloadProgress(long Received, long? Total);
 /// <summary>The reviewed official installer. Update the URL and hash together after checking CRAN and Authenticode.</summary>
 internal sealed class RInstallation : IDisposable
 {
-    internal const string Version = "4.6.1";
-    internal static readonly Uri DownloadUri = new("https://cran.r-project.org/bin/windows/base/R-4.6.1-win.exe");
-    internal const string Sha256 = "c5424c40cd70ef85765a55d2ff96bb602b5f30ed536938ff004f14db5db3c2df";
+    internal const string Version = "4.6.2";
+    internal const string Series = "4.6";   // the series the R console's worker takes: a new series needs the worker rebuilt and this pin moved
+    internal static readonly Uri DownloadUri = new("https://cran.r-project.org/bin/windows/base/R-4.6.2-win.exe");
+    internal const string Sha256 = "b0b0053baa1963b6d8a28c9642d50107ef9ce2f41c8b9a90e952846c8918b38a";
     internal const long MaximumBytes = 150 * 1024 * 1024;
     private readonly string folder = Directory.CreateTempSubdirectory("StatsDirect-R-").FullName;
     private bool launched;
@@ -108,9 +109,11 @@ internal sealed class RInstallation : IDisposable
         return process;
     }
 
-    internal static async Task<bool> ReadyAsync(CancellationToken token)
+    internal static Task<bool> ReadyAsync(CancellationToken token) => ReadyAsync(RController.PreferredRVersion(), token);
+
+    /// <summary>Whether this installed R answers; false for none.  The console asks for the R of its worker's series, the runner for the newest.</summary>
+    internal static async Task<bool> ReadyAsync(RVersion version, CancellationToken token)
     {
-        var version = RController.PreferredRVersion();
         if (version == null) return false;
         var start = new ProcessStartInfo(Path.Combine(version.BinPath, "Rscript.exe"))
         { UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true };

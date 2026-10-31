@@ -171,7 +171,16 @@ namespace StatsDirect.R
             => RunScriptCapturingOutput(scriptBody, preferredVersion, stop, echo, Guid.NewGuid());
 
         private static bool housekept;
-        private static readonly Regex AutomaticChart = new("^Rplot-[0-9a-f]{32}-[0-9]+-[0-9]{3}\\.svg$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        // The runner's automatic charts, and the console's snapshots, device pages, file copies, previews and plot indexes
+        private static readonly Regex AutomaticChart = new("^(?:Rplot-[0-9a-f]{32}-[0-9]+-[0-9]{3}\\.svg|console-(?:plots-)?[0-9a-f]{32}-.*\\.(?:svg|png|jpe?g|gif|bmp|tiff?|pdf|tsv))$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+        /// <summary>The housekeeping once per process, before the first run or session, for the runner and the console alike.</summary>
+        internal static void HousekeepOnce(string folder)
+        {
+            if (housekept) return;
+            housekept = true;
+            HousekeepAutomaticCharts(folder, DateTime.Now);
+        }
 
         /// <summary>
         /// Removes the automatic chart files of earlier runs, Rplot-&lt;run&gt;-&lt;device&gt;-&lt;page&gt;.svg, that are a week old or more from the R
@@ -182,7 +191,7 @@ namespace StatsDirect.R
         {
             if (!Directory.Exists(folder))
                 return;
-            foreach (string path in Directory.EnumerateFiles(folder, "Rplot-*.svg"))
+            foreach (string path in Directory.EnumerateFiles(folder))
             {
                 if (!AutomaticChart.IsMatch(Path.GetFileName(path)))
                     continue;
@@ -198,7 +207,7 @@ namespace StatsDirect.R
             string rFolder = SDConfiguration.MyStatsDirectRFolder;
             if (!Directory.Exists(rFolder))
                 Directory.CreateDirectory(rFolder);
-            if (!housekept) { housekept = true; HousekeepAutomaticCharts(rFolder, DateTime.Now); }
+            HousekeepOnce(rFolder);
             // A random identity stays unique across concurrent runs, app restarts and processes whose Windows IDs are reused.
             string scriptPath = Path.Combine(rFolder, "continue-" + runId.ToString("N") + ".r");
             string sourcePath = Path.Combine(rFolder, "script-" + runId.ToString("N") + ".r");
@@ -326,9 +335,12 @@ namespace StatsDirect.R
         /// If necessary, prompt the user to install R.  Return true if we think the user might have installed R successfully, or false if there's no chance (for example, the user's told us that they're not going to)
         /// </summary>
         /// <returns></returns>
-        public static bool UserMightHaveInstalledR()
+        public static bool UserMightHaveInstalledR() => UserMightHaveInstalledR(RInstallation.ReadyAsync);
+
+        /// <summary>The same, with the readiness the caller needs: the console's, an R of its worker's series.</summary>
+        internal static bool UserMightHaveInstalledR(Func<System.Threading.CancellationToken, System.Threading.Tasks.Task<bool>> ready)
         {
-            using frmInstallR f = new();
+            using frmInstallR f = new(ready);
             f.ShowDialog(SdApplication.SoleInstance.DialogOwner);
             return f.UserThinksRIsInstalled;
         }

@@ -103,7 +103,12 @@ internal sealed partial class RConsoleView : UserControl
             core.Settings.IsPasswordAutosaveEnabled = false;
             core.SetVirtualHostNameToFolderMapping(new Uri(Origin).Host, Path.Combine(AppContext.BaseDirectory, "RConsole"), CoreWebView2HostResourceAccessKind.DenyCors);
             core.NavigationStarting += (_, e) => e.Cancel = !e.Uri.StartsWith(Origin + "/", StringComparison.Ordinal);
-            core.NavigationCompleted += (_, e) => { if (!e.IsSuccess) ReportNotice("The R console page could not load: " + e.WebErrorStatus); };
+            // A page that fails to load faults Ready, so Run and Continue in R fail at once rather than waiting for ever, and shows the reload link
+            core.NavigationCompleted += (_, e) =>
+            {
+                if (e.IsSuccess || closing || pageReady || e.WebErrorStatus == CoreWebView2WebErrorStatus.OperationCanceled) return;
+                FailPage("The R console page could not load: " + e.WebErrorStatus);
+            };
             core.NewWindowRequested += (_, e) => e.Handled = true;
             core.DownloadStarting += (_, e) => e.Cancel = true;
             core.PermissionRequested += (_, e) => e.State = CoreWebView2PermissionState.Deny;
@@ -128,6 +133,33 @@ internal sealed partial class RConsoleView : UserControl
         }
     }
 
+    private void FailPage(string message)
+    {
+        ready.TrySetException(new IOException(message));
+        _ = ready.Task.Exception;   // observed here: the callers that await Ready get it as their own
+        displayFailure.Text = message + " Reload display (your R workspace is retained).";
+        displayFailure.Visible = true; displayFailure.BringToFront();
+        Notice?.Invoke(message);
+    }
+
+    /// <summary>The newest installed R of the series the worker was built for; the newest of any when the worker cannot name its series.</summary>
+    private static RVersion? CompatibleRVersion(string? series)
+    {
+        RVersion? preferred = null;
+        foreach (RVersion candidate in RController.CheckR())
+            if ((series == null || candidate.MajorVersion + "." + candidate.MinorVersion == series) && candidate.CompareTo(preferred) > 0)
+                preferred = candidate;
+        return preferred;
+    }
+
+    /// <summary>Asks the worker to stop, as closing the window does before the window goes, so that R ends its session tidily.</summary>
+    internal async Task ShutdownAsync()
+    {
+        if (Session == null) return;
+        try { await Session.StopAsync().WaitAsync(TimeSpan.FromSeconds(4)); }
+        catch (Exception error) when (error is TimeoutException or IOException or InvalidOperationException or ObjectDisposedException) { }
+    }
+
     internal async Task StartAsync()
     {
         await Ready;
@@ -139,12 +171,20 @@ internal sealed partial class RConsoleView : UserControl
             {
                 string helper = Path.Combine(AppContext.BaseDirectory, "StatsDirect.RConsole.Native.exe");
                 if (!File.Exists(helper)) throw new FileNotFoundException("The R console component is missing. Repair or reinstall StatsDirect; your script has been retained.", helper);
-                RVersion? version = RController.PreferredRVersion();
+                // The worker takes one R series: the newest installed R of that series, else the Set up R dialog, which offers it
+                string? series = RConsoleSession.CompiledRSeries(helper);
+                RVersion? version = CompatibleRVersion(series);
                 while (version == null)
                 {
-                    if (!RController.UserMightHaveInstalledR()) throw new OperationCanceledException("R was not installed. The script has been retained.");
-                    version = RController.PreferredRVersion();
+                    RVersion? other = RController.PreferredRVersion();
+                    if (other != null && series != null)
+                        ReportNotice("R " + other.VersionString + " is installed; the R console works with 64-bit R " + series + ".x. Set up R installs it beside the R you have.");
+                    // Set up R's Check installation looks for an R of the worker's series, not for any R, so an older R does not close the dialog as success
+                    if (!RController.UserMightHaveInstalledR(token => RInstallation.ReadyAsync(CompatibleRVersion(series), token)))
+                        throw new OperationCanceledException("R " + (series ?? "") + (series == null ? "" : ".x ") + "was not installed. The script has been retained.");
+                    version = CompatibleRVersion(series);
                 }
+                RController.HousekeepOnce(WorkingDirectory);   // the automatic chart files of earlier runs and sessions, a week old or more
                 Session = new RConsoleSession(helper, version.InstallPath, WorkingDirectory);
                 Session.Event += OnSessionEvent;
             }
@@ -207,6 +247,7 @@ internal sealed partial class RConsoleView : UserControl
                 pageReady = true;
                 displayFailure.Visible = false;
                 SendSession();
+                if (ready.Task.IsFaulted) ready = new(TaskCreationOptions.RunContinuationsAsynchronously);   // a page that failed to load and loaded after all, by the browser's own reload
                 ready.TrySetResult();
                 return;
             }
@@ -346,7 +387,11 @@ internal sealed partial class RConsoleView : UserControl
         path = Path.GetFullPath(path);
         string relative = Path.GetRelativePath(Path.GetFullPath(WorkingDirectory), path);
         if (!outputFiles.Contains(path) || Path.IsPathRooted(relative) || relative == ".." || relative.StartsWith(".." + Path.DirectorySeparatorChar, StringComparison.Ordinal) || !File.Exists(path)) throw new InvalidOperationException("That output file is no longer available in this R folder.");
-        Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
+        // A document opens in its program; a file of any other kind, one Windows would run, is shown in its folder instead
+        string extension = Path.GetExtension(path).ToLowerInvariant();
+        if (extension is ".csv" or ".tsv" or ".txt" or ".dat" or ".rds" or ".rdata" or ".rda" or ".json" or ".xml" or ".html" or ".htm" or ".md" or ".xlsx" or ".xls" or ".docx" or ".pdf" or ".r" or ".rmd" or ".log")
+            Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
+        else Process.Start(new ProcessStartInfo("explorer.exe") { ArgumentList = { "/select,", path }, UseShellExecute = false });   // the path its own argument, quoted when it has spaces
     }
     private static string PreviewKey(string source) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(source)));
     private JsonElement PlotMetadata(string id, long? revision)

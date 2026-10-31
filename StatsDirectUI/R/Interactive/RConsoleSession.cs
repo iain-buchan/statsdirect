@@ -65,6 +65,19 @@ public sealed class RConsoleSession : IDisposable
         }
     }
 
+    /// <summary>The R series the worker was built for, such as "4.6", which it reports to --version; null when it cannot say.</summary>
+    public static string? CompiledRSeries(string nativeHelper)
+    {
+        try
+        {
+            using var query = Process.Start(new ProcessStartInfo(nativeHelper, "--version") { UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true });
+            if (query == null) return null;
+            string series = query.StandardOutput.ReadToEnd().Trim();
+            return query.WaitForExit(10000) && query.ExitCode == 0 && Regex.IsMatch(series, @"^\d+\.\d+$") ? series : null;
+        }
+        catch (Exception error) when (error is IOException or InvalidOperationException or System.ComponentModel.Win32Exception) { return null; }
+    }
+
     public RConsoleSession(string nativeHelper, string rHome, string workingDirectory)
     {
         helper = Path.GetFullPath(nativeHelper);
@@ -122,6 +135,14 @@ public sealed class RConsoleSession : IDisposable
         {
             if (launched && !child.HasExited) child.Kill(entireProcessTree: true);
             child.Dispose(); process = null;
+            // No reader ran, so nothing else turns the session from busy to stopped: the page would show R running for ever
+            bool resetHere;
+            lock (sync)
+            {
+                resetHere = generation == current && !disposed && state != "stopped";
+                if (resetHere) { state = "stopped"; active = null; requestId = null; currentPrompt = "Restart R to continue."; }
+            }
+            if (resetHere) Emit(current, "state", new() { ["state"] = "stopped", ["prompt"] = "Restart R to continue." });
             throw;
         }
     }
@@ -151,7 +172,7 @@ public sealed class RConsoleSession : IDisposable
     {
         long current;
         uint nativeId;
-        string kind;
+        string kind, prompt;
         lock (sync)
         {
             ObjectDisposedException.ThrowIf(disposed, this);
@@ -160,10 +181,11 @@ public sealed class RConsoleSession : IDisposable
             ValidateText(text, requestKind == "continuation" ? 8 * 1024 * 1024 - 5 : requestMaxBytes);
             if (requestKind != "continuation" && (text.Contains('\n') || text.Contains('\r')))
                 throw new ArgumentException("An answer to this R prompt must be one line.", nameof(text));
-            nativeId = nativeRequestId; kind = requestKind;
+            nativeId = nativeRequestId; kind = requestKind; prompt = currentPrompt;
             current = generation; this.requestId = null; state = "busy";
         }
-        Emit(current, "inputEcho", new() { ["text"] = text, ["prompt"] = kind == "continuation" ? "+ " : "", ["origin"] = kind == "continuation" ? "console" : "input" });
+        // the answer is echoed after its question, as a console shows "Your name? Iain": the question reaches R only through the prompt
+        Emit(current, "inputEcho", new() { ["text"] = text, ["prompt"] = kind == "continuation" ? "+ " : prompt, ["origin"] = kind == "continuation" ? "console" : "input" });
         Emit(current, "state", new() { ["state"] = "busy", ["prompt"] = "" });
         try { await SendAsync(2, nativeId, text, current); }
         catch (Exception error) { TransportFailed(current, error); throw; }
@@ -178,7 +200,7 @@ public sealed class RConsoleSession : IDisposable
             current = generation; state = "stopping"; requestId = null;
         }
         // No empty line or EOF is delivered to R. The helper wakes its callback and unwinds on the R thread.
-        Emit(current, "state", new() { ["state"] = "busy", ["prompt"] = "Stopping…" });
+        Emit(current, "state", new() { ["state"] = "interrupting", ["prompt"] = "Stopping…" });   // as PublishState shows this state: Stop stays disabled until R unwinds
         try { await SendAsync(3, null, null, current); }
         catch (Exception error) { TransportFailed(current, error); throw; }
     }
@@ -187,6 +209,14 @@ public sealed class RConsoleSession : IDisposable
     {
         await lifecycle.WaitAsync();
         try { await StopCoreAsync(); await StartCoreAsync(); }
+        finally { lifecycle.Release(); }
+    }
+
+    /// <summary>Asks the worker to stop and waits briefly, so that R ends its session and removes its temporary folder, before the window closes.</summary>
+    public async Task StopAsync()
+    {
+        await lifecycle.WaitAsync();
+        try { await StopCoreAsync(); }
         finally { lifecycle.Release(); }
     }
 
@@ -450,8 +480,9 @@ public sealed class RConsoleSession : IDisposable
 
     // Discover named file-device charts separately from the console's active-device snapshots.
     // Auto-device files can still be open/incomplete, and belong only to the snapshot mechanism.
+    // The old runner's fixed names too: a template's R analysis finishing meanwhile is not this command's output
     private static bool InternalOutput(string name) => Regex.IsMatch(name,
-        @"^(?:console-(?:plots-)?[0-9a-f]{32}-|Rplot-[0-9a-f]{32}-|(?:continue|script)-[0-9a-f]{32}\.r$)",
+        @"^(?:console-(?:plots-)?[0-9a-f]{32}-|Rplot-[0-9a-f]{32}-|(?:continue|script)-[0-9a-f]{32}\.r$|(?:script|open-in-r)\.r$|(?:results|error)\.txt$)",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
     private Dictionary<string, FileStamp> OutputFiles()
@@ -577,10 +608,30 @@ public sealed class RConsoleSession : IDisposable
     public void Dispose()
     {
         if (disposed) return;
+        Process? child;
+        lock (sync) { child = process; }
+        // The worker is asked to stop first, by the end of its input, so that R ends its session and removes its temporary
+        // folder; a worker still busy after two seconds is killed, as before.  Stop above never kills a persistent workspace.
+        if (child is { HasExited: false })
+        {
+            try { child.StandardInput.Close(); } catch (Exception error) when (error is IOException or InvalidOperationException or ObjectDisposedException) { }
+            try { if (!child.WaitForExit(2000)) child.Kill(entireProcessTree: true); } catch (InvalidOperationException) { }
+        }
         lock (sync) { disposed = true; generation++; requestId = null; }
-        // Closing/restarting is the explicit destructive fallback; Stop above never kills a persistent workspace.
-        try { if (process is { HasExited: false }) process.Kill(entireProcessTree: true); }
-        catch (InvalidOperationException) { }
-        process?.Dispose(); process = null;
+        child?.Dispose(); process = null;
+        RemoveSessionFiles();
+    }
+
+    /// <summary>The session's own files in the R folder, the plot snapshots, device pages, file copies, previews and plot indexes:
+    /// written for its cards, and of no use once the window is closed.  The chart windows hold their own copies.</summary>
+    private void RemoveSessionFiles()
+    {
+        try
+        {
+            foreach (string pattern in new[] { $"console-{sessionId}-*", $"console-plots-{sessionId}-*" })
+                foreach (string path in Directory.EnumerateFiles(workingDirectory, pattern))
+                    try { File.Delete(path); } catch (Exception error) when (error is IOException or UnauthorizedAccessException) { }
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException) { }
     }
 }

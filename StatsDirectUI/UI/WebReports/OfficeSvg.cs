@@ -103,6 +103,7 @@ internal static class OfficeSvg
             using var drawing = new GraphicsPath();
             using var format = (StringFormat)StringFormat.GenericTypographic.Clone();
             format.FormatFlags |= StringFormatFlags.NoWrap | StringFormatFlags.MeasureTrailingSpaces;
+            if (LacksGlyph(label, family, style, size, format)) return null;   // the text stays, for the receiving program's own fallback
             float ascent = size * family.GetCellAscent(style) / family.GetEmHeight(style);
             drawing.AddString(label, family, (int)style, size, new PointF(x, y - ascent), format);
             string data = PathData(drawing);
@@ -113,12 +114,37 @@ internal static class OfficeSvg
                     or "dominant-baseline" or "alignment-baseline" or "baseline-shift" or "letter-spacing" or "word-spacing" or "writing-mode")
                     && a.Name != XNamespace.Xml + "space").Select(a => new XAttribute(a)));
             result.SetAttributeValue("d", data);
-            result.SetAttributeValue("fill-rule", drawing.FillMode == FillMode.Alternate ? "evenodd" : "nonzero");
+            // Glyph outlines are made for the nonzero rule, as every text rasteriser fills them: the counters of O and B stay open,
+            // and the overlapping strokes of a font such as Bahnschrift stay solid, where even-odd would cut holes
+            result.SetAttributeValue("fill-rule", "nonzero");
             if (result.Attribute("aria-label") == null) result.SetAttributeValue("aria-label", label);
             result.Add(new XElement(ns + "title", label));
             return result;
         }
         catch (ArgumentException) { return null; }
+    }
+
+    // A character the font and the fonts linked to it lack is drawn as the font's .notdef box, which AddString does not report:
+    // the box is known as the outline of a code point no font assigns, and no supplementary-plane character comes through GDI+
+    // font linking at all
+    private static bool LacksGlyph(string label, FontFamily family, FontStyle style, float size, StringFormat format)
+    {
+        if (label.Any(char.IsSurrogate)) return true;
+        PointF[] notdef = Glyph("\u0530", family, style, size, format);
+        if (notdef.Length == 0) return false;
+        foreach (char character in label.Distinct())
+        {
+            if (char.IsWhiteSpace(character)) continue;
+            PointF[] glyph = Glyph(character.ToString(), family, style, size, format);
+            if (glyph.Length == notdef.Length && glyph.SequenceEqual(notdef)) return true;
+        }
+        return false;
+    }
+    private static PointF[] Glyph(string text, FontFamily family, FontStyle style, float size, StringFormat format)
+    {
+        using var path = new GraphicsPath();
+        path.AddString(text, family, (int)style, size, PointF.Empty, format);
+        return path.PointCount == 0 ? Array.Empty<PointF>() : path.PathPoints;
     }
 
     private static string Inherited(XElement element, XName name) => element.AncestorsAndSelf()
