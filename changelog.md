@@ -18,6 +18,7 @@ Version 5.3.0 brings an interactive R console into the R script window. Console 
 - Calculator has a separate section in Analysis immediately before Options. The Tools menu, external program shortcuts and separate R launcher are retired; File > New R session and contextual R actions remain.
 
 ### Fixed
+- The R chart popup keeps its menu alive after closing, preventing a disposed-menu exception when Copy runs. It offers Copy, Save chart as SVG and Save chart as PNG, and targets the selected chart revision even when two cards contain identical pictures. Saved SVGs keep Office-compatible label positions; PNG exports preserve native pixels or render SVG at higher resolution.
 - The Learning and AI transcript bundles use DOMPurify 3.4.17, matching their pinned dependency manifests and licence notice.
 - The report editor's third-party notice names marked (MIT), bundled since 5.2.9 for a notebook's Markdown, in its opening line with the project's address, and lists its licence in order as the notice builder writes it; the builder finds the bundled packages on Windows as on other systems
 

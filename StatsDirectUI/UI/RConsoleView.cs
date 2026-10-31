@@ -382,16 +382,12 @@ internal sealed partial class RConsoleView : UserControl
         using var deferral = e.GetDeferral();
         try
         {
-            string? source = JsonSerializer.Deserialize<string>(await ExecuteAsync("window.StatsDirectRHost.contextChartSource()"));
-            string key = PreviewKey(source ?? "");
-            var plot = plots.Values.LastOrDefault(x => x.TryGetProperty("previewKey", out var preview) && preview.GetString() == key);
-            if (plot.ValueKind != JsonValueKind.Object) return;
-            string id = plot.GetProperty("plotId").GetString()!; long revision = plot.GetProperty("revision").GetInt64();
-            var menu = new ContextMenuStrip();
-            menu.Items.Add("Copy chart", null, async (_, _) => { try { await CopyPlotAsync(id, revision); } catch (Exception ex) { ReportNotice(ex.Message); } });
-            menu.Items.Add("Open chart", null, (_, _) => { try { OpenPlot(id, revision); } catch (Exception ex) { ReportNotice(ex.Message); } });
-            menu.Closed += (_, _) => menu.Dispose();
-            menu.Show(this, PointToClient(Cursor.Position));
+            JsonElement target = JsonSerializer.Deserialize<JsonElement>(await ExecuteAsync("window.StatsDirectRHost.contextChartTarget()"));
+            if (target.ValueKind != JsonValueKind.Object || !target.TryGetProperty("plotId", out var selectedId)
+                || selectedId.ValueKind != JsonValueKind.String || !target.TryGetProperty("revision", out var selectedRevision)
+                || !selectedRevision.TryGetInt64(out long revision)) return;
+            string id = selectedId.GetString()!;
+            ShowChartContextMenu(id, revision, PointToClient(Cursor.Position));
         }
         catch (Exception ex) { ReportNotice(ex.Message); }
     }
@@ -400,6 +396,7 @@ internal sealed partial class RConsoleView : UserControl
         if (disposing && !closing)
         {
             closing = true;
+            chartContextMenu?.Dispose();
             if (Session != null) { Session.Event -= OnSessionEvent; Session.Dispose(); }
             ready.TrySetCanceled();
         }

@@ -409,10 +409,16 @@ internal static partial class Program
     {
         if (browser.Parent?.GetType().Name == "RConsoleView")
         {
-            // Click the integrated card's real shared UI action. The outer fixture
-            // waits for native SVG/PNG publication before reading the clipboard.
-            string invoked = await browser.CoreWebView2.ExecuteScriptAsync("(()=>{const i=document.querySelector(" + JsonSerializer.Serialize(selector) + "),b=i?.closest('figure.plot')?.querySelectorAll('button');const copy=b&&[...b].find(x=>x.textContent==='Copy chart');if(!copy)return false;copy.click();return true})()");
-            Check(invoked == "true", "the integrated R chart exposes and invokes its exact-revision Copy chart action");
+            // Exercise the native popup and the WinForms close-before-click ordering.
+            // The outer fixture already owns a materialised clipboard backup.
+            var menu = await OpenRChartMenu(browser, selector);
+            bool vector = selector.Contains(".svg'", StringComparison.Ordinal);
+            CheckRChartMenu(menu, vector);
+            var copy = (ToolStripMenuItem)menu.Items[0];
+            menu.Close(ToolStripDropDownCloseReason.ItemClicked);
+            Check(!menu.IsDisposed && !copy.IsDisposed, "the actual R popup retains Copy after its drop-down closes");
+            copy.PerformClick();
+            Check(!menu.IsDisposed, "activating R chart Copy leaves the native menu alive for WinForms bookkeeping");
             return;
         }
         var selected = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);

@@ -6,7 +6,7 @@
     const input = document.getElementById('console-input');
     const transcript = document.getElementById('transcript');
     if (!script || !input || !transcript || !window.StatsDirectRConsole) return;
-    let target = input, transcriptTarget = false, contextSource = null;
+    let target = input, transcriptTarget = false, contextSource = null, contextChart = null;
     let lastState = '', scheduled = false, undo = false, redo = false;
     const mode = () => document.getElementById('script-panel').hidden ? 'console' : 'script';
     const post = message => window.chrome?.webview?.postMessage({channel: 'statsdirect-r-host', ...message});
@@ -134,6 +134,8 @@
     document.addEventListener('contextmenu', event => {
       const image = event.target.closest?.('figure.plot img');
       contextSource = image?.getAttribute('src') || null;
+      const figure = image?.closest('figure.plot');
+      contextChart = figure?.dataset.plotId ? {plotId:figure.dataset.plotId, revision:Number(figure.dataset.revision)} : null;
       if (event.target === script || event.target === input) { target = event.target; transcriptTarget = false; }
       else if (transcript.contains(event.target)) transcriptTarget = true;
       schedule();
@@ -158,6 +160,7 @@
       edit, selectedText, selectAll, findNext, replaceSelection, replaceAll,
       focus() { if (transcriptTarget) transcript.focus({preventScroll: true}); else field().focus({preventScroll: true}); },
       contextChartSource: () => contextSource,
+      contextChartTarget: () => contextChart,
       refresh: () => { lastState = ''; schedule(); }
     };
     state();

@@ -50,10 +50,21 @@ internal static partial class Program
             Check(svgSize[0] > 0 && svgSize[0] <= Math.Min(480, svgSize[2]) + 2 && Math.Abs(svgSize[0] * .8 - svgSize[1]) <= 2
                 && pngSize[0] == 300 && pngSize[1] == 200 && pngSize[2] > 0 && pngSize[2] <= 300,
                 "the SVG fits its own size or console width without distortion and the PNG retains its 300 by 200 pixels");
+            var inputReadyDeadline = DateTime.UtcNow.AddSeconds(10);
+            while (await Eval("window.StatsDirectRConsole.snapshot().state==='ready'&&!document.getElementById('console-input').disabled") != "true" && DateTime.UtcNow < inputReadyDeadline) await Task.Delay(25);
             string look = await Eval("getComputedStyle(document.getElementById('console-input')).color+'|'+getComputedStyle(document.getElementById('console-input')).fontFamily");
             Check(look.StartsWith("rgb(6, 69, 173)|", StringComparison.Ordinal) && look.Contains("Consolas"),
                 "R commands use the shared blue code colour and a monospace face");
+            await CheckRChartExports(script, browser, svgFile, pngFile);
             await CheckScriptImagePaste(main, browser, svgFile, pngFile);
+            var console = RConsole(script);
+            var lastVector = RPlots(script).Last(p => p.GetProperty("mime").GetString() == "image/svg+xml");
+            Call(console, "ShowChartContextMenu", lastVector.GetProperty("plotId").GetString(), lastVector.GetProperty("revision").GetInt64(), new Point(4, 4));
+            var menu = (ContextMenuStrip)Field(console, "chartContextMenu");
+            Check(menu.Visible, "the owned R chart menu is open before disposing its window");
+            script.Dispose();
+            Check(menu.IsDisposed, "disposing the R window releases its open native image menu before later MDI activation");
+
         }
         finally
         {
