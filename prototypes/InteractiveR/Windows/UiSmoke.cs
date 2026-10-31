@@ -16,6 +16,7 @@ internal sealed partial class MainForm
         string? screenshot = null;
         JsonElement? browserMetrics = null;
         object? recipeRegression = null;
+        JsonElement? wheelRegression = null;
         var elapsed = Stopwatch.StartNew();
         try
         {
@@ -240,6 +241,71 @@ internal sealed partial class MainForm
             {
                 await browser.CoreWebView2.ExecuteScriptAsync("(()=>{const r=window.__statsDirectPlotClickRegression;if(r?.original)window.chrome.webview.postMessage=r.original;delete window.__statsDirectPlotClickRegression;delete window.__statsDirectSmokeFrames})()");
             }
+
+            // Synthetic wheel events establish routing and prevention only.
+            // They do not invoke the browser's trusted native textarea scroll.
+            wheelRegression = JsonSerializer.Deserialize<JsonElement>(await browser.CoreWebView2.ExecuteScriptAsync("""
+                (() => {
+                  const field = document.getElementById('console-input'), pane = document.getElementById('transcript');
+                  const row = field.parentElement, label = document.getElementById('prompt'), api = window.StatsDirectRConsole;
+                  const original = {value:field.value,start:field.selectionStart,end:field.selectionEnd,top:field.scrollTop,focus:document.activeElement};
+                  const source = api.snapshot().script, history = JSON.stringify(api.snapshot().history);
+                  const close = (actual, expected) => Math.abs(actual - expected) < 1;
+                  const wheel = (target, fields, start = 200) => {
+                    pane.scrollTop = start;
+                    const before = pane.scrollTop, event = new WheelEvent('wheel', {bubbles:true,cancelable:true,...fields});
+                    target.dispatchEvent(event);
+                    return {prevented:event.defaultPrevented,delta:pane.scrollTop-before};
+                  };
+                  try {
+                    api.setMode('console');
+                    field.value = 'Unsent wheel draft'; field.dispatchEvent(new Event('input',{bubbles:true}));
+                    field.focus(); field.setSelectionRange(2,7);
+                    const lineHeight = parseFloat(getComputedStyle(field).lineHeight), pageHeight = pane.clientHeight;
+                    if (pane.scrollHeight - pane.clientHeight < pageHeight + 400) throw new Error('The wheel regression needs a scrollable transcript');
+                    const pixel = wheel(row,{deltaY:40,deltaMode:0});
+                    const line = wheel(label,{deltaY:3,deltaMode:1});
+                    const page = wheel(row,{deltaY:1,deltaMode:2});
+                    const labelUp = wheel(label,{deltaY:-30,deltaMode:0});
+                    const shortInput = wheel(field,{deltaY:40,deltaMode:0});
+                    const ignored = [
+                      wheel(row,{deltaY:40,ctrlKey:true}), wheel(label,{deltaY:40,metaKey:true}),
+                      wheel(row,{deltaY:40,shiftKey:true}), wheel(row,{deltaX:60,deltaY:0}),
+                      wheel(label,{deltaX:80,deltaY:15})
+                    ];
+                    const shortPreserved = field.value === 'Unsent wheel draft' && field.selectionStart === 2 && field.selectionEnd === 7 && document.activeElement === field;
+                    const longDraft = Array.from({length:60},(_,index)=>'Long draft line '+index).join('\n');
+                    field.value = longDraft; field.dispatchEvent(new Event('input',{bubbles:true})); field.setSelectionRange(3,8);
+                    const limit = field.scrollHeight - field.clientHeight;
+                    if (limit < 100) throw new Error('The multiline draft did not become scrollable');
+                    field.scrollTop = limit/2;
+                    const nativeDown = wheel(field,{deltaY:40}), nativeUp = wheel(field,{deltaY:-40});
+                    field.scrollTop = 0; const topBoundary = wheel(field,{deltaY:-40});
+                    field.scrollTop = limit; const bottomBoundary = wheel(field,{deltaY:40});
+                    const longPreserved = field.value === longDraft && field.selectionStart === 3 && field.selectionEnd === 8 && document.activeElement === field;
+                    return {
+                      rowAndLabelForward: pixel.prevented && labelUp.prevented && shortInput.prevented && close(labelUp.delta,-30),
+                      deltasNormalized: close(pixel.delta,40) && line.prevented && close(line.delta,3*lineHeight) && page.prevented && close(page.delta,pageHeight),
+                      modifiedAndHorizontalUnchanged: ignored.every(result=>!result.prevented&&result.delta===0),
+                      nativeDirectionalUnprevented: !nativeDown.prevented && nativeDown.delta===0 && !nativeUp.prevented && nativeUp.delta===0,
+                      boundariesForward: topBoundary.prevented && close(topBoundary.delta,-40) && bottomBoundary.prevented && close(bottomBoundary.delta,40),
+                      draftFocusSourceHistoryPreserved: shortPreserved && longPreserved && api.snapshot().script===source && JSON.stringify(api.snapshot().history)===history,
+                      pixel,line,page,lineHeight,pageHeight,nativeDown,nativeUp,topBoundary,bottomBoundary
+                    };
+                  } finally {
+                    field.value=original.value;field.dispatchEvent(new Event('input',{bubbles:true}));
+                    field.setSelectionRange(original.start,original.end);field.scrollTop=original.top;
+                    if(original.focus?.isConnected)original.focus.focus({preventScroll:true});
+                  }
+                })()
+                """));
+            bool WheelCheck(string name) => wheelRegression.Value.GetProperty(name).GetBoolean();
+            await Check("wheel events over the fixed prompt row and label scroll the transcript", WheelCheck("rowAndLabelForward"));
+            await Check("prompt wheel pixel, line and page deltas are normalized", WheelCheck("deltasNormalized"));
+            await Check("Ctrl, Meta, Shift and horizontal wheel gestures remain unprevented", WheelCheck("modifiedAndHorizontalUnchanged"));
+            await Check("multiline input leaves native directional wheel handling unprevented before its boundary", WheelCheck("nativeDirectionalUnprevented"));
+            await Check("wheel events at both multiline input boundaries scroll the transcript", WheelCheck("boundariesForward"));
+            await Check("prompt wheel routing preserves the draft, focus, source and history", WheelCheck("draftFocusSourceHistoryPreserved"));
             screenshot = Path.ChangeExtension(Path.GetFullPath(options.UiSmokeResult!), ".png");
             browserMetrics = JsonSerializer.Deserialize<JsonElement>(await browser.CoreWebView2.ExecuteScriptAsync("({width:innerWidth,height:innerHeight,devicePixelRatio,codeFont:getComputedStyle(document.getElementById('console-input')).fontSize})"));
             await browser.CoreWebView2.ExecuteScriptAsync("(()=>{const pane=document.getElementById('transcript');pane.scrollTop=pane.scrollHeight})()");
@@ -259,7 +325,7 @@ internal sealed partial class MainForm
         {
             string resultPath = Path.GetFullPath(options.UiSmokeResult!);
             Directory.CreateDirectory(Path.GetDirectoryName(resultPath)!);
-            await File.WriteAllTextAsync(resultPath, JsonSerializer.Serialize(new { passed = failure is null, elapsedSeconds = elapsed.Elapsed.TotalSeconds, checks, failure, recipeRegression, screenshot, browserMetrics, hostDpi = DeviceDpi, browserZoom = browser.ZoomFactor, workingDirectory = options.WorkingDirectory }, new JsonSerializerOptions { WriteIndented = true }));
+            await File.WriteAllTextAsync(resultPath, JsonSerializer.Serialize(new { passed = failure is null, elapsedSeconds = elapsed.Elapsed.TotalSeconds, checks, failure, recipeRegression, wheelRegression, screenshot, browserMetrics, hostDpi = DeviceDpi, browserZoom = browser.ZoomFactor, workingDirectory = options.WorkingDirectory }, new JsonSerializerOptions { WriteIndented = true }));
             Environment.ExitCode = failure is null ? 0 : 1;
             Close();
         }
