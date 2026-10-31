@@ -15,6 +15,7 @@ internal static partial class Program
         var ci = (ComboBox)Get(main, "cboConfidenceInterval")!;
         var instructions = (Panel)Get(main, "pnlFollowOnInstructions")!;
         string oldText = label.Text, oldDescription = label.AccessibleDescription ?? "", oldCi = ci.Text;
+        Size oldSize = main.Size;
         bool oldPanelVisible = panel.Visible, oldConfidence = confidence.Visible, oldInstructions = instructions.Visible;
         bool hadTable = (bool)Call(main, "HasUserInputTable")!;
         var table = hadTable ? (TableLayoutPanel)Call(main, "GetUserInputTable")! : (TableLayoutPanel)Call(main, "CreateUserInputTable")!;
@@ -56,6 +57,24 @@ internal static partial class Program
                 "many long variable names wrap within the summary width and retain literal ampersands");
             Check(panel.Height <= label.Font.Height * 6 + label.Padding.Vertical && panel.VerticalScroll.Visible && !panel.HorizontalScroll.Visible,
                 "the long summary is bounded to six font lines with vertical rather than horizontal scrolling");
+            int originalWidth = label.MaximumSize.Width, originalHeight = label.PreferredHeight;
+            main.Width -= 400;
+            await Wait(() => label.MaximumSize.Width < originalWidth && label.PreferredHeight > originalHeight,
+                "Resizing the main window did not rewrap the selected-variable summary.");
+            Check(label.Width <= panel.ClientSize.Width + 1 && !panel.HorizontalScroll.Visible,
+                "resizing the main window rewraps long selected names without horizontal overflow");
+            main.Size = oldSize;
+            await Wait(() => label.MaximumSize.Width == originalWidth, "The summary width did not recover after resizing.");
+            panel.AutoScrollPosition = new Point(0, label.Height);
+            Check(panel.AutoScrollPosition.Y < 0, "the long selected-variable summary can be scrolled to later names");
+            var changed = new DataFrame();
+            for (int i = 0; i < 30; i++) changed.Variables.Add(new DoubleVariable(new[] { (double)i }, "C & D " + i + " " + new string('w', 300)));
+            var changedContext = new ParameterBag(); changedContext.AddInput("data", changed);
+            Call(main, "MaybeShowVariables", changedContext);
+            Check(panel.AutoScrollPosition == Point.Empty && panel.VerticalScroll.Visible
+                && label.Text.StartsWith("Selected variables (30)", StringComparison.Ordinal) && label.Text.Contains("C & D 0", StringComparison.Ordinal),
+                "changing to a different long selection restores the selected-variable heading at the top");
+            Call(main, "MaybeShowVariables", context);
             var operations = (Panel)Get(main, "pnlOperations")!;
             int bottom = operations.RectangleToScreen(operations.ClientRectangle).Bottom;
             Check(confidence.Visible && ci.Text == "95" && option.Visible && option.Checked && instructions.Visible
@@ -71,6 +90,7 @@ internal static partial class Program
             options.Controls.Remove(option); option.Dispose();
             if (!hadTable) { user.Controls.Remove(table); table.Dispose(); }
             operationField.SetValue(main, previousOperation);
+            main.Size = oldSize;
             label.Text = oldText; label.AccessibleDescription = oldDescription; panel.Visible = oldPanelVisible;
             confidence.Visible = oldConfidence; instructions.Visible = oldInstructions; ci.Text = oldCi;
             if (previousPanel != null) Call(main, "ShowPanel", previousPanel, false);
