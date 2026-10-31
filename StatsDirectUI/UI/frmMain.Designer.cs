@@ -142,11 +142,14 @@ namespace StatsDirect.UI
             this.pnlConfidenceInterval = new System.Windows.Forms.Panel();
             this.lblConfidenceInterval = new System.Windows.Forms.Label();
             this.cboConfidenceInterval = new System.Windows.Forms.ComboBox();
+            this.pnlVariables = new System.Windows.Forms.Panel();
+            this.cmdVariables = new System.Windows.Forms.Button();
             this.tlpUserArea = new System.Windows.Forms.TableLayoutPanel();
             this.pnlUser = new System.Windows.Forms.Panel();
             this.pnlFollowOnInstructions = new System.Windows.Forms.Panel();
             this.lblFollowOnInstructions = new System.Windows.Forms.Label();
             this.openFileDialog = new System.Windows.Forms.OpenFileDialog();
+            this.tipVariables = new System.Windows.Forms.ToolTip(this.components);
             this.postTabTimer = new System.Windows.Forms.Timer(this.components);
             this.tipBatch = new System.Windows.Forms.ToolTip(this.components);
             this.mnuMain.SuspendLayout();
@@ -170,6 +173,7 @@ namespace StatsDirect.UI
             ((System.ComponentModel.ISupportInitialize)(this.picLinkArrow)).BeginInit();
             this.tableLayoutPanel1.SuspendLayout();
             this.pnlConfidenceInterval.SuspendLayout();
+            this.pnlVariables.SuspendLayout();
             this.tlpUserArea.SuspendLayout();
             this.pnlFollowOnInstructions.SuspendLayout();
             this.SuspendLayout();
@@ -1264,6 +1268,7 @@ namespace StatsDirect.UI
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
             this.tableLayoutPanel1.Controls.Add(this.pnlConfidenceInterval, 0, 0);
+            this.tableLayoutPanel1.Controls.Add(this.pnlVariables, 1, 0);
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 57);
             this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
@@ -1312,6 +1317,39 @@ namespace StatsDirect.UI
             this.cboConfidenceInterval.Size = new System.Drawing.Size(52, 21);
             this.cboConfidenceInterval.TabIndex = 5;
             // 
+            // pnlVariables
+            //
+            this.pnlVariables.AutoSize = true;
+            this.pnlVariables.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.pnlVariables.Controls.Add(this.cmdVariables);
+            this.pnlVariables.Location = new System.Drawing.Point(140, 0);
+            this.pnlVariables.Margin = new System.Windows.Forms.Padding(0);
+            this.pnlVariables.Name = "pnlVariables";
+            this.pnlVariables.Size = new System.Drawing.Size(90, 26);
+            this.pnlVariables.TabIndex = 3;
+            this.pnlVariables.Visible = false;
+            //
+            // cmdVariables
+            //
+            this.cmdVariables.AccessibleName = "Data already supplied to this analysis";
+            this.cmdVariables.AutoSize = true;
+            this.cmdVariables.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.cmdVariables.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.cmdVariables.Location = new System.Drawing.Point(3, 3);
+            this.cmdVariables.Margin = new System.Windows.Forms.Padding(0);
+            this.cmdVariables.Name = "cmdVariables";
+            this.cmdVariables.Size = new System.Drawing.Size(84, 23);
+            this.cmdVariables.TabIndex = 0;
+            this.cmdVariables.TabStop = true;
+            this.cmdVariables.Text = "Data info…";
+            this.cmdVariables.UseVisualStyleBackColor = true;
+            this.cmdVariables.Click += new System.EventHandler(this.cmdVariables_Click);
+            //
+            // tipVariables
+            //
+            this.tipVariables.AutoPopDelay = 10000;
+            this.tipVariables.ToolTipTitle = "Data already supplied to this analysis";
+            //
             // tlpUserArea
             // 
             this.tlpUserArea.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
@@ -1428,6 +1466,8 @@ namespace StatsDirect.UI
             this.tableLayoutPanel1.PerformLayout();
             this.pnlConfidenceInterval.ResumeLayout(false);
             this.pnlConfidenceInterval.PerformLayout();
+            this.pnlVariables.ResumeLayout(false);
+            this.pnlVariables.PerformLayout();
             this.tlpUserArea.ResumeLayout(false);
             this.tlpUserArea.PerformLayout();
             this.pnlFollowOnInstructions.ResumeLayout(false);
@@ -1528,6 +1568,9 @@ namespace StatsDirect.UI
         private System.Windows.Forms.Label lblFurtherAnalysis;
         private System.Windows.Forms.CheckBox chkBatchMode;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
+        private System.Windows.Forms.Panel pnlVariables;
+        private System.Windows.Forms.Button cmdVariables;
+        private System.Windows.Forms.ToolTip tipVariables;
         private System.Windows.Forms.Timer postTabTimer;
 
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip;

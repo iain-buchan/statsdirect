@@ -2217,6 +2217,8 @@ namespace StatsDirect.UI
         {
             bool shouldRun = ShouldRunOperationOnSelection(operation, knownParameters);
             pnlFollowOnInstructions.Visible = !shouldRun;
+            tipVariables.Hide(cmdVariables);
+            pnlVariables.Visible = false;
             if (InOperation)
             {
                 // There's already an operation running; deal with it
@@ -2458,6 +2460,8 @@ namespace StatsDirect.UI
                 IList<Parameter> parametersToValidate = new List<Parameter>(outstandingParameters);
                 outstandingParameters.Clear();
 
+                MaybeShowVariables(context);
+
                 // Some parameters (notably CI parameters) may be defaulted - none will be shown.  If that's the case, don't show; just default them all!
                 DrawingControl.ResumeDrawing(this);
                 FillCombinedParameters(host, processor, context, willDisplayAtLeastOneParameter, atLeastOneNonCancel ? null : cancelSkipsParameterString, parametersToValidate, ref outputParameters);
@@ -2506,6 +2510,85 @@ namespace StatsDirect.UI
             }
             // Make use of the fact that we always create columns in the order 1..n, so controls[i-1] is the control that was created i'th in sequence and hence the control in column i.
             return (TableLayoutPanel)tlp.Controls[column - 1];
+        }
+
+        /// <summary>Offer information about data already supplied, without adding instructions to the parameter controls.</summary>
+        private void MaybeShowVariables(ParameterBag context)
+        {
+            bool shouldShow = false;
+            StringBuilder sb = new();
+            IList<Operation> ops = BuildOperationHistory(context);
+            foreach (KeyValuePair<string, FilledParameter> pair in context.Pairs)
+            {
+                if (null != pair.Value && pair.Value.IsInputParameter && pair.Value.IsDataFrame
+                    && null != TryToFindParameterLabel(ops, context, pair.Key))
+                {
+                    if (shouldShow) sb.AppendLine();
+                    shouldShow = true;
+                    foreach (IVariable variable in pair.Value.AsDataFrame.Variables)
+                        sb.AppendLine(variable?.Title ?? "(unnamed)");
+                }
+            }
+            string toolTipText = sb.ToString().TrimEnd();
+            cmdVariables.Tag = shouldShow ? toolTipText : null;
+            cmdVariables.AccessibleDescription = shouldShow
+                ? tipVariables.ToolTipTitle + Environment.NewLine + toolTipText : string.Empty;
+            tipVariables.SetToolTip(cmdVariables, toolTipText);
+            pnlVariables.Visible = shouldShow;
+        }
+
+        private IList<Operation> BuildOperationHistory(ParameterBag context)
+        {
+            List<Operation> ops = new();
+            if (null != mostRecentOperation)
+                ops.Add(mostRecentOperation);
+            if (null != context)
+            {
+                if (context.ContainsKey(OPERATION_MEMORY_NAME))
+                {
+                    foreach (string operationName in context[OPERATION_MEMORY_NAME].AsStringList)
+                    {
+                        if (TemplateFactory.Operations.TryGetValue(operationName, out Operation op))
+                        {
+                            if (!ops.Contains(op))
+                                ops.Add(op);
+                        }
+                    }
+                }
+            }
+            return ops;
+        }
+
+        private static string TryToFindParameterLabel(IEnumerable<Operation> ops, ParameterBag context, string parameterName)
+        {
+            foreach (Operation op in ops)
+            {
+                string parameterTitle = TryToFindParameterLabel(op.Steps, context, parameterName);
+                if (null != parameterTitle)
+                    return parameterTitle;
+            }
+            return null;
+        }
+
+        private static string TryToFindParameterLabel(IEnumerable<Step> steps, ParameterBag context, string parameterName)
+        {
+            foreach (Step step in steps)
+            {
+                // TODO: Handle branches correctly!
+                if (step is ParametersStep)
+                {
+                    foreach (Parameter parameter in ((ParametersStep)step).Parameters)
+                    {
+                        if (parameterName.Equals(parameter.Name))
+                        {
+                            if (null != parameter.Title)
+                                return parameter.Title;
+                            return parameter.Prompt(new TemplateProcessor(SdApplication.SoleInstance), context);
+                        }
+                    }
+                }
+            }
+            return null;
         }
 
         private void ClearCombinedParameters()
@@ -4085,6 +4168,12 @@ namespace StatsDirect.UI
             return bmp;
         }
 
+
+        private void cmdVariables_Click(object sender, EventArgs e)
+        {
+            const int durationMilliseconds = 10000;
+            tipVariables.Show(tipVariables.GetToolTip(cmdVariables), cmdVariables, durationMilliseconds);
+        }
 
         private void cmdModalMessageKeyPress(object sender, KeyPressEventArgs e)
         {
