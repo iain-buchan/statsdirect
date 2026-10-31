@@ -136,7 +136,6 @@ internal static partial class Program
         var combo = (ComboBox)Field(main, "cboOperation");
         var panel = (Control)Field(main, "pnlSelectOperation");
         var instructions = (Control)Field(main, "pnlFollowOnInstructions");
-        var variables = (Control)Field(main, "pnlVariables");
         var operations = (Control)Field(main, "pnlOperations");
         var top = (Control)Field(main, "pnlTop");
         var left = (Control)Field(main, "tlpSelectOperation");
@@ -150,7 +149,7 @@ internal static partial class Program
         Console.WriteLine($"      {label}: items {combo.Items.Count} of {operation.SuggestedOperations.Count}, selected {combo.SelectedIndex}, panel visible {panel.Visible}, operations panel visible {operations.Visible}, "
             + $"drop-down visible {combo.Visible} enabled {combo.Enabled} can focus {combo.CanFocus} width {combo.Width}, top bar {top.Height} tall for content {left.Height} (drop-down within the bar: {withinTheBar}; "
             + $"default panel {standard.Height}, toolbar {(toolbar.Visible ? "shown" : "hidden")}, active window {main.ActiveMdiChild?.GetType().Name ?? "none"}), "
-            + $"instructions visible {instructions.Visible}, variables visible {variables.Visible}, under the arrow: {hit.Name}, "
+            + $"instructions visible {instructions.Visible}, under the arrow: {hit.Name}, "
             + $"capture: {(capture == IntPtr.Zero ? "none" : captor?.Name ?? capture.ToString())}, inputting {Field(main, "inputtingData")}, selecting {Field(main, "selectingData")}, "
             + $"in operation {Get(main, "InOperation")}, open forms {Application.OpenForms.Count}, main enabled {main.Enabled}, title '{main.Text}'");
         return combo.Items.Count == operation.SuggestedOperations.Count && panel.Visible && operations.Visible && combo.Visible && combo.Enabled && withinTheBar && hit == combo

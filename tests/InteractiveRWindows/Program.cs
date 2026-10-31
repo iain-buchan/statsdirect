@@ -130,7 +130,6 @@ internal static partial class Program
     }
     static async Task Run(frmMain main)
     {
-        await CheckVariableSummary(main);
         var host = await NewConsole(main);
         Check((string)Get(host.Document, "LearningScript")! == "" && !(bool)Get(host.Document, "LearningRunning")! && (string)Get(host.Document, "LearningOutput")! == "",
             "a new R session has blank source and runs no user code automatically");

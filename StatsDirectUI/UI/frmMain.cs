@@ -1656,55 +1656,41 @@ namespace StatsDirect.UI
             currentPanelType = panelType;
         }
 
-        private bool resizingOperationContainer;
-
-        private void tlpUserArea_SizeChanged(object sender, EventArgs e)
-        {
-            if (!resizingOperationContainer && pnlVariables.Visible)
-                ResizeContainer(true);
-        }
-
         private void ResizeContainer(bool enforceHeightOnOperations)
         {
-            if (resizingOperationContainer) return;
-            resizingOperationContainer = true;
-            try
+            int tableHeight = 0;
+            if (HasUserInputTable())
             {
-                int summaryHeight = 0;
-                if (pnlVariables.Visible)
-                {
-                    int width = Math.Max(1, tlpUserArea.ClientSize.Width - pnlVariables.Margin.Horizontal
-                        - SystemInformation.VerticalScrollBarWidth);
-                    lblSelectedVariables.MaximumSize = new Size(width, 0);
-                    int maximumHeight = lblSelectedVariables.Font.Height * 6 + lblSelectedVariables.Padding.Vertical;
-                    pnlVariables.MaximumSize = new Size(0, maximumHeight);
-                    pnlVariables.Height = Math.Min(lblSelectedVariables.PreferredHeight, maximumHeight);
-                    summaryHeight = pnlVariables.Height + pnlVariables.Margin.Vertical;
-                }
-                int tableHeight = 0;
-                if (HasUserInputTable())
-                {
-                    TableLayoutPanel tlp = GetUserInputTable();
-                    tlp.Width = pnlUser.Width;
-                    tableHeight = tlp.PreferredSize.Height + tlp.Margin.Top;
-                    tlp.Height = tableHeight;
-                }
-                int instructionsHeight = pnlFollowOnInstructions.Visible
-                    ? pnlFollowOnInstructions.PreferredSize.Height + pnlFollowOnInstructions.Margin.Vertical : 0;
-                // Include the visible summary and follow-on guidance above the input widgets.
-                int rightHandHeight = tableHeight + pnlUser.Margin.Vertical + summaryHeight + instructionsHeight;
-                int contentHeight = Math.Max(Math.Max(rightHandHeight, tlpSelectOperation.Height), 58);
-                int constrainedHeight = Math.Min(contentHeight, Math.Max(58, Height - HEIGHT_BREATHING_SPACE));
-                if (enforceHeightOnOperations || pnlTop.Height < constrainedHeight)
-                {
-                    pnlTop.Height = constrainedHeight;
-                    pnlOperations.Height = constrainedHeight;
-                    tlpOperations.Height = contentHeight;
-                }
-                pnlUser.Height = tableHeight;
-                tlpOperations.AutoScroll = constrainedHeight < contentHeight;
+                TableLayoutPanel tlp = GetUserInputTable();
+                tableHeight = tlp.PreferredSize.Height + tlp.Margin.Top;
+                tlp.Width = pnlUser.Width;
             }
-            finally { resizingOperationContainer = false; }
+            // The operations panel is always at least the same height as the standard panel (58 pixels), but must also fit both left-hand and right-hand content
+            int leftHandHeight = tlpSelectOperation.Height;
+            int contentHeight = Math.Max(tableHeight, leftHandHeight);
+            contentHeight = Math.Max(contentHeight, 58);
+
+            // Set a constraint on the maximum height of the table so that it's never off the bottom of the window
+            int constrainedHeight = Math.Min(contentHeight, Height - HEIGHT_BREATHING_SPACE);
+            // A bar shorter than its content clips it: the Further analysis row suggested after a run was laid out below the visible edge
+            // once the bar had shrunk to the default panel, which is short while a report is in front.  The heights are set whenever they
+            // are too small, and otherwise only when the caller enforces them, which also lets them shrink.
+            if (enforceHeightOnOperations || pnlTop.Height < constrainedHeight)
+            {
+                pnlTop.Height = constrainedHeight;
+                pnlOperations.Height = constrainedHeight;
+                tlpOperations.Height = contentHeight;
+                pnlUser.Height = contentHeight;
+            }
+
+            bool shouldScrollVertically = constrainedHeight < contentHeight;
+            tlpOperations.AutoScroll = shouldScrollVertically;
+            // The following is a workaround for the TableLayoutPanel apparently not following its own wishes for height, even when the preferred height is reported correctly.  No idea why!
+            if (HasUserInputTable())
+            {
+                TableLayoutPanel tlp = GetUserInputTable();
+                tlp.Height = contentHeight;
+            }
         }
 
         internal bool IsCalculateButton(Control control)
@@ -2231,7 +2217,6 @@ namespace StatsDirect.UI
         {
             bool shouldRun = ShouldRunOperationOnSelection(operation, knownParameters);
             pnlFollowOnInstructions.Visible = !shouldRun;
-            pnlVariables.Visible = false;
             if (InOperation)
             {
                 // There's already an operation running; deal with it
@@ -2473,8 +2458,6 @@ namespace StatsDirect.UI
                 IList<Parameter> parametersToValidate = new List<Parameter>(outstandingParameters);
                 outstandingParameters.Clear();
 
-                MaybeShowVariables(context);
-
                 // Some parameters (notably CI parameters) may be defaulted - none will be shown.  If that's the case, don't show; just default them all!
                 DrawingControl.ResumeDrawing(this);
                 FillCombinedParameters(host, processor, context, willDisplayAtLeastOneParameter, atLeastOneNonCancel ? null : cancelSkipsParameterString, parametersToValidate, ref outputParameters);
@@ -2523,105 +2506,6 @@ namespace StatsDirect.UI
             }
             // Make use of the fact that we always create columns in the order 1..n, so controls[i-1] is the control that was created i'th in sequence and hence the control in column i.
             return (TableLayoutPanel)tlp.Controls[column - 1];
-        }
-
-        /// <summary>
-        /// We're about to display a data input screen.  If there are any variables that we already know about, allow the user to examine them.  If not, hide the button!
-        /// </summary>
-        private void MaybeShowVariables(ParameterBag context)
-        {
-            bool shouldShow = false;
-            int variableCount = 0;
-            StringBuilder sb = new();
-            IList<Operation> ops = BuildOperationHistory(context);
-            foreach (KeyValuePair<string, FilledParameter> pair in context.Pairs)
-            {
-                if (null != pair.Value && pair.Value.IsInputParameter && pair.Value.IsDataFrame)
-                {
-                    // Find the parameter corresponding to the key
-                    // Go back through the operation list - in the case of follow-ons, the variable is often from a precursor.  Use more recent operations in preference to older ones.
-                    string parameterTitle = TryToFindParameterLabel(ops, context, pair.Key);
-                    if (null != parameterTitle)
-                    {
-                        shouldShow = true;
-                        sb.AppendLine(parameterTitle);
-                        foreach (IVariable v in pair.Value.AsDataFrame.Variables)
-                        {
-                            sb.AppendLine("   " + (v?.Title ?? "(unnamed)"));
-                            variableCount++;
-                        }
-                    }
-                }
-            }
-            string summary = shouldShow
-                ? "Selected variables (" + variableCount.ToString(CultureInfo.CurrentCulture) + ")"
-                    + Environment.NewLine + sb.ToString().TrimEnd()
-                : string.Empty;
-            bool summaryChanged = lblSelectedVariables.Text != summary;
-            lblSelectedVariables.Text = summary;
-            lblSelectedVariables.AccessibleDescription = lblSelectedVariables.Text;
-            pnlVariables.Visible = shouldShow;
-            if (pnlOperations.Visible) ResizeContainer(true);
-            if (summaryChanged) pnlVariables.AutoScrollPosition = Point.Empty;
-        }
-
-        private IList<Operation> BuildOperationHistory(ParameterBag context)
-        {
-            List<Operation> ops = new();
-            if (null != mostRecentOperation)
-                ops.Add(mostRecentOperation);
-            if (null != context)
-            {
-                if (context.ContainsKey(OPERATION_MEMORY_NAME))
-                {
-                    foreach (string operationName in context[OPERATION_MEMORY_NAME].AsStringList)
-                    {
-                        if (TemplateFactory.Operations.TryGetValue(operationName, out Operation op))
-                        {
-                            if (!ops.Contains(op))
-                                ops.Add(op);
-                        }
-                    }
-                }
-            }
-            return ops;
-        }
-
-        private static string TryToFindParameterLabel(IEnumerable<Operation> ops, ParameterBag context, string parameterName)
-        {
-            foreach (Operation op in ops)
-            {
-                string parameterTitle = TryToFindParameterLabel(op.Steps, context, parameterName);
-                if (null != parameterTitle)
-                    return parameterTitle;
-            }
-            return null;
-        }
-
-        private static string TryToFindParameterLabel(IEnumerable<Step> steps, ParameterBag context, string parameterName)
-        {
-            foreach (Step step in steps)
-            {
-                // TODO: Handle branches correctly!
-                if (step is ParametersStep)
-                {
-                    foreach (Parameter p in ((ParametersStep)step).Parameters)
-                    {
-                        if (parameterName.Equals(p.Name))
-                        {
-                            // This parameter is providing the input
-                            if (null != p.Title)
-                            {
-                                // If there's a title, use it as the title of the parameter
-                                return p.Title;
-                            }
-                            return p.Prompt(new TemplateProcessor(SdApplication.SoleInstance), context);
-                        }
-                    }
-                }
-            }
-            // Didn't find the label
-            return null;
         }
 
         private void ClearCombinedParameters()

@@ -142,8 +142,6 @@ namespace StatsDirect.UI
             this.pnlConfidenceInterval = new System.Windows.Forms.Panel();
             this.lblConfidenceInterval = new System.Windows.Forms.Label();
             this.cboConfidenceInterval = new System.Windows.Forms.ComboBox();
-            this.pnlVariables = new System.Windows.Forms.Panel();
-            this.lblSelectedVariables = new System.Windows.Forms.Label();
             this.tlpUserArea = new System.Windows.Forms.TableLayoutPanel();
             this.pnlUser = new System.Windows.Forms.Panel();
             this.pnlFollowOnInstructions = new System.Windows.Forms.Panel();
@@ -172,7 +170,6 @@ namespace StatsDirect.UI
             ((System.ComponentModel.ISupportInitialize)(this.picLinkArrow)).BeginInit();
             this.tableLayoutPanel1.SuspendLayout();
             this.pnlConfidenceInterval.SuspendLayout();
-            this.pnlVariables.SuspendLayout();
             this.tlpUserArea.SuspendLayout();
             this.pnlFollowOnInstructions.SuspendLayout();
             this.SuspendLayout();
@@ -1127,7 +1124,7 @@ namespace StatsDirect.UI
             this.tlpOperations.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.tlpOperations.ColumnCount = 2;
             this.tlpOperations.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
-            this.tlpOperations.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tlpOperations.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
             this.tlpOperations.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
             this.tlpOperations.Controls.Add(this.tlpSelectOperation, 0, 0);
             this.tlpOperations.Controls.Add(this.tlpUserArea, 1, 0);
@@ -1315,30 +1312,6 @@ namespace StatsDirect.UI
             this.cboConfidenceInterval.Size = new System.Drawing.Size(52, 21);
             this.cboConfidenceInterval.TabIndex = 5;
             // 
-            // pnlVariables
-            // 
-            this.pnlVariables.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
-            this.pnlVariables.AutoScroll = true;
-            this.pnlVariables.Controls.Add(this.lblSelectedVariables);
-            this.pnlVariables.Location = new System.Drawing.Point(0, 27);
-            this.pnlVariables.Margin = new System.Windows.Forms.Padding(0, 3, 0, 3);
-            this.pnlVariables.Name = "pnlVariables";
-            this.pnlVariables.Size = new System.Drawing.Size(443, 26);
-            this.pnlVariables.TabIndex = 3;
-            this.pnlVariables.Visible = false;
-            // 
-            // lblSelectedVariables
-            // 
-            this.lblSelectedVariables.AccessibleName = "Selected variables";
-            this.lblSelectedVariables.AccessibleRole = System.Windows.Forms.AccessibleRole.StaticText;
-            this.lblSelectedVariables.AutoSize = true;
-            this.lblSelectedVariables.Location = new System.Drawing.Point(0, 0);
-            this.lblSelectedVariables.MaximumSize = new System.Drawing.Size(420, 0);
-            this.lblSelectedVariables.Name = "lblSelectedVariables";
-            this.lblSelectedVariables.Padding = new System.Windows.Forms.Padding(6, 3, 6, 3);
-            this.lblSelectedVariables.Text = "Selected variables";
-            this.lblSelectedVariables.UseMnemonic = false;
-            // 
             // tlpUserArea
             // 
             this.tlpUserArea.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
@@ -1347,19 +1320,16 @@ namespace StatsDirect.UI
             this.tlpUserArea.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.tlpUserArea.ColumnCount = 1;
             this.tlpUserArea.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tlpUserArea.Controls.Add(this.pnlUser, 0, 2);
-            this.tlpUserArea.Controls.Add(this.pnlVariables, 0, 1);
+            this.tlpUserArea.Controls.Add(this.pnlUser, 0, 1);
             this.tlpUserArea.Controls.Add(this.pnlFollowOnInstructions, 0, 0);
             this.tlpUserArea.Location = new System.Drawing.Point(249, 0);
             this.tlpUserArea.Margin = new System.Windows.Forms.Padding(0);
             this.tlpUserArea.Name = "tlpUserArea";
-            this.tlpUserArea.RowCount = 3;
-            this.tlpUserArea.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.tlpUserArea.RowCount = 2;
             this.tlpUserArea.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tlpUserArea.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tlpUserArea.Size = new System.Drawing.Size(443, 27);
             this.tlpUserArea.TabIndex = 0;
-            this.tlpUserArea.SizeChanged += new System.EventHandler(this.tlpUserArea_SizeChanged);
             // 
             // pnlUser
             // 
@@ -1458,7 +1428,6 @@ namespace StatsDirect.UI
             this.tableLayoutPanel1.PerformLayout();
             this.pnlConfidenceInterval.ResumeLayout(false);
             this.pnlConfidenceInterval.PerformLayout();
-            this.pnlVariables.ResumeLayout(false);
             this.tlpUserArea.ResumeLayout(false);
             this.tlpUserArea.PerformLayout();
             this.pnlFollowOnInstructions.ResumeLayout(false);
@@ -1559,8 +1528,6 @@ namespace StatsDirect.UI
         private System.Windows.Forms.Label lblFurtherAnalysis;
         private System.Windows.Forms.CheckBox chkBatchMode;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
-        private System.Windows.Forms.Panel pnlVariables;
-        private System.Windows.Forms.Label lblSelectedVariables;
         private System.Windows.Forms.Timer postTabTimer;
 
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip;
