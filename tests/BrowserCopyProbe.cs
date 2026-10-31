@@ -32,6 +32,8 @@ internal static class BrowserCopyProbe
         try
         {
             uint before=GetClipboardSequenceNumber();
+            // Chromium 156 copies only from a focused page, which a fixture kept off screen never is: the page is told it has the focus, as a click gives it
+            await browser.CallDevToolsProtocolMethodAsync("Emulation.setFocusEmulationEnabled", "{\"enabled\":true}");
             var reply = await browser.CallDevToolsProtocolMethodAsync("Runtime.evaluate", "{\"expression\":\"document.execCommand('copy')\",\"userGesture\":true,\"returnByValue\":true}");
             await Task.Delay(75);
             copied = GetClipboardSequenceNumber();

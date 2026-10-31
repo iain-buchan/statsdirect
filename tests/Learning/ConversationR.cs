@@ -69,7 +69,7 @@ internal static partial class Program
     {
         string folder=Path.Combine(artifacts,name);Directory.CreateDirectory(folder);
         string path=Path.Combine(folder,"check.R");File.WriteAllText(path,code+"\n"+assertions);
-        string executable=Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT")??@"C:\Program Files\R\R-4.6.1\bin\Rscript.exe";
+        string executable=Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT")??Path.Combine(StatsDirect.R.RController.PreferredRVersion()?.BinPath??@"C:\Program Files\R\R-none\bin\x64","Rscript.exe");
         var start=new ProcessStartInfo(executable){WorkingDirectory=folder,UseShellExecute=false,CreateNoWindow=true,RedirectStandardOutput=true,RedirectStandardError=true};
         start.ArgumentList.Add("--vanilla");start.ArgumentList.Add(path);
         using var process=Process.Start(start)!;

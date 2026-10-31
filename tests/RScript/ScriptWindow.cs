@@ -39,16 +39,19 @@ internal static partial class Program
         // the toolbar: Save, then Cut, Copy and Paste with the Edit menu's icons, then Find, then the R tools
         ToolStrip toolbar = (ToolStrip)script.GetField("ToolStrip1", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(first.window);
         ToolStripButton[] buttons = toolbar.Items.OfType<ToolStripButton>().ToArray();
-        Check(string.Join("|", buttons.Take(11).Select(b => b.Text)) == "Save|Undo|Redo|Cut|Copy|Paste|Find|Run|Help|AI assistance|Open in R" && buttons.Take(11).All(b => b.Image != null), "one script toolbar follows the common document order with AI then R+: " + string.Join(", ", buttons.Select(b => b.Text)));
+        Check(string.Join("|", buttons.Take(9).Select(b => b.Text)) == "Save|Undo|Redo|Cut|Copy|Paste|Find|Run|Help" && buttons.Take(9).All(b => b.Image != null), "one script toolbar follows the common document order: Save, Undo, Redo, Cut, Copy, Paste, Find, Run, Help");
         // the toolbar is drawn as the main window's: the same renderer paints a symbol for each button by its name at the display size, the
         // bitmaps serving only to size the buttons, so the script window's buttons take the names the renderer knows, and it must draw each
         Type renderer = program.GetType("StatsDirect.UI.SharpToolbarRenderer");
         Check(toolbar.Renderer.GetType() == renderer && toolbar.ImageScalingSize == toolbar.LogicalToDeviceUnits(new System.Drawing.Size(20, 20)),
               "the script window's toolbar has the main window's renderer and icon size");
-        Check(string.Join("|", buttons.Take(11).Select(b => b.Name)) == "saveToolStripButton|undoToolStripButton|redoToolStripButton|cutToolStripButton|copyToolStripButton|pasteToolStripButton|findToolStripButton|runToolStripButton|helpToolStripButton|aiToolStripButton|rPlusToolStripButton",
-              "the eleven primary buttons use the common vector icons");
-        var openR=buttons.Single(b=>b.Name=="rPlusToolStripButton");
-        Check(openR.DisplayStyle==ToolStripItemDisplayStyle.Image&&openR.Text=="Open in R"&&openR.ToolTipText=="Open in R"&&openR.AccessibleName=="Open in R"&&buttons.Count(b=>b.Text=="Open in R")==1,"R+ is one icon with an accessible Open in R label for its tooltip and overflow");
+        Check(string.Join("|", buttons.Take(9).Select(b => b.Name)) == "saveToolStripButton|undoToolStripButton|redoToolStripButton|cutToolStripButton|copyToolStripButton|pasteToolStripButton|findToolStripButton|runToolStripButton|helpToolStripButton",
+              "the nine primary buttons use the common vector icons");
+        // 5.3.0: an R script shows the interactive console in the window, with its own toolbar (Run, Stop, Restart, AI, Help and More, where Open in
+        // R / RStudio, Output folder and Clear output live) in place of the native toolbar; the shell suite sees that toolbar drawn
+        object console = script.GetProperty("InteractiveConsole", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(first.window);
+        Check(console is Control view && first.window.Controls.Contains(view) && buttons.All(b => b.Text is not ("Open in R" or "AI assistance")),
+              "an R script has the interactive console in its window, and the native toolbar no longer carries Open in R or AI assistance, which the console's toolbar and More menu hold");
         MethodInfo draw = renderer.GetMethod("DrawSymbol", BindingFlags.Static | BindingFlags.NonPublic);
         int Ink(ToolStripItem item)   // the pixels the renderer paints for an item, on a white bitmap
         {
@@ -60,13 +63,10 @@ internal static partial class Program
             for (int i = 0; i < 32; i++) for (int j = 0; j < 32; j++) if (bitmap.GetPixel(i, j).ToArgb() != System.Drawing.Color.White.ToArgb()) ink++;
             return ink;
         }
-        string[] inks = buttons.Take(11).Select(b => b.Text + " " + Ink(b)).ToArray();
-        Check(buttons.Take(11).All(b => Ink(b) > 40) && Ink(new ToolStripButton("Nothing") { Name = "noSuchButton" }) == 0, "the renderer draws all eleven command symbols: " + string.Join(", ", inks));
-        Check(toolbar.CanOverflow && toolbar.OverflowButton.AccessibleName == "More commands" && buttons.Where(b => b.Text is "Clear output" or "Output folder").All(b => b.Overflow == ToolStripItemOverflow.Always), "secondary script actions use accessible More overflow");
-        var generation = script.GetField("rGeneration", BindingFlags.Instance | BindingFlags.NonPublic);
-        int beforeRun = (int)generation.GetValue(first.window);
-        buttons.Single(b=>b.Text=="Run").PerformClick();
-        Check((int)generation.GetValue(first.window)==beforeRun+1, "the single labelled Run button starts the existing R workflow");
+        string[] inks = buttons.Take(9).Select(b => b.Text + " " + Ink(b)).ToArray();
+        Check(buttons.Take(9).All(b => Ink(b) > 40) && Ink(new ToolStripButton("Nothing") { Name = "noSuchButton" }) == 0, "the renderer draws all nine command symbols: " + string.Join(", ", inks));
+        Check(toolbar.CanOverflow && toolbar.OverflowButton.AccessibleName == "More commands", "secondary script actions use accessible More overflow");
+        Check(buttons.Count(b => b.Text == "Run") == 1 && buttons.Single(b => b.Text == "Run").DisplayStyle == ToolStripItemDisplayStyle.ImageAndText, "the single labelled Run button remains for C# and VB scripts; an R script runs through its console's toolbar");
         Check(first.window.Text == "Script 1: Paired t test" && first.tab.Text == first.window.Text, "the first script window is Script 1 with the analysis after it, and its tab is named with it: " + first.tab.Text);
         Check(second.window.Text == "Script 2: Unpaired t test" && second.tab.Text == second.window.Text, "a second Continue in R opens Script 2: " + second.tab.Text);
         Check((int)nextNumber.Invoke(app, null) == 3, "the next script window would be Script 3");

@@ -135,7 +135,7 @@ update and verify both the archive/file pins and exact-tag licence assets, then 
 [the first-use checks](../tests/TutorRuntime/README.md). The package remains Windows
 x64; Windows ARM64 uses x64 compatibility. No new Windows minimum is set.
 
-R setup pins CRAN's R 4.6.1 Windows installer and SHA-256, verifies its Windows
+R setup pins the CRAN Windows installer named in R/RInstallation.cs (currently R 4.6.2) and its SHA-256, verifies its Windows
 publisher signature, downloads with cancellation/progress and starts the native
 installer. It minimises the modal setup dialog while the installer runs: hiding
 a modal WinForms form would end its caller prematurely. Installation is recognised

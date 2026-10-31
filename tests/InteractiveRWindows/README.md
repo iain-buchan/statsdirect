@@ -1,16 +1,19 @@
 # Integrated Windows interactive R checks
 
-31 October 2026: **103 actual-application checks pass**, with no unhandled UI
-exceptions and all owned native R workers terminated. The application selected
-R 4.6.2; complete SVG pages also matched independent ordinary R 4.6.1 renderings.
-The twelve shared/replay-model tests pass. This is an isolated application
-build, not a released installer or an Office clipboard acceptance result.
+31 October 2026: the actual-application checks pass (the suite prints its count),
+with no unhandled UI exceptions and all owned native R workers terminated. The
+application selected R 4.6.2; complete SVG pages also matched independent ordinary
+R renderings from the same installation. The thirteen shared/replay-model tests
+pass under Node. This is an isolated application build, not a released installer
+or an Office clipboard acceptance result.
 
 This suite opens the actual StatsDirect MDI R script window and its WebView2
 console, using an installed R through the native worker. It does not use the
 standalone prototype host. Startup/settings/IPC handlers are detached from the
 fixture's main window, and each R window writes into its own test directory.
-No installer is built and the system clipboard is not changed.
+No installer is built. The chart-viewer checks back up, overwrite (through the
+viewer's Copy Chart) and restore the system clipboard; set `STATSDIRECT_SKIP_CLIPBOARD=1`
+to skip them and leave the clipboard untouched.
 
 An optional native Office probe is in `OfficeInterop.ps1`, invoked through the
 WindowsShell `STATSDIRECT_PASTE_PROBE` hook while its fully materialised clipboard
@@ -35,9 +38,9 @@ R starts on first use and writes into the fixture's owned artifact directory.
 Close the acceptance window when finished; startup/IPC/preferences handlers and
 the fixture document's unsaved-source prompt are excluded.
 
-The default R reference is `C:\Program Files\R\R-4.6.1`; set
-`STATSDIRECT_RHOME` to another installed R home for the independent SVG
-comparison. The application uses its ordinary installed-R discovery.
+The independent SVG comparison runs the newest R installed under Program Files;
+set `STATSDIRECT_RHOME` to another installed R home. The application uses its
+ordinary installed-R discovery.
 
 The checks cover genuine prompt answers, Unicode, continuation, rejected input,
 Stop during calculation/sleep/questions/continuation, R stack cleanup, retained

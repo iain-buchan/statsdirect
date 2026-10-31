@@ -211,6 +211,7 @@ internal static partial class Program
                     bool vector = kind is "R-SVG" or "SVG-only";
                     string imageSelector = vector ? "#results svg" : "#results img[src^='data:image/png;base64,']";
                     async Task<bool> Present() => await browser.CoreWebView2.ExecuteScriptAsync("!!document.querySelector(" + JsonSerializer.Serialize(imageSelector) + ")") == "true";
+                    if (!await Present()) Console.WriteLine("      after the " + kind + " paste the report holds: " + (await browser.CoreWebView2.ExecuteScriptAsync("document.getElementById('results').innerHTML.slice(0,600)")).Replace("\\n", " "));
                     Check(await Present(), kind + " pastes into the newly added report text area as " + (vector ? "vector SVG" : "an embedded picture"));
                     if (kind == "R-SVG")
                         Check(await browser.CoreWebView2.ExecuteScriptAsync("document.querySelector('#results svg').getAttribute('width')") == "\"360pt\"",

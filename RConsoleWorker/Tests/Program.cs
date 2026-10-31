@@ -73,11 +73,20 @@ try
     log = await Run("cat('STILL=', preserved, '\n', sep='')");
     Check(!Plots(log).Any() && Output(log).Contains("STILL=42"), "follow-on commands retain variables and do not rediscover old charts");
 
+    int asked = Mark(); await session.SubmitAsync("name <- readline('Your name? '); cat('NAMED=', name, '\\n', sep='')");
+    var request = await Wait(asked, e => Is(e, "inputRequested"));
+    await session.ReplyAsync(long.Parse(Text(request, "requestId")), "Iain");
+    await Wait(asked, e => Is(e, "commandFinished"));
+    var echoed = Since(asked).Where(e => Is(e, "inputEcho") && Text(e, "origin") == "input").ToArray();
+    Check(echoed.Length == 1 && Text(echoed[0], "prompt") == "Your name? " && Text(echoed[0], "text") == "Iain" && Output(Since(asked)).Contains("NAMED=Iain"),
+        "an answered question is echoed after its prompt, as a console shows it, so the transcript keeps the question");
+    await Wait(asked, e => Is(e, "state") && Text(e, "state") == "ready");
     int question = Mark(); await session.SubmitAsync("answer <- readline('Answer: '); after <- TRUE");
     await Wait(question, e => Is(e, "inputRequested"));
     await session.InterruptAsync();
     var stopped = await Wait(question, e => Is(e, "commandFinished"));
     Check(Text(stopped, "status") == "interrupted", "Stop unwinds a real input prompt");
+    Check(Since(question).Any(e => Is(e, "state") && Text(e, "state") == "interrupting"), "Stop shows as interrupting until R unwinds, so Stop is not offered again meanwhile");
     await Wait(question, e => Is(e, "state") && Text(e, "state") == "ready");
     log = await Run("cat('STOP=', exists('answer'), exists('after'), preserved, '\n')");
     Check(Output(log).Contains("STOP= FALSE FALSE 42"), "Stop supplies no answer, skips following code and preserves earlier variables");

@@ -91,9 +91,9 @@ $env:STATSDIRECT_TEST_NODE = (Get-Command node).Source
 $env:STATSDIRECT_LEARNING_ARTIFACTS = 'C:\path\to\test-artifacts'
 $env:STATSDIRECT_TEST_TUTOR_RUNTIME = "$PWD\DownloadedBinaries\TutorRuntime\bin\codex-app-server.exe" # optional prepare-runtime.ps1 fixture
 # Optional: verify an already downloaded, pinned official R installer; never install it.
-$env:STATSDIRECT_TEST_R_INSTALLER = 'C:\path\to\R-4.6.1-win.exe'
+$env:STATSDIRECT_TEST_R_INSTALLER = 'C:\path\to\R-4.6.2-win.exe'
 dotnet run --project tests/Learning -c Release -p:StatsDirectBin=C:\path\to\app
-$env:STATSDIRECT_RSCRIPT = 'C:\Program Files\R\R-4.6.1\bin\Rscript.exe'
+$env:STATSDIRECT_RSCRIPT = 'C:\Program Files\R\R-4.6.2\bin\Rscript.exe'
 node tests/Learning/run-shared.mjs
 ```
 

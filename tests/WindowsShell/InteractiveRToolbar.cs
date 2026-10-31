@@ -43,9 +43,11 @@ internal static partial class Program
         try
         {
             main.MinimumSize = Size.Empty; main.Width = main.LogicalToDeviceUnits(290);
-            await Task.Delay(90);
-            Check(await JS("(()=>{const t=document.querySelector('.toolbar'),b=document.getElementById('windows-more');return !!b&&b.getAttribute('aria-label')==='More R session commands'&&(t.scrollWidth<=t.clientWidth+1||getComputedStyle(t).overflowX==='auto'||getComputedStyle(t).overflowX==='scroll')})()") == "true",
-                "the narrow R toolbar retains accessible More and a reachable overflow layout");
+            // the page lays out after the resize: wait until the toolbar overflows, up to two seconds
+            for (int wait = 0; wait < 40 && await JS("(()=>{const t=document.querySelector('.toolbar');return t.scrollWidth>t.clientWidth+1})()") != "true"; wait++) await Task.Delay(50);
+            // More must be reachable, not merely styled: the toolbar overflows at this width, scrolls to its end, and More is hit-testable there
+            Check(await JS("(()=>{const t=document.querySelector('.toolbar'),b=document.getElementById('windows-more');if(!b||b.getAttribute('aria-label')!=='More R session commands')return false;if(t.scrollWidth<=t.clientWidth+1)return false;t.scrollLeft=t.scrollWidth;const r=b.getBoundingClientRect(),tr=t.getBoundingClientRect();if(r.width<=0||r.left<tr.left-1||r.right>tr.right+1)return false;const hit=document.elementFromPoint((r.left+r.right)/2,(r.top+r.bottom)/2);return b===hit||b.contains(hit);})()") == "true",
+                "the narrow R toolbar scrolls to an accessible, hit-testable More");
         }
         finally { main.Width = oldWidth; main.MinimumSize = oldMinimum; }
     }

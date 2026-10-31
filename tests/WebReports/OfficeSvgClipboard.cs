@@ -44,15 +44,16 @@ internal static partial class Program
                 <text x="14" y="126" font-family="StatsDirectMissingFont,Arial,sans-serif">Font fallback β μ</text>
               </g>
               <g transform="translate(590 150) rotate(-90)" font-family="Arial" font-size="22" fill="black"><text x="0" y="0">Rotated Ω</text></g>
+              <text x="20" y="190" font-family="Arial" font-size="20" fill="black">smile 😀 label</text>
             </svg>
             """;
         string fontOutlined = OfficeSvg.ForClipboard(fontFixture);
         var fontDocument = XDocument.Parse(fontOutlined);
-        Check(!fontDocument.Descendants().Any(n => n.Name.LocalName == "text")
+        Check(fontDocument.Descendants().Where(n => n.Name.LocalName == "text").Select(n => n.Value).SequenceEqual(new[] { "smile 😀 label" })
             && fontDocument.Descendants().Count(n => n.Name.LocalName == "path") >= 4
-            && fontDocument.Descendants().Any(n => (string?)n.Attribute("fill-rule") == "evenodd")
+            && fontDocument.Descendants().Where(n => n.Name.LocalName == "path" && n.Attribute("aria-label") != null).All(n => (string?)n.Attribute("fill-rule") == "nonzero")
             && fontDocument.Descendants().Any(n => (string?)n.Attribute("clip-path") == "url(#label-clip)"),
-            "bold italic, Unicode and fallback-font labels become clipped vector outlines with glyph holes retained");
+            "bold italic, Unicode and fallback-font labels become clipped nonzero vector outlines, and a label the font cannot draw keeps its text");
         await CompareOfficeSvgRendering("fonts-and-holes", fontFixture, fontOutlined);
 
         const string pathsOnly = "<svg xmlns='http://www.w3.org/2000/svg' width='80' height='40' viewBox='0 0 80 40'><g transform='translate(3 2)'><path d='M2 2H30V30H2ZM8 8V24H24V8Z' fill-rule='evenodd' fill='blue'/><path d='M40 5L70 30' fill='none' stroke='red' stroke-width='2'/></g></svg>";

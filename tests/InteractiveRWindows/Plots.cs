@@ -136,12 +136,24 @@ internal static partial class Program
             await Task.Delay(40);
         }
     }
+    /// <summary>The newest R under Program Files, as the worker's build takes its headers.</summary>
+    static string NewestInstalledR()
+    {
+        string root = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "R");
+        return Directory.Exists(root)
+            ? Directory.GetDirectories(root, "R-*").Where(d => File.Exists(Path.Combine(d, "bin", "x64", "Rscript.exe")))
+                .OrderByDescending(d => Version.TryParse(Path.GetFileName(d)[2..], out var v) ? v : new Version(0, 0)).FirstOrDefault() ?? Path.Combine(root, "R-none")
+            : Path.Combine(root, "R-none");
+    }
     static async Task CompareOrdinaryR(ConsoleHost host, string source, JsonElement[] plots, string name)
     {
         string directory = Path.Combine(artifacts, "ordinary-r", name); Directory.CreateDirectory(directory);
         string submitted = Path.Combine(directory, "submitted.R"); File.WriteAllText(submitted, source, new System.Text.UTF8Encoding(false));
         string Q(string value) => JsonSerializer.Serialize(value.Replace('\\', '/'));
-        var start = new ProcessStartInfo(Path.Combine(Environment.GetEnvironmentVariable("STATSDIRECT_RHOME") ?? @"C:\Program Files\R\R-4.6.1", "bin", "x64", "Rscript.exe"))
+        string rHome = Environment.GetEnvironmentVariable("STATSDIRECT_RHOME") ?? NewestInstalledR();
+        string rscript = Path.Combine(rHome, "bin", "x64", "Rscript.exe");
+        if (!File.Exists(rscript)) throw new InvalidOperationException("No Rscript.exe at " + rscript + "; set STATSDIRECT_RHOME to an installed 64-bit R.");
+        var start = new ProcessStartInfo(rscript)
         {
             WorkingDirectory = directory, UseShellExecute = false, CreateNoWindow = true,
             RedirectStandardOutput = true, RedirectStandardError = true
