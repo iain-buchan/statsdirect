@@ -1656,41 +1656,55 @@ namespace StatsDirect.UI
             currentPanelType = panelType;
         }
 
+        private bool resizingOperationContainer;
+
+        private void tlpUserArea_SizeChanged(object sender, EventArgs e)
+        {
+            if (!resizingOperationContainer && pnlVariables.Visible)
+                ResizeContainer(true);
+        }
+
         private void ResizeContainer(bool enforceHeightOnOperations)
         {
-            int tableHeight = 0;
-            if (HasUserInputTable())
+            if (resizingOperationContainer) return;
+            resizingOperationContainer = true;
+            try
             {
-                TableLayoutPanel tlp = GetUserInputTable();
-                tableHeight = tlp.PreferredSize.Height + tlp.Margin.Top;
-                tlp.Width = pnlUser.Width;
+                int summaryHeight = 0;
+                if (pnlVariables.Visible)
+                {
+                    int width = Math.Max(1, tlpUserArea.ClientSize.Width - pnlVariables.Margin.Horizontal
+                        - SystemInformation.VerticalScrollBarWidth);
+                    lblSelectedVariables.MaximumSize = new Size(width, 0);
+                    int maximumHeight = lblSelectedVariables.Font.Height * 6 + lblSelectedVariables.Padding.Vertical;
+                    pnlVariables.MaximumSize = new Size(0, maximumHeight);
+                    pnlVariables.Height = Math.Min(lblSelectedVariables.PreferredHeight, maximumHeight);
+                    summaryHeight = pnlVariables.Height + pnlVariables.Margin.Vertical;
+                }
+                int tableHeight = 0;
+                if (HasUserInputTable())
+                {
+                    TableLayoutPanel tlp = GetUserInputTable();
+                    tlp.Width = pnlUser.Width;
+                    tableHeight = tlp.PreferredSize.Height + tlp.Margin.Top;
+                    tlp.Height = tableHeight;
+                }
+                int instructionsHeight = pnlFollowOnInstructions.Visible
+                    ? pnlFollowOnInstructions.PreferredSize.Height + pnlFollowOnInstructions.Margin.Vertical : 0;
+                // Include the visible summary and follow-on guidance above the input widgets.
+                int rightHandHeight = tableHeight + pnlUser.Margin.Vertical + summaryHeight + instructionsHeight;
+                int contentHeight = Math.Max(Math.Max(rightHandHeight, tlpSelectOperation.Height), 58);
+                int constrainedHeight = Math.Min(contentHeight, Math.Max(58, Height - HEIGHT_BREATHING_SPACE));
+                if (enforceHeightOnOperations || pnlTop.Height < constrainedHeight)
+                {
+                    pnlTop.Height = constrainedHeight;
+                    pnlOperations.Height = constrainedHeight;
+                    tlpOperations.Height = contentHeight;
+                }
+                pnlUser.Height = tableHeight;
+                tlpOperations.AutoScroll = constrainedHeight < contentHeight;
             }
-            // The operations panel is always at least the same height as the standard panel (58 pixels), but must also fit both left-hand and right-hand content
-            int leftHandHeight = tlpSelectOperation.Height;
-            int contentHeight = Math.Max(tableHeight, leftHandHeight);
-            contentHeight = Math.Max(contentHeight, 58);
-
-            // Set a constraint on the maximum height of the table so that it's never off the bottom of the window
-            int constrainedHeight = Math.Min(contentHeight, Height - HEIGHT_BREATHING_SPACE);
-            // A bar shorter than its content clips it: the Further analysis row suggested after a run was laid out below the visible edge
-            // once the bar had shrunk to the default panel, which is short while a report is in front.  The heights are set whenever they
-            // are too small, and otherwise only when the caller enforces them, which also lets them shrink.
-            if (enforceHeightOnOperations || pnlTop.Height < constrainedHeight)
-            {
-                pnlTop.Height = constrainedHeight;
-                pnlOperations.Height = constrainedHeight;
-                tlpOperations.Height = contentHeight;
-                pnlUser.Height = contentHeight;
-            }
-
-            bool shouldScrollVertically = constrainedHeight < contentHeight;
-            tlpOperations.AutoScroll = shouldScrollVertically;
-            // The following is a workaround for the TableLayoutPanel apparently not following its own wishes for height, even when the preferred height is reported correctly.  No idea why!
-            if (HasUserInputTable())
-            {
-                TableLayoutPanel tlp = GetUserInputTable();
-                tlp.Height = contentHeight;
-            }
+            finally { resizingOperationContainer = false; }
         }
 
         internal bool IsCalculateButton(Control control)
@@ -2517,6 +2531,7 @@ namespace StatsDirect.UI
         private void MaybeShowVariables(ParameterBag context)
         {
             bool shouldShow = false;
+            int variableCount = 0;
             StringBuilder sb = new();
             IList<Operation> ops = BuildOperationHistory(context);
             foreach (KeyValuePair<string, FilledParameter> pair in context.Pairs)
@@ -2533,14 +2548,18 @@ namespace StatsDirect.UI
                         foreach (IVariable v in pair.Value.AsDataFrame.Variables)
                         {
                             sb.AppendLine("   " + (v?.Title ?? "(unnamed)"));
+                            variableCount++;
                         }
                     }
                 }
             }
+            lblSelectedVariables.Text = shouldShow
+                ? "Selected variables (" + variableCount.ToString(CultureInfo.CurrentCulture) + ")"
+                    + Environment.NewLine + sb.ToString().TrimEnd()
+                : string.Empty;
+            lblSelectedVariables.AccessibleDescription = lblSelectedVariables.Text;
             pnlVariables.Visible = shouldShow;
-            string toolTipText = sb.ToString();
-            cmdVariables.Tag = shouldShow ? toolTipText : null;
-            tipVariables.SetToolTip(cmdVariables, toolTipText);
+            if (pnlOperations.Visible) ResizeContainer(true);
         }
 
         private IList<Operation> BuildOperationHistory(ParameterBag context)
@@ -4179,11 +4198,6 @@ namespace StatsDirect.UI
             return bmp;
         }
 
-        private void cmdVariables_Click(object sender, EventArgs e)
-        {
-            const int durationMilliseconds = 10000;
-            tipVariables.Show(tipVariables.GetToolTip(cmdVariables), cmdVariables, durationMilliseconds);
-        }
 
         private void cmdModalMessageKeyPress(object sender, KeyPressEventArgs e)
         {

@@ -16,6 +16,7 @@ Version 5.3.0 brings an interactive R console into the R script window. Console 
 - Desktop and web help describe the integrated console and the simplified Analysis menu.
 
 ### Changed
+- Chosen variable names appear directly above the analysis options in a wrapping, scrollable summary, replacing the trolley button and its tooltip.
 - Calculator has a separate section in Analysis immediately before Options. The Tools menu, external program shortcuts and separate R launcher are retired; File > New R session and contextual R actions remain.
 
 ### Fixed
