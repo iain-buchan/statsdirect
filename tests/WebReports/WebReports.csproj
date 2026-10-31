@@ -6,7 +6,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="../BrowserCopyProbe.cs" Link="BrowserCopyProbe.cs" />
-    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4258.31" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4314.35" />
     <PackageReference Include="RtfPipe" Version="2.0.7677.4303" />
     <Reference Include="StatsDirect"><HintPath>$(StatsDirectBin)/StatsDirect.dll</HintPath></Reference>
     <Compile Include="../../StatsDirectUI/UI/WebReports/*.cs" Link="Production/%(Filename)%(Extension)" />

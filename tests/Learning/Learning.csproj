@@ -9,7 +9,7 @@
     <Reference Include="StatsDirect"><HintPath>$(StatsDirectBin)/StatsDirect.dll</HintPath></Reference>
     <Reference Include="SpreadsheetGear"><HintPath>$(StatsDirectBin)/SpreadsheetGear.dll</HintPath></Reference>
     <Reference Include="SpreadsheetGear.Windows.Forms"><HintPath>$(StatsDirectBin)/SpreadsheetGear.Windows.Forms.dll</HintPath></Reference>
-    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4258.31" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4314.35" />
     <PackageReference Include="ExcelDataReader" Version="3.9.0" />
     <PackageReference Include="RtfPipe" Version="2.0.7677.4303" />
     <Content Include="$(StatsDirectBin)/**" Exclude="$(StatsDirectBin)/TutorRuntime/**" Link="%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
