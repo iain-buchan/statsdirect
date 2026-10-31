@@ -7,6 +7,9 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="../../StatsDirectUI/R/Interactive/IRSession.cs" Link="IRSession.cs" />
+    <Compile Include="../../StatsDirectUI/R/Interactive/ROutputFiles.cs" Link="ROutputFiles.cs" />
     <Compile Include="../../StatsDirectUI/R/Interactive/RConsoleSession.cs" Link="RConsoleSession.cs" />
+    <Compile Include="../../StatsDirectUI/R/Interactive/RScriptSession.cs" Link="RScriptSession.cs" />
   </ItemGroup>
 </Project>

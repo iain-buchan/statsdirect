@@ -36,7 +36,7 @@ public partial class frmInstallR : Form
         FormBorderStyle = FormBorderStyle.FixedDialog; MaximizeBox = false; MinimizeBox = false;
         ClientSize = new Size(558, 270);
         var layout = new FlowLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(18), FlowDirection = FlowDirection.TopDown, WrapContents = false };
-        layout.Controls.Add(new Label { AutoSize = true, MaximumSize = new Size(520, 0), Text = "R is needed for this action: the R console works with 64-bit R " + RInstallation.Series + ".x, the version offered here. Download the official Windows installer from CRAN, then complete its setup. Your worksheet and script will stay open; StatsDirect will resume this action when R is ready." });
+        layout.Controls.Add(new Label { AutoSize = true, MaximumSize = new Size(520, 0), Text = "R is needed for this action: the R console works with 64-bit R " + RInstallation.MinimumSeries + " or later, and R " + RInstallation.Version + " is offered here. Download the official Windows installer from CRAN, then complete its setup. Your worksheet and script will stay open; StatsDirect will resume this action when R is ready." });
         status.Text = "R " + RInstallation.Version + " · official CRAN download · verified before opening";
         layout.Controls.Add(status); layout.Controls.Add(progress);
         var buttons = new FlowLayoutPanel { AutoSize = true, WrapContents = false, Margin = new Padding(0, 12, 0, 0) };

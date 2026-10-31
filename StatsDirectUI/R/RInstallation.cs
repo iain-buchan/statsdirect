@@ -17,7 +17,7 @@ internal readonly record struct RDownloadProgress(long Received, long? Total);
 internal sealed class RInstallation : IDisposable
 {
     internal const string Version = "4.6.2";
-    internal const string Series = "4.6";   // the series the R console's worker takes: a new series needs the worker rebuilt and this pin moved
+    internal const string MinimumSeries = "4.2";   // the oldest R the console's worker takes, as console.c states it; the view asks the worker, this is the fallback
     internal static readonly Uri DownloadUri = new("https://cran.r-project.org/bin/windows/base/R-4.6.2-win.exe");
     internal const string Sha256 = "b0b0053baa1963b6d8a28c9642d50107ef9ce2f41c8b9a90e952846c8918b38a";
     internal const long MaximumBytes = 150 * 1024 * 1024;

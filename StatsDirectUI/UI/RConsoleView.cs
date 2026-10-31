@@ -39,7 +39,7 @@ internal sealed partial class RConsoleView : UserControl
     private long generation, offlineSeq, historySize;
     private bool browserFailed, recovering;
     private bool startingPage, pageReady, closing;
-    internal RConsoleSession? Session { get; private set; }
+    internal IRSession? Session { get; private set; }
     internal Task Ready => ready.Task;
     internal string NativeState { get; private set; } = "ready";
     internal IReadOnlyList<JsonElement> History => history;
@@ -142,12 +142,14 @@ internal sealed partial class RConsoleView : UserControl
         Notice?.Invoke(message);
     }
 
-    /// <summary>The newest installed R of the series the worker was built for; the newest of any when the worker cannot name its series.</summary>
-    private static RVersion? CompatibleRVersion(string? series)
+    /// <summary>The newest installed 64-bit R of at least the given series, such as "4.2", the oldest the worker takes; null when none is.</summary>
+    internal static RVersion? ConsoleRVersion(string minimum)
     {
+        string[] parts = minimum.Split('.');
+        int major = int.Parse(parts[0], System.Globalization.CultureInfo.InvariantCulture), minor = int.Parse(parts[1], System.Globalization.CultureInfo.InvariantCulture);
         RVersion? preferred = null;
         foreach (RVersion candidate in RController.CheckR())
-            if ((series == null || candidate.MajorVersion + "." + candidate.MinorVersion == series) && candidate.CompareTo(preferred) > 0)
+            if (candidate.IsX64 && (candidate.MajorVersion > major || candidate.MajorVersion == major && candidate.MinorVersion >= minor) && candidate.CompareTo(preferred) > 0)
                 preferred = candidate;
         return preferred;
     }
@@ -171,22 +173,38 @@ internal sealed partial class RConsoleView : UserControl
             {
                 string helper = Path.Combine(AppContext.BaseDirectory, "StatsDirect.RConsole.Native.exe");
                 if (!File.Exists(helper)) throw new FileNotFoundException("The R console component is missing. Repair or reinstall StatsDirect; your script has been retained.", helper);
-                // The worker takes one R series: the newest installed R of that series, else the Set up R dialog, which offers it
-                string? series = RConsoleSession.CompiledRSeries(helper);
-                RVersion? version = CompatibleRVersion(series);
-                while (version == null)
+                // The worker takes any 64-bit R from the minimum it states, and the newest such R installed runs the console; an installed R
+                // the worker does not take, older or 32-bit, runs each command through its Rscript instead, as the window did before the
+                // console, with a notice; with no R at all the Set up R dialog offers the current R
+                // (STATSDIRECT_R_CONSOLE_MINIMUM is the checks' hook: a minimum above any installed R exercises the Rscript fallback)
+                string minimum = Environment.GetEnvironmentVariable("STATSDIRECT_R_CONSOLE_MINIMUM") ?? RConsoleSession.CompiledRSeries(helper) ?? RInstallation.MinimumSeries;
+                RVersion? version = ConsoleRVersion(minimum), any = RController.PreferredRVersion();
+                while (any == null)
                 {
-                    RVersion? other = RController.PreferredRVersion();
-                    if (other != null && series != null)
-                        ReportNotice("R " + other.VersionString + " is installed; the R console works with 64-bit R " + series + ".x. Set up R installs it beside the R you have.");
-                    // Set up R's Check installation looks for an R of the worker's series, not for any R, so an older R does not close the dialog as success
-                    if (!RController.UserMightHaveInstalledR(token => RInstallation.ReadyAsync(CompatibleRVersion(series), token)))
-                        throw new OperationCanceledException("R " + (series ?? "") + (series == null ? "" : ".x ") + "was not installed. The script has been retained.");
-                    version = CompatibleRVersion(series);
+                    if (!RController.UserMightHaveInstalledR())
+                        throw new OperationCanceledException("R was not installed. The script has been retained.");
+                    version = ConsoleRVersion(minimum); any = RController.PreferredRVersion();
                 }
                 RController.HousekeepOnce(WorkingDirectory);   // the automatic chart files of earlier runs and sessions, a week old or more
-                Session = new RConsoleSession(helper, version.InstallPath, WorkingDirectory);
+                string setup = "More > Set up R installs R " + RInstallation.Version + " beside the R you have.";
+                Session = version != null
+                    ? new RConsoleSession(helper, version.InstallPath, WorkingDirectory)
+                    : new RScriptSession(Path.Combine(any.BinPath, "Rscript.exe"), any.VersionString + (any.IsX64 ? "" : " (32-bit)"), WorkingDirectory,
+                        "The interactive console needs 64-bit R " + minimum + " or later. " + setup);
                 Session.Event += OnSessionEvent;
+                if (version != null)
+                {
+                    try { await Session.StartAsync(); }
+                    catch (Exception error) when (error is IOException or TimeoutException or InvalidOperationException)
+                    {
+                        // The worker could not start with this R: rather than leave the window without R, each command runs through this R's Rscript,
+                        // the notice says why, and Restart R tries the console again
+                        Session.Event -= OnSessionEvent; Session.Dispose();
+                        Session = new RScriptSession(Path.Combine(version.BinPath, "Rscript.exe"), version.VersionString, WorkingDirectory,
+                            "The interactive console could not start (" + error.Message.TrimEnd('.') + "). Restart R tries it again.");
+                        Session.Event += OnSessionEvent;
+                    }
+                }
             }
             await Session.StartAsync();
         }
@@ -202,6 +220,13 @@ internal sealed partial class RConsoleView : UserControl
     internal async Task RestartAsync()
     {
         await GetScriptAsync();
+        // From the Rscript fallback, Restart R chooses the session afresh: the console when it can start now, which an R installed meanwhile allows
+        if (Session is RScriptSession runner)
+        {
+            await startingR.WaitAsync();
+            try { runner.Event -= OnSessionEvent; runner.Dispose(); Session = null; }
+            finally { startingR.Release(); }
+        }
         if (Session == null) await StartAsync(); else await Session.RestartAsync();
     }
     internal async Task<string> GetScriptAsync()

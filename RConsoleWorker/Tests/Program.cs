@@ -1,10 +1,23 @@
+using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using StatsDirect.R.Interactive;
 
+// The newest 64-bit R installed under Program Files\R, as the console needs: a second argument names another.
+string NewestRHome()
+{
+    string root = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "R");
+    var homes = Directory.Exists(root) ? Directory.GetDirectories(root) : [];
+    string? newest = homes.Where(home => File.Exists(Path.Combine(home, "bin", "x64", "R.dll")))
+        .Select(home => (Home: home, Match: Regex.Match(Path.GetFileName(home), @"^R-(\d+(?:\.\d+){1,3})$")))
+        .Where(found => found.Match.Success && Version.TryParse(found.Match.Groups[1].Value, out _))
+        .OrderByDescending(found => Version.Parse(found.Match.Groups[1].Value)).Select(found => found.Home).FirstOrDefault();
+    return newest ?? throw new DirectoryNotFoundException("No 64-bit R with bin\\x64\\R.dll was found under " + root + ". Name an R home as the second argument.");
+}
 string helper = args.Length > 0 ? Path.GetFullPath(args[0]) : Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../bin/StatsDirect.RConsole.Native.exe"));
-string rHome = args.Length > 1 ? Path.GetFullPath(args[1]) : @"C:\Program Files\R\R-4.6.2";
+string rHome = args.Length > 1 ? Path.GetFullPath(args[1]) : NewestRHome();
 string working = args.Length > 2 ? Path.GetFullPath(args[2]) : Path.Combine(Path.GetTempPath(), "StatsDirect-R-session-" + Guid.NewGuid().ToString("N"));
 Directory.CreateDirectory(working);
 using var session = new RConsoleSession(helper, rHome, working);
@@ -26,9 +39,9 @@ async Task<JsonElement> Wait(int mark, Func<JsonElement, bool> predicate)
     }
     throw new TimeoutException(string.Join("\n", Since(mark).TakeLast(12).Select(e => e.GetRawText())));
 }
-async Task<JsonElement[]> Run(string source, string status = "ok")
+async Task<JsonElement[]> Run(string source, string status = "ok", IRSession? on = null)
 {
-    int mark = Mark(); await session.SubmitAsync(source, "script");
+    int mark = Mark(); await (on ?? session).SubmitAsync(source, "script");
     var finished = await Wait(mark, e => Is(e, "commandFinished"));
     Check(Text(finished, "status") == status, "R submission finishes as " + status);
     await Wait(mark, e => Is(e, "state") && Text(e, "state") == "ready");
@@ -38,6 +51,17 @@ string Output(JsonElement[] log) => string.Concat(log.Where(e => Is(e, "output")
 JsonElement[] Plots(JsonElement[] log) => log.Where(e => Is(e, "plot")).ToArray();
 XElement Svg(JsonElement plot) => XDocument.Load(Text(plot, "path")).Root!;
 string Hash(string path) => Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(path)));
+int Handles() { using var me = Process.GetCurrentProcess(); return me.HandleCount; }
+// The version R itself reports, as the host passes it to the Rscript session: the installed R's folder name may say less.
+string RVersionOf(string rscriptPath)
+{
+    var query = new ProcessStartInfo(rscriptPath) { UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true };
+    query.ArgumentList.Add("--vanilla"); query.ArgumentList.Add("-e"); query.ArgumentList.Add("cat(as.character(getRversion()))");
+    using var asked = Process.Start(query) ?? throw new IOException("Rscript did not start: " + rscriptPath);
+    string version = asked.StandardOutput.ReadToEnd().Trim();
+    asked.WaitForExit();
+    return Regex.IsMatch(version, @"^\d+\.\d+\.\d+$") ? version : throw new IOException("Rscript did not report its version: " + version);
+}
 try
 {
     await session.StartAsync();
@@ -169,6 +193,133 @@ try
     Check(!Plots(log).Any() && log.Any(e => Is(e, "notice") && Text(e, "label") == "invalid.jpg" && Text(e, "filePath").EndsWith("invalid.jpg")), "a malformed raster remains a file link without breaking the R session");
     log = await Run("cat('RASTER_ALIVE=', kept_after_clear, '\\n', sep='')");
     Check(Output(log).Contains("RASTER_ALIVE=17"), "variables and R execution survive an unsupported image decoder input");
+    Check(session.PersistentWorkspace && session.RDescription.StartsWith("R 4.") && session.RDescription.Length > 2, "the console session describes its persistent R from the worker's ready event");
+
+    // The Rscript runner, the console's fallback for an R the worker cannot use, against the same R's Rscript in a fresh folder of its own.
+    string rscript = Path.Combine(rHome, "bin", "x64", "Rscript.exe");
+    if (!File.Exists(rscript)) rscript = Path.Combine(rHome, "bin", "Rscript.exe");
+    string rVersion = RVersionOf(rscript);
+    string runnerFolder = Path.Combine(working, "rscript");
+    string Stream(JsonElement[] run, string stream) => string.Concat(run.Where(e => Is(e, "output") && Text(e, "stream") == stream).Select(e => Text(e, "text")));
+    var runner = new RScriptSession(rscript, rVersion, runnerFolder, "The interactive console needs 64-bit R 4.2 or later.");
+    runner.Event += e => { lock (events) events.Add(e.Clone()); };
+    int restarted = -1;
+    string brokenId = "";
+    try
+    {
+        int opened = Mark(); await runner.StartAsync();
+        var opening = Since(opened);
+        var announced = opening.Single(e => Is(e, "session"));
+        string runnerId = Text(announced, "sessionId");
+        long runnerGeneration = announced.GetProperty("generation").GetInt64();
+        Check(Since(0).Where(e => Text(e, "sessionId") != runnerId).All(e => e.GetProperty("generation").GetInt64() < runnerGeneration),
+            "the Rscript session's generation exceeds every generation of the console session before it, so the page, which orders sessions by generation alone, takes it as the replacement");
+        Check(announced.GetProperty("capabilities").GetProperty("persistentWorkspace").ValueKind == JsonValueKind.False && !runner.PersistentWorkspace
+            && opening.Any(e => Is(e, "notice") && Text(e, "text").Contains("Rscript") && Text(e, "text").Contains(rVersion)) && Is(opening.Last(), "state") && Text(opening.Last(), "state") == "ready",
+            "the Rscript session announces a workspace that does not persist and names Rscript in its opening notice");
+        Check(runner.RDescription == "R " + rVersion + " through Rscript" && Directory.Exists(runnerFolder), "the Rscript session describes its R and creates its working folder");
+        log = await Run("cat('OUT=1\\n'); message('MSG=2')", on: runner);
+        Check(Stream(log, "stdout").Contains("OUT=1\n") && Stream(log, "stderr").Contains("MSG=2\n") && !Output(log).Contains('\r') && log.Where(e => Is(e, "output")).All(e => e.GetProperty("commandId").ValueKind == JsonValueKind.Number)
+            && log.Any(e => Is(e, "commandAccepted")) && log.Any(e => Is(e, "inputEcho") && Text(e, "prompt") == "> " && Text(e, "origin") == "script"),
+            "an Rscript submission's printed output arrives as stdout output events and a message as stderr, under its command, with LF line ends as the worker's output has");
+        log = await Run("x <- 1; cat('FIRST=', exists('x'), '\\n', sep='')", on: runner);
+        var later = await Run("cat('SECOND=', exists('x'), '\\n', sep='')", on: runner);
+        Check(Output(log).Contains("FIRST=TRUE") && Output(later).Contains("SECOND=FALSE"), "objects do not persist between Rscript commands, each a fresh R");
+        log = await Run("cat('LIB_FIRST=', normalizePath(.libPaths()[1L])==normalizePath(file.path(getwd(),'Lib')), sep=''); cat(' LIB_PRIVATE=', !any(c('libdir','n','device') %in% ls(all.names=TRUE)), sep='')", on: runner);
+        Check(Output(log).Contains("LIB_FIRST=TRUE") && Output(log).Contains("LIB_PRIVATE=TRUE") && Directory.Exists(Path.Combine(runnerFolder, "Lib")), "the Rscript runner's Lib folder leads the package search path without adding global setup variables");
+        // Each run's pipe readers go with its process rather than waiting for the finalizer, which would otherwise find two handles per run to
+        // close: the handles a collection gives back show that, where the count itself also grows with the pool threads the pumps occupy.
+        // The Process class leaves one handle per run to the finalizer itself, readers disposed or not, so three per run would mean the readers.
+        GC.Collect(); GC.WaitForPendingFinalizers(); GC.Collect(); GC.WaitForPendingFinalizers();
+        int handlesBefore = Handles();
+        for (int i = 0; i < 12; i++) await Run("cat(" + i + ")", on: runner);
+        int handlesAfter = Handles();
+        GC.Collect(); GC.WaitForPendingFinalizers(); GC.Collect(); GC.WaitForPendingFinalizers();
+        int handlesCollected = Handles();
+        Check(handlesAfter - handlesCollected < 24, $"twelve Rscript runs leave no pipe readers for the finalizer to close ({handlesBefore} before, {handlesAfter} after the runs, {handlesCollected} after a collection): each run's readers are released with its process");
+        log = await Run("plot(1:3)", on: runner);
+        var automatic = Plots(log);
+        Check(automatic.Length == 1 && Text(automatic[0], "mime") == "image/svg+xml" && Text(automatic[0], "preview").StartsWith("data:image/svg+xml;base64,") && Text(automatic[0], "label") == "R plot 1"
+            && Text(automatic[0], "plotId").StartsWith(runnerId + "-") && Text(automatic[0], "plotId").Contains("-device-1-1")
+            && string.Equals(Path.GetDirectoryName(Text(automatic[0], "path")), runnerFolder, StringComparison.OrdinalIgnoreCase) && File.Exists(Text(automatic[0], "path")) && Svg(automatic[0]).Descendants().Any(),
+            "plot(1:3) through Rscript produces exactly one chart card with an SVG preview whose file lies in the working folder");
+        log = await Run("plot(1:3); plot(1:4); dev.new(); plot(1:5)", on: runner);
+        Check(Plots(log).Length == 3 && Plots(log).Select(p => Text(p, "label")).SequenceEqual(new[] { "R plot 1", "R plot 2", "R plot 3" }) && Plots(log).Select(p => Text(p, "plotId")).Distinct().Count() == 3,
+            "several pages and devices in one Rscript command become cards in device then page order, numbered within the command");
+        log = await Run("svg('named.svg', width=5, height=3); plot(1:4); dev.off(); png('named.png', width=600, height=300); plot(1:4); dev.off(); write.csv(data.frame(x=1:3), 'named.csv', row.names=FALSE)", on: runner);
+        var namedSvg = Plots(log).Single(p => Text(p, "label") == "named.svg");
+        var namedPng = Plots(log).Single(p => Text(p, "label") == "named.png");
+        Check(Plots(log).Length == 2 && Text(namedSvg, "mime") == "image/svg+xml" && (string?)Svg(namedSvg).Attribute("width") == "360pt" && Text(namedSvg, "path") != Text(namedSvg, "originalPath") && File.Exists(Text(namedSvg, "originalPath"))
+            && Text(namedPng, "mime") == "image/png" && Text(namedPng, "preview").StartsWith("data:image/png;base64,")
+            && log.Any(e => Is(e, "notice") && Text(e, "text").Contains("named.csv") && Text(e, "filePath").EndsWith("named.csv")),
+            "named svg and png files give cards with immutable copies and write.csv gives a notice through Rscript, as the console does");
+        log = await Run("stop('expected')", "error", on: runner);
+        Check(log.Any(e => Is(e, "notice") && Text(e, "text").Contains("exit code 1")) && Stream(log, "stderr").Contains("expected"), "an R error through Rscript finishes as error with a notice naming the exit code");
+        int sleeping = Mark(); await runner.SubmitAsync("Sys.sleep(60)", "script");
+        var stopwatch = Stopwatch.StartNew(); await runner.InterruptAsync();
+        var interrupted = await Wait(sleeping, e => Is(e, "commandFinished"));
+        Check(Text(interrupted, "status") == "interrupted" && stopwatch.Elapsed < TimeSpan.FromSeconds(5) && Since(sleeping).Any(e => Is(e, "state") && Text(e, "state") == "interrupting")
+            && !Since(sleeping).Any(e => Is(e, "notice") && Text(e, "text").Contains("exit code")), "Stop ends a sleeping Rscript command as interrupted within 5 s, shown as interrupting meanwhile, without an exit-code notice");
+        await Wait(sleeping, e => Is(e, "state") && Text(e, "state") == "ready");
+        bool refused = false;
+        try { await runner.ReplyAsync(1, "Iain"); } catch (InvalidOperationException) { refused = true; }
+        Check(refused, "ReplyAsync refuses: R through Rscript cannot ask questions");
+        restarted = Mark(); await runner.RestartAsync();
+        var afterRestart = Since(restarted);
+        var reopened = afterRestart.Single(e => Is(e, "session"));
+        Check(Text(reopened, "sessionId") == runnerId && reopened.GetProperty("generation").GetInt64() > runnerGeneration && afterRestart.All(e => e.GetProperty("generation").GetInt64() == reopened.GetProperty("generation").GetInt64())
+            && afterRestart.Any(e => Is(e, "notice") && Text(e, "text").Contains("Rscript")) && afterRestart.Any(e => Is(e, "notice") && Text(e, "text").Contains("no workspace to clear"))
+            && Is(afterRestart.Last(), "state") && Text(afterRestart.Last(), "state") == "ready",
+            "Restart through Rscript opens a new generation with a session event, which releases the page from its restarting state, explains again why R runs this way and that there is no workspace to clear, and leaves the state ready");
+        log = await Run("cat('AFTER_RESTART=1\\n')", on: runner);
+        Check(Output(log).Contains("AFTER_RESTART=1"), "commands keep running through Rscript after Restart");
+        bool ownFilesBefore = Directory.GetFiles(runnerFolder, "console-" + runnerId + "-*").Length > 0;
+        runner.Dispose();
+        Check(ownFilesBefore && Directory.GetFiles(runnerFolder, "console-" + runnerId + "-*").Length == 0 && File.Exists(Path.Combine(runnerFolder, "named.svg")),
+            "Dispose removes the Rscript session's own console files and leaves the user's files");
+    }
+    finally { runner.Dispose(); }
+
+    // A runner whose Rscript cannot start, a text file in its place: the command ends as an R error ends one, with one notice and no exception
+    // for the host to report again.
+    string brokenFolder = Path.Combine(working, "broken-r");
+    Directory.CreateDirectory(brokenFolder);
+    string brokenRscript = Path.Combine(brokenFolder, "Rscript.exe");
+    File.WriteAllText(brokenRscript, "not a program");
+    using (var broken = new RScriptSession(brokenRscript, rVersion, Path.Combine(working, "broken"), "A check."))
+    {
+        broken.Event += e => { lock (events) events.Add(e.Clone()); };
+        int failing = Mark(); await broken.StartAsync();
+        brokenId = Text(Since(failing).Single(e => Is(e, "session")), "sessionId");
+        failing = Mark(); await broken.SubmitAsync("cat(1)", "script");
+        var failed = await Wait(failing, e => Is(e, "commandFinished"));
+        await Wait(failing, e => Is(e, "state") && Text(e, "state") == "ready");
+        var told = Since(failing);
+        Check(Text(failed, "status") == "error" && told.Count(e => Is(e, "notice")) == 1 && Text(told.Single(e => Is(e, "notice")), "text").StartsWith("R could not run through Rscript. ")
+            && Is(told.Last(), "state") && Text(told.Last(), "state") == "ready",
+            "an Rscript that cannot start ends the command as an error with one notice saying why, without an exception for the host to report again");
+    }
+
+    // The page's acceptance rules, as console.js receive has them: a session event must raise the generation, any other event must come from the
+    // session held with the next seq, and while a restart is awaited only a session event is taken. Every event of the three sessions in turn is.
+    string? pageSession = null; long pageGeneration = -1, pageSeq = -1; bool pageRestarting = false; int pageRefused = 0;
+    var recorded = Since(0);
+    for (int i = 0; i < recorded.Length; i++)
+    {
+        var e = recorded[i];
+        if (i == restarted) pageRestarting = true;   // as the page sets it when it sends restart
+        long eventGeneration = e.GetProperty("generation").GetInt64(), eventSeq = e.GetProperty("seq").GetInt64();
+        if (Is(e, "session"))
+        {
+            if (pageSession != null && eventGeneration <= pageGeneration) { pageRefused++; continue; }
+            pageSession = Text(e, "sessionId"); pageGeneration = eventGeneration; pageSeq = eventSeq; pageRestarting = false;
+            continue;
+        }
+        if (pageRestarting || Text(e, "sessionId") != pageSession || eventGeneration != pageGeneration || eventSeq <= pageSeq) { pageRefused++; continue; }
+        pageSeq = eventSeq;
+    }
+    Check(pageRefused == 0 && !pageRestarting && pageSession == brokenId && recorded.Count(e => Is(e, "session")) == 4,
+        $"a page fed every recorded event in order, as console.js takes them, accepts all {recorded.Length}: the console, the Rscript runner, its restart and the runner that could not start each supersede the session before");
     Console.WriteLine($"PASS {checks} production R session checks");
 }
 finally

@@ -48,7 +48,8 @@ variables, Script/Console continuity, selection-only execution, File New/Open/Sa
 immutable SVG revisions, complete paired-test output, multiple complete pages,
 base/grid multipanels, device dimensions, explicit file outputs, large SVG Open
 cards without previews, global-workspace clearing, Restart, stale input tokens,
-independent windows and owned-worker cleanup. Actual unsaved-source close banners
+independent windows, owned-worker cleanup, and the Rscript fallback through the raised-minimum hook
+(STATSDIRECT_R_CONSOLE_MINIMUM: a notice naming Rscript, fresh R per command, stderr output, a chart card, an error). Actual unsaved-source close banners
 exercise Cancel, Yes, an owned read-only-file save failure, and unused blank
 sessions; file bytes, browser source, worker lifetime and dirty state are checked.
 Ordinary R draws the

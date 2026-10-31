@@ -14,7 +14,7 @@ using System.Text.RegularExpressions;
 namespace StatsDirect.R.Interactive;
 
 /// <summary>Persistent console adapter. R runs in a native child; neither the WebView nor this process loads R.dll.</summary>
-public sealed class RConsoleSession : IDisposable
+public sealed class RConsoleSession : IRSession
 {
     private readonly string helper, rHome, workingDirectory;
     private readonly object sync = new();
@@ -31,22 +31,26 @@ public sealed class RConsoleSession : IDisposable
     private static readonly UTF8Encoding Utf8 = new(false, true);
     private string state = "stopped", requestKind = "input";
     private string currentPrompt = "";
+    private string rDescription = "R";
     private Command? active;
     private bool disposed, configured;
     private TaskCompletionSource? started;
     private string plotIndex = "";
     private long plotIndexLines, nextFilePlot;
 
-    private readonly record struct FileStamp(long Length, long Written);
-
     private sealed record Command(uint Id, string Source, string Origin, string? Internal = null)
     {
         public string? Status { get; set; }
         public Command? Parent { get; init; }
-        public IReadOnlyDictionary<string, FileStamp>? FilesBefore { get; init; }
+        public IReadOnlyDictionary<string, ROutputFiles.FileStamp>? FilesBefore { get; init; }
     }
 
     public event Action<JsonElement>? Event;
+
+    public bool PersistentWorkspace => true;
+
+    /// <summary>"R 4.6.2" once the worker has reported its R; "R" before that.</summary>
+    public string RDescription { get { lock (sync) return rDescription; } }
 
     public void PublishNotice(string text)
     {
@@ -65,7 +69,7 @@ public sealed class RConsoleSession : IDisposable
         }
     }
 
-    /// <summary>The R series the worker was built for, such as "4.6", which it reports to --version; null when it cannot say.</summary>
+    /// <summary>The oldest R series the worker takes, such as "4.2", which it reports to --version; null when it cannot say.</summary>
     public static string? CompiledRSeries(string nativeHelper)
     {
         try
@@ -101,12 +105,13 @@ public sealed class RConsoleSession : IDisposable
         long current;
         lock (sync)
         {
-            current = ++generation; seq = 0; requestId = null; active = null;
+            // From the counter every session shares, so that this session outranks on the page any session it replaces.
+            current = generation = RSessionGenerations.Next(); seq = 0; requestId = null; active = null;
             configured = false; state = "busy"; plotIndexLines = 0;
             plotIndex = Path.Combine(workingDirectory, $"console-plots-{sessionId}-{current}.tsv");
             started = new(TaskCreationOptions.RunContinuationsAsynchronously);
         }
-        Emit(current, "session", new() { ["script"] = "", ["capabilities"] = new { plotMimes = new[] { "image/svg+xml", "image/png", "application/pdf" }, consoleInput = true, rawStdin = false, help = true, ai = false, openPlot = true, copyPlot = true } });
+        Emit(current, "session", new() { ["script"] = "", ["capabilities"] = new { plotMimes = new[] { "image/svg+xml", "image/png", "application/pdf" }, consoleInput = true, rawStdin = false, help = true, ai = false, openPlot = true, copyPlot = true, persistentWorkspace = true } });
         Emit(current, "state", new() { ["state"] = "busy", ["prompt"] = "Starting R…" });
         var info = new ProcessStartInfo(helper)
         {
@@ -158,7 +163,7 @@ public sealed class RConsoleSession : IDisposable
             ObjectDisposedException.ThrowIf(disposed, this);
             if (state != "ready" || active != null) throw new InvalidOperationException("R is busy or is waiting for an answer. Finish or stop that command first.");
             current = generation;
-            command = active = new(++nextCommand, source, origin) { FilesBefore = OutputFiles() };
+            command = active = new(++nextCommand, source, origin) { FilesBefore = ROutputFiles.Snapshot(workingDirectory) };
             state = "busy"; requestId = null;
         }
         Emit(current, "commandAccepted", new() { ["commandId"] = command.Id, ["origin"] = origin });
@@ -289,6 +294,7 @@ public sealed class RConsoleSession : IDisposable
         switch (type)
         {
             case "ready":
+                lock (sync) rDescription = "R " + Text("rVersion");
                 Emit(current, "notice", new() { ["text"] = "R " + Text("rVersion") + " — interactive session." });
                 break;
             case "output":
@@ -478,87 +484,13 @@ public sealed class RConsoleSession : IDisposable
         lock (sync) { if (current == generation && !disposed) plotIndexLines = lines.Length; }
     }
 
-    // Discover named file-device charts separately from the console's active-device snapshots.
-    // Auto-device files can still be open/incomplete, and belong only to the snapshot mechanism.
-    // The old runner's fixed names too: a template's R analysis finishing meanwhile is not this command's output
-    private static bool InternalOutput(string name) => Regex.IsMatch(name,
-        @"^(?:console-(?:plots-)?[0-9a-f]{32}-|Rplot-[0-9a-f]{32}-|(?:continue|script)-[0-9a-f]{32}\.r$|(?:script|open-in-r)\.r$|(?:results|error)\.txt$)",
-        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
-
-    private Dictionary<string, FileStamp> OutputFiles()
-    {
-        var files = new Dictionary<string, FileStamp>(StringComparer.OrdinalIgnoreCase);
-        try
-        {
-            foreach (var file in new DirectoryInfo(workingDirectory).GetFiles())
-                if (!InternalOutput(file.Name)) files[file.FullName] = new(file.Length, file.LastWriteTimeUtc.Ticks);
-        }
-        catch (Exception error) when (error is IOException or UnauthorizedAccessException) { }
-        return files;
-    }
-
+    // Named file-device charts and other written files are found by ROutputFiles, shared with the Rscript runner, separately from the
+    // console's active-device snapshots: auto-device files can still be open/incomplete, and belong only to the snapshot mechanism.
     private async Task ReadFilesAsync(Command command, long current)
     {
         if (command.FilesBefore == null) return;
-        foreach (var (path, stamp) in OutputFiles())
-        {
-            if (command.FilesBefore.TryGetValue(path, out var before) && before == stamp) continue;
-            lock (sync) if (current != generation || disposed) return;
-            string name = Path.GetFileName(path), extension = Path.GetExtension(path).ToLowerInvariant();
-            bool decodeRaster = extension is ".jpg" or ".jpeg" or ".gif" or ".bmp" or ".tif" or ".tiff";
-            string? mime = extension switch { ".svg" => "image/svg+xml", ".png" => "image/png", ".pdf" => "application/pdf", _ => decodeRaster ? "image/png" : null };
-            // Cairo file devices commonly leave an empty file until dev.off flushes it.
-            // Wait for that completed file rather than appending a blank preview now.
-            if (mime != null && stamp.Length == 0) continue;
-            if (mime == null)
-            {
-                Emit(current, "notice", new() { ["text"] = "File written: " + name, ["filePath"] = path, ["label"] = name });
-                continue;
-            }
-            try
-            {
-                // The immutable asset, rather than the user's overwriteable filename,
-                // is the exact revision later opened/copied from this card.
-                long id = ++nextFilePlot;
-                string snapshot = Path.Combine(workingDirectory, $"console-{sessionId}-{current}-file-{id}{extension}");
-                File.Copy(path, snapshot, overwrite: false);
-                string? preview = null, previewPath = null;
-                if (mime != "application/pdf" && stamp.Length <= 20 * 1024 * 1024)
-                {
-                    byte[] bytes;
-                    if (decodeRaster)
-                    {
-                        // Match the previous output pane: decode the original pixels,
-                        // retain its original file and publish PNG for browser/clipboard use.
-                        bytes = await Task.Run(() =>
-                        {
-                            using var image = System.Drawing.Image.FromFile(snapshot);
-                            using var png = new MemoryStream();
-                            image.Save(png, System.Drawing.Imaging.ImageFormat.Png);
-                            return png.ToArray();
-                        });
-                        previewPath = Path.Combine(workingDirectory, $"console-{sessionId}-{current}-file-{id}-preview.png");
-                        await File.WriteAllBytesAsync(previewPath, bytes);
-                    }
-                    else bytes = await File.ReadAllBytesAsync(snapshot);
-                    if (bytes.Length <= 20 * 1024 * 1024)
-                        preview = "data:" + mime + ";base64," + Convert.ToBase64String(bytes);
-                }
-                var fields = new Dictionary<string, object?>
-                {
-                    ["plotId"] = $"{sessionId}-{current}-file-{id}", ["revision"] = 1,
-                    ["mime"] = mime, ["preview"] = preview, ["path"] = snapshot,
-                    ["uri"] = new Uri(snapshot).AbsoluteUri, ["originalPath"] = path, ["label"] = name
-                };
-                if (previewPath != null) fields["previewPath"] = previewPath;
-                Emit(current, "plot", fields);
-            }
-            catch (Exception error) when (error is IOException or UnauthorizedAccessException or ArgumentException or System.Runtime.InteropServices.ExternalException or OutOfMemoryException)
-            {
-                // GDI+ also reports malformed/unsupported image data as OutOfMemoryException.
-                Emit(current, "notice", new() { ["text"] = "File written: " + name + ". Its preview could not be read: " + error.Message, ["filePath"] = path, ["label"] = name });
-            }
-        }
+        foreach (var (type, fields) in await ROutputFiles.ChangedAsync(workingDirectory, command.FilesBefore, sessionId, current, () => ++nextFilePlot, () => { lock (sync) return current == generation && !disposed; }))
+            Emit(current, type, fields);
     }
 
     private static void ValidateText(string text, int maxBytes)

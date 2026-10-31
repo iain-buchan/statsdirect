@@ -149,6 +149,7 @@ internal static partial class Program
         await CheckDomAndWheel(host);
         await CheckClearOutput(host);
         await CheckRestartAndIsolation(main, host);
+        await CheckRscriptFallback(main);
         await CheckClosingAndSaving(main);
     }
 }
