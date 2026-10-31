@@ -6,6 +6,7 @@ internal static partial class Program
     // or a PNG drawn from it at a scale of its size on the page; a raster picture gives its own data and no SVG
     private static async Task CheckChartFiles()
     {
+        await CheckOfficeSvgClipboard();
         await view.CallAsync("load", new { entries = Array.Empty<object>() });
         await view.AppendAsync("<p>A result</p><svg viewBox=\"0 0 300 150\" width=\"300\" height=\"150\"><rect x=\"10\" y=\"10\" width=\"280\" height=\"130\" fill=\"#2a7\"/><text x=\"20\" y=\"80\">A chart</text></svg>", "With a chart", "Chart", 1234);
         await Js("document.querySelector('#results svg rect').dispatchEvent(new MouseEvent('contextmenu',{bubbles:true,cancelable:true}))");

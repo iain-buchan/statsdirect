@@ -31,7 +31,8 @@ internal static partial class Program
         {
         try
         {
-            if (args.Contains("--notebook-only")) { await CheckNotebook(); await CheckNotebookImport(); }
+            if (args.Contains("--office-svg-only")) { await CheckOfficeSvgClipboard(); }
+            else if (args.Contains("--notebook-only")) { await CheckNotebook(); await CheckNotebookImport(); }
             else
             {
                 if (!args.Contains("--svg-import-only")) { await CheckLegacyReports(); await Run(); await InteroperabilityChecks(); await CheckToolbar(); await CheckChartAlignment(); await CheckNotebook(); await CheckNotebookImport(); }

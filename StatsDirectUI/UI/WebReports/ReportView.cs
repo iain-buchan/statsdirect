@@ -347,6 +347,7 @@ internal sealed class ReportView : UserControl
                     png = picture.GetProperty("png").GetString();
                     if (picture.TryGetProperty("svg", out var vector)) svg = vector.GetString();
                 }
+                svg = OfficeSvg.ForClipboard(svg);
                 ReportClipboard.Publish(data, svg, png);
                 // A failed clipboard write never removes the selected content.
                 if (command == "cut") await CallAsync("cut", new { token = token.GetString() });
