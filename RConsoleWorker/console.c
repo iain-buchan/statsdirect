@@ -481,13 +481,17 @@ static void evaluate_command(void *unused)
     completed();
 }
 
-/* The R series this worker was built for, such as "4.6": patch releases of a series share its startup structure and are
- * accepted; another series is refused before that structure is used. */
-static void compiled_series(char *buffer, size_t size)
+/* The oldest R the worker takes: 4.2.0, the first R for Windows that is 64-bit only, has UTF-8 as its native encoding and
+ * versions its start-up structure, whose 64-bit layout is unchanged through the headers this worker is built with (the field
+ * R 4.4 added fills what was padding).  Every R entry point is resolved by name at run time, so a later R serves while it keeps
+ * those entry points and accepts that structure version, which R confirms at start-up. */
+#define MINIMUM_R_MAJOR 4
+#define MINIMUM_R_MINOR 2
+static int version_at_least(const char *version, int major, int minor)
 {
-    snprintf(buffer, size, "%s.%s", R_MAJOR, R_MINOR);
-    char *patch = strrchr(buffer, '.');
-    if (patch) *patch = '\0';
+    int v_major = 0, v_minor = 0;
+    if (sscanf(version, "%d.%d", &v_major, &v_minor) != 2) return 0;
+    return v_major > major || (v_major == major && v_minor >= minor);
 }
 
 static char *utf8(const wchar_t *value)
@@ -501,7 +505,11 @@ static char *utf8(const wchar_t *value)
 static FARPROC required(HMODULE dll, const char *name)
 {
     FARPROC proc = GetProcAddress(dll, name);
-    if (!proc) { error_event(name); ExitProcess(2); }
+    if (!proc) {
+        char message[200];
+        snprintf(message, sizeof(message), "This R does not provide %s; the interactive console needs 64-bit R %d.%d or later.", name, MINIMUM_R_MAJOR, MINIMUM_R_MINOR);
+        error_event(message); ExitProcess(2);
+    }
     return proc;
 }
 #define LOAD(name, symbol) name = (void *)required(dll, symbol)
@@ -509,9 +517,8 @@ static FARPROC required(HMODULE dll, const char *name)
 int wmain(int argc, wchar_t **argv)
 {
     if (argc == 2 && !wcscmp(argv[1], L"--version")) {
-        /* the host asks which R series the worker takes, to choose that series among the installed Rs */
-        char series[32]; compiled_series(series, sizeof(series));
-        printf("%s\n", series); return 0;
+        /* the host asks for the oldest R series the worker takes, to choose among the installed Rs */
+        printf("%d.%d\n", MINIMUM_R_MAJOR, MINIMUM_R_MINOR); return 0;
     }
     const wchar_t *rhome = NULL, *working = NULL;
     for (int i = 1; i + 1 < argc; i += 2) {
@@ -549,7 +556,7 @@ int wmain(int argc, wchar_t **argv)
     free(r_path);
     SetDllDirectoryW(bin_path);
     HMODULE dll = LoadLibraryW(dll_path);
-    if (!dll) { error_event("Cannot load R.dll from the requested R installation."); return 2; }
+    if (!dll) { error_event("Cannot load the 64-bit R.dll of the requested R installation; the interactive console needs 64-bit R."); return 2; }
     LOAD(r_defparams, "R_DefParamsEx"); LOAD(r_setparams, "R_SetParams");
     LOAD(r_setargs, "R_set_command_line_arguments"); LOAD(r_starttime, "R_setStartTime");
     LOAD(r_setup, "setup_Rmainloop");
@@ -575,20 +582,22 @@ int wmain(int argc, wchar_t **argv)
     r_ga_initapp = (void *)required(graphapp, "GA_initapp");
     LOAD(r_readconfig, "readconsolecfg"); LOAD(r_version, "getDLLVersion"); LOAD(r_getruser, "getRUser");
     r_userbreak = (int *)required(dll, "UserBreak");
-    char compiled_minor[32];
-    compiled_series(compiled_minor, sizeof(compiled_minor));
-    /* Use only the same major/minor startup ABI. Patch releases in this series
-     * retain RSTART_VERSION and structRstart; both installed 4.6 patches are tested.
-     * Do not assume a future minor version is compatible with these headers. */
     const char *runtime_version = r_version();
-    size_t prefix_length = strlen(compiled_minor);
-    if (strncmp(runtime_version, compiled_minor, prefix_length) || runtime_version[prefix_length] != '.') {
-        char message[160];
-        snprintf(message, sizeof(message), "The interactive console requires R %s.x (64-bit); this R installation is %s.", compiled_minor, runtime_version);
+    if (!version_at_least(runtime_version, MINIMUM_R_MAJOR, MINIMUM_R_MINOR)) {
+        char message[200];
+        snprintf(message, sizeof(message), "The interactive console needs 64-bit R %d.%d or later; this R installation is %s.", MINIMUM_R_MAJOR, MINIMUM_R_MINOR, runtime_version);
         error_event(message); return 2;
     }
     structRstart params;
-    r_starttime(); r_defparams(&params, RSTART_VERSION);
+    memset(&params, 0, sizeof(params));
+    r_starttime();
+    /* R fills the structure for the version asked for and refuses a version it does not know: a later R that dropped this one
+     * is refused here, before any field of the structure is used */
+    if (r_defparams(&params, RSTART_VERSION)) {
+        char message[200];
+        snprintf(message, sizeof(message), "R %s does not accept the interactive console's start-up structure (version %d).", runtime_version, RSTART_VERSION);
+        error_event(message); return 2;
+    }
     char *home = utf8(rhome);
     /* The user's home as R's own front ends take it (R_USER, HOME, else the Documents folder), so that ~ means here
      * what it means in Rscript and Rgui; the string lives as long as R does. */

@@ -27,20 +27,19 @@ if (!$RHome -or !(Test-Path -LiteralPath (Join-Path $RHome 'include\R_ext\RStart
 }
 if (!$Zig) { $Zig = Join-Path $PSScriptRoot 'tools\zig-x86_64-windows-0.15.2\zig.exe' }
 $RHome = [IO.Path]::GetFullPath($RHome)
-# The R series the worker targets is pinned here, so that a newer R on the build machine cannot change what the release accepts.
-$pin = Join-Path $PSScriptRoot 'target-r-series.txt'
-if (!(Test-Path -LiteralPath $pin)) { throw 'RConsoleWorker/target-r-series.txt, the pinned R series such as 4.6, is missing from this checkout.' }
-$targetSeries = (Get-Content -LiteralPath $pin -Raw).Trim()
+# The worker takes any 64-bit R from the minimum console.c states (4.2, whose start-up structure version and 64-bit layout the later
+# headers keep); it is built with headers of that R or a later one, and the stamp records both.
+$source = Join-Path $PSScriptRoot 'console.c'
+$consoleSource = Get-Content -LiteralPath $source -Raw
+$minimumSeries = [regex]::Match($consoleSource, '#define\s+MINIMUM_R_MAJOR\s+(\d+)').Groups[1].Value + '.' + [regex]::Match($consoleSource, '#define\s+MINIMUM_R_MINOR\s+(\d+)').Groups[1].Value
+if ($minimumSeries -notmatch '^\d+\.\d+$') { throw 'console.c does not state the minimum R (MINIMUM_R_MAJOR and MINIMUM_R_MINOR).' }
 $versionHeader = Get-Content -LiteralPath (Join-Path $RHome 'include\Rversion.h') -Raw
-$headerMajor = [regex]::Match($versionHeader, '#define\s+R_MAJOR\s+"([^"]+)"').Groups[1].Value
-$headerMinor = [regex]::Match($versionHeader, '#define\s+R_MINOR\s+"([^"]+)"').Groups[1].Value
-$headerSeries = ($headerMajor + '.' + $headerMinor) -replace '\.[^.]*$', ''
-if ($headerSeries -ne $targetSeries) {
-    throw "The worker targets R $targetSeries (RConsoleWorker/target-r-series.txt); the headers at $RHome are R $headerSeries. Build with that R series, or change the target deliberately."
+$headerVersion = [regex]::Match($versionHeader, '#define\s+R_MAJOR\s+"([^"]+)"').Groups[1].Value + '.' + [regex]::Match($versionHeader, '#define\s+R_MINOR\s+"([^"]+)"').Groups[1].Value
+if ([version]$headerVersion -lt [version]$minimumSeries) {
+    throw "The worker takes R $minimumSeries or later and must be built with such headers; the headers at $RHome are R $headerVersion."
 }
 $output = [IO.Path]::GetFullPath($OutputDirectory)
 New-Item -ItemType Directory -Path $output -Force | Out-Null
-$source = Join-Path $PSScriptRoot 'console.c'
 $manifest = Join-Path $PSScriptRoot 'console.manifest'
 $exe = Join-Path $output 'StatsDirect.RConsole.Native.exe'
 $object = Join-Path $output 'console.obj'
@@ -92,7 +91,8 @@ $imports = [Text.Encoding]::ASCII.GetString([IO.File]::ReadAllBytes($exe))
 if ($imports -match 'VCRUNTIME|MSVCP') { throw 'The worker imports the Visual C++ runtime, which StatsDirect does not install. Link the C runtime statically.' }
 @{
     rHome = $RHome
-    targetSeries = $targetSeries
+    headerVersion = $headerVersion
+    minimumSeries = $minimumSeries
     compiler = $compiler
     fingerprint = $fingerprint
     executableSha256 = (FileSha256 $exe)

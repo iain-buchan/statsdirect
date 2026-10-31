@@ -99,9 +99,8 @@ The R Script window uses the shared offline `Assets/RConsole` page, with Console
 and Script views of one persistent R workspace. The native worker is built and
 copied by the application project; a separate R installation supplies R.dll. The
 Windows application never loads that DLL into its own process. The current
-worker is verified with 64-bit R 4.6.2 and requires the runtime to match the
-major/minor header series it was built against, pinned in `RConsoleWorker/target-r-series.txt`;
-R 4.6.1 shares those headers but was last tested before the protection-stack correction. More > Set up R opens the
+worker takes any 64-bit R from 4.2, the minimum `RConsoleWorker/console.c` states, and is
+verified with R 4.6.2 and R 4.2.3; the window uses the newest such R installed. More > Set up R opens the
 existing official-R installation flow; R is not bundled into StatsDirect.
 
 Run `tests/InteractiveRWindows`, `tests/WindowsShell` and `tests/Learning` after

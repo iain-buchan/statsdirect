@@ -18,7 +18,7 @@ completed assignments. Normal printing, warnings, task callbacks and the base
 `.Last.value` binding retain ordinary Console behaviour; its original binding
 lock is restored through `R_ExecWithCleanup`.
 
-The correction is verified against the installed R 4.6.2 by the checks below:
+The correction is verified against the installed R 4.6.2, and the worker against R 4.2.3 as well, by the checks below:
 `test-native.py` (95 native checks, 96 in the checked build), `Tests/Program.cs`
 (the production-session checks) and `tests/InteractiveRWindows`. A soak of fresh
 start-ups and shutdowns, `test-native.py --startups N` against a checked build,
@@ -41,13 +41,19 @@ Building requires R development headers plus the pinned portable Zig compiler
 the worker too when Zig is absent, with two compatibility flags the script passes for
 R 4.6's headers (`msvc-rconfig.h`). R itself is not redistributed. The default
 headers are taken from the latest installed R under Program Files; set
-`RConsoleRHome` or `R_HOME` to choose another installation; the series those
-headers belong to must be the one pinned in `target-r-series.txt`, so that a newer
-R on the build machine cannot change what a release accepts. Runtime patch versions
-in that same major/minor series are supported; another minor version is refused
-before its startup structure is used. Current verification covers R 4.6.2; R 4.6.1
-has byte-identical public startup headers but was last tested before the
-protection-stack correction.
+`RConsoleRHome` or `R_HOME` to choose another installation, of R 4.2 or later. The
+worker takes any 64-bit R from 4.2.0, the minimum `console.c` states: every R entry
+point is resolved by name when the worker starts, and R's start-up structure has been
+versioned since 4.2.0 with its 64-bit layout unchanged through the headers the worker
+is built with (the field R 4.4 added fills what was padding). R confirms the
+structure version at start-up; an R below the minimum, a 32-bit R, an R that lacks an
+entry point or one that refuses the structure version is turned away with a message
+before any of it is used. The build stamp records the headers' version and the
+minimum. Verified on R 4.6.2 and R 4.2.3 by the checks below. An installed R the worker
+does not take runs each command through its Rscript instead (`RScriptSession.cs`, the
+same page events, a notice saying so); the environment variable
+`STATSDIRECT_R_CONSOLE_MINIMUM`, set to a series above any installed R, makes the window
+take that path, which `tests/InteractiveRWindows` uses to check it.
 
 ```powershell
 # Optional; downloads and checks the compiler, without installing it globally.

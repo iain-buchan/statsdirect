@@ -370,11 +370,13 @@ cat("DEFAULT-PACKAGES-AND-LAPACK-READY\\n")''')
         rscript = subprocess.run([str(pathlib.Path(RHOME) / "bin" / "x64" / "Rscript.exe"), "--vanilla", "-e", 'cat(path.expand("~"))'],
                                  capture_output=True, text=True, env=child_environment, timeout=60)
         check(("TILDE " + rscript.stdout.strip()) in output(seen), "~ expands to the folder Rscript expands it to: " + rscript.stdout.strip())
-        # --version names the R series the worker was built for, which the host uses to choose an installed R
+        # --version names the oldest R series the worker takes, which the host uses to choose among the installed Rs
         version = subprocess.run([str(HELPER), "--version"], capture_output=True, text=True, timeout=30)
         ready_version = next(e["rVersion"] for e in all_events if e["type"] == "ready")
-        check(version.returncode == 0 and re.fullmatch(r"\d+\.\d+", version.stdout.strip()) is not None and ready_version.startswith(version.stdout.strip() + "."),
-              "--version reports the R series the worker takes: " + version.stdout.strip())
+        minimum = version.stdout.strip()
+        check(version.returncode == 0 and re.fullmatch(r"\d+\.\d+", minimum) is not None
+              and tuple(int(p) for p in ready_version.split(".")[:2]) >= tuple(int(p) for p in minimum.split(".")),
+              "--version reports the oldest R series the worker takes, " + minimum + ", and this R " + ready_version + " is not below it")
         send(1, 17, 'shutdown_answer <- readline("Closing: "); writeLines("BAD", "shutdown-followon.txt")')
         until(lambda e: e["type"] == "prompt" and e["kind"] == "input")
         send(4)
