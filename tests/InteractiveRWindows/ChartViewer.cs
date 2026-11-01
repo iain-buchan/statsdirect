@@ -205,14 +205,14 @@ internal static partial class Program
             "the actual paired-PEFR agreement chart retains its nine unfilled data points and two red limits of agreement");
         await InvokeAsync(viewer, "SetZoomAsync", 3.81);
         await ViewerJS(viewer, "window.ChartViewer.pan(9999,9999)");
-        var before = await ViewerSnapshot(viewer);
+        var before = await SettledViewerSnapshot(viewer);
         Check(before.GetProperty("zoom").GetDouble() == 3.81 && before.GetProperty("left").GetDouble() > 0
             && before.GetProperty("top").GetDouble() > 0,
             "the actual PEFR chart is substantially zoomed and panned in both axes before testing its actions");
         string zoomSvg = Path.Combine(exportRoot, "pefr-zoomed.svg"), zoomPng = Path.Combine(exportRoot, "pefr-zoomed.png");
         await InvokeAsync(viewer, "SaveChartAsync", "svg", zoomSvg);
         await InvokeAsync(viewer, "SaveChartAsync", "png", zoomPng);
-        var after = await ViewerSnapshot(viewer);
+        var after = await SettledViewerSnapshot(viewer, before);   // a save may still be redrawing the viewer when the first reading is taken
         Check(vector.SequenceEqual(File.ReadAllBytes(zoomSvg)) && SameViewerPng(raster, File.ReadAllBytes(zoomPng))
             && after.GetProperty("zoom").GetDouble() == before.GetProperty("zoom").GetDouble()
             && Math.Abs(after.GetProperty("left").GetDouble() - before.GetProperty("left").GetDouble()) < 1
@@ -240,6 +240,23 @@ internal static partial class Program
     static async Task ViewerReady(Form viewer) => await ((Task)Get(viewer, "Ready")!).WaitAsync(TimeSpan.FromSeconds(45));
     static async Task<string> ViewerJS(Form viewer, string source) => await ((WebView2)Get(viewer, "Browser")!).CoreWebView2.ExecuteScriptAsync(source);
     static async Task<JsonElement> ViewerSnapshot(Form viewer) => JsonSerializer.Deserialize<JsonElement>(await ViewerJS(viewer, "window.ChartViewer.snapshot()"));
+    /// <summary>The viewer's snapshot once its zoom and position have stopped changing, two readings alike, or once they match the one given: a pan
+    /// or a save may still be being drawn when the first reading is taken.  After three seconds the last reading is returned as it is.</summary>
+    static async Task<JsonElement> SettledViewerSnapshot(Form viewer, JsonElement? expected = null)
+    {
+        long start = Environment.TickCount64;
+        var last = await ViewerSnapshot(viewer);
+        while (Environment.TickCount64 - start < 3000)
+        {
+            await Task.Delay(50);
+            var next = await ViewerSnapshot(viewer);
+            if (SamePosition(next, expected ?? last)) return next;
+            last = next;
+        }
+        return last;
+    }
+    static bool SamePosition(JsonElement a, JsonElement b) => a.GetProperty("zoom").GetDouble() == b.GetProperty("zoom").GetDouble()
+        && Math.Abs(a.GetProperty("left").GetDouble() - b.GetProperty("left").GetDouble()) < 1 && Math.Abs(a.GetProperty("top").GetDouble() - b.GetProperty("top").GetDouble()) < 1;
     static void ViewerKey(Form viewer, Keys keys)
     {
         var message = Message.Create(viewer.Handle, 0x0100, (nint)(keys & Keys.KeyCode), 0);
