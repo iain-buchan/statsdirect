@@ -23,6 +23,8 @@
         LicenseFile="Licence.rtf"
         LogoFile="statsdirect.png"
         Theme="rtfLicense" />
+      <!-- Restore the visible progress window once after successful UAC elevation (WiX issue 9317). -->
+      <Payload SourceFile="$(var.InstallerFocusDll)" Name="StatsDirect.Setup.Focus.dll" bal:BAFunctions="yes" />
       <Payload SourceFile="bannrbmp-sd.png" />
       <Payload SourceFile="dlgbmp-sd.png" />
       <Payload SourceFile="greybar.png" />

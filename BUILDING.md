@@ -61,6 +61,21 @@ ReleaseWithSigning
 
 The build process copies generated installers to `<repository-root>/ReleaseBuild`.
 
+### Installer foreground handover
+
+The bundle includes a small native `SDBootstrapper/Focus` BAFunctions extension.
+After successful UAC elevation it makes one foreground request for the visible,
+non-minimised installer window, following WiX issue 9317. It does not keep the
+installer on top or activate it during ordinary progress updates. Windows can
+decline the request; the bundle log records the result.
+
+The bundle build restores the pinned WiX 6.0.2 native API headers and builds the
+extension with the same portable Zig compiler used by the R worker, or Visual
+Studio C++ when Zig is absent. `ReleaseWithSigning` signs the extension before
+embedding it in setup. Run `tests/InstallerFocus/run.ps1` after changes, then
+verify the actual post-UAC handover on Windows. The automated callback checks
+do not install StatsDirect or certify Windows foreground activation.
+
 ### Desktop HTML5 help
 
 The complete offline help bundle is checked in at `StatsDirectUI/Assets/Help`.
