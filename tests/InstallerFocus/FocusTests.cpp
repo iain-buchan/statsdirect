@@ -60,7 +60,7 @@ public:
     UNUSED_ENGINE_METHOD(SetVariableVersion, LPCWSTR, LPCWSTR)
     UNUSED_ENGINE_METHOD(CloseSplashScreen)
     UNUSED_ENGINE_METHOD(Detect, HWND)
-    UNUSED_ENGINE_METHOD(Plan, BOOTSTRAPPER_ACTION)
+    UNUSED_ENGINE_METHOD(Plan, BOOTSTRAPPER_ACTION, BOOTSTRAPPER_SCOPE)
     UNUSED_ENGINE_METHOD(Elevate, HWND)
     UNUSED_ENGINE_METHOD(Apply, HWND)
     UNUSED_ENGINE_METHOD(Quit, DWORD)
@@ -83,9 +83,14 @@ static bool Check(bool passed, const char* description)
 using CreateFunction = HRESULT (WINAPI*)(const SetupFocusCreateArgs*, SetupFocusCreateResults*);
 using DestroyFunction = void (WINAPI*)(const SetupFocusDestroyArgs*, SetupFocusDestroyResults*);
 
+// WixStdBA v7.0.1 LoadBAFunctions supplies MAKEQWORDVERSION(2024, 1, 1, 0).
+// Keep this independent of the helper's constant so both the source and actual
+// DLL checks catch a guard accidentally changed to the WiX package/core version.
+constexpr DWORD64 Wix701BAFunctionsApiVersion = 0x07e8000100010000ULL;
+
 static SetupFocusCreateArgs CreateArgs(TestEngine& engine, BOOTSTRAPPER_COMMAND& command)
 {
-    return {sizeof(SetupFocusCreateArgs), SetupFocusApiVersion, &engine, &command};
+    return {sizeof(SetupFocusCreateArgs), Wix701BAFunctionsApiVersion, &engine, &command};
 }
 
 static bool PolicyChecks()
@@ -103,6 +108,9 @@ static bool PolicyChecks()
     auto wrongVersion = args; ++wrongVersion.qwBAFunctionsAPIVersion;
     REQUIRE(BAFunctionsCreate(&wrongVersion, &result) == HRESULT_FROM_WIN32(ERROR_REVISION_MISMATCH) && engine.references == 1,
         "a different BAFunctions interface version is rejected without leaking a reference");
+    wrongVersion.qwBAFunctionsAPIVersion = WIX_7_BOOTSTRAPPER_APPLICATION_API_VERSION;
+    REQUIRE(BAFunctionsCreate(&wrongVersion, &result) == HRESULT_FROM_WIN32(ERROR_REVISION_MISMATCH) && engine.references == 1,
+        "the WiX 7 core API number is not accepted as the BAFunctions interface version");
     REQUIRE(BAFunctionsCreate(&args, &result) == S_OK && result.pfnBAFunctionsProc && result.pvBAFunctionsProcContext && engine.references == 2,
         "the helper creates its callback and holds the engine until destruction");
     SetupFocusCreateResults duplicate{}; duplicate.cbSize = sizeof(duplicate);
@@ -145,9 +153,11 @@ static bool PolicyChecks()
     callback(BOOTSTRAPPER_APPLICATION_MESSAGE_ONELEVATECOMPLETE, &elevation, &untouched, context);
     REQUIRE(foregroundCalls == previous, "hidden, minimized and destroyed windows are never activated or restored");
     validWindow = true;
-    auto unknownEventVersion = elevation; ++unknownEventVersion.dwApiVersion;
+    // WiX v7.0.1 BACallbackOnElevateComplete still sends the version-5 structure.
+    // Version 7 exists for other events but must not replace this event's guard.
+    auto unknownEventVersion = elevation; unknownEventVersion.dwApiVersion = WIX_7_BOOTSTRAPPER_APPLICATION_API_VERSION;
     callback(BOOTSTRAPPER_APPLICATION_MESSAGE_ONELEVATECOMPLETE, &unknownEventVersion, &untouched, context);
-    REQUIRE(foregroundCalls == previous, "an incompatible elevation-event structure is ignored");
+    REQUIRE(foregroundCalls == previous, "the core version-7 marker is rejected for the version-5 elevation event");
     allowForeground = FALSE; engine.rejectLog = true;
     REQUIRE(callback(BOOTSTRAPPER_APPLICATION_MESSAGE_ONELEVATECOMPLETE, &elevation, &untouched, context) == S_OK
         && foregroundCalls == previous + 1 && untouched == 0xabcdef01,
@@ -191,8 +201,11 @@ static bool BinaryChecks(const wchar_t* path)
     command.cbSize = sizeof(command); command.display = BOOTSTRAPPER_DISPLAY_FULL;
     auto args = CreateArgs(engine, command);
     SetupFocusCreateResults result{}; result.cbSize = sizeof(result);
+    auto wrongVersion = args; wrongVersion.qwBAFunctionsAPIVersion = WIX_7_BOOTSTRAPPER_APPLICATION_API_VERSION;
+    REQUIRE(create(&wrongVersion, &result) == HRESULT_FROM_WIN32(ERROR_REVISION_MISMATCH) && engine.references == 1,
+        "the actual DLL distinguishes the BAFunctions contract from the WiX 7 core API number");
     REQUIRE(create(&args, &result) == S_OK && result.pfnBAFunctionsProc && result.pvBAFunctionsProcContext && engine.references == 2,
-        "the compiled DLL's creation ABI returns a callable callback and owns one engine reference");
+        "the compiled DLL accepts the WiX 7.0.1 loader's exact BAFunctions version and owns one engine reference");
     // An invalid HWND is deliberate: the actual WinAPI is used, but no real
     // desktop window can be activated by this binary smoke check.
     SetupFocusThemeLoadedArgs theme{sizeof(theme), nullptr};

@@ -12,7 +12,7 @@ destroyed windows and unrelated callbacks must not. The checks also load the
 actual compiled DLL and exercise its exported creation/callback/destruction ABI
 with invalid window handles, so no desktop focus changes are made.
 
-Run the script with the same WiX 6.0.2 native headers and compiler used to build
+Run the script with the same WiX 7.0.1 native headers and compiler used to build
 the helper. Its command-line parameters are documented at the top of `run.ps1`.
 Build products are written below `bin` unless an output directory is supplied.
 

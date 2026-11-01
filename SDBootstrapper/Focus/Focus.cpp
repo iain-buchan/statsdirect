@@ -24,6 +24,8 @@ namespace
         else if (message == BOOTSTRAPPER_APPLICATION_MESSAGE_ONELEVATECOMPLETE)
         {
             auto elevation = static_cast<const BA_ONELEVATECOMPLETE_ARGS*>(args);
+            // WiX 7 still sends this event with API version 5; the engine's
+            // version-7 interfaces do not change this callback contract.
             if (elevation->dwApiVersion != WIX_5_BOOTSTRAPPER_APPLICATION_API_VERSION) return S_OK;
             HWND window = static_cast<HWND>(InterlockedCompareExchangePointer(&state->window, nullptr, nullptr));
             // Restore the user's installation window once after successful UAC.

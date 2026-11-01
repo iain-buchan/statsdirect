@@ -27,7 +27,7 @@
 
 // The small part of the published WixStdBA BAFunctions ABI used here. WiX ships
 // the core event types above in BootstrapperApplicationApi, but not BAFunctions.h:
-// https://github.com/wixtoolset/wix/blob/v6.0.2/src/ext/Bal/wixstdfn/inc/BAFunctions.h
+// https://github.com/wixtoolset/wix/blob/v7.0.1/src/ext/Bal/wixstdfn/inc/BAFunctions.h
 // Keep the interface layout/version tied to the WiX package used by this bundle.
 using SetupFocusCallback = HRESULT (WINAPI*)(int, const void*, void*, void*);
 constexpr DWORD64 SetupFocusApiVersion = (DWORD64{2024} << 48) | (DWORD64{1} << 32) | (DWORD64{1} << 16);

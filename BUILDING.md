@@ -31,7 +31,7 @@ You may want:
 * If you will sign builds:
   * Install the token's SafeNet Authentication Client and plug the token in. `certmgr.msc` (Personal > Certificates) should then list a certificate issued to `StatsDirect Ltd`.
   * `<repository-root>/Key/sign.cmd` selects that certificate by its name. If more than one certificate with that name is present, set the user environment variable `STATSDIRECT_SIGNING_THUMBPRINT` to the SHA-1 thumbprint of the right one.
-  * The token client asks for the token password when the first file is signed. A signing build signs seven files (the program, its main library, the installer's helper `StatsDirectRetire.dll`, the native R worker, the .msi, the setup bundle's engine and the bundle), so consider enabling the client's single log-on option or you will be asked seven times.
+  * The token client asks for the token password when the first file is signed. A signing build signs eight files (the program, its main library, the installer's helper `StatsDirectRetire.dll`, the native R worker, the .msi, the foreground extension, the setup bundle's engine and the bundle), so consider enabling the client's single log-on option or you will be asked eight times.
   * Signatures are timestamped at GlobalSign's RFC 3161 server; set `STATSDIRECT_SIGNING_TIMESTAMP_URL` to use a different one.
   * The older way of signing with a `.pfx` file still works: put it at `<repository-root>/Key/sdsign.pfx` and set `STATSDIRECT_SIGNING_PASSWORD` to its password. Certificate authorities no longer issue keys that way.
 * [Set environment variables](https://www.youtube.com/watch?v=5BTnfpIq5mI) for your SpreadsheetGear license string.
@@ -61,6 +61,18 @@ ReleaseWithSigning
 
 The build process copies generated installers to `<repository-root>/ReleaseBuild`.
 
+Both installer projects pin WiX and their extensions to 7.0.1. WiX 7 requires
+explicit acceptance of its [OSMF EULA](https://docs.firegiant.com/wix/osmf/).
+For a command-line installer build, pass `-p:AcceptEula=wix7`, for example:
+
+```powershell
+dotnet build StatsDirectUI.slnx -c Release -p:AcceptEula=wix7
+```
+
+This accepts the EULA for that invocation without changing the machine's saved
+acceptance settings. For IDE builds, follow WiX's documented acceptance process.
+The application-only Debug configurations do not build WiX installers.
+
 ### Installer foreground handover
 
 The bundle includes a small native `SDBootstrapper/Focus` BAFunctions extension.
@@ -69,12 +81,18 @@ non-minimised installer window, following WiX issue 9317. It does not keep the
 installer on top or activate it during ordinary progress updates. Windows can
 decline the request; the bundle log records the result.
 
-The bundle build restores the pinned WiX 6.0.2 native API headers and builds the
+The bundle build restores the pinned WiX 7.0.1 native API headers and builds the
 extension with the same portable Zig compiler used by the R worker, or Visual
 Studio C++ when Zig is absent. `ReleaseWithSigning` signs the extension before
 embedding it in setup. Run `tests/InstallerFocus/run.ps1` after changes, then
 verify the actual post-UAC handover on Windows. The automated callback checks
 do not install StatsDirect or certify Windows foreground activation.
+
+The BAFunctions interface is independently versioned from the Burn engine.
+WiX 7.0.1 still supplies BAFunctions version `2024.1.1.0`, and its
+`OnElevateComplete` event still uses the version-5 callback contract. Recheck
+both against the pinned WiX source when upgrading; changing either constant
+to the engine's major version would disable the foreground handover.
 
 ### Desktop HTML5 help
 
@@ -172,5 +190,5 @@ sheet by the real document host, with the main window opened off screen.
 ```
 cd <repository-root>
 dotnet clean
-dotnet build -c <solution-configuration>
+dotnet build -c <solution-configuration> -p:AcceptEula=wix7
 ```

@@ -1,4 +1,4 @@
-<Project Sdk="WixToolset.Sdk/6.0.2">
+<Project Sdk="WixToolset.Sdk/7.0.1">
   <PropertyGroup>
     <Platform>x64</Platform>
     <ProductVersion>5.0</ProductVersion>
@@ -10,11 +10,11 @@
     <SignOutput Condition="'$(Configuration)' == 'ReleaseWithSigning'">true</SignOutput>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="WixToolset.NetFx.wixext" Version="6.0.2" />
-    <PackageReference Include="WixToolset.Util.wixext" Version="6.0.2" />
-    <PackageReference Include="WixToolset.Bal.wixext" Version="6.0.2" />
+    <PackageReference Include="WixToolset.NetFx.wixext" Version="7.0.1" />
+    <PackageReference Include="WixToolset.Util.wixext" Version="7.0.1" />
+    <PackageReference Include="WixToolset.Bal.wixext" Version="7.0.1" />
     <!-- Native API headers only; do not import the C++ project's build targets. -->
-    <PackageDownload Include="WixToolset.BootstrapperApplicationApi" Version="[6.0.2]" />
+    <PackageDownload Include="WixToolset.BootstrapperApplicationApi" Version="[7.0.1]" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="bannrbmp-sd.png" />
@@ -34,7 +34,7 @@
       <InstallerFocusDll>$(InstallerFocusDirectory)\StatsDirect.Setup.Focus.dll</InstallerFocusDll>
       <DefineConstants>$(DefineConstants);InstallerFocusDll=$(InstallerFocusDll)</DefineConstants>
     </PropertyGroup>
-    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\Focus\build-native.ps1&quot; -ApiIncludeDirectory &quot;$(NuGetPackageRoot)wixtoolset.bootstrapperapplicationapi\6.0.2\build\native\include&quot; -OutputDirectory &quot;$(InstallerFocusDirectory)&quot;" />
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\Focus\build-native.ps1&quot; -ApiIncludeDirectory &quot;$(NuGetPackageRoot)wixtoolset.bootstrapperapplicationapi\7.0.1\build\native\include&quot; -OutputDirectory &quot;$(InstallerFocusDirectory)&quot;" />
     <ItemGroup>
       <FileWrites Include="$(InstallerFocusDirectory)\**" />
     </ItemGroup>

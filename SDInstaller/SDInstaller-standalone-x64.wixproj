@@ -1,4 +1,4 @@
-﻿<Project Sdk="WixToolset.Sdk/6.0.2">
+<Project Sdk="WixToolset.Sdk/7.0.1">
   <PropertyGroup>
     <Platform>x64</Platform>
     <ProductVersion>5.0</ProductVersion>
@@ -13,7 +13,6 @@
     <Content Include="dlgbmp-sd.bmp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="global.json" />
     <None Include="Licence.rtf" />
   </ItemGroup>
   <ItemGroup>
@@ -26,10 +25,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="WixToolset.NetFx.wixext" Version="6.0.2" />
-    <PackageReference Include="WixToolset.Util.wixext" Version="6.0.2" />
-    <PackageReference Include="WixToolset.UI.wixext" Version="6.0.2" />
-    <PackageReference Include="WixToolset.Heat" Version="6.0.2" />
+    <PackageReference Include="WixToolset.NetFx.wixext" Version="7.0.1" />
+    <PackageReference Include="WixToolset.Util.wixext" Version="7.0.1" />
+    <PackageReference Include="WixToolset.UI.wixext" Version="7.0.1" />
   </ItemGroup>
   <!-- ReleaseWithSigning: sign StatsDirect.exe and StatsDirect.dll in StatsDirectUI's output before they are bound into the installer, so that the
        program itself carries the publisher's signature as well as the .msi and the setup bundle; and StatsDirectRetire.dll beside them, which the

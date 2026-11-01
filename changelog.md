@@ -4,6 +4,9 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
 ##[Unreleased]
 
+### Changed
+- Windows installers use WiX 7.0.1, retaining the post-UAC foreground handover extension and existing upgrade identities.
+
 ##[v5.3.0] 2026-11-01
 
 Version 5.3.0 brings an interactive R console into the R script window. Console and Script share a persistent workspace, so users can explore results, answer R prompts and continue calculations without rerunning the whole script. The statistical engine's results are unchanged.

@@ -7,7 +7,7 @@ $ErrorActionPreference = 'Stop'
 $ApiIncludeDirectory = [IO.Path]::GetFullPath($ApiIncludeDirectory)
 $OutputDirectory = [IO.Path]::GetFullPath($OutputDirectory)
 foreach ($header in @('BootstrapperApplicationTypes.h', 'IBootstrapperEngine.h')) {
-    if (!(Test-Path -LiteralPath (Join-Path $ApiIncludeDirectory $header))) { throw "WiX native API header missing: $header. Restore WixToolset.BootstrapperApplicationApi 6.0.2." }
+    if (!(Test-Path -LiteralPath (Join-Path $ApiIncludeDirectory $header))) { throw "WiX native API header missing: $header. Restore WixToolset.BootstrapperApplicationApi 7.0.1." }
 }
 if (!$Zig) { $Zig = Join-Path $PSScriptRoot '..\..\RConsoleWorker\tools\zig-x86_64-windows-0.15.2\zig.exe' }
 $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
