@@ -44,7 +44,7 @@ internal static partial class Program
                 <text x="14" y="126" font-family="StatsDirectMissingFont,Arial,sans-serif">Font fallback β μ</text>
               </g>
               <g transform="translate(590 150) rotate(-90)" font-family="Arial" font-size="22" fill="black"><text x="0" y="0">Rotated Ω</text></g>
-              <text x="20" y="190" font-family="Arial" font-size="20" fill="black">smile 😀 label</text>
+              <text x="330" y="126" font-family="Arial" font-size="20" fill="black">smile 😀 label</text>
             </svg>
             """;
         string fontOutlined = OfficeSvg.ForClipboard(fontFixture);
