@@ -76,23 +76,34 @@ The application-only Debug configurations do not build WiX installers.
 ### Installer foreground handover
 
 The bundle includes a small native `SDBootstrapper/Focus` BAFunctions extension.
-After successful UAC elevation it makes one foreground request for the visible,
-non-minimised installer window, following WiX issue 9317. It does not keep the
-installer on top or activate it during ordinary progress updates. Windows can
-decline the request; the bundle log records the result.
+After successful UAC elevation it posts one handover to the installer's own
+window thread. Hidden, disabled and minimised windows are left alone. Windows
+can deny foreground activation even on that thread and with the upstream
+engine-side request from WiX issue 9317 / PR728.
+
+If activation is denied, the helper raises its own progress window once without
+changing keyboard focus, then immediately returns it to the normal window
+group. It does not leave the installer always on top or repeat activation during
+progress. Existing topmost windows are left alone. The log distinguishes actual
+foreground ownership from this visibility fallback and records whether normal
+window mode was restored; a failed cleanup is logged as `normal=0`.
 
 The bundle build restores the pinned WiX 7.0.1 native API headers and builds the
 extension with the same portable Zig compiler used by the R worker, or Visual
 Studio C++ when Zig is absent. `ReleaseWithSigning` signs the extension before
 embedding it in setup. Run `tests/InstallerFocus/run.ps1` after changes, then
 verify the actual post-UAC handover on Windows. The automated callback checks
-do not install StatsDirect or certify Windows foreground activation.
+do not install StatsDirect or certify Windows foreground activation. Launch from
+Explorer and click Install/approve UAC manually in repeated tests; invoking a
+button through automation is not an equivalent test of the last-input rules.
 
 The BAFunctions interface is independently versioned from the Burn engine.
 WiX 7.0.1 still supplies BAFunctions version `2024.1.1.0`, and its
 `OnElevateComplete` event still uses the version-5 callback contract. Recheck
 both against the pinned WiX source when upgrading; changing either constant
 to the engine's major version would disable the foreground handover.
+The published BAFunctions window-procedure hook is message 1025; its x64
+argument/result structures are 40/16 bytes.
 
 ### Desktop HTML5 help
 

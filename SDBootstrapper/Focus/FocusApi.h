@@ -32,6 +32,8 @@
 using SetupFocusCallback = HRESULT (WINAPI*)(int, const void*, void*, void*);
 constexpr DWORD64 SetupFocusApiVersion = (DWORD64{2024} << 48) | (DWORD64{1} << 32) | (DWORD64{1} << 16);
 constexpr int SetupFocusThemeLoaded = 1024;
+constexpr int SetupFocusWindowProc = 1025;
+constexpr wchar_t SetupFocusMessageName[] = L"StatsDirect.Setup.Focus.AfterElevation.1";
 
 struct SetupFocusCreateArgs
 {
@@ -49,7 +51,18 @@ struct SetupFocusCreateResults
 struct SetupFocusDestroyArgs { DWORD cbSize; BOOL fReload; };
 struct SetupFocusDestroyResults { DWORD cbSize; BOOL fDisableUnloading; };
 struct SetupFocusThemeLoadedArgs { DWORD cbSize; HWND hWnd; };
+struct SetupFocusWindowProcArgs
+{
+    DWORD cbSize;
+    HWND hWnd;
+    UINT uMsg;
+    WPARAM wParam;
+    LPARAM lParam;
+};
+struct SetupFocusWindowProcResults { DWORD cbSize; BOOL fProcessed; LRESULT lResult; };
 
 static_assert(sizeof(void*) == 8, "This bundle uses the x64 WixStdBA.");
 static_assert(sizeof(SetupFocusCreateArgs) == 32 && sizeof(SetupFocusCreateResults) == 24 && sizeof(SetupFocusThemeLoadedArgs) == 16,
     "The x64 BAFunctions interface layout changed.");
+static_assert(sizeof(SetupFocusWindowProcArgs) == 40 && sizeof(SetupFocusWindowProcResults) == 16,
+    "The x64 BAFunctions window-procedure interface layout changed.");
