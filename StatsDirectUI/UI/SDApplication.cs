@@ -664,6 +664,13 @@ namespace StatsDirect.UI
         }
 
         /// <summary>
+        /// The sheet pick that the last frame was written to.  An operation's frames after its first keep the selection, so they follow the
+        /// first frame in the grid it made active rather than taking the pick again, which for a new sheet or a new workbook would make one
+        /// for each frame.
+        /// </summary>
+        private PaneAndPosition honouredOutputLocation;
+
+        /// <summary>
         /// Append the data in the frame to a new or existing user-selected grid window.
         /// </summary>
         void IUserInterface.OutputFrame(DataFrame frame, bool keepSelection, bool isFormulae, string missingIndicator, PaneAndPosition preferredOutputLocation, RelativePosition defaultPosition)
@@ -671,7 +678,17 @@ namespace StatsDirect.UI
             IGrid grid;
             RelativePosition writePosition = defaultPosition;
 
-            if (keepSelection && null != ActiveGrid)
+            // The sheet the user picked comes before the selection a step keeps: the pick is for the operation's first frame, whether or not
+            // its step keeps the selection, and the frames after it follow in the grid the first made active.
+            bool pickedForThisFrame = null != preferredOutputLocation
+                && !(keepSelection && null != ActiveGrid && ReferenceEquals(preferredOutputLocation, honouredOutputLocation));
+            if (pickedForThisFrame)
+            {
+                writePosition = preferredOutputLocation.WritePosition;
+                grid = SelectGridWindow(preferredOutputLocation.Pane, ref writePosition);
+                honouredOutputLocation = preferredOutputLocation;
+            }
+            else if (keepSelection && null != ActiveGrid)
             {
                 grid = (IGrid)ActiveGrid.Window;
                 // If we're writing multiple outputs that won't be written over the top of each other, each one is selected after it is written.  Therefore we can use that to ensure subsequent output is written directly after the initial output.
@@ -679,17 +696,7 @@ namespace StatsDirect.UI
             }
             else
             {
-                if (null != preferredOutputLocation)
-                {
-                    PaneAndPosition paneAndPosition = preferredOutputLocation;
-                    Pane pane = paneAndPosition.Pane;
-                    writePosition = paneAndPosition.WritePosition;
-                    grid = SelectGridWindow(pane, ref writePosition);
-                }
-                else
-                {
-                    grid = PickGridWindow(true, ref writePosition);
-                }
+                grid = PickGridWindow(true, ref writePosition);
             }
             if (null == grid)
                 throw new TemplateOperationCancelledException();

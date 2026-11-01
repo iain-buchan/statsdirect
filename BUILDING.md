@@ -136,6 +136,8 @@ Analysis menu section immediately before Options. External-program shortcuts and
 Setup Tools have been retired. Old `-calculator` shortcuts open the main application
 with this same pane; the separate calculator application has been removed.
 `tests/WindowsShell` checks the actual main form and merged worksheet commands.
+`tests/WorksheetOutput` checks the writing of an operation's output frames to a picked
+sheet by the real document host, with the main window opened off screen.
 
 ### Visual Studio 2026
 
