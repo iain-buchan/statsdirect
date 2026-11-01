@@ -46,6 +46,55 @@ test('restored console history recalls commands while new commands append exactl
   assert.equal(model.script, script + next + '\n');
 });
 
+test('native command recall survives cleared output and repeated recovery without using unexecuted Script', () => {
+  const batch = '# executed startup café β\nvalues <- c(\n  1, 2, 3\n)\nmean(values)';
+  const recall = [batch, 'answer <- readline("Name? ")', 'sum(values)'];
+  const edited = '# not executed\nneverRun <- 999\n';
+  for (let reload = 0; reload < 3; reload++) {
+    const model = new ConsoleModel();
+    assert.equal(model.receive(event('session', 0, {
+      script: edited, commandHistory: recall, events: [event('state', 8, {state: 'ready', prompt: '> '})]
+    })), true);
+    assert.deepEqual(model.history, recall);
+    assert.deepEqual(model.entries, []);
+    assert.equal(model.script, edited);
+    assert.equal(model.navigateHistory(-1, 'unfinished draft'), 'sum(values)');
+    assert.equal(model.navigateHistory(1, ''), 'unfinished draft');
+    assert.equal(model.script, edited, 'recalling a command does not execute it or alter Script');
+  }
+});
+
+test('the native recall seed is authoritative after replay and answers remain outside it', () => {
+  const records = [
+    event('inputEcho', 1, {origin: 'console', text: 'x <- 1'}),
+    event('inputEcho', 2, {origin: 'console', text: 'x <- 2'}),
+    event('inputRequested', 3, {requestId: 'q1', prompt: 'Answer? '}),
+    event('inputEcho', 4, {origin: 'input', text: 'reply data', prompt: 'Answer? '}),
+    event('state', 5, {state: 'ready', prompt: '> '})
+  ];
+  const model = new ConsoleModel();
+  assert.equal(model.receive(event('session', 0, {events: records, commandHistory: ['x <- 1', 'x <- 2']})), true);
+  assert.deepEqual(model.history, ['x <- 1', 'x <- 2'], 'replay does not duplicate the seeded command sequence');
+  assert.equal(model.receive(event('inputEcho', 6, {origin: 'console', text: 'x + 1'})), true);
+  assert.deepEqual(model.history, ['x <- 1', 'x <- 2', 'x + 1']);
+  const empty = new ConsoleModel();
+  empty.receive(event('session', 0, {events: records, commandHistory: []}));
+  assert.deepEqual(empty.history, [], 'an explicit empty seed replaces replay-derived recall');
+});
+
+test('recall seeds retain multiline commands within the existing limits and ignore noncommands', () => {
+  const model = new ConsoleModel();
+  const commands = Array.from({length: 105}, (_, index) => `value <- ${index}`);
+  model.receive(event('session', 0, {commandHistory: [null, 42, {}, '', '   ', ...commands]}));
+  assert.deepEqual(model.history, commands.slice(-100));
+  const large = '# startup\n' + 'x'.repeat(500001);
+  const batch = new ConsoleModel();
+  batch.receive(event('session', 0, {commandHistory: ['old command', large]}));
+  assert.deepEqual(batch.history, [large], 'a large submitted batch remains intact as the newest entry');
+  const oldHost = restore(new ConsoleModel());
+  assert.deepEqual(oldHost.history, [entered], 'older hosts without a seed still recover recall from echoes');
+});
+
 test('optional file notice metadata survives live output and renderer recovery', () => {
   const model = restore(new ConsoleModel());
   const filePath = 'C:\\R output\\résumé #1.txt', label = 'résumé #1.txt';

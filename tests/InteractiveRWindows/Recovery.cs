@@ -14,10 +14,25 @@ internal static partial class Program
         await host.Prompt(cancelled, "CLEAR_CANCEL>");
         await host.Stop(cancelled);
 
+        const string unexecuted = "\n# unexecuted recovery edit\nnotExecutedAfterClear <- 999\n";
+        await host.JS($$"""
+            (()=>{
+              window.StatsDirectRConsole.setMode('script');
+              const field=document.getElementById('script-source');
+              field.value += {{JsonSerializer.Serialize(unexecuted)}};
+              field.dispatchEvent(new Event('input',{bubbles:true}));
+              window.StatsDirectRConsole.setMode('console');
+            })()
+            """);
+        await host.TwoFrames();
+
         var before = await host.Snapshot();
         string source = Text(before, "script"), history = before.GetProperty("history").GetRawText();
         Check(before.GetProperty("transcript").EnumerateArray().Count(e => Text(e, "kind") == "question") >= 2,
             "Clear output fixture contains both answered and Stop-cancelled questions");
+        Check(!before.GetProperty("history").EnumerateArray().Any(e => e.GetString()!.Contains("notExecutedAfterClear", StringComparison.Ordinal)
+                || e.GetString() == "kept"),
+            "unexecuted Script edits and question answers are absent from command recall");
         await InvokeAsync(host.View, "ClearOutputAsync");
         await host.TwoFrames();
         var after = await host.Snapshot();
@@ -31,17 +46,33 @@ internal static partial class Program
             await Reload("ready");
             after = await host.Snapshot();
             Check(after.GetProperty("transcript").GetArrayLength() == 0 && Text(after, "script") == source
+                && after.GetProperty("history").GetRawText() == history
                 && await host.JS("document.querySelectorAll('.question-entry').length===0&&document.getElementById('question-announcement').textContent===''") == "true",
-                "cleared answered and cancelled questions stay cleared after renderer recovery " + (reload + 1));
+                "cleared questions stay cleared and exact command recall survives renderer recovery " + (reload + 1));
         }
+        const string draft = "# unfinished console draft";
+        string lastCommand = before.GetProperty("history").EnumerateArray().Last().GetString()!;
+        await host.JS($$"""
+            (()=>{
+              const field=document.getElementById('console-input');field.value={{JsonSerializer.Serialize(draft)}};
+              field.dispatchEvent(new Event('input',{bubbles:true}));field.setSelectionRange(field.value.length,field.value.length);
+              field.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowUp',bubbles:true,cancelable:true}));
+            })()
+            """);
+        Check(JsonSerializer.Deserialize<string>(await host.JS("document.getElementById('console-input').value")) == lastCommand,
+            "Up recalls the original submitted command after clearing and repeated display recovery");
+        await host.JS("document.getElementById('console-input').dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowDown',bubbles:true,cancelable:true}))");
+        Check(JsonSerializer.Deserialize<string>(await host.JS("document.getElementById('console-input').value")) == draft,
+            "Down restores the unfinished draft after recalled commands");
         Check(host.Since(recovery).All(e => Kind(e) is not ("commandAccepted" or "inputEcho")),
             "recovering a cleared display does not resubmit commands or replay answers into R");
-        await host.Run("cat('AFTER_CLEAR=',saved==42 && identical(clearAnswered,'kept') && !exists('clearCancelled'),'\\n',sep='')", "AFTER_CLEAR=TRUE");
+        await host.Run("cat('AFTER_CLEAR=',saved==42 && identical(clearAnswered,'kept') && !exists('clearCancelled') && !exists('notExecutedAfterClear'),'\\n',sep='')", "AFTER_CLEAR=TRUE");
         Check(true, "Clear output and repeated recovery retain live variables and the cancelled assignment stays absent");
 
         int pending = await host.Submit("clearPending <- readline('CLEAR_PENDING> '); cat('CLEAR_PENDING_REPLY=',clearPending,'\\n',sep='')");
         string requestId = Text(await host.Prompt(pending, "CLEAR_PENDING>"), "requestId");
-        source = Text(await host.Snapshot(), "script");
+        var pendingSnapshot = await host.Snapshot();
+        source = Text(pendingSnapshot, "script"); history = pendingSnapshot.GetProperty("history").GetRawText();
         await InvokeAsync(host.View, "ClearOutputAsync");
         await host.TwoFrames();
         await CheckPending("clearing output");
@@ -54,8 +85,10 @@ internal static partial class Program
 
         await InvokeAsync(host.View, "ClearOutputAsync");
         await Reload("ready");
-        Check((await host.Snapshot()).GetProperty("transcript").GetArrayLength() == 0,
-            "a pending question that was later answered also stays cleared after recovery");
+        var finalSnapshot = await host.Snapshot();
+        Check(finalSnapshot.GetProperty("transcript").GetArrayLength() == 0
+            && finalSnapshot.GetProperty("history").GetRawText() == history,
+            "an answered question stays cleared after recovery while commands remain in recall and its Unicode reply stays out");
 
         async Task Reload(string state)
         {
@@ -73,6 +106,7 @@ internal static partial class Program
             var snapshot = await host.Snapshot();
             var questions = snapshot.GetProperty("transcript").EnumerateArray().Where(e => Text(e, "kind") == "question").ToArray();
             Check(Text(snapshot, "state") == "input" && Text(snapshot, "requestId") == requestId && Text(snapshot, "script") == source
+                && snapshot.GetProperty("history").GetRawText() == history
                 && questions.Length == 1 && Text(questions[0], "requestId") == requestId
                 && await host.JS("document.querySelectorAll('.question-entry').length===1") == "true",
                 action + " preserves exactly the live question and its original reply token without duplicating Script");

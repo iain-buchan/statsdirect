@@ -10,9 +10,13 @@ internal static partial class Program
         var oldRequest = await host.Prompt(mark, "OLD_GENERATION>");
         var oldSnapshot = await host.Snapshot();
         await host.Stop(mark);
-        string source = Text(await host.Snapshot(), "script");
+        var beforeRestart = await host.Snapshot();
+        string source = Text(beforeRestart, "script"), recall = beforeRestart.GetProperty("history").GetRawText();
         await host.Restart(); RememberWorker(host);
         Check(Text(await host.Snapshot(), "script") == source, "Restart clears R state while preserving the accumulated source script");
+        await InvokeAsync(host.View, "RecoverDisplayAsync"); await host.WaitBrowserReady(); await host.TwoFrames();
+        Check((await host.Snapshot()).GetProperty("history").GetRawText() == recall,
+            "Restart and display recovery preserve command recall independently of the cleared R workspace");
         await host.JS("window.chrome.webview.postMessage(" + JsonSerializer.Serialize(new
         {
             channel = "statsdirect-r-console", action = "inputReply", sessionId = Text(oldSnapshot, "sessionId"),
@@ -37,6 +41,8 @@ internal static partial class Program
         Check(host.Output(mark).Contains("CURRENT_REPLY=correct current answer", StringComparison.Ordinal), "the current question remains answerable after rejecting a stale token");
 
         var second = await NewConsole(main); await second.Start(); RememberWorker(second);
+        Check((await second.Snapshot()).GetProperty("history").GetArrayLength() == 0,
+            "a new R script window starts with independent empty command recall");
         await host.Run("scope <- 11; cat('FIRST_SCOPE=',scope,'\\n',sep='')", "FIRST_SCOPE=11");
         await second.Run("scope <- 99; cat('SECOND_SCOPE=',scope,'\\n',sep='')", "SECOND_SCOPE=99");
         await host.Run("cat('FIRST_STILL=',scope,'\\n',sep='')", "FIRST_STILL=11");

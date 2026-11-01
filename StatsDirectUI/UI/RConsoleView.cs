@@ -29,6 +29,7 @@ internal sealed partial class RConsoleView : UserControl
     private TaskCompletionSource ready = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private readonly SemaphoreSlim startingR = new(1, 1);
     private readonly List<JsonElement> history = new();
+    private readonly List<string> commandHistory = new();
     private readonly Dictionary<string, JsonElement> plots = new();
     private readonly Dictionary<string, JsonElement> latestPlots = new();
     private readonly HashSet<string> outputFiles = new(StringComparer.OrdinalIgnoreCase);
@@ -36,7 +37,7 @@ internal sealed partial class RConsoleView : UserControl
     private readonly LinkLabel displayFailure = new() { Dock = DockStyle.Top, AutoSize = true, Padding = new Padding(8), Visible = false, Text = "The R display stopped. Reload display (your R workspace is retained)." };
     private JsonElement sessionEnvelope;
     private string sessionId = Guid.NewGuid().ToString("N"), script = "";
-    private long generation, offlineSeq, historySize;
+    private long generation, offlineSeq, historySize, commandHistorySize;
     private bool browserFailed, recovering;
     private bool startingPage, pageReady, closing;
     internal IRSession? Session { get; private set; }
@@ -330,6 +331,7 @@ internal sealed partial class RConsoleView : UserControl
         }
         if (type == "state") NativeState = item.GetProperty("state").GetString()!;
         if (type == "exited") NativeState = "stopped";
+        if (type == "inputEcho") RememberCommand(item);
         if (type == "plot")
         {
             string id = item.GetProperty("plotId").GetString()!;
@@ -358,11 +360,29 @@ internal sealed partial class RConsoleView : UserControl
         }
         if (pageReady) Browser.CoreWebView2.PostWebMessageAsJson(item.GetRawText());
     }
+    private void RememberCommand(JsonElement item)
+    {
+        if (!item.TryGetProperty("origin", out var origin) || origin.GetString() is not ("console" or "script" or "continueInR")
+            || !item.TryGetProperty("text", out var text)) return;
+        string source = text.GetString() ?? "";
+        // Match JavaScript trim's blank test without changing the stored command:
+        // U+FEFF is whitespace there; U+0085 is not.
+        if (!source.Any(c => c == '\u0085' || !char.IsWhiteSpace(c) && c != '\uFEFF')
+            || commandHistory.Count > 0 && commandHistory[^1] == source) return;
+        commandHistory.Add(source); commandHistorySize += source.Length;
+        // Same limits as the page's recall; keep a single large batch intact.
+        while (commandHistory.Count > 1 && (commandHistory.Count > 100 || commandHistorySize > 500000))
+        {
+            commandHistorySize -= commandHistory[0].Length; commandHistory.RemoveAt(0);
+        }
+    }
     private void SendSession()
     {
         if (!pageReady || closing) return;
         var envelope = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(sessionEnvelope.GetRawText())!;
         envelope["script"] = JsonSerializer.SerializeToElement(script);
+        // Recall belongs to the document, independently of its clearable output.
+        envelope["commandHistory"] = JsonSerializer.SerializeToElement(commandHistory);
         // The session's own capabilities stay, among them whether its workspace persists (the Rscript fallback's does not, and the page's status
         // line says so); this view adds what it provides: help, AI and the chart actions
         var capabilities = envelope.TryGetValue("capabilities", out var stated) && stated.ValueKind == JsonValueKind.Object
