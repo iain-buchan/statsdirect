@@ -16,11 +16,17 @@ internal static partial class Program
 
         int mark = await host.Submit("answer <- readline('WINDOWS_ANSWER> '); cat('ANSWER=',enc2utf8(answer),'\\n',sep='')");
         await host.Prompt(mark, "WINDOWS_ANSWER>");
+        await host.TwoFrames();
+        Check(await host.JS("""(()=>{const q=[...document.querySelectorAll('.question-entry')].map(e=>e.textContent);const a=document.getElementById('question-announcement').textContent;const s=document.getElementById('state').textContent;return q.some(t=>t.includes('WINDOWS_ANSWER>'))&&/^R question [0-9]+: WINDOWS_ANSWER> $/.test(a)&&s==='R is waiting for your answer'})()""") == "true",
+            "while R waits, the question is a transcript line of its own, the hidden region announces it by number, and the status line does not carry it");
         await host.Submit("reply café β");
         await host.Finished(mark);
         Check(host.Output(mark).Contains("ANSWER=reply café β", StringComparison.Ordinal), "real readline receives the separate Unicode answer in the integrated window");
         Check(await host.JS("(()=>{const s=window.StatsDirectRConsole.snapshot();return !s.script.includes('reply café β')&&!s.history.includes('reply café β')})()") == "true",
             "prompt replies are excluded from the executable script and command history");
+        await host.TwoFrames();
+        Check(await host.JS("""(()=>{const rows=[...document.querySelectorAll('.input-entry.reply')],last=rows.at(-1);return !!last&&last.querySelector('.echo-prompt').textContent===''&&last.textContent.includes('reply café β')&&document.getElementById('question-announcement').textContent===''})()""") == "true",
+            "after the answer, the reply is a line of its own under the question, and the announcement is cleared");
 
         mark = await host.Submit("selected <- menu(c('First','Second'),graphics=FALSE); cat('MENU=',selected,'\\n',sep='')");
         await host.Prompt(mark, "Selection:");
@@ -77,6 +83,12 @@ internal static partial class Program
             await host.Stop(mark);
             await host.Run("cat('CANCEL_SAFE='," + fixture.Check + " && saved==42,'\\n',sep='')", "CANCEL_SAFE=TRUE");
             Check(true, "Stop cancels " + fixture.State + " without supplying an empty answer, assigning a result or running follow-on source");
+            if (fixture.State == "input")
+            {
+                await host.TwoFrames();
+                Check(await host.JS("[...document.querySelectorAll('.question-entry')].some(e=>e.textContent.includes('" + fixture.Prompt + "'))") == "true",
+                    "the question Stop cancelled stays in the transcript as its own line");
+            }
         }
 
         mark = await host.Submit("cleanup <- FALSE; local({on.exit(cleanup <<- TRUE); cat('CLEANUP_STARTED\\n'); repeat {}})");
