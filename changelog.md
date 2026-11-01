@@ -4,6 +4,8 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
 ##[Unreleased]
 
+##[v5.3.1] 2026-11-01
+
 ### Changed
 - Windows installers use WiX 7.0.1, retaining the post-UAC foreground handover extension and existing upgrade identities.
 
