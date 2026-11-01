@@ -4,7 +4,7 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
 ##[Unreleased]
 
-##[v5.3.0] 2026-10-31
+##[v5.3.0] 2026-11-01
 
 Version 5.3.0 brings an interactive R console into the R script window. Console and Script share a persistent workspace, so users can explore results, answer R prompts and continue calculations without rerunning the whole script. The statistical engine's results are unchanged.
 
@@ -32,6 +32,7 @@ Version 5.3.0 brings an interactive R console into the R script window. Console 
 - A global calling handler installed by one console command still fires in the next, as in R's own console; a tilde in a path means what it means in Rscript and Rgui, the Documents folder by default; closing an R window asks R to end its session, so R removes its temporary folder, and the session's chart snapshots leave the R folder with it; the weekly housekeeping of automatic chart files covers the console's files and runs for the console too
 - An answered R question keeps its question in the transcript, and a screen reader hears the question; Stop shows as interrupting until R unwinds; a worker that cannot start or a console page that cannot load reports so at once rather than showing R running for ever; a file the console reports written opens if it is a document and is shown in its folder otherwise; a template's own R output files are not reported as a console command's
 - Report chart labels copied as vector outlines use the nonzero fill rule, so fonts with overlapping strokes stay solid, and a label with a character the font cannot draw keeps its text for the receiving program's own fallback; Help on Check for Updates opens the Help menu topic
+- Values saved to a picked sheet, such as the fits and residuals of a multiple linear regression and the fits of LOESS, go to that sheet: the sheet picked for an operation's output comes before the selection its steps keep, which had sent the values into the workbook of the data after the current selection whatever sheet was picked; the frames after the first follow it, and a pick of a new sheet makes one sheet
 
 ##[v5.2.9] 2026-10-24
 
