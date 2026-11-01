@@ -150,6 +150,7 @@ internal static partial class Program
         await CheckClearOutput(host);
         await CheckRestartAndIsolation(main, host);
         await CheckRscriptFallback(main);
+        await CheckUnrunnableWorkerFallback(main);
         await CheckClosingAndSaving(main);
     }
 }

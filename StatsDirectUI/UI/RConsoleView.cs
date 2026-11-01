@@ -195,10 +195,10 @@ internal sealed partial class RConsoleView : UserControl
                 if (version != null)
                 {
                     try { await Session.StartAsync(); }
-                    catch (Exception error) when (error is IOException or TimeoutException or InvalidOperationException)
+                    catch (Exception error) when (error is IOException or TimeoutException or InvalidOperationException or System.ComponentModel.Win32Exception)
                     {
-                        // The worker could not start with this R: rather than leave the window without R, each command runs through this R's Rscript,
-                        // the notice says why, and Restart R tries the console again
+                        // The worker could not start with this R, or Windows could not run the worker at all: rather than leave the window without R,
+                        // each command runs through this R's Rscript, the notice says why, and Restart R tries the console again
                         Session.Event -= OnSessionEvent; Session.Dispose();
                         Session = new RScriptSession(Path.Combine(version.BinPath, "Rscript.exe"), version.VersionString, WorkingDirectory,
                             "The interactive console could not start (" + error.Message.TrimEnd('.') + "). Restart R tries it again.");
@@ -363,7 +363,14 @@ internal sealed partial class RConsoleView : UserControl
         if (!pageReady || closing) return;
         var envelope = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(sessionEnvelope.GetRawText())!;
         envelope["script"] = JsonSerializer.SerializeToElement(script);
-        envelope["capabilities"] = JsonSerializer.SerializeToElement(new { plotMimes = new[] { "image/svg+xml", "image/png", "application/pdf" }, help = true, ai = true, consoleInput = true, rawStdin = false, openPlot = true, copyPlot = true });
+        // The session's own capabilities stay, among them whether its workspace persists (the Rscript fallback's does not, and the page's status
+        // line says so); this view adds what it provides: help, AI and the chart actions
+        var capabilities = envelope.TryGetValue("capabilities", out var stated) && stated.ValueKind == JsonValueKind.Object
+            ? JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(stated.GetRawText())! : new Dictionary<string, JsonElement>();
+        capabilities["plotMimes"] = JsonSerializer.SerializeToElement(new[] { "image/svg+xml", "image/png", "application/pdf" });
+        foreach (var (name, provided) in new[] { ("help", true), ("ai", true), ("consoleInput", true), ("rawStdin", false), ("openPlot", true), ("copyPlot", true) })
+            capabilities[name] = JsonSerializer.SerializeToElement(provided);
+        envelope["capabilities"] = JsonSerializer.SerializeToElement(capabilities);
         envelope["events"] = JsonSerializer.SerializeToElement(history);
         Browser.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(envelope));
         if (Session == null) SendOfflineState();
