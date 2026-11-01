@@ -9,6 +9,12 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 ### Changed
 - Windows installers use WiX 7.0.1, retaining the post-UAC foreground handover extension and existing upgrade identities.
 
+### Fixed
+- The installer requests foreground for its visible progress window after successful Windows elevation, addressing the Explorer/UAC focus handover. Hidden or minimised windows are left alone.
+- The request is made on the installer window's own thread, and when Windows refuses it the window is raised once and at once returned to its ordinary place in the window order, so it is seen without staying on top; hidden, disabled, minimised and already-topmost windows are left alone
+- The R script window running each command through Rscript, because the installed R is older than 4.2 or 32-bit, says so in its status line rather than that the workspace is retained
+- A worker file that Windows cannot run, as distinct from a missing one, sends the R script window to Rscript with a notice, as a worker that cannot start does, rather than leaving the window without R
+
 ##[v5.3.0] 2026-11-01
 
 Version 5.3.0 brings an interactive R console into the R script window. Console and Script share a persistent workspace, so users can explore results, answer R prompts and continue calculations without rerunning the whole script. The statistical engine's results are unchanged.
@@ -26,7 +32,6 @@ Version 5.3.0 brings an interactive R console into the R script window. Console 
 - The R script window runs R through a worker that takes any 64-bit R from 4.2 (April 2022, the first R for Windows with UTF-8 as its native encoding): the newest such R installed is used, and when none is installed More > Set up R offers the current one, R 4.6.2, from CRAN. R before 4.2 and 32-bit R are not taken by the R window, which says so; R's own templates still run with any installed R. Verified on R 4.6.2 and R 4.2.3.
 
 ### Fixed
-- The installer requests foreground for its visible progress window after successful Windows elevation, addressing the Explorer/UAC focus handover. Hidden or minimised windows are left alone.
 - The Windows R console no longer nests R's DLL REPL inside an incompatible error wrapper, which could underflow R's protection stack and cause intermittent heap corruption during startup. Balanced parsing and evaluation preserve Stop, errors, continuation, completed assignments, printing, warnings and charts.
 - The R console follows charts through image loading and input resizing when the reader is at the end; scrolling up, selecting text or holding a chart button preserves the reader's position. Open and Copy remain beneath each chart.
 - Console Up/Down command recall includes code run from Script or Continue in R, including the startup script. Multi-line submissions stay intact and are not appended to Script a second time; opening unexecuted code and answers to R questions do not enter command history.
