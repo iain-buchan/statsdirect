@@ -8,11 +8,14 @@ the worker's R thread; Restart or closing the window ends the worker process.
 The evaluator uses R's parser and evaluator within a balanced `R_ToplevelExec`
 error boundary. It does not call `R_ReplDLLdo1`: that DLL REPL resets R's
 protection stack and cannot safely be nested within `R_ToplevelExec`.
-Expressions are parsed individually, so a complete prefix runs before an
-incomplete or invalid suffix. R's `wholeSrcref` supplies the consumed physical
-line and Unicode column, including delimiters; the worker maps that position
-back to the original UTF-8 input rather than interpreting R syntax. The byte
-counter is unsuitable for this because it can overcount multibyte input.
+A submission is parsed whole, as `source()` parses a file: the work is in
+proportion to the text, and its expressions share one source reference. Only
+text that does not parse whole is parsed one expression at a time, so a
+complete prefix runs before an incomplete or invalid suffix. R's `wholeSrcref`
+supplies the consumed physical line and Unicode column, including delimiters;
+the worker maps that position back to the original UTF-8 input rather than
+interpreting R syntax. The byte counter is unsuitable for this because it can
+overcount multibyte input.
 Errors and Stop discard the remaining submitted expressions while keeping
 completed assignments. Normal printing, warnings, task callbacks and the base
 `.Last.value` binding retain ordinary Console behaviour; its original binding
