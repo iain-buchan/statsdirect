@@ -386,10 +386,13 @@ internal sealed partial class RConsoleView : UserControl
     }
     internal async Task ClearOutputAsync()
     {
-        history.RemoveAll(x => x.GetProperty("type").GetString() is "inputEcho" or "output" or "notice" or "plot");
+        // Questions are transcript rows too. The R session owns any live request;
+        // republish it after clearing rather than replaying historical questions.
+        history.RemoveAll(x => x.GetProperty("type").GetString() is "inputRequested" or "inputEcho" or "output" or "notice" or "plot");
         historySize = history.Sum(x => (long)x.GetRawText().Length);
         transcript.Clear();
         await ExecuteAsync("window.StatsDirectRConsole.clearOutput()");
+        Session?.PublishState();
     }
     internal async Task RecoverDisplayAsync()
     {

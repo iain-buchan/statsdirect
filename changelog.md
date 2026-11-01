@@ -7,6 +7,9 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 ### Changed
 - A question R asks in the console appears in the transcript as its own line when it is asked, and stays there when Stop or an error comes before an answer; the answer follows on its own line. A screen reader hears each question once, by its number, from a region of its own, and the input box is announced as the R console input with its prompt; the status line no longer carries the question. The console page is the one the Mac program shares
 
+### Fixed
+- Clear output removes old R questions from the console's replay history, so reloading the display does not bring answered or cancelled questions back. A question R is still waiting for remains available to answer after clearing or reloading the display.
+
 ##[v5.3.1] 2026-11-01
 
 ### Changed

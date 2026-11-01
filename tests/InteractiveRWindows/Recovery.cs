@@ -6,15 +6,77 @@ internal static partial class Program
 {
     static async Task CheckClearOutput(ConsoleHost host)
     {
+        int answered = await host.Submit("clearAnswered <- readline('CLEAR_ANSWER> ')");
+        await host.Prompt(answered, "CLEAR_ANSWER>");
+        await host.Submit("kept");
+        await host.Finished(answered);
+        int cancelled = await host.Submit("clearCancelled <- readline('CLEAR_CANCEL> ')");
+        await host.Prompt(cancelled, "CLEAR_CANCEL>");
+        await host.Stop(cancelled);
+
         var before = await host.Snapshot();
         string source = Text(before, "script"), history = before.GetProperty("history").GetRawText();
+        Check(before.GetProperty("transcript").EnumerateArray().Count(e => Text(e, "kind") == "question") >= 2,
+            "Clear output fixture contains both answered and Stop-cancelled questions");
         await InvokeAsync(host.View, "ClearOutputAsync");
         await host.TwoFrames();
         var after = await host.Snapshot();
         Check(after.GetProperty("transcript").GetArrayLength() == 0 && Text(after, "script") == source && after.GetProperty("history").GetRawText() == history,
             "Clear output removes the transcript while preserving Script and command history");
-        await host.Run("cat('AFTER_CLEAR=',saved,'\\n',sep='')", "AFTER_CLEAR=42");
-        Check(true, "Clear output retains the live R variables");
+        Check(((IEnumerable<JsonElement>)Get(host.View, "History")!).All(e => Kind(e) != "inputRequested"),
+            "Clear output removes completed and cancelled questions from native replay history");
+        int recovery = host.Mark;
+        for (int reload = 0; reload < 2; reload++)
+        {
+            await Reload("ready");
+            after = await host.Snapshot();
+            Check(after.GetProperty("transcript").GetArrayLength() == 0 && Text(after, "script") == source
+                && await host.JS("document.querySelectorAll('.question-entry').length===0&&document.getElementById('question-announcement').textContent===''") == "true",
+                "cleared answered and cancelled questions stay cleared after renderer recovery " + (reload + 1));
+        }
+        Check(host.Since(recovery).All(e => Kind(e) is not ("commandAccepted" or "inputEcho")),
+            "recovering a cleared display does not resubmit commands or replay answers into R");
+        await host.Run("cat('AFTER_CLEAR=',saved==42 && identical(clearAnswered,'kept') && !exists('clearCancelled'),'\\n',sep='')", "AFTER_CLEAR=TRUE");
+        Check(true, "Clear output and repeated recovery retain live variables and the cancelled assignment stays absent");
+
+        int pending = await host.Submit("clearPending <- readline('CLEAR_PENDING> '); cat('CLEAR_PENDING_REPLY=',clearPending,'\\n',sep='')");
+        string requestId = Text(await host.Prompt(pending, "CLEAR_PENDING>"), "requestId");
+        source = Text(await host.Snapshot(), "script");
+        await InvokeAsync(host.View, "ClearOutputAsync");
+        await host.TwoFrames();
+        await CheckPending("clearing output");
+        await Reload("input");
+        await CheckPending("recovering the cleared display");
+        await host.Submit("café β");
+        await host.Finished(pending);
+        Check(host.Output(pending).Contains("CLEAR_PENDING_REPLY=café β", StringComparison.Ordinal),
+            "the original pending request accepts one Unicode answer after Clear output and recovery");
+
+        await InvokeAsync(host.View, "ClearOutputAsync");
+        await Reload("ready");
+        Check((await host.Snapshot()).GetProperty("transcript").GetArrayLength() == 0,
+            "a pending question that was later answered also stays cleared after recovery");
+
+        async Task Reload(string state)
+        {
+            await InvokeAsync(host.View, "RecoverDisplayAsync");
+            var watch = Stopwatch.StartNew();
+            while (Text(await host.Snapshot(), "state") != state)
+            {
+                if (watch.ElapsedMilliseconds > 15000) throw new TimeoutException("The cleared display did not recover its " + state + " state.");
+                await Task.Delay(30);
+            }
+            await host.TwoFrames();
+        }
+        async Task CheckPending(string action)
+        {
+            var snapshot = await host.Snapshot();
+            var questions = snapshot.GetProperty("transcript").EnumerateArray().Where(e => Text(e, "kind") == "question").ToArray();
+            Check(Text(snapshot, "state") == "input" && Text(snapshot, "requestId") == requestId && Text(snapshot, "script") == source
+                && questions.Length == 1 && Text(questions[0], "requestId") == requestId
+                && await host.JS("document.querySelectorAll('.question-entry').length===1") == "true",
+                action + " preserves exactly the live question and its original reply token without duplicating Script");
+        }
     }
     static async Task CheckDisplayRecovery(ConsoleHost host)
     {
