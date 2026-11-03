@@ -34,7 +34,7 @@ capture/restoration around streamed and completed replies. `recovery-port.mjs`
 adds the recovery and R-context bridge behaviour from Mac `cbccc10b591c85e34c6cc9faee9397e7aeb2e017`.
 The 14 October parity update imports the reviewed 12 October lesson refinements
 and guide changes from Mac `5a20b86df2042a88cd96664c960dee6a095cf27d`; dependency
-versions remain pinned. To rebuild it, run `pnpm --dir Learning install --frozen-lockfile` and
+versions remain pinned. To rebuild it, run `pnpm --dir Learning install --frozen-lockfile --ignore-scripts` and
 `node Learning/build.mjs` from the repository root. Commit the generated
 `StatsDirectUI/Assets/Learn/app.js` and refresh the adaptation hashes when changing
 the port. `conversation.mjs` also builds the offline Script/Report AI conversation
@@ -104,6 +104,77 @@ changed or rebuilt for this update.
 Searchable PDF course import uses unmodified PdfPig 0.1.16, Apache-2.0, source
 commit `a7bb35662bbbf405efddad50aedc9bcdcf515afc`. Its full licence and included
 font notices ship in `Assets/Licenses/PdfPig`. OCR is not included.
+
+## Authored built-in tutor content
+
+The Help Editor can maintain the **main built-in tutor**, separately from optional
+provider course packs. Its built-in publisher writes reviewed build inputs to
+`Learning/AuthoredTutor`: `lessons.json`, `questions.json`, `tracks.json`, a static
+`bank.mjs`, `manifest.json` and a short README. The manifest identifies the source
+revision, bank version, file hashes/counts and the changed-item author reviews.
+The original source snapshot has 12 lessons and 35 questions across five named
+pathways, with shared `core` questions; publishing does not add `course:` IDs or
+turn every question into `core`. The existing five pathway IDs must remain so
+saved learning records stay compatible. Optional teaching/example packs are not
+automatically added to the built-in content.
+
+On a clean Windows x64 checkout, install Node.js and pnpm, then run
+`pnpm --dir Learning install --frozen-lockfile --ignore-scripts` from the repository
+root. Only `Learning/node_modules` is needed; do not install separately in the
+pinned upstream copy. The frozen lock includes esbuild's matching Windows x64
+optional executable package, which the real build uses without its postinstall
+script. `--ignore-scripts` avoids pnpm's build-script approval error while keeping
+the recorded dependency versions and integrity checks intact. The clean-install
+check was run with Node 24.22.1 and pnpm 11.25.0.
+
+`node Learning/build.mjs` validates an authored manifest before changing assets.
+When present, its verified lesson and question data replace the corresponding
+inputs to the normal Learning bundle. The native host's
+`StatsDirectUI/Assets/Learn/lessons.json` is updated from the same validated
+snapshot. The existing Windows selection/recovery adaptations and conversation
+renderer remain in use. Both JavaScript bundles must build successfully before
+the three generated assets are replaced. Missing, malformed, incomplete or
+unreviewed authored content stops the build; it never silently selects older
+checked-in material. Without an authored manifest, ordinary `npm run build` in
+`Learning` retains the existing upstream-source route.
+
+For the application build hook, `node Learning/build.mjs --authored-if-needed`
+performs the same validation, then reuses generated assets only when their hashes
+and the complete recorded build inputs still match. Its local receipt is
+`Learning/obj/authored-tutor-build.json` (ignored by Git). Changing source,
+adaptation scripts, dependency locks, a consumed dependency or any generated
+output forces regeneration. A sibling `.AuthoredTutor.publishing` marker means
+the editor has not finished promoting its source folder: builds stop until that
+operation finishes. The helper never runs R, publishes a release or updates the
+pinned `Learning/upstream` files or their historical provenance lock.
+
+Authored builds also apply the guarded `authored-review-port.mjs` adaptation to
+the pinned lesson guide. Its footer displays the lesson's recorded authorship,
+review status, date and reviewer, escaped as text. It makes no default original
+authorship or AI-review claim and shows draft status even without references.
+An unexpected upstream template change stops the build for explicit review.
+
+Run the ingestion checks with `node --test Learning/authored-tutor.test.mjs`.
+Run the rendered review-label checks with `node --test Learning/authored-review-port.test.mjs`.
+They use isolated fixtures and do not replace application assets. Existing shared
+content/R checks remain important; a legitimate change to a worked example may
+require an independently reviewed update to its expected numerical fixtures.
+Neither a valid manifest nor an author-review label independently certifies the
+statistical content, examination readiness or CPD accreditation.
+
+`node --test Learning/authored-build.test.mjs` executes the real build in an
+isolated temporary repository using the existing pinned local dependencies.
+It checks content ingestion, pathway/question identity, invalid publication,
+incremental rebuilding, compile failures and interrupted output replacement.
+Source and dependency bytes are rechecked before promotion. A failed replacement
+or receipt write restores the previous complete output using transient staging;
+the staging files are removed after success or failure. No rollback build is kept.
+To include the compiled browser MCQ/reload checks, set
+`STATSDIRECT_PLAYWRIGHT_PATH` to an installed Playwright package and optionally
+`STATSDIRECT_BROWSER_CHANNEL` (default `msedge`). The browser check is explicitly
+skipped when the package path is absent. Set `STATSDIRECT_AUTHORED_TEST_EVIDENCE`
+to retain the isolated build log and browser screenshots; generated test builds
+are deleted. These checks never replace the checkout's application assets.
 
 ## First-use ChatGPT setup
 

@@ -25,9 +25,9 @@
     mod
   ));
 
-  // Learning/upstream/Learn/node_modules/.pnpm/highlight.js@11.12.0/node_modules/highlight.js/lib/core.js
+  // upstream/Learn/node_modules/.pnpm/highlight.js@11.12.0/node_modules/highlight.js/lib/core.js
   var require_core = __commonJS({
-    "Learning/upstream/Learn/node_modules/.pnpm/highlight.js@11.12.0/node_modules/highlight.js/lib/core.js"(exports, module) {
+    "upstream/Learn/node_modules/.pnpm/highlight.js@11.12.0/node_modules/highlight.js/lib/core.js"(exports, module) {
       function deepFreeze(obj) {
         if (obj instanceof Map) {
           obj.clear = obj.delete = obj.set = function() {
@@ -1579,7 +1579,7 @@
     }
   });
 
-  // Learning/node_modules/marked/lib/marked.esm.js
+  // node_modules/marked/lib/marked.esm.js
   function getDefaults() {
     return {
       async: false,
@@ -3741,7 +3741,7 @@ ${content}</tr>
   var parser = Parser.parse;
   var lexer = Lexer.lex;
 
-  // Learning/upstream/Learn/node_modules/.pnpm/dompurify@3.4.17/node_modules/dompurify/dist/purify.es.mjs
+  // upstream/Learn/node_modules/.pnpm/dompurify@3.4.17/node_modules/dompurify/dist/purify.es.mjs
   function _OverloadYield(e, d) {
     this.v = e, this.k = d;
   }
@@ -5798,7 +5798,7 @@ ${content}</tr>
   }
   var purify_default = createDOMPurify();
 
-  // Learning/upstream/Learn/node_modules/.pnpm/katex@0.19.0/node_modules/katex/dist/katex.mjs
+  // upstream/Learn/node_modules/.pnpm/katex@0.19.0/node_modules/katex/dist/katex.mjs
   var ParseError = class _ParseError extends Error {
     // The underlying error message without any context added.
     constructor(message, token) {
@@ -20006,11 +20006,11 @@ ${content}</tr>
     __domTree
   };
 
-  // Learning/upstream/Learn/node_modules/.pnpm/highlight.js@11.12.0/node_modules/highlight.js/es/core.js
+  // upstream/Learn/node_modules/.pnpm/highlight.js@11.12.0/node_modules/highlight.js/es/core.js
   var import_core = __toESM(require_core(), 1);
   var core_default = import_core.default;
 
-  // Learning/upstream/Learn/node_modules/.pnpm/highlight.js@11.12.0/node_modules/highlight.js/es/languages/r.js
+  // upstream/Learn/node_modules/.pnpm/highlight.js@11.12.0/node_modules/highlight.js/es/languages/r.js
   function r(hljs) {
     const regex = hljs.regex;
     const IDENT_RE = /(?:(?:[a-zA-Z]|\.[._a-zA-Z])[._a-zA-Z0-9]*)|\.(?!\d)/;
@@ -20220,7 +20220,7 @@ ${content}</tr>
     };
   }
 
-  // Learning/upstream/Learn/rich-text.mjs
+  // upstream/Learn/rich-text.mjs
   core_default.registerLanguage("r", r);
   var esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
   var math2 = (text3, displayMode) => katex.renderToString(text3, { displayMode, throwOnError: false, trust: false, strict: "ignore", maxExpand: 500, maxSize: 20 });
@@ -20244,7 +20244,7 @@ ${content}</tr>
     return purify_default.sanitize(marked.parse(String(text3)), { USE_PROFILES: { html: true, mathMl: true, svg: true }, FORBID_TAGS: ["img", "video", "audio", "iframe", "style", "form", "input", "textarea", "select"], FORBID_ATTR: ["id", "name"], ALLOW_DATA_ATTR: true });
   }
 
-  // Learning/conversation.mjs
+  // conversation.mjs
   (() => {
     const container = document.getElementById("conversation");
     const post = (message) => {

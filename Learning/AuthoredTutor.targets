@@ -1,0 +1,16 @@
+<Project>
+  <!-- Author-maintained tutor data are optional. Pinned upstream sources remain intact. -->
+  <PropertyGroup Condition="Exists('$(MSBuildThisFileDirectory)AuthoredTutor/manifest.json')">
+    <!-- Visual Studio must enter MSBuild to validate content outside the UI project. -->
+    <DisableFastUpToDateCheck>true</DisableFastUpToDateCheck>
+  </PropertyGroup>
+  <ItemGroup>
+    <UpToDateCheckInput Include="$(MSBuildThisFileDirectory)AuthoredTutor/manifest.json;$(MSBuildThisFileDirectory)AuthoredTutor/lessons.json;$(MSBuildThisFileDirectory)AuthoredTutor/questions.json;$(MSBuildThisFileDirectory)AuthoredTutor/tracks.json;$(MSBuildThisFileDirectory)AuthoredTutor/bank.mjs;$(MSBuildThisFileDirectory)build.mjs;$(MSBuildThisFileDirectory)authored-tutor.mjs;$(MSBuildThisFileDirectory)authored-review-port.mjs" />
+  </ItemGroup>
+  <Target Name="BuildAuthoredTutor" BeforeTargets="BeforeBuild"
+    Condition="'$(DesignTimeBuild)' != 'true' and (Exists('$(MSBuildThisFileDirectory)AuthoredTutor/manifest.json') or Exists('$(MSBuildThisFileDirectory).AuthoredTutor.publishing'))">
+    <Error Condition="!Exists('$(MSBuildThisFileDirectory)node_modules/esbuild/package.json')"
+      Text="The authored StatsDirect tutor needs its pinned web build dependencies. Install Node.js and pnpm, then run pnpm --dir Learning install --frozen-lockfile --ignore-scripts from the repository root and build again. The previous tutor is not a substitute for the maintained sources." />
+    <Exec Command="node &quot;$(MSBuildThisFileDirectory)build.mjs&quot; --authored-if-needed" WorkingDirectory="$(MSBuildThisFileDirectory)" />
+  </Target>
+</Project>
