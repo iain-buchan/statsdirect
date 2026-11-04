@@ -4,6 +4,8 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import crypto from 'node:crypto';
+import { build } from 'esbuild';
+import { fileURLToPath } from 'node:url';
 import { resolveAuthoredTutor, parseStaticBank, authoredBuildInputs, authoredBuildIsCurrent, assertAuthoredBuildInputsUnchanged, recordAuthoredBuild, authoredOutputs, atomicWrite, promoteBuildOutputs } from './authored-tutor.mjs';
 
 const hash = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
@@ -45,6 +47,71 @@ test('valid authored data preserves static question identity, pathways and froze
   assert.equal(parseStaticBank(data.texts['bank.mjs']).tracks.analyst.title, 'Healthcare analyst');
   await f.write('Learning/AuthoredTutor/lessons.json', 'later change');
   assert.equal(JSON.parse(data.texts['lessons.json'])[0].id, 'L1');
+}));
+
+test('optional question classifications preserve multiple goals without changing the existing pathway or legacy records', () => fixture(async f => {
+  let state = await resolveAuthoredTutor(f.root);
+  assert.equal(Object.hasOwn(JSON.parse(state.texts['questions.json'])[0], 'difficulty'), false);
+  await recordAuthoredBuild(f.root, state, await authoredBuildInputs(f.root, state));
+  for (const difficulty of ['beginner', 'intermediate', 'advanced']) {
+    Object.assign(f.question, { difficulty, learnerGoals: ['undergraduateMedicine', 'mastersStatistics', 'usMedicalBoards'], learnerGoalNotes: 'Author-estimated difficulty; tailor the specialty and exam stage before use.' });
+    f.lessons[0].practiceQuestions = [structuredClone(f.question)]; await f.publish(); state = await resolveAuthoredTutor(f.root);
+    const rootQuestion = JSON.parse(state.texts['questions.json'])[0], bankQuestion = parseStaticBank(state.texts['bank.mjs']).questions[0];
+    assert.deepEqual(rootQuestion, f.question); assert.deepEqual(bankQuestion, f.question);
+    assert.deepEqual(JSON.parse(state.texts['lessons.json'])[0].practiceQuestions[0], f.question);
+    assert.equal(bankQuestion.track, 'medicine');
+    assert.equal(await authoredBuildIsCurrent(f.root, state, await authoredBuildInputs(f.root, state)), false, 'classification-only edits must invalidate the prior compiled-content receipt');
+  }
+  Object.assign(f.question, { learnerGoals: ['undergraduateMedicine', 'undergraduateHealthScience', 'postgraduateMedicine', 'postgraduateAlliedHealth', 'publicHealth', 'healthcareBusinessAnalyst', 'mastersStatistics', 'usMedicalBoards'], learnerGoalNotes: 'x'.repeat(3000) });
+  f.lessons[0].practiceQuestions = [structuredClone(f.question)]; await f.publish();
+  assert.equal(parseStaticBank((await resolveAuthoredTutor(f.root)).texts['bank.mjs']).questions[0].learnerGoals.length, 8);
+  Object.assign(f.question, { difficulty: null, learnerGoals: null, learnerGoalNotes: null });
+  f.lessons[0].practiceQuestions = [structuredClone(f.question)]; await f.publish();
+  assert.equal(parseStaticBank((await resolveAuthoredTutor(f.root)).texts['bank.mjs']).questions[0].difficulty, null);
+  Object.assign(f.question, { learnerGoals: [], learnerGoalNotes: '' });
+  f.lessons[0].practiceQuestions = [structuredClone(f.question)]; await f.publish();
+  assert.deepEqual(parseStaticBank((await resolveAuthoredTutor(f.root)).texts['bank.mjs']).questions[0].learnerGoals, []);
+}));
+
+test('malformed classification shapes, unknown goals, duplicates and excessive notes fail before outputs change', () => fixture(async f => {
+  const prior = await Promise.all(authoredOutputs.map(file => fs.readFile(path.join(f.root, file))));
+  for (const [key, values, pattern] of [
+    ['difficulty', ['', 'Advanced', 'beginner\n', 2, {}, []], /question difficulty/],
+    ['learnerGoals', ['undergraduateMedicine', {}, [42], ['unknownGoal'], ['publicHealth', 'publicHealth'], Array(9).fill('publicHealth')], /question learnerGoals/],
+    ['learnerGoalNotes', [42, {}, [], 'x'.repeat(3001)], /question learnerGoalNotes/]
+  ]) {
+    for (const value of values) {
+      f.question[key] = value; f.lessons[0].practiceQuestions = [structuredClone(f.question)]; await f.publish();
+      await assert.rejects(resolveAuthoredTutor(f.root), pattern, key + ': ' + JSON.stringify(value)); delete f.question[key];
+      assert.deepEqual(await Promise.all(authoredOutputs.map(file => fs.readFile(path.join(f.root, file)))), prior);
+    }
+  }
+}));
+
+test('actual provider conversion, learner attempts, restore and JSON record exports retain question classifications', () => fixture(async f => {
+  Object.assign(f.question, { difficulty: 'advanced', learnerGoals: ['healthcareBusinessAnalyst', 'publicHealth'], learnerGoalNotes: 'Case-mix reasoning for a local health-service course.' });
+  f.lessons[0].practiceQuestions = [structuredClone(f.question)]; await f.publish();
+  const bundle = await build({ stdin: { contents: "export {createSession,recordAnswer} from './upstream/Learn/quiz.mjs'; export {newPortfolio,restorePortfolio,reviewRecord,reviewText} from './upstream/Learn/portfolio.mjs'; export {courseQuestions} from './upstream/Learn/provider-course.mjs';", resolveDir: fileURLToPath(new URL('./', import.meta.url)), sourcefile: 'classification-runtime-check.mjs' }, bundle: true, write: false, format: 'esm', platform: 'node', plugins: [{ name: 'isolated-authored-bank', setup(b) { b.onResolve({ filter: /^\.\/bank\.mjs$/ }, () => ({ path: path.join(f.authored, 'bank.mjs') })); } }] });
+  const runtime = await import('data:text/javascript;base64,' + Buffer.from(bundle.outputFiles[0].contents).toString('base64'));
+  const expected = { difficulty: f.question.difficulty, learnerGoals: f.question.learnerGoals, learnerGoalNotes: f.question.learnerGoalNotes };
+  const classifications = question => Object.fromEntries(Object.keys(expected).map(key => [key, question[key]]));
+  const provider = { schemaVersion: 2, id: 'local-health', version: '1', title: 'Local health course', questions: [f.question] };
+  const converted = runtime.courseQuestions(provider);
+  assert.deepEqual(classifications(converted[0]), expected); assert.equal(converted[0].track, 'core');
+  for (const pack of [null, { version: '1', questions: converted, course: { key: 'local-health:1', title: 'Local health course', version: '1', provider: 'Local author' } }]) {
+    const session = runtime.createSession('medicine', 'learn', crypto.randomUUID(), pack);
+    assert.deepEqual(classifications(session.questionSnapshots[0]), expected);
+    runtime.recordAnswer(session, session.questionIds[0], 'A', 'fairly');
+    const portfolio = runtime.newPortfolio(); portfolio.profile = 'medicine'; portfolio.quiz = session;
+    const restored = runtime.restorePortfolio(JSON.parse(JSON.stringify(portfolio)));
+    assert.deepEqual(classifications(restored.quiz.questionSnapshots[0]), expected);
+    const exported = JSON.parse(JSON.stringify(runtime.reviewRecord(restored)));
+    assert.deepEqual(classifications(exported.attempts[0].questionSnapshots[0]), expected);
+    assert.equal(exported.attempts[0].result.score, 1);
+    // Existing readable reports enumerate selected fields; JSON is the complete
+    // classification-preserving evidence route until a learner UI is requested.
+    assert.ok(!runtime.reviewText(exported).includes(expected.learnerGoalNotes));
+  }
 }));
 test('no manifest retains ordinary upstream fallback and an active publication never falls back', () => fixture(async f => {
   await fs.unlink(path.join(f.authored, 'manifest.json'));

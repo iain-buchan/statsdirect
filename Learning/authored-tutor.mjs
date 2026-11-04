@@ -14,7 +14,14 @@ const text = (value, maximum, required = true) => typeof value === 'string' && v
 const object = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 const canonical = value => Array.isArray(value) ? value.map(canonical) : object(value) ? Object.fromEntries(Object.keys(value).sort().map(key => [key, canonical(value[key])])) : value;
 const same = (a, b) => JSON.stringify(canonical(a)) === JSON.stringify(canonical(b));
+const difficultyLevels = new Set(['beginner', 'intermediate', 'advanced']);
+const learnerGoalIDs = new Set(['undergraduateMedicine', 'undergraduateHealthScience', 'postgraduateMedicine', 'postgraduateAlliedHealth', 'publicHealth', 'healthcareBusinessAnalyst', 'mastersStatistics', 'usMedicalBoards']);
 function requireThat(test, message) { if (!test) throw Error('Authored tutor: ' + message); }
+function validateQuestionTargets(question) {
+  requireThat(question.difficulty == null || difficultyLevels.has(question.difficulty), 'a question difficulty must be beginner, intermediate or advanced when assigned: ' + question.id);
+  requireThat(question.learnerGoals == null || Array.isArray(question.learnerGoals) && question.learnerGoals.length <= 8 && question.learnerGoals.every(goal => learnerGoalIDs.has(goal)) && new Set(question.learnerGoals).size === question.learnerGoals.length, 'question learnerGoals must be at most eight unique recognised goal IDs: ' + question.id);
+  requireThat(question.learnerGoalNotes == null || text(question.learnerGoalNotes, 3000, false), 'question learnerGoalNotes must be text of at most 3000 characters: ' + question.id);
+}
 function localPath(repoRoot, relative) {
   requireThat(typeof relative === 'string' && relative.length > 0 && !path.isAbsolute(relative), 'expected a repository-relative path.');
   const full = path.resolve(repoRoot, relative), base = path.resolve(repoRoot);
@@ -80,6 +87,7 @@ function validateData(manifest, lessons, questions, tracks) {
   };
   for (const lesson of lessons) visit(lesson.id);
   for (const question of questions) {
+    validateQuestionTargets(question);
     requireThat(Number.isInteger(question.version) && question.version > 0 && text(question.stem, 6000) && text(question.explanation, 10000), 'a question is missing a version, stem or explanation: ' + question.id);
     requireThat(['topic', 'hint', 'lesson', 'help'].every(key => typeof question[key] === 'string'), 'a built-in question needs string topic, hint, lesson and help fields for practice and saved-record compatibility: ' + question.id);
     requireThat(question.track === 'core' || Object.hasOwn(tracks, question.track), 'a question has an unknown pathway: ' + question.id);
