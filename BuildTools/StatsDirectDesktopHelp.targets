@@ -1,0 +1,5 @@
+<Project>
+  <Target Name="CheckStatsDirectDesktopHelpPublication" BeforeTargets="BeforeBuild;GetCopyToOutputDirectoryItems;CopyFilesToOutputDirectory">
+    <Error Condition="Exists('$(MSBuildThisFileDirectory)../.statsdirect-desktop-help.publishing.json')" Text="Desktop help publication is incomplete. Recover or finish it with StatsDirect Help Editor before building StatsDirect." />
+  </Target>
+</Project>

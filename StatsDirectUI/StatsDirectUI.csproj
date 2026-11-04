@@ -131,4 +131,5 @@
     <Delete Files="@(_RetiredReportArtifact)" />
   </Target>
   <Import Project="../Learning/AuthoredTutor.targets" />
+  <Import Project="../BuildTools/StatsDirectDesktopHelp.targets" />
 </Project>
