@@ -1,0 +1,6 @@
+{
+  "schemaVersion": 1,
+  "adoptedAtUtc": "2026-11-05T08:21:40.6519241+00:00",
+  "previousFlareSha256": "a810d0ab4bffb980705753ba872abc8aa3915f771b90bbe268eab7bccc6c5794",
+  "reason": "Iain authorised the first Windows help delivery on 5 November 2026. The generated local edits match Flare output and the equations are present in the maintained source."
+}

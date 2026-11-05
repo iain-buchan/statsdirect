@@ -12,3 +12,5 @@ StatsDirectUI/Assets/Tutor/** -text
 StatsDirectUI/Assets/Brand/** -text
 StatsDirectUI/Assets/Licenses/OpenAI/** -text
 StatsDirectUI/Assets/R/data-files.R -text
+# Preserve the generated desktop help bytes recorded by its delivery receipt.
+StatsDirectUI/Assets/Help/** -text
