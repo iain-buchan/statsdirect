@@ -32,3 +32,6 @@ ReportEditor/upstream/Report/node_modules/
 /StatsDirectUI/Assets/Help/**/*.output
 /StatsDirectUI/Assets/Help/**/*.log.zip
 /StatsDirectUI/Assets/Help/**/*.mclog
+
+# In-progress help publication is local transaction state; the build guard still checks it.
+/.statsdirect-desktop-help.publishing.json

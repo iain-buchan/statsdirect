@@ -74,8 +74,9 @@
   </ItemGroup>
   <ItemGroup>
     <!-- The mapping workbook is a note for whoever maintains the help and does not belong on users' machines. Nor do the build records that
-         MadCap Flare leaves when it publishes the HTML help (Data/*.output, *.log.zip), the retired CHM, or the retired Excel link. -->
-    <ContentWithTargetPath Include="Assets/**" Exclude="Assets/Excel/**;Assets/SD Help ID to File Name Mapping.xlsx;Assets/Data/*.output;Assets/*.log.zip;Assets/**/*.chm;Assets/**/*.chw;Assets/Help/**/*.output;Assets/Help/**/*.mclog;Assets/Help/**/*.log.zip">
+         MadCap Flare leaves when it publishes the HTML help (Data/*.output, *.log.zip), the retired CHM, or the retired Excel link.
+         Help Editor publication receipts stay in the source tree for verification. Keep its reader CSS, MathJax and equation artwork. -->
+    <ContentWithTargetPath Include="Assets/**" Exclude="Assets/Excel/**;Assets/SD Help ID to File Name Mapping.xlsx;Assets/Data/*.output;Assets/*.log.zip;Assets/**/*.chm;Assets/**/*.chw;Assets/Help/**/*.output;Assets/Help/**/*.mclog;Assets/Help/**/*.log.zip;Assets/Help/.statsdirect-*.json;Assets/Help/build-info.json;Assets/Help/resources/help-editor-runtime/publication.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <TargetPath>%(RecursiveDir)\%(Filename)%(Extension)</TargetPath>
     </ContentWithTargetPath>
@@ -122,11 +123,11 @@
   </Target>
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
   </Target>
-  <!-- Incremental builds can retain dependencies removed from the project. Do
-       not leave the retired editor next to the new application or in publish. -->
+  <!-- Incremental builds can retain files removed from the content list. Do
+       not leave retired editor files or help publication controls in the application output. -->
   <Target Name="RemoveRetiredReportArtifacts" AfterTargets="CopyFilesToOutputDirectory">
     <ItemGroup>
-      <_RetiredReportArtifact Include="$(OutDir)**/DevExpress*;$(OutDir)Template/blank.rtf;$(OutDir)**/*.chm;$(OutDir)**/*.chw" />
+      <_RetiredReportArtifact Include="$(OutDir)**/DevExpress*;$(OutDir)Template/blank.rtf;$(OutDir)**/*.chm;$(OutDir)**/*.chw;$(OutDir)Help/.statsdirect-*.json;$(OutDir)Help/build-info.json;$(OutDir)Help/resources/help-editor-runtime/publication.json" />
     </ItemGroup>
     <Delete Files="@(_RetiredReportArtifact)" />
   </Target>
