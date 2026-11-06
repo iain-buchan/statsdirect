@@ -21904,7 +21904,7 @@ ${x.verification}`)).join("")) + section("Reflection", para(r2.reflection || "No
 
   // Shared/Learning/quiz.mjs
   var { bankVersion: bankVersion2, questions: questions2, tracks: tracks2 } = bank_exports;
-  var bankPublication2 = void 0 ?? null;
+  var bankPublication = Reflect.get(bank_exports, "bankPublication") ?? null;
   function createSession(track, mode, id = crypto.randomUUID(), providerPack = null) {
     if (!tracks2[track] || !["learn", "test"].includes(mode)) throw new Error("Choose a valid learning path and mode.");
     const selected = providerPack?.questions ?? questions2.filter((q) => q.track === track || q.track === "core");
@@ -21914,7 +21914,7 @@ ${x.verification}`)).join("")) + section("Reflection", para(r2.reflection || "No
       track,
       mode,
       bankVersion: providerPack?.version ?? bankVersion2,
-      contentPublication: providerPack ? null : structuredClone(bankPublication2),
+      contentPublication: providerPack ? null : structuredClone(bankPublication),
       course: providerPack?.course ?? null,
       startedAt: (/* @__PURE__ */ new Date()).toISOString(),
       completedAt: null,
