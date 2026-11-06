@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "format": "statsdirect-desktop-help-v1",
-  "publishedAtUtc": "2026-11-05T08:21:13.4787715+00:00",
-  "sourceSha256": "c1e40618d52b267364dfcff34e35701a53672fe8ac77c3156cf1dbf2d48f2b16",
+  "publishedAtUtc": "2026-11-06T07:36:51.2715555+00:00",
+  "sourceSha256": "2a66386877482ce2baa7d4e9c2b06eade5a865162b8bc8ecec7a112dd77b887e",
   "entryPage": "index.html",
   "topicCount": 404,
   "searchDocumentCount": 403,
@@ -2030,14 +2030,14 @@
   ],
   "aliasSourceSha256": "1b982112068d44a22dbe95a98db37b6cb08abb54a29927d112e32fb65db5ddcf",
   "contextHeaderSha256": "65a27d8c45a47b3ec913e0aa3b85d7166527d716cc3ffa6861a725ffcb804099",
-  "previousKind": "FlareNeedsAdoption",
-  "previousSha256": "a810d0ab4bffb980705753ba872abc8aa3915f771b90bbe268eab7bccc6c5794",
-  "adoptedFlareOutput": true,
+  "previousKind": "PortableArtifact",
+  "previousSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "adoptedFlareOutput": false,
   "files": [
     {
       "path": ".statsdirect-help-output.json",
-      "bytes": 55031,
-      "sha256": "14fce3ded0771cb1d490c1e70b700e1e5902864a28edb34963271113d873d162"
+      "bytes": 55080,
+      "sha256": "7d89727a9f09f4c42b4576d8da9a1c3d297d4e7e9b7cf6350747152bab8f79fd"
     },
     {
       "path": "Data/Alias.xml",
@@ -2201,8 +2201,8 @@
     },
     {
       "path": "basics/confidence_interval.htm",
-      "bytes": 9589,
-      "sha256": "409b956e306cc0595880239e733902a6b22a5a79ba6b198a0e0fd77a2682caf1"
+      "bytes": 9617,
+      "sha256": "cac79273e153574a6e19ed63e97bbc6b166e24ec503ff7dcfad6a8623d62638c"
     },
     {
       "path": "basics/confounding.htm",
@@ -2307,7 +2307,7 @@
     {
       "path": "build-info.json",
       "bytes": 228,
-      "sha256": "9063d693a7f19b9f09d330cfe0d3847ecb7e410ac50e64d0f6b4bbd8aa4dbd60"
+      "sha256": "ffbe257793b0f38da214b00f693f0ada7fc37324f553bda68213bc142e79f17c"
     },
     {
       "path": "chi_square_tests/22.htm",
@@ -5490,6 +5490,11 @@
       "sha256": "9fef48d868277a8bc1852f7ba796b33ead812d38916a7131b0a29ea48961a6a4"
     },
     {
+      "path": "resources/help-editor-runtime/publication.json",
+      "bytes": 137,
+      "sha256": "e5ff5105181b554db12ea85972fa91b17dc94d7fc057435a15104a9907a88a4c"
+    },
+    {
       "path": "resources/help-editor-runtime/topic.css",
       "bytes": 3743,
       "sha256": "c9b92221e8cf77b710f31dffbc407a51c78e929c3f514884cf7d7a93c273d92b"
@@ -6405,5 +6410,5 @@
       "sha256": "2a091e49f8555d32ad8cafc6cf79aa4888cbba65c3a38214f4c662ee5bd4e172"
     }
   ],
-  "publicationSnapshotSha256": null
+  "publicationSnapshotSha256": "2e2dd87ebe53ee063d477c7022ae9aa339284be5cc9c927fc41cfa641ffedc85"
 }
