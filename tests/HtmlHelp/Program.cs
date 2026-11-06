@@ -64,10 +64,10 @@ internal static class Program
         contentHost.Show(owner);
         await help.Ready.WaitAsync(TimeSpan.FromSeconds(45));
         await Loaded("/parametric_methods/paired_t.htm");
-        await Until("!!document.querySelector('.MCDropDownHotSpot') && document.querySelector('.MCDropDownBody').offsetHeight === 0");
+        await Until("!!document.querySelector('details.rcode > summary') && !document.querySelector('details.rcode').open");
         Check((await Js("document.body.innerText.includes('Paired')")).GetBoolean(), "context topic renders in WebView2");
-        await Js("document.querySelector('.MCDropDownHotSpot').click()");
-        await Until("document.querySelector('.MCDropDownBody').offsetHeight > 0");
+        await Js("document.querySelector('details.rcode > summary').click()");
+        await Until("document.querySelector('details.rcode').open && document.querySelector('pre.rcode').offsetHeight > 0");
         Check((await Js("document.querySelector('pre.rcode').textContent.includes('t.test')")).GetBoolean(), "R code expands and retains executable example text");
         await Until("[...document.images].filter(i=>!i.src.endsWith('transparent.gif')).every(i=>i.complete && i.naturalWidth > 0)");
         Check(true, "topic images and generated equations load offline");
@@ -81,11 +81,11 @@ internal static class Program
         await Loaded("/parametric_methods/paired_t.htm");
         Check(help.Browser.CoreWebView2.CanGoForward, "back/forward history retains the analysis topic");
         help.Search("paired t");
-        await Until("location.pathname === '/search.htm' && document.body.innerText.toLowerCase().includes('paired') && document.querySelectorAll('#resultList li, .search-result').length > 0");
+        await Until("location.hash.includes('searchQuery=') && document.body.innerText.toLowerCase().includes('paired') && document.querySelectorAll('a.result').length > 0");
         Check(true, "full-text search returns offline results");
         using (var png = File.Create(Path.Combine(output, "search-help.png"))) await help.Browser.CoreWebView2.CapturePreviewAsync(CoreWebView2CapturePreviewImageFormat.Png, png);
-        await Js("document.querySelector('#resultList a, .search-result a').click()");
-        await Until("location.pathname !== '/search.htm' && document.readyState === 'complete'");
+        await Js("document.querySelector('a.result').click()");
+        await Until("(!location.pathname.endsWith('/index.html') || new URLSearchParams(location.hash.slice(1)).has('topic')) && document.readyState === 'complete'");
         Check(true, "search result opens its help topic");
         help.ShowTopic("1239");
         await Loaded("/parametric_methods/paired_t.htm");
@@ -127,15 +127,15 @@ internal static class Program
         service.Show(owner, "1239", assets);
         await Loaded("/parametric_methods/paired_t.htm");
         Check(ReferenceEquals(help, service.View), "repeat context requests reuse the same browser view");
-        await Js("document.querySelector('.MCDropDownHotSpot').click(); window.dockTestToken='persistent'; document.querySelector('pre.rcode').scrollIntoView();");
-        await Until("document.querySelector('.MCDropDownBody').offsetHeight > 0");
+        await Js("document.querySelector('details.rcode > summary').click(); window.dockTestToken='persistent'; document.querySelector('pre.rcode').scrollIntoView();");
+        await Until("document.querySelector('details.rcode').open && document.querySelector('pre.rcode').offsetHeight > 0");
         var browser = help.Browser.CoreWebView2;
         await service.ToggleModeAsync();
         await Task.Delay(150);
         Check(!service.IsDocked && service.Window?.Owner == owner && mdi.Width == fullWidth, "Pop out restores full workspace width and opens one owned help window");
         Check(Screen.FromControl(owner).WorkingArea.Contains(service.Window.Bounds), "floating help fits its monitor after DPI scaling");
         service.Window.Location = new Point(-15000, -15000);
-        Check(ReferenceEquals(browser, help.Browser.CoreWebView2) && (await Js("window.dockTestToken === 'persistent' && document.querySelector('.MCDropDownBody').offsetHeight > 0")).GetBoolean(), "Pop out preserves the browser, page and expanded R example without reload");
+        Check(ReferenceEquals(browser, help.Browser.CoreWebView2) && (await Js("window.dockTestToken === 'persistent' && document.querySelector('details.rcode').open && document.querySelector('pre.rcode').offsetHeight > 0")).GetBoolean(), "Pop out preserves the browser, page and expanded R example without reload");
         await service.ToggleModeAsync();
         await Task.Delay(150);
         Check(service.IsDocked && service.Window == null && help.Browser.CoreWebView2.CanGoBack && (await Js("window.dockTestToken === 'persistent'")).GetBoolean(), "Dock returns the same page/session/history to the workspace");
@@ -181,8 +181,8 @@ internal static class Program
                 await help.Ready.WaitAsync(TimeSpan.FromSeconds(45));
                 await Loaded("/parametric_methods/paired_t.htm");
                 Check(help.Enabled && service.Window.Owner == modal && modal.Enabled && service.IsTemporary, "help temporarily floats and stays interactive alongside a modal parameter dialog");
-                await Js("if (document.querySelector('.MCDropDownBody').offsetHeight === 0) document.querySelector('.MCDropDownHotSpot').click()");
-                await Until("document.querySelector('.MCDropDownBody').offsetHeight > 0");
+                await Js("if (!document.querySelector('details.rcode').open) document.querySelector('details.rcode > summary').click()");
+                await Until("document.querySelector('details.rcode').open && document.querySelector('pre.rcode').offsetHeight > 0");
                 Check(true, "R dropdown remains usable during a modal dialog");
             }
             catch (Exception ex) { modalError = ex; }
