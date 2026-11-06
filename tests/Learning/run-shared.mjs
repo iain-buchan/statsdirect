@@ -11,8 +11,9 @@ import {spawnSync} from 'node:child_process';
 const repo=fileURLToPath(new URL('../../',import.meta.url));
 const r=process.env.STATSDIRECT_RSCRIPT;
 if(!r||!fs.existsSync(r))throw Error('Set STATSDIRECT_RSCRIPT to the installed Windows Rscript.exe.');
-const packageRoot=path.join(repo,'Learning/Shared/Learning');
-if(!fs.existsSync(path.join(packageRoot,'app.mjs')))throw Error('The Learning package is missing; run git submodule update --init Learning/Shared.');
+// STATSDIRECT_LEARNING_PACKAGE names another copy of the package, to test a candidate before the pin moves.
+const packageRoot=process.env.STATSDIRECT_LEARNING_PACKAGE?path.resolve(process.env.STATSDIRECT_LEARNING_PACKAGE):path.join(repo,'Learning/Shared/Learning');
+if(!fs.existsSync(path.join(packageRoot,'app.mjs')))throw Error('The Learning package is missing at '+packageRoot+'; run git submodule update --init Learning/Shared.');
 const scratch=fs.mkdtempSync(path.join(os.tmpdir(),'StatsDirect-shared-learning-'));
 try{
   // The whole package, unchanged, plus the host's bank shim where the package imports './bank.mjs'.
@@ -36,7 +37,7 @@ try{
   fs.writeFileSync(path.join(scratch,'Content/analysis-menu.json'),JSON.stringify({operations}));
   const tests=fs.readdirSync(path.join(scratch,'Learn')).filter(f=>f.endsWith('.test.mjs'));
   const env={...process.env,STATSDIRECT_RSCRIPT:r,STATSDIRECT_CONTENT_ROOT:path.join(scratch,'Content')};
-  delete env.STATSDIRECT_LEARN_ARCHIVE; // Windows keeps no archived bank; unset skips that comparison by the package's rule.
+  // Windows keeps no archived bank, so STATSDIRECT_LEARN_ARCHIVE is normally unset and that comparison is skipped by the package's rule; a named archive passes through.
   const result=spawnSync(process.execPath,['--test',...tests.map(f=>path.join(scratch,'Learn',f))],{stdio:'inherit',cwd:scratch,env});
   if(result.error)throw result.error;process.exitCode=result.status??1;
 }finally{
