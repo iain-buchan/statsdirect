@@ -1,4 +1,4 @@
-// Run the shared Learning tests (Learning/Upstream/Learning, the package pinned by the submodule)
+// Run the shared Learning tests (Learning/Shared/Learning, the package pinned by the submodule)
 // against Windows' shipped lessons, help and operation definitions, the way the package README
 // describes a host running them: from a root of the host's own, with the host's bank shim beside
 // the package, the host's node_modules above it, and the three variables set. No test file is
@@ -11,8 +11,8 @@ import {spawnSync} from 'node:child_process';
 const repo=fileURLToPath(new URL('../../',import.meta.url));
 const r=process.env.STATSDIRECT_RSCRIPT;
 if(!r||!fs.existsSync(r))throw Error('Set STATSDIRECT_RSCRIPT to the installed Windows Rscript.exe.');
-const packageRoot=path.join(repo,'Learning/Upstream/Learning');
-if(!fs.existsSync(path.join(packageRoot,'app.mjs')))throw Error('The Learning package is missing; run git submodule update --init Learning/Upstream.');
+const packageRoot=path.join(repo,'Learning/Shared/Learning');
+if(!fs.existsSync(path.join(packageRoot,'app.mjs')))throw Error('The Learning package is missing; run git submodule update --init Learning/Shared.');
 const scratch=fs.mkdtempSync(path.join(os.tmpdir(),'StatsDirect-shared-learning-'));
 try{
   // The whole package, unchanged, plus the host's bank shim where the package imports './bank.mjs'.

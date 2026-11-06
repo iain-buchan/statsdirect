@@ -14,7 +14,7 @@ const inputs=await authoredBuildInputs(repoRoot,authored);
 if(process.argv.includes('--authored-if-needed')&&await authoredBuildIsCurrent(repoRoot,authored,inputs)){console.log('Authored built-in tutor assets are current ('+authored.manifest.bankVersion+').');process.exit(0);}
 // The shared Learning code is the pinned submodule package; its pin, hashes and host contract are checked before every bundle.
 const upstream=await verifyUpstream();
-const packageRoot=local('./Upstream/Learning/');
+const packageRoot=local('./Shared/Learning/');
 const lessonAsset=local('../StatsDirectUI/Assets/Learn/lessons.json');
 const lessonBytes=authored?Buffer.from(authored.texts['lessons.json']):await readFile(lessonAsset);
 const consumed=new Map();
@@ -28,10 +28,10 @@ function captureRemainingInputs(b){
   b.onLoad({filter:/\.(?:mjs|cjs|js|json)$/},async({path:file})=>({contents:await readInput(file),loader:file.endsWith('.json')?'json':'js'}));
 }
 const learning=await build({
-  entryPoints:[local('./Upstream/Learning/app.mjs')],bundle:true,format:'iife',target:'safari17',
+  entryPoints:[local('./Shared/Learning/app.mjs')],bundle:true,format:'iife',target:'safari17',
   outfile:local('../StatsDirectUI/Assets/Learn/app.js'),write:false,metafile:true,absWorkingDir:learningRoot,
   plugins:[{name:'windows-learning-host',setup(b){
-    // The two imports every host remaps (Learning/Upstream/Learning/README.md): the published lessons and the host's bank shim.
+    // The two imports every host remaps (Learning/Shared/Learning/README.md): the published lessons and the host's bank shim.
     b.onResolve({filter:/^\.\.\/Content\/Learn\/lessons\.json$/},args=>path.resolve(args.importer).startsWith(packageRoot)?{path:authored?.lessonsPath??lessonAsset}:undefined);
     if(authored){
       b.onResolve({filter:/^\.\/bank\.mjs$/},args=>path.resolve(args.importer).startsWith(packageRoot)?{path:authored.bankPath}:undefined);

@@ -11,7 +11,7 @@ documented separately in `ReportEditor/chart-alignment-port.md`.
 ## Source and redistribution
 
 The Learning page and its modules are the shared package `Learning/` of
-`iain-buchan/statisticalhelp` (MIT), taken as the Git submodule `Learning/Upstream`
+`iain-buchan/statisticalhelp` (MIT), taken as the Git submodule `Learning/Shared`
 and pinned by `Learning/upstream-manifest.json` (repository, full commit, its
 `learning-v*` tag, the host contract number and the SHA-256 of every tracked file
 under the package). The Mac application pins the same package in the same way; the
@@ -28,7 +28,7 @@ manifest and `LearningView.HostContract` agree, and that `Learning/package.json`
 the package's dependencies at the same versions. The bundle must then carry that
 contract number, which the page sends in `ready` and the host checks at load.
 
-To move the pin: check out the new tagged commit in `Learning/Upstream`, run
+To move the pin: check out the new tagged commit in `Learning/Shared`, run
 `node Learning/verify-upstream.mjs --write`, review the host contract (bump
 `LearningView.HostContract` only when the package's number changed and the host
 implements the new contract), rebuild, run the checks, and commit the gitlink with the
@@ -39,7 +39,7 @@ to the published lessons and `./bank.mjs` to the authored bank shim. The host re
 `window.statsDirectHost` (platform `windows`, `postMessage` through WebView2) before the
 page runs. To rebuild, run `pnpm --dir Learning install --frozen-lockfile --ignore-scripts`
 and `node Learning/build.mjs` from the repository root (a fresh clone first needs
-`git submodule update --init Learning/Upstream`), and commit the generated
+`git submodule update --init Learning/Shared`), and commit the generated
 `StatsDirectUI/Assets/Learn/app.js`. `conversation.mjs` builds the offline Script/Report AI
 conversation bundle from the package's sanitized Markdown, KaTeX and R highlighting renderer.
 

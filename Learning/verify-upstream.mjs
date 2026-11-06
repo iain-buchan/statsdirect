@@ -1,5 +1,5 @@
 // The shared Learning code is the Learning/ folder of iain-buchan/statisticalhelp, taken as the
-// submodule Learning/Upstream and pinned by Learning/upstream-manifest.json. This script records
+// submodule Learning/Shared and pinned by Learning/upstream-manifest.json. This script records
 // the pin (--write) and verifies it (--verify, also run by build.mjs before bundling):
 //   the submodule's HEAD, the manifest's commit and the repository's gitlink agree;
 //   the pinned commit carries one learning-v* tag (unless --allow-untagged);
@@ -15,7 +15,7 @@ import path from 'node:path';
 
 const learningRoot = fileURLToPath(new URL('./', import.meta.url));
 export const repoRoot = path.resolve(learningRoot, '..');
-export const submodulePath = 'Learning/Upstream';
+export const submodulePath = 'Learning/Shared';
 export const packagePath = submodulePath + '/Learning';
 export const manifestPath = path.join(learningRoot, 'upstream-manifest.json');
 const repository = 'https://github.com/iain-buchan/statisticalhelp.git';

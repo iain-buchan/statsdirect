@@ -20220,7 +20220,7 @@ ${content}</tr>
     };
   }
 
-  // Upstream/Learning/rich-text.mjs
+  // Shared/Learning/rich-text.mjs
   core_default.registerLanguage("r", r);
   var esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
   var math2 = (text3, displayMode) => katex.renderToString(text3, { displayMode, throwOnError: false, trust: false, strict: "ignore", maxExpand: 500, maxSize: 20 });

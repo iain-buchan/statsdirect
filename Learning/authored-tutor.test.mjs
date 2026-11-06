@@ -25,8 +25,8 @@ async function fixture(action) {
     for (const [name, text] of Object.entries(texts)) await write('Learning/AuthoredTutor/' + name, text);
     await write('Learning/AuthoredTutor/manifest.json', JSON.stringify(manifest, null, 2));
   };
-  await write('Learning/Upstream/Learning/app.mjs', '// original upstream entry\n');
-  await write('Learning/Upstream/Learning/lessons.json', '[]\n');
+  await write('Learning/Shared/Learning/app.mjs', '// original upstream entry\n');
+  await write('Learning/Shared/Learning/lessons.json', '[]\n');
   for (const name of ['build.mjs', 'authored-tutor.mjs', 'verify-upstream.mjs', 'conversation.mjs']) await write('Learning/' + name, '// fixture source\n');
   await write('Learning/package.json', '{"type":"module"}\n'); await write('Learning/pnpm-lock.yaml', 'lockfileVersion: 9\n'); await write('Learning/upstream-manifest.json', '{}\n');
   await write('Learning/node_modules/vendor/index.js', 'export default "v1";\n');
@@ -91,7 +91,7 @@ test('malformed classification shapes, unknown goals, duplicates and excessive n
 test('actual provider conversion, learner attempts, restore and JSON record exports retain question classifications', () => fixture(async f => {
   Object.assign(f.question, { difficulty: 'advanced', learnerGoals: ['healthcareBusinessAnalyst', 'publicHealth'], learnerGoalNotes: 'Case-mix reasoning for a local health-service course.' });
   f.lessons[0].practiceQuestions = [structuredClone(f.question)]; await f.publish();
-  const bundle = await build({ stdin: { contents: "export {createSession,recordAnswer} from './Upstream/Learning/quiz.mjs'; export {newPortfolio,restorePortfolio,reviewRecord,reviewText} from './Upstream/Learning/portfolio.mjs'; export {courseQuestions} from './Upstream/Learning/provider-course.mjs';", resolveDir: fileURLToPath(new URL('./', import.meta.url)), sourcefile: 'classification-runtime-check.mjs' }, bundle: true, write: false, format: 'esm', platform: 'node', plugins: [{ name: 'isolated-authored-bank', setup(b) { b.onResolve({ filter: /^\.\/bank\.mjs$/ }, () => ({ path: path.join(f.authored, 'bank.mjs') })); } }] });
+  const bundle = await build({ stdin: { contents: "export {createSession,recordAnswer} from './Shared/Learning/quiz.mjs'; export {newPortfolio,restorePortfolio,reviewRecord,reviewText} from './Shared/Learning/portfolio.mjs'; export {courseQuestions} from './Shared/Learning/provider-course.mjs';", resolveDir: fileURLToPath(new URL('./', import.meta.url)), sourcefile: 'classification-runtime-check.mjs' }, bundle: true, write: false, format: 'esm', platform: 'node', plugins: [{ name: 'isolated-authored-bank', setup(b) { b.onResolve({ filter: /^\.\/bank\.mjs$/ }, () => ({ path: path.join(f.authored, 'bank.mjs') })); } }] });
   const runtime = await import('data:text/javascript;base64,' + Buffer.from(bundle.outputFiles[0].contents).toString('base64'));
   const expected = { difficulty: f.question.difficulty, learnerGoals: f.question.learnerGoals, learnerGoalNotes: f.question.learnerGoalNotes };
   const classifications = question => Object.fromEntries(Object.keys(expected).map(key => [key, question[key]]));
@@ -193,7 +193,7 @@ test('receipt skips only matching source, consumed dependency and every generate
 test('every build source and lockfile change invalidates a receipt; metadata-only mtime changes do not', () => fixture(async f => {
   const authored = await resolveAuthoredTutor(f.root), inputs = await authoredBuildInputs(f.root, authored);
   await recordAuthoredBuild(f.root, authored, inputs, []);
-  for (const file of ['Learning/Upstream/Learning/app.mjs', 'Learning/build.mjs', 'Learning/authored-tutor.mjs', 'Learning/verify-upstream.mjs', 'Learning/package.json', 'Learning/pnpm-lock.yaml', 'Learning/upstream-manifest.json']) {
+  for (const file of ['Learning/Shared/Learning/app.mjs', 'Learning/build.mjs', 'Learning/authored-tutor.mjs', 'Learning/verify-upstream.mjs', 'Learning/package.json', 'Learning/pnpm-lock.yaml', 'Learning/upstream-manifest.json']) {
     const original = await fs.readFile(path.join(f.root, file)); await f.write(file, Buffer.concat([original, Buffer.from(' ')]));
     assert.equal(await authoredBuildIsCurrent(f.root, authored, await authoredBuildInputs(f.root, authored)), false, file);
     await f.write(file, original);

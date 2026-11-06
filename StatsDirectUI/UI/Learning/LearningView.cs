@@ -20,7 +20,7 @@ internal sealed class LearningView : StatsDirectForm
     private readonly Label notice = new() { Dock = DockStyle.Bottom, AutoSize = true, Text = "Opening Learning…" };
     internal TaskCompletionSource Ready { get; private set; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
     internal string Generation { get; private set; } = Guid.NewGuid().ToString("N");
-    /// <summary>The Learning host contract this host implements (Learning/Upstream/Learning/HOST-CONTRACT.md); the build and the ready handler refuse a page that declares another.</summary>
+    /// <summary>The Learning host contract this host implements (Learning/Shared/Learning/HOST-CONTRACT.md); the build and the ready handler refuse a page that declares another.</summary>
     internal const int HostContract = 1;
     internal bool NeedsRecovery { get; private set; }
     internal bool Restoring { get; private set; }

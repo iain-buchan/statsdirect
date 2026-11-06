@@ -56,7 +56,7 @@ async function mutateDuringFinalCheck(mode, dependency) {
 
 before(async () => {
   root = await fs.mkdtemp(path.join(os.tmpdir(), 'StatsDirect-authored-build-')); learning = path.join(root, 'Learning'); authored = path.join(learning, 'AuthoredTutor');
-  await fs.cp(originalLearning, learning, { recursive: true, dereference: true, filter: file => { const parts = path.relative(originalLearning, file).split(path.sep); return !parts.some(part => ['node_modules', 'obj', 'AuthoredTutor'].includes(part)) && !(parts[0] === 'Upstream' && parts.length > 1 && parts[1] !== 'Learning'); } });
+  await fs.cp(originalLearning, learning, { recursive: true, dereference: true, filter: file => { const parts = path.relative(originalLearning, file).split(path.sep); return !parts.some(part => ['node_modules', 'obj', 'AuthoredTutor'].includes(part)) && !(parts[0] === 'Shared' && parts.length > 1 && parts[1] !== 'Learning'); } });
   await fs.mkdir(authored, { recursive: true });
   // Flatten these existing, pinned dependencies into the disposable repository;
   // no junction points back to the developer checkout and no network is used.
