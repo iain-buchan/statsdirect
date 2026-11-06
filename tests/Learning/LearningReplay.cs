@@ -48,7 +48,7 @@ internal static partial class Program
         Check(!older.LearningScript.Contains("stopifnot(length(d)"),"Learning old replies exclude subsequent conversation code");
         view.Activate();await LearningAsk(service,view,"LOCAL_CONTEXT_PRIVACY");
         Check(service.State.A("conversation").Last().S("text")=="LOCAL_METADATA_EXCLUDED","local replay snapshots are excluded from later AI requests");
-        var record=await JS(view,"(()=>{let result;const p=window.webkit.messageHandlers.statsDirectLearn,old=p.postMessage;p.postMessage=m=>result=m;window.statsDirectLearn.exportRecord();p.postMessage=old;return result})()");
+        var record=await JS(view,"(()=>{let result;const p=window.statsDirectHost,old=p.postMessage;p.postMessage=m=>result=m;window.statsDirectLearn.exportRecord();p.postMessage=old;return result})()");
         Check(!record.ToJsonString().Contains("LOCAL_REPLAY_ONLY")&&!record.ToJsonString().Contains("rContexts"),"learning-record exports exclude local R snapshot metadata");
         Check(File.ReadAllText(Path.Combine(service.Storage,"portfolio.json")).Contains("LOCAL_REPLAY_ONLY"),"approved R context persists locally for reopening");
         string oldGeneration=view.Generation;

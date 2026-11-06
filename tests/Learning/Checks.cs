@@ -213,7 +213,7 @@ internal static partial class Program
     static async Task TestExports(LearningService service,LearningView view)
     {
         view.Activate();await JS(view,"document.getElementById('recordNav').click()");
-        var payload=(JsonObject)await JS(view,"(()=>{const old=window.webkit.messageHandlers.statsDirectLearn.postMessage;let result;window.webkit.messageHandlers.statsDirectLearn.postMessage=m=>result=m;window.statsDirectLearn.exportRecord();window.webkit.messageHandlers.statsDirectLearn.postMessage=old;return result})()");
+        var payload=(JsonObject)await JS(view,"(()=>{const old=window.statsDirectHost.postMessage;let result;window.statsDirectHost.postMessage=m=>result=m;window.statsDirectLearn.exportRecord();window.statsDirectHost.postMessage=old;return result})()");
         Check(payload.S("text").Contains("learning",StringComparison.OrdinalIgnoreCase)&&payload.S("html").Length>0,"learning record preview produces text, structured data and formatted content");
         foreach(string format in new[]{"txt","json","html","pdf","docx"})
         {
