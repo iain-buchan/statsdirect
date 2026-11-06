@@ -1,0 +1,160 @@
+name: Windows checks
+
+# Builds the StatsDirect application (unsigned, no installers) and runs the deterministic test
+# projects, the program's own sanity and operations checks, and the Learning JavaScript tests.
+# The window-driven suites run in a second, advisory job. Signed builds, installers and the
+# full release run stay on the release machine, as BUILDING.md describes.
+
+on:
+  push:
+    branches: [main, 'ci/**']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-checks-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_NOLOGO: 1
+  DOTNET_CLI_TELEMETRY_OPTOUT: 1
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+
+jobs:
+  build-and-check:
+    name: Build and deterministic checks
+    runs-on: windows-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          submodules: true
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9
+        with:
+          dotnet-version: 10.0.x
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 26
+      - name: Install R (headers for the native R worker, Rscript for the Learning tests)
+        uses: r-lib/actions/setup-r@f9a764fea8d5c63df6ef9a5c7795bf7deb5d7e05
+        with:
+          r-version: release
+      - name: Record R_HOME and Rscript
+        shell: bash
+        run: |
+          echo "R_HOME=$(Rscript -e 'cat(normalizePath(R.home(), winslash = "\\"))')" >> "$GITHUB_ENV"
+          echo "STATSDIRECT_RSCRIPT=$(cygpath -w "$(which Rscript)")" >> "$GITHUB_ENV"
+      - name: Portable C compiler for the native R worker
+        shell: pwsh
+        run: ./RConsoleWorker/fetch-native-tools.ps1
+      - name: Learning web dependencies
+        shell: bash
+        run: |
+          npm install -g pnpm@10
+          pnpm --dir Learning install --frozen-lockfile --ignore-scripts
+          pnpm --dir Learning/upstream/Learn install --frozen-lockfile --ignore-scripts
+      - name: Build StatsDirect (Release, unsigned, no installers)
+        env:
+          SPREADSHEETGEAR_LICENSE_STRING: ${{ secrets.SPREADSHEETGEAR_LICENSE_STRING }}
+        run: dotnet build StatsDirectUI/StatsDirectUI.csproj -c Release -p:AcceptEula=wix7
+      - name: Deterministic test projects
+        shell: bash
+        run: |
+          BIN="$GITHUB_WORKSPACE/StatsDirectUI/bin/Release/net10.0-windows10.0.17763.0"
+          BIN_WIN=$(cygpath -w "$BIN")
+          failed=()
+          for p in Definitions DistributionRegression GlmFitRegression DataSelection AnalysisOfVariance Nonparametric Descriptive Parametric ClinicalEpidemiology SampleSize Randomization Rates Proportions ChiSquare ExactTests Frequencies NoncentralTRegression MetaAnalysis Survival Agreement CoxRegression CorrelationRegression ExcelAddInRetirement InstallerFocus; do
+            start=$(date +%s)
+            if out=$(dotnet run --project "tests/$p" -c Release -p:StatsDirectBin="$BIN_WIN" 2>&1); then
+              echo "tests/$p: ok, $(( $(date +%s) - start )) s: $(echo "$out" | grep -E 'CHECKS|checks|PASS|FAIL' | tail -1)"
+            else
+              echo "tests/$p: FAILED, $(( $(date +%s) - start )) s"
+              echo "$out" | tail -40
+              failed+=("$p")
+            fi
+          done
+          if [ ${#failed[@]} -ne 0 ]; then echo "Failed: ${failed[*]}"; exit 1; fi
+      - name: Sanity check and operations test
+        shell: bash
+        run: |
+          BIN="$GITHUB_WORKSPACE/StatsDirectUI/bin/Release/net10.0-windows10.0.17763.0"
+          "$BIN/StatsDirect.exe" -sanity-check; echo "sanity check exit $?"
+          head -1 "$BIN/sanity-check-results.txt"
+          grep -q 'failures: 0' "$BIN/sanity-check-results.txt"
+          "$BIN/StatsDirect.exe" -test-operations; echo "operations test exit $?"
+          head -1 "$BIN/test-operations-results.txt"
+          grep -q 'failed: 0' "$BIN/test-operations-results.txt"
+      - name: Learning JavaScript tests
+        shell: bash
+        run: |
+          node tests/Learning/run-shared.mjs
+          cd Learning && node --test ./*.test.mjs
+      - name: Keep the check results
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: windows-check-results
+          if-no-files-found: ignore
+          path: |
+            StatsDirectUI/bin/Release/net10.0-windows10.0.17763.0/sanity-check-results.txt
+            StatsDirectUI/bin/Release/net10.0-windows10.0.17763.0/test-operations-results.txt
+
+  window-suites:
+    name: Window-driven suites (advisory)
+    runs-on: windows-latest
+    timeout-minutes: 150
+    continue-on-error: true
+    needs: build-and-check
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          submodules: true
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9
+        with:
+          dotnet-version: 10.0.x
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 26
+      - uses: r-lib/actions/setup-r@f9a764fea8d5c63df6ef9a5c7795bf7deb5d7e05
+        with:
+          r-version: release
+      - name: Record R_HOME and Rscript
+        shell: bash
+        run: |
+          echo "R_HOME=$(Rscript -e 'cat(normalizePath(R.home(), winslash = "\\"))')" >> "$GITHUB_ENV"
+          echo "STATSDIRECT_RSCRIPT=$(cygpath -w "$(which Rscript)")" >> "$GITHUB_ENV"
+      - name: Portable C compiler for the native R worker
+        shell: pwsh
+        run: ./RConsoleWorker/fetch-native-tools.ps1
+      - name: Learning web dependencies
+        shell: bash
+        run: |
+          npm install -g pnpm@10
+          pnpm --dir Learning install --frozen-lockfile --ignore-scripts
+          pnpm --dir Learning/upstream/Learn install --frozen-lockfile --ignore-scripts
+      - name: Build StatsDirect (Release, unsigned, no installers)
+        env:
+          SPREADSHEETGEAR_LICENSE_STRING: ${{ secrets.SPREADSHEETGEAR_LICENSE_STRING }}
+        run: dotnet build StatsDirectUI/StatsDirectUI.csproj -c Release -p:AcceptEula=wix7
+      - name: Window-driven test projects
+        shell: bash
+        env:
+          STATSDIRECT_SKIP_CLIPBOARD: 1
+        run: |
+          BIN="$GITHUB_WORKSPACE/StatsDirectUI/bin/Release/net10.0-windows10.0.17763.0"
+          BIN_WIN=$(cygpath -w "$BIN")
+          failed=()
+          for p in Calculator Crosstabs Distributions HtmlHelp ReportRendering TutorRuntime WorksheetOutput WebReports RScript InteractiveRWindows Learning UpdateDownloadRegression; do
+            start=$(date +%s)
+            if out=$(timeout 1500 dotnet run --project "tests/$p" -c Release -p:StatsDirectBin="$BIN_WIN" 2>&1); then
+              echo "tests/$p: ok, $(( $(date +%s) - start )) s: $(echo "$out" | grep -E 'CHECKS|checks|PASS|FAIL' | tail -1)"
+            else
+              echo "tests/$p: FAILED, $(( $(date +%s) - start )) s"
+              echo "$out" | grep -E '^FAIL|rror|xception' | head -20
+              failed+=("$p")
+            fi
+          done
+          if [ ${#failed[@]} -ne 0 ]; then echo "Failed: ${failed[*]}"; exit 1; fi
