@@ -24,13 +24,14 @@ function git(cwd, ...args) { return execFileSync('git', args, {cwd, encoding: 'u
 async function sha256(file) { return createHash('sha256').update(await readFile(file)).digest('hex'); }
 function fail(message) { throw new Error('Learning upstream: ' + message); }
 
-export async function describeUpstream({allowUntagged = false} = {}) {
+export async function describeUpstream({allowUntagged = false, requireTag = true} = {}) {
   const submodule = path.join(repoRoot, submodulePath);
   try { await stat(path.join(submodule, 'Learning', 'app.mjs')); }
   catch { fail('the submodule ' + submodulePath + ' is empty; run git submodule update --init ' + submodulePath); }
   const commit = git(submodule, 'rev-parse', 'HEAD');
+  // A shallow checkout (continuous integration) may hold no tags, so the tag is demanded when the pin is written, not when it is verified.
   const tags = git(submodule, 'tag', '--points-at', 'HEAD').split('\n').filter(tag => /^learning-v\d+\.\d+\.\d+$/.test(tag));
-  if (tags.length !== 1 && !allowUntagged) fail('the pinned commit ' + commit.slice(0, 8) + ' carries ' + tags.length + ' learning-v tags; pin a tagged commit or pass --allow-untagged');
+  if (requireTag && tags.length !== 1 && !allowUntagged) fail('the pinned commit ' + commit.slice(0, 8) + ' carries ' + tags.length + ' learning-v tags; pin a tagged commit or pass --allow-untagged');
   const dirty = git(submodule, 'status', '--porcelain', '--', 'Learning');
   if (dirty) fail('the package has modified or untracked files:\n' + dirty);
   const tracked = git(submodule, 'ls-files', '--', 'Learning').split('\n').filter(Boolean);
@@ -62,14 +63,14 @@ async function describeWithoutGit() {
 
 export async function verifyUpstream({allowUntagged = false} = {}) {
   const withoutGit = process.env.STATSDIRECT_LEARNING_UPSTREAM_NO_GIT === '1';
-  const actual = withoutGit ? await describeWithoutGit() : await describeUpstream({allowUntagged});
+  const actual = withoutGit ? await describeWithoutGit() : await describeUpstream({allowUntagged, requireTag: false});
   const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
   if (manifest.repository !== actual.repository) fail('the manifest names another repository');
   if (manifest.commit !== actual.commit) fail('the submodule is at ' + actual.commit.slice(0, 8) + ' but the manifest pins ' + String(manifest.commit).slice(0, 8));
   if (!withoutGit) {
     const gitlink = git(repoRoot, 'ls-files', '-s', '--', submodulePath).split(/\s+/)[1];
     if (gitlink !== actual.commit) fail('the repository records the submodule at ' + String(gitlink).slice(0, 8) + ', not ' + actual.commit.slice(0, 8) + '; stage the submodule with the manifest');
-    if ((manifest.tag ?? null) !== actual.tag) fail('the manifest tag ' + manifest.tag + ' does not match the pinned commit\'s tag ' + actual.tag);
+    if (actual.tag && (manifest.tag ?? null) !== actual.tag) fail('the manifest tag ' + manifest.tag + ' does not match the pinned commit\'s tag ' + actual.tag);
   }
   const recorded = Object.keys(manifest.files ?? {}).sort(), present = Object.keys(actual.files).sort();
   if (recorded.join('\n') !== present.join('\n')) fail('the package file list changed; rerun --write after reviewing the change');
