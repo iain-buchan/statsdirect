@@ -81,7 +81,7 @@ internal sealed partial class LearningService
             // Rendering the reply re-enables Send in the shared web UI. Release this request
             // first, so an immediate next question cannot hit a stale busy flag.
             if (question == pending) { question = null; requestId = null; }
-            await view.CallAsync("reply", new JsonObject { ["id"] = id, ["text"] = reply.Text, ["model"] = reply.Model, ["responseID"] = reply.ResponseID, ["promptVersion"] = "statsdirect-chatgpt-tutor-v4", ["workspaceSources"] = new JsonArray(approved.Select(d => (JsonNode)JsonValue.Create(d.Text)).ToArray()), ["courseSources"] = new JsonArray(new JsonObject { ["id"] = "library:" + lesson.S("id"), ["title"] = lesson.S("title") + " Â· " + lesson.S("contentVersion") }) });
+            await view.CallAsync("reply", new JsonObject { ["id"] = id, ["text"] = reply.Text, ["model"] = reply.Model, ["responseID"] = reply.ResponseID, ["promptVersion"] = "statsdirect-chatgpt-tutor-v4", ["workspaceSources"] = new JsonArray(approved.Select(d => (JsonNode)JsonValue.Create(d.Text)).ToArray()), ["courseSources"] = new JsonArray(new JsonObject { ["id"] = "library:" + lesson.S("id"), ["title"] = lesson.S("title") + " · " + lesson.S("contentVersion") }) });
         }
         catch (Exception ex)
         {
