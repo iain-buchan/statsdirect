@@ -71,6 +71,7 @@ namespace StatsDirect.UI.Properties
                 DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase
             };
+            Directory.CreateDirectory(SDConfiguration.MyStatsDirectFolder); // A profile without the folder yet, as on a test runner, gets it here rather than failing.
             using (FileStream settingsStream = File.Create(SDConfiguration.SettingsPath))
             {
                 JsonSerializer.Serialize(settingsStream, this, options);
