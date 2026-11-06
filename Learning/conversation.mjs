@@ -1,4 +1,4 @@
-import {richText} from './upstream/Learn/rich-text.mjs';
+import {richText} from './Upstream/Learning/rich-text.mjs';
 // The Script AI conversation page.  The program posts the whole conversation after every change: the messages so far and the reply
 // being streamed.  Each message is rendered from its Markdown once; only the streamed reply is rendered again as it grows, and the
 // view follows it while the reader is at the end, staying put when they have scrolled up or are selecting text.  Everything in a

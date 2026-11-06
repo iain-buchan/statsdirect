@@ -10,37 +10,38 @@ documented separately in `ReportEditor/chart-alignment-port.md`.
 
 ## Source and redistribution
 
-The source is `iain-buchan/statsdirect-mac`, commit
-`1f4d920be36081a6e9121d83933b6356ed6ece2d` (MIT).
-`upstream/Learn` and `upstream/Docs/Learn/bank.mjs` are copied unchanged. The original
-`Content/Learn`, `Content/Tutor` and `Content/Brand` assets are under
-`StatsDirectUI/Assets`. The Windows host supplies the bridge and adjusts platform
-wording. `upstream.lock.json` records SHA-256 hashes of the original copied files;
-its `windowsAdaptations` entries separately record successive Windows ports.
-`.gitattributes` prevents Git's line-ending
-conversion from changing those vendored bytes. Preserve the MIT notice and the bundled
-`THIRD-PARTY-LICENSES.txt` for DOMPurify, KaTeX and highlight.js.
+The Learning page and its modules are the shared package `Learning/` of
+`iain-buchan/statisticalhelp` (MIT), taken as the Git submodule `Learning/Upstream`
+and pinned by `Learning/upstream-manifest.json` (repository, full commit, its
+`learning-v*` tag, the host contract number and the SHA-256 of every tracked file
+under the package). The Mac application pins the same package in the same way; the
+Help Editor publishes the lessons, questions and pathways separately. The original
+`Content/Learn`, `Content/Tutor` and `Content/Brand` assets remain under
+`StatsDirectUI/Assets`. Preserve the MIT notice and the bundled
+`THIRD-PARTY-LICENSES.txt` for DOMPurify, KaTeX, marked and highlight.js.
 
-For a content update, build and review the Mac source at a recorded commit, copy
-these same directories, update the lock, and run the Windows checks. The upstream
-build uses its pinned Learn dependencies and the Grid esbuild dependency; it does
-not need to run when compiling the Windows application from checked-in assets.
+`Learning/verify-upstream.mjs --verify` (run by `build.mjs` before every bundle, and by
+the checks) confirms that the submodule's HEAD, the manifest and the repository's gitlink
+agree, that the pinned commit carries one `learning-v*` tag, that every package file has
+its recorded hash and none is modified or untracked, that `host-contract.json`, the
+manifest and `LearningView.HostContract` agree, and that `Learning/package.json` carries
+the package's dependencies at the same versions. The bundle must then carry that
+contract number, which the page sends in `ready` and the host checks at load.
 
-The Windows Learning bundle now includes the selection/reading-position module
-from Mac commit `0a112baeae9f799b10685ada30f6dd442aec68c5`, copied unchanged as
-`conversation-view.mjs`. `selection-port.mjs` applies a narrow, guarded adaptation
-to the recorded app source at build time: stable message IDs and selection
-capture/restoration around streamed and completed replies. `recovery-port.mjs`
-adds the recovery and R-context bridge behaviour from Mac `cbccc10b591c85e34c6cc9faee9397e7aeb2e017`.
-The 14 October parity update imports the reviewed 12 October lesson refinements
-and guide changes from Mac `5a20b86df2042a88cd96664c960dee6a095cf27d`; dependency
-versions remain pinned. To rebuild it, run `pnpm --dir Learning install --frozen-lockfile --ignore-scripts` and
-`node Learning/build.mjs` from the repository root. Commit the generated
-`StatsDirectUI/Assets/Learn/app.js` and refresh the adaptation hashes when changing
-the port. `conversation.mjs` also builds the offline Script/Report AI conversation
-bundle from the shared sanitized Markdown, KaTeX and R highlighting renderer.
-The build fails if its expected source fragments no longer match;
-review the adaptation explicitly when updating the upstream baseline.
+To move the pin: check out the new tagged commit in `Learning/Upstream`, run
+`node Learning/verify-upstream.mjs --write`, review the host contract (bump
+`LearningView.HostContract` only when the package's number changed and the host
+implements the new contract), rebuild, run the checks, and commit the gitlink with the
+manifest. Learning code changes are made in `statisticalhelp/Learning`, never here.
+
+The bundler remaps the two imports every host remaps: `../Content/Learn/lessons.json`
+to the published lessons and `./bank.mjs` to the authored bank shim. The host registers
+`window.statsDirectHost` (platform `windows`, `postMessage` through WebView2) before the
+page runs. To rebuild, run `pnpm --dir Learning install --frozen-lockfile --ignore-scripts`
+and `node Learning/build.mjs` from the repository root (a fresh clone first needs
+`git submodule update --init Learning/Upstream`), and commit the generated
+`StatsDirectUI/Assets/Learn/app.js`. `conversation.mjs` builds the offline Script/Report AI
+conversation bundle from the package's sanitized Markdown, KaTeX and R highlighting renderer.
 
 Learning recovery keeps the native portfolio and latest reply event while a
 failed WebView is unavailable. Reopen Learning installs a new restricted browser

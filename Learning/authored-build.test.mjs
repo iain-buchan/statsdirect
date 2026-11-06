@@ -23,7 +23,7 @@ const outputs = () => Promise.all(authoredOutputs.map(file => fs.readFile(path.j
 async function run(args = ['--authored-if-needed'], preload) {
   const started = Date.now();
   const result = await new Promise((resolve, reject) => {
-    const child = spawn(process.execPath, [...(preload ? ['--import', pathToFileURL(preload).href] : []), path.join(learning, 'build.mjs'), ...args], { cwd: root, windowsHide: true, env: { ...process.env } });
+    const child = spawn(process.execPath, [...(preload ? ['--import', pathToFileURL(preload).href] : []), path.join(learning, 'build.mjs'), ...args], { cwd: root, windowsHide: true, env: { ...process.env, STATSDIRECT_LEARNING_UPSTREAM_NO_GIT: '1' } });
     let stdout = '', stderr = '';
     child.stdout.on('data', bytes => stdout += bytes); child.stderr.on('data', bytes => stderr += bytes);
     child.on('error', reject); child.on('close', code => resolve({ code, stdout, stderr }));
@@ -49,20 +49,19 @@ async function rejectedUnchanged(pattern, action) {
 }
 async function mutateDuringFinalCheck(mode, dependency) {
   const preload = path.join(root, 'mutation-' + mode + '.mjs');
-  const change = mode === 'marker' ? "await fs.writeFile(path.resolve('Learning/.AuthoredTutor.publishing'),'test-only publication in progress');" : mode === 'dependency' ? `await fs.appendFile(${JSON.stringify(dependency)},'\\nglobalThis.__qaDependencyVersion="second";\\n');` : "await fs.appendFile(path.resolve('Learning/selection-port.mjs'),'\\n// concurrent isolated author edit\\n');";
+  const change = mode === 'marker' ? "await fs.writeFile(path.resolve('Learning/.AuthoredTutor.publishing'),'test-only publication in progress');" : mode === 'dependency' ? `await fs.appendFile(${JSON.stringify(dependency)},'\\nglobalThis.__qaDependencyVersion="second";\\n');` : "await fs.appendFile(path.resolve('Learning/conversation.mjs'),'\\n// concurrent isolated author edit\\n');";
   await fs.writeFile(preload, `import fs from 'node:fs/promises';\nimport {syncBuiltinESMExports} from 'node:module';\nimport path from 'node:path';\nconst read=fs.readFile; let seen=0; fs.readFile=async function(file,...args){\nif(String(file).replaceAll('\\\\','/').endsWith('/AuthoredTutor/manifest.json')&&++seen===4){\n${change}\n}\nreturn read.call(this,file,...args);}; syncBuiltinESMExports();\n`);
   return preload;
 }
 
 before(async () => {
   root = await fs.mkdtemp(path.join(os.tmpdir(), 'StatsDirect-authored-build-')); learning = path.join(root, 'Learning'); authored = path.join(learning, 'AuthoredTutor');
-  await fs.cp(originalLearning, learning, { recursive: true, dereference: true, filter: file => !path.relative(originalLearning, file).split(path.sep).some(part => ['node_modules', 'obj', 'AuthoredTutor'].includes(part)) });
+  await fs.cp(originalLearning, learning, { recursive: true, dereference: true, filter: file => { const parts = path.relative(originalLearning, file).split(path.sep); return !parts.some(part => ['node_modules', 'obj', 'AuthoredTutor'].includes(part)) && !(parts[0] === 'Upstream' && parts.length > 1 && parts[1] !== 'Learning'); } });
   await fs.mkdir(authored, { recursive: true });
   // Flatten these existing, pinned dependencies into the disposable repository;
   // no junction points back to the developer checkout and no network is used.
   for (const name of ['esbuild', 'dompurify', 'highlight.js', 'katex', 'marked']) await fs.cp(path.join(originalLearning, 'node_modules', name), path.join(learning, 'node_modules', name), { recursive: true, dereference: true });
   await fs.cp(path.join(originalLearning, 'node_modules/.pnpm/@esbuild+win32-x64@0.25.10/node_modules/@esbuild/win32-x64'), path.join(learning, 'node_modules/@esbuild/win32-x64'), { recursive: true, dereference: true });
-  await fs.symlink(path.join(learning, 'node_modules'), path.join(learning, 'upstream/Learn/node_modules'), 'junction');
   await fs.cp(path.join(originalRepo, 'StatsDirectUI/Assets/Learn'), path.join(root, 'StatsDirectUI/Assets/Learn'), { recursive: true, dereference: true });
   await fs.cp(path.join(originalRepo, 'StatsDirectUI/Assets/Brand'), path.join(root, 'StatsDirectUI/Assets/Brand'), { recursive: true, dereference: true });
   initialOutputs = authoredOutputs.map(file => Buffer.from('prior verified isolated asset: ' + file + '\n'));
@@ -144,7 +143,7 @@ test('unknown/deleted question links and removal of a saved pathway cannot ship'
 });
 
 test('publication markers and source edits arriving after bundling preserve all prior outputs', async () => {
-  const port = path.join(learning, 'selection-port.mjs'), original = await fs.readFile(port);
+  const port = path.join(learning, 'conversation.mjs'), original = await fs.readFile(port);
   for (const mode of ['marker', 'source']) {
     const prior = await outputs(), preload = await mutateDuringFinalCheck(mode);
     try { const result = await run([], preload); assert.notEqual(result.code, 0, result.stdout + result.stderr); assert.match(result.stderr, /changed while|publication is in progress|inputs changed/); assert.deepEqual(await outputs(), prior); }

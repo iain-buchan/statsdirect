@@ -56,7 +56,6 @@ jobs:
         run: |
           npm install -g pnpm@10
           pnpm --dir Learning install --frozen-lockfile --ignore-scripts
-          pnpm --dir Learning/upstream/Learn install --frozen-lockfile --ignore-scripts
       - name: Build StatsDirect (Release, unsigned, no installers)
         env:
           SPREADSHEETGEAR_LICENSE_STRING: ${{ secrets.SPREADSHEETGEAR_LICENSE_STRING }}
@@ -136,7 +135,6 @@ jobs:
         run: |
           npm install -g pnpm@10
           pnpm --dir Learning install --frozen-lockfile --ignore-scripts
-          pnpm --dir Learning/upstream/Learn install --frozen-lockfile --ignore-scripts
       - name: Build StatsDirect (Release, unsigned, no installers)
         env:
           SPREADSHEETGEAR_LICENSE_STRING: ${{ secrets.SPREADSHEETGEAR_LICENSE_STRING }}

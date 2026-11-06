@@ -1,0 +1,5 @@
+[submodule "Learning/Upstream"]
+	path = Learning/Upstream
+	url = https://github.com/iain-buchan/statisticalhelp.git
+	branch = master
+	shallow = true

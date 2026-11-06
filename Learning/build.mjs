@@ -3,9 +3,7 @@ import {readFile,access} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 import {createHash} from 'node:crypto';
-import {selectionPort} from './selection-port.mjs';
-import {recoveryPort,replayLinks} from './recovery-port.mjs';
-import {authoredReviewPort} from './authored-review-port.mjs';
+import {verifyUpstream,verifyBundle} from './verify-upstream.mjs';
 import {resolveAuthoredTutor,authoredBuildInputs,authoredBuildIsCurrent,assertAuthoredBuildInputsUnchanged,assertConsumedBuildInputsUnchanged,recordAuthoredBuild,promoteBuildOutputs} from './authored-tutor.mjs';
 const local=path=>fileURLToPath(new URL(path,import.meta.url));
 const learningRoot=local('./'),repoRoot=local('../');
@@ -14,6 +12,9 @@ const authored=await resolveAuthoredTutor(repoRoot);
 if(process.argv.includes('--authored-if-needed')&&!authored){console.log('No authored built-in tutor is selected; checked-in assets are unchanged.');process.exit(0);}
 const inputs=await authoredBuildInputs(repoRoot,authored);
 if(process.argv.includes('--authored-if-needed')&&await authoredBuildIsCurrent(repoRoot,authored,inputs)){console.log('Authored built-in tutor assets are current ('+authored.manifest.bankVersion+').');process.exit(0);}
+// The shared Learning code is the pinned submodule package; its pin, hashes and host contract are checked before every bundle.
+const upstream=await verifyUpstream();
+const packageRoot=local('./Upstream/Learning/');
 const lessonAsset=local('../StatsDirectUI/Assets/Learn/lessons.json');
 const lessonBytes=authored?Buffer.from(authored.texts['lessons.json']):await readFile(lessonAsset);
 const consumed=new Map();
@@ -27,16 +28,13 @@ function captureRemainingInputs(b){
   b.onLoad({filter:/\.(?:mjs|cjs|js|json)$/},async({path:file})=>({contents:await readInput(file),loader:file.endsWith('.json')?'json':'js'}));
 }
 const learning=await build({
-  entryPoints:[local('./upstream/Learn/app.mjs')],bundle:true,format:'iife',target:'safari17',
+  entryPoints:[local('./Upstream/Learning/app.mjs')],bundle:true,format:'iife',target:'safari17',
   outfile:local('../StatsDirectUI/Assets/Learn/app.js'),write:false,metafile:true,absWorkingDir:learningRoot,
-  plugins:[{name:'windows-learning-selection',setup(b){
-    b.onLoad({filter:/[\\/]upstream[\\/]Learn[\\/]app\.mjs$/},async({path})=>({contents:recoveryPort(selectionPort((await readInput(path)).toString('utf8'))),loader:'js'}));
-    b.onLoad({filter:/[\\/]upstream[\\/]Learn[\\/]rich-text\.mjs$/},async({path})=>({contents:replayLinks((await readInput(path)).toString('utf8')),loader:'js'}));
-    b.onResolve({filter:/^\.\.\/Grid\/node_modules\/marked\/lib\/marked\.esm\.js$/},()=>({path:local('./node_modules/marked/lib/marked.esm.js')}));
-    b.onResolve({filter:/^\.\.\/Content\/Learn\/lessons\.json$/},()=>({path:authored?.lessonsPath??lessonAsset}));
+  plugins:[{name:'windows-learning-host',setup(b){
+    // The two imports every host remaps (Learning/Upstream/Learning/README.md): the published lessons and the host's bank shim.
+    b.onResolve({filter:/^\.\.\/Content\/Learn\/lessons\.json$/},args=>path.resolve(args.importer).startsWith(packageRoot)?{path:authored?.lessonsPath??lessonAsset}:undefined);
     if(authored){
-      b.onLoad({filter:/[\\/]upstream[\\/]Learn[\\/]lesson-guide\.mjs$/},async({path})=>({contents:authoredReviewPort((await readInput(path)).toString('utf8')),loader:'js'}));
-      b.onResolve({filter:/^\.\/bank\.mjs$/},args=>path.resolve(args.importer).startsWith(local('./upstream/Learn/'))?{path:authored.bankPath}:undefined);
+      b.onResolve({filter:/^\.\/bank\.mjs$/},args=>path.resolve(args.importer).startsWith(packageRoot)?{path:authored.bankPath}:undefined);
       b.onLoad({filter:/[\\/]AuthoredTutor[\\/]bank\.mjs$/},()=>({contents:authored.texts['bank.mjs'],loader:'js'}));
       b.onLoad({filter:/[\\/]AuthoredTutor[\\/]lessons\.json$/},()=>({contents:authored.texts['lessons.json'],loader:'json'}));
     }
@@ -47,7 +45,6 @@ const conversation=await build({
   entryPoints:[local('./conversation.mjs')],bundle:true,format:'iife',target:'chrome120',
   outfile:local('../StatsDirectUI/Assets/Tutor/conversation.js'),write:false,metafile:true,absWorkingDir:learningRoot,
   plugins:[{name:'windows-conversation',setup(b){
-    b.onResolve({filter:/^\.\.\/Grid\/node_modules\/marked\/lib\/marked\.esm\.js$/},()=>({path:local('./node_modules/marked/lib/marked.esm.js')}));
     // Preserve the Windows transcript's explicit line breaks while sharing the
     // sanitized Markdown, equations and code renderer with Learning.
     b.onLoad({filter:/[\\/]rich-text\.mjs$/},async({path})=>({contents:(await readInput(path)).toString('utf8').replace('mangle:false','breaks:true,mangle:false'),loader:'js'}));
@@ -80,4 +77,5 @@ for(const result of [learning,conversation])for(const output of result.outputFil
 if(authored)replacements.push({path:lessonAsset,bytes:lessonBytes});
 for(const relative of [...dependencies])if(!consumed.has(relative.replaceAll(path.sep,'/')))dependencies.delete(relative);
 await promoteBuildOutputs(replacements,()=>recordAuthoredBuild(repoRoot,authored,inputs,[...dependencies],consumedRecords),validate);
+await verifyBundle(local('../StatsDirectUI/Assets/Learn/app.js'),upstream.hostContract);
 console.log(authored?'Built authored StatsDirect tutor: '+authored.manifest.lessonCount+' lessons, '+authored.manifest.questionCount+' questions; bank '+authored.manifest.bankVersion+'.':'Built the checked-in upstream Learning and conversation assets.');

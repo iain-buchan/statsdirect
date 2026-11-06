@@ -74,7 +74,11 @@ internal sealed partial class LearningService
             RememberRContext(id, userMessageId, workspace);
             var reply = await Tutor.ConverseAsync(context, body.A("messages"), workspace.Tools, false,
                 text => { if (question == pending && !view.IsDisposed) _ = view.CallAsync("partial", new JsonObject { ["id"] = id, ["text"] = text }); },
-                async (name, arguments) => { var result = await workspace.CallAsync(name, arguments); if (!view.IsDisposed) RememberRContext(id, userMessageId, workspace); return result; }, pending.Token);
+                async (name, arguments) =>
+                {
+                    if (question == pending && !view.IsDisposed) _ = view.CallAsync("toolActivity", new JsonObject { ["id"] = id, ["text"] = "The tutor is reading " + name.Replace('_', ' ') + "…" });
+                    var result = await workspace.CallAsync(name, arguments); if (!view.IsDisposed) RememberRContext(id, userMessageId, workspace); return result;
+                }, pending.Token);
             workspace.Check();
             if (view.IsDisposed) return;
             RememberRContext(id, userMessageId, workspace);

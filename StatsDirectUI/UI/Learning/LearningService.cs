@@ -89,6 +89,15 @@ internal sealed partial class LearningService : IDisposable
         {
             case "ready":
                 if (view.Ready.Task.IsCompleted) return;
+                int pageContract = body["hostContract"] is JsonValue declaredContract && declaredContract.TryGetValue(out int declared) ? declared : -1;
+                if (pageContract != LearningView.HostContract)
+                {
+                    // A page built against another contract must not be driven by this host; it stays unrestored and says why.
+                    canSave = false;
+                    await view.CallAsync("loadError", JsonValue.Create("This learning page declares host contract " + (pageContract < 0 ? "none" : pageContract.ToString()) + ", but this StatsDirect implements contract " + LearningView.HostContract + "."));
+                    view.Ready.TrySetException(new InvalidOperationException("Learning host contract mismatch."));
+                    return;
+                }
                 string readyGeneration = view.Generation;
                 try
                 {
@@ -154,6 +163,7 @@ internal sealed partial class LearningService : IDisposable
             case "email":
                 string draft = PrepareEmail(body); Process.Start(new ProcessStartInfo(draft) { UseShellExecute = true });
                 await view.CallAsync("notice", JsonValue.Create("Email draft prepared with TXT and JSON attachments. Review and send it in your mail application. If it cannot open .eml drafts, attach the files from " + Path.GetDirectoryName(draft) + ". No email has been sent by StatsDirect.")); break;
+            default: await view.CallAsync("notice", JsonValue.Create("The learning page asked for an action this StatsDirect does not implement: " + body.S("action"))); break;
         }
     }
     internal void SaveState(JsonNode state)

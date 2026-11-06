@@ -1,5 +1,8 @@
-// Run the unchanged Mac learning tests against Windows' shipped lessons, help and
-// operation definitions. Only the hard-coded R executable is adapted in temporary copies.
+// Run the shared Learning tests (Learning/Upstream/Learning, the package pinned by the submodule)
+// against Windows' shipped lessons, help and operation definitions, the way the package README
+// describes a host running them: from a root of the host's own, with the host's bank shim beside
+// the package, the host's node_modules above it, and the three variables set. No test file is
+// patched; the package's test-config.mjs reads the variables.
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
@@ -8,10 +11,15 @@ import {spawnSync} from 'node:child_process';
 const repo=fileURLToPath(new URL('../../',import.meta.url));
 const r=process.env.STATSDIRECT_RSCRIPT;
 if(!r||!fs.existsSync(r))throw Error('Set STATSDIRECT_RSCRIPT to the installed Windows Rscript.exe.');
+const packageRoot=path.join(repo,'Learning/Upstream/Learning');
+if(!fs.existsSync(path.join(packageRoot,'app.mjs')))throw Error('The Learning package is missing; run git submodule update --init Learning/Upstream.');
 const scratch=fs.mkdtempSync(path.join(os.tmpdir(),'StatsDirect-shared-learning-'));
 try{
-  fs.cpSync(path.join(repo,'Learning/upstream/Learn'),path.join(scratch,'Learn'),{recursive:true});
-  fs.cpSync(path.join(repo,'Learning/upstream/Docs'),path.join(scratch,'Docs'),{recursive:true});
+  // The whole package, unchanged, plus the host's bank shim where the package imports './bank.mjs'.
+  fs.cpSync(packageRoot,path.join(scratch,'Learn'),{recursive:true});
+  fs.copyFileSync(path.join(repo,'Learning/AuthoredTutor/bank.mjs'),path.join(scratch,'Learn/bank.mjs'));
+  // The host's dependencies, above the package as in the repository.
+  fs.symlinkSync(path.join(repo,'Learning/node_modules'),path.join(scratch,'node_modules'),'junction');
   fs.mkdirSync(path.join(scratch,'Content/Learn'),{recursive:true});
   for(const f of ['lessons.json','provider-course-example.json'])fs.copyFileSync(path.join(repo,'StatsDirectUI/Assets/Learn',f),path.join(scratch,'Content/Learn',f));
   const {questions}=await import(pathToFileURL(path.join(scratch,'Learn/bank.mjs')));
@@ -27,21 +35,9 @@ try{
   }
   fs.writeFileSync(path.join(scratch,'Content/analysis-menu.json'),JSON.stringify({operations}));
   const tests=fs.readdirSync(path.join(scratch,'Learn')).filter(f=>f.endsWith('.test.mjs'));
-  for(const f of tests){
-    const file=path.join(scratch,'Learn',f);
-    let source=fs.readFileSync(file,'utf8').replaceAll("'/Library/Frameworks/R.framework/Resources/bin/Rscript'",JSON.stringify(r));
-    // Rscript.exe's command-line parser does not preserve multiline -e arguments
-    // the way Unix does. Write the identical expression as a temporary .R script.
-    if(source.includes("import {execFileSync} from 'node:child_process';"))source=source.replace("import {execFileSync} from 'node:child_process';",`
-      import {execFileSync as nativeExecFileSync} from 'node:child_process';
-      import {writeFileSync as writeExpression} from 'node:fs';
-      const execFileSync=(program,args,options)=>{
-        if(args.includes('-e')){const i=args.indexOf('-e'),file=${JSON.stringify(scratch.replaceAll('\\','/'))}+'/'+crypto.randomUUID()+'.R';writeExpression(file,args[i+1]);args=[...args.slice(0,i),file];}
-        return nativeExecFileSync(program,args,{...options,env:{...process.env,LC_ALL:'C',LANG:'C'}});
-      };`);
-    fs.writeFileSync(file,source);
-  }
-  const result=spawnSync(process.execPath,['--test',...tests.map(f=>path.join(scratch,'Learn',f))],{stdio:'inherit',cwd:scratch});
+  const env={...process.env,STATSDIRECT_RSCRIPT:r,STATSDIRECT_CONTENT_ROOT:path.join(scratch,'Content')};
+  delete env.STATSDIRECT_LEARN_ARCHIVE; // Windows keeps no archived bank; unset skips that comparison by the package's rule.
+  const result=spawnSync(process.execPath,['--test',...tests.map(f=>path.join(scratch,'Learn',f))],{stdio:'inherit',cwd:scratch,env});
   if(result.error)throw result.error;process.exitCode=result.status??1;
 }finally{
   const resolved=path.resolve(scratch),parent=path.resolve(os.tmpdir());

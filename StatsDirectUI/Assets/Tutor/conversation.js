@@ -25,9 +25,9 @@
     mod
   ));
 
-  // upstream/Learn/node_modules/.pnpm/highlight.js@11.12.0/node_modules/highlight.js/lib/core.js
+  // node_modules/.pnpm/highlight.js@11.12.0/node_modules/highlight.js/lib/core.js
   var require_core = __commonJS({
-    "upstream/Learn/node_modules/.pnpm/highlight.js@11.12.0/node_modules/highlight.js/lib/core.js"(exports, module) {
+    "node_modules/.pnpm/highlight.js@11.12.0/node_modules/highlight.js/lib/core.js"(exports, module) {
       function deepFreeze(obj) {
         if (obj instanceof Map) {
           obj.clear = obj.delete = obj.set = function() {
@@ -1579,7 +1579,7 @@
     }
   });
 
-  // node_modules/marked/lib/marked.esm.js
+  // node_modules/.pnpm/marked@4.3.0/node_modules/marked/lib/marked.esm.js
   function getDefaults() {
     return {
       async: false,
@@ -3741,7 +3741,7 @@ ${content}</tr>
   var parser = Parser.parse;
   var lexer = Lexer.lex;
 
-  // upstream/Learn/node_modules/.pnpm/dompurify@3.4.17/node_modules/dompurify/dist/purify.es.mjs
+  // node_modules/.pnpm/dompurify@3.4.17/node_modules/dompurify/dist/purify.es.mjs
   function _OverloadYield(e, d) {
     this.v = e, this.k = d;
   }
@@ -5798,7 +5798,7 @@ ${content}</tr>
   }
   var purify_default = createDOMPurify();
 
-  // upstream/Learn/node_modules/.pnpm/katex@0.19.0/node_modules/katex/dist/katex.mjs
+  // node_modules/.pnpm/katex@0.19.0/node_modules/katex/dist/katex.mjs
   var ParseError = class _ParseError extends Error {
     // The underlying error message without any context added.
     constructor(message, token) {
@@ -20006,11 +20006,11 @@ ${content}</tr>
     __domTree
   };
 
-  // upstream/Learn/node_modules/.pnpm/highlight.js@11.12.0/node_modules/highlight.js/es/core.js
+  // node_modules/.pnpm/highlight.js@11.12.0/node_modules/highlight.js/es/core.js
   var import_core = __toESM(require_core(), 1);
   var core_default = import_core.default;
 
-  // upstream/Learn/node_modules/.pnpm/highlight.js@11.12.0/node_modules/highlight.js/es/languages/r.js
+  // node_modules/.pnpm/highlight.js@11.12.0/node_modules/highlight.js/es/languages/r.js
   function r(hljs) {
     const regex = hljs.regex;
     const IDENT_RE = /(?:(?:[a-zA-Z]|\.[._a-zA-Z])[._a-zA-Z0-9]*)|\.(?!\d)/;
@@ -20220,14 +20220,14 @@ ${content}</tr>
     };
   }
 
-  // upstream/Learn/rich-text.mjs
+  // Upstream/Learning/rich-text.mjs
   core_default.registerLanguage("r", r);
   var esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
   var math2 = (text3, displayMode) => katex.renderToString(text3, { displayMode, throwOnError: false, trust: false, strict: "ignore", maxExpand: 500, maxSize: 20 });
   var renderer = new marked.Renderer();
   renderer.html = esc;
   renderer.code = (code, language = "") => {
-    const isR = /^(r|rscript)\b/i.test(language);
+    const isR = /^(r|rscript)$/i.test(language.trim());
     return `<div class="code-block"><div class="code-actions"><span>${isR ? "R" : "Code"}</span><button type="button" data-code="copy">Copy</button>${isR ? '<button type="button" data-code="r">Open in R</button>' : ""}</div><pre><code>${isR ? core_default.highlight(code, { language: "r" }).value : esc(code)}</code></pre></div>`;
   };
   marked.use({ renderer, breaks: true, mangle: false, headerIds: false, extensions: [

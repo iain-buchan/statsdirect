@@ -20,6 +20,8 @@ internal sealed class LearningView : StatsDirectForm
     private readonly Label notice = new() { Dock = DockStyle.Bottom, AutoSize = true, Text = "Opening Learning…" };
     internal TaskCompletionSource Ready { get; private set; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
     internal string Generation { get; private set; } = Guid.NewGuid().ToString("N");
+    /// <summary>The Learning host contract this host implements (Learning/Upstream/Learning/HOST-CONTRACT.md); the build and the ready handler refuse a page that declares another.</summary>
+    internal const int HostContract = 1;
     internal bool NeedsRecovery { get; private set; }
     internal bool Restoring { get; private set; }
     internal JsonObject ReplyEvent { get; private set; }
@@ -60,7 +62,7 @@ internal sealed class LearningView : StatsDirectForm
                     Failed(browser);
             };
             string generation = Generation;
-            await core.AddScriptToExecuteOnDocumentCreatedAsync("if(location.href === " + JsonSerializer.Serialize(Page) + ") window.webkit={messageHandlers:{statsDirectLearn:{postMessage:body=>window.chrome.webview.postMessage({...body,viewGeneration:" + JsonSerializer.Serialize(generation) + "})}}};");
+            await core.AddScriptToExecuteOnDocumentCreatedAsync("if(location.href === " + JsonSerializer.Serialize(Page) + ") window.statsDirectHost={platform:'windows',postMessage:body=>window.chrome.webview.postMessage({...body,viewGeneration:" + JsonSerializer.Serialize(generation) + "})};");
             core.WebMessageReceived += async (_, e) =>
             {
                 if (IsDisposed || NeedsRecovery || browser != Browser || e.Source != Page || browser.Source?.AbsoluteUri != Page || e.WebMessageAsJson.Length > 15_000_000) return;
@@ -127,9 +129,6 @@ internal sealed class LearningView : StatsDirectForm
         if (result is null or "null") { Failed(browser); return null; }
         var envelope = JsonNode.Parse(result);
         if (!envelope.B("ok")) throw new IOException(envelope.S("error", "The learning page did not complete this action."));
-        // Platform wording belongs to the host; keep the pinned Mac content bundle intact.
-        try { await browser.CoreWebView2.ExecuteScriptAsync("for (const id of ['saveStatus','optionSaved','connectionPrivacy']) {const e=document.getElementById(id);if(e)e.textContent=e.textContent.replaceAll('on this Mac','on this PC').replaceAll('this Mac’s','this computer’s');}"); }
-        catch (Exception) when (IsDisposed || NeedsRecovery || browser != Browser) { }
         return envelope["value"]?.DeepClone();
     }
     internal void Loaded() { Restoring = false; notice.Text = "Learning record stored on this PC"; Ready.TrySetResult(); }

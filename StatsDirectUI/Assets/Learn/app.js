@@ -8,6 +8,10 @@
   var __commonJS = (cb, mod) => function __require() {
     return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
   };
+  var __export = (target, all) => {
+    for (var name in all)
+      __defProp(target, name, { get: all[name], enumerable: true });
+  };
   var __copyProps = (to, from, except, desc) => {
     if (from && typeof from === "object" || typeof from === "function") {
       for (let key of __getOwnPropNames(from))
@@ -25,9 +29,9 @@
     mod
   ));
 
-  // upstream/Learn/node_modules/.pnpm/highlight.js@11.12.0/node_modules/highlight.js/lib/core.js
+  // node_modules/.pnpm/highlight.js@11.12.0/node_modules/highlight.js/lib/core.js
   var require_core = __commonJS({
-    "upstream/Learn/node_modules/.pnpm/highlight.js@11.12.0/node_modules/highlight.js/lib/core.js"(exports, module) {
+    "node_modules/.pnpm/highlight.js@11.12.0/node_modules/highlight.js/lib/core.js"(exports, module) {
       function deepFreeze(obj) {
         if (obj instanceof Map) {
           obj.clear = obj.delete = obj.set = function() {
@@ -1579,7 +1583,7 @@
     }
   });
 
-  // node_modules/marked/lib/marked.esm.js
+  // node_modules/.pnpm/marked@4.3.0/node_modules/marked/lib/marked.esm.js
   function getDefaults() {
     return {
       async: false,
@@ -3741,7 +3745,7 @@ ${content}</tr>
   var parser = Parser.parse;
   var lexer = Lexer.lex;
 
-  // upstream/Learn/node_modules/.pnpm/dompurify@3.4.17/node_modules/dompurify/dist/purify.es.mjs
+  // node_modules/.pnpm/dompurify@3.4.17/node_modules/dompurify/dist/purify.es.mjs
   function _OverloadYield(e2, d) {
     this.v = e2, this.k = d;
   }
@@ -5798,7 +5802,7 @@ ${content}</tr>
   }
   var purify_default = createDOMPurify();
 
-  // upstream/Learn/node_modules/.pnpm/katex@0.19.0/node_modules/katex/dist/katex.mjs
+  // node_modules/.pnpm/katex@0.19.0/node_modules/katex/dist/katex.mjs
   var ParseError = class _ParseError extends Error {
     // The underlying error message without any context added.
     constructor(message, token) {
@@ -20006,11 +20010,11 @@ ${content}</tr>
     __domTree
   };
 
-  // upstream/Learn/node_modules/.pnpm/highlight.js@11.12.0/node_modules/highlight.js/es/core.js
+  // node_modules/.pnpm/highlight.js@11.12.0/node_modules/highlight.js/es/core.js
   var import_core = __toESM(require_core(), 1);
   var core_default = import_core.default;
 
-  // upstream/Learn/node_modules/.pnpm/highlight.js@11.12.0/node_modules/highlight.js/es/languages/r.js
+  // node_modules/.pnpm/highlight.js@11.12.0/node_modules/highlight.js/es/languages/r.js
   function r(hljs) {
     const regex = hljs.regex;
     const IDENT_RE = /(?:(?:[a-zA-Z]|\.[._a-zA-Z])[._a-zA-Z0-9]*)|\.(?!\d)/;
@@ -20220,14 +20224,14 @@ ${content}</tr>
     };
   }
 
-  // upstream/Learn/rich-text.mjs
+  // Upstream/Learning/rich-text.mjs
   core_default.registerLanguage("r", r);
   var esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
   var math2 = (text3, displayMode) => katex.renderToString(text3, { displayMode, throwOnError: false, trust: false, strict: "ignore", maxExpand: 500, maxSize: 20 });
   var renderer = new marked.Renderer();
   renderer.html = esc;
   renderer.code = (code, language = "") => {
-    const isR = /^(r|rscript)\b/i.test(language);
+    const isR = /^(r|rscript)$/i.test(language.trim());
     return `<div class="code-block"><div class="code-actions"><span>${isR ? "R" : "Code"}</span><button type="button" data-code="copy">Copy</button>${isR ? '<button type="button" data-code="r">Open in R</button>' : ""}</div><pre><code>${isR ? core_default.highlight(code, { language: "r" }).value : esc(code)}</code></pre></div>`;
   };
   marked.use({ renderer, mangle: false, headerIds: false, extensions: [
@@ -20255,7 +20259,7 @@ ${content}</tr>
       const code = button.closest(".code-block").querySelector("code").textContent;
       if (button.dataset.code === "r") {
         const message = button.closest("[data-message-id]");
-        openR(code, { messageID: message?.dataset.messageId ?? "", blockIndex: Array.from(message?.querySelectorAll("[data-code=r]") ?? []).indexOf(button) });
+        openR(code, { messageID: message?.dataset.messageId, blockIndex: message ? Array.from(message.querySelectorAll("[data-code=r]")).indexOf(button) : -1 });
       } else {
         copy(code);
         button.textContent = "Copied";
@@ -20264,7 +20268,7 @@ ${content}</tr>
     });
   }
 
-  // upstream/Learn/record-html.mjs
+  // Upstream/Learning/record-html.mjs
   var e = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
   function exportRichText(text3) {
     const content = document.createElement("div");
@@ -20286,7 +20290,7 @@ ${x.verification}`)).join("")) + section("Reflection", para(r2.reflection || "No
     return '<!doctype html><html><head><meta charset="utf-8"><title>StatsDirect learning record</title><style>body{font:14px/1.5 -apple-system,Arial,sans-serif;color:#213b48;max-width:900px;margin:auto;padding:32px}h1,h2,h3{break-after:avoid}h2{border-bottom:1px solid #ccc;margin-top:28px}article{margin:20px 0}pre{white-space:pre-wrap;overflow-wrap:anywhere}table{border-collapse:collapse}th,td{border:1px solid #bbb;padding:6px}.code-actions{display:none}.katex-html{display:none}</style></head><body>' + body + "</body></html>";
   }
 
-  // conversation-view.mjs
+  // Upstream/Learning/conversation-view.mjs
   function endpoint(container, node, offset) {
     const element = node?.nodeType === 1 ? node : node?.parentElement;
     const body = element?.closest(".message-body"), message = body?.closest("[data-message-id]");
@@ -20336,6 +20340,12 @@ ${x.verification}`)).join("")) + section("Reflection", para(r2.reflection || "No
   }
 
   // AuthoredTutor/bank.mjs
+  var bank_exports = {};
+  __export(bank_exports, {
+    bankVersion: () => bankVersion,
+    questions: () => questions,
+    tracks: () => tracks
+  });
   var bankVersion = "learn-draft-2026-10-01";
   var tracks = {
     "foundation": {
@@ -21892,16 +21902,19 @@ ${x.verification}`)).join("")) + section("Reflection", para(r2.reflection || "No
     }
   ];
 
-  // upstream/Learn/quiz.mjs
+  // Upstream/Learning/quiz.mjs
+  var { bankVersion: bankVersion2, questions: questions2, tracks: tracks2 } = bank_exports;
+  var bankPublication2 = void 0 ?? null;
   function createSession(track, mode, id = crypto.randomUUID(), providerPack = null) {
-    if (!tracks[track] || !["learn", "test"].includes(mode)) throw new Error("Choose a valid learning path and mode.");
-    const selected = providerPack?.questions ?? questions.filter((q) => q.track === track || q.track === "core");
+    if (!tracks2[track] || !["learn", "test"].includes(mode)) throw new Error("Choose a valid learning path and mode.");
+    const selected = providerPack?.questions ?? questions2.filter((q) => q.track === track || q.track === "core");
     if (!selected.length) throw Error("This course has no practice questions.");
     return {
       id,
       track,
       mode,
-      bankVersion: providerPack?.version ?? bankVersion,
+      bankVersion: providerPack?.version ?? bankVersion2,
+      contentPublication: providerPack ? null : structuredClone(bankPublication2),
       course: providerPack?.course ?? null,
       startedAt: (/* @__PURE__ */ new Date()).toISOString(),
       completedAt: null,
@@ -21954,10 +21967,10 @@ ${x.verification}`)).join("")) + section("Reflection", para(r2.reflection || "No
     };
   }
   function sessionQuestion(session, id) {
-    return session.questionSnapshots?.find((q) => q.id === id) ?? questions.find((q) => q.id === id);
+    return session.questionSnapshots?.find((q) => q.id === id) ?? questions2.find((q) => q.id === id);
   }
 
-  // upstream/Learn/provider-course.mjs
+  // Upstream/Learning/provider-course.mjs
   var statisticalSkills = { beginner: "Beginner", intermediate: "Intermediate", advanced: "Advanced" };
   var assessmentTypes = { none: "None", cpd: "Continued professional development credits", self: "AI supported self-assessment" };
   var assessmentNotes = { none: "Learn at your own pace.", cpd: "Keep a learning record for your provider to review for credit.", self: "Use the tutor for practice questions and feedback on your reasoning." };
@@ -22002,7 +22015,7 @@ ${x.verification}`)).join("")) + section("Reflection", para(r2.reflection || "No
     return review;
   }
 
-  // upstream/Learn/portfolio.mjs
+  // Upstream/Learning/portfolio.mjs
   var stages = { menus: "Start with menus", bridge: "Connect menus to R", coding: "Practise R coding" };
   function newPortfolio() {
     return { schemaVersion: 2, id: crypto.randomUUID(), startedAt: (/* @__PURE__ */ new Date()).toISOString(), profile: "foundation", stage: "menus", lesson: "epidemiology", view: "study", identity: { name: "", email: "", goal: "" }, learning: { statisticalSkills: "beginner", needs: "", qualifications: "", priorKnowledge: "", targetDate: "", focus: ["epidemiology", "causal"], style: "Worked examples and questions" }, training: trainingDefaults(), courseKey: "", courseWork: [], workDrafts: {}, providerReviews: [], evidence: [], conversation: [], sharingConsents: [], activities: [], attempts: [], quiz: null, reflection: "", draft: "" };
@@ -22064,7 +22077,7 @@ ${x.verification}`)).join("")) + section("Reflection", para(r2.reflection || "No
       rExperience: stages[state2.stage],
       diagnostics: structuredClone(state2.diagnostics ?? {}),
       bankVersion,
-      questionSource: "StatsDirect items are original teaching drafts with subject-expert review pending. Provider items retain the course and version recorded with each attempt. These are not official examination questions.",
+      questionSource: "StatsDirect items are original teaching material. Provider items retain the course and version recorded with each attempt. These are not official examination questions.",
       marking: "Provisional fixed-key MCQ scoring: 1 correct, 0 otherwise. First answers retained. Confidence and free-text reasoning are not graded. Independent practice is unsupervised and cannot certify exam readiness.",
       reviewStatus: "No accreditation or CPD points awarded by StatsDirect. Imported provider responses are recorded separately and are not authenticated. Email preparation does not confirm delivery or acceptance.",
       training: structuredClone(state2.training),
@@ -22114,7 +22127,7 @@ ${item.options.map((x) => x.id + ". " + x.text).join("\n")}
 Teaching rationale: ${item.explanation}` : "";
   }
 
-  // upstream/Learn/exam-sources.mjs
+  // Upstream/Learning/exam-sources.mjs
   var examSources = [
     { title: "MRCP(UK): official Part 1 sample examination", url: "https://www.thefederation.uk/examinations/part-1/part-1-sample-questions", note: "Official best-of-five practice access. Registration is required; the questions behind that step were not reviewed for this build." },
     { title: "MRCP-style diagnostic questions: published practice examples", url: "https://www.pastpaperhero.com/resources/rcp-mrcp-statistics-epidemiology-and-evidence-based-medicine-sensitivity-specificity-and-predictive-values?content=article", note: "Independent publisher, not a Royal College source. Public questions cover diagnostic denominators, prevalence and threshold changes. Used for topic inspiration only." },
@@ -22124,7 +22137,7 @@ Teaching rationale: ${item.explanation}` : "";
   ];
   var communicationPrompt = "Practise a short public-health communication scenario with me. You are a fictional service manager asking whether a clinic with longer average waiting times is performing poorly. Give me a small original data example, ask me to explain it in plain language, and wait for my reply. Then give formative feedback on interpretation, case mix, uncertainty and clarity. Do not assign an official examination grade.";
 
-  // upstream/Learn/lesson-context.mjs
+  // Upstream/Learning/lesson-context.mjs
   function labelStudyGuides(state2, lessons) {
     for (const entry of state2.conversation) {
       if (entry.source !== "Study guide" || entry.role !== "assistant") continue;
@@ -22139,7 +22152,7 @@ Teaching rationale: ${item.explanation}` : "";
   function ensureLessonPrompt(state2, lessons) {
     labelStudyGuides(state2, lessons);
     const current = lessons.find((l) => l.id === state2.lesson);
-    if (!current) return false;
+    if (!current || typeof current.challenge !== "string" || !current.challenge.trim()) return false;
     const latest = lessonConversation(state2).findLast((c) => c.lessonPrompt === true);
     if (latest?.lessonId === current.id && latest.text === current.challenge) return false;
     transcriptEntry(state2, "assistant", current.challenge, "Study guide", { lessonId: current.id, lessonTitle: current.title, lessonPrompt: true });
@@ -23797,24 +23810,24 @@ if (FALSE) {
     }
   ];
 
-  // authored-review-port.mjs
-  function authoredLessonReviewHTML(lesson2, esc4) {
-    const value = (field) => typeof field === "string" ? field.trim() : "";
-    const review = lesson2.review ?? {};
-    const parts = [
-      value(review.authorship) || value(lesson2.authorship),
-      value(review.status) && "Review status: " + value(review.status),
-      value(review.date) && "Review date: " + value(review.date),
-      value(review.reviewer) && "Reviewer: " + value(review.reviewer)
-    ].filter(Boolean);
-    return parts.length ? `<p class="small">${parts.map(esc4).join(" \u2014 ")}</p>` : "";
-  }
+  // Upstream/Learning/host-contract.json
+  var host_contract_default = { hostContract: 1 };
 
-  // upstream/Learn/lesson-guide.mjs
+  // Upstream/Learning/lesson-guide.mjs
+  var difficulties = { beginner: "Beginner", intermediate: "Intermediate", advanced: "Advanced" };
+  var learnerGoals = { undergraduateMedicine: "Undergraduate medicine", undergraduateHealthScience: "Undergraduate health sciences", postgraduateMedicine: "Postgraduate medicine", postgraduateAlliedHealth: "Postgraduate allied health", publicHealth: "Public health", healthcareBusinessAnalyst: "Healthcare business analyst", mastersStatistics: "Master's-level statistics", usMedicalBoards: "US medical board examinations" };
+  function learningTargetHTML(item, esc4) {
+    const parts = [];
+    if (typeof item.difficulty === "string" && item.difficulty) parts.push(difficulties[item.difficulty] ?? item.difficulty);
+    const goals = Array.isArray(item.learnerGoals) ? item.learnerGoals.filter((id) => typeof id === "string" && id.trim()) : [];
+    if (goals.length) parts.push(goals.map((id) => learnerGoals[id] ?? id).join("; "));
+    if (typeof item.learnerGoalNotes === "string" && item.learnerGoalNotes) parts.push(item.learnerGoalNotes);
+    return parts.length ? `<p class="small learning-targets">${parts.map(esc4).join(" \xB7 ")}</p>` : "";
+  }
   function lessonGuideHTML(lesson2, catalogue, esc4, safeURL2) {
     const list = (values) => `<ul>${values.map((value) => `<li>${esc4(value)}</li>`).join("")}</ul>`;
     const section = (title, html3) => html3 ? `<h3>${esc4(title)}</h3>${html3}` : "";
-    let html2 = `<p>${esc4(lesson2.summary)}</p><p>${esc4(lesson2.steps)}</p>`;
+    let html2 = learningTargetHTML(lesson2, esc4) + `<p>${esc4(lesson2.summary)}</p><p>${esc4(lesson2.steps)}</p>`;
     if (lesson2.learningObjectives?.length) html2 += section("What you will learn", list(lesson2.learningObjectives));
     if (lesson2.prerequisites?.length) html2 += `<p><strong>Useful preparation:</strong> ${lesson2.prerequisites.map((id) => esc4(catalogue.find((l) => l.id === id)?.title ?? id)).join("; ")}.</p>`;
     if (lesson2.keyConcepts?.length) html2 += section("Key ideas", lesson2.keyConcepts.map((c) => `<p><strong>${esc4(c.term)}.</strong> ${esc4(c.explanation)}</p>`).join(""));
@@ -23823,11 +23836,10 @@ if (FALSE) {
     if (lesson2.teachingPrompts?.length) html2 += section("Think it through", list(lesson2.teachingPrompts.map((p) => p.prompt)));
     if (lesson2.rProgression) html2 += section("From menus to R", list([lesson2.rProgression.menus, lesson2.rProgression.bridge, lesson2.rProgression.coding]));
     if (lesson2.sources?.length) html2 += section("References and further reading", `<ul>${lesson2.sources.map((s) => `<li>${safeURL2(s.url) ? `<a href="${esc4(safeURL2(s.url))}" target="_blank" rel="noopener">${esc4(s.title)}</a>` : esc4(s.title)} \u2014 ${esc4(s.scope)}${s.checkedAt ? ` <span class="small">Checked ${esc4(s.checkedAt)}.</span>` : ""}</li>`).join("")}</ul>`);
-    html2 += authoredLessonReviewHTML(lesson2, esc4);
     return html2;
   }
 
-  // upstream/Learn/course-ui.mjs
+  // Upstream/Learning/course-ui.mjs
   var esc2 = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
   function trainingHTML(state2, pack) {
     const t = state2.training;
@@ -23870,7 +23882,24 @@ ${pack ? `<details><summary>Included materials</summary><ul>${pack.documents.map
 <section class="card"><h2>Returned assessments</h2><button id="importProviderReview">Import provider response\u2026</button><p class="small">Import a response file returned by your provider for this learning record. StatsDirect records the supplied decision and feedback; it does not authenticate certificates or award credit.</p>${state2.providerReviews.map((r2) => `<article class="review-line"><strong>${esc2(r2.provider)} \u2014 ${esc2(r2.decision)}</strong><p>${esc2(r2.feedback)}</p><p>${esc2(r2.creditStatement)}</p><p class="small">${esc2(r2.reviewer)} \xB7 ${esc2(r2.reviewedAt)} \xB7 ${esc2(r2.verification)}</p></article>`).join("")}</section>`;
   }
 
-  // upstream/Learn/app.mjs
+  // Upstream/Learning/host.mjs
+  function bridge(win) {
+    if (win.statsDirectHost) return win.statsDirectHost;
+    return win.webkit?.messageHandlers?.statsDirectLearn ? { postMessage: (body) => win.webkit?.messageHandlers?.statsDirectLearn?.postMessage(body) } : null;
+  }
+  function platformOf(win, host2, settings2) {
+    return settings2?.platform ?? host2?.platform ?? (win.chrome?.webview ? "windows" : win.webkit?.messageHandlers?.statsDirectLearn ? "mac" : "web");
+  }
+  var wording = { mac: { computer: "this Mac", app: "the Mac app", application: "the Mac application" }, windows: { computer: "this PC", app: "the StatsDirect app", application: "the StatsDirect application" } };
+  var neutral = { computer: "this computer", app: "the StatsDirect app", application: "the StatsDirect application" };
+  function wordsFor(platform2) {
+    return wording[platform2] ?? neutral;
+  }
+  function hostClassName(platform2) {
+    return "host-" + (typeof platform2 === "string" && /^[a-z]+$/.test(platform2) ? platform2 : "web");
+  }
+
+  // Upstream/Learning/app.mjs
   var $ = (id) => document.getElementById(id);
   var esc3 = (value) => String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
   var state = newPortfolio();
@@ -23881,16 +23910,23 @@ ${pack ? `<details><summary>Included materials</summary><ul>${pack.documents.map
   var feedback = null;
   var reviewApproved = false;
   var coursePack = null;
+  var bridgeGeneration = "";
   var streamedText = "";
   var streamTimer = null;
   var renderedStudy = null;
-  var bridgeGeneration = "";
   var workspace = { choice: "__none__", choices: [], label: "Lessons only \xB7 open documents are not shared" };
-  var native = Boolean(window.webkit?.messageHandlers?.statsDirectLearn);
-  var post = (body) => window.webkit?.messageHandlers?.statsDirectLearn?.postMessage(body);
+  var host = bridge(window);
+  var native = Boolean(host);
+  var post = (body) => host?.postMessage(body);
+  var platform = () => platformOf(window, host, settings);
+  var words = () => wordsFor(platform());
+  var hostClass = () => {
+    for (const c of [...document.documentElement.classList]) if (c.startsWith("host-")) document.documentElement.classList.remove(c);
+    document.documentElement.classList.add(hostClassName(platform()));
+  };
   var allLessons = () => [...lessons_default, ...courseLessons(coursePack)];
   var lesson = () => allLessons().find((x) => x.id === state.lesson) ?? lessons_default[0];
-  var privacyText = () => settings.disabled ? "The online tutor is disabled by this Mac\u2019s learning policy. Local lessons, practice, help and R examples remain available." : settings.configured ? "Send shares learning context and up to 40 recent messages with OpenAI. Document sharing requires confirmation for each question. Earlier shared content can remain in the conversation. Do not include person identifiers." : "Connect your ChatGPT account to talk with the tutor here. No API key is needed. Your account\u2019s Codex access and usage allowance apply.";
+  var privacyText = () => settings.disabled ? `The online tutor is disabled by ${words().computer}\u2019s learning policy. Local lessons, practice, help and R examples remain available.` : settings.configured ? "Send shares learning context and up to 40 recent messages with OpenAI. Document sharing requires confirmation for each question. Earlier shared content can remain in the conversation. Do not include person identifiers." : "Connect your ChatGPT account to talk with the tutor here. No API key is needed. Your account\u2019s Codex access and usage allowance apply.";
   var sendLabel = () => settings.disabled ? "Online tutor disabled" : settings.configured ? "Send" : settings.signingIn ? "Finish sign-in" : "Use my ChatGPT";
   var independent = () => state.quiz?.mode === "test" && !state.quiz.completedAt;
   var notice = (text3) => {
@@ -24012,9 +24048,8 @@ ${pack ? `<details><summary>Included materials</summary><ul>${pack.documents.map
     $("send").onclick = () => settings.configured ? send() : configure();
     if ($("stop")) $("stop").onclick = () => {
       const id = pending;
-      pending = null;
       post({ action: "cancel", id });
-      render3();
+      window.statsDirectLearn.tutorError({ id, message: "Reply stopped. You can send another question." });
     };
     document.querySelectorAll("[data-action]").forEach((b) => b.onclick = () => openActivity(b.dataset.action));
     document.querySelectorAll("[data-prompt]").forEach((b) => {
@@ -24047,7 +24082,7 @@ ${pack ? `<details><summary>Included materials</summary><ul>${pack.documents.map
       },
       openR: (code, position) => {
         if (native) post({ action: "openRCode", generation, lessonID, ...position });
-        else notice("Open the Mac app to review and run this code in an R session.");
+        else notice(`Open ${words().app} to review and run this code in an R session.`);
       }
     });
   }
@@ -24089,7 +24124,7 @@ ${pack ? `<details><summary>Included materials</summary><ul>${pack.documents.map
       return;
     }
     if (native) post({ action: "settings" });
-    else notice("Choose Use my ChatGPT in the Mac application to sign in through your browser. No API key is needed.");
+    else notice(`Choose Use my ChatGPT in ${words().application} to sign in through your browser. No API key is needed.`);
   }
   function openActivity(action) {
     if (independent()) return;
@@ -24098,7 +24133,7 @@ ${pack ? `<details><summary>Included materials</summary><ul>${pack.documents.map
     activity(`${action === "r" ? "Opened bundled R example" : action === "help" ? "Opened help" : "Opened StatsDirect analysis"}: ${l.title}`);
     if (native) post({ action, lesson: l.id });
     else if (action === "help") window.open("../Help/" + l.help, "_blank");
-    else notice("Open this learning window in the Mac application to start the " + (action === "r" ? "R session" : "StatsDirect analysis") + ".");
+    else notice(`Open this learning window in ${words().application} to start the ` + (action === "r" ? "R session" : "StatsDirect analysis") + ".");
   }
   function send() {
     if (pending || independent() || settings.disabled) return;
@@ -24109,13 +24144,13 @@ ${pack ? `<details><summary>Included materials</summary><ul>${pack.documents.map
       return;
     }
     teachingSupport();
-    const userMessage = transcriptEntry(state, "user", text3, "Learner", { lessonId: lesson().id, lessonTitle: lesson().title });
+    const entry = transcriptEntry(state, "user", text3, "Learner", { lessonId: lesson().id, lessonTitle: lesson().title });
     state.draft = "";
     pending = crypto.randomUUID();
     streamedText = "";
     save();
     render3();
-    post({ action: "ask", id: pending, userMessageID: userMessage.id, lesson: lesson().id, profile: tracks[state.profile].title, stage: stages[state.stage], practiceContext: practiceContext(state), learningGoals: state.learning, messages: conversationForTutor(state) });
+    post({ action: "ask", id: pending, userMessageID: entry.id, lesson: lesson().id, profile: tracks[state.profile].title, stage: stages[state.stage], practiceContext: practiceContext(state), learningGoals: state.learning, messages: conversationForTutor(state) });
   }
   function startQuiz(mode, provider = false) {
     if (pending || state.quiz && !state.quiz.completedAt) return;
@@ -24130,7 +24165,7 @@ ${pack ? `<details><summary>Included materials</summary><ul>${pack.documents.map
     const qz = state.quiz;
     $("main").innerHTML = `<div class="eyebrow">PRACTICE WITH PURPOSE</div><h1>Put your understanding to work</h1><p class="subtle"><span id="questionSetSummary">${esc3(qz?.course?.title || (!qz && courseQuestions(coursePack).length ? coursePack.title : tracks[state.profile].title))} \xB7 ${qz?.questionIds.length ?? (courseQuestions(coursePack).length || questions.filter((q2) => q2.track === state.profile || q2.track === "core").length)} questions.</span> These short practice sets do not establish exam readiness.</p>`;
     if (!qz) {
-      $("main").insertAdjacentHTML("beforeend", `<section class="card"><h2>Choose how to practise</h2><p>Supported practice gives feedback after each answer. Independent practice pauses the tutor and withholds feedback until the end.</p>${courseQuestions(coursePack).length ? `<label for="questionSource">Question set</label><select id="questionSource"><option value="course">${esc3(coursePack.title)} \u2014 provider questions</option><option value="builtin">StatsDirect foundation / pathway questions</option></select>` : ""}<div class="actions"><button class="primary" id="supported">Supported practice</button><button id="independent">Independent practice</button></div><p class="small">First answers are retained. Confidence and reasoning help you reflect; they do not alter the score. Question bank: teaching drafts awaiting expert review.</p></section>`);
+      $("main").insertAdjacentHTML("beforeend", `<section class="card"><h2>Choose how to practise</h2><p>Supported practice gives feedback after each answer. Independent practice pauses the tutor and withholds feedback until the end.</p>${courseQuestions(coursePack).length ? `<label for="questionSource">Question set</label><select id="questionSource"><option value="course">${esc3(coursePack.title)} \u2014 provider questions</option><option value="builtin">StatsDirect foundation / pathway questions</option></select>` : ""}<div class="actions"><button class="primary" id="supported">Supported practice</button><button id="independent">Independent practice</button></div><p class="small">First answers are retained. Confidence and reasoning help you reflect; they do not alter the score.</p></section>`);
       $("supported").onclick = () => startQuiz("learn", $("questionSource")?.value === "course");
       $("independent").onclick = () => startQuiz("test", $("questionSource")?.value === "course");
       if ($("questionSource")) $("questionSource").onchange = () => {
@@ -24163,7 +24198,7 @@ ${pack ? `<details><summary>Included materials</summary><ul>${pack.documents.map
       return;
     }
     const q = sessionQuestion(qz, qz.questionIds[qz.answers.length]);
-    $("main").insertAdjacentHTML("beforeend", `<section class="card"><div class="eyebrow">${qz.mode === "test" ? "INDEPENDENT" : "SUPPORTED"} \xB7 QUESTION ${qz.answers.length + 1} OF ${qz.questionIds.length}</div>${qz.course ? `<p class="small">${esc3(qz.course.title)} \xB7 version ${esc3(qz.course.version)}</p>` : ""}<p class="question">${esc3(q.stem)}</p><form id="answerForm"><div class="options">${q.options.map((o) => `<label class="option"><input type="radio" name="answer" value="${o.id}" required><span><b>${o.id}.</b> ${esc3(o.text)}</span></label>`).join("")}</div><div class="form-row"><div><label for="confidence">How confident are you?</label><select id="confidence" required><option value="">Choose confidence</option><option value="unsure">Unsure</option><option value="fairly">Fairly confident</option><option value="confident">Confident</option></select></div><div><label for="reasoning">Your reasoning (optional)</label><textarea id="reasoning" rows="2" maxlength="1500" placeholder="What led you to this answer?"></textarea></div></div><div class="actions"><button class="primary" type="submit">Submit first answer</button>${qz.mode === "learn" ? '<button id="hint" type="button">Give me a hint</button><button id="teach" type="button">Explain the principle</button>' : ""}</div></form><div id="hintText" class="small"></div><button id="endPractice" class="link-button">End this attempt early</button></section><div id="feedback"></div>`);
+    $("main").insertAdjacentHTML("beforeend", `<section class="card"><div class="eyebrow">${qz.mode === "test" ? "INDEPENDENT" : "SUPPORTED"} \xB7 QUESTION ${qz.answers.length + 1} OF ${qz.questionIds.length}</div>${qz.course ? `<p class="small">${esc3(qz.course.title)} \xB7 version ${esc3(qz.course.version)}</p>` : ""}<p class="question">${esc3(q.stem)}</p>${learningTargetHTML(q, esc3)}<form id="answerForm"><div class="options">${q.options.map((o) => `<label class="option"><input type="radio" name="answer" value="${o.id}" required><span><b>${o.id}.</b> ${esc3(o.text)}</span></label>`).join("")}</div><div class="form-row"><div><label for="confidence">How confident are you?</label><select id="confidence" required><option value="">Choose confidence</option><option value="unsure">Unsure</option><option value="fairly">Fairly confident</option><option value="confident">Confident</option></select></div><div><label for="reasoning">Your reasoning (optional)</label><textarea id="reasoning" rows="2" maxlength="1500" placeholder="What led you to this answer?"></textarea></div></div><div class="actions"><button class="primary" type="submit">Submit first answer</button>${qz.mode === "learn" ? '<button id="hint" type="button">Give me a hint</button><button id="teach" type="button">Explain the principle</button>' : ""}</div></form><div id="hintText" class="small"></div><button id="endPractice" class="link-button">End this attempt early</button></section><div id="feedback"></div>`);
     $("answerForm").onsubmit = (e2) => {
       e2.preventDefault();
       const choice = new FormData(e2.target).get("answer");
@@ -24220,7 +24255,7 @@ ${pack ? `<details><summary>Included materials</summary><ul>${pack.documents.map
   function renderRecord() {
     const record = reviewRecord(state), text3 = reviewText(record);
     reviewApproved = false;
-    $("main").innerHTML = `<div class="eyebrow">YOUR LEARNING PORTFOLIO</div><h1>A record you can reflect on and share</h1><p class="subtle">Your answers, explanations, confidence, learning conversation and practical activities stay together. Prepare a review request when you are ready.</p><section class="card"><h2>About you and your learning</h2><div class="form-row"><div><label for="learnerName">Name for the reviewer</label><input id="learnerName" maxlength="120" value="${esc3(state.identity.name)}" autocomplete="name"></div><div><label for="learnerEmail">Reply email</label><input id="learnerEmail" type="email" maxlength="180" value="${esc3(state.identity.email)}" autocomplete="email"></div></div><label for="goal">Course, professional role or learning goal</label><input id="goal" maxlength="500" value="${esc3(state.identity.goal)}"><label for="reflection">Reflection and next learning step</label><textarea id="reflection" rows="3" maxlength="3000" placeholder="What did you learn, and what will you practise next?">${esc3(state.reflection)}</textarea><p class="small">Identity fields are kept locally and included in your review record. They are not automatically sent to the AI tutor.</p></section>${providerRecordHTML(state, workspace)}<section class="card"><h2>Review before sharing</h2><p>${record.attempts.filter((a) => a.completedAt).length} completed practice attempt(s) \xB7 ${state.conversation.length} conversation entries \xB7 ${state.activities.length} practical activities</p><p class="small">Original draft questions, provisional fixed-key scoring and AI teaching need external review. These are unsupervised learning records, not certificates. Any assessment decision or CPD recognition comes from your provider under their stated conditions.</p><details><summary>Preview the complete record to be attached</summary><pre id="recordPreview" class="record-preview">${esc3(text3)}</pre></details><div class="actions"><select id="recordFormat" aria-label="Export format"><option value="pdf">PDF document</option><option value="docx">Word document</option><option value="html">HTML document</option><option value="json">JSON record and diagnostics</option><option value="txt">Plain text</option></select><button id="exportRecord">Export learning record\u2026</button></div><label for="recipient">Ask for external review</label><input id="recipient" type="email" maxlength="254" value="${esc3(state.training.reviewEmail)}" list="reviewRecipients"><datalist id="reviewRecipients"><option value="support@statisticalhelp.org"><option value="chil@liverpool.ac.uk"></datalist><label id="mailConsent"><input id="consent" type="checkbox"><span>I have reviewed the record and want to include the full conversation and practice answers in an email to this recipient.</span></label><div class="actions"><button id="emailRecord" class="primary" disabled>Prepare email draft\u2026</button></div><p class="small">Opens Mail with the record attached. You review and send the message. Your chosen tutor or training provider reviews the record. StatsDirect does not award credits or arrange a reviewer.</p></section>`;
+    $("main").innerHTML = `<div class="eyebrow">YOUR LEARNING PORTFOLIO</div><h1>A record you can reflect on and share</h1><p class="subtle">Your answers, explanations, confidence, learning conversation and practical activities stay together. Prepare a review request when you are ready.</p><section class="card"><h2>About you and your learning</h2><div class="form-row"><div><label for="learnerName">Name for the reviewer</label><input id="learnerName" maxlength="120" value="${esc3(state.identity.name)}" autocomplete="name"></div><div><label for="learnerEmail">Reply email</label><input id="learnerEmail" type="email" maxlength="180" value="${esc3(state.identity.email)}" autocomplete="email"></div></div><label for="goal">Course, professional role or learning goal</label><input id="goal" maxlength="500" value="${esc3(state.identity.goal)}"><label for="reflection">Reflection and next learning step</label><textarea id="reflection" rows="3" maxlength="3000" placeholder="What did you learn, and what will you practise next?">${esc3(state.reflection)}</textarea><p class="small">Identity fields are kept locally and included in your review record. They are not automatically sent to the AI tutor.</p></section>${providerRecordHTML(state, workspace)}<section class="card"><h2>Review before sharing</h2><p>${record.attempts.filter((a) => a.completedAt).length} completed practice attempt(s) \xB7 ${state.conversation.length} conversation entries \xB7 ${state.activities.length} practical activities</p><p class="small">These are unsupervised learning records, not certificates. Any assessment decision or CPD recognition comes from your provider under their stated conditions.</p><details><summary>Preview the complete record to be attached</summary><pre id="recordPreview" class="record-preview">${esc3(text3)}</pre></details><div class="actions"><select id="recordFormat" aria-label="Export format"><option value="pdf">PDF document</option><option value="docx">Word document</option><option value="html">HTML document</option><option value="json">JSON record and diagnostics</option><option value="txt">Plain text</option></select><button id="exportRecord">Export learning record\u2026</button></div><label for="recipient">Ask for external review</label><input id="recipient" type="email" maxlength="254" value="${esc3(state.training.reviewEmail)}" list="reviewRecipients"><datalist id="reviewRecipients"><option value="support@statisticalhelp.org"><option value="chil@liverpool.ac.uk"></datalist><label id="mailConsent"><input id="consent" type="checkbox"><span>I have reviewed the record and want to include the full conversation and practice answers in an email to this recipient.</span></label><div class="actions"><button id="emailRecord" class="primary" disabled>Prepare email draft\u2026</button></div><p class="small">Opens Mail with the record attached. You review and send the message. Your chosen tutor or training provider reviews the record. StatsDirect does not award credits or arrange a reviewer.</p></section>`;
     for (const [id, key] of [["learnerName", "name"], ["learnerEmail", "email"], ["goal", "goal"]]) $(id).oninput = () => {
       state.identity[key] = $(id).value;
       save();
@@ -24233,11 +24268,11 @@ ${pack ? `<details><summary>Included materials</summary><ul>${pack.documents.map
     };
     $("captureEvidence").onclick = () => {
       if (native) post({ action: "captureLearningEvidence", documentID: $("evidenceDocument").value });
-      else notice("Open the Mac app to attach analysis evidence.");
+      else notice(`Open ${words().app} to attach analysis evidence.`);
     };
     $("importProviderReview").onclick = () => {
       if (native) post({ action: "importProviderReview" });
-      else notice("Provider response import is available in the Mac app.");
+      else notice(`Provider response import is available in ${words().app}.`);
     };
     $("exportRecord").onclick = exportRecord;
     $("consent").onchange = () => {
@@ -24264,7 +24299,7 @@ ${pack ? `<details><summary>Included materials</summary><ul>${pack.documents.map
         return;
       }
       if (native) post({ action: "email", recipient, ...exportPayload() });
-      else notice("Email drafts with attachments are available in the Mac application. Export the record here and attach it yourself.");
+      else notice(`Email drafts with attachments are available in ${words().application}. Export the record here and attach it yourself.`);
     };
   }
   function renderOptions() {
@@ -24302,11 +24337,11 @@ ${pack ? `<details><summary>Included materials</summary><ul>${pack.documents.map
     });
     $("exampleCourse").onclick = () => {
       if (native) post({ action: "exampleCourse" });
-      else notice("Open the Mac app to load the example provider course.");
+      else notice(`Open ${words().app} to load the example provider course.`);
     };
     $("importCourse").onclick = () => {
       if (native) post({ action: "importCoursePack" });
-      else notice("Course pack import is available in the Mac application.");
+      else notice(`Course pack import is available in ${words().application}.`);
     };
     bindTraining(state, { save });
     $("applyOptions").onclick = () => {
@@ -24378,16 +24413,9 @@ ${pack ? `<details><summary>Included materials</summary><ul>${pack.documents.map
   $("practiceNav").onclick = () => navigate("practice");
   $("recordNav").onclick = () => navigate("record");
   window.statsDirectLearn = {
+    hostContract: host_contract_default.hostContract,
     bridgeGeneration(value) {
       bridgeGeneration = value;
-    },
-    resumeReply(event) {
-      if (!loaded || !event?.value?.id) return;
-      pending = event.value.id;
-      streamedText = event.partial ?? "";
-      if (event.action === "reply") this.reply(event.value);
-      else if (event.action === "tutorError") this.tutorError(event.value);
-      else render3();
     },
     restore(value) {
       try {
@@ -24395,8 +24423,6 @@ ${pack ? `<details><summary>Included materials</summary><ul>${pack.documents.map
         pending = null;
         streamedText = "";
         renderedStudy = null;
-        clearTimeout(streamTimer);
-        streamTimer = null;
         state = value ? restorePortfolio(value) : newPortfolio();
         if (!state.lesson.startsWith("course:") && !lessons_default.some((l) => l.id === state.lesson)) state.lesson = "epidemiology";
         labelStudyGuides(state, lessons_default);
@@ -24420,6 +24446,7 @@ ${pack ? `<details><summary>Included materials</summary><ul>${pack.documents.map
     settings(value) {
       const wasSigningIn = settings.signingIn;
       settings = value;
+      hostClass();
       $("settings").disabled = Boolean(pending) || Boolean(value.disabled);
       $("settings").textContent = value.disabled ? "Online tutor disabled" : value.configured ? "Tutor connection" : value.signingIn ? "Finish ChatGPT sign-in" : "Use my ChatGPT";
       if ($("tutorBadge")) $("tutorBadge").textContent = value.label;
@@ -24450,6 +24477,14 @@ ${pack ? `<details><summary>Included materials</summary><ul>${pack.documents.map
         renderStream();
       }, 80);
     },
+    resumeReply(event) {
+      if (!loaded || !event?.value?.id) return;
+      pending = event.value.id;
+      streamedText = event.partial ?? "";
+      if (event.action === "reply") this.reply(event.value);
+      else if (event.action === "tutorError") this.tutorError(event.value);
+      else render3();
+    },
     diagnostics(value) {
       state.diagnostics = value;
       save();
@@ -24459,18 +24494,17 @@ ${pack ? `<details><summary>Included materials</summary><ul>${pack.documents.map
     },
     saved(value) {
       if (value === revision) {
-        $("saveStatus").textContent = "Saved on this Mac";
-        if ($("optionSaved")) $("optionSaved").textContent = "Saved on this Mac";
+        $("saveStatus").textContent = `Saved on ${words().computer}`;
+        if ($("optionSaved")) $("optionSaved").textContent = `Saved on ${words().computer}`;
       }
     },
     notice,
     reply(value) {
       if (value.id !== pending) return;
-      const messageId = pending;
       pending = null;
-      state.conversation = state.conversation.filter((c) => c.id !== messageId);
+      state.conversation = state.conversation.filter((c) => c.id !== value.id);
       if (value.workspaceSources?.length) activity("Tutor used: " + value.workspaceSources.join("; "));
-      transcriptEntry(state, "assistant", value.text, "StatsDirect AI tutor", { id: messageId, lessonId: lesson().id, lessonTitle: lesson().title, model: value.model, responseID: value.responseID, promptVersion: value.promptVersion, diagnostics: value.diagnostics ?? [], learningOptions: structuredClone(state.learning), rExperience: state.stage, courseSources: value.courseSources ?? [], workspaceSources: value.workspaceSources ?? [] });
+      transcriptEntry(state, "assistant", value.text, "StatsDirect AI tutor", { id: value.id, lessonId: lesson().id, lessonTitle: lesson().title, model: value.model, responseID: value.responseID, promptVersion: value.promptVersion, diagnostics: value.diagnostics ?? [], learningOptions: structuredClone(state.learning), rExperience: state.stage, courseSources: value.courseSources ?? [], workspaceSources: value.workspaceSources ?? [] });
       save();
       render3();
     },
@@ -24516,7 +24550,8 @@ ${pack ? `<details><summary>Included materials</summary><ul>${pack.documents.map
       if (loaded) navigate("options");
     }
   };
-  if (native) post({ action: "ready" });
+  hostClass();
+  if (native) post({ action: "ready", hostContract: host_contract_default.hostContract });
   else {
     try {
       const stored = localStorage.getItem("statsdirect-learning-preview");
@@ -24524,7 +24559,7 @@ ${pack ? `<details><summary>Included materials</summary><ul>${pack.documents.map
     } catch (error) {
       window.statsDirectLearn.loadError(error.message);
     }
-    notice("Browser preview. Use the Mac app to sign in with ChatGPT, analyses, R sessions and email drafts.");
+    notice(`Browser preview. Use ${words().app} to sign in with ChatGPT, analyses, R sessions and email drafts.`);
   }
 })();
 /*! Bundled license information:

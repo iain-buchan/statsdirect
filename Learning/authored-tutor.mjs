@@ -146,9 +146,9 @@ async function fileRecords(repoRoot, paths) {
 }
 export async function authoredBuildInputs(repoRoot, authored) {
   const learning = path.join(repoRoot, 'Learning'), paths = [];
-  for (const entry of await fs.readdir(learning, { withFileTypes: true })) if (entry.isFile() && (/\.mjs$/.test(entry.name) || ['package.json', 'pnpm-lock.yaml', 'upstream.lock.json'].includes(entry.name))) paths.push(path.join(learning, entry.name));
-  paths.push(...await walk(path.join(learning, 'upstream/Learn')));
-  for (const file of ['node_modules/.modules.yaml', 'node_modules/.pnpm/lock.yaml', 'upstream/Learn/node_modules/.modules.yaml']) if (await exists(path.join(learning, file))) paths.push(path.join(learning, file));
+  for (const entry of await fs.readdir(learning, { withFileTypes: true })) if (entry.isFile() && (/\.mjs$/.test(entry.name) || ['package.json', 'pnpm-lock.yaml', 'upstream-manifest.json'].includes(entry.name))) paths.push(path.join(learning, entry.name));
+  paths.push(...await walk(path.join(learning, 'Upstream/Learning')));
+  for (const file of ['node_modules/.modules.yaml', 'node_modules/.pnpm/lock.yaml', 'Upstream/Learning/node_modules/.modules.yaml']) if (await exists(path.join(learning, file))) paths.push(path.join(learning, file));
   if (authored) paths.push(...['manifest.json', ...FILES].map(file => path.join(authored.root, file)));
   else if (await exists(path.join(repoRoot, 'StatsDirectUI/Assets/Learn/lessons.json'))) paths.push(path.join(repoRoot, 'StatsDirectUI/Assets/Learn/lessons.json'));
   const records = await fileRecords(repoRoot, paths.map(file => path.relative(repoRoot, file)));
