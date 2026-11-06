@@ -20,6 +20,9 @@ internal static class Program
         throw new Exception("Timed out: " + condition + " at " + help.Browser.CoreWebView2.Source);
     }
     private static async Task Loaded(string path) => await Until($"location.pathname === {JsonSerializer.Serialize(path)} && document.readyState === 'complete' && (typeof StatsDirectHelp !== 'undefined' || typeof MadCap !== 'undefined')");
+    private static async Task CheckDesktopChrome(string surface) =>
+        Check((await Js("![...document.querySelectorAll('body > header:has(> .help-identity), #search-form')].some(element => element.getClientRects().length > 0)")).GetBoolean(),
+            $"{surface} uses the native controls without a website banner or search bar");
     [STAThread]
     private static int Main(string[] args)
     {
@@ -66,6 +69,7 @@ internal static class Program
         await Loaded("/parametric_methods/paired_t.htm");
         await Until("!!document.querySelector('details.rcode > summary') && !document.querySelector('details.rcode').open");
         Check((await Js("document.body.innerText.includes('Paired')")).GetBoolean(), "context topic renders in WebView2");
+        await CheckDesktopChrome("The context topic");
         await Js("document.querySelector('details.rcode > summary').click()");
         await Until("document.querySelector('details.rcode').open && document.querySelector('pre.rcode').offsetHeight > 0");
         Check((await Js("document.querySelector('pre.rcode').textContent.includes('t.test')")).GetBoolean(), "R code expands and retains executable example text");
@@ -83,6 +87,7 @@ internal static class Program
         help.Search("paired t");
         await Until("location.hash.includes('searchQuery=') && document.body.innerText.toLowerCase().includes('paired') && document.querySelectorAll('a.result').length > 0");
         Check(true, "full-text search returns offline results");
+        await CheckDesktopChrome("The search results");
         using (var png = File.Create(Path.Combine(output, "search-help.png"))) await help.Browser.CoreWebView2.CapturePreviewAsync(CoreWebView2CapturePreviewImageFormat.Png, png);
         await Js("document.querySelector('a.result').click()");
         await Until("(!location.pathname.endsWith('/index.html') || new URLSearchParams(location.hash.slice(1)).has('topic')) && document.readyState === 'complete'");
@@ -122,6 +127,38 @@ internal static class Program
         Check(service.IsDocked && service.DockHost.Panel.Visible && service.Window == null && mdi.Width < fullWidth, "help docks on the right and reserves real space beside the MDI workspace");
         Check(mdi.Right <= service.DockHost.Divider.Left && service.DockHost.Divider.Right <= service.DockHost.Panel.Left && ribbon.Width == owner.ClientSize.Width && service.DockHost.Panel.Top >= ribbon.Bottom, "help and its divider do not cover documents, menus or the full-width operation ribbon");
         Check(owner.ActiveMdiChild == worksheet && cells.SelectionStart == 2 && cells.SelectionLength == 8 && cells.Focused, "opening help preserves active MDI document, focus and selected range");
+        await CheckDesktopChrome("Docked help");
+        var buttons = help.Controls.OfType<ToolStrip>().SelectMany(strip => strip.Items.OfType<ToolStripButton>()).ToArray();
+        var home = buttons.Single(button => button.Text == "Home");
+        var browse = buttons.Single(button => button.Text == "Browse topics");
+        Check(Array.IndexOf(buttons, browse) == Array.IndexOf(buttons, home) + 1, "Home and Browse topics are adjacent native toolbar buttons");
+        await Js("window.browseTestToken = 'retained'");
+        browse.PerformClick();
+        const string contentsLink = "document.querySelector('#contents a[data-link=\"contents.htm\"]')";
+        await Until(contentsLink + "?.getClientRects().length > 0 && !!document.activeElement.closest('#contents')");
+        Check((await Js("location.pathname === '/parametric_methods/paired_t.htm' && window.browseTestToken === 'retained'")).GetBoolean(),
+            "Native Browse topics opens the Contents tree and focuses a link without replacing the reading page");
+        const string distributions = "[...document.querySelectorAll('#contents summary')].find(summary => summary.textContent.trim() === 'Probability distributions')";
+        const string distributionOverview = "document.querySelector('#contents a[data-link=\"distributions/distributions.htm\"]')";
+        const string normalDistribution = "document.querySelector('#contents a[data-link=\"distributions/normal.htm\"]')";
+        await Until(distributions + "?.getClientRects().length > 0");
+        await Js(distributions + ".click()");
+        await Until(distributions + ".parentElement.open && " + normalDistribution + "?.getClientRects().length > 0");
+        Check((await Js("location.pathname === '/parametric_methods/paired_t.htm' && window.browseTestToken === 'retained' && document.body.classList.contains('navigation-open')")).GetBoolean(),
+            "Clicking the Probability distributions title expands its topics without leaving the current topic or closing the tree");
+        Check((await Js($$"""
+            (() => {
+                const summary = {{distributions}}, overview = {{distributionOverview}};
+                return !summary.querySelector('a') && overview?.textContent === 'Overview' &&
+                    overview.getAttribute('aria-label') === 'Probability distributions overview' &&
+                    summary.parentElement.querySelector('ul > li:first-child > a') === overview;
+            })()
+            """)).GetBoolean(), "The branch title is an expander and its page remains the first Overview link");
+        await Js(normalDistribution + ".click()");
+        await Loaded("/distributions/normal.htm");
+        home.PerformClick();
+        await Loaded("/contents.htm");
+        Check(true, "A child topic opens from the expanded tree and native Home opens the welcome page");
         service.Show(owner, "1040", assets);
         await Loaded("/basics/worksheet.htm");
         service.Show(owner, "1239", assets);
@@ -136,6 +173,7 @@ internal static class Program
         Check(Screen.FromControl(owner).WorkingArea.Contains(service.Window.Bounds), "floating help fits its monitor after DPI scaling");
         service.Window.Location = new Point(-15000, -15000);
         Check(ReferenceEquals(browser, help.Browser.CoreWebView2) && (await Js("window.dockTestToken === 'persistent' && document.querySelector('details.rcode').open && document.querySelector('pre.rcode').offsetHeight > 0")).GetBoolean(), "Pop out preserves the browser, page and expanded R example without reload");
+        await CheckDesktopChrome("Floating help");
         await service.ToggleModeAsync();
         await Task.Delay(150);
         Check(service.IsDocked && service.Window == null && help.Browser.CoreWebView2.CanGoBack && (await Js("window.dockTestToken === 'persistent'")).GetBoolean(), "Dock returns the same page/session/history to the workspace");

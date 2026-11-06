@@ -4,6 +4,11 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
 ##[Unreleased]
 
+##[v5.3.4] 2026-11-06
+
+### Fixed
+- Desktop Help uses the native Home, Browse topics and search controls without the extra website header. Selecting a parent title expands its branch and keeps the current topic in place. Overview links open the parent pages.
+
 ##[v5.3.3] 2026-11-06
 
 ### Changed
