@@ -6,6 +6,8 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
 ### Changed
 - A question R asks in the console appears in the transcript as its own line when it is asked, and stays there when Stop or an error comes before an answer; the answer follows on its own line. A screen reader hears each question once, by its number, from a region of its own, and the input box is announced as the R console input with its prompt; the status line no longer carries the question. The console page is the one the Mac program shares
+- The desktop help and the help website are built by the StatsDirect Help Editor instead of MadCap Flare: the same topics and context-sensitive links, with a new reader and search.
+- The built-in tutor's lessons, questions and learning pathways are built from the authored content maintained in the StatsDirect Help Editor, including each question's difficulty and learner goals.
 
 ### Fixed
 - Executed R commands remain available to Up/Down recall after Clear output and display reload, independently of the transcript. Multiline batches remain intact; answers to R questions and unexecuted Script edits are excluded.
