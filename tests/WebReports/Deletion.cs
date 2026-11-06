@@ -101,7 +101,18 @@ internal static partial class Program
         var readOnly=(await view.CallAsync("snapshot")).GetRawText();
         await Key("Delete",46);
         Check((await view.CallAsync("snapshot")).GetRawText()==readOnly, "Delete cannot remove a result in reading mode");
-        await Js("StatsDirectReportEditor.setEditing(true);const size=document.querySelector('[data-format=fontSize]');size.focus();size.value='12';size.setSelectionRange(0,2)");
+        Check(await True("""
+            (() => {
+                StatsDirectReportEditor.setEditing(true);
+                const size = document.querySelector('[data-format=fontSize]');
+                const more = size.closest('#report-more-tools');
+                if (more?.hidden) document.getElementById('report-more-toggle').click();
+                size.focus();
+                size.value = '12';
+                size.setSelectionRange(0, 2);
+                return document.activeElement === size;
+            })()
+            """), "the font-size field receives focus in the toolbar or More menu");
         var beforeField=(await view.CallAsync("snapshot")).GetRawText();
         await Key("Backspace",8);
         Check((await view.CallAsync("snapshot")).GetRawText()==beforeField && await True("document.querySelector('[data-format=fontSize]').value===''"), "Backspace in a formatting field edits only that field");

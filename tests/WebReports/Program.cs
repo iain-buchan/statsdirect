@@ -189,12 +189,41 @@ internal static partial class Program
 
     private static async Task CheckStandardPresentation(string real)
     {
+        // The preceding drag checks use 60% zoom. Measure the default report at 100%.
+        view.Browser.ZoomFactor = 1;
         await view.CallAsync("load", new { entries = Array.Empty<object>() });
         await view.AppendAsync(real, "Paired t test and agreement", "TPaired", 1150);
         await view.Browser.CoreWebView2.CallDevToolsProtocolMethodAsync("Emulation.setDeviceMetricsOverride", "{\"width\":1600,\"height\":950,\"deviceScaleFactor\":1,\"mobile\":false}");
         await Js("window.scrollTo(0,0)");
-        Check(await True("(()=>{const b=document.querySelector('.report-entry'),p=b.querySelector('p'),h=b.querySelector('h1');return b.getBoundingClientRect().left===24 && getComputedStyle(document.body).maxWidth==='none' && getComputedStyle(p).fontFamily.startsWith('Arial') && Math.abs(parseFloat(getComputedStyle(p).fontSize)-40/3)<.01 && getComputedStyle(h).fontSize===getComputedStyle(p).fontSize;})()"), "wide report starts at the left margin with standard Arial 10pt text and headings");
-        Check(await True("(()=>{const s=document.querySelector('.report-body svg'),box=s.getBoundingClientRect();return s.getAttribute('width')==='6in' && Math.abs(box.width-576)<1 && box.left===24;})()"), "engine chart keeps its six-inch report width and left alignment on a wide screen");
+        var layout = await Js("""
+            (() => {
+                const entry = document.querySelector('.report-entry');
+                const paragraph = getComputedStyle(entry.querySelector('p'));
+                const heading = getComputedStyle(entry.querySelector('h1'));
+                const body = getComputedStyle(document.body);
+                const chart = entry.querySelector('svg');
+                const chartBox = chart.getBoundingClientRect();
+                return { left: entry.getBoundingClientRect().left, viewport: innerWidth,
+                    padding: body.paddingLeft, maxWidth: body.maxWidth, font: paragraph.fontFamily,
+                    paragraphSize: parseFloat(paragraph.fontSize), headingSize: parseFloat(heading.fontSize),
+                    chartLeft: chartBox.left, chartWidth: chartBox.width, chartWidthAttribute: chart.getAttribute('width') };
+            })()
+            """);
+        // The browser can round rendered positions by a fraction of a CSS pixel.
+        const double margin = 24, layoutTolerance = 0.05;
+        double paragraphSize = layout.GetProperty("paragraphSize").GetDouble();
+        Check(layout.GetProperty("viewport").GetInt32() >= 1500
+            && layout.GetProperty("padding").GetString() == "24px"
+            && Math.Abs(layout.GetProperty("left").GetDouble() - margin) < layoutTolerance
+            && layout.GetProperty("maxWidth").GetString() == "none"
+            && layout.GetProperty("font").GetString().StartsWith("Arial", StringComparison.Ordinal)
+            && Math.Abs(paragraphSize - 40d / 3) < 0.01
+            && layout.GetProperty("headingSize").GetDouble() == paragraphSize,
+            $"wide report starts at the left margin with standard Arial 10pt text and headings [{layout}]");
+        Check(layout.GetProperty("chartWidthAttribute").GetString() == "6in"
+            && Math.Abs(layout.GetProperty("chartWidth").GetDouble() - 576) < 1
+            && Math.Abs(layout.GetProperty("chartLeft").GetDouble() - margin) < layoutTolerance,
+            $"engine chart keeps its six-inch report width and left alignment on a wide screen [{layout}]");
         await view.AppendAsync("<p><span class='ci'>CI marker</span> <span class='pval'>P marker</span> <span class='score'>Score marker</span> <span class='warn'>Warning marker</span> <span class='subtotal'>Subtotal marker</span> <span class='model'>Model marker</span> <span class='grandtotal'>Grand total marker</span></p><p style='font:18pt Georgia;color:#800080'>User formatting</p>", "Palette", "", 0);
         const string palette = "[...document.querySelectorAll('.report-entry')].at(-1).querySelectorAll('span')";
         Check(await True($"JSON.stringify([...{palette}].map(e=>getComputedStyle(e).color))===JSON.stringify(['rgb(0, 0, 255)','rgb(0, 127, 0)','rgb(0, 127, 127)','rgb(255, 0, 0)','rgb(127, 0, 0)','rgb(0, 0, 127)','rgb(0, 0, 127)'])"), "all seven semantic result colours match the standard RTF palette");
