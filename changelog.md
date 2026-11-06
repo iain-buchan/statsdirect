@@ -10,6 +10,7 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 ### Fixed
 - Executed R commands remain available to Up/Down recall after Clear output and display reload, independently of the transcript. Multiline batches remain intact; answers to R questions and unexecuted Script edits are excluded.
 - Clear output removes old R questions from the console's replay history, so reloading the display does not bring answered or cancelled questions back. A question R is still waiting for remains available to answer after clearing or reloading the display.
+- In Learning, a tutor question with lettered options gets Answer A to E buttons beneath it, and the reply box says it takes an answer. Returning to a lesson no longer repeats its study-guide question, and repeats already in a record are shown once. The line naming the lesson and content version under a tutor reply is gone; only further-reading links remain.
 
 ##[v5.3.1] 2026-11-01
 
