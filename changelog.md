@@ -4,6 +4,13 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
 ##[Unreleased]
 
+##[v5.3.3] 2026-11-06
+
+### Changed
+- In Learning, Stop keeps the question and the part of the reply already received in the transcript, with a note that the reply was stopped; asking again is a new question.
+- The lesson guide no longer shows a review line; who reviewed a lesson and when stays in the lesson's record and the learning-record exports.
+- While the tutor reads a document you have shared, the status line says so.
+
 ##[v5.3.2] 2026-11-06
 
 ### Changed
