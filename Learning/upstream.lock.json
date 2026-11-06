@@ -185,6 +185,15 @@
         "StatsDirectUI/Assets/Learn/THIRD-PARTY-LICENSES.txt": "7fba3b1c7135eb7000b0c77d7310ad2191f0bd8004c6dae52b217a53e01eec84",
         "StatsDirectUI/Assets/Tutor/conversation.js": "4b553930dc8a94e433ece3c1e88789e04223a228700ba7c8f315bdb81e303d27"
       }
+    },
+    {
+      "description": "6 November 2026 shared Learning tutor fixes, applied to the copied Learning source so both platforms carry the same files: a lesson prompt is checked within its own lesson thread (returning to a lesson no longer re-posts its challenge), each prompt is shown once per thread, and a tutor message with lettered options or a closing question gets Answer buttons and an answer-mode composer label, and the transcript shows only reading links under a reply instead of the lesson-context provenance line. statsdirect-mac is to apply the identical diff; these hashes supersede the files listed.",
+      "files": {
+        "Learning/upstream/Learn/app.mjs": "a2bacce8aae20773c26d2413941d10e1952cad2a3024b263e62486f63a9078ce",
+        "Learning/upstream/Learn/lesson-context.mjs": "8c77038266eb2403956efb027c5caaba251471c4431de9084272e67e48d6f434",
+        "Learning/upstream/Learn/lesson-context.test.mjs": "7156bbf2920811ba963beea9db6884c9ee9ee50e5bfc9dd308088f0184f6d188",
+        "StatsDirectUI/Assets/Learn/learn.css": "3d1fe29b49cd390cb4c9bcbee1ead99c0f48a222a4980e043f43d232250b2a68"
+      }
     }
   ]
 }
