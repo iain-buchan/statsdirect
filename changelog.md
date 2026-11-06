@@ -10,8 +10,8 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 - The built-in tutor's lessons, questions and learning pathways are built from the authored content maintained in the StatsDirect Help Editor, including each question's difficulty and learner goals.
 
 ### Fixed
-- Executed R commands remain available to Up/Down recall after Clear output and display reload, independently of the transcript. Multiline batches remain intact; answers to R questions and unexecuted Script edits are excluded.
-- Clear output removes old R questions from the console's replay history, so reloading the display does not bring answered or cancelled questions back. A question R is still waiting for remains available to answer after clearing or reloading the display.
+- Executed R commands remain available to Up/Down recall after Clear output and display reload, independently of the transcript. Multiline batches remain intact; answers to R questions and unexecuted Script edits are excluded. On the Mac, whose console has no Clear output yet, recall is unchanged.
+- Clear output removes old R questions from the console's replay history, so reloading the display does not bring answered or cancelled questions back. A question R is still waiting for remains available to answer after clearing or reloading the display. This is Windows only until the Mac console gains Clear output.
 - In Learning, a tutor question with lettered options gets Answer A to E buttons beneath it, and the reply box says it takes an answer. Returning to a lesson no longer repeats its study-guide question, and repeats already in a record are shown once. The line naming the lesson and content version under a tutor reply is gone; only further-reading links remain.
 
 ##[v5.3.1] 2026-11-01

@@ -120,15 +120,19 @@ leaving the active worksheet/report and data selection intact. During a modal
 dialog, visible help temporarily floats so it stays interactive, then returns
 to the user's chosen presentation when the dialog closes.
 
-To update the bundle, build the `DesktopHelp` target in the `statisticalhelp` Flare
-project (`C:/Develop/SD3Help/StatsDirect/StatsDirect.flprj` on this PC). Its local
-destination publishes directly to this checkout's `StatsDirectUI/Assets/Help`;
-adjust that destination when using another checkout. The target includes
-software-help content, uses a compact desktop stylesheet/master without web
-analytics, and generates all navigation, search, images and R dropdowns. Commit
-the entire published bundle, excluding Flare build logs/metadata (gitignored).
-Do not replace it with a partial copy of topics or either public web target
-(`GitHub` for GitHub Pages and `Website` for statsdirect.com/help).
+To update the bundle, publish from the StatsDirect Help Editor (File > Publish
+content, or the `publish-content` command of `StatsDirectHelpBuilder.exe`). It
+builds the desktop help from the maintained `HelpEditor/HelpSource` in the
+`statisticalhelp` repository, delivers it to this checkout's
+`StatsDirectUI/Assets/Help` after inspecting the destination's hash, and records
+the delivery in `Assets/Help/.statsdirect-desktop-help.json` and
+`.statsdirect-desktop-help-adoption.json` at the repository root. While
+`.statsdirect-desktop-help.publishing.json` exists at the repository root the
+application build stops (`BuildTools/StatsDirectDesktopHelp.targets`). Commit the
+entire delivered bundle; `StatsDirectUI.csproj` keeps its control files out of
+the application package. MadCap Flare is retired: do not build any help target
+with it, and do not replace the bundle with a partial copy of topics or with the
+website output.
 
 Numeric context IDs retain their historical `chm-id` XML name for compatibility
 with existing operations and the Mac host. They resolve through the generated
