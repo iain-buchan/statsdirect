@@ -4,6 +4,8 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
 ##[Unreleased]
 
+##[v5.3.2] 2026-11-06
+
 ### Changed
 - A question R asks in the console appears in the transcript as its own line when it is asked, and stays there when Stop or an error comes before an answer; the answer follows on its own line. A screen reader hears each question once, by its number, from a region of its own, and the input box is announced as the R console input with its prompt; the status line no longer carries the question. The console page is the one the Mac program shares
 - The desktop help and the help website are built by the StatsDirect Help Editor instead of MadCap Flare: the same topics and context-sensitive links, with a new reader and search.
