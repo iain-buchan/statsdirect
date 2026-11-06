@@ -47,6 +47,7 @@ jobs:
         run: |
           echo "R_HOME=$(Rscript -e 'cat(normalizePath(R.home(), winslash = "\\"))')" >> "$GITHUB_ENV"
           echo "STATSDIRECT_RSCRIPT=$(cygpath -w "$(which Rscript)")" >> "$GITHUB_ENV"
+          echo "STATSDIRECT_TEST_NODE=$(cygpath -w "$(which node)")" >> "$GITHUB_ENV"
       - name: Portable C compiler for the native R worker
         shell: pwsh
         run: ./RConsoleWorker/fetch-native-tools.ps1
@@ -126,6 +127,7 @@ jobs:
         run: |
           echo "R_HOME=$(Rscript -e 'cat(normalizePath(R.home(), winslash = "\\"))')" >> "$GITHUB_ENV"
           echo "STATSDIRECT_RSCRIPT=$(cygpath -w "$(which Rscript)")" >> "$GITHUB_ENV"
+          echo "STATSDIRECT_TEST_NODE=$(cygpath -w "$(which node)")" >> "$GITHUB_ENV"
       - name: Portable C compiler for the native R worker
         shell: pwsh
         run: ./RConsoleWorker/fetch-native-tools.ps1
@@ -139,6 +141,20 @@ jobs:
         env:
           SPREADSHEETGEAR_LICENSE_STRING: ${{ secrets.SPREADSHEETGEAR_LICENSE_STRING }}
         run: dotnet build StatsDirectUI/StatsDirectUI.csproj -c Release -p:AcceptEula=wix7
+      - name: Pinned tutor runtime package for the TutorRuntime suite
+        shell: pwsh
+        run: |
+          $source = Get-Content StatsDirectUI/UI/Learning/TutorRuntimeInstallation.cs -Raw
+          $version = [regex]::Match($source, 'Version = "([^"]+)"').Groups[1].Value
+          $sha = [regex]::Match($source, 'Sha256 = "([0-9a-f]{64})"').Groups[1].Value
+          if (-not $version -or -not $sha) { throw "The runtime pin was not found in TutorRuntimeInstallation.cs." }
+          $name = "codex-app-server-package-x86_64-pc-windows-msvc.tar.gz"
+          $target = "DownloadedBinaries/TutorCache/$name"
+          New-Item -ItemType Directory -Force (Split-Path $target) | Out-Null
+          Invoke-WebRequest -UseBasicParsing "https://github.com/openai/codex/releases/download/rust-v$version/$name" -OutFile $target
+          $actual = (Get-FileHash $target -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($actual -ne $sha) { throw "The downloaded runtime package does not match the pinned hash." }
+          "Runtime $version cached, hash verified."
       - name: Window-driven test projects
         shell: bash
         env:

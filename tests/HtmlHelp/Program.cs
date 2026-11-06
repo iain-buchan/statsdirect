@@ -19,7 +19,7 @@ internal static class Program
         }
         throw new Exception("Timed out: " + condition + " at " + help.Browser.CoreWebView2.Source);
     }
-    private static async Task Loaded(string path) => await Until($"location.pathname === {JsonSerializer.Serialize(path)} && document.readyState === 'complete' && typeof MadCap !== 'undefined'");
+    private static async Task Loaded(string path) => await Until($"location.pathname === {JsonSerializer.Serialize(path)} && document.readyState === 'complete' && (typeof StatsDirectHelp !== 'undefined' || typeof MadCap !== 'undefined')");
     [STAThread]
     private static int Main(string[] args)
     {
