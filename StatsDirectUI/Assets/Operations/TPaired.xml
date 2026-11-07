@@ -9,6 +9,7 @@
           <name>data</name>
           <prompt>Select 2 matched columns (or 1 of differences)</prompt>
           <same-length>true</same-length>
+          <preserve-row-alignment>true</preserve-row-alignment>
           <mode>NumericReplaceMissing</mode>
           <min-columns>1</min-columns>
           <max-columns>2</max-columns>

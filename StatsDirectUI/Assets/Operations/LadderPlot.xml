@@ -10,6 +10,7 @@
           <prompt>Select DATA for PLOT</prompt>
           <ask-for-group-id>true</ask-for-group-id>
           <same-length>true</same-length>
+          <preserve-row-alignment>true</preserve-row-alignment>
           <mode>NumericReplaceMissing</mode>
           <min-columns>2</min-columns>
           <max-columns>2</max-columns>

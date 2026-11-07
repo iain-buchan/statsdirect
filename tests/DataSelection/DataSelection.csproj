@@ -9,6 +9,11 @@
     <StatsDirectBin Condition="'$(StatsDirectBin)' == ''">../../StatsDirectUI/bin/Debug/net10.0-windows10.0.17763.0</StatsDirectBin>
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="benchmarks/row-alignment.tsv" Link="row-alignment.tsv" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="benchmarks/matched-selection.tsv" Link="matched-selection.tsv" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="benchmarks/sequential-selection.tsv" Link="sequential-selection.tsv" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="benchmarks/mixed-selection.tsv" Link="mixed-selection.tsv" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="benchmarks/logistic-stacking.tsv" Link="logistic-stacking.tsv" CopyToOutputDirectory="PreserveNewest" />
     <Reference Include="StatsDirect">
       <HintPath>$(StatsDirectBin)/StatsDirect.dll</HintPath>
     </Reference>

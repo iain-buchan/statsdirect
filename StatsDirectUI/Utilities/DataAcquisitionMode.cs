@@ -8,7 +8,7 @@
         /// </summary>
         NumericSkipMissing = 1,
         /// <summary>
-        /// Doubles; missing rows are preserved in the output, replaced with Constant.MISSING.
+        /// Doubles; interior missing rows use Constant.MISSING, with legacy trimming at the ends.
         /// </summary>
         NumericReplaceMissing = 2,
         /// <summary>
@@ -26,6 +26,15 @@
         /// <summary>
         /// Whatever we can get, of whatever types.  Used for R export.
         /// </summary>
-        Variant = 107
+        Variant = 107,
+        /// <summary>
+        /// Numeric values in their selected visible rows, including leading and trailing missing values.
+        /// Used for matched observations and outcomes aligned with group identifiers.
+        /// </summary>
+        NumericPreserveRows = 108,
+        /// <summary>
+        /// Mixed numeric/categorical predictors in selected visible rows, retaining missing values before dummy coding.
+        /// </summary>
+        NumericCodingTextToDummiesPreserveRows = 109
     }
 }

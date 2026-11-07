@@ -3,6 +3,8 @@ using StatsDirect.UI.HtmlHelp;
 using System.Text.Json;
 using System.Reflection;
 using System.Xml.Linq;
+using System.Runtime.InteropServices;
+using System.ComponentModel;
 
 internal static class Program
 {
@@ -142,31 +144,73 @@ internal static class Program
         NativeKey(toolbar,Keys.Enter); await Until(VisibleFocus(paired));
         Check(true,"Enter on keyboard-selected Contents opens and focuses the current tree entry");
     }
+    [StructLayout(LayoutKind.Sequential)]
+    private struct WindowRect { public int Left,Top,Right,Bottom; }
+    [DllImport("user32.dll",SetLastError=true)]
+    [return:MarshalAs(UnmanagedType.Bool)]
+    private static extern bool GetClientRect(IntPtr window,out WindowRect rect);
+    [DllImport("user32.dll",SetLastError=true)]
+    [return:MarshalAs(UnmanagedType.Bool)]
+    private static extern bool SetWindowPos(IntPtr window,IntPtr insertAfter,int x,int y,int width,int height,uint flags);
+    private static Size NativeClientSize(Form window)
+    {
+        if(!GetClientRect(window.Handle,out var rect))throw new Win32Exception(Marshal.GetLastWin32Error());
+        return new Size(rect.Right-rect.Left,rect.Bottom-rect.Top);
+    }
     private static async Task CheckWideBrowse(HelpService service,ToolStripButton browse,bool hasIndex)
     {
         await service.ToggleModeAsync();
-        service.Window.Location=new Point(-15000,-15000);
-        service.Window.ClientSize=new Size((int)Math.Ceiling(1450*help.DeviceDpi/96d),700);
-        await Until("innerWidth>=1280");
-        help.ShowTopic("references/support.htm"); await Loaded("/references/support.htm");
-        await Js("document.querySelectorAll('#contents details').forEach(d=>d.open=true);document.getElementById('help-navigation').scrollTop=0");
-        Check((await Js("document.querySelector('#contents a[aria-current=\"page\"]').getBoundingClientRect().top>document.getElementById('help-navigation').getBoundingClientRect().bottom")).GetBoolean(),"wide-reader current entry starts below the visible contents viewport");
-        await RememberPage(); await Browse(browse,"references/support.htm");
-        await CheckUnchanged("Wide Browse scrolls a low current-topic entry into view and focuses it without navigation");
-        if(hasIndex)
+        var frame=service.Window;
+        frame.Location=new Point(-15000,-15000);
+        var previousMaximum=frame.MaximumSize;
+        var requestedClient=new Size((int)Math.Ceiling(1450*help.DeviceDpi/96d),700);
+        var nativeClient=NativeClientSize(frame);
+        var requestedOuter=new Size(requestedClient.Width+frame.Width-nativeClient.Width,requestedClient.Height+frame.Height-nativeClient.Height);
+        try
         {
-            var index=browse.Owner.Items.OfType<ToolStripDropDownButton>().Single(button=>button.Text=="Index");
-            index.ShowDropDown(); await NativeUntil(()=>index.DropDown.Visible);
-            Check((await Js("!document.body.classList.contains('navigation-open') && document.getElementById('help-navigation').getClientRects().length>0")).GetBoolean(),"Index preserves the wide reader's permanent sidebar without opening a Contents drawer");
-            await Browse(browse,"references/support.htm");
-            Check(!index.DropDown.Visible,"Contents closes Index in the wide layout");
-            await CheckUnchanged("wide Contents/Index switching preserves the topic and history");
+            // Both Form sizing and Windows' default tracking limit cap a large
+            // offscreen test window on small CI displays. Permit the native size
+            // explicitly, then bypass Form's separate managed cap. No zoom or
+            // emulated viewport: exercise the real WebView at the required width.
+            try
+            {
+                frame.MaximumSize=requestedOuter;
+                const uint keepPositionAndActivation=0x0002|0x0004|0x0010; // NOMOVE | NOZORDER | NOACTIVATE
+                if(!SetWindowPos(frame.Handle,IntPtr.Zero,0,0,requestedOuter.Width,requestedOuter.Height,keepPositionAndActivation))
+                    throw new Win32Exception(Marshal.GetLastWin32Error());
+                await Until("innerWidth>=1280");
+                Check(NativeClientSize(frame).Width==requestedClient.Width,"wide reader has the requested real native client width");
+            }
+            catch(Exception ex)
+            {
+                string browser;
+                try { browser=(await Js("({width:innerWidth,height:innerHeight,dpr:devicePixelRatio,visualWidth:visualViewport?.width,visualScale:visualViewport?.scale,screenWidth:screen.width,screenHeight:screen.height,wide:matchMedia('(min-width:1280px)').matches})")).ToString(); }
+                catch(Exception diagnosticError) { browser="Unavailable: "+diagnosticError.Message; }
+                var screen=Screen.FromControl(frame);
+                throw new Exception($"Wide Help viewport setup failed: requestedClient={requestedClient}, outer={requestedOuter}; frame={frame.Bounds}, client={frame.ClientSize}, nativeClient={NativeClientSize(frame)}, minimum={frame.MinimumSize}, maximum={frame.MaximumSize}, dpi={frame.DeviceDpi}; help={help.Bounds}, client={help.ClientSize}, dpi={help.DeviceDpi}; browser={help.Browser.Bounds}, client={help.Browser.ClientSize}, zoom={help.Browser.ZoomFactor}; maxTrack={SystemInformation.MaxWindowTrackSize}, virtualScreen={SystemInformation.VirtualScreen}, screen={screen.Bounds}, workingArea={screen.WorkingArea}; DOM={browser}",ex);
+            }
+            Console.WriteLine($"Wide Help viewport: nativeClient={NativeClientSize(frame)}, CSS width={await Js("innerWidth")}, DPI={frame.DeviceDpi}, zoom={help.Browser.ZoomFactor}, maxTrack={SystemInformation.MaxWindowTrackSize}");
+            help.ShowTopic("references/support.htm"); await Loaded("/references/support.htm");
+            await Js("document.querySelectorAll('#contents details').forEach(d=>d.open=true);document.getElementById('help-navigation').scrollTop=0");
+            Check((await Js("document.querySelector('#contents a[aria-current=\"page\"]').getBoundingClientRect().top>document.getElementById('help-navigation').getBoundingClientRect().bottom")).GetBoolean(),"wide-reader current entry starts below the visible contents viewport");
+            await RememberPage(); await Browse(browse,"references/support.htm");
+            await CheckUnchanged("Wide Browse scrolls a low current-topic entry into view and focuses it without navigation");
+            if(hasIndex)
+            {
+                var index=browse.Owner.Items.OfType<ToolStripDropDownButton>().Single(button=>button.Text=="Index");
+                index.ShowDropDown(); await NativeUntil(()=>index.DropDown.Visible);
+                Check((await Js("!document.body.classList.contains('navigation-open') && document.getElementById('help-navigation').getClientRects().length>0")).GetBoolean(),"Index preserves the wide reader's permanent sidebar without opening a Contents drawer");
+                await Browse(browse,"references/support.htm");
+                Check(!index.DropDown.Visible,"Contents closes Index in the wide layout");
+                await CheckUnchanged("wide Contents/Index switching preserves the topic and history");
+            }
+            if(checkReaderEscape)
+            {
+                await EscapeToTopic();
+                Check(true,"Escape after native Browse focuses the topic in the wide reader with no overlay open");
+            }
         }
-        if(checkReaderEscape)
-        {
-            await EscapeToTopic();
-            Check(true,"Escape after native Browse focuses the topic in the wide reader with no overlay open");
-        }
+        finally { frame.MaximumSize=previousMaximum; }
         await service.ToggleModeAsync();
     }
 

@@ -4,7 +4,7 @@
   xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util"
   xmlns:netfx="http://wixtoolset.org/schemas/v4/wxs/netfx">
   <!-- The .Net Windows Desktop runtime bundled into the setup executable. To move to a newer one, change this version and download the matching installer: see DownloadedBinaries/README.md. -->
-  <?define DotNetDesktopRuntimeVersion = "10.0.12" ?>
+  <?define DotNetDesktopRuntimeVersion = "10.0.14" ?>
   <?define DotNetDesktopRuntimeInstaller = "windowsdesktop-runtime-$(DotNetDesktopRuntimeVersion)-win-x64.exe" ?>
   <Bundle
     Name="StatsDirect"
@@ -71,7 +71,7 @@
         Id="DotNetDesktop"
         Permanent="yes"
         Cache="remove"
-        DetectCondition="DOTNETDESKTOPVERSION &gt;= &quot;10.0.0&quot;"
+        DetectCondition="DOTNETDESKTOPVERSION &gt;= v$(DotNetDesktopRuntimeVersion)"
         InstallArguments="/install /quiet /norestart">
         <ExePackagePayload
           Name="$(DotNetDesktopRuntimeInstaller)"

@@ -4,6 +4,20 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
 ##[Unreleased]
 
+### Changed
+- Desktop Help has Home, Contents and the authored keyword Index in its toolbar, with the same published help and tutor content available to the Windows and Mac builds.
+- Offline report HTML sanitization uses DOMPurify 3.4.17.
+- Setup includes the .NET 10.0.14 Desktop security update and upgrades older .NET 10 Desktop prerequisites; the standalone MSI retains its compatible runtime minimum.
+
+### Fixed
+- Grouped analyses preserve leading and trailing missing observations and filtered-row alignment, avoiding incorrect unequal-length selection errors. Recorded data replay retains each column's header and worksheet context; groups without usable observations are refused.
+- Selection errors report both required and provided row counts. Repeated-data selection can retry after a missing identifier, and handles pivot/cancel returns safely. Separate repeated-measures matrices retain their subject rows and header context across repeats.
+- Matched observations retain their original row positions in paired tests, rank correlations, agreement and repeated-measures/data-matrix analyses. A leading blank no longer shifts a paired sample before missing-value padding; independent samples and count tables keep their existing acquisition behaviour.
+- Sequential numeric selections for regression, crossover analyses and weighted summaries retain matching rows before incomplete observations are removed. Formula transformations retain missing operands in their original output rows, and selected empty headers are normalized before determining later column lengths.
+- All pairwise differences use each sample's own observed length and allocate the Cartesian product, avoiding incorrect zero-filled values, bounds errors and an incorrect output-size check when the sample sizes differ.
+- Missing categorical predictor values remain missing during dummy coding instead of becoming the reference category. Mixed regression selections retain their source rows before incomplete records are removed; domain checks retain strict count-table rules.
+- Grouped logistic regression excludes incomplete totals before stacking equal predictor patterns, so a missing row cannot discard a valid duplicate pattern.
+
 ##[v5.3.4] 2026-11-06
 
 ### Fixed

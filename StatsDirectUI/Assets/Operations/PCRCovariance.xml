@@ -14,6 +14,7 @@
           <prompt>Select DATA</prompt>
           <ask-for-group-id>false</ask-for-group-id>
           <same-length>true</same-length>
+          <preserve-row-alignment>true</preserve-row-alignment>
           <mode>NumericReplaceMissing</mode>
           <min-columns>2</min-columns>
           <max-columns>200</max-columns>

@@ -1,6 +1,7 @@
 ﻿using StatsDirect.Builtins;
 using StatsDirect.Data;
 using StatsDirect.Numerics;
+using StatsDirect.Templates;
 using StatsDirect.Utilities;
 using System;
 using System.Collections.Generic;
@@ -23,6 +24,9 @@ namespace StatsDirect.UI
         /// <param name="frameName"></param>
         /// <returns></returns>
         public static DataFrame ProcessCellArray(CellSelection cellSelection, DataAcquisitionMode mode, int rowLengthHint, bool isRefill, bool titleWasInData, int originGroup, string frameName)
+            => ProcessCellArrayWithReference(cellSelection, mode, rowLengthHint, isRefill, titleWasInData, originGroup, frameName, null);
+
+        internal static DataFrame ProcessCellArrayWithReference(CellSelection cellSelection, DataAcquisitionMode mode, int rowLengthHint, bool isRefill, bool titleWasInData, int originGroup, string frameName, WorksheetOrigin rowReference)
         {
             // If we get here, the user selected some data.
             try
@@ -36,11 +40,24 @@ namespace StatsDirect.UI
                     case DataAcquisitionMode.NumericReplaceMissing:
                         frame = ProcessCellArrayNumericReplaceMissing(cellSelection, mode, originGroup);
                         break;
+                    case DataAcquisitionMode.NumericPreserveRows:
+                        frame = ProcessCellArrayNumericPreserveRows(cellSelection, rowLengthHint, isRefill, titleWasInData, originGroup);
+                        break;
+                    case DataAcquisitionMode.NumericCodingTextToDummiesPreserveRows:
+                        frame = ProcessCellArrayNumericCodingPreserveRows(cellSelection, rowLengthHint, isRefill, titleWasInData, originGroup, null, rowReference);
+                        break;
                     case DataAcquisitionMode.GroupIdentifiers:
                     case DataAcquisitionMode.CategoryReplaceMissing:
                     case DataAcquisitionMode.CategoryCombineAllColumns:
                     case DataAcquisitionMode.Text:
                         {
+                            bool noVisibleRows = mode == DataAcquisitionMode.CategoryCombineAllColumns && cellSelection.TotalColumns > 0
+                                && cellSelection.ColumnSelections.TrueForAll(column => { column.GetTexts(); return column.NonHiddenRowCount == 0; });
+                            if (noVisibleRows)
+                            {
+                                frame = ProcessCellArrayCategoryCombineAllColumns(cellSelection, mode, 0, new string[0, cellSelection.TotalColumns], originGroup);
+                                break;
+                            }
                             if (!PreprocessCellArrayGroupsOrText(cellSelection, rowLengthHint, isRefill, titleWasInData, out int topRow, out string[,] hold))
                                 return null;
 
@@ -134,7 +151,7 @@ namespace StatsDirect.UI
                 if (isTextual)
                 {
                     ClassifierVariable variable = new();
-                    variable.EnsureLength(lastRow + 1);
+                    variable.EnsureLength(lastRow + 1, Constant.MISSING);
 
                     // Code text categories as numbers
                     Dictionary<string, Group> groupsByLabel = new();
@@ -491,8 +508,10 @@ namespace StatsDirect.UI
 
         private static DataFrame ProcessCellArrayCategoryCombineAllColumns(CellSelection cellSelection, DataAcquisitionMode mode, int topRow, string[,] hold, int originGroup)
         {
-            // Categories combined across columns; output as row pattern
-            int totRows = cellSelection.LongestRowCount;
+            // The strings are packed to visible rows. Do not turn hidden rows into extra missing identifiers.
+            int totRows = 0;
+            foreach (CellColumnSelection column in cellSelection.ColumnSelections)
+                totRows = Math.Max(totRows, column.NonHiddenRowCount);
             int totCols = cellSelection.TotalColumns;
             string[] foundwhat = new string[totRows];
             int[] nbin = new int[totRows];
@@ -651,6 +670,133 @@ namespace StatsDirect.UI
             }
             return frame;
         }
+
+        private static DataFrame ProcessCellArrayNumericPreserveRows(CellSelection cellSelection, int rowLengthHint, bool isRefill, bool titleWasInData, int originGroup)
+        {
+            DataFrame frame = new();
+            foreach (CellColumnSelection column in cellSelection.ColumnSelections)
+            {
+                DoubleVariable variable = ReadSelectedNumericColumn(column, rowLengthHint, isRefill, titleWasInData, originGroup, out _, false);
+                if (variable != null)
+                    frame.Variables.Add(variable);
+            }
+            return frame;
+        }
+
+        private static DoubleVariable ReadSelectedNumericColumn(CellColumnSelection column, int rowLengthHint, bool isRefill, bool titleWasInData, int originGroup, out string[] dataTexts, bool includeTexts = true)
+        {
+            dataTexts = null;
+            double[] selected = column.GetSelectedDataValues();
+            if (selected == null)
+                return null;
+            string[] texts = column.GetTexts();
+            string first = selected.Length > 0 && texts.Length > 0 ? (texts[0] ?? string.Empty).Trim() : string.Empty;
+            // A count hint, when supplied, must agree with an optional selected title.
+            // Matched columns have no count hint yet; only genuine text can be their selected header.
+            bool hasTitle = isRefill ? titleWasInData : (rowLengthHint == 0 || selected.Length == rowLengthHint + 1)
+                && first.Length > 0 && selected[0] == Constant.MISSING && !IsMissingRowText(first);
+            int offset = hasTitle && selected.Length > 0 && column.FirstSelectedRowIsVisible() ? 1 : 0;
+            double[] values = new double[selected.Length - offset];
+            dataTexts = includeTexts ? new string[values.Length] : null;
+            for (int row = 0; row < values.Length; row++)
+            {
+                double value = selected[row + offset];
+                values[row] = value == Constant.MISSING * 10D || double.IsNaN(value) ? Constant.MISSING : value;
+                if (dataTexts != null)
+                    dataTexts[row] = row + offset < texts.Length ? texts[row + offset] ?? string.Empty : string.Empty;
+            }
+            return new DoubleVariable(values, column.ColumnTitle)
+            {
+                // Numeric columns have already made their continuous/header decisions; replay must not ask again.
+                Origin = column.GetWorksheetOrigin(DataAcquisitionMode.NumericPreserveRows, hasTitle, originGroup)
+            };
+        }
+
+        /// <summary>Read aligned predictors before asking how any categorical values should be coded.</summary>
+        internal static DataFrame ProcessCellArrayNumericCodingPreserveRows(CellSelection cellSelection, int rowLengthHint, bool isRefill, bool titleWasInData, int originGroup, ITemplateHost host = null, WorksheetOrigin rowReference = null)
+        {
+            DataFrame frame = new();
+            foreach (CellColumnSelection column in cellSelection.ColumnSelections)
+            {
+                DoubleVariable numeric = ReadSelectedNumericColumn(column, rowLengthHint, isRefill, titleWasInData, originGroup, out string[] texts);
+                if (numeric == null)
+                    continue;
+                int beforeNormalization = numeric.Length;
+                GridSelectionProcessor.NormalizeSelectedGroupHeaders(new DataFrame(numeric), rowLengthHint, rowReference, column.CellGetter);
+                if (numeric.Length != beforeNormalization)
+                {
+                    // The shared positive-origin guard proved that this was an empty selected header.
+                    string[] dataTexts = new string[numeric.Length];
+                    Array.Copy(texts, beforeNormalization - numeric.Length, dataTexts, 0, dataTexts.Length);
+                    texts = dataTexts;
+                }
+                bool textual = false;
+                for (int row = 0; row < numeric.Length; row++)
+                    if (numeric.Data[row] == Constant.MISSING && !string.IsNullOrWhiteSpace(texts[row]) && !IsMissingRowText(texts[row].Trim()))
+                        textual = true;
+
+                ClassifierVariable classifier = new() { Title = numeric.Title };
+                classifier.EnsureLength(numeric.Length, Constant.MISSING);
+                Dictionary<string, Group> groupsByLabel = new();
+                bool allInteger = true;
+                int observed = 0;
+                for (int row = 0; row < numeric.Length; row++)
+                {
+                    double value = numeric.Data[row];
+                    string pattern;
+                    if (textual)
+                    {
+                        pattern = texts[row];
+                        if (string.IsNullOrWhiteSpace(pattern) || IsMissingRowText(pattern.Trim()))
+                            continue;
+                    }
+                    else
+                    {
+                        if (value == Constant.MISSING)
+                            continue;
+                        if (value < int.MinValue || value > int.MaxValue || value != Math.Floor(value))
+                        {
+                            allInteger = false;
+                            break;
+                        }
+                        pattern = ((int)value).ToString(System.Globalization.CultureInfo.InvariantCulture);
+                    }
+                    observed++;
+                    if (!groupsByLabel.TryGetValue(pattern, out Group group))
+                    {
+                        group = new Group(pattern, groupsByLabel.Count);
+                        groupsByLabel.Add(pattern, group);
+                    }
+                    group.NBin++;
+                    classifier.Data[row] = group.Id;
+                }
+                // Missing tails do not turn a set of distinct numeric values into repeated categories.
+                bool askForCoding = textual || allInteger && groupsByLabel.Count > 2 && groupsByLabel.Count < Math.Min(observed, 12);
+                if (!askForCoding)
+                {
+                    frame.Variables.Add(numeric);
+                    continue;
+                }
+                classifier.EnsureGroups(groupsByLabel.Count);
+                foreach (Group group in groupsByLabel.Values)
+                    classifier.Groups[(int)group.Id] = group;
+                DataFrame dummies = Sheet.ToDummyVariables(host ?? SdApplication.SoleInstance, classifier, !textual);
+                if (dummies == null)
+                    frame.Variables.Add(numeric);
+                else
+                    foreach (IVariable variable in dummies.Variables)
+                        frame.Variables.Add(variable); // Expanded columns retain the existing entered-data snapshot contract.
+            }
+            return frame;
+        }
+
+        private static bool IsMissingRowText(string text) => text == "*" || text == "."
+            || text.Equals("MISSING", StringComparison.OrdinalIgnoreCase)
+            || text.Equals(Formatting.MISSINGLABEL, StringComparison.OrdinalIgnoreCase)
+            || text.Equals("NA", StringComparison.OrdinalIgnoreCase)
+            || text.Equals("N/A", StringComparison.OrdinalIgnoreCase)
+            || text.Equals("NaN", StringComparison.OrdinalIgnoreCase)
+            || text.Equals("NULL", StringComparison.OrdinalIgnoreCase);
 
         private static DataFrame ProcessCellArrayNumericReplaceMissing(CellSelection cellSelection, DataAcquisitionMode mode, int originGroup)
         {

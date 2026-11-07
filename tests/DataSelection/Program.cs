@@ -29,19 +29,19 @@ static class Program
         public FakeGrid(string title, string[] texts) { this.title = title; this.texts = texts; }
         public string GetColumnTitle(int column) => title;
         public string GetCellText(int gridRow, int gridColumn) => texts[gridRow];
-        public (string[], int) GetCellTexts(int column, int firstRow, int lastRow) => (texts[firstRow..(lastRow + 1)], 0);
+        public (string[], int) GetCellTexts(int column, int firstRow, int lastRow) => (texts[firstRow..(lastRow + 1)], lastRow - firstRow + 1);
         public bool IsFormattedLikeATitle(int column, int row) => false;
         public (object[,], int) GetCellObjects(int column, int firstRow, int lastRow)
         {
             object[,] objects = new object[lastRow - firstRow + 1, 1];
             for (int r = firstRow; r <= lastRow; r++)
                 objects[r - firstRow, 0] = texts[r].Length == 0 ? null : texts[r];
-            return (objects, 0);
+            return (objects, lastRow - firstRow + 1);
         }
-        public (string[], int) GetCellFormulae(int column, int firstRow, int lastRow) => (texts[firstRow..(lastRow + 1)], 0);
-        public (DateTime[], int) GetCellDateValues(int column, int firstRow, int lastRow) => (new DateTime[lastRow - firstRow + 1], 0);
+        public (string[], int) GetCellFormulae(int column, int firstRow, int lastRow) => (texts[firstRow..(lastRow + 1)], lastRow - firstRow + 1);
+        public (DateTime[], int) GetCellDateValues(int column, int firstRow, int lastRow) => (new DateTime[lastRow - firstRow + 1], lastRow - firstRow + 1);
         public double GetCellValue(int gridRow, int gridColumn) => double.NaN;
-        public (double[], int) GetCellValues(int column, int firstRow, int lastRow) => (Enumerable.Repeat(double.NaN, lastRow - firstRow + 1).ToArray(), 0);
+        public (double[], int) GetCellValues(int column, int firstRow, int lastRow) => (Enumerable.Repeat(double.NaN, lastRow - firstRow + 1).ToArray(), lastRow - firstRow + 1);
     }
 
     // The classifier that the processor makes of the identifier columns given (each a column of cell texts, "" for a blank cell)
@@ -177,6 +177,15 @@ static class Program
             string differ = string.Join(" ", keys.Where(key => o[key].AsDouble != c[key].AsDouble));
             Say(differ.Length == 0, "the long layout and the layout in separate columns give the same figures" + (differ.Length == 0 ? " (" + keys.Length + " compared)" : ": differ at " + differ));
         }
+        failures += RowAlignedSelectionChecks.Run();
+        failures += GroupedRepeatedSelectionChecks.Run();
+        failures += RepeatedAcquisitionBoundaryChecks.Run();
+        failures += SequentialSelectionChecks.Run();
+        failures += MixedSelectionChecks.Run();
+        failures += ValidationPolicyChecks.Run();
+        failures += ApplyFunctionSelectionChecks.Run();
+        failures += PairwiseDifferencesChecks.Run();
+        failures += LogisticStackingChecks.Run();
         Console.WriteLine(failures == 0 ? "ALL CHECKS PASS" : $"{failures} CHECKS FAILED");
         return failures == 0 ? 0 : 1;
     }

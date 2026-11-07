@@ -56,26 +56,30 @@ namespace StatsDirect.TemplateProcessing
                 return ValidationResult.Valid;
 
             FilledParameter p = filledParameters[parameterName];
+            // Aligned frames retain missing rows for the analysis to omit
+            // jointly. Value-domain checks apply to their observed values;
+            // count tables and explicit missing-data validators keep their rules.
+            bool allowMissing = parameter is FrameParameter { PreserveRowAlignment: true };
             switch (validatorName)
             {
                 case "Boolean":
-                    return ValidateBoolean(failedValidationMessage, p.AsDataFrame);
+                    return ValidateBoolean(failedValidationMessage, p.AsDataFrame, allowMissing);
                 case "CheckForNonDummiedCategories":
-                    return CheckForNonDummiedCategories(p.AsDataFrame);
+                    return CheckForNonDummiedCategories(p.AsDataFrame, allowMissing);
                 case "Expression":
                     return ValidateExpression(failedValidationMessage, p.AsString);
                 case "Integer":
-                    return ValidateInteger(failedValidationMessage, p.AsDataFrame);
+                    return ValidateInteger(failedValidationMessage, p.AsDataFrame, allowMissing);
                 case "NoMissingData":
                     return ValidateNoMissingData(failedValidationMessage, p.AsDataFrame);
                 case "NonNegative":
-                    return ValidateNonNegative(failedValidationMessage, p.AsDataFrame);
+                    return ValidateNonNegative(failedValidationMessage, p.AsDataFrame, allowMissing);
                 case "PersonTimeSize":
                     return ValidatePersonTimeSize(p.AsDataFrame);
                 case "Pooling":
                     return ValidatePooling(failedValidationMessage, p.AsDataFrame);
                 case "Positive":
-                    return ValidatePositive(failedValidationMessage, p.AsDataFrame);
+                    return ValidatePositive(failedValidationMessage, p.AsDataFrame, allowMissing);
                 case "PositiveRows":
                     return ValidatePositiveRows(failedValidationMessage, p.AsDataFrame);
                 case "PositiveRowsExceptLastColumn":
@@ -87,9 +91,9 @@ namespace StatsDirect.TemplateProcessing
                 case "TwoBinsAndNoMissingData":
                     return ValidateTwoBins(failedValidationMessage, p.AsDataFrame);
                 case "ZeroToOneExclusive":
-                    return ValidateZeroToOneExclusive(failedValidationMessage, p.AsDataFrame);
+                    return ValidateZeroToOneExclusive(failedValidationMessage, p.AsDataFrame, allowMissing);
                 case "ZeroToOneInclusive":
-                    return ValidateZeroToOneInclusive(failedValidationMessage, p.AsDataFrame);
+                    return ValidateZeroToOneInclusive(failedValidationMessage, p.AsDataFrame, allowMissing);
                 default:
                     throw new ArgumentOutOfRangeException(nameof(validatorName), validatorName, "No validator with the specified name");
             }
@@ -144,35 +148,35 @@ namespace StatsDirect.TemplateProcessing
             return ValidationResult.Valid;
         }
 
-        private static ValidationResult ValidateZeroToOneInclusive(string failedValidationMessage, DataFrame dataFrame)
+        private static ValidationResult ValidateZeroToOneInclusive(string failedValidationMessage, DataFrame dataFrame, bool allowMissing)
         {
             // Ensure all values are in the range [0, 1]
             foreach (IVariable variable in dataFrame.Variables)
                 if (variable is DoubleVariable doubleVariable)
                     foreach (double value in doubleVariable.Data)
-                        if (value < 0 || value > 1)
+                        if ((!allowMissing || value != Constant.MISSING) && (value < 0 || value > 1))
                             return ValidationResult.Invalid(failedValidationMessage ?? "Data must lie between 0 and 1 inclusive");
             return ValidationResult.Valid;
         }
 
-        private static ValidationResult ValidateZeroToOneExclusive(string failedValidationMessage, DataFrame dataFrame)
+        private static ValidationResult ValidateZeroToOneExclusive(string failedValidationMessage, DataFrame dataFrame, bool allowMissing)
         {
             // Ensure all values are in the range (0, 1)
             foreach (IVariable variable in dataFrame.Variables)
                 if (variable is DoubleVariable doubleVariable)
                     foreach (double value in doubleVariable.Data)
-                        if (value <= 0 || value >= 1)
+                        if ((!allowMissing || value != Constant.MISSING) && (value <= 0 || value >= 1))
                             return ValidationResult.Invalid(failedValidationMessage ?? "Data must lie between 0 and 1");
             return ValidationResult.Valid;
         }
 
-        private static ValidationResult ValidateNonNegative(string failedValidationMessage, DataFrame dataFrame)
+        private static ValidationResult ValidateNonNegative(string failedValidationMessage, DataFrame dataFrame, bool allowMissing)
         {
             // Ensure all values are >= 0
             foreach (IVariable variable in dataFrame.Variables)
                 if (variable is DoubleVariable doubleVariable)
                     foreach (double value in doubleVariable.Data)
-                        if (value < 0)
+                        if ((!allowMissing || value != Constant.MISSING) && value < 0)
                             return ValidationResult.Invalid(failedValidationMessage ?? "Data must be positive or zero numbers");
             return ValidationResult.Valid;
         }
@@ -222,49 +226,53 @@ namespace StatsDirect.TemplateProcessing
             return ValidationResult.Valid;
         }
 
-        private static ValidationResult ValidateInteger(string failedValidationMessage, DataFrame dataFrame)
+        private static ValidationResult ValidateInteger(string failedValidationMessage, DataFrame dataFrame, bool allowMissing)
         {
             // Ensure all values are integers
             foreach (IVariable variable in dataFrame.Variables)
                 if (variable is DoubleVariable doubleVariable)
                     foreach (double value in doubleVariable.Data)
-                        if (value != Math.Floor(value))
+                        if ((!allowMissing || value != Constant.MISSING) && value != Math.Floor(value))
                             return ValidationResult.Invalid(failedValidationMessage ?? "Data must be integer numbers");
             return ValidationResult.Valid;
         }
 
-        private static ValidationResult ValidatePositive(string failedValidationMessage, DataFrame dataFrame)
+        private static ValidationResult ValidatePositive(string failedValidationMessage, DataFrame dataFrame, bool allowMissing)
         {
             // Ensure all values are > 0
             foreach (IVariable variable in dataFrame.Variables)
                 if (variable is DoubleVariable doubleVariable)
                     foreach (double value in doubleVariable.Data)
-                        if (value <= 0)
+                        if ((!allowMissing || value != Constant.MISSING) && value <= 0)
                             return ValidationResult.Invalid(failedValidationMessage ?? "Data must be positive non-zero numbers");
             return ValidationResult.Valid;
         }
 
-        private static ValidationResult ValidateBoolean(string failedValidationMessage, DataFrame dataFrame)
+        private static ValidationResult ValidateBoolean(string failedValidationMessage, DataFrame dataFrame, bool allowMissing)
         {
             // Ensure all values are in {0, 1}
             foreach (IVariable variable in dataFrame.Variables)
                 if (variable is DoubleVariable doubleVariable)
                     foreach (double value in doubleVariable.Data)
-                        if (0.0 != value && 1.0 != value)
+                        if ((!allowMissing || value != Constant.MISSING) && 0.0 != value && 1.0 != value)
                             return ValidationResult.Invalid(failedValidationMessage ?? "Case-control indicator must be 1 for case or 0 for control only");
             return ValidationResult.Valid;
         }
 
-        private static ValidationResult CheckForNonDummiedCategories(DataFrame dataFrame)
+        private static ValidationResult CheckForNonDummiedCategories(DataFrame dataFrame, bool allowMissing)
         {
             // Ensure the number of bins, if >2, is at least 12 (or they're all distinct)
             foreach (DoubleVariable v in dataFrame.Variables)
             {
                 double[] data = v.Data;
                 bool allInteger = true;
+                int observed = 0;
                 // skip if all not integers
                 foreach (double t in data)
                 {
+                    if (allowMissing && t == Constant.MISSING)
+                        continue;
+                    observed++;
                     if (t != Math.Floor(t))
                     {
                         allInteger = false;
@@ -275,7 +283,7 @@ namespace StatsDirect.TemplateProcessing
                     continue;
 
                 // All integers. How many categories have we got?  If it's 12 or more, we're OK.  If there's only one duplicate, we're also OK.
-                int upperLimitForCategories = Math.Min(data.Length - 1, 11);
+                int upperLimitForCategories = Math.Min((allowMissing ? observed : data.Length) - 1, 11);
                 HashSet<double> distinctValues = new();
                 foreach (double value in data)
                     if (value != Constant.MISSING)
