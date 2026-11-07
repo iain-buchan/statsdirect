@@ -31,6 +31,10 @@
         /// Numeric values in their selected visible rows, including leading and trailing missing values.
         /// Used for matched observations and outcomes aligned with group identifiers.
         /// </summary>
-        NumericPreserveRows = 108
+        NumericPreserveRows = 108,
+        /// <summary>
+        /// Mixed numeric/categorical predictors in selected visible rows, retaining missing values before dummy coding.
+        /// </summary>
+        NumericCodingTextToDummiesPreserveRows = 109
     }
 }

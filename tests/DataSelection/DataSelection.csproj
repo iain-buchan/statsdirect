@@ -12,6 +12,8 @@
     <Content Include="benchmarks/row-alignment.tsv" Link="row-alignment.tsv" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="benchmarks/matched-selection.tsv" Link="matched-selection.tsv" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="benchmarks/sequential-selection.tsv" Link="sequential-selection.tsv" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="benchmarks/mixed-selection.tsv" Link="mixed-selection.tsv" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="benchmarks/logistic-stacking.tsv" Link="logistic-stacking.tsv" CopyToOutputDirectory="PreserveNewest" />
     <Reference Include="StatsDirect">
       <HintPath>$(StatsDirectBin)/StatsDirect.dll</HintPath>
     </Reference>

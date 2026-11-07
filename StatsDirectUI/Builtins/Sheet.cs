@@ -352,6 +352,8 @@ namespace StatsDirect.Builtins
                         // only enter if not missing category mc
                         if (categoryVariable.Data[r] != mc && categoryVariable.Data[r] != Constant.MISSING)
                             outputVariable.Data[r] = categoryVariable.Data[r] == gcat[j].Id ? 1 : 0;
+                        else
+                            outputVariable.Data[r] = Constant.MISSING;
                     }
                     outputFrame.Variables.Add(outputVariable);
                 }
@@ -1675,8 +1677,8 @@ namespace StatsDirect.Builtins
             else
             {
                 // differences
-                x = new double[rows + 1];
-                y = new double[rows2 + 1];
+                x = new double[rows2 + 1];
+                y = new double[rows + 1];
                 ctr = 0;
                 for (int i = 1; i <= rows2; i++)
                 {
@@ -1700,25 +1702,27 @@ namespace StatsDirect.Builtins
                 rows = ctr;
             }
 
-            // lc = 1; 
+            long combinations = 0;
             switch (index)
             {
                 case 1:
-                    limit = rows * rows;
+                    combinations = (long)rows2 * rows;
                     qx = "Differences (" + xt + " - " + yt + ")";
                     break;
                 case 2:
-                    limit = Convert.ToInt32(rows * (rows + 1) / 2);
+                    combinations = rows * (rows + 1L) / 2;
                     qx = "Means within " + yt;
                     break;
                 case 3:
-                    limit = Convert.ToInt32((rows - 2) * (rows - 1) / 2);
+                    // Conservative upper bound: equal X values yield no slope.
+                    combinations = rows * (rows - 1L) / 2;
                     qx = "Slopes(" + xt + ", " + yt + ")";
                     break;
             }
 
-            if (limit > host.Preferences.MaxRows)
+            if (combinations > host.Preferences.MaxRows)
                 throw new TemplateOperationCancelledException("Too many data.", "Pairwise");
+            limit = (int)combinations;
 
             string t = qx;
 
@@ -1729,9 +1733,9 @@ namespace StatsDirect.Builtins
             switch (index)
             {
                 case 1:
-                    for (int i = 1; i <= rows; i++)
+                    for (int i = 1; i <= rows2; i++)
                     {
-                        for (int j = 1; j <= rows2; j++)
+                        for (int j = 1; j <= rows; j++)
                         {
                             Debug.Assert(y != null, "y != null");
                             if (x[i] == Constant.MISSING || y[j] == Constant.MISSING)
@@ -1773,6 +1777,8 @@ namespace StatsDirect.Builtins
                     }
                     if (parameters["calculate-slope"].AsBoolean)
                     {
+                        if (cnt == 0)
+                            throw new TemplateOperationCancelledException("At least two complete observations with different X values are required to calculate a slope.", "Pairwise");
                         double gamma = parameters["gamma"].AsDouble;
                         double p = (1.0 - gamma) / 2.0;
                         if (p < 0 || p > 1)
@@ -1827,6 +1833,7 @@ namespace StatsDirect.Builtins
                     break;
             }
 
+            outputVariable.TruncateDataToLength(cnt);
             ParameterBag outputParameters = new();
             outputParameters.AddOutput("output", outputFrame);
             return new StepOutput(outputParameters);

@@ -31,8 +31,13 @@ namespace StatsDirect.Templates
         public bool PreserveRowAlignment { get; set; }
 
         [XmlIgnore]
-        public DataAcquisitionMode SelectionMode => PreserveRowAlignment && DataAcquisitionMode == DataAcquisitionMode.NumericReplaceMissing
-            ? DataAcquisitionMode.NumericPreserveRows : DataAcquisitionMode;
+        public DataAcquisitionMode SelectionMode => !PreserveRowAlignment ? DataAcquisitionMode : DataAcquisitionMode switch
+        {
+            DataAcquisitionMode.NumericReplaceMissing => DataAcquisitionMode.NumericPreserveRows,
+            DataAcquisitionMode.NumericCodingTextToDummies => DataAcquisitionMode.NumericCodingTextToDummiesPreserveRows,
+            DataAcquisitionMode.CategoryReplaceMissing => DataAcquisitionMode.CategoryCombineAllColumns,
+            _ => DataAcquisitionMode
+        };
 
         /// <summary>
         /// The mode in which the data should be loaded into the frame

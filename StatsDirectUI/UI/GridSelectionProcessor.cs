@@ -106,7 +106,7 @@ namespace StatsDirect.UI
                 }
                 if (null != frame)
                 {
-                    if (frameParameter.SelectionMode == DataAcquisitionMode.NumericPreserveRows)
+                    if (frameParameter.SelectionMode == DataAcquisitionMode.NumericPreserveRows || frameParameter.SelectionMode == DataAcquisitionMode.NumericCodingTextToDummiesPreserveRows)
                         NormalizePeerSelectedHeaders(frame, grid as IGetCells);
                     ParameterBag outputParameters = new();
                     if (!string.IsNullOrEmpty(frameParameter.AppendToFrame))
@@ -565,7 +565,7 @@ namespace StatsDirect.UI
                     }
                 }
                 else
-                    frame = grid.GetCellArray(requiredRows, mode, minimumColumns, maximumColumns, selectionMessage, cancelButtonLabel, allowUserToPivot, mightBeBatching, out userCancelled, out wasPivoted, originGroup);
+                    frame = grid.GetCellArray(requiredRows, mode, minimumColumns, maximumColumns, selectionMessage, cancelButtonLabel, allowUserToPivot, mightBeBatching, out userCancelled, out wasPivoted, originGroup, groupHeaderReference);
                 if (wasPivoted)
                     return null;
 
@@ -574,7 +574,7 @@ namespace StatsDirect.UI
                     // User cancelled selection or other issue - either way, userCancelled is already set correctly
                     return null;
                 }
-                if (mode == DataAcquisitionMode.NumericPreserveRows)
+                if (mode == DataAcquisitionMode.NumericPreserveRows || mode == DataAcquisitionMode.NumericCodingTextToDummiesPreserveRows)
                 {
                     NormalizeSelectedGroupHeaders(frame, requiredRows, groupHeaderReference, grid as IGetCells);
                     // A selected peer title supplies positive row context for an empty header.

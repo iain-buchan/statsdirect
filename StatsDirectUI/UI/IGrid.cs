@@ -35,7 +35,7 @@ namespace StatsDirect.UI
         /// <param name="wasPivoted">If true, the user changed from selecting groups by column to by identifier, or vice versa</param>
         /// <param name="originGroup">An identifier to be recorded by all of the variables in this action to indicate they all came from the same selection.</param>
         /// <returns></returns>
-        DataFrame GetCellArray(int rowLengthHint, DataAcquisitionMode mode, int minimumColumns, int maximumColumns, string selectionMessage, string cancelButtonLabel, bool allowUserToPivot, bool mightBeBatching, out bool userCancelled, out bool wasPivoted, int originGroup);
+        DataFrame GetCellArray(int rowLengthHint, DataAcquisitionMode mode, int minimumColumns, int maximumColumns, string selectionMessage, string cancelButtonLabel, bool allowUserToPivot, bool mightBeBatching, out bool userCancelled, out bool wasPivoted, int originGroup, WorksheetOrigin rowReference = null);
 
         /// <summary>
         /// Obtain a 0-indexed array of [row,column] objects for the 0-indexed cells specified.

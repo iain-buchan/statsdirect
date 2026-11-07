@@ -180,7 +180,11 @@ static class Program
         failures += RowAlignedSelectionChecks.Run();
         failures += GroupedRepeatedSelectionChecks.Run();
         failures += SequentialSelectionChecks.Run();
+        failures += MixedSelectionChecks.Run();
+        failures += ValidationPolicyChecks.Run();
         failures += ApplyFunctionSelectionChecks.Run();
+        failures += PairwiseDifferencesChecks.Run();
+        failures += LogisticStackingChecks.Run();
         Console.WriteLine(failures == 0 ? "ALL CHECKS PASS" : $"{failures} CHECKS FAILED");
         return failures == 0 ? 0 : 1;
     }

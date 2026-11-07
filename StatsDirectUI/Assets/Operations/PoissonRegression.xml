@@ -52,6 +52,7 @@
           <name>response</name>
           <prompt>Select data for RESPONSE/number of EVENTS</prompt>
           <mode>NumericReplaceMissing</mode>
+          <preserve-row-alignment>true</preserve-row-alignment>
           <min-columns>1</min-columns>
           <max-columns>1</max-columns>
           <clear-selection-first>true</clear-selection-first>
@@ -67,6 +68,7 @@
               <prompt>Select data for EXPOSURE (person-time)</prompt>
               <same-length-as>response</same-length-as>
               <mode>NumericReplaceMissing</mode>
+              <preserve-row-alignment>true</preserve-row-alignment>
               <min-columns>1</min-columns>
               <max-columns>1</max-columns>
               <clear-selection-first>true</clear-selection-first>
@@ -83,6 +85,7 @@
               <prompt>Select data for PRIOR WEIGHTS</prompt>
               <same-length-as>response</same-length-as>
               <mode>NumericReplaceMissing</mode>
+              <preserve-row-alignment>true</preserve-row-alignment>
               <min-columns>1</min-columns>
               <max-columns>1</max-columns>
               <clear-selection-first>true</clear-selection-first>
@@ -96,6 +99,7 @@
           <prompt>Select data for PREDICTORS</prompt>
           <same-length-as>response</same-length-as>
           <mode>NumericCodingTextToDummies</mode>
+          <preserve-row-alignment>true</preserve-row-alignment>
           <min-columns>1</min-columns>
           <max-columns>200</max-columns>
           <clear-selection-first>true</clear-selection-first>

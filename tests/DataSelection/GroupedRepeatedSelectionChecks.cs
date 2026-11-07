@@ -45,7 +45,7 @@ internal static class GroupedRepeatedSelectionChecks
         }
         public (string[], int) GetCellFormulae(int c, int first, int last) => GetCellTexts(c, first, last);
         public (DateTime[], int) GetCellDateValues(int c, int first, int last) => (new DateTime[last - first + 1], Rows(first, last).Length);
-        public DataFrame GetCellArray(int hint, DataAcquisitionMode mode, int min, int max, string prompt, string cancel, bool pivot, bool batching, out bool userCancelled, out bool wasPivoted, int originGroup)
+        public DataFrame GetCellArray(int hint, DataAcquisitionMode mode, int min, int max, string prompt, string cancel, bool pivot, bool batching, out bool userCancelled, out bool wasPivoted, int originGroup, WorksheetOrigin rowReference = null)
         {
             userCancelled = wasPivoted = false;
             if (selections.Count == 0) throw new InvalidOperationException("Unexpected repeated selection: " + prompt);

@@ -9,6 +9,7 @@
           <name>times</name>
           <prompt>Select data for TIMES</prompt>
           <mode>NumericReplaceMissing</mode>
+          <preserve-row-alignment>true</preserve-row-alignment>
           <min-columns>1</min-columns>
           <max-columns>1</max-columns>
           <clear-selection-first>true</clear-selection-first>
@@ -18,6 +19,7 @@
           <prompt>Select data for DEATHS/EVENTS or CENSORED{0}</prompt>
           <same-length-as>times</same-length-as>
           <mode>NumericReplaceMissing</mode>
+          <preserve-row-alignment>true</preserve-row-alignment>
           <min-columns>1</min-columns>
           <max-columns>1</max-columns>
           <clear-selection-first>true</clear-selection-first>
@@ -27,6 +29,7 @@
           <prompt>Select data for PREDICTORS</prompt>
           <same-length-as>times</same-length-as>
           <mode>NumericCodingTextToDummies</mode>
+          <preserve-row-alignment>true</preserve-row-alignment>
           <min-columns>1</min-columns>
           <max-columns>200</max-columns>
           <clear-selection-first>true</clear-selection-first>
@@ -37,6 +40,7 @@
           <cancel-skips-parameter>Skip</cancel-skips-parameter>
           <same-length-as>times</same-length-as>
           <mode>CategoryReplaceMissing</mode>
+          <preserve-row-alignment>true</preserve-row-alignment>
           <min-columns>1</min-columns>
           <max-columns>1</max-columns>
           <clear-selection-first>true</clear-selection-first>

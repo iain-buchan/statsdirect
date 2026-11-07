@@ -2803,17 +2803,18 @@ namespace StatsDirect.Builtins
                 throw new TemplateOperationCancelledException("You must have more observations than parameters", "Logistic Regression");
 
             // stack entries with duplicate covariate patterns
-            // IEB July 2009: don't stack missing observations in the response as the subsequent dropper won't work
+            // Do not let a missing total or response consume a valid duplicate pattern
+            // before the complete-case omission below.
             //  Rows are merged only when their prior weights are equal (the merged row keeps that weight); a row whose weight is blank is left alone and dropped below with the missing-data message
             bool[] merged = new bool[rows + 1];
             int cutrows = 0;
             for (int i = 1; i < rows; i++)
             {
-                if (merged[i] || tr[i] == Constant.MISSING || tw[i] == Constant.MISSING)
+                if (merged[i] || tt[i] == Constant.MISSING || tr[i] == Constant.MISSING || tw[i] == Constant.MISSING)
                     continue;
                 for (int j = i + 1; j <= rows; j++)
                 {
-                    if (!merged[j] && tr[j] != Constant.MISSING && tw[j] == tw[i])
+                    if (!merged[j] && tt[j] != Constant.MISSING && tr[j] != Constant.MISSING && tw[j] == tw[i])
                     {
                         bool snap = true;
                         for (int k = 0; k < prd; k++)
