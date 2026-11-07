@@ -142,7 +142,7 @@ internal static class Program
         NativeKey(toolbar,Keys.Enter); await Until(VisibleFocus(paired));
         Check(true,"Enter on keyboard-selected Contents opens and focuses the current tree entry");
     }
-    private static async Task CheckWideBrowse(HelpService service,ToolStripButton browse)
+    private static async Task CheckWideBrowse(HelpService service,ToolStripButton browse,bool hasIndex)
     {
         await service.ToggleModeAsync();
         service.Window.Location=new Point(-15000,-15000);
@@ -153,6 +153,15 @@ internal static class Program
         Check((await Js("document.querySelector('#contents a[aria-current=\"page\"]').getBoundingClientRect().top>document.getElementById('help-navigation').getBoundingClientRect().bottom")).GetBoolean(),"wide-reader current entry starts below the visible contents viewport");
         await RememberPage(); await Browse(browse,"references/support.htm");
         await CheckUnchanged("Wide Browse scrolls a low current-topic entry into view and focuses it without navigation");
+        if(hasIndex)
+        {
+            var index=browse.Owner.Items.OfType<ToolStripDropDownButton>().Single(button=>button.Text=="Index");
+            index.ShowDropDown(); await NativeUntil(()=>index.DropDown.Visible);
+            Check((await Js("!document.body.classList.contains('navigation-open') && document.getElementById('help-navigation').getClientRects().length>0")).GetBoolean(),"Index preserves the wide reader's permanent sidebar without opening a Contents drawer");
+            await Browse(browse,"references/support.htm");
+            Check(!index.DropDown.Visible,"Contents closes Index in the wide layout");
+            await CheckUnchanged("wide Contents/Index switching preserves the topic and history");
+        }
         if(checkReaderEscape)
         {
             await EscapeToTopic();
@@ -177,6 +186,9 @@ internal static class Program
         await NativeUntil(() => index.Enabled);
         var toolbar=index.Owner;
         var contents=toolbar.Items.OfType<ToolStripButton>().Single(button=>button.Text=="Contents");
+        await Browse(contents,"parametric_methods/paired_t.htm");
+        await RememberPage();
+        Check((await Js("document.body.classList.contains('navigation-open')")).GetBoolean(),"the compact Contents drawer is open before switching to Index");
         toolbar.Focus(); contents.Select(); NativeKey(toolbar,Keys.Right);
         Check(index.Selected,"Right arrow reaches Index from Contents");
         NativeKey(toolbar,Keys.Enter);
@@ -186,6 +198,18 @@ internal static class Program
         var list = panel.Controls.OfType<ListBox>().Single();
         await NativeUntil(() => popup.Visible && filter.Focused);
         Check(true,"Enter on the selected Index button opens the keyword filter");
+        Check((await Js("!document.body.classList.contains('navigation-open')")).GetBoolean(),"opening Index closes the Contents drawer before showing the keyword picker");
+        await CheckUnchanged("Contents-to-Index switching preserves the page and history");
+        await Browse(contents,"parametric_methods/paired_t.htm");
+        Check(!popup.Visible && (await Js("document.body.classList.contains('navigation-open')")).GetBoolean(),"opening Contents closes the Index picker");
+        index.ShowDropDown(); contents.PerformClick();
+        await Until(VisibleFocus("parametric_methods/paired_t.htm")); await Task.Delay(100);
+        Check(!popup.Visible,"a later Contents command cancels a pending asynchronous Index open");
+        index.ShowDropDown();
+        typeof(Form).GetMethod("OnDeactivate",BindingFlags.Instance|BindingFlags.NonPublic)!.Invoke(help.FindForm(),[EventArgs.Empty]);
+        await Task.Delay(100);
+        Check(!popup.Visible,"deactivating the owner cancels a pending Index open without stealing focus later");
+        index.ShowDropDown(); await NativeUntil(()=>popup.Visible && filter.Focused);
         Check(list.Items.Count == catalog.IndexEntries.Count && list.Items.Count > 0,"Index lists every authored keyword target, including multiple pages for a keyword");
         Check(Screen.FromPoint(popup.Location).WorkingArea.Contains(popup.Bounds),"the keyword index popup fits its monitor");
         using (var image = new Bitmap(popup.Width,popup.Height))
@@ -478,7 +502,7 @@ internal static class Program
         await Task.Delay(150);
         Check(!help.IsDisposed && service.IsDocked && service.Window == null && ReferenceEquals(browser, help.Browser.CoreWebView2), "closing the dialog returns the same help session to the dock");
         Check((await Js("window.dockTestToken === 'persistent'")).GetBoolean(), "modal help roundtrip preserves the live document");
-        await CheckWideBrowse(service,browse);
+        await CheckWideBrowse(service,browse,catalog.HasKeywordIndex);
         service.Dispose();
         Check(help.IsDisposed && mdi.Width == fullWidth, "disposing help releases the browser, dock and divider");
     }
