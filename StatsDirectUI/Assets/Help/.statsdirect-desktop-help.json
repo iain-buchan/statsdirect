@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "format": "statsdirect-desktop-help-v1",
-  "publishedAtUtc": "2026-11-06T18:35:49.5644707+00:00",
-  "sourceSha256": "f9582e87134122d045efce2e65d4b7ea2e2159600a80bdfb49e08f254e232426",
+  "publishedAtUtc": "2026-11-07T04:19:15.2770184+00:00",
+  "sourceSha256": "2a66386877482ce2baa7d4e9c2b06eade5a865162b8bc8ecec7a112dd77b887e",
   "entryPage": "index.html",
   "topicCount": 404,
   "searchDocumentCount": 403,
@@ -2030,14 +2030,14 @@
   ],
   "aliasSourceSha256": "1b982112068d44a22dbe95a98db37b6cb08abb54a29927d112e32fb65db5ddcf",
   "contextHeaderSha256": "65a27d8c45a47b3ec913e0aa3b85d7166527d716cc3ffa6861a725ffcb804099",
-  "previousKind": "EditorOwned",
-  "previousSha256": "a351d7248844d94eeb5cbef669443efa5f03e3779a672c7e5bcb975bff3af7df",
+  "previousKind": "PortableArtifact",
+  "previousSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
   "adoptedFlareOutput": false,
   "files": [
     {
       "path": ".statsdirect-help-output.json",
-      "bytes": 55031,
-      "sha256": "14fce3ded0771cb1d490c1e70b700e1e5902864a28edb34963271113d873d162"
+      "bytes": 55080,
+      "sha256": "7d89727a9f09f4c42b4576d8da9a1c3d297d4e7e9b7cf6350747152bab8f79fd"
     },
     {
       "path": "Data/Alias.xml",
@@ -2307,7 +2307,7 @@
     {
       "path": "build-info.json",
       "bytes": 220,
-      "sha256": "2e351302106b62d29522ac7ec0cf47ddc35710816ed0c6629bac283b353cf773"
+      "sha256": "7ec68d9819b1e4a0197ade67449443255bc55f558e2a6cd85946052bbac3aba3"
     },
     {
       "path": "chi_square_tests/22.htm",
@@ -5490,6 +5490,11 @@
       "sha256": "9fef48d868277a8bc1852f7ba796b33ead812d38916a7131b0a29ea48961a6a4"
     },
     {
+      "path": "resources/help-editor-runtime/publication.json",
+      "bytes": 133,
+      "sha256": "ce6e03d45817790441e3689a6ceb796e6b379b395755762f89f8455b0eac1cd3"
+    },
+    {
       "path": "resources/help-editor-runtime/topic.css",
       "bytes": 3543,
       "sha256": "3481127310fffba5acb4cbe16b4003945d3920cd9b8d4e679275bcd45522f8a2"
@@ -6405,5 +6410,5 @@
       "sha256": "4ece2b498147ca6f25bedd3c2be67a88d35f72d5d825458ec5a0538894a060af"
     }
   ],
-  "publicationSnapshotSha256": null
+  "publicationSnapshotSha256": "4265ba923bd1c64d131dc90988225faa81462c09ff1e2ba537e218dea323a438"
 }
