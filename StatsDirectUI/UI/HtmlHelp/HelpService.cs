@@ -11,6 +11,8 @@ internal sealed class HelpService : IDisposable
     private ToolPaneSession session;
     private HelpView view;
     private bool disposed;
+    private readonly string userDataDirectory;
+    internal HelpService(string userDataDirectory = null) => this.userDataDirectory = userDataDirectory;
     internal ToolWindow Window => session?.Window;
     internal HelpView View => view;
     internal ToolDockHost DockHost => session?.DockHost;
@@ -26,7 +28,7 @@ internal sealed class HelpService : IDisposable
         {
             Form root = parent?.MdiParent ?? parent ?? throw new ArgumentNullException(nameof(parent));
             while (root.Owner != null) root = root.Owner;
-            view = new HelpView(new HelpCatalog(directory));
+            view = new HelpView(new HelpCatalog(directory), userDataDirectory);
             session = new ToolPaneSession(root, view, "Help", DockStyle.Right, 460, new Size(900, 780),
                 view.SetPresentation, null, view.ShowNotice, view.PreservePositionAsync);
             view.ModeRequested += async () => await session.ToggleModeAsync();
