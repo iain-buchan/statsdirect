@@ -674,8 +674,9 @@ namespace StatsDirect.UI
                     continue;
                 string[] texts = column.GetTexts();
                 string first = selected.Length > 0 && texts.Length > 0 ? (texts[0] ?? string.Empty).Trim() : string.Empty;
-                // A count hint identifies an optional selected title; a blank or explicit missing value is still a data row.
-                bool hasTitle = isRefill ? titleWasInData : rowLengthHint > 0 && selected.Length == rowLengthHint + 1
+                // A count hint, when supplied, must agree with an optional selected title.
+                // Matched columns have no count hint yet; only genuine text can be their selected header.
+                bool hasTitle = isRefill ? titleWasInData : (rowLengthHint == 0 || selected.Length == rowLengthHint + 1)
                     && first.Length > 0 && selected[0] == Constant.MISSING && !IsMissingRowText(first);
                 int offset = hasTitle && selected.Length > 0 && column.FirstSelectedRowIsVisible() ? 1 : 0;
                 double[] values = new double[selected.Length - offset];

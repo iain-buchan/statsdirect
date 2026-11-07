@@ -194,6 +194,7 @@
         <xs:choice maxOccurs="unbounded">
           <xs:element minOccurs="1" maxOccurs="1" name="can-select" type="xs:boolean" />
           <xs:element minOccurs="1" maxOccurs="1" name="same-length" type="xs:boolean" />
+          <xs:element minOccurs="0" maxOccurs="1" name="preserve-row-alignment" type="xs:boolean" />
           <xs:element minOccurs="1" maxOccurs="1" name="mode" type="sdop:DataAcquisitionMode" />
           <xs:element minOccurs="1" maxOccurs="1" name="same-length-as" type="xs:string" />
           <xs:element minOccurs="1" maxOccurs="1" name="append-to-frame" type="xs:string" />

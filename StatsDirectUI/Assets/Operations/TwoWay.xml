@@ -9,6 +9,7 @@
         <name>data</name>
         <prompt>Select DATA</prompt>
         <same-length>true</same-length>
+        <preserve-row-alignment>true</preserve-row-alignment>
         <mode>NumericReplaceMissing</mode>
         <min-columns>2</min-columns>
         <max-columns>200</max-columns>

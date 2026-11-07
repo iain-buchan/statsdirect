@@ -24,6 +24,17 @@ namespace StatsDirect.Templates
         public bool ColumnsAreSameLength { get; set; }
 
         /// <summary>
+        /// Keep missing values in their selected rows for matched observations.
+        /// Equal-length count tables and independent samples do not opt into this.
+        /// </summary>
+        [XmlElement(ElementName = "preserve-row-alignment")]
+        public bool PreserveRowAlignment { get; set; }
+
+        [XmlIgnore]
+        public DataAcquisitionMode SelectionMode => PreserveRowAlignment && DataAcquisitionMode == DataAcquisitionMode.NumericReplaceMissing
+            ? DataAcquisitionMode.NumericPreserveRows : DataAcquisitionMode;
+
+        /// <summary>
         /// The mode in which the data should be loaded into the frame
         /// </summary>
         [XmlElement(ElementName = "mode")]

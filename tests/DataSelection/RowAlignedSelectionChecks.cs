@@ -261,6 +261,7 @@ internal static class RowAlignedSelectionChecks
                 Check(actual.Data.Take(actual.Length).SequenceEqual(expected), $"group {group + 1} preserves exactly its observations ({mode})");
             }
         }
+        failures += MatchedSelectionChecks.Run();
         Console.WriteLine($"ROW ALIGNMENT: {checks} checks, {failures} failures");
         return failures;
     }
