@@ -291,7 +291,13 @@ internal static class Program
         using var owner = new Form { Text = "StatsDirect help tests", IsMdiContainer = true, Width = 1600, Height = 900, Location = new Point(-16000, -16000), StartPosition = FormStartPosition.Manual, ShowInTaskbar = false };
         owner.Shown += async (_, _) =>
         {
-            try { await Run(owner); Console.WriteLine($"PASS {checks} HTML5 help checks"); exit = 0; }
+            try
+            {
+                if (args.Contains("--corrupt-index-only"))
+                    await CorruptIndexViewChecks.Run(owner, helpDirectory ?? Path.Combine(AppContext.BaseDirectory, "Help"), output, Check);
+                else await Run(owner);
+                Console.WriteLine($"PASS {checks} HTML5 help checks"); exit = 0;
+            }
             catch (Exception ex) { Console.WriteLine("FAIL " + ex); }
             finally { help?.Dispose(); owner.Close(); }
         };
@@ -302,6 +308,7 @@ internal static class Program
     private static async Task Run(Form owner)
     {
         string assets = helpDirectory ?? Path.Combine(AppContext.BaseDirectory, "Help");
+        await CorruptIndexViewChecks.Run(owner, assets, output, Check);
         var catalog = new HelpCatalog(assets);
         KeywordIndexChecks.Run(Check,assets,output);
         var invalid = catalog.Topics.Where(t => catalog.Resolve(t.Key) == null).ToArray();
