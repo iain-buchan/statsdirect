@@ -56,6 +56,8 @@ internal static class Program
         var message=Message.Create(target.Handle,0x0100,(IntPtr)(int)key,IntPtr.Zero);
         if(!target.PreProcessMessage(ref message)) typeof(Control).GetMethod("WndProc",BindingFlags.Instance|BindingFlags.NonPublic)!.Invoke(target,[message]);
     }
+    private static void MouseUp(Control target, MouseButtons button, Point point) => typeof(Control)
+        .GetMethod("OnMouseUp",BindingFlags.Instance|BindingFlags.NonPublic)!.Invoke(target,[new MouseEventArgs(button,1,point.X,point.Y,0)]);
     private static async Task RememberPage() => _=await Js("window.browseSnapshot={url:location.href,history:history.length};window.browseToken='retained'");
     private static async Task CheckUnchanged(string description) => Check((await Js("location.href===window.browseSnapshot.url && history.length===window.browseSnapshot.history && window.browseToken==='retained'")).GetBoolean(),description);
     private static async Task CheckBrowseFailuresAndFallbacks(ToolStripButton browse, ToolStripButton home)
@@ -136,9 +138,9 @@ internal static class Program
         DialogKey(help,Keys.Shift|Keys.Tab); await NativeUntil(()=>heading.ContainsFocus);
         Check(true,"Native Tab and Shift+Tab traverse heading, toolbar, search and reader in visual order");
         toolbar.Focus(); home.Select(); NativeKey(toolbar,Keys.Right);
-        Check(browse.Selected,"Right arrow reaches Browse topics from Home on the native toolbar");
+        Check(browse.Selected,"Right arrow reaches Contents from Home on the native toolbar");
         NativeKey(toolbar,Keys.Enter); await Until(VisibleFocus(paired));
-        Check(true,"Enter on keyboard-selected Browse topics opens and focuses the current tree entry");
+        Check(true,"Enter on keyboard-selected Contents opens and focuses the current tree entry");
     }
     private static async Task CheckWideBrowse(HelpService service,ToolStripButton browse)
     {
@@ -157,6 +159,96 @@ internal static class Program
             Check(true,"Escape after native Browse focuses the topic in the wide reader with no overlay open");
         }
         await service.ToggleModeAsync();
+    }
+
+    private static async Task CheckIndex(HelpCatalog catalog, ToolStripDropDownButton index, HelpService service)
+    {
+        await NativeUntil(() => index.Enabled);
+        help.ShowTopic("1239"); await Loaded("/parametric_methods/paired_t.htm");
+        await RememberPage();
+        if (!catalog.HasKeywordIndex)
+        {
+            index.ShowDropDown();
+            await NativeUntil(() => StatusText.Contains("does not yet include a keyword index"));
+            Check(!index.DropDown.Visible,"older help bundles report a missing keyword index without opening an empty popup");
+            await CheckUnchanged("opening Index on an older bundle preserves the current page and history");
+            return;
+        }
+        await NativeUntil(() => index.Enabled);
+        var toolbar=index.Owner;
+        var contents=toolbar.Items.OfType<ToolStripButton>().Single(button=>button.Text=="Contents");
+        toolbar.Focus(); contents.Select(); NativeKey(toolbar,Keys.Right);
+        Check(index.Selected,"Right arrow reaches Index from Contents");
+        NativeKey(toolbar,Keys.Enter);
+        var popup = index.DropDown;
+        var panel = (Panel)popup.Items.OfType<ToolStripControlHost>().Single().Control;
+        var filter = panel.Controls.OfType<TextBox>().Single();
+        var list = panel.Controls.OfType<ListBox>().Single();
+        await NativeUntil(() => popup.Visible && filter.Focused);
+        Check(true,"Enter on the selected Index button opens the keyword filter");
+        Check(list.Items.Count == catalog.IndexEntries.Count && list.Items.Count > 0,"Index lists every authored keyword target, including multiple pages for a keyword");
+        Check(Screen.FromPoint(popup.Location).WorkingArea.Contains(popup.Bounds),"the keyword index popup fits its monitor");
+        using (var image = new Bitmap(popup.Width,popup.Height))
+        {
+            popup.DrawToBitmap(image,new Rectangle(Point.Empty,image.Size));
+            image.Save(Path.Combine(output,"keyword-index.png"));
+        }
+        filter.Text="Cohen's kappa";
+        Check(list.Items.Count > 0 && list.Items.Cast<object>().All(item=>item.ToString().Contains("Cohen",StringComparison.OrdinalIgnoreCase)),"typing filters authored index keywords");
+        NativeKey(filter,Keys.Down);
+        await NativeUntil(() => list.Focused);
+        await CheckUnchanged("filtering and moving through index entries do not navigate");
+        NativeKey(list,Keys.Tab); await NativeUntil(() => filter.Focused);
+        NativeKey(filter,Keys.Shift|Keys.Tab); await NativeUntil(() => list.Focused);
+        Check(true,"Tab and Shift+Tab reach both the keyword filter and entries");
+        NativeKey(list,Keys.Enter);
+        await Loaded("/agreement/kappa.htm");
+        Check(!popup.Visible,"Enter opens the selected keyword topic in the same Help view and closes the popup");
+
+        index.ShowDropDown(); await NativeUntil(() => popup.Visible && filter.Focused);
+        Check(filter.Text=="Cohen's kappa","reopening Index retains the last filter");
+        await RememberPage();
+        var firstRow=list.GetItemRectangle(0);
+        MouseUp(list,MouseButtons.Right,new Point(firstRow.Left+4,firstRow.Top+4));
+        await CheckUnchanged("right-clicking an index entry does not open a topic");
+        MouseUp(list,MouseButtons.Left,new Point(8,firstRow.Bottom+firstRow.Height));
+        await CheckUnchanged("clicking blank list space does not open the selected keyword");
+        filter.Text="Gaussian distribution";
+        Check(list.Items.Count==1,"the Gaussian distribution keyword has one clear destination");
+        firstRow=list.GetItemRectangle(0);
+        MouseUp(list,MouseButtons.Left,new Point(firstRow.Left+4,firstRow.Top+4));
+        await Loaded("/distributions/normal.htm");
+        Check(!popup.Visible,"clicking a keyword entry opens its topic and closes Index");
+        index.ShowDropDown(); await NativeUntil(() => popup.Visible && filter.Focused);
+        filter.Text="__no_such_index_keyword__";
+        Check(list.Items.Count==0,"a filter with no matches leaves no selectable index target");
+        await RememberPage(); NativeKey(filter,Keys.Enter);
+        await CheckUnchanged("Enter with no matching keyword leaves the reading page unchanged");
+        Check(popup.Visible,"an empty-filter result stays open for correction");
+        NativeKey(filter,Keys.Escape);
+        await NativeUntil(() => !popup.Visible && index.Selected);
+        Check(true,"Escape closes Index and returns to its native toolbar button");
+
+        index.ShowDropDown(); await NativeUntil(() => popup.Visible && filter.Focused);
+        filter.Text="Scheffe";
+        Check(list.Items.Cast<object>().Any(item=>item.ToString().Contains("Scheff",StringComparison.OrdinalIgnoreCase)),"index filtering finds accented authored keywords without requiring accents");
+        filter.Text="ANOVA";
+        Check(list.Items.Count>1,"index filtering retains the authored ANOVA subentries");
+        filter.Text="AI assistance";
+        Check(list.Items.Count==2 && list.Items.Cast<object>().Select(item=>item.ToString()).Distinct().Count()==2,"a keyword with multiple topics presents distinguishable target titles");
+        filter.Text="ANOVA";
+        popup.Close();
+        index.ShowDropDown(); await NativeUntil(() => popup.Visible && filter.Focused);
+        Check(!popup.IsDisposed && filter.Text=="ANOVA","repeated opening reuses the live index popup without disposed-menu errors");
+        await service.ToggleModeAsync();
+        service.Window.Location=new Point(-15000,-15000);
+        Check(!popup.Visible,"popping Help out closes its open Index popup");
+        await service.ToggleModeAsync();
+        help.ShowTopic("1239"); await Loaded("/parametric_methods/paired_t.htm");
+        await NativeUntil(()=>contents.Enabled);
+        toolbar.Focus(); contents.Select(); NativeKey(toolbar,Keys.Enter);
+        await Until(VisibleFocus("parametric_methods/paired_t.htm"));
+        Check(!popup.Visible,"a closed, previously used Index does not intercept Enter on Contents");
     }
     private static async Task CheckDesktopChrome(string surface) =>
         Check((await Js("![...document.querySelectorAll('body > header:has(> .help-identity), #search-form')].some(element => element.getClientRects().length > 0)")).GetBoolean(),
@@ -187,6 +279,7 @@ internal static class Program
     {
         string assets = helpDirectory ?? Path.Combine(AppContext.BaseDirectory, "Help");
         var catalog = new HelpCatalog(assets);
+        KeywordIndexChecks.Run(Check,assets,output);
         var invalid = catalog.Topics.Where(t => catalog.Resolve(t.Key) == null).ToArray();
         Check(invalid.Length == 0, $"all {catalog.Topics.Count} numeric and named aliases resolve to packaged topics: {string.Join(",", invalid.Select(x => x.Key))}");
         string repository = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../"));
@@ -272,9 +365,12 @@ internal static class Program
         await CheckDesktopChrome("Docked help");
         var buttons = help.Controls.OfType<ToolStrip>().SelectMany(strip => strip.Items.OfType<ToolStripButton>()).ToArray();
         var home = buttons.Single(button => button.Text == "Home");
-        var browse = buttons.Single(button => button.Text == "Browse topics");
-        Check(Array.IndexOf(buttons, browse) == Array.IndexOf(buttons, home) + 1, "Home and Browse topics are adjacent native toolbar buttons");
+        var browse = buttons.Single(button => button.Text == "Contents");
+        Check(Array.IndexOf(buttons, browse) == Array.IndexOf(buttons, home) + 1, "Home and Contents are adjacent native toolbar buttons");
+        var index = browse.Owner.Items.OfType<ToolStripDropDownButton>().Single(button=>button.Text=="Index");
+        Check(browse.Owner.Items.IndexOf(index)==browse.Owner.Items.IndexOf(browse)+1,"Home, Contents and Index follow the agreed toolbar order");
         await CheckBrowseFailuresAndFallbacks(browse, home);
+        await CheckIndex(catalog,index,service);
         await Js("window.browseTestToken = 'retained'");
         await Browse(browse,"parametric_methods/paired_t.htm");
         const string contentsLink = "document.querySelector('#contents a[data-link=\"contents.htm\"]')";
@@ -365,6 +461,14 @@ internal static class Program
                 await Js("if (!document.querySelector('details.rcode').open) document.querySelector('details.rcode > summary').click()");
                 await Until("document.querySelector('details.rcode').open && document.querySelector('pre.rcode').offsetHeight > 0");
                 Check(true, "R dropdown remains usable during a modal dialog");
+                if (catalog.HasKeywordIndex)
+                {
+                    index.ShowDropDown();
+                    var indexFilter=((Control)index.DropDown.Items.OfType<ToolStripControlHost>().Single().Control).Controls.OfType<TextBox>().Single();
+                    await NativeUntil(()=>index.DropDown.Visible && indexFilter.Focused);
+                    Check(indexFilter.Enabled && service.Window.Owner==modal,"the keyword Index remains usable in Help beside a modal parameter dialog");
+                    index.HideDropDown();
+                }
             }
             catch (Exception ex) { modalError = ex; }
             finally { modal.Close(); }

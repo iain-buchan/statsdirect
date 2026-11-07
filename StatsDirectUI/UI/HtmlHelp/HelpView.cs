@@ -18,7 +18,9 @@ internal sealed class HelpView : UserControl
     private readonly HelpCatalog catalog;
     private readonly string userData;
     private readonly ToolStripButton back = new("Back") { Enabled = false }, forward = new("Forward") { Enabled = false };
-    private readonly ToolStripButton browse = new("Browse topics") { Enabled = false };
+    private readonly ToolStripButton browse = new("Contents") { Enabled = false };
+    private readonly ToolStripDropDownButton index = new("Index") { Enabled = false, ToolTipText = "Find a topic by an index keyword" };
+    private readonly HelpIndexMenu indexMenu = new();
     private readonly ToolStripTextBox search = new() { AutoSize = false, Width = 190, AccessibleName = "Search all help topics" };
     private readonly ToolStripStatusLabel status = new() { Spring = true, TextAlign = ContentAlignment.MiddleLeft };
     private const string BrowseFailure = "Could not open the help topics";
@@ -46,7 +48,37 @@ internal sealed class HelpView : UserControl
         heading.Items.AddRange([new ToolStripLabel("Help"), close, mode]);
         var toolbar = new ToolStrip { GripStyle = ToolStripGripStyle.Hidden, Dock = DockStyle.Top, TabStop = true, TabIndex = 1 };
         browse.Click += async (_, _) => await BrowseTopicsAsync();
-        toolbar.Items.AddRange([back, forward, new ToolStripButton("Home", null, (_, _) => ShowTopic("1000")), browse,
+        index.DropDown = indexMenu;
+        indexMenu.Opening += (_, e) =>
+        {
+            try
+            {
+                if (!catalog.HasKeywordIndex)
+                {
+                    e.Cancel = true;
+                    status.Text = "This help bundle does not yet include a keyword index.";
+                    return;
+                }
+                indexMenu.Prepare(catalog.IndexEntries, this, index);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException)
+            {
+                e.Cancel = true;
+                status.Text = "Could not open the help index: " + ex.Message;
+            }
+        };
+        indexMenu.TopicChosen += entry => { ShowTopic(entry.Path); Browser.Focus(); };
+        indexMenu.Closed += (_, e) =>
+        {
+            if (e.CloseReason == ToolStripDropDownCloseReason.Keyboard && Visible && !IsDisposed)
+            {
+                index.GetCurrentParent()?.Focus();
+                index.Select();
+            }
+        };
+        VisibleChanged += (_, _) => { if (!Visible && indexMenu.Visible) indexMenu.Close(); };
+        ParentChanged += (_, _) => { if (indexMenu.Visible) indexMenu.Close(); };
+        toolbar.Items.AddRange([back, forward, new ToolStripButton("Home", null, (_, _) => ShowTopic("1000")), browse, index,
             new ToolStripSeparator(), new ToolStripButton("Print", null, (_, _) => Browser.CoreWebView2?.ShowPrintUI())]);
         var searchbar = new ToolStrip { GripStyle = ToolStripGripStyle.Hidden, Dock = DockStyle.Top, CanOverflow = false, TabStop = true, TabIndex = 2 };
         var searchLabel = new ToolStripLabel("Search:");
@@ -209,6 +241,7 @@ internal sealed class HelpView : UserControl
                 if (HelpCatalog.IsLocal(e.Uri))
                 {
                     browse.Enabled = false;
+                    index.Enabled = false;
                     return;
                 }
                 e.Cancel = true;
@@ -230,6 +263,7 @@ internal sealed class HelpView : UserControl
             core.NavigationCompleted += (_, e) =>
             {
                 browse.Enabled = e.IsSuccess || e.WebErrorStatus == CoreWebView2WebErrorStatus.OperationCanceled;
+                index.Enabled = browse.Enabled;
                 if (!e.IsSuccess && e.WebErrorStatus != CoreWebView2WebErrorStatus.OperationCanceled) status.Text = "The help page could not load: " + e.WebErrorStatus;
             };
             core.ProcessFailed += (_, _) => status.Text = "The help browser stopped. Close and reopen Help to continue.";
@@ -287,7 +321,7 @@ internal sealed class HelpView : UserControl
 
     protected override void Dispose(bool disposing)
     {
-        if (disposing) ready.TrySetCanceled();
+        if (disposing) { ready.TrySetCanceled(); indexMenu.Dispose(); }
         base.Dispose(disposing);
     }
 }
