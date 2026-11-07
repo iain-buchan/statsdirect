@@ -4,6 +4,9 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
 ##[Unreleased]
 
+### Fixed
+- Grouped analyses preserve leading and trailing missing observations and filtered-row alignment, avoiding incorrect unequal-length selection errors. Recorded data replay retains each column's header and worksheet context; groups without usable observations are refused.
+
 ##[v5.3.4] 2026-11-06
 
 ### Fixed

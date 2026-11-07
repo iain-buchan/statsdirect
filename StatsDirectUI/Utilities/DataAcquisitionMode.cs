@@ -26,6 +26,11 @@
         /// <summary>
         /// Whatever we can get, of whatever types.  Used for R export.
         /// </summary>
-        Variant = 107
+        Variant = 107,
+        /// <summary>
+        /// Numeric values in their selected visible rows, including leading and trailing missing values.
+        /// Used when outcomes must stay aligned with a separate group-identifier selection.
+        /// </summary>
+        NumericPreserveRows = 108
     }
 }

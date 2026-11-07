@@ -272,8 +272,35 @@ namespace StatsDirect.UI
                 revisedCellSelection.ColumnSelections.Add(cellColumnSelection);
                 revisedCellSelection.LongestRowCount = cellColumnSelection.RowCount;
             }
-            WorksheetOrigin firstWorksheetOrigin = origins[0];
-            return CellArrayProcessor.ProcessCellArray(revisedCellSelection, firstWorksheetOrigin.Mode, 0, true, firstWorksheetOrigin.HasTitle, firstWorksheetOrigin.OriginGroup, ((WindowInformation)Tag).FriendlyName);
+            return ProcessRecordedColumns(revisedCellSelection, origins, ((WindowInformation)Tag).FriendlyName);
+        }
+
+        /// <summary>Read recorded ranges with their own selected-title decisions when row alignment is required.</summary>
+        internal static DataFrame ProcessRecordedColumns(CellSelection selection, IList<WorksheetOrigin> origins, string frameName)
+        {
+            WorksheetOrigin first = origins[0];
+            if (first.Mode != DataAcquisitionMode.NumericPreserveRows)
+                return CellArrayProcessor.ProcessCellArray(selection, first.Mode, 0, true, first.HasTitle, first.OriginGroup, frameName);
+
+            DataFrame frame = new() { Name = frameName };
+            for (int index = 0; index < origins.Count; index++)
+            {
+                // A replicate selection may include its header while another begins at its first data row.
+                // Reusing the first column's HasTitle would discard a real observation from the latter on replay.
+                CellColumnSelection column = selection.ColumnSelections[index];
+                WorksheetOrigin origin = origins[index];
+                // The UI reconstructs these selections from coordinates; retain their recorded source on the new origins.
+                column.WorkbookPath = origin.WorkbookPath;
+                column.WorksheetName = origin.WorksheetName;
+                CellSelection one = new() { LongestRowCount = column.RowCount };
+                one.ColumnSelections.Add(column);
+                DataFrame read = CellArrayProcessor.ProcessCellArray(one, origin.Mode, 0, true, origin.HasTitle, origin.OriginGroup, frameName);
+                if (read == null)
+                    return null;
+                foreach (IVariable variable in read.Variables)
+                    frame.Variables.Add(variable);
+            }
+            return frame;
         }
 
         /// <summary>

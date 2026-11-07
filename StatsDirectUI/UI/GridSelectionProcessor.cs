@@ -521,7 +521,7 @@ namespace StatsDirect.UI
         /// <param name="wasPivoted">If true, the user switched from selecting groups by column to by identifier or vice versa.</param>
         /// <param name="originGroup"></param>
         /// <returns></returns>
-        private DataFrame GetCellEqual(int requiredRows, DataAcquisitionMode mode, GroupIdentifierMode groupIdentifierMode, int minimumColumns, int maximumColumns, string selectionMessage, string cancelButtonLabel, bool allowUserToPivot, DataAcquisitionWidth width, bool mightBeBatching, out bool userCancelled, out bool wasPivoted, int originGroup)
+        private DataFrame GetCellEqual(int requiredRows, DataAcquisitionMode mode, GroupIdentifierMode groupIdentifierMode, int minimumColumns, int maximumColumns, string selectionMessage, string cancelButtonLabel, bool allowUserToPivot, DataAcquisitionWidth width, bool mightBeBatching, out bool userCancelled, out bool wasPivoted, int originGroup, WorksheetOrigin groupHeaderReference = null)
         {
             while (true)
             {
@@ -565,6 +565,8 @@ namespace StatsDirect.UI
                     // User cancelled selection or other issue - either way, userCancelled is already set correctly
                     return null;
                 }
+                if (mode == DataAcquisitionMode.NumericPreserveRows)
+                    NormalizeSelectedGroupHeaders(frame, requiredRows, groupHeaderReference, grid as IGetCells);
                 // Find the index of the first non-matching column - if everything matches, c will equal frame.Variables
                 int maxRows = frame.MaxRows;
                 int c;
@@ -596,13 +598,44 @@ namespace StatsDirect.UI
                 {
                     // Defined minimum length, and we didn't hit it.
                     string xtra = string.Empty;
-                    if (mode == DataAcquisitionMode.NumericSkipMissing || mode == DataAcquisitionMode.NumericReplaceMissing)
+                    if (mode == DataAcquisitionMode.NumericSkipMissing || mode == DataAcquisitionMode.NumericReplaceMissing || mode == DataAcquisitionMode.NumericPreserveRows)
                     {
                         xtra = "\r\n\r\nThe rows must contain numeric data not text.";
                     }
                     SdApplication.SoleInstance.MsgboxX(Formatting.ERRCOLON + "all columns selected must be the same length (" + requiredRows.ToString() + " rows)." + xtra, MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "Worksheet Data Selection", true);
                 }
                 ClearSelection();
+            }
+        }
+
+        /// <summary>
+        /// Recognize an unmatched empty title row only when known worksheet coordinates positively align it with the identifiers.
+        /// Other selections remain positional: this does not reject different sheets or offsets, or trim their missing observations.
+        /// </summary>
+        internal static void NormalizeSelectedGroupHeaders(DataFrame frame, int requiredRows, WorksheetOrigin identifiers, IGetCells cells)
+        {
+            if (frame == null || cells == null || identifiers == null || requiredRows < 1 || identifiers.TopRow < 0 || identifiers.Rows < 1
+                || string.IsNullOrWhiteSpace(identifiers.WorkbookPath) || string.IsNullOrWhiteSpace(identifiers.WorksheetName))
+                return;
+            long identifierFirst = (long)identifiers.TopRow + (identifiers.HasTitle ? 1 : 0);
+            long identifierEnd = (long)identifiers.TopRow + identifiers.Rows;
+            foreach (IVariable candidate in frame.Variables)
+            {
+                if (candidate is not DoubleVariable variable || (long)variable.Length != (long)requiredRows + 1 || variable.Data[0] != Constant.MISSING
+                    || variable.Origin is not WorksheetOrigin origin || origin.Mode != DataAcquisitionMode.NumericPreserveRows || origin.HasTitle
+                    || origin.TopRow < 0 || origin.Rows < 1
+                    || !string.Equals(identifiers.WorkbookPath, origin.WorkbookPath, StringComparison.OrdinalIgnoreCase)
+                    || !string.Equals(identifiers.WorksheetName, origin.WorksheetName, StringComparison.OrdinalIgnoreCase)
+                    || (long)origin.TopRow != identifierFirst - 1 || (long)origin.TopRow + origin.Rows != identifierEnd)
+                    continue;
+                // Packed values omit hidden rows. Never remove a visible observation for a header that was already hidden.
+                if (cells.GetCellObjects(origin.Column, origin.TopRow, origin.TopRow).Item2 < 1)
+                    continue;
+                double[] values = new double[requiredRows];
+                Array.Copy(variable.Data, 1, values, 0, requiredRows);
+                variable.Data = values;
+                variable.Origin = new WorksheetOrigin(origin.WorkbookPath, origin.WorksheetName, origin.Column, origin.TopRow, origin.Rows,
+                    origin.Mode, true, origin.WasFiltered, origin.OriginGroup);
             }
         }
 
@@ -637,19 +670,9 @@ namespace StatsDirect.UI
                     continue;
                 }
 
-                int mingn = int.MaxValue;
-                int maxgn = int.MinValue;
-                for (int i = 0; i < groupIdVariable.GroupCount; i++)
-                {
-                    if (groupIdVariable.Groups[i].NBin > maxgn)
-                        maxgn = groupIdVariable.Groups[i].NBin;
-                    if (groupIdVariable.Groups[i].NBin < mingn)
-                        mingn = groupIdVariable.Groups[i].NBin;
-                }
-
                 // call for data
                 ClearSelection();
-                DataFrame dataFrame = GetCellEqual(groupIdVariable.Length, DataAcquisitionMode.NumericReplaceMissing, GroupIdentifierMode.GroupIdentifier, 1, 1, labd, null, true, DataAcquisitionWidth.Wide, true, out userCancelled, out wasPivoted, originGroup);
+                DataFrame dataFrame = GetCellEqual(groupIdVariable.Length, DataAcquisitionMode.NumericPreserveRows, GroupIdentifierMode.GroupIdentifier, 1, 1, labd, null, true, DataAcquisitionWidth.Wide, true, out userCancelled, out wasPivoted, originGroup, groupIdVariable.Origin as WorksheetOrigin);
                 if (userCancelled || wasPivoted)
                     return null;
 
@@ -665,42 +688,7 @@ namespace StatsDirect.UI
                     continue;
                 }
 
-                DataFrame outputFrame = new();
-                string emptyGroup = null;   // a group whose values are all missing, which the analysis cannot take
-                for (int i = 0; i < groupIdVariable.GroupCount; i++)
-                {
-                    double thisGroupId = groupIdVariable.Groups[i].Id;
-                    DoubleVariable v = new();
-                    outputFrame.Variables.Add(v);
-                    v.EnsureLength(maxgn);
-
-                    int cnt = 0;
-                    if (DataAcquisitionMode.NumericSkipMissing == mode)
-                    {
-                        // skip missing data
-                        for (int j = 0; j < groupIdVariable.Length; j++)
-                        {
-                            if (groupIdVariable.Data[j] == thisGroupId && dataVariable.Data[j] != Constant.MISSING)
-                                v.Data[cnt++] = dataVariable.Data[j];
-                        }
-                    }
-                    else
-                    {
-                        // include missing data but do not sum them
-                        for (int j = 0; j < groupIdVariable.Length; j++)
-                        {
-                            if (groupIdVariable.Data[j] == thisGroupId)
-                                v.Data[cnt++] = dataVariable.Data[j];
-                        }
-                    }
-                    v.TruncateDataToLength(cnt);
-                    if (cnt == 0 && null == emptyGroup)
-                        emptyGroup = groupIdVariable.Groups[i].Label;
-                    if (groupIdVariable.GroupCount > 1)
-                        v.Title = dataVariable.Title + "_" + groupIdVariable.Title + "_" + groupIdVariable.Groups[i].Label;
-                    else
-                        v.Title = dataVariable.Title;
-                }
+                DataFrame outputFrame = BuildGroupsByIdentifier(groupIdVariable, dataVariable, mode, out string emptyGroup);
                 if (null != emptyGroup)
                 {
                     // a variable of no values stopped the analysis with an error of the program
@@ -710,6 +698,79 @@ namespace StatsDirect.UI
                 }
                 return outputFrame;
             }
+        }
+
+        /// <summary>Place aligned observations in their groups, retaining or omitting missing values as the operation requests.</summary>
+        internal static DataFrame BuildGroupsByIdentifier(ClassifierVariable groupIdVariable, DoubleVariable dataVariable, DataAcquisitionMode mode, out string emptyGroup)
+        {
+            ArgumentNullException.ThrowIfNull(groupIdVariable);
+            ArgumentNullException.ThrowIfNull(dataVariable);
+            if (groupIdVariable.Length != dataVariable.Length)
+                throw new ArgumentException("The group identifiers and observations must have matching rows.");
+            int maxgn = 0;
+            foreach (Group group in groupIdVariable.Groups)
+                maxgn = Math.Max(maxgn, group.NBin);
+            DataFrame outputFrame = new();
+            emptyGroup = null;
+            for (int i = 0; i < groupIdVariable.GroupCount; i++)
+            {
+                double thisGroupId = groupIdVariable.Groups[i].Id;
+                DoubleVariable variable = new();
+                outputFrame.Variables.Add(variable);
+                variable.EnsureLength(maxgn);
+                int retained = 0, observed = 0;
+                for (int row = 0; row < groupIdVariable.Length; row++)
+                {
+                    if (groupIdVariable.Data[row] != thisGroupId)
+                        continue;
+                    double value = dataVariable.Data[row];
+                    if (value != Constant.MISSING)
+                        observed++;
+                    if (mode != DataAcquisitionMode.NumericSkipMissing || value != Constant.MISSING)
+                        variable.Data[retained++] = value;
+                }
+                variable.TruncateDataToLength(retained);
+                if (observed == 0 && emptyGroup == null)
+                    emptyGroup = groupIdVariable.Groups[i].Label;
+                variable.Title = groupIdVariable.GroupCount > 1
+                    ? dataVariable.Title + "_" + groupIdVariable.Title + "_" + groupIdVariable.Groups[i].Label
+                    : dataVariable.Title;
+            }
+            return outputFrame;
+        }
+
+        /// <summary>The first group with no row having both an X value and at least one Y replicate, or null.</summary>
+        internal static string GroupWithoutUsableCovarianceRows(ClassifierVariable identifiers, DoubleVariable x, DataFrame replicates)
+        {
+            ArgumentNullException.ThrowIfNull(identifiers);
+            ArgumentNullException.ThrowIfNull(x);
+            ArgumentNullException.ThrowIfNull(replicates);
+            if (x.Length != identifiers.Length)
+                throw new ArgumentException("The group identifiers and X values must have matching rows.");
+            List<double[]> outcomes = new();
+            foreach (IVariable variable in replicates.Variables)
+            {
+                if (variable is not DoubleVariable outcome || outcome.Length != identifiers.Length)
+                    throw new ArgumentException("The group identifiers and Y replicates must have matching numeric rows.");
+                outcomes.Add(outcome.Data);
+            }
+            HashSet<double> observed = new();
+            for (int row = 0; row < identifiers.Length; row++)
+            {
+                double group = identifiers.Data[row];
+                if (group == Constant.MISSING || x.Data[row] == Constant.MISSING)
+                    continue;
+                foreach (double[] outcome in outcomes)
+                    if (outcome[row] != Constant.MISSING)
+                    {
+                        observed.Add(group);
+                        break;
+                    }
+            }
+            foreach (Group group in identifiers.Groups)
+                if (!observed.Contains(group.Id))
+                    return group.Label;
+            return null;
         }
 
         /// <summary>
@@ -1299,7 +1360,7 @@ namespace StatsDirect.UI
                 minMax.MinY = double.MaxValue;
                 minMax.MaxY = double.MinValue;
                 ClearSelection();
-                DataFrame replicatesFrame = GetCellEqual(rows, DataAcquisitionMode.NumericReplaceMissing, GroupIdentifierMode.GroupIdentifier, 1, 200, labd + " for Y (VERTICAL AXIS) REPLICATES", null, true, DataAcquisitionWidth.Wide, false, out cancelled, out wasPivoted, 0);
+                DataFrame replicatesFrame = GetCellEqual(rows, DataAcquisitionMode.NumericPreserveRows, GroupIdentifierMode.GroupIdentifier, 1, 200, labd + " for Y (VERTICAL AXIS) REPLICATES", null, true, DataAcquisitionWidth.Wide, false, out cancelled, out wasPivoted, 0, groupIdentifierVariable.Origin as WorksheetOrigin);
                 if (cancelled || wasPivoted)
                     break;
 
@@ -1321,7 +1382,7 @@ namespace StatsDirect.UI
                 minMax.MinX = double.MaxValue;
                 minMax.MaxX = double.MinValue;
                 ClearSelection();
-                DataFrame xFrame = GetCellEqual(rows, DataAcquisitionMode.NumericReplaceMissing, GroupIdentifierMode.GroupIdentifier, 1, 1, labd + " for X (HORIZONTAL AXIS)", null, true, DataAcquisitionWidth.Wide, false, out cancelled, out wasPivoted, 0);
+                DataFrame xFrame = GetCellEqual(rows, DataAcquisitionMode.NumericPreserveRows, GroupIdentifierMode.GroupIdentifier, 1, 1, labd + " for X (HORIZONTAL AXIS)", null, true, DataAcquisitionWidth.Wide, false, out cancelled, out wasPivoted, 0, groupIdentifierVariable.Origin as WorksheetOrigin);
                 if (cancelled || wasPivoted)
                     break;
                 DoubleVariable xVariable = (DoubleVariable)xFrame.Variables[0];
@@ -1329,6 +1390,13 @@ namespace StatsDirect.UI
                 if (unplaced > 0)
                 {
                     SdApplication.SoleInstance.MsgboxX(Formatting.ERRCOLON + "row " + unplaced.ToString() + " of the X data selected has a value but no group identifier.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "Worksheet Data Selection", true);
+                    ClearSelection();
+                    continue;
+                }
+                string unusableGroup = GroupWithoutUsableCovarianceRows(groupIdentifierVariable, xVariable, replicatesFrame);
+                if (unusableGroup != null)
+                {
+                    SdApplication.SoleInstance.MsgboxX(Formatting.ERRCOLON + "group " + unusableGroup + " has no rows with both X and Y observations.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "Worksheet Data Selection", true);
                     ClearSelection();
                     continue;
                 }

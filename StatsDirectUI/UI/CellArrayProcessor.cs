@@ -36,11 +36,21 @@ namespace StatsDirect.UI
                     case DataAcquisitionMode.NumericReplaceMissing:
                         frame = ProcessCellArrayNumericReplaceMissing(cellSelection, mode, originGroup);
                         break;
+                    case DataAcquisitionMode.NumericPreserveRows:
+                        frame = ProcessCellArrayNumericPreserveRows(cellSelection, rowLengthHint, isRefill, titleWasInData, originGroup);
+                        break;
                     case DataAcquisitionMode.GroupIdentifiers:
                     case DataAcquisitionMode.CategoryReplaceMissing:
                     case DataAcquisitionMode.CategoryCombineAllColumns:
                     case DataAcquisitionMode.Text:
                         {
+                            bool noVisibleRows = mode == DataAcquisitionMode.CategoryCombineAllColumns && cellSelection.TotalColumns > 0
+                                && cellSelection.ColumnSelections.TrueForAll(column => { column.GetTexts(); return column.NonHiddenRowCount == 0; });
+                            if (noVisibleRows)
+                            {
+                                frame = ProcessCellArrayCategoryCombineAllColumns(cellSelection, mode, 0, new string[0, cellSelection.TotalColumns], originGroup);
+                                break;
+                            }
                             if (!PreprocessCellArrayGroupsOrText(cellSelection, rowLengthHint, isRefill, titleWasInData, out int topRow, out string[,] hold))
                                 return null;
 
@@ -491,8 +501,10 @@ namespace StatsDirect.UI
 
         private static DataFrame ProcessCellArrayCategoryCombineAllColumns(CellSelection cellSelection, DataAcquisitionMode mode, int topRow, string[,] hold, int originGroup)
         {
-            // Categories combined across columns; output as row pattern
-            int totRows = cellSelection.LongestRowCount;
+            // The strings are packed to visible rows. Do not turn hidden rows into extra missing identifiers.
+            int totRows = 0;
+            foreach (CellColumnSelection column in cellSelection.ColumnSelections)
+                totRows = Math.Max(totRows, column.NonHiddenRowCount);
             int totCols = cellSelection.TotalColumns;
             string[] foundwhat = new string[totRows];
             int[] nbin = new int[totRows];
@@ -651,6 +663,44 @@ namespace StatsDirect.UI
             }
             return frame;
         }
+
+        private static DataFrame ProcessCellArrayNumericPreserveRows(CellSelection cellSelection, int rowLengthHint, bool isRefill, bool titleWasInData, int originGroup)
+        {
+            DataFrame frame = new();
+            foreach (CellColumnSelection column in cellSelection.ColumnSelections)
+            {
+                double[] selected = column.GetSelectedDataValues();
+                if (selected == null)
+                    continue;
+                string[] texts = column.GetTexts();
+                string first = selected.Length > 0 && texts.Length > 0 ? (texts[0] ?? string.Empty).Trim() : string.Empty;
+                // A count hint identifies an optional selected title; a blank or explicit missing value is still a data row.
+                bool hasTitle = isRefill ? titleWasInData : rowLengthHint > 0 && selected.Length == rowLengthHint + 1
+                    && first.Length > 0 && selected[0] == Constant.MISSING && !IsMissingRowText(first);
+                int offset = hasTitle && selected.Length > 0 && column.FirstSelectedRowIsVisible() ? 1 : 0;
+                double[] values = new double[selected.Length - offset];
+                for (int row = 0; row < values.Length; row++)
+                {
+                    double value = selected[row + offset];
+                    values[row] = value == Constant.MISSING * 10D || double.IsNaN(value) ? Constant.MISSING : value;
+                }
+                DoubleVariable variable = new(values, column.ColumnTitle)
+                {
+                    // Keep the selected-title decision for replay; a hidden title must not consume the first visible data row.
+                    Origin = column.GetWorksheetOrigin(DataAcquisitionMode.NumericPreserveRows, hasTitle, originGroup)
+                };
+                frame.Variables.Add(variable);
+            }
+            return frame;
+        }
+
+        private static bool IsMissingRowText(string text) => text == "*" || text == "."
+            || text.Equals("MISSING", StringComparison.OrdinalIgnoreCase)
+            || text.Equals(Formatting.MISSINGLABEL, StringComparison.OrdinalIgnoreCase)
+            || text.Equals("NA", StringComparison.OrdinalIgnoreCase)
+            || text.Equals("N/A", StringComparison.OrdinalIgnoreCase)
+            || text.Equals("NaN", StringComparison.OrdinalIgnoreCase)
+            || text.Equals("NULL", StringComparison.OrdinalIgnoreCase);
 
         private static DataFrame ProcessCellArrayNumericReplaceMissing(CellSelection cellSelection, DataAcquisitionMode mode, int originGroup)
         {

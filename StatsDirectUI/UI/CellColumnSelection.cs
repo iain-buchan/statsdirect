@@ -37,6 +37,7 @@ namespace StatsDirect.UI
         private int nonHiddenRowCount = -1;
         private int nonHiddenDataRowCount = -1;
         private double[] cachedDataValues;
+        private double[] cachedSelectedDataValues;
         private string[] cachedTextValues;
         private string[] cachedTexts;
         private string[] cachedFormulae;
@@ -192,6 +193,17 @@ namespace StatsDirect.UI
                 (cachedDataValues, nonHiddenDataRowCount) = cellGetter.GetCellValues(ColumnIndex, GridFirstDataRow, GridFirstDataRow + DataRows - 1);
             return cachedDataValues;
         }
+
+        /// <summary>The numeric values of the full selected visible range, without title or blank-row trimming.</summary>
+        internal double[] GetSelectedDataValues()
+        {
+            if (cachedSelectedDataValues == null)
+                (cachedSelectedDataValues, nonHiddenRowCount) = cellGetter.GetCellValues(ColumnIndex, RowIndex, RowIndex + RowCount - 1);
+            return cachedSelectedDataValues;
+        }
+
+        /// <summary>Whether the physical first row of the selection is visible (the first visible row may be later).</summary>
+        internal bool FirstSelectedRowIsVisible() => RowCount > 0 && cellGetter.GetCellObjects(ColumnIndex, RowIndex, RowIndex).Item2 > 0;
 
         internal string[] GetFormulae()
         {
