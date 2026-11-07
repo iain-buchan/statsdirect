@@ -179,6 +179,8 @@ static class Program
         }
         failures += RowAlignedSelectionChecks.Run();
         failures += GroupedRepeatedSelectionChecks.Run();
+        failures += SequentialSelectionChecks.Run();
+        failures += ApplyFunctionSelectionChecks.Run();
         Console.WriteLine(failures == 0 ? "ALL CHECKS PASS" : $"{failures} CHECKS FAILED");
         return failures == 0 ? 0 : 1;
     }

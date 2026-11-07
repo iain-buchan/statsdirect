@@ -12,6 +12,7 @@
           <name>group1drug</name>
           <prompt>Select data for Group 1 DRUG</prompt>
           <mode>NumericReplaceMissing</mode>
+          <preserve-row-alignment>true</preserve-row-alignment>
           <min-columns>1</min-columns>
           <max-columns>1</max-columns>
           <clear-selection-first>true</clear-selection-first>
@@ -20,6 +21,7 @@
           <name>group1placebo</name>
           <prompt>Select data for Group 1 PLACEBO</prompt>
           <mode>NumericReplaceMissing</mode>
+          <preserve-row-alignment>true</preserve-row-alignment>
           <same-length-as>group1drug</same-length-as>
           <min-columns>1</min-columns>
           <max-columns>1</max-columns>
@@ -30,6 +32,7 @@
           <prompt>Select data for Group 1 BASELINE (skip if none)</prompt>
           <cancel-skips-parameter>Skip</cancel-skips-parameter>
           <mode>NumericReplaceMissing</mode>
+          <preserve-row-alignment>true</preserve-row-alignment>
           <same-length-as>group1drug</same-length-as>
           <min-columns>1</min-columns>
           <max-columns>1</max-columns>
@@ -39,6 +42,7 @@
           <name>group2drug</name>
           <prompt>Select data for Group 2 DRUG</prompt>
           <mode>NumericReplaceMissing</mode>
+          <preserve-row-alignment>true</preserve-row-alignment>
           <min-columns>1</min-columns>
           <max-columns>1</max-columns>
           <clear-selection-first>true</clear-selection-first>
@@ -47,6 +51,7 @@
           <name>group2placebo</name>
           <prompt>Select data for Group 2 PLACEBO</prompt>
           <mode>NumericReplaceMissing</mode>
+          <preserve-row-alignment>true</preserve-row-alignment>
           <same-length-as>group2drug</same-length-as>
           <min-columns>1</min-columns>
           <max-columns>1</max-columns>
@@ -58,6 +63,7 @@
           <prompt>Select data for Group 2 BASELINE (skip if none)</prompt>
           <cancel-skips-parameter>Skip</cancel-skips-parameter>
           <mode>NumericReplaceMissing</mode>
+          <preserve-row-alignment>true</preserve-row-alignment>
           <same-length-as>group2drug</same-length-as>
           <min-columns>1</min-columns>
           <max-columns>1</max-columns>

@@ -10,6 +10,7 @@
           <prompt>Select data for FUNCTION</prompt>
           <same-length>true</same-length>
           <mode>NumericReplaceMissing</mode>
+          <preserve-row-alignment>true</preserve-row-alignment>
           <min-columns>1</min-columns>
           <max-columns>9</max-columns>
         </frame>

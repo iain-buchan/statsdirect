@@ -36,6 +36,7 @@ namespace StatsDirect.UI
                 if (frameParameter.ColumnsAreSameLength || frameParameter.HasLength || null != frameParameter.SameLengthAsParameter && frameParameter.SameLengthAsParameter.Count > 0)
                 {
                     int requiredLength = 0;
+                    WorksheetOrigin rowReference = null;
                     if (frameParameter.HasLength)
                         requiredLength = frameParameter.Length(processor, parameters);
                     else if (null != frameParameter.SameLengthAsParameter && frameParameter.SameLengthAsParameter.Count > 0)
@@ -49,6 +50,12 @@ namespace StatsDirect.UI
                                 {
                                     DataFrame f = fp.AsDataFrame;
                                     requiredLength = f.MaxRows;
+                                    foreach (IVariable variable in f.Variables)
+                                        if (variable.Length == requiredLength && variable.Origin is WorksheetOrigin origin)
+                                        {
+                                            rowReference = origin;
+                                            break;
+                                        }
                                 }
                                 break;
                             }
@@ -66,7 +73,7 @@ namespace StatsDirect.UI
                         false,
                         out userCancelled,
                         out wasPivoted,
-                        processor.NextOriginGroup());
+                        processor.NextOriginGroup(), rowReference);
                 }
                 else
                 {
@@ -99,6 +106,8 @@ namespace StatsDirect.UI
                 }
                 if (null != frame)
                 {
+                    if (frameParameter.SelectionMode == DataAcquisitionMode.NumericPreserveRows)
+                        NormalizePeerSelectedHeaders(frame, grid as IGetCells);
                     ParameterBag outputParameters = new();
                     if (!string.IsNullOrEmpty(frameParameter.AppendToFrame))
                     {
@@ -571,9 +580,7 @@ namespace StatsDirect.UI
                     // A selected peer title supplies positive row context for an empty header.
                     // Never infer a title just from a leading missing measurement.
                     if (requiredRows == 0)
-                        foreach (IVariable variable in frame.Variables)
-                            if (variable.Origin is WorksheetOrigin origin && origin.HasTitle)
-                                NormalizeSelectedGroupHeaders(frame, variable.Length, origin, grid as IGetCells);
+                        NormalizePeerSelectedHeaders(frame, grid as IGetCells);
                 }
                 // Find the index of the first non-matching column - if everything matches, c will equal frame.Variables
                 int maxRows = frame.MaxRows;
@@ -614,6 +621,16 @@ namespace StatsDirect.UI
                 }
                 ClearSelection();
             }
+        }
+
+        /// <summary>
+        /// Normalize selected headers before a frame becomes the row-count reference for later parameters.
+        /// </summary>
+        internal static void NormalizePeerSelectedHeaders(DataFrame frame, IGetCells cells)
+        {
+            foreach (IVariable variable in frame.Variables)
+                if (variable.Origin is WorksheetOrigin origin && origin.HasTitle)
+                    NormalizeSelectedGroupHeaders(frame, variable.Length, origin, cells);
         }
 
         /// <summary>

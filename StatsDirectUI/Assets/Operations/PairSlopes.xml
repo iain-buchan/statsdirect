@@ -9,6 +9,7 @@
           <name>y</name>
           <prompt>Select Y</prompt>
           <mode>NumericReplaceMissing</mode>
+          <preserve-row-alignment>true</preserve-row-alignment>
           <min-columns>1</min-columns>
           <max-columns>1</max-columns>
           <clear-selection-first>true</clear-selection-first>
@@ -17,6 +18,7 @@
           <name>x</name>
           <prompt>Select X</prompt>
           <mode>NumericReplaceMissing</mode>
+          <preserve-row-alignment>true</preserve-row-alignment>
           <min-columns>1</min-columns>
           <max-columns>1</max-columns>
           <clear-selection-first>true</clear-selection-first>

@@ -87,7 +87,7 @@ internal static class MatchedSelectionChecks
         Near((double)context.GetType().GetProperty("R").GetValue(context), gold[name]["pearson"], name + " Pearson r");
     }
 
-    static DataFrame Acquire(MatchedCells cells, (int column, int first, int count)[] ranges, DataAcquisitionMode mode = aligned)
+    internal static DataFrame Acquire(MatchedCells cells, (int column, int first, int count)[] ranges, DataAcquisitionMode mode = aligned)
     {
         IGrid grid = DispatchProxy.Create<IGrid, MatchedGridProxy>();
         var proxy = (MatchedGridProxy)(object)grid;
@@ -220,7 +220,7 @@ internal static class MatchedSelectionChecks
     // A regression must fail the test instead of waiting for a human to dismiss a
     // warning. This CBT hook is installed ONLY on this test's own calling thread;
     // it cannot see or close Iain's windows or windows in other application threads.
-    sealed class UnexpectedDialogGuard : IDisposable
+    internal sealed class UnexpectedDialogGuard : IDisposable
     {
         delegate IntPtr Hook(int code, IntPtr window, IntPtr details);
         readonly Hook callback;

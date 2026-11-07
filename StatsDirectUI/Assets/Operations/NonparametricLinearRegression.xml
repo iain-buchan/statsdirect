@@ -12,6 +12,7 @@
           <name>outcome</name>
           <prompt>Select data for OUTCOME (Y axis)</prompt>
           <mode>NumericReplaceMissing</mode>
+          <preserve-row-alignment>true</preserve-row-alignment>
           <min-columns>1</min-columns>
           <max-columns>1</max-columns>
           <ask-for-group-id>false</ask-for-group-id>
@@ -22,6 +23,7 @@
           <prompt>Select data for PREDICTOR (X axis)</prompt>
           <same-length-as>outcome</same-length-as>
           <mode>NumericReplaceMissing</mode>
+          <preserve-row-alignment>true</preserve-row-alignment>
           <min-columns>1</min-columns>
           <max-columns>1</max-columns>
           <ask-for-group-id>false</ask-for-group-id>

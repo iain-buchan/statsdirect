@@ -9,6 +9,7 @@
         <name>data</name>
         <prompt>Select data to describe</prompt>
         <mode>NumericReplaceMissing</mode>
+        <preserve-row-alignment>true</preserve-row-alignment>
         <min-columns>1</min-columns>
         <max-columns>200</max-columns>
         <ask-for-group-id>true</ask-for-group-id>
@@ -17,6 +18,7 @@
         <name>weights</name>
         <prompt>Select weights</prompt>
         <mode>NumericReplaceMissing</mode>
+        <preserve-row-alignment>true</preserve-row-alignment>
         <min-columns>1</min-columns>
         <max-columns>1</max-columns>
         <same-length-as>data</same-length-as>

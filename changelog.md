@@ -7,6 +7,7 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 ### Fixed
 - Grouped analyses preserve leading and trailing missing observations and filtered-row alignment, avoiding incorrect unequal-length selection errors. Recorded data replay retains each column's header and worksheet context; groups without usable observations are refused.
 - Matched observations retain their original row positions in paired tests, rank correlations, agreement and repeated-measures/data-matrix analyses. A leading blank no longer shifts a paired sample before missing-value padding; independent samples and count tables keep their existing acquisition behaviour.
+- Sequential numeric selections for regression, crossover analyses and weighted summaries retain matching rows before incomplete observations are removed. Formula transformations retain missing operands in their original output rows, and selected empty headers are normalized before determining later column lengths.
 
 ##[v5.3.4] 2026-11-06
 
