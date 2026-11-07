@@ -154,19 +154,28 @@ namespace StatsDirect.UI
                 int originGroup = processor.NextOriginGroup();
                 if (SdApplication.SoleInstance.Preferences.SelectGroupsByIdentifier)
                 {
-                    DataFrame2D frame = Gidx3(frame2dParameter.MinimumColumns(processor, parameters),
-                        frame2dParameter.MaximumColumns(processor, parameters),
-                        0,
-                        frame2dParameter.SubPrompt(processor, parameters),
-                        frame2dParameter.DataAcquisitionMode,
-                        out bool userCancelled,
-                        out bool wasPivoted,
-                        originGroup);
-                    if (userCancelled)
-                        throw new TemplateOperationCancelledException();
-                    if (wasPivoted)
+                    try
+                    {
+                        DataFrame2D frame = Gidx3(frame2dParameter.MinimumColumns(processor, parameters),
+                            frame2dParameter.MaximumColumns(processor, parameters),
+                            0,
+                            frame2dParameter.SubPrompt(processor, parameters),
+                            frame2dParameter.DataAcquisitionMode,
+                            out bool userCancelled,
+                            out bool wasPivoted,
+                            originGroup);
+                        if (userCancelled)
+                            throw new TemplateOperationCancelledException();
+                        if (wasPivoted || frame == null)
+                            continue;
+                        return frame;
+                    }
+                    catch (TemplateOperationCancelledException ex) when (ex.ShouldShowError)
+                    {
+                        SdApplication.SoleInstance.MsgboxX(ex.Message, MessageBoxButtons.OK, MessageBoxIcon.Exclamation, ex.Caption, true);
+                        ClearSelection();
                         continue;
-                    return frame;
+                    }
                 }
                 switch (frame2dParameter.DataAcquisitionMode)
                 {
@@ -232,13 +241,14 @@ namespace StatsDirect.UI
                             // If we get here, we have some repeats
                             int cols = 0;
                             int rows = 0;
+                            WorksheetOrigin repeatRowReference = null;
                             bool startAgain = false;
                             frame.Name = string.Empty;
                             for (int rpt = 1; rpt <= repeats; rpt++)
                             {
                                 frame.Name += " (";
                                 ClearSelection();
-                                DataFrame repeatFrame = GetCellEqual(rows, DataAcquisitionMode.NumericReplaceMissing, GroupIdentifierMode.GroupIdentifier, 2, 200, "Select subject (row) by treatment (column) data for repeat " + rpt, parameter.CancelSkipsParameter, true, DataAcquisitionWidth.Wide, false, out userCancelled, out bool wasPivoted, originGroup);
+                                DataFrame repeatFrame = ReadRepeatedObservations(rows, rpt, parameter.CancelSkipsParameter, originGroup, repeatRowReference, out userCancelled, out bool wasPivoted);
                                 // No frame was returned, either because the user cancelled or because of an error.  Distinguish the two cases!
                                 if (userCancelled)
                                 {
@@ -259,6 +269,7 @@ namespace StatsDirect.UI
                                     // Wait for a selection then dim the array
                                     rows = repeatFrame.MinRows;
                                     cols = repeatFrame.VariableCount;
+                                    repeatRowReference = repeatFrame.Variables[0].Origin as WorksheetOrigin;
                                     frame.EnsureVariablesSquare(rows, cols);
                                     foreach (IList<IVariable> vl in frame.Variables)
                                     {
@@ -303,6 +314,14 @@ namespace StatsDirect.UI
                         throw new ArgumentOutOfRangeException(nameof(parameter), frame2dParameter.DataAcquisitionMode, "Only GroupThenBlock and BlockThenGroup are known");
                 }
             }
+        }
+
+        private DataFrame ReadRepeatedObservations(int requiredRows, int repeat, string cancelLabel, int originGroup,
+            WorksheetOrigin rowReference, out bool userCancelled, out bool wasPivoted)
+        {
+            return GetCellEqual(requiredRows, DataAcquisitionMode.NumericPreserveRows, GroupIdentifierMode.GroupIdentifier, 2, 200,
+                "Select subject (row) by treatment (column) data for repeat " + repeat, cancelLabel, true,
+                DataAcquisitionWidth.Wide, false, out userCancelled, out wasPivoted, originGroup, rowReference);
         }
 
         public GroupedCovarianceData FillGroupedCovarianceParameter(ITemplateProcessor processor)
@@ -612,12 +631,11 @@ namespace StatsDirect.UI
                 else
                 {
                     // Defined minimum length, and we didn't hit it.
-                    string xtra = string.Empty;
-                    if (mode == DataAcquisitionMode.NumericSkipMissing || mode == DataAcquisitionMode.NumericReplaceMissing || mode == DataAcquisitionMode.NumericPreserveRows)
-                    {
-                        xtra = "\r\n\r\nThe rows must contain numeric data not text.";
-                    }
-                    SdApplication.SoleInstance.MsgboxX(Formatting.ERRCOLON + "all columns selected must be the same length (" + requiredRows.ToString() + " rows)." + xtra, MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "Worksheet Data Selection", true);
+                    string providedRows = allEqualLength ? frame.MinRows.ToString() + " rows"
+                        : frame.MinRows.ToString() + " to " + frame.MaxRows.ToString() + " rows per column";
+                    SdApplication.SoleInstance.MsgboxX(Formatting.ERRCOLON + "each selected column must provide " + requiredRows.ToString()
+                        + " data rows. This selection provides " + providedRows + ".\r\n\r\nSelect matching row ranges, checking their first and last rows and any blank or hidden rows.",
+                        MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "Worksheet Data Selection", true);
                 }
                 ClearSelection();
             }
@@ -984,7 +1002,7 @@ namespace StatsDirect.UI
             DataFrame groupFrame = grid.GetCellArray(0, DataAcquisitionMode.CategoryCombineAllColumns, 1, 1, groupSelectionLabel, null, true, false, out userCancelled, out wasPivoted, originGroup);
             if (userCancelled)
                 throw new TemplateOperationCancelledException();
-            if (wasPivoted)
+            if (wasPivoted || groupFrame == null)
                 return null;
 
             ClassifierVariable groupVariable = (ClassifierVariable)groupFrame.Variables[0];
@@ -1026,6 +1044,8 @@ namespace StatsDirect.UI
             DataFrame subGroupFrame = GetCellEqual(rows, DataAcquisitionMode.CategoryCombineAllColumns, GroupIdentifierMode.GroupIdentifier, 1, 1, subGroupSelectionLabel, null, true, DataAcquisitionWidth.Wide, false, out userCancelled, out wasPivoted, originGroup);
             if (userCancelled)
                 throw new TemplateOperationCancelledException();
+            if (wasPivoted || subGroupFrame == null)
+                return null;
             ClassifierVariable subGroupVariable = (ClassifierVariable)subGroupFrame.Variables[0];
 
             int scats = subGroupVariable.GroupCount;
@@ -1051,6 +1071,8 @@ namespace StatsDirect.UI
             DataFrame dataFrame = GetCellEqual(rows, DataAcquisitionMode.NumericPreserveRows, GroupIdentifierMode.GroupIdentifier, 1, 1, "Select DATA column", null, true, DataAcquisitionWidth.Wide, false, out userCancelled, out wasPivoted, originGroup, groupVariable.Origin as WorksheetOrigin);
             if (userCancelled)
                 throw new TemplateOperationCancelledException();
+            if (wasPivoted || dataFrame == null)
+                return null;
             DoubleVariable dataVariable = (DoubleVariable)dataFrame.Variables[0];
 
             string dlab = dataVariable.Title;

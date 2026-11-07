@@ -179,6 +179,7 @@ static class Program
         }
         failures += RowAlignedSelectionChecks.Run();
         failures += GroupedRepeatedSelectionChecks.Run();
+        failures += RepeatedAcquisitionBoundaryChecks.Run();
         failures += SequentialSelectionChecks.Run();
         failures += MixedSelectionChecks.Run();
         failures += ValidationPolicyChecks.Run();
