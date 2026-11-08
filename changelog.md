@@ -2,7 +2,7 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
-##[Unreleased]
+##[v5.3.6] 2026-11-08
 
 ### Fixed
 - Continue in R, Open in R and saved notebooks no longer carry the blank rows that a whole-column selection takes in from a sheet whose other columns are longer. The run record keeps the selected columns up to the last row that holds a value in any of them, the same row count for every frame of the analysis, so the R script's vectors, their row ranges and the hashes that detect a changed worksheet all describe the same rows, and the recipes' summary lines and plots that read from the raw vectors match the report instead of showing NA. Missing values among the data, including a trailing blank in only some of the columns, are kept, so paired and sequentially selected columns keep their row alignment.
