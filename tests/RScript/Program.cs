@@ -50,6 +50,7 @@ internal static partial class Program
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "recipes") { CheckRecipes(); CheckRecipesAgainstHelp(); Console.WriteLine($"PASS {checks} R recipe checks"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "recipe-bindings") { CheckRecipes(); Console.WriteLine($"PASS {checks} recipe binding checks"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "acquisition") { CheckAcquisition(); Console.WriteLine($"PASS {checks} acquisition checks"); return 0; }
+            if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "paired-missing") { StatsDirect.R.RRecipes.Folder = Metadata("Recipes"); CheckPairedMissingReplay(Path.Combine(Path.GetTempPath(), "statsdirect-paired-missing-" + Guid.NewGuid().ToString("N"))); Console.WriteLine($"PASS {checks} paired missing-data replay checks"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "charts-a") { CheckChartRecipesA(); Console.WriteLine($"PASS {checks} chart recipe A checks"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "charts-b") { CheckChartRecipesB(); Console.WriteLine($"PASS {checks} chart recipe B checks"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "charts-c") { CheckChartRecipesC(); Console.WriteLine($"PASS {checks} chart recipe C checks"); return 0; }

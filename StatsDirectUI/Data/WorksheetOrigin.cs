@@ -65,6 +65,11 @@ namespace StatsDirect.Data
         [XmlElement("was-filtered")]
         public bool WasFiltered { get; set; }
 
+        /// <summary>The physical zero-based worksheet row of each acquired data value when hidden rows made the selection noncontiguous.
+        /// An acquisition-time mapping only; the saved run records its actual row boundary rather than serializing this array.</summary>
+        [XmlIgnore]
+        public int[] DataRowIndices { get; set; }
+
         public int OriginGroup { get; set; }
     }
 }

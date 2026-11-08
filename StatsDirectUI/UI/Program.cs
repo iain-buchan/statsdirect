@@ -16,6 +16,7 @@ namespace StatsDirect.UI
         [STAThread]
         public static void Main(string[] args)
         {
+            SDConfiguration.IsolateDiagnosticUserData(args);
 #if !WATCH_EXCEPTIONS
             // Right at the start, cope with as many variants of chaos as we can.
             CatchMostErrors();

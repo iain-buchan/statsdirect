@@ -66,7 +66,7 @@ jobs:
           BIN="$GITHUB_WORKSPACE/StatsDirectUI/bin/Release/net10.0-windows10.0.17763.0"
           BIN_WIN=$(cygpath -w "$BIN")
           failed=()
-          for p in Definitions DistributionRegression GlmFitRegression DataSelection AnalysisOfVariance Nonparametric Descriptive Parametric ClinicalEpidemiology SampleSize Randomization Rates Proportions ChiSquare ExactTests Frequencies NoncentralTRegression MetaAnalysis Survival Agreement CoxRegression CorrelationRegression ExcelAddInRetirement; do
+          for p in Definitions DistributionRegression GlmFitRegression DataSelection AnalysisOfVariance Nonparametric Descriptive Parametric ClinicalEpidemiology SampleSize Randomization Rates Proportions ChiSquare ExactTests Frequencies NoncentralTRegression MetaAnalysis Survival Agreement CoxRegression CorrelationRegression ExcelAddInRetirement UserDataIsolation; do
             start=$(date +%s)
             if out=$(dotnet run --project "tests/$p" -c Release -p:StatsDirectBin="$BIN_WIN" 2>&1); then
               echo "tests/$p: ok, $(( $(date +%s) - start )) s: $(echo "$out" | grep -E 'CHECKS|checks|PASS|FAIL' | tail -1)"

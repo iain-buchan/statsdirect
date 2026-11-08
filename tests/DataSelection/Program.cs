@@ -178,6 +178,7 @@ static class Program
             Say(differ.Length == 0, "the long layout and the layout in separate columns give the same figures" + (differ.Length == 0 ? " (" + keys.Length + " compared)" : ": differ at " + differ));
         }
         failures += RowAlignedSelectionChecks.Run();
+        failures += PhysicalRowMappingChecks.Run();
         failures += GroupedRepeatedSelectionChecks.Run();
         failures += RepeatedAcquisitionBoundaryChecks.Run();
         failures += SequentialSelectionChecks.Run();

@@ -1,14 +1,17 @@
 # StatsDirect recipe: Paired t test with its agreement analysis, as the help shows it in R.
 # From the help's R code (parametric_methods/paired_t.htm); the data and settings above come from the run.
 # data: before, after
-# settings: confidence = gamma
-# hand-edited: the confidence level and the data come from the run, as the header says
+# settings: confidence = gamma, agreement = doAgreement
+# hand-edited: the selected confidence level, agreement option and complete pairs come from the run
 
 # Paired t test: the StatsDirect help example (peak expiratory flow rate before
 # and after a walk on a cold day in 9 asthmatics) in R
 
 # R's standard test gives t, df, the two sided P and the confidence interval for
 # the mean difference, as StatsDirect reports them.
+keep <- complete.cases(before, after)
+before <- before[keep]
+after <- after[keep]
 pct <- paste0(100 * confidence, "%")
 r <- t.test(before, after, paired = TRUE, conf.level = confidence)
 print(r)
@@ -33,16 +36,19 @@ cat(sprintf("Power (for 5%% significance) = %.2f%%\n", 100 * pw$power))
 
 # StatsDirect's agreement analysis option adds the 95% limits of agreement of
 # Bland and Altman: the mean difference plus or minus 1.96 standard deviations.
-loa <- mean(d) + c(-1, 1) * qnorm((1 + confidence) / 2) * sd(d)
-cat(pct, "Limits of agreement =", six(loa[1]), "to", six(loa[2]), "\n")
+if (!exists("agreement") || is.null(agreement)) agreement <- TRUE # older saved results
+if (isTRUE(agreement)) {
+  loa <- mean(d) + c(-1, 1) * qnorm((1 + confidence) / 2) * sd(d)
+  cat(pct, "Limits of agreement =", six(loa[1]), "to", six(loa[2]), "\n")
 
 # The agreement plot that follows in the report: each difference against the mean
 # of its pair, with the mean difference (black) and the limits of agreement (red)
-if (!exists("before_title")) before_title <- "before"
-if (!exists("after_title")) after_title <- "after"
-plot((before + after) / 2, d, xlab = paste0("Mean ((", before_title, " + ", after_title, ") / 2)"),
-     ylab = paste0("Difference (", before_title, " - ", after_title, ")"), ylim = range(d, loa))
-abline(h = mean(d))
-abline(h = loa, col = "red")
-mtext(paste0("Mean difference and ", pct, " limits of agreement"),
-      side = 3, line = 0.5, cex = 0.8)
+  if (!exists("before_title")) before_title <- "before"
+  if (!exists("after_title")) after_title <- "after"
+  plot((before + after) / 2, d, xlab = paste0("Mean ((", before_title, " + ", after_title, ") / 2)"),
+       ylab = paste0("Difference (", before_title, " - ", after_title, ")"), ylim = range(d, loa))
+  abline(h = mean(d))
+  abline(h = loa, col = "red")
+  mtext(paste0("Mean difference and ", pct, " limits of agreement"),
+        side = 3, line = 0.5, cex = 0.8)
+}

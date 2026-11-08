@@ -37,7 +37,51 @@ namespace StatsDirect.Templates
             internal JsonElement Held;
             internal JsonElement Source;
             internal int PointerCount;
-            internal InputSnapshot Copy() => new() { Content = Content, Held = Held, Source = Source, PointerCount = PointerCount };
+            internal ColumnSnapshot[] Columns;
+            internal InputSnapshot Copy() => new() { Content = Content, Held = Held, Source = Source, PointerCount = PointerCount, Columns = Columns };
+        }
+
+        /// <summary>Acquired column bounds and a constant-size hash state. Trailing missing
+        /// values need only newline separators, so a later aligned cutoff can be hashed
+        /// without retaining large data arrays or reading an analysis's mutated values.</summary>
+        internal sealed class ColumnSnapshot
+        {
+            internal readonly int Count, LastValueCount;
+            internal readonly bool CanTrim;
+            internal readonly int[] DataRows;
+            private readonly IncrementalHash prefix;
+            private static readonly byte[] Separator = { 10 };
+
+            internal ColumnSnapshot(IVariable variable)
+            {
+                object[] values = Values(variable);
+                Count = LastValueCount = values.Length;
+                while (LastValueCount > 0 && values[LastValueCount - 1] == null) LastValueCount--;
+                var origin = (WorksheetOrigin)variable.Origin;
+                DataRows = origin.DataRowIndices?.ToArray();
+                CanTrim = !origin.WasFiltered || DataRows?.Length == Count;
+                prefix = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+                for (int i = 0; i < LastValueCount; i++)
+                {
+                    if (i > 0) prefix.AppendData(Separator);
+                    prefix.AppendData(Encoding.UTF8.GetBytes(Text(values[i])));
+                }
+            }
+
+            internal string HashAt(int count)
+            {
+                using IncrementalHash hash = prefix.Clone();
+                int missing = count - LastValueCount - (LastValueCount == 0 && count > 0 ? 1 : 0);
+                Span<byte> separators = stackalloc byte[256];
+                separators.Fill(10);
+                while (missing > 0)
+                {
+                    int block = Math.Min(missing, separators.Length);
+                    hash.AppendData(separators[..block]);
+                    missing -= block;
+                }
+                return Convert.ToHexString(hash.GetHashAndReset(), 0, 8).ToLowerInvariant();
+            }
         }
 
         private static JsonElement Json(Action<Utf8JsonWriter> write)
@@ -61,7 +105,8 @@ namespace StatsDirect.Templates
                     if (IsPointerFrame(frame))
                     {
                         w.WriteString("kind", "frame");
-                        WritePointer(w, frame);
+                        snapshot.Columns = frame.Variables.Select(variable => new ColumnSnapshot(variable)).ToArray();
+                        WritePointer(w, frame, snapshot.Columns);
                         snapshot.PointerCount = Count(frame);
                         snapshot.Source = Json(source => WriteSource(source, ((WorksheetOrigin)frame.Variables[0].Origin).WorkbookPath));
                         if (snapshot.PointerCount <= EmbeddingThreshold)
@@ -107,27 +152,26 @@ namespace StatsDirect.Templates
         /// <summary>
         /// The rows the record keeps of the run's pointer frames: up to the last row that holds a value in any column of any of them, so
         /// that the trailing rows blank in every column (a whole-column selection's rows below the data) are left out, while frames
-        /// selected together keep the same row count and so stay aligned. Negative when a frame's values are not held with the record,
-        /// in which case nothing is trimmed: its hash and row range describe all its rows.
+        /// selected together keep the same row count and so stay aligned. This is independent
+        /// of the limit on embedded data. Unknown legacy filtered coordinates are left intact.
         /// </summary>
         private static int KeptRows(IEnumerable<InputSnapshot> snapshots)
         {
             int kept = 0;
+            int original = 0;
             foreach (InputSnapshot snapshot in snapshots)
             {
                 if (snapshot == null || snapshot.Content.ValueKind != JsonValueKind.Object || snapshot.Content.GetProperty("kind").GetString() != "frame")
                     continue;
-                if (snapshot.Held.ValueKind != JsonValueKind.Object)
+                if (snapshot.Columns == null)
                     return -1;
-                foreach (JsonProperty column in snapshot.Held.EnumerateObject())
+                foreach (ColumnSnapshot column in snapshot.Columns)
                 {
-                    int last = column.Value.GetArrayLength();
-                    while (last > 0 && column.Value[last - 1].ValueKind == JsonValueKind.Null)
-                        last--;
-                    kept = Math.Max(kept, last);
+                    original = Math.Max(original, column.Count);
+                    kept = Math.Max(kept, column.CanTrim ? column.LastValueCount : column.Count);
                 }
             }
-            return kept;
+            return kept > 0 ? kept : original; // no observations: retain valid original ranges
         }
 
         /// <summary>
@@ -136,17 +180,17 @@ namespace StatsDirect.Templates
         /// </summary>
         private static InputSnapshot Trim(InputSnapshot snapshot, int keptRows)
         {
-            if (snapshot == null || keptRows < 0 || snapshot.Content.ValueKind != JsonValueKind.Object || snapshot.Held.ValueKind != JsonValueKind.Object
+            if (snapshot == null || keptRows < 0 || snapshot.Content.ValueKind != JsonValueKind.Object || snapshot.Columns == null
                 || snapshot.Content.GetProperty("kind").GetString() != "frame" || !snapshot.Content.TryGetProperty("columns", out JsonElement columns))
                 return snapshot;
-            List<JsonProperty> held = snapshot.Held.EnumerateObject().ToList();
-            if (held.Count != columns.GetArrayLength() || held.All(h => h.Value.GetArrayLength() <= keptRows))
+            if (snapshot.Columns.Length != columns.GetArrayLength() || snapshot.Columns.All(column => column.Count <= keptRows))
                 return snapshot;
-            InputSnapshot trimmed = new() { Source = snapshot.Source };
-            trimmed.Held = Json(data =>
+            InputSnapshot trimmed = new() { Source = snapshot.Source, Columns = snapshot.Columns,
+                PointerCount = snapshot.Columns.Sum(column => Math.Min(keptRows, column.Count)) };
+            if (snapshot.Held.ValueKind == JsonValueKind.Object) trimmed.Held = Json(data =>
             {
                 data.WriteStartObject();
-                foreach (JsonProperty h in held)
+                foreach (JsonProperty h in snapshot.Held.EnumerateObject())
                 {
                     int count = Math.Min(keptRows, h.Value.GetArrayLength());
                     data.WritePropertyName(h.Name);
@@ -154,7 +198,6 @@ namespace StatsDirect.Templates
                     for (int i = 0; i < count; i++)
                         h.Value[i].WriteTo(data);
                     data.WriteEndArray();
-                    trimmed.PointerCount += count;
                 }
                 data.WriteEndObject();
             });
@@ -172,23 +215,25 @@ namespace StatsDirect.Templates
                     int c = 0;
                     foreach (JsonElement column in columns.EnumerateArray())
                     {
-                        JsonElement values = held[c++].Value;
-                        int count = Math.Min(keptRows, values.GetArrayLength());
+                        ColumnSnapshot acquired = snapshot.Columns[c++];
+                        int count = Math.Min(keptRows, acquired.Count);
                         w.WriteStartObject();
                         foreach (JsonProperty p in column.EnumerateObject())
                         {
-                            if (p.Name == "rows" && p.Value.ValueKind == JsonValueKind.Array && p.Value.GetArrayLength() == 2)
+                            if (p.Name == "rows" && count < acquired.Count && acquired.CanTrim && p.Value.ValueKind == JsonValueKind.Array && p.Value.GetArrayLength() == 2)
                             {
-                                // the first row, the title row if there is one, then the kept values; never beyond the rows that were selected
+                                // Filtered observations retain their physical worksheet coordinates.
                                 int firstRow = p.Value[0].GetInt32(), lastRow = p.Value[1].GetInt32();
                                 bool hasTitle = column.TryGetProperty("hasTitle", out JsonElement title) && title.ValueKind == JsonValueKind.True;
                                 w.WriteStartArray("rows");
                                 w.WriteNumberValue(firstRow);
-                                w.WriteNumberValue(Math.Min(lastRow, firstRow - 1 + (hasTitle ? 1 : 0) + count));
+                                int end = count > 0 && acquired.DataRows != null && count <= acquired.DataRows.Length
+                                    ? acquired.DataRows[count - 1] + 1 : firstRow - 1 + (hasTitle ? 1 : 0) + count;
+                                w.WriteNumberValue(Math.Min(lastRow, end));
                                 w.WriteEndArray();
                             }
                             else if (p.Name == "hash")
-                                w.WriteString("hash", Hash(Enumerable.Range(0, count).Select(i => FromJson(values[i]))));
+                                w.WriteString("hash", acquired.HashAt(count));
                             else
                                 p.WriteTo(w);
                         }
@@ -200,17 +245,6 @@ namespace StatsDirect.Templates
             });
             return trimmed;
         }
-
-        /// <summary>A held value as <see cref="Values(IVariable)"/> gave it: a number, text, a flag, or null for a missing value.</summary>
-        private static object FromJson(JsonElement value) => value.ValueKind switch
-        {
-            JsonValueKind.Null => null,
-            JsonValueKind.Number => value.GetDouble(),
-            JsonValueKind.String => value.GetString(),
-            JsonValueKind.True => true,
-            JsonValueKind.False => false,
-            _ => value.GetRawText()
-        };
 
         /// <summary>The kind of value a parameter takes, as the record names it.</summary>
         public static string KindOf(Parameter parameter) => parameter switch
@@ -563,7 +597,7 @@ namespace StatsDirect.Templates
             catch (ArgumentException) { return path; }
         }
 
-        private static void WritePointer(Utf8JsonWriter w, DataFrame frame)
+        private static void WritePointer(Utf8JsonWriter w, DataFrame frame, ColumnSnapshot[] snapshots)
         {
             WorksheetOrigin first = (WorksheetOrigin)frame.Variables[0].Origin;
             w.WriteString("mode", first.Mode.ToString());
@@ -571,6 +605,7 @@ namespace StatsDirect.Templates
             w.WriteString("path", first.WorkbookPath ?? "");
             w.WriteString("sheet", first.WorksheetName);
             w.WriteStartArray("columns");
+            int index = 0;
             foreach (IVariable variable in frame.Variables)
             {
                 WorksheetOrigin origin = (WorksheetOrigin)variable.Origin;
@@ -584,7 +619,8 @@ namespace StatsDirect.Templates
                 w.WriteNumberValue(origin.TopRow + origin.Rows);
                 w.WriteEndArray();
                 w.WriteBoolean("hasTitle", origin.HasTitle);
-                w.WriteString("hash", Hash(variable));
+                ColumnSnapshot acquired = snapshots[index++];
+                w.WriteString("hash", acquired.HashAt(acquired.Count));
                 w.WriteEndObject();
             }
             w.WriteEndArray();

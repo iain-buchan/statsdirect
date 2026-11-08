@@ -21,6 +21,7 @@ internal static partial class Program
         CheckAcquisitionCopies();
         CheckOtherChartOrder();
         CheckTrailingBlankRows(folder);
+        CheckPairedMissingReplay(folder);
         Console.WriteLine("      acquisition regression artifacts: " + folder);
     }
 

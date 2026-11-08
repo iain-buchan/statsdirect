@@ -678,7 +678,11 @@ namespace StatsDirect.UI
                 Array.Copy(variable.Data, 1, values, 0, requiredRows);
                 variable.Data = values;
                 variable.Origin = new WorksheetOrigin(origin.WorkbookPath, origin.WorksheetName, origin.Column, origin.TopRow, origin.Rows,
-                    origin.Mode, true, origin.WasFiltered, origin.OriginGroup);
+                    origin.Mode, true, origin.WasFiltered, origin.OriginGroup)
+                {
+                    // The proved empty header was part of the acquired visible values; keep the new data and their physical rows aligned.
+                    DataRowIndices = origin.DataRowIndices?.Length == requiredRows + 1 ? origin.DataRowIndices[1..] : null
+                };
             }
         }
 

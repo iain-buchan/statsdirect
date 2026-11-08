@@ -2,6 +2,13 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
+##[Unreleased]
+
+### Fixed
+- Continue in R and notebook replay trim trailing blank worksheet rows even when selections exceed the embedded-data limit, while keeping acquisition hashes and row alignment intact.
+- Recorded filtered selections retain the physical worksheet rows of their observations; legacy filtered origins without a row map keep their original bounds.
+- Paired-t R replay omits incomplete pairs jointly before summaries and charts, and honours the selected agreement option.
+- Automated tests and diagnostic test modes use isolated user-data folders instead of writing to the user's preferences, R workspace or example workbook.
 ##[v5.3.6] 2026-11-08
 
 ### Fixed
