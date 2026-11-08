@@ -2,7 +2,7 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
-##[Unreleased]
+##[v5.3.5] 2026-11-08
 
 ### Changed
 - Desktop Help has Home, Contents and the authored keyword Index in its toolbar, with the same published help and tutor content available to the Windows and Mac builds.
