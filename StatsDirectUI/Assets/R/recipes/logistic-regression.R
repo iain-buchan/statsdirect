@@ -2,12 +2,26 @@
 # From the help's R code (regression_and_correlation/logistic.htm); the data and settings above come from the run.
 # data: total = total, responders = response, predictors... = predictors, weight = weight
 # settings: confidence = gamma, intercept = intercept
+# hand-edited: omit incomplete model rows before grouping and all calculations
 
-if (is.null(total)) {   # individual responses: one trial in each row, merged by covariate pattern (and prior weight) as the report does
-  sd_rows <- cbind(as.data.frame(predictors, optional = TRUE), sd_r = responders, sd_n = 1, sd_w = if (is.null(weight)) 1 else weight)
-  sd_merged <- aggregate(cbind(sd_r, sd_n) ~ ., data = sd_rows, FUN = sum)
-  predictors <- sd_merged[names(predictors)]; responders <- sd_merged$sd_r; total <- sd_merged$sd_n; if (!is.null(weight)) weight <- sd_merged$sd_w
-}
+keep <- complete.cases(responders, total, predictors, weight)
+responders <- responders[keep]
+predictors <- lapply(predictors, function(x) x[keep])
+if (!is.null(total)) total <- total[keep]
+if (!is.null(weight)) weight <- weight[keep]
+
+# Individual rows represent one trial; both layouts merge equal covariate
+# patterns with the same prior weight, as the native analysis does.
+if (is.null(total)) total <- rep(1, length(responders))
+n_predictors <- length(predictors)
+sd_merged <- aggregate(cbind(responders, total),
+                       by = c(predictors, list(prior_weight = if (is.null(weight)) rep(1, length(responders)) else weight)), FUN = sum)
+# Grouping columns come first, then the two summed counts. Use their positions
+# so a selected predictor can have any of these column names too.
+predictors <- sd_merged[seq_len(n_predictors)]
+responders <- sd_merged[[n_predictors + 2]]
+total <- sd_merged[[n_predictors + 3]]
+if (!is.null(weight)) weight <- sd_merged[[n_predictors + 1]]
 # Logistic regression: the StatsDirect help example (Altman 1991, hypertension and
 # smoking, obesity and snoring in 433 total) in R
 
@@ -68,8 +82,9 @@ cat("Pearson chi-square goodness of fit =", six(pearson), " df =", fit$df.residu
 # patterns in order of fitted proportion, a new group whenever the total so far
 # reach the next tenth of the total (a pattern is never split), then the sum over
 # the groups of (O - E)^2 / (E (1 - E / n)) with 2 fewer degrees of freedom than
-# groups; these 8 patterns make 4 groups
-ntot <- sum(total)
+# groups. Prior weights count as frequencies in the group sizes and counts.
+frequency <- total * w
+ntot <- sum(frequency)
 ncut <- floor(ntot / 10)
 ncum <- 0
 group <- integer(n)
@@ -80,11 +95,11 @@ for (i in order(p)) {
     ncut <- floor(max(ncum + ntot / 10, g * ntot / 10))
   }
   group[i] <- g
-  ncum <- ncum + total[i]
+  ncum <- ncum + frequency[i]
 }
-o <- tapply(responders, group, sum)
-e <- tapply(p * total, group, sum)
-size <- tapply(total, group, sum)
+o <- tapply(responders * w, group, sum)
+e <- tapply(p * frequency, group, sum)
+size <- tapply(frequency, group, sum)
 hl <- sum((o - e)^2 / (e * (1 - e / size)))
 cat("Hosmer-Lemeshow test =", six(hl), " df =", length(o) - 2, " ",
     pv(pchisq(hl, length(o) - 2, lower.tail = FALSE)), "\n")

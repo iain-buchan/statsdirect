@@ -7,6 +7,7 @@
 # children) in R
 # The data are the IgM column of the Parametric worksheet of the StatsDirect test
 # workbook.
+igm <- igm[!is.na(igm)]
 pct <- paste0(100 * confidence, "%")
 n <- length(igm)
 z <- qnorm((1 + confidence) / 2)                   # for a 95% range and 95% confidence intervals

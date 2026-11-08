@@ -6,6 +6,7 @@
 
 # Single sample t test: the StatsDirect help example (resting systolic blood
 # pressure of 20 first year resident doctors) in R
+bp <- bp[!is.na(bp)]
 pct <- paste0(100 * confidence, "%")
 n <- length(bp)
 
@@ -23,9 +24,10 @@ cat(pct, "confidence interval for mean difference =", six(r$conf.int[1] - mu), "
     six(r$conf.int[2] - mu), "\n")
 cat(sprintf("One sided P = %.4f\n", r$p.value / 2))
 
-# Power of a two sided test at the 5% level to detect the difference and sd seen,
+# Power at the selected significance level to detect the difference and sd seen,
 # from the noncentral t distribution; strict = TRUE counts rejections in both
 # tails, as StatsDirect does.
-pw <- power.t.test(n = n, delta = mean(bp) - mu, sd = sd(bp), sig.level = 0.05,
+alpha <- 1 - confidence
+pw <- power.t.test(n = n, delta = mean(bp) - mu, sd = sd(bp), sig.level = alpha,
                    type = "one.sample", strict = TRUE)
-cat(sprintf("Power (for 5%% significance) = %.2f%%\n", 100 * pw$power))
+cat(sprintf("Power (for %g%% significance) = %.2f%%\n", 100 * alpha, 100 * pw$power))

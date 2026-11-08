@@ -62,6 +62,7 @@ internal static partial class Program
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "routed-replay") { CheckRoutedReplay(); Console.WriteLine($"PASS {checks} routed replay checks"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "records") { CheckRecord(); CheckThreshold(); CheckHash(); CheckScript(); CheckTable(); CheckFollowOn(); CheckRealRuns(); CheckRegressionFollowOn(); CheckTwoLevel(); CheckColumnLocator(); Console.WriteLine($"PASS {checks} saved record checks"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "follow-on-plots") { CheckFollowOnPlots(); Console.WriteLine($"PASS {checks} follow-on plot checks"); return 0; }
+            if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "acquisition-modes") { StatsDirect.R.RRecipes.Folder = Metadata("Recipes"); string folder = Path.Combine(Path.GetTempPath(), "statsdirect-acquisition-modes-" + Guid.NewGuid().ToString("N")); Directory.CreateDirectory(folder); CheckAcquisitionModeReplay(folder); Console.WriteLine($"PASS {checks} acquisition-mode replay checks"); return 0; }
             CheckRecord();
             CheckNativeAxisLabels();
             CheckRecipeGeneralSimplicity();

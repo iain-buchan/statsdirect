@@ -52,7 +52,7 @@ internal static partial class Program
                 "stopifnot(identical(before,expected_before),identical(after,expected_after),identical(d,expected_d),n==5L)\n" +
                 "actual <- c(n,mean(d),sd(d),sd(d)/sqrt(n),unname(r$parameter),unname(r$statistic),r$p.value,r$conf.int[1:2])\n" +
                 "stopifnot(isTRUE(all.equal(actual," + RScriptWriter.Vector(expected.Cast<object>().ToArray()) + ",tolerance=1e-10,check.attributes=FALSE)))\n" +
-                "stopifnot(isTRUE(all.equal(pw$power,power.t.test(n=5,delta=mean(expected_d),sd=sd(expected_d),sig.level=0.05,type='paired',strict=TRUE)$power)))\n" +
+                "stopifnot(isTRUE(all.equal(pw$power,power.t.test(n=5,delta=mean(expected_d),sd=sd(expected_d),sig.level=1-confidence,type='paired',strict=TRUE)$power)))\n" +
                 "stopifnot(plot_count==" + (agreement ? "1L" : "0L") + ")\n" +
                 (agreement ? "stopifnot(identical(plotted$x,(expected_before+expected_after)/2),identical(plotted$y,expected_d),identical(plotted$xlab,'Mean ((Selected before + Selected after) / 2)'),identical(plotted$ylab,'Difference (Selected before - Selected after)'),isTRUE(all.equal(loa,mean(expected_d)+c(-1,1)*qnorm((1+confidence)/2)*sd(expected_d))))\n" : "stopifnot(!exists('loa'))\n") +
                 "dev.off()\ncat('PAIRED_MISSING_REPLAY_OK\\n')\n";

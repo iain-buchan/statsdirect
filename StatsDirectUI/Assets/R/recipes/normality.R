@@ -3,6 +3,7 @@
 # data: yield
 
 # Normality tests: the StatsDirect help example (30 penicillin yields) in R
+yield <- yield[!is.na(yield)]
 n <- length(yield)
 
 # R's standard test gives the Shapiro-Wilk W and its P (Royston 1995), as

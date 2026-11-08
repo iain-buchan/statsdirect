@@ -47,7 +47,7 @@ namespace StatsDirect.Templates
         internal sealed class ColumnSnapshot
         {
             internal readonly int Count, LastValueCount;
-            internal readonly bool CanTrim;
+            internal readonly bool Positional, CanTrim;
             internal readonly int[] DataRows;
             private readonly IncrementalHash prefix;
             private static readonly byte[] Separator = { 10 };
@@ -59,7 +59,17 @@ namespace StatsDirect.Templates
                 while (LastValueCount > 0 && values[LastValueCount - 1] == null) LastValueCount--;
                 var origin = (WorksheetOrigin)variable.Origin;
                 DataRows = origin.DataRowIndices?.ToArray();
-                CanTrim = !origin.WasFiltered || DataRows?.Length == Count;
+                // Only positional acquisition can distinguish an unused blank tail
+                // from explicit missing markers kept by NumericReplaceMissing.
+                Positional = origin.Mode is DataAcquisitionMode.NumericPreserveRows
+                    or DataAcquisitionMode.NumericCodingTextToDummiesPreserveRows or DataAcquisitionMode.CategoryCombineAllColumns;
+                CanTrim = origin.Mode switch
+                {
+                    DataAcquisitionMode.NumericPreserveRows or DataAcquisitionMode.NumericCodingTextToDummiesPreserveRows
+                        => !origin.WasFiltered || DataRows?.Length == Count,
+                    DataAcquisitionMode.CategoryCombineAllColumns => !origin.WasFiltered,
+                    _ => false
+                };
                 prefix = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
                 for (int i = 0; i < LastValueCount; i++)
                 {
@@ -82,6 +92,8 @@ namespace StatsDirect.Templates
                 }
                 return Convert.ToHexString(hash.GetHashAndReset(), 0, 8).ToLowerInvariant();
             }
+
+            internal int KeptCount(int rows) => CanTrim ? Math.Min(rows, Count) : Count;
         }
 
         private static JsonElement Json(Action<Utf8JsonWriter> write)
@@ -167,7 +179,10 @@ namespace StatsDirect.Templates
                     return -1;
                 foreach (ColumnSnapshot column in snapshot.Columns)
                 {
+                    if (!column.Positional) continue;
                     original = Math.Max(original, column.Count);
+                    // Unknown filtered coordinates still protect their matched row
+                    // alignment. Non-positional modes do not constrain this cutoff.
                     kept = Math.Max(kept, column.CanTrim ? column.LastValueCount : column.Count);
                 }
             }
@@ -183,16 +198,17 @@ namespace StatsDirect.Templates
             if (snapshot == null || keptRows < 0 || snapshot.Content.ValueKind != JsonValueKind.Object || snapshot.Columns == null
                 || snapshot.Content.GetProperty("kind").GetString() != "frame" || !snapshot.Content.TryGetProperty("columns", out JsonElement columns))
                 return snapshot;
-            if (snapshot.Columns.Length != columns.GetArrayLength() || snapshot.Columns.All(column => column.Count <= keptRows))
+            if (snapshot.Columns.Length != columns.GetArrayLength() || snapshot.Columns.All(column => !column.CanTrim || column.Count <= keptRows))
                 return snapshot;
             InputSnapshot trimmed = new() { Source = snapshot.Source, Columns = snapshot.Columns,
-                PointerCount = snapshot.Columns.Sum(column => Math.Min(keptRows, column.Count)) };
+                PointerCount = snapshot.Columns.Sum(column => column.KeptCount(keptRows)) };
             if (snapshot.Held.ValueKind == JsonValueKind.Object) trimmed.Held = Json(data =>
             {
                 data.WriteStartObject();
+                int column = 0;
                 foreach (JsonProperty h in snapshot.Held.EnumerateObject())
                 {
-                    int count = Math.Min(keptRows, h.Value.GetArrayLength());
+                    int count = snapshot.Columns[column++].KeptCount(keptRows);
                     data.WritePropertyName(h.Name);
                     data.WriteStartArray();
                     for (int i = 0; i < count; i++)
@@ -216,7 +232,7 @@ namespace StatsDirect.Templates
                     foreach (JsonElement column in columns.EnumerateArray())
                     {
                         ColumnSnapshot acquired = snapshot.Columns[c++];
-                        int count = Math.Min(keptRows, acquired.Count);
+                        int count = acquired.KeptCount(keptRows);
                         w.WriteStartObject();
                         foreach (JsonProperty p in column.EnumerateObject())
                         {
@@ -232,7 +248,7 @@ namespace StatsDirect.Templates
                                 w.WriteNumberValue(Math.Min(lastRow, end));
                                 w.WriteEndArray();
                             }
-                            else if (p.Name == "hash")
+                            else if (p.Name == "hash" && acquired.CanTrim)
                                 w.WriteString("hash", acquired.HashAt(count));
                             else
                                 p.WriteTo(w);

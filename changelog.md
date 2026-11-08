@@ -7,7 +7,12 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 ### Fixed
 - Continue in R and notebook replay trim trailing blank worksheet rows even when selections exceed the embedded-data limit, while keeping acquisition hashes and row alignment intact.
 - Recorded filtered selections retain the physical worksheet rows of their observations; legacy filtered origins without a row map keep their original bounds.
-- Paired-t R replay omits incomplete pairs jointly before summaries and charts, and honours the selected agreement option.
+- R replay retains explicitly typed missing markers in legacy numeric selections without shortening their worksheet pointers or falsely reporting changed data. Only positional acquisition modes trim unused blank-row tails.
+- Independent-sample R recipes omit missing observations within each sample, while matched tests and models omit incomplete observations jointly. Summary missing-value counts are retained; weighted summaries and Poisson exposure rules match the native analyses.
+- Variance-ratio replay orders the samples by their observed variances and uses the selected group names, matching the native F statistic and degrees of freedom.
+- Paired t and signed-rank replay support a single column of differences as well as two matched columns. Agreement is offered only for paired measurements, and power calculations use the selected significance level. Exact signed-rank probabilities and advanced confidence limits are preserved.
+- Grouped logistic R replay combines matching predictor patterns and prior weights before fitting and uses frequency-weighted goodness-of-fit diagnostics.
+- Acquisition, missing-data and numerical R replay regressions, including a native filtered-grid reread, now block Windows CI.
 - Automated tests and diagnostic test modes use isolated user-data folders instead of writing to the user's preferences, R workspace or example workbook.
 ##[v5.3.6] 2026-11-08
 

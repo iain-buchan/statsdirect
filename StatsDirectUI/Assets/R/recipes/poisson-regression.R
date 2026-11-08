@@ -2,6 +2,14 @@
 # From the help's R code (regression_and_correlation/poisson.htm); the data and settings above come from the run.
 # data: response = response, exposure = exposure, predictors... = predictors, weight = weight
 # settings: confidence = gamma, intercept = intercept
+# hand-edited: every model and summary uses the same complete rows
+
+keep <- complete.cases(response, predictors, exposure, weight)
+if (!is.null(exposure)) keep <- keep & exposure > 0
+response <- response[keep]
+predictors <- lapply(predictors, function(x) x[keep])
+if (!is.null(exposure)) exposure <- exposure[keep]
+if (!is.null(weight)) weight <- weight[keep]
 
 # Poisson regression: the StatsDirect help example (Armitage, Berry and Matthews
 # 2001, response in veterans and non-veterans by age group, with the subject-exposure

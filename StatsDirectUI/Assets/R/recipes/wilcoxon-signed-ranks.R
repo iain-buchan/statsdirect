@@ -2,12 +2,19 @@
 # From the help's R code (nonparametric_methods/wilcoxon_signed_ranks.htm); the data and settings above come from the run.
 # data: first, second
 # settings: confidence = gamma
-# hand-edited: the confidence level and the data come from the run, as the header says
+# hand-edited: the selected confidence level and complete pairs or differences come from the run
 
 # Wilcoxon signed ranks test: the StatsDirect help example (Conover 1999) in R
 pct <- paste0(100 * confidence, "%")
-d <- first - second                       # one difference is 0 and some are tied
+if (is.null(second)) {
+  d <- first[!is.na(first)]                 # one column already contains differences
+} else {
+  keep <- complete.cases(first, second)
+  d <- first[keep] - second[keep]
+}
 n <- length(d)
+nz <- d[d != 0]
+if (!length(nz)) stop("All differences are zero; at least one non-zero difference is required.")
 
 # R's standard test. Its V is the sum of ranks for positive differences. R 4.6.0
 # or later gives exact results that allow for the zero and the ties, but it ranks
@@ -17,12 +24,11 @@ n <- length(d)
 # exact for its own method. Older versions of R warn and use a normal
 # approximation with continuity correction, as exact = FALSE does (V = 41.5,
 # two sided P = 0.4765).
-print(wilcox.test(first, second, paired = TRUE, conf.int = TRUE))
+print(wilcox.test(d, conf.int = TRUE, conf.level = confidence))
 
 # With zeros set aside first, R 4.6.0 or later gives StatsDirect's two sided P.
 # Use alternative = "less" for the lower side P and "greater" for the upper.
 # Keep the confidence interval from the first call: it needs every difference.
-nz <- d[d != 0]
 print(wilcox.test(nz))
 
 # Number of non-zero differences and the sum of ranks for positive differences
@@ -54,7 +60,12 @@ cat("Lower side P =", round(lower, 4), "  Upper side P =", round(upper, 4),
 K <- qsignrank((1 - confidence) / 2, n)
 a <- outer(d, d, "+") / 2
 a <- sort(a[upper.tri(a, diag = TRUE)])
-cat(sprintf("%.1f%% confidence interval for difference between population medians:\n",
-            100 * (1 - 2 * psignrank(K - 1, n))))
-cat(sprintf("K = %g   Median difference = %g (%g to %g)\n",
-            K, median(a), a[K], rev(a)[K]))
+if (length(nz) >= 4 && K > 0) {
+  cat(sprintf("%.1f%% confidence interval for difference between population medians:\n",
+              100 * (1 - 2 * psignrank(K - 1, n))))
+  cat(sprintf("K = %g   Median difference = %g (%g to %g)\n",
+              K, median(a), a[K], rev(a)[K]))
+} else {
+  reason <- if (length(nz) < 4) "fewer than four non-zero differences" else "too few pairs at this confidence level"
+  cat(sprintf("Median difference = %g (interval unavailable: %s)\n", median(a), reason))
+}

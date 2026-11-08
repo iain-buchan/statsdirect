@@ -2,8 +2,10 @@
 # From the help's R code (agreement/intraclass.htm); the data and settings above come from the run.
 # data: raters...
 # settings: confidence = ci
+# hand-edited: omit incomplete subjects before all summaries and plots
 
 flow <- do.call(cbind, raters)
+flow <- flow[complete.cases(flow), , drop = FALSE]
 # Agreement of continuous measurements: the StatsDirect help example (Bland and Altman
 # 1996a, four peak flow readings on each of 20 children; the test workbook's Agreement
 # worksheet columns 1st to 4th) in R

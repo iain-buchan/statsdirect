@@ -5,6 +5,7 @@
 
 # Normal distribution (z) tests: the StatsDirect help example (Michelson's 100
 # measurements of the speed of light in air, millions of metres per second) in R
+speed <- speed[!is.na(speed)]
 pct <- paste0(100 * confidence, "%")
 n <- length(speed)
 

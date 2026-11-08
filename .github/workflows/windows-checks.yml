@@ -65,8 +65,9 @@ jobs:
         run: |
           BIN="$GITHUB_WORKSPACE/StatsDirectUI/bin/Release/net10.0-windows10.0.17763.0"
           BIN_WIN=$(cygpath -w "$BIN")
+          unset STATSDIRECT_RSCRIPT_ONLY
           failed=()
-          for p in Definitions DistributionRegression GlmFitRegression DataSelection AnalysisOfVariance Nonparametric Descriptive Parametric ClinicalEpidemiology SampleSize Randomization Rates Proportions ChiSquare ExactTests Frequencies NoncentralTRegression MetaAnalysis Survival Agreement CoxRegression CorrelationRegression ExcelAddInRetirement UserDataIsolation; do
+          for p in Definitions DistributionRegression GlmFitRegression DataSelection AnalysisOfVariance Nonparametric Descriptive Parametric ClinicalEpidemiology SampleSize Randomization Rates Proportions ChiSquare ExactTests Frequencies NoncentralTRegression MetaAnalysis Survival Agreement CoxRegression CorrelationRegression ExcelAddInRetirement UserDataIsolation RScript; do
             start=$(date +%s)
             if out=$(dotnet run --project "tests/$p" -c Release -p:StatsDirectBin="$BIN_WIN" 2>&1); then
               echo "tests/$p: ok, $(( $(date +%s) - start )) s: $(echo "$out" | grep -E 'CHECKS|checks|PASS|FAIL' | tail -1)"
@@ -77,6 +78,12 @@ jobs:
             fi
           done
           if [ ${#failed[@]} -ne 0 ]; then echo "Failed: ${failed[*]}"; exit 1; fi
+      - name: Native filtered replay regression (blocking)
+        env:
+          STATSDIRECT_LEARNING_ONLY: filtered-replay
+          STATSDIRECT_SKIP_CLIPBOARD: 1
+        shell: pwsh
+        run: dotnet run --project tests/Learning -c Release -p:StatsDirectBin="$env:GITHUB_WORKSPACE/StatsDirectUI/bin/Release/net10.0-windows10.0.17763.0"
       - name: Sanity check and operations test
         shell: bash
         run: |
@@ -161,7 +168,7 @@ jobs:
           BIN="$GITHUB_WORKSPACE/StatsDirectUI/bin/Release/net10.0-windows10.0.17763.0"
           BIN_WIN=$(cygpath -w "$BIN")
           failed=()
-          for p in Calculator Crosstabs Distributions HtmlHelp ReportRendering TutorRuntime WorksheetOutput WebReports RScript InteractiveRWindows Learning UpdateDownloadRegression; do
+          for p in Calculator Crosstabs Distributions HtmlHelp ReportRendering TutorRuntime WorksheetOutput WebReports InteractiveRWindows Learning UpdateDownloadRegression; do
             start=$(date +%s)
             if out=$(timeout 1500 dotnet run --project "tests/$p" -c Release -p:StatsDirectBin="$BIN_WIN" 2>&1); then
               echo "tests/$p: ok, $(( $(date +%s) - start )) s: $(echo "$out" | grep -E 'CHECKS|checks|PASS|FAIL' | tail -1)"

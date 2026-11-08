@@ -2,8 +2,10 @@
 # From the help's R code (regression_and_correlation/pca.htm); the data and settings above come from the run.
 # data: q... = data
 # settings: correct = correctForReversal
+# hand-edited: omit incomplete subjects before components and reliability estimates
 
 q <- as.data.frame(q)
+q <- q[complete.cases(q), , drop = FALSE]
 # Principal components and scale reliability: the StatsDirect help example (four
 # questionnaire items answered by 60 people) in R. The data are the test workbook's
 # Agreement worksheet columns Question 1 to 4.

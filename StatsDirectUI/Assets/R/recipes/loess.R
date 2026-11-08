@@ -2,6 +2,7 @@
 # From the help's R code (nonparametric_methods/loess.htm); the data and settings above come from the run.
 # data: Hgb = outcome, eGFR... = predictors
 # settings: span = span, degree = degree, model = model, title = title, xlab = xlab, ylab = ylab
+# hand-edited: plot fitted values against the complete model rows used by loess
 
 rname <- function(s) { s <- tolower(s); s <- gsub("[^a-z0-9._]", ".", s); if (!grepl("^[a-z]", s)) s <- paste0(".", s); if (grepl("^\\.[0-9]", s)) s <- paste0(".", s); s }   # names as the program makes them for R
 d <- data.frame(Hgb, as.data.frame(eGFR, optional = TRUE), check.names = FALSE)
@@ -22,9 +23,10 @@ cat(sprintf("Residual Standard Error: %.6f\n", m$s))
 
 # The plot: the fitted curve with a 95% confidence band
 p <- predict(m, se = TRUE)
-i <- order(d[[2]])
+x <- as.numeric(m$x[, 1])
+i <- order(x)
 t95 <- qt(0.975, p$df)
 plot(d[[2]], d[[1]], main = title, xlab = xlab, ylab = ylab)
-lines(d[[2]][i], p$fit[i], lwd = 2)
-lines(d[[2]][i], p$fit[i] - t95 * p$se.fit[i], lty = 2)
-lines(d[[2]][i], p$fit[i] + t95 * p$se.fit[i], lty = 2)
+lines(x[i], p$fit[i], lwd = 2)
+lines(x[i], p$fit[i] - t95 * p$se.fit[i], lty = 2)
+lines(x[i], p$fit[i] + t95 * p$se.fit[i], lty = 2)
