@@ -62,8 +62,33 @@ internal static partial class Program
         await RunConversationR(ConversationRScript.Build(messages,0),"ai-workbook-snapshot","stopifnot(identical(before,c(312,242,340)),identical(after,c(300,201,232)))\ncat('WORKBOOK_CONTEXT_OK\\n')","WORKBOOK_CONTEXT_OK");
         var literal=new JsonObject{["datasetId"]="escaped",["columns"]=new JsonArray(new JsonObject{["index"]=3,["values"]=new JsonArray("quoted\"\\\ntext",null,"plain")},new JsonObject{["index"]=7,["values"]=new JsonArray(2,null,4)})};
         await RunConversationR(ConversationRScript.Dataset(literal),"ai-literal-data","stopifnot(identical(.statsdirect_data[['escaped']][['column_3']],c(\"quoted\\\"\\\\\\ntext\",NA,\"plain\")),identical(.statsdirect_data[['escaped']][['column_7']],c(2,NA,4)))\ncat('LITERAL_CONTEXT_OK\\n')","LITERAL_CONTEXT_OK");
+        await TestSnapshotMetadata();
         Check(ConversationRScript.Blocks("```python\nno_r()\n```\n~~~RSCRIPT\nx <- 1\n~~~\n```r\nincomplete <-").SequenceEqual(new[]{"x <- 1"}),"R extraction accepts Rscript and tilde fences but excludes other languages and unfinished blocks");
         Check(ConversationRScript.Build(new JsonArray(new JsonObject{["role"]="user",["rSource"]=source,["text"]="```r\nmean(before)\n```"}),0,0).Contains(source),"R blocks in the user's own question still open with their source context");
+    }
+    static async Task TestSnapshotMetadata()
+    {
+        // A real random UUID can contain 999. Metadata and another approved column
+        // must not be mistaken for the replacement value in the edited column.
+        const string id = "99900000000040008000000000000001";
+        var data = new JsonObject {
+            ["datasetId"] = id, ["documentId"] = "StatsDirectForm:999",
+            ["workbook"] = "Workbook 999", ["sheet"] = "Sheet 999", ["range"] = "A2:B3",
+            ["columns"] = new JsonArray(
+                new JsonObject { ["index"] = 0, ["values"] = new JsonArray(101, 102) },
+                new JsonObject { ["index"] = 1, ["values"] = new JsonArray(999, 201) })
+        };
+        string frozen = ConversationRScript.Dataset(data);
+        data["columns"][0]["values"][0] = 999;
+        string exported = ConversationRScript.Build(new JsonArray(new JsonObject {
+            ["role"] = "assistant", ["rData"] = frozen, ["text"] = "```r\ninvisible(.statsdirect_data)\n```"
+        }), 0);
+        Check(exported.Contains(frozen), "Open in R keeps the frozen snapshot when IDs, labels and other data contain the edited value");
+        await RunConversationR(exported, "ai-snapshot-metadata",
+            $"x <- .statsdirect_data[[{RScriptWriter.Quote(id)}]]\n" +
+            "stopifnot(length(.statsdirect_data)==1,identical(x$column_0,c(101,102)),identical(x$column_1,c(999,201))," +
+            "identical(attr(x,'statsdirect'),list(documentId='StatsDirectForm:999',workbook='Workbook 999',sheet='Sheet 999',range='A2:B3')))\ncat('SNAPSHOT_METADATA_OK\\n')",
+            "SNAPSHOT_METADATA_OK");
     }
     static async Task RunConversationR(string code,string name,string assertions,string marker)
     {

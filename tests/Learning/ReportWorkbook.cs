@@ -80,7 +80,10 @@ internal static partial class Program
             string frozenRData = lastReply.S("rData");
             a.LoadLearningExample(new JsonArray(new JsonObject { ["title"] = "Replacement", ["values"] = new JsonArray(999) }));
             var exported = ConversationRScript.Build(new JsonArray(new JsonObject { ["role"] = "assistant", ["rData"] = frozenRData, ["text"] = "```r\ninvisible(.statsdirect_data)\n```" }), 0);
-            Check(exported.Contains(aId) && exported.Contains(bId) && exported.Contains(frozenRData) && exported.Contains("101") && !exported.Contains("999"),
+            // Dataset IDs and other approved workbooks may legitimately contain 999.
+            // Preserve the entire frozen snapshot here; the R assertions below check
+            // each workbook's actual values and attributes after editing/closing it.
+            Check(frozenRData.Length > 0 && exported.Contains(aId) && exported.Contains(bId) && exported.Contains(frozenRData),
                 "Open in R retains original literal snapshots and workbook identities after one workbook is edited");
             await Reject(() => context.CallAsync("statsdirect_read_data", Read(aId)), "a question captured before a worksheet edit cannot reread changed values");
             service.ShowReportAI(report, note); b.Activate(); a.Activate(); service.RefreshWorkspace();
