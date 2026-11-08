@@ -22,12 +22,12 @@ rx <- rank(career)
 ry <- rank(psychology)
 rho <- cor(rx, ry)
 score <- (n^3 - n) * (1 - rho) / 6
+cat("Spearman's score =", score, "\n")
 ci <- NULL
 if (n >= 4 && 1 - abs(rho) >= 1e-12) {
   ci <- tanh(atanh(rho) + c(-1, 1) * qnorm((1 + confidence) / 2) / sqrt(n - 3))
   cat(sprintf("Rho = %.6f   %s CI = %.6f to %.6f\n", rho, pct, ci[1], ci[2]))
 } else cat("Rho =", rho, "(confidence interval unavailable)\n")
-cat("Spearman's score =", score, "\n")
 
 if (!tied && n == 10) {
   # Exact P for ten untied pairs: count, for every way of
