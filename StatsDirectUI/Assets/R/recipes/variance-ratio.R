@@ -12,7 +12,12 @@ slight <- slight[!is.na(slight)]
 marked <- marked[!is.na(marked)]
 if (!exists("slight_title")) slight_title <- "First sample"
 if (!exists("marked_title")) marked_title <- "Second sample"
-if (var(slight) > var(marked)) {
+# Match the report's two-pass double accumulation when ordering near ties.
+report_variance <- function(x) {
+  m <- Reduce(`+`, x) / length(x)
+  Reduce(`+`, (x - m) * (x - m)) / (length(x) - 1)
+}
+if (report_variance(slight) > report_variance(marked)) {
   high <- slight; low <- marked
   high_title <- slight_title; low_title <- marked_title
 } else {

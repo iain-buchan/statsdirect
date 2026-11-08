@@ -38,7 +38,11 @@ namespace StatsDirect.Templates
             internal JsonElement Source;
             internal int PointerCount;
             internal ColumnSnapshot[] Columns;
-            internal InputSnapshot Copy() => new() { Content = Content, Held = Held, Source = Source, PointerCount = PointerCount, Columns = Columns };
+            // Dummy-coded worksheet predictors are saved as entered values without
+            // origins. Their row-preserving parameter still ties them to the other
+            // frames; ordinary helper/title frames do not have that contract.
+            internal bool AlignedEntered;
+            internal InputSnapshot Copy() => new() { Content = Content, Held = Held, Source = Source, PointerCount = PointerCount, Columns = Columns, AlignedEntered = AlignedEntered };
         }
 
         /// <summary>Acquired column bounds and a constant-size hash state. Trailing missing
@@ -173,6 +177,9 @@ namespace StatsDirect.Templates
             int original = 0;
             foreach (InputSnapshot snapshot in snapshots)
             {
+                // Keep every aligned input at its acquired length when one frame
+                // cannot be trimmed as pointers. Recipes omit incomplete rows jointly.
+                if (snapshot?.AlignedEntered == true) return -1;
                 if (snapshot == null || snapshot.Content.ValueKind != JsonValueKind.Object || snapshot.Content.GetProperty("kind").GetString() != "frame")
                     continue;
                 if (snapshot.Columns == null)

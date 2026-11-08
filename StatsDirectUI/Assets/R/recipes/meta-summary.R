@@ -70,8 +70,9 @@ cat("Z (test Odds Ratio differs from 1) =", six(z_fixed), " ",
 # 'exact' option (the iterative method it credits to Hedges and Pigott, 2001): Q is
 # treated as non-central chi-square and its distribution function at the observed Q
 # is inverted for the non-centrality parameter lambda, the lower limit where that
-# probability is 0.975 (0 when even the central distribution gives less) and the
-# upper where it is 0.025; each limit becomes I-squared as lambda / (df + lambda)
+# probability reaches the selected upper or lower tail probability (0 when even
+# the central distribution gives less). Each limit becomes I-squared as
+# lambda / (df + lambda).
 cat("Non-combinability of studies\n")
 dfree <- k - 1
 cat("Cochran Q = ", six(q), "  (df = ", dfree, ")  ",
@@ -83,7 +84,7 @@ lambda <- function(p) {
     uniroot(function(l) pchisq(q, dfree, ncp = l) - p, c(0, 10 * q + 100),
             tol = 1e-10)$root
 }
-lim <- c(lambda(0.975), lambda(0.025))
+lim <- c(lambda((1 + confidence) / 2), lambda((1 - confidence) / 2))
 cat("I2 (inconsistency) = ", one(i2), "% (", pct, "CI = ",
     one(100 * lim[1] / (dfree + lim[1])), "% to ",
     one(100 * lim[2] / (dfree + lim[2])), "%)\n", sep = "")

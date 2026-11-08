@@ -50,6 +50,7 @@ internal static partial class Program
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "recipes") { CheckRecipes(); CheckRecipesAgainstHelp(); Console.WriteLine($"PASS {checks} R recipe checks"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "recipe-bindings") { CheckRecipes(); Console.WriteLine($"PASS {checks} recipe binding checks"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "acquisition") { CheckAcquisition(); Console.WriteLine($"PASS {checks} acquisition checks"); return 0; }
+            if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "review-acquisition") { StatsDirect.R.RRecipes.Folder = Metadata("Recipes"); CheckDummyPredictorReplay(Path.Combine(Path.GetTempPath(), "statsdirect-dummy-review-" + Guid.NewGuid().ToString("N"))); Console.WriteLine($"PASS {checks} dummy predictor acquisition checks"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "paired-missing") { StatsDirect.R.RRecipes.Folder = Metadata("Recipes"); CheckPairedMissingReplay(Path.Combine(Path.GetTempPath(), "statsdirect-paired-missing-" + Guid.NewGuid().ToString("N"))); Console.WriteLine($"PASS {checks} paired missing-data replay checks"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "charts-a") { CheckChartRecipesA(); Console.WriteLine($"PASS {checks} chart recipe A checks"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "charts-b") { CheckChartRecipesB(); Console.WriteLine($"PASS {checks} chart recipe B checks"); return 0; }
@@ -183,6 +184,8 @@ internal sealed class Host : ITemplateHost, IProgressBar
         if (!answers.TryGetValue(parameter.Name, out object value)) throw new Exception($"the operation asked for {parameter.Name}, which these checks do not answer");
         if (value is Queue<object> passes) value = passes.Count > 0 ? passes.Dequeue() : throw new Exception($"the operation asked for {parameter.Name} more times than these checks answer");   // a prompt asked in each pass of a loop
         if (value == null) { ParameterBag skipped = new(); skipped[parameter.Name] = null; return skipped; }   // an optional parameter skipped: the dialog notes it as a null entry
+        if (value is Func<ITemplateProcessor, Parameter, ParameterBag, ITemplateHost, ParameterBag> acquire)
+            return acquire(processor, parameter, context, this);
         if (parameter is OptionsParameter options && value is Dictionary<string, bool> chosen)
         {
             // as the program's dialog fills a set of options: one boolean input per option, under the option's name

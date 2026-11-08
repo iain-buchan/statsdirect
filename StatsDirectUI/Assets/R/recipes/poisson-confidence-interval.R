@@ -5,6 +5,7 @@
 
 # Poisson confidence interval: the StatsDirect help example (patients arriving at
 # a reception desk in 23 five minute intervals) in R
+counts <- counts[!is.na(counts)]
 pct <- paste0(100 * confidence, "%")
 n <- length(counts)
 

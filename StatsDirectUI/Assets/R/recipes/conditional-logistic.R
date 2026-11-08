@@ -3,6 +3,8 @@
 # data: stratum = stratum, case = case-control, predictors... = predictors
 # settings: confidence = gamma
 
+if (length(stratum) != length(case) || any(lengths(predictors) != length(case)))
+  stop("Matched-set identifiers, case indicators and predictors must have equal lengths.")
 lowbwt <- data.frame(PAIRID = stratum, LBWT = case, as.data.frame(predictors, optional = TRUE), check.names = FALSE)
 # Conditional logistic regression: the StatsDirect help example (Hosmer and Lemeshow
 # 1989, low birth weight in 56 matched pairs) in R. The data are the test workbook's

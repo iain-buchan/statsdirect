@@ -4,6 +4,7 @@ using StatsDirect.Data;
 using StatsDirect.Numerics;
 using StatsDirect.R;
 using StatsDirect.Templates;
+using StatsDirect.Utilities;
 
 internal static partial class Program
 {
@@ -135,16 +136,79 @@ internal static partial class Program
             VerifyLogistic("colliding-labels-" + titles[0], new() { ["gamma"] = .95, ["grouping"] = "grouped", ["accuracy"] = "0.000000001", ["intercept"] = true, ["weights"] = true, ["total"] = Frame(("Total", total)), ["response"] = Frame(("Responders", response)), ["weight"] = Frame(("Prior weight", weights)), ["predictors"] = Frame((titles[0], x1), (titles[1], x2), (titles[2], x3)) }, 16);
         }
 
+        // Native HL treats zero prior frequencies specially and retains its
+        // group counter for df, including an empty first group below frequency 10.
+        double[] hlDose = Enumerable.Range(0, 10).Select(i => 1.5 + i).ToArray();
+        double[] hlTotal = Enumerable.Repeat(20.0, 10).ToArray(), hlResponse = { 2, 3, 5, 6, 8, 10, 12, 13, 15, 17 };
+        foreach (int[] zeros in new[] { Array.Empty<int>(), new[] { 9 }, new[] { 0 }, new[] { 5 }, new[] { 8, 9 } })
+        {
+            double[] weights = Enumerable.Range(0, 10).Select(i => zeros.Contains(i) ? 0.0 : 1).ToArray();
+            VerifyLogisticHl("grouped-zero-" + (zeros.Length == 0 ? "none" : string.Join("-", zeros)), hlDose, hlResponse, hlTotal, weights);
+        }
+        VerifyLogisticHl("grouped-unweighted", hlDose, hlResponse, hlTotal, null);
+        VerifyLogisticHl("grouped-decreasing-zero-first", hlDose, hlResponse.Reverse().ToArray(), hlTotal, new[] { 0d }.Concat(Enumerable.Repeat(1.0, 9)).ToArray());
+        VerifyLogisticHl("grouped-unequal-zero-last", hlDose, hlResponse, hlTotal, new double[] { 1, 2, 1, 2, 1, 2, 1, 2, 1, 0 });
+
+        double[] hlAge = Enumerable.Range(1, 40).Select(i => (double)i).ToArray();
+        double[] hlBinary = { 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1 };
+        foreach (double weight in new[] { .2, .5, 1.0 })
+            VerifyLogisticHl("individual-weight-" + weight.ToString("R", inv), hlAge, hlBinary, null, Enumerable.Repeat(weight, 40).ToArray());
+        VerifyLogisticHl("individual-zero-last", hlAge, hlBinary, null, Enumerable.Repeat(1.0, 39).Append(0).ToArray());
+        VerifyLogisticHl("individual-nine-unweighted", Enumerable.Range(1, 9).Select(i => (double)i).ToArray(), new double[] { 0, 0, 1, 0, 1, 0, 1, 1, 1 }, null, null);
+
+        // Fixed, independently reviewed seeds with distinct covariates. The
+        // separate native fractional-frequency overflow (review D6) is deferred;
+        // these cases must complete natively, not be silently caught or skipped.
+        foreach (int seed in new[] { 1, 2, 4, 6, 8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24, 26, 27, 28, 30, 31, 32, 34, 35, 36, 37, 38, 40 })
+        {
+            Random rng = new(seed);
+            int count = 25 + rng.Next(30);
+            double[] predictor = Enumerable.Range(0, count).Select(i => Math.Round(i * 10.0 / count + rng.NextDouble() * .05, 4)).ToArray();
+            double[] response = predictor.Select(v => rng.NextDouble() < 1 / (1 + Math.Exp(-(v - 5) * .6)) ? 1.0 : 0).ToArray();
+            double[] choices = seed % 4 == 0 ? new[] { 0d, 1, 1, 2 } : seed % 4 == 1 ? new[] { .1, .2, .3 } : seed % 4 == 2 ? new[] { .5, 1.5, 2.5 } : new[] { 0d, .25, .5 };
+            double[] weights = predictor.Select(_ => choices[rng.Next(choices.Length)]).ToArray();
+            VerifyLogisticHl("seed-" + seed, predictor, response, null, weights);
+        }
+
+        void VerifyLogisticHl(string label, double[] predictor, double[] response, double[] totals, double[] weights)
+        {
+            object[] Cells(string title, double[] values) => new object[] { title }.Concat(values.Cast<object>()).ToArray();
+            List<object[]> cells = new() { Cells("Dose", predictor), Cells("Outcome", response) };
+            int totalColumn = -1, weightColumn = -1;
+            if (totals != null) { totalColumn = cells.Count; cells.Add(Cells("Total", totals)); }
+            if (weights != null) { weightColumn = cells.Count; cells.Add(Cells("Prior weight", weights)); }
+            RecordCells grid = new(cells.ToArray());
+            int rows = response.Length + 1;
+            Dictionary<string, object> answers = new()
+            {
+                ["gamma"] = .95, ["grouping"] = totals == null ? "individual" : "grouped", ["accuracy"] = "0.000000001", ["intercept"] = true, ["weights"] = weights != null,
+                ["response"] = grid.Acquire(1, 0, rows, DataAcquisitionMode.NumericPreserveRows),
+                ["predictors"] = grid.Acquire(0, 0, rows, DataAcquisitionMode.NumericCodingTextToDummiesPreserveRows)
+            };
+            if (totals != null) answers["total"] = grid.Acquire(totalColumn, 0, rows, DataAcquisitionMode.NumericPreserveRows);
+            if (weights != null) answers["weight"] = grid.Acquire(weightColumn, 0, rows, DataAcquisitionMode.NumericPreserveRows);
+            var (run, output) = Run("LogisticRegression", answers);
+            string script = Script(run);
+            var (_, model) = Run("LogisticRegressionModel", new(), output.ParameterBag);
+            ParameterBag bag = model.ParameterBag;
+            double statistic = Number(bag, "hl"), df = Number(bag, "df_hl"), probability = Number(bag, "p_hl");
+            string assertions = "\nstopifnot(hldf==" + df.ToString("R", inv) + ",is.finite(hl))\n" +
+                Compare("hl,pchisq(hl,hldf,lower.tail=FALSE)", new[] { statistic, probability }) +
+                "cat('NATIVE_HL_OK\\n')\n";
+            string result = RunR(script + assertions, Path.Combine(folder, "logistic-hl-" + label));
+            Check(result.Contains("NATIVE_HL_OK") && result.Contains("Coefficients and standard errors:"), "logistic HL " + label + " reproduces native statistic, df and P and completes the coefficient table");
+        }
+
         void VerifyLogistic(string label, Dictionary<string, object> answers, int expectedPatterns)
         {
             var (run, output) = Run("LogisticRegression", answers);
             string script = Script(run);
             var (_, model) = Run("LogisticRegressionModel", new(), output.ParameterBag);
             ParameterBag bag = model.ParameterBag;
-            double[] expected = new[] { "ll", "dev", "idf", "rank", "aka", "sch", "devx", "r2", "r2i", "x2", "hl", "df_hl" }.Select(key => Number(bag, key)).ToArray();
+            double[] expected = new[] { "ll", "dev", "idf", "rank", "aka", "sch", "devx", "r2", "r2i", "x2", "hl", "df_hl", "p_hl" }.Select(key => Number(bag, key)).ToArray();
             IList<ParameterBag> coefficients = Block(bag, "parameters");
             string assertions = "\nstopifnot(n==" + expectedPatterns + "L,nobs(fit)==" + expectedPatterns + "L,all(complete.cases(responders,total,predictors,weight)))\n" +
-                Compare("ll,dev,fit$df.residual,k,dev+2*k,dev+k*log(n),fit$null.deviance,1-dev/fit$null.deviance,1-ll/ll0,pearson,hl,length(o)-2", expected) +
+                Compare("ll,dev,fit$df.residual,k,dev+2*k,dev+k*log(n),fit$null.deviance,1-dev/fit$null.deviance,1-ll/ll0,pearson,hl,hldf,pchisq(hl,hldf,lower.tail=FALSE)", expected) +
                 Compare("coef(fit)", coefficients.Select(b => Number(b, "coef"))) + Compare("summary(fit)$coefficients[,2]", coefficients.Select(b => Number(b, "err")), 1e-5) +
                 "cat('MODEL_MISSING_OK\\n')\n";
             Check(RunR(script + assertions, Path.Combine(folder, "logistic-" + label)).Contains("MODEL_MISSING_OK"), "logistic " + label + " reproduces native merged-pattern coefficients, criteria, Pearson and weighted Hosmer-Lemeshow diagnostics");

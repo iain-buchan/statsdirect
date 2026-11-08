@@ -27,6 +27,9 @@ internal static partial class Program
         CheckMatchedMissingReplay(folder);
         CheckModelMissingReplay(folder);
         CheckPairedDifferenceReplay(folder);
+        CheckDummyPredictorReplay(folder);
+        CheckIndependentReview537(folder);
+        CheckSelectedConfidenceReview(folder);
         Console.WriteLine("      acquisition regression artifacts: " + folder);
     }
 

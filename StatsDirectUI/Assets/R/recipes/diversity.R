@@ -5,6 +5,8 @@
 
 # Diversity of classes: the StatsDirect help example (strains of Staphylococcus
 # aureus in hospital samples, Grundmann et al. 2001) in R
+# The native analysis uses non-missing positive integer class counts.
+counts <- counts[!is.na(counts) & counts > 0 & counts == floor(counts)]
 pct <- paste0(100 * confidence, "%")
 N <- sum(counts)
 S <- length(counts)                       # classes observed (richness)

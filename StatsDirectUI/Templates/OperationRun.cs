@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 
 namespace StatsDirect.Templates
 {
@@ -63,7 +64,14 @@ namespace StatsDirect.Templates
                 if (Inputs[i].Name == parameter.Name && Inputs[i].Pass == pass)
                     Inputs.RemoveAt(i);
             RunInput input = new(parameter.Name, prompt, RunRecord.KindOf(parameter)) { Pass = pass, Value = value };
-            try { input.Snapshot = RunRecord.Capture(value, input.Kind); }
+            try
+            {
+                input.Snapshot = RunRecord.Capture(value, input.Kind);
+                if (parameter is FrameParameter { PreserveRowAlignment: true }
+                    && input.Snapshot?.Content.ValueKind == JsonValueKind.Object
+                    && input.Snapshot.Content.GetProperty("kind").GetString() == "entered")
+                    input.Snapshot.AlignedEntered = true;
+            }
             catch (Exception) { }   // the report can still attempt its previous best-effort capture
             if (parameter is Double2By2Parameter table)
             {

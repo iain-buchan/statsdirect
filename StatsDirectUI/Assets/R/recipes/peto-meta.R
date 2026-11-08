@@ -76,7 +76,7 @@ cat("Z (test of odds ratio differs from 1) =", six(z_pooled), " ",
 # not below zero. Its interval is the non-central chi-square method of Hedges and
 # Pigott (2001) that the report uses: Q is treated as a non-central chi-square variable
 # on df degrees of freedom, and each limit is the non-centrality parameter at which the
-# observed Q sits at the 97.5th (lower limit) or the 2.5th (upper limit) percentile,
+# observed Q reaches the selected upper (lower limit) or lower (upper limit) tail,
 # found with uniroot and pchisq; a limit is 0 when the central distribution already
 # puts Q below that percentile. A non-centrality lambda gives
 # I-squared = lambda / (df + lambda)
@@ -91,7 +91,7 @@ ncp_limit <- function(p) {
   # the bracket Q + 1000 is ample: the distribution function there is near 0
   uniroot(function(l) pchisq(Q, dfq, ncp = l) - p, c(0, Q + 1000), tol = 1e-10)$root
 }
-lambda <- c(ncp_limit(0.975), ncp_limit(0.025))
+lambda <- c(ncp_limit((1 + confidence) / 2), ncp_limit((1 - confidence) / 2))
 i2_ci <- 100 * lambda / (dfq + lambda)
 cat("I2 (inconsistency) = ", one(i2), "% (", pct, "CI = ", one(i2_ci[1]), "% to ",
     one(i2_ci[2]), "%)\n", sep = "")

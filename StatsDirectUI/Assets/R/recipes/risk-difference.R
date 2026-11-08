@@ -87,8 +87,8 @@ cat("Chi-square (test risk difference differs from 0) =", six(x2), " (df = 1) ",
 # I-squared = (Q - df) / Q, with the interval StatsDirect gives by default (the 'exact'
 # option, Hedges and Pigott 2001): Q is treated as non-central chi-square and its
 # distribution function at the observed Q is inverted for the non-centrality parameter
-# lambda, the lower limit where that probability is 0.975 (0 when even the central
-# distribution gives less) and the upper where it is 0.025; each limit is converted to
+# lambda, using the selected upper and lower tail probabilities (a limit is 0 when
+# even the central distribution gives less); each limit is converted to
 # I-squared as lambda / (df + lambda)
 cat("Non-combinability of studies\n")
 dfree <- k - 1
@@ -101,7 +101,7 @@ lambda <- function(p) {
     uniroot(function(l) pchisq(q, dfree, ncp = l) - p, c(0, 10 * q + 100),
             tol = 1e-10)$root
 }
-lim <- c(lambda(0.975), lambda(0.025))
+lim <- c(lambda((1 + confidence) / 2), lambda((1 - confidence) / 2))
 cat("I-squared (inconsistency) = ", one(i2), "% (", pct, "CI = ",
     one(100 * lim[1] / (dfree + lim[1])), "% to ",
     one(100 * lim[2] / (dfree + lim[2])), "%)\n", sep = "")

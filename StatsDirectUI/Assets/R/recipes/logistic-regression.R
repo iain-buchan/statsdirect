@@ -83,25 +83,33 @@ cat("Pearson chi-square goodness of fit =", six(pearson), " df =", fit$df.residu
 # reach the next tenth of the total (a pattern is never split), then the sum over
 # the groups of (O - E)^2 / (E (1 - E / n)) with 2 fewer degrees of freedom than
 # groups. Prior weights count as frequencies in the group sizes and counts.
-frequency <- total * w
+wv <- rep_len(w, length(total))
+frequency <- total * wv
+# The native fit leaves zero-weight patterns at fitted value zero, so they sort
+# first. Stop when all weighted observations have been assigned; empty groups
+# contribute no statistic, but the native group counter determines the df.
+sd_d <- ifelse(frequency > 0, p, 0)
 ntot <- sum(frequency)
-ncut <- floor(ntot / 10)
+ndiv <- ntot / 10
+ncut <- floor(ndiv)
 ncum <- 0
-group <- integer(n)
 g <- 1
-for (i in order(p)) {
+tot <- obs <- mpi <- numeric(11)
+for (i in order(sd_d)) {
   if (ncum >= ncut && g <= 10) {
     g <- g + 1
-    ncut <- floor(max(ncum + ntot / 10, g * ntot / 10))
+    ncut <- floor(max(ncum + ndiv, g * ndiv))
   }
-  group[i] <- g
+  tot[g] <- tot[g] + frequency[i]
+  obs[g] <- obs[g] + responders[i] * wv[i]
+  mpi[g] <- mpi[g] + sd_d[i] * frequency[i]
   ncum <- ncum + frequency[i]
+  if (ncum >= ntot) break
 }
-o <- tapply(responders * w, group, sum)
-e <- tapply(p * frequency, group, sum)
-size <- tapply(frequency, group, sum)
-hl <- sum((o - e)^2 / (e * (1 - e / size)))
-cat("Hosmer-Lemeshow test =", six(hl), " df =", length(o) - 2, " ",
-    pv(pchisq(hl, length(o) - 2, lower.tail = FALSE)), "\n")
+used <- which(tot[seq_len(g)] > 0 & mpi[seq_len(g)] > 0)
+hl <- sum((obs[used] - mpi[used])^2 / (mpi[used] * (1 - mpi[used] / tot[used])))
+hldf <- g - 2
+cat("Hosmer-Lemeshow test =", six(hl), " df =", hldf, " ",
+    if (hldf < 1) "P = *" else pv(pchisq(hl, hldf, lower.tail = FALSE)), "\n")
 cat("Coefficients and standard errors:\n")
 for (i in seq_len(nrow(s))) cat(rownames(s)[i], six(s[i, 1]), six(s[i, 2]), "\n")
