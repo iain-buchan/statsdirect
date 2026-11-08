@@ -13,7 +13,7 @@ internal static partial class Program
     private static void CheckOptions2()
     {
         RRecipes.Folder = Metadata("Recipes");
-        string folder = Path.Combine(Path.GetTempPath(), "statsdirect-rscript-checks", "options2");
+        string folder = Path.Combine(TemporaryRoot, "statsdirect-rscript-checks", "options2");
         Directory.CreateDirectory(folder);
         int column = 1;
         DataFrame Sheet(params (string title, double[] values)[] columns) { DataFrame f = SheetFrame(Workbook, "Options2", column, 1, columns); column += columns.Length; return f; }

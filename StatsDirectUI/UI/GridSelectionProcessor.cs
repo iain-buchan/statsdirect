@@ -619,8 +619,7 @@ namespace StatsDirect.UI
                     // Unequal - ask the user, if they accept then force all the data to maximum length, missing-padded
                     if (SdApplication.SoleInstance.MsgboxX("Warning: unequal length columns. If you select OK then the jagged ends of columns will be padded with missing data.", MessageBoxButtons.OKCancel, MessageBoxIcon.Exclamation, "Worksheet Data Selection", true) == DialogResult.OK)
                     {
-                        foreach (IVariable v in frame.Variables)
-                            v.EnsureLengthAndPadWithMissing(maxRows);
+                        PadAcquiredFrame(frame, maxRows);
                         return frame;
                     }
                 }
@@ -638,6 +637,15 @@ namespace StatsDirect.UI
                         MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "Worksheet Data Selection", true);
                 }
                 ClearSelection();
+            }
+        }
+
+        internal static void PadAcquiredFrame(DataFrame frame, int rows)
+        {
+            foreach (IVariable variable in frame.Variables)
+            {
+                if (variable.Length < rows && variable.Origin is WorksheetOrigin origin) origin.WasPadded = true;
+                variable.EnsureLengthAndPadWithMissing(rows);
             }
         }
 
@@ -681,7 +689,8 @@ namespace StatsDirect.UI
                     origin.Mode, true, origin.WasFiltered, origin.OriginGroup)
                 {
                     // The proved empty header was part of the acquired visible values; keep the new data and their physical rows aligned.
-                    DataRowIndices = origin.DataRowIndices?.Length == requiredRows + 1 ? origin.DataRowIndices[1..] : null
+                    DataRowIndices = origin.DataRowIndices?.Length == requiredRows + 1 ? origin.DataRowIndices[1..] : null,
+                    WasPadded = origin.WasPadded
                 };
             }
         }

@@ -2,6 +2,16 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
+##[Unreleased]
+
+### Fixed
+- Continue in R and notebook export preserve explicitly padded selections and trim unused blank rows across aligned worksheet and dummy-coded frames together. Small observed selections can be embedded even when the selected worksheet range is large, within the existing 5,000-value limit.
+- Agreement uses exact Kendall probabilities where available and consistent groups for near ties. Signed ranks uses bounded, appropriate approximations for large samples; Spearman works beyond twelve observations. PCA reliability retains the selected confidence, method and item names and handles two-item scales.
+- Normality, Poisson confidence intervals and diversity replay every selected column. Diversity handles absent singletons or doubletons and nonnegative variances; t, z and regression replay handle the native confidence defaults and degenerate paired differences.
+- Model replay keeps responses, exposures and weights distinct from predictor headings, preserves exact predictor patterns, and improves GLM standard errors without treating aliased columns as independent. Native weighted models omit zero-weight rows correctly; Hosmer–Lemeshow grouping is deterministic and safe with fractional weights. Undefined diagnostics are reported as unavailable.
+- Cox, agreement and LOESS replay use the selected confidence levels. Meta-analysis records its exact or approximate method, including the chosen I-squared and study intervals.
+- R regression checks clean only their own temporary files. Failed diagnostics retain their isolated crash evidence, and replay tests compare acquired data with native results and real R.
+
 ##[v5.3.7] 2026-11-08
 
 ### Fixed

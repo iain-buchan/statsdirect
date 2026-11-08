@@ -40,7 +40,7 @@ internal static partial class Program
         JsonElement entered = screenRecord.GetProperty("inputs").EnumerateArray().FirstOrDefault(i => i.GetProperty("name").GetString() == "data");
         Check(entered.ValueKind == JsonValueKind.Object && entered.GetProperty("kind").GetString() == "entered" && entered.GetProperty("columns").GetArrayLength() == 2, "a table typed on screen is recorded as an entered frame under the grid's name");
         RScript screenScript = RScriptWriter.Write(screenRecord, null, null);
-        string output = RunR(screenScript.Text, Path.Combine(Path.GetTempPath(), "statsdirect-rscript-checks", "screen"));
+        string output = RunR(screenScript.Text, Path.Combine(TemporaryRoot, "statsdirect-rscript-checks", "screen"));
         Check(screenScript.HasRecipe && Figures(output).Length > 0 && output.Contains("X-squared"), "the recipe of the 2 by k table runs on the recorded grid and gives R's chi-square");
         // a follow-on of the logistic regression, whose Continue in R gave the data alone (11 Oct 2026): its script is the regression's,
         // bound to the frames it inherited; every follow-on of an operation with a recipe takes that recipe

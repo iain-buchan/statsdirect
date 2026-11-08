@@ -11,6 +11,8 @@
 keep <- complete.cases(increase, weight)
 increase <- increase[keep]
 weight <- weight[keep]
+if (!is.null(confidence) && !is.na(confidence) && confidence <= 0) stop("Confidence must be greater than zero.")
+if (is.null(confidence) || !is.finite(confidence) || confidence >= 1) confidence <- 0.95
 pct <- paste0(100 * confidence, "%")
 fit <- lm(increase ~ weight)
 print(summary(fit))

@@ -24,11 +24,9 @@ internal static partial class Program
         string Vec(IEnumerable<double> values) => RScriptWriter.Vector(values.Cast<object>().ToArray());
         string Compare(string expression, IEnumerable<double> expected, double tolerance = 1e-6) =>
             "stopifnot(isTRUE(all.equal(unname(c(" + expression + "))," + Vec(expected) + ",tolerance=" + tolerance.ToString("R", inv) + ",check.attributes=FALSE)))\n";
-        // R's glm.fit retains the last IRLS QR for summary.glm's covariance.
-        // Its default convergence threshold can leave the standard errors a few
-        // parts per million from the native fit's tighter requested accuracy.
-        // Coefficients and model diagnostics retain the stricter 1e-6 check;
-        // standard errors alone allow 1e-5, as the existing options suite does.
+        // R's glm.fit retains the preceding IRLS QR for summary.glm's covariance.
+        // The recipes request tighter convergence, so standard errors must now
+        // agree to 1e-7 rather than hiding default glm's few-parts-per-million gap.
         string Script(StatsDirect.Templates.OperationRun run)
         {
             RScript script = RScriptWriter.Write(Record(run), null, null);
@@ -84,7 +82,7 @@ internal static partial class Program
             IList<ParameterBag> coefficients = Block(bag, "unscaled");
             string assertions = "\nstopifnot(n==" + expectedN + "L,nobs(fit)==" + expectedN + "L,all(complete.cases(response,predictors,exposure,weight)))\n" +
                 Compare("ll,dev,fit$df.residual,k,dev+2*k,dev+k*log(n),fit$null.deviance,1-dev/fit$null.deviance,1-ll/ll0,pearson,scale", expected) +
-                Compare("coef(fit)", coefficients.Select(b => Number(b, "coef"))) + Compare("summary(fit)$coefficients[,2]", coefficients.Select(b => Number(b, "err")), 1e-5) +
+                Compare("coef(fit)", coefficients.Select(b => Number(b, "coef"))) + Compare("summary(fit)$coefficients[,2]", coefficients.Select(b => Number(b, "err")), 1e-7) +
                 "cat('MODEL_MISSING_OK\\n')\n";
             Check(RunR(script + assertions, Path.Combine(folder, "poisson-" + weighted + "-" + exposed + "-" + missing)).Contains("MODEL_MISSING_OK"), "Poisson replay uses identical complete positive-exposure rows for the fitted and null models, criteria, Pearson scale and coefficients");
         }
@@ -136,8 +134,8 @@ internal static partial class Program
             VerifyLogistic("colliding-labels-" + titles[0], new() { ["gamma"] = .95, ["grouping"] = "grouped", ["accuracy"] = "0.000000001", ["intercept"] = true, ["weights"] = true, ["total"] = Frame(("Total", total)), ["response"] = Frame(("Responders", response)), ["weight"] = Frame(("Prior weight", weights)), ["predictors"] = Frame((titles[0], x1), (titles[1], x2), (titles[2], x3)) }, 16);
         }
 
-        // Native HL treats zero prior frequencies specially and retains its
-        // group counter for df, including an empty first group below frequency 10.
+        // Native HL excludes zero prior frequencies and bases its df on occupied
+        // groups, without the former empty first group below frequency 10.
         double[] hlDose = Enumerable.Range(0, 10).Select(i => 1.5 + i).ToArray();
         double[] hlTotal = Enumerable.Repeat(20.0, 10).ToArray(), hlResponse = { 2, 3, 5, 6, 8, 10, 12, 13, 15, 17 };
         foreach (int[] zeros in new[] { Array.Empty<int>(), new[] { 9 }, new[] { 0 }, new[] { 5 }, new[] { 8, 9 } })
@@ -156,10 +154,9 @@ internal static partial class Program
         VerifyLogisticHl("individual-zero-last", hlAge, hlBinary, null, Enumerable.Repeat(1.0, 39).Append(0).ToArray());
         VerifyLogisticHl("individual-nine-unweighted", Enumerable.Range(1, 9).Select(i => (double)i).ToArray(), new double[] { 0, 0, 1, 0, 1, 0, 1, 1, 1 }, null, null);
 
-        // Fixed, independently reviewed seeds with distinct covariates. The
-        // separate native fractional-frequency overflow (review D6) is deferred;
-        // these cases must complete natively, not be silently caught or skipped.
-        foreach (int seed in new[] { 1, 2, 4, 6, 8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24, 26, 27, 28, 30, 31, 32, 34, 35, 36, 37, 38, 40 })
+        // Include the fractional-frequency seeds that formerly overflowed the
+        // native fixed arrays. No failure is silently caught or skipped.
+        foreach (int seed in Enumerable.Range(1, 40))
         {
             Random rng = new(seed);
             int count = 25 + rng.Next(30);
@@ -209,7 +206,7 @@ internal static partial class Program
             IList<ParameterBag> coefficients = Block(bag, "parameters");
             string assertions = "\nstopifnot(n==" + expectedPatterns + "L,nobs(fit)==" + expectedPatterns + "L,all(complete.cases(responders,total,predictors,weight)))\n" +
                 Compare("ll,dev,fit$df.residual,k,dev+2*k,dev+k*log(n),fit$null.deviance,1-dev/fit$null.deviance,1-ll/ll0,pearson,hl,hldf,pchisq(hl,hldf,lower.tail=FALSE)", expected) +
-                Compare("coef(fit)", coefficients.Select(b => Number(b, "coef"))) + Compare("summary(fit)$coefficients[,2]", coefficients.Select(b => Number(b, "err")), 1e-5) +
+                Compare("coef(fit)", coefficients.Select(b => Number(b, "coef"))) + Compare("summary(fit)$coefficients[,2]", coefficients.Select(b => Number(b, "err")), 1e-7) +
                 "cat('MODEL_MISSING_OK\\n')\n";
             Check(RunR(script + assertions, Path.Combine(folder, "logistic-" + label)).Contains("MODEL_MISSING_OK"), "logistic " + label + " reproduces native merged-pattern coefficients, criteria, Pearson and weighted Hosmer-Lemeshow diagnostics");
         }

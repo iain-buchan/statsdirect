@@ -40,7 +40,7 @@ internal static partial class Program
         RScript script = RScriptWriter.Write(r, null, null);
         Check(script.HasRecipe && script.Text.Contains("counts <- matrix(c(10, 5, 3, 12), 2, byrow = TRUE,\n  dimnames = list(\"Outcome\" = c(\"Present\", \"Absent\"), \"Characteristic\" = c(\"Present\", \"Absent\")))\n") && script.Text.Contains("confidence <- 0.95\n"),
               "the script writes the table as a matrix of counts with the labels and the names of its rows and columns");
-        string output = RunR(script.Text, Path.Combine(Path.GetTempPath(), "statsdirect-rscript-checks"));
+        string output = RunR(script.Text, Path.Combine(TemporaryRoot, "statsdirect-rscript-checks"));
         double chi = Figure(output, "X-squared = ([0-9.eE+-]+), df = 1"), expected = PearsonChiSquare(10, 5, 3, 12);
         Console.WriteLine($"      R: X-squared = {chi}; from the definition {expected.ToString("R", inv)}");
         Check(Close(chi, expected, 1e-4), "R's chi-square on the recorded table agrees with the definition");

@@ -14,7 +14,7 @@ internal static partial class Program
     {
         RRecipes.Folder = Metadata("Recipes");
         string examples = Metadata("Examples");
-        string folder = Path.Combine(Path.GetTempPath(), "statsdirect-rscript-checks", "real");
+        string folder = Path.Combine(TemporaryRoot, "statsdirect-rscript-checks", "real");
         Directory.CreateDirectory(folder);
         // the answers beyond the example's inputs and settings: the prompts the dialog would show; null skips an optional frame
         // mode: "" the example's own (exact, cut or subset), or "subset" where the dialog's labels differ from the help's (the 2 by 2

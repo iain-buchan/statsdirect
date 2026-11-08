@@ -54,6 +54,7 @@ namespace StatsDirect.Configuration
             // override set during shutdown so late writers stay off the real profile.
             AppDomain.CurrentDomain.ProcessExit += (_, _) =>
             {
+                if (Environment.ExitCode != 0) return; // Keep Blackbox.txt and the isolated crash context.
                 try { Directory.Delete(root, true); }
                 catch (IOException) { }
                 catch (UnauthorizedAccessException) { }

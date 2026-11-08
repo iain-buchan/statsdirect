@@ -7,7 +7,7 @@ internal static partial class Program
     // named by the user or by R itself, and recent automatic charts, stay.
     private static void CheckChartHousekeeping()
     {
-        string folder = Path.Combine(Path.GetTempPath(), "statsdirect-housekeeping-" + Guid.NewGuid().ToString("N"));
+        string folder = Path.Combine(TemporaryRoot, "statsdirect-housekeeping-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(folder);
         DateTime now = new(2026, 10, 18, 9, 0, 0);
         void Write(string name, double daysOld) { string path = Path.Combine(folder, name); File.WriteAllText(path, "<svg/>"); File.SetLastWriteTime(path, now.AddDays(-daysOld)); }

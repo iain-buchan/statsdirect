@@ -65,7 +65,7 @@ internal static partial class Program
             DataFrame data=grid.Acquire(0,first,cells.Count-first,DataAcquisitionMode.NumericReplaceMissing);
             Check(data.MaxRows==observed+1&&RunRecord.Missing(((DoubleVariable)data.Variables[0]).Data[^1]),"typed "+marker+" "+layout+" "+observed+": actual acquisition retains explicit missing observation");
             string acquiredHash=RunRecord.Hash(data.Variables[0]);
-            var (run,_)=Run("TSingle",new(){["data"]=data,["gamma"]=0.95,["population-mean"]=0.0});
+            var (run,native)=Run("TSingle",new(){["data"]=data,["gamma"]=0.95,["population-mean"]=0.0});
             JsonElement record=Record(run);var input=AcquisitionInput(record,"data");
             var origin=(WorksheetOrigin)data.Variables[0].Origin;var column=input.GetProperty("columns")[0];
             Check(column.GetProperty("rows")[0].GetInt32()==origin.TopRow+1&&column.GetProperty("rows")[1].GetInt32()==origin.TopRow+origin.Rows&&column.GetProperty("hash").GetString()==acquiredHash,"typed "+marker+" "+layout+" "+observed+": original physical bounds and full hash stay intact");
@@ -75,7 +75,8 @@ internal static partial class Program
             var script=RScriptWriter.Write(record,null,grid.Read);
             Check(!script.DataUnavailable&&!script.Text.Contains("has changed in the workbook"),"unchanged typed-marker workbook is never falsely labelled changed");
             string label=layout+"-"+observed+"-"+(marker=="*"?"star":marker=="."?"dot":"word");
-            string assertion=$"\nstopifnot(n=={observed}L,unname(r$parameter)=={observed-1}L,mean(bp)=={(observed+1)/2.0:R})\ncat('MODE_REPLAY_OK\\n')\n";
+            string expected=RScriptWriter.Vector(new[]{"size","df","sam_mean"}.Select(k=>(object)Convert.ToDouble(native.ParameterBag[k].AsObject,inv)).ToArray());
+            string assertion="\nstopifnot(isTRUE(all.equal(unname(c(n,r$parameter,mean(bp))),"+expected+",tolerance=1e-12,check.attributes=FALSE)))\ncat('MODE_REPLAY_OK\\n')\n";
             Check(RunR(script.Text+assertion,Path.Combine(folder,"mode-"+label)).Contains("MODE_REPLAY_OK"),"typed "+label+": R matches actual native sample size and observations");
             Check(RunR(AcquisitionNotebook(record,grid.Read)+"\ncat('MODE_NOTEBOOK_OK\\n')\n",Path.Combine(folder,"mode-notebook-"+label)).Contains("MODE_NOTEBOOK_OK"),"typed "+label+": notebook export accepts unchanged worksheet and replays");
         }

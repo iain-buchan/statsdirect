@@ -37,12 +37,17 @@ namespace StatsDirect.Templates
             internal JsonElement Held;
             internal JsonElement Source;
             internal int PointerCount;
+            internal int HeldCount;
             internal ColumnSnapshot[] Columns;
             // Dummy-coded worksheet predictors are saved as entered values without
             // origins. Their row-preserving parameter still ties them to the other
             // frames; ordinary helper/title frames do not have that contract.
             internal bool AlignedEntered;
-            internal InputSnapshot Copy() => new() { Content = Content, Held = Held, Source = Source, PointerCount = PointerCount, Columns = Columns, AlignedEntered = AlignedEntered };
+            internal bool KeepAcquiredRows;
+            internal int[] EnteredCounts, EnteredLastValues;
+            internal InputSnapshot Copy() => new() { Content = Content, Held = Held, Source = Source, PointerCount = PointerCount,
+                HeldCount = HeldCount, Columns = Columns, AlignedEntered = AlignedEntered, KeepAcquiredRows = KeepAcquiredRows,
+                EnteredCounts = EnteredCounts, EnteredLastValues = EnteredLastValues };
         }
 
         /// <summary>Acquired column bounds and a constant-size hash state. Trailing missing
@@ -56,7 +61,7 @@ namespace StatsDirect.Templates
             private readonly IncrementalHash prefix;
             private static readonly byte[] Separator = { 10 };
 
-            internal ColumnSnapshot(IVariable variable)
+            internal ColumnSnapshot(IVariable variable, bool acquired)
             {
                 object[] values = Values(variable);
                 Count = LastValueCount = values.Length;
@@ -67,13 +72,13 @@ namespace StatsDirect.Templates
                 // from explicit missing markers kept by NumericReplaceMissing.
                 Positional = origin.Mode is DataAcquisitionMode.NumericPreserveRows
                     or DataAcquisitionMode.NumericCodingTextToDummiesPreserveRows or DataAcquisitionMode.CategoryCombineAllColumns;
-                CanTrim = origin.Mode switch
+                CanTrim = acquired && (origin.Mode switch
                 {
                     DataAcquisitionMode.NumericPreserveRows or DataAcquisitionMode.NumericCodingTextToDummiesPreserveRows
                         => !origin.WasFiltered || DataRows?.Length == Count,
                     DataAcquisitionMode.CategoryCombineAllColumns => !origin.WasFiltered,
                     _ => false
-                };
+                });
                 prefix = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
                 for (int i = 0; i < LastValueCount; i++)
                 {
@@ -84,7 +89,9 @@ namespace StatsDirect.Templates
 
             internal string HashAt(int count)
             {
-                using IncrementalHash hash = prefix.Clone();
+                IncrementalHash copy;
+                lock (prefix) copy = prefix.Clone(); // one acquisition may serve concurrent report exports
+                using IncrementalHash hash = copy;
                 int missing = count - LastValueCount - (LastValueCount == 0 && count > 0 ? 1 : 0);
                 Span<byte> separators = stackalloc byte[256];
                 separators.Fill(10);
@@ -108,7 +115,7 @@ namespace StatsDirect.Templates
             return document.RootElement.Clone();
         }
 
-        internal static InputSnapshot Capture(FilledParameter value, string kind)
+        internal static InputSnapshot Capture(FilledParameter value, string kind, bool rowAligned = false, bool acquired = true)
         {
             if (value?.HasData != true) return null;
             InputSnapshot snapshot = new();
@@ -118,22 +125,29 @@ namespace StatsDirect.Templates
                 if (value.IsDataFrame)
                 {
                     DataFrame frame = value.AsDataFrame;
-                    if (IsPointerFrame(frame))
+                    bool padded = frame.Variables.Any(v => v.Origin is WorksheetOrigin { WasPadded: true });
+                    if (IsPointerFrame(frame) && !padded)
                     {
                         w.WriteString("kind", "frame");
-                        snapshot.Columns = frame.Variables.Select(variable => new ColumnSnapshot(variable)).ToArray();
+                        snapshot.Columns = frame.Variables.Select(variable => new ColumnSnapshot(variable, acquired)).ToArray();
                         WritePointer(w, frame, snapshot.Columns);
                         snapshot.PointerCount = Count(frame);
                         snapshot.Source = Json(source => WriteSource(source, ((WorksheetOrigin)frame.Variables[0].Origin).WorkbookPath));
-                        if (snapshot.PointerCount <= EmbeddingThreshold)
+                        snapshot.HeldCount = snapshot.Columns.Sum(c => c.Positional ? c.LastValueCount : c.Count);
+                        if (snapshot.HeldCount <= EmbeddingThreshold)
                             snapshot.Held = Json(data =>
                             {
                                 data.WriteStartObject();
                                 HashSet<string> titles = new();
-                                foreach (IVariable variable in frame.Variables)
+                                for (int i = 0; i < frame.VariableCount; i++)
                                 {
+                                    IVariable variable = frame.Variables[i];
                                     data.WritePropertyName(UniqueTitle(variable.Title, titles));
-                                    WriteValues(data, variable);
+                                    object[] values = Values(variable);
+                                    int count = snapshot.Columns[i].Positional ? snapshot.Columns[i].LastValueCount : values.Length;
+                                    data.WriteStartArray();
+                                    for (int j = 0; j < count; j++) WriteScalar(data, values[j]);
+                                    data.WriteEndArray();
                                 }
                                 data.WriteEndObject();
                             });
@@ -142,6 +156,21 @@ namespace StatsDirect.Templates
                     {
                         w.WriteString("kind", "entered");
                         WriteColumns(w, frame);
+                        snapshot.AlignedEntered = rowAligned || padded;
+                        snapshot.KeepAcquiredRows = padded;
+                        if (snapshot.AlignedEntered)
+                        {
+                            object[][] values = frame.Variables.Select(Values).ToArray();
+                            snapshot.EnteredCounts = values.Select(v => v.Length).ToArray();
+                            snapshot.EnteredLastValues = values.Select(v =>
+                            {
+                                int count = v.Length;
+                                while (count > 0 && v[count - 1] == null) count--;
+                                return count;
+                            }).ToArray();
+                        }
+                        if (padded && frame.Variables.Select(v => v.Origin).OfType<WorksheetOrigin>().FirstOrDefault() is WorksheetOrigin origin)
+                            snapshot.Source = Json(source => WriteSource(source, origin.WorkbookPath));
                     }
                 }
                 else
@@ -177,9 +206,12 @@ namespace StatsDirect.Templates
             int original = 0;
             foreach (InputSnapshot snapshot in snapshots)
             {
-                // Keep every aligned input at its acquired length when one frame
-                // cannot be trimmed as pointers. Recipes omit incomplete rows jointly.
-                if (snapshot?.AlignedEntered == true) return -1;
+                if (snapshot?.AlignedEntered == true && snapshot.EnteredCounts != null)
+                {
+                    original = Math.Max(original, snapshot.EnteredCounts.DefaultIfEmpty().Max());
+                    kept = Math.Max(kept, (snapshot.KeepAcquiredRows ? snapshot.EnteredCounts : snapshot.EnteredLastValues).DefaultIfEmpty().Max());
+                    continue;
+                }
                 if (snapshot == null || snapshot.Content.ValueKind != JsonValueKind.Object || snapshot.Content.GetProperty("kind").GetString() != "frame")
                     continue;
                 if (snapshot.Columns == null)
@@ -202,14 +234,46 @@ namespace StatsDirect.Templates
         /// </summary>
         private static InputSnapshot Trim(InputSnapshot snapshot, int keptRows)
         {
+            if (keptRows < 0) keptRows = int.MaxValue;
+            if (snapshot?.AlignedEntered == true && snapshot.EnteredCounts != null && keptRows >= 0)
+            {
+                InputSnapshot entered = snapshot.Copy();
+                entered.Content = Json(w =>
+                {
+                    w.WriteStartObject();
+                    foreach (JsonProperty property in snapshot.Content.EnumerateObject())
+                    {
+                        if (property.Name != "columns") { property.WriteTo(w); continue; }
+                        w.WriteStartArray("columns");
+                        int i = 0;
+                        foreach (JsonElement column in property.Value.EnumerateArray())
+                        {
+                            int count = Math.Min(keptRows, snapshot.EnteredCounts[i++]);
+                            w.WriteStartObject();
+                            foreach (JsonProperty p in column.EnumerateObject())
+                            {
+                                if (p.Name != "values") { p.WriteTo(w); continue; }
+                                w.WriteStartArray("values");
+                                int j = 0;
+                                foreach (JsonElement value in p.Value.EnumerateArray()) { if (j++ == count) break; value.WriteTo(w); }
+                                w.WriteEndArray();
+                            }
+                            w.WriteEndObject();
+                        }
+                        w.WriteEndArray();
+                    }
+                    w.WriteEndObject();
+                });
+                return entered;
+            }
             if (snapshot == null || keptRows < 0 || snapshot.Content.ValueKind != JsonValueKind.Object || snapshot.Columns == null
                 || snapshot.Content.GetProperty("kind").GetString() != "frame" || !snapshot.Content.TryGetProperty("columns", out JsonElement columns))
                 return snapshot;
-            if (snapshot.Columns.Length != columns.GetArrayLength() || snapshot.Columns.All(column => !column.CanTrim || column.Count <= keptRows))
+            if (snapshot.Columns.Length != columns.GetArrayLength())
                 return snapshot;
             InputSnapshot trimmed = new() { Source = snapshot.Source, Columns = snapshot.Columns,
-                PointerCount = snapshot.Columns.Sum(column => column.KeptCount(keptRows)) };
-            if (snapshot.Held.ValueKind == JsonValueKind.Object) trimmed.Held = Json(data =>
+                HeldCount = snapshot.HeldCount, PointerCount = snapshot.Columns.Sum(column => column.KeptCount(keptRows)) };
+            if (snapshot.Held.ValueKind == JsonValueKind.Object && trimmed.PointerCount <= EmbeddingThreshold) trimmed.Held = Json(data =>
             {
                 data.WriteStartObject();
                 int column = 0;
@@ -218,8 +282,9 @@ namespace StatsDirect.Templates
                     int count = snapshot.Columns[column++].KeptCount(keptRows);
                     data.WritePropertyName(h.Name);
                     data.WriteStartArray();
-                    for (int i = 0; i < count; i++)
-                        h.Value[i].WriteTo(data);
+                    int i = 0;
+                    foreach (JsonElement value in h.Value.EnumerateArray()) { if (i++ == count) break; value.WriteTo(data); }
+                    for (int j = h.Value.GetArrayLength(); j < count; j++) data.WriteNullValue();
                     data.WriteEndArray();
                 }
                 data.WriteEndObject();
@@ -327,12 +392,15 @@ namespace StatsDirect.Templates
                 Dictionary<RunInput, InputSnapshot> snapshots = new();
                 foreach (RunInput input in run.Inputs)
                     if (!(input.Kind == "table" && input.Parts != null))
-                        snapshots[input] = input.Snapshot ?? Capture(input.Value ?? (bag.TryGetValue(input.Name, out FilledParameter fallback) ? fallback : null), input.Kind);
+                    {
+                        input.Snapshot ??= Capture(input.Value ?? (bag.TryGetValue(input.Name, out FilledParameter fallback) ? fallback : null), input.Kind, input.PreserveRowAlignment, acquired: false);
+                        snapshots[input] = input.Snapshot;
+                    }
                 Dictionary<string, InputSnapshot> inherited = new();
                 foreach (KeyValuePair<string, FilledParameter> pair in bag.Pairs)
                     if (IsInheritedFrame(run, pair))
                         inherited[pair.Key] = run.InheritedInputs.TryGetValue(pair.Key, out InputSnapshot acquired) && acquired != null ? acquired
-                            : Capture(pair.Value, pair.Value.IsDataFrame ? "frame" : "frame2d");
+                            : Capture(pair.Value, pair.Value.IsDataFrame ? "frame" : "frame2d", acquired: false);
                 int keptRows = KeptRows(snapshots.Values.Concat(inherited.Values));
                 w.WriteStartArray("inputs");
                 foreach (RunInput input in run.Inputs)

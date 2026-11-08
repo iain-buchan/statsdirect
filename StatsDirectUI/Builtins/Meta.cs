@@ -1,4 +1,4 @@
-using StatsDirect.Charting;
+﻿using StatsDirect.Charting;
 using StatsDirect.Data;
 using StatsDirect.Numerics;
 using StatsDirect.Numerics.SpecialFunctions;
@@ -42,6 +42,9 @@ namespace StatsDirect.Builtins
         /// confidence level.</param>
         public static StepOutput RptPetoMeta(IPreferencesAndProgressBar host, ParameterBag parameters)
         {
+            // Keep the method used for this result, independent of later preference changes.
+            bool exactMeta = host.Preferences.MetaExact;
+
             double cco = parameters["gamma"].AsDouble;
             if (cco <= 0)
                 cco = 0.95;
@@ -173,6 +176,7 @@ namespace StatsDirect.Builtins
             }
 
             ParameterBag outputParameters = new();
+            outputParameters.AddInput("metaExact", exactMeta);
             IList<ParameterBag> inputsList = new List<ParameterBag>();
             outputParameters.AddOutput("*inputs", inputsList);
             for (int i = 1; i <= k; i++)
@@ -242,7 +246,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("qc", realk > 1 ? qc : 0.0);   // 0 by definition with one stratum, not the rounding residue of one squared deviation
             outputParameters.AddOutput("df", realk - 1);
             outputParameters.AddOutput("xp", PDF.chivalp(qc, realk - 1));
-            IsquareNcc(host, qc, realk, cco, cit, out double isq, out double llisq, out double ulisq);
+            IsquareNcc(host, qc, realk, cco, cit, out double isq, out double llisq, out double ulisq, exact: exactMeta);
             outputParameters.AddOutput("isq", isq);
             outputParameters.AddOutput("pc1", cco * 100);
             outputParameters.AddOutput("llisq", llisq);
@@ -562,6 +566,9 @@ namespace StatsDirect.Builtins
         /// <param name="parameters">As for RptPetoMeta.</param>
         public static StepOutput RptRiskDifferenceMeta(IPreferencesAndProgressBar host, ParameterBag parameters)
         {
+            // Keep the method used for this result, independent of later preference changes.
+            bool exactMeta = host.Preferences.MetaExact;
+
             double cco = parameters["gamma"].AsDouble;
             if (cco <= 0)
                 cco = 0.95;
@@ -614,11 +621,12 @@ namespace StatsDirect.Builtins
                     throw new InvalidDataException();
             }
 
-            Riskdifma(host, k, o, out double rmh, out double ll, out double ul, out double x2Rmh, cit, cco, rkr, rkw, dsw, rkrl, rkru, rkx, lerr, uerr, out double qc, out double dsrd, out double dsx2, out double dsll, out double dsul, out double tausq, cced, included, wll, wul, out int realk, out int ierr);
+            Riskdifma(host, k, o, out double rmh, out double ll, out double ul, out double x2Rmh, cit, cco, rkr, rkw, dsw, rkrl, rkru, rkx, lerr, uerr, out double qc, out double dsrd, out double dsx2, out double dsll, out double dsul, out double tausq, cced, included, wll, wul, out int realk, out int ierr, exact: exactMeta);
             if (ierr == -1)
                 throw new InvalidDataException();
 
             ParameterBag outputParameters = new();
+            outputParameters.AddInput("metaExact", exactMeta);
 
             IList<ParameterBag> inputsList = new List<ParameterBag>();
             outputParameters.AddOutput("*inputs", inputsList);
@@ -646,7 +654,7 @@ namespace StatsDirect.Builtins
             }
 
             outputParameters.AddOutput("pc", cco * 100);
-            outputParameters.AddOutput("method", host.Preferences.MetaExact ? "Miettinen" : "approximate");
+            outputParameters.AddOutput("method", exactMeta ? "Miettinen" : "approximate");
             IList<ParameterBag> differencesList = new List<ParameterBag>();
             outputParameters.AddOutput("*differences", differencesList);
             for (int i = 1; i <= k; i++)
@@ -681,7 +689,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("df_cochran", realk - 1);
             outputParameters.AddOutput("xp_cochran", PDF.chivalp(qc, realk - 1));
             outputParameters.AddOutput("tausq", tausq);
-            IsquareNcc(host, qc, realk, cco, cit, out double isq, out double llisq, out double ulisq);
+            IsquareNcc(host, qc, realk, cco, cit, out double isq, out double llisq, out double ulisq, exact: exactMeta);
             outputParameters.AddOutput("isq", isq);
             outputParameters.AddOutput("pc1", cco * 100);
             outputParameters.AddOutput("llisq", llisq);
@@ -736,6 +744,9 @@ namespace StatsDirect.Builtins
         /// <param name="parameters">As for RptPetoMeta.</param>
         public static StepOutput RptRelativeRiskMeta(IPreferencesAndProgressBar host, ParameterBag parameters)
         {
+            // Keep the method used for this result, independent of later preference changes.
+            bool exactMeta = host.Preferences.MetaExact;
+
             const int lowerBound = 1;
 
             double cco = parameters["gamma"].AsDouble;
@@ -780,13 +791,14 @@ namespace StatsDirect.Builtins
                     throw new InvalidDataException("All data values must be >= 0, and the number responding must be less than the sample size");
             }
 
-            RelativeRiskMA(host, lowerBound, k, out int realk, o, out double rmh, out double ll, out double ul, out double x2Rmh, cit, out double[] rkr, out double[] rkw, out double[] dsw, out double[] rkrl, out double[] rkru, out double[] rkx, out bool[] lerr, out bool[] uerr, out double qc, out double dsrr, out double dsx2, out double dsll, out double dsul, out double tausq, out bool[] cced, out bool[] included, out int ierr);
+            RelativeRiskMA(host, lowerBound, k, out int realk, o, out double rmh, out double ll, out double ul, out double x2Rmh, cit, out double[] rkr, out double[] rkw, out double[] dsw, out double[] rkrl, out double[] rkru, out double[] rkx, out bool[] lerr, out bool[] uerr, out double qc, out double dsrr, out double dsx2, out double dsll, out double dsul, out double tausq, out bool[] cced, out bool[] included, out int ierr, exact: exactMeta);
             if (ierr == -1)
                 throw new InvalidDataException("relriskma() returned an error");
             if (realk == 0)
                 throw new TemplateOperationCancelledException("None of the studies can be pooled: each of them has no events, or a group with no subjects.", "Relative risk meta-analysis");
 
             ParameterBag outputParameters = new();
+            outputParameters.AddInput("metaExact", exactMeta);
 
             IList<ParameterBag> inputsList = new List<ParameterBag>();
             outputParameters.AddOutput("*inputs", inputsList);
@@ -803,7 +815,7 @@ namespace StatsDirect.Builtins
             }
 
             outputParameters.AddOutput("pc", cco * 100);
-            outputParameters.AddOutput("method", host.Preferences.MetaExact ? "Koopman" : "approximate");
+            outputParameters.AddOutput("method", exactMeta ? "Koopman" : "approximate");
 
             IList<ParameterBag> risksList = new List<ParameterBag>();
             outputParameters.AddOutput("*risks", risksList);
@@ -834,7 +846,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("df_cochran", realk - 1);
             outputParameters.AddOutput("xp_cochran", PDF.chivalp(qc, realk - 1));
             outputParameters.AddOutput("tausq", tausq);
-            IsquareNcc(host, qc, realk, cco, cit, out double isq, out double llisq, out double ulisq);
+            IsquareNcc(host, qc, realk, cco, cit, out double isq, out double llisq, out double ulisq, exact: exactMeta);
             outputParameters.AddOutput("isq", isq);
             outputParameters.AddOutput("pc1", cco * 100);
             outputParameters.AddOutput("llisq", llisq);
@@ -1533,8 +1545,9 @@ namespace StatsDirect.Builtins
         /// <param name="cced">On return, whether each table had the continuity correction.</param>
         /// <param name="included">On return, whether each table is pooled (see IncludeRelativeRisk).</param>
         /// <param name="ierr">On return, 0.</param>
-        public static void RelativeRiskMA(IPreferences host, int lowerBound, int k, out int realk, double[,] o, out double rmh, out double ll, out double ul, out double x2Rmh, double cit, out double[] rkr, out double[] rkw, out double[] dsw, out double[] rkrl, out double[] rkru, out double[] rkx, out bool[] lerr, out bool[] uerr, out double qc, out double dsrr, out double dsx2, out double dsll, out double dsul, out double tausq, out bool[] cced, out bool[] included, out int ierr)
+        public static void RelativeRiskMA(IPreferences host, int lowerBound, int k, out int realk, double[,] o, out double rmh, out double ll, out double ul, out double x2Rmh, double cit, out double[] rkr, out double[] rkw, out double[] dsw, out double[] rkrl, out double[] rkru, out double[] rkx, out bool[] lerr, out bool[] uerr, out double qc, out double dsrr, out double dsx2, out double dsll, out double dsul, out double tausq, out bool[] cced, out bool[] included, out int ierr, bool? exact = null)
         {
+            bool useExact = exact ?? host.Preferences.MetaExact;
             ierr = -1;
             double siga = 0.0;
             double sumwt = 0.0;
@@ -1590,7 +1603,7 @@ namespace StatsDirect.Builtins
                 {
                     realk++;
 
-                    if (host.Preferences.MetaExact)
+                    if (useExact)
                     {
                         // try Koopman rr and ci for stratum before continuity correction
                         MathDbl.lr_ci(b, a, b + d, a + c, cit, out rkrl[i], out rkru[i]);
@@ -1611,7 +1624,7 @@ namespace StatsDirect.Builtins
                         cced[i] = false;
                     }
                     rkr[i] = a / (a + c) / (b / (b + d));
-                    if (!host.Preferences.MetaExact)
+                    if (!useExact)
                     {
                         // approximate se of log rr
                         double selogrr = Math.Sqrt(1.0 / a + 1.0 / b - 1.0 / (a + c) - 1.0 / (b + d));
@@ -1745,8 +1758,9 @@ namespace StatsDirect.Builtins
         /// <param name="realk">On return, the number of studies that are pooled.</param>
         /// <remarks>The other parameters are as those of RelativeRiskMA.  With the exact method the limits of each study are
         /// those of Miettinen (MathDbl.uppci).</remarks>
-        private static void Riskdifma(IPreferences host, int k, double[,] o, out double rmh, out double ll, out double ul, out double x2Rmh, double cit, double cco, double[] rkr, double[] rkw, double[] dsw, double[] rkrl, double[] rkru, double[] rkx, bool[] lerr, bool[] uerr, out double qc, out double dsrd, out double dsx2, out double dsll, out double dsul, out double tausq, bool[] cced, bool[] included, double[] wll, double[] wul, out int realk, out int ierr)
+        private static void Riskdifma(IPreferences host, int k, double[,] o, out double rmh, out double ll, out double ul, out double x2Rmh, double cit, double cco, double[] rkr, double[] rkw, double[] dsw, double[] rkrl, double[] rkru, double[] rkx, bool[] lerr, bool[] uerr, out double qc, out double dsrd, out double dsx2, out double dsll, out double dsul, out double tausq, bool[] cced, bool[] included, double[] wll, double[] wul, out int realk, out int ierr, bool? exact = null)
         {
+            bool useExact = exact ?? host.Preferences.MetaExact;
             ierr = -1;
             realk = 0;
             double sumlk = 0.0;
@@ -1785,7 +1799,7 @@ namespace StatsDirect.Builtins
                 }
                 realk++;
                 rkr[i] = a / (a + c) - b / (b + d);
-                if (host.Preferences.MetaExact)
+                if (useExact)
                 {
                     double r1 = a;
                     double n1 = a + c;
@@ -1809,7 +1823,7 @@ namespace StatsDirect.Builtins
                 double se = Math.Sqrt(vark[i]);
                 wll[i] = rkr[i] - cit * se;
                 wul[i] = rkr[i] + cit * se;
-                if (!host.Preferences.MetaExact)
+                if (!useExact)
                 {
                     rkrl[i] = wll[i];
                     rkru[i] = wul[i];
@@ -3101,6 +3115,9 @@ namespace StatsDirect.Builtins
         /// statistic and the words of the test, for the report; "studies" (may be left out): the labels; "gamma".</param>
         public static StepOutput RptMetaSummary(IPreferencesAndProgressBar host, ParameterBag parameters)
         {
+            // Keep the method used for this result, independent of later preference changes.
+            bool exactMeta = host.Preferences.MetaExact;
+
             double dsul; double dsll; double dsrr;
             double tausq;
             double zrmh; double ulrmh; double llrmh;
@@ -3281,6 +3298,7 @@ namespace StatsDirect.Builtins
             }
 
             ParameterBag outputParameters = new();
+            outputParameters.AddInput("metaExact", exactMeta);
             outputParameters.AddOutput("stat", stat);
             outputParameters.AddOutput("pc", cco * 100);
 
@@ -3314,7 +3332,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("df", k - 1);
             outputParameters.AddOutput("xp", PDF.chivalp(qc, k - 1));
             outputParameters.AddOutput("tausq", tausq);
-            IsquareNcc(host, qc, k, cco, cit, out double isq, out double llisq, out double ulisq);
+            IsquareNcc(host, qc, k, cco, cit, out double isq, out double llisq, out double ulisq, exact: exactMeta);
             outputParameters.AddOutput("isq", isq);
             outputParameters.AddOutput("pc1", cco * 100);
             outputParameters.AddOutput("llisq", llisq);

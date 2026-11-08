@@ -10,7 +10,7 @@ internal static partial class Program
     private static void CheckTukeyHinges()
     {
         RRecipes.Folder = Metadata("Recipes");
-        string folder = Path.Combine(Path.GetTempPath(), "statsdirect-tukey-" + Guid.NewGuid().ToString("N"));
+        string folder = Path.Combine(TemporaryRoot, "statsdirect-tukey-" + Guid.NewGuid().ToString("N"));
         var method = (BoxWhiskerOptions.BoxWhiskerMethod)7;
         Check(new BoxWhiskerOptions().Method == BoxWhiskerOptions.BoxWhiskerMethod.MedianQuartilesRange,
             "adding Tukey hinges preserves the existing box-plot default and method numbers");

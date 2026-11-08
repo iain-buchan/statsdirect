@@ -7,7 +7,7 @@ internal static partial class Program
     private static void CheckRecipeGeneralSimplicity()
     {
         RRecipes.Folder = Metadata("Recipes");
-        string folder = Path.Combine(Path.GetTempPath(), "statsdirect-general-simplicity-" + Guid.NewGuid().ToString("N"));
+        string folder = Path.Combine(TemporaryRoot, "statsdirect-general-simplicity-" + Guid.NewGuid().ToString("N"));
         int number = 0;
         void Probe(string description, string script, string assertions)
         {
