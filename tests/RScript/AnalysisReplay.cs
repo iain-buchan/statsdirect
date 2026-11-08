@@ -54,7 +54,10 @@ internal static partial class Program
             foreach (bool conservative in new[] { false, true })
             foreach (double p in new[] { 0.03, 0.5, 0.9 })
             {
-                double[] first = Enumerable.Range(1, n).Select(i => (double)i).Concat(new[] { Constant.MISSING }).ToArray();
+                // One missing value in each column, in the first row: a row that is blank in every selected column at the end of a
+                // selection is not data and is left out of the record (see RunRecord.KeptRows), so the replay's count of missing values
+                // is checked with a missing value among the data.
+                double[] first = new[] { Constant.MISSING }.Concat(Enumerable.Range(1, n).Select(i => (double)i)).ToArray();
                 double[] second = first.Select(v => v == Constant.MISSING ? v : 100 + v * 2).ToArray();
                 double confidence = n == 20 ? 0.8 : 0.99;
                 var (run, output) = Run("Quantile", new()

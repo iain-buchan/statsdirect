@@ -20,6 +20,7 @@ internal static partial class Program
             foreach (bool missing in new[] { false, true }) CheckPolynomialAcquisition(count, missing, folder);
         CheckAcquisitionCopies();
         CheckOtherChartOrder();
+        CheckTrailingBlankRows(folder);
         Console.WriteLine("      acquisition regression artifacts: " + folder);
     }
 
