@@ -99,6 +99,119 @@ namespace StatsDirect.Templates
             foreach (JsonProperty property in snapshot.Content.EnumerateObject()) property.WriteTo(writer);
         }
 
+        /// <summary>A frame in the bag that an earlier run acquired and this run took over without asking for it again.</summary>
+        private static bool IsInheritedFrame(OperationRun run, KeyValuePair<string, FilledParameter> pair) =>
+            IsSetting(pair.Key) && pair.Value != null && pair.Value.HasData && pair.Value.Direction != FilledParameterDirection.Output
+            && (pair.Value.IsDataFrame || pair.Value.AsObject is DataFrame2D) && !run.Inputs.Any(i => i.Name == pair.Key);
+
+        /// <summary>
+        /// The rows the record keeps of the run's pointer frames: up to the last row that holds a value in any column of any of them, so
+        /// that the trailing rows blank in every column (a whole-column selection's rows below the data) are left out, while frames
+        /// selected together keep the same row count and so stay aligned. Negative when a frame's values are not held with the record,
+        /// in which case nothing is trimmed: its hash and row range describe all its rows.
+        /// </summary>
+        private static int KeptRows(IEnumerable<InputSnapshot> snapshots)
+        {
+            int kept = 0;
+            foreach (InputSnapshot snapshot in snapshots)
+            {
+                if (snapshot == null || snapshot.Content.ValueKind != JsonValueKind.Object || snapshot.Content.GetProperty("kind").GetString() != "frame")
+                    continue;
+                if (snapshot.Held.ValueKind != JsonValueKind.Object)
+                    return -1;
+                foreach (JsonProperty column in snapshot.Held.EnumerateObject())
+                {
+                    int last = column.Value.GetArrayLength();
+                    while (last > 0 && column.Value[last - 1].ValueKind == JsonValueKind.Null)
+                        last--;
+                    kept = Math.Max(kept, last);
+                }
+            }
+            return kept;
+        }
+
+        /// <summary>
+        /// A pointer frame's snapshot cut to the kept rows: each column's held values, its row range and its hash then describe the same
+        /// rows, so that reading the recorded rows back gives values with the recorded hash. The snapshot itself when nothing is cut.
+        /// </summary>
+        private static InputSnapshot Trim(InputSnapshot snapshot, int keptRows)
+        {
+            if (snapshot == null || keptRows < 0 || snapshot.Content.ValueKind != JsonValueKind.Object || snapshot.Held.ValueKind != JsonValueKind.Object
+                || snapshot.Content.GetProperty("kind").GetString() != "frame" || !snapshot.Content.TryGetProperty("columns", out JsonElement columns))
+                return snapshot;
+            List<JsonProperty> held = snapshot.Held.EnumerateObject().ToList();
+            if (held.Count != columns.GetArrayLength() || held.All(h => h.Value.GetArrayLength() <= keptRows))
+                return snapshot;
+            InputSnapshot trimmed = new() { Source = snapshot.Source };
+            trimmed.Held = Json(data =>
+            {
+                data.WriteStartObject();
+                foreach (JsonProperty h in held)
+                {
+                    int count = Math.Min(keptRows, h.Value.GetArrayLength());
+                    data.WritePropertyName(h.Name);
+                    data.WriteStartArray();
+                    for (int i = 0; i < count; i++)
+                        h.Value[i].WriteTo(data);
+                    data.WriteEndArray();
+                    trimmed.PointerCount += count;
+                }
+                data.WriteEndObject();
+            });
+            trimmed.Content = Json(w =>
+            {
+                w.WriteStartObject();
+                foreach (JsonProperty property in snapshot.Content.EnumerateObject())
+                {
+                    if (property.Name != "columns")
+                    {
+                        property.WriteTo(w);
+                        continue;
+                    }
+                    w.WriteStartArray("columns");
+                    int c = 0;
+                    foreach (JsonElement column in columns.EnumerateArray())
+                    {
+                        JsonElement values = held[c++].Value;
+                        int count = Math.Min(keptRows, values.GetArrayLength());
+                        w.WriteStartObject();
+                        foreach (JsonProperty p in column.EnumerateObject())
+                        {
+                            if (p.Name == "rows" && p.Value.ValueKind == JsonValueKind.Array && p.Value.GetArrayLength() == 2)
+                            {
+                                // the first row, the title row if there is one, then the kept values; never beyond the rows that were selected
+                                int firstRow = p.Value[0].GetInt32(), lastRow = p.Value[1].GetInt32();
+                                bool hasTitle = column.TryGetProperty("hasTitle", out JsonElement title) && title.ValueKind == JsonValueKind.True;
+                                w.WriteStartArray("rows");
+                                w.WriteNumberValue(firstRow);
+                                w.WriteNumberValue(Math.Min(lastRow, firstRow - 1 + (hasTitle ? 1 : 0) + count));
+                                w.WriteEndArray();
+                            }
+                            else if (p.Name == "hash")
+                                w.WriteString("hash", Hash(Enumerable.Range(0, count).Select(i => FromJson(values[i]))));
+                            else
+                                p.WriteTo(w);
+                        }
+                        w.WriteEndObject();
+                    }
+                    w.WriteEndArray();
+                }
+                w.WriteEndObject();
+            });
+            return trimmed;
+        }
+
+        /// <summary>A held value as <see cref="Values(IVariable)"/> gave it: a number, text, a flag, or null for a missing value.</summary>
+        private static object FromJson(JsonElement value) => value.ValueKind switch
+        {
+            JsonValueKind.Null => null,
+            JsonValueKind.Number => value.GetDouble(),
+            JsonValueKind.String => value.GetString(),
+            JsonValueKind.True => true,
+            JsonValueKind.False => false,
+            _ => value.GetRawText()
+        };
+
         /// <summary>The kind of value a parameter takes, as the record names it.</summary>
         public static string KindOf(Parameter parameter) => parameter switch
         {
@@ -150,6 +263,20 @@ namespace StatsDirect.Templates
                 List<KeyValuePair<string, InputSnapshot>> pointerFrames = new();
                 RunInput table = null;
                 double[] counts = null;
+                // The snapshots of the inputs, taken now where the run holds none, so that the kept rows below see every frame. A selection
+                // that runs past the data, such as a whole column on a sheet whose other columns are longer, carries trailing rows that are
+                // blank in every column; the record keeps the rows up to the last value in any pointer frame of the run, the same count
+                // for every frame, so that frames selected together stay aligned row by row (see Trim).
+                Dictionary<RunInput, InputSnapshot> snapshots = new();
+                foreach (RunInput input in run.Inputs)
+                    if (!(input.Kind == "table" && input.Parts != null))
+                        snapshots[input] = input.Snapshot ?? Capture(input.Value ?? (bag.TryGetValue(input.Name, out FilledParameter fallback) ? fallback : null), input.Kind);
+                Dictionary<string, InputSnapshot> inherited = new();
+                foreach (KeyValuePair<string, FilledParameter> pair in bag.Pairs)
+                    if (IsInheritedFrame(run, pair))
+                        inherited[pair.Key] = run.InheritedInputs.TryGetValue(pair.Key, out InputSnapshot acquired) && acquired != null ? acquired
+                            : Capture(pair.Value, pair.Value.IsDataFrame ? "frame" : "frame2d");
+                int keptRows = KeptRows(snapshots.Values.Concat(inherited.Values));
                 w.WriteStartArray("inputs");
                 foreach (RunInput input in run.Inputs)
                 {
@@ -183,7 +310,7 @@ namespace StatsDirect.Templates
                     }
                     // the value as it was asked, else the bag's: a parameter asked in each pass of a loop keeps each pass's value
                     FilledParameter filled = input.Value ?? (bag.TryGetValue(input.Name, out FilledParameter current) ? current : null);
-                    InputSnapshot snapshot = input.Snapshot ?? Capture(filled, input.Kind);
+                    InputSnapshot snapshot = Trim(snapshots.TryGetValue(input, out InputSnapshot taken) ? taken : input.Snapshot ?? Capture(filled, input.Kind), keptRows);
                     if (snapshot == null)
                         continue;
                     w.WriteStartObject();
@@ -204,19 +331,13 @@ namespace StatsDirect.Templates
                 // simulation) takes the data of the result it was asked from without asking for them again
                 foreach (KeyValuePair<string, FilledParameter> pair in bag.Pairs)
                 {
-                    if (!IsSetting(pair.Key) || pair.Value == null || !pair.Value.HasData || pair.Value.Direction == FilledParameterDirection.Output)
-                        continue;
-                    bool twoLevel = !pair.Value.IsDataFrame && pair.Value.AsObject is DataFrame2D;   // the nested and replicated layouts' frame
-                    if (!pair.Value.IsDataFrame && !twoLevel)
-                        continue;
-                    if (run.Inputs.Any(i => i.Name == pair.Key))
+                    if (!IsInheritedFrame(run, pair))
                         continue;
                     w.WriteStartObject();
                     w.WriteString("name", pair.Key);
                     w.WriteString("prompt", "");
                     w.WriteBoolean("inherited", true);
-                    InputSnapshot snapshot = run.InheritedInputs.TryGetValue(pair.Key, out InputSnapshot acquired) ? acquired : null;
-                    snapshot ??= Capture(pair.Value, twoLevel ? "frame2d" : "frame");
+                    InputSnapshot snapshot = Trim(inherited[pair.Key], keptRows);
                     WriteSnapshot(w, snapshot);
                     if (snapshot.Content.GetProperty("kind").GetString() == "frame")
                     {
