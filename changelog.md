@@ -2,7 +2,7 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
-##[v5.3.7] 2026-11-08
+##[v5.3.7] 2026-11-09
 
 ### Fixed
 - Continue in R and notebook replay trim trailing blank worksheet rows even when selections exceed the embedded-data limit, while keeping acquisition hashes and row alignment intact.
