@@ -9,6 +9,7 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 - Results of more than 5,000 values that 5.3.5 or 5.3.6 saved after padding unequal columns with missing values replay from their workbook again: Continue in R and notebook export recognise the padding by the recorded hash instead of reporting a changed column, and an edited column is still reported.
 - A report's context menu offers Continue in R only for a result whose script will run an R recipe: a reopened follow-on saved without the analysis it continued, whose script has only its data and settings, offers Open data and settings in R.
 - Time series summary and contraction of frequencies refuse a blank or missing subject identifier or category with the missing-data message when it is selected, instead of failing with an object reference or index error.
+- Opening an HTML report or a notebook removes external url(...) references from chart fill, stroke, filter, clip-path, mask and marker attributes, as pasting already did; a chart's references to its own definitions are kept.
 
 ##[v5.3.8] 2026-11-09
 
