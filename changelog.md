@@ -19,6 +19,8 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 - Pasting into a report removes video and audio elements and poster and background addresses, as opening a report already did, and both remove animateColor animations; on either path a style attribute keeps only its permitted declarations, never an image-set() address.
 - Kappa of raters whose columns differ in length, when the jagged ends are padded with missing data as the selection's warning offers, leaves the padded rows out as missing ratings instead of counting them as ratings of the shorter column's first category, both natively and in Continue in R.
 - Preferences are kept between sessions: at start-up StatsDirect reads back the preferences it saves in Documents\StatsDirect\statsdirect.json, which it has saved since 2023 but never read, so the main window's position, size and maximised state, decimal places, the default confidence interval, data selection, meta-analysis, worksheet font and chart options, and the recent files that still exist are restored. A missing, damaged or older file, a value StatsDirect cannot use, or a window position no longer on any screen leaves that preference at its default, and nothing is written while the preferences load.
+- Continue in R reproduces the analysis of variance of a weighted multiple linear regression that drops collinear predictors, and gives predictors with the same or a blank title their own columns.
+- A new analysis result takes the focus in the report, so the ? button and F1 open the help for that analysis instead of the general report help.
 
 ##[v5.3.8] 2026-11-09
 
