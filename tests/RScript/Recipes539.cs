@@ -113,20 +113,25 @@ internal static partial class Program
     }
 
     // 1. Expected counts (or percentages, or proportions that do not add up to 1) are scaled to the observed total by the
-    //    report; chisq.test needs rescale.p = TRUE to do the same.
+    //    report; chisq.test needs rescale.p = TRUE to do the same. A category whose observed or expected cell is empty is
+    //    left out by the report, where chisq.test stopped on the missing value.
     private static void CheckGoodnessOfFit539(string folder)
     {
-        void Case(string label, double[] observed, double[] expected, bool simulate = false) => Case539("gof " + label, () =>
+        void Case(string label, double[] observed, double[] expected, bool simulate = false) =>
+            Cells(label, observed.Cast<object>().ToArray(), expected.Cast<object>().ToArray(), simulate);
+        void Cells(string label, object[] observed, object[] expected, bool simulate = false) => Case539("gof " + label, () =>
         {
             string[] names = observed.Select((_, i) => "Group " + (char)('A' + i)).ToArray();
-            var cells = new RecordCells(Cells539("Observed", observed), Cells539("Expected", expected), new object[] { "Category" }.Concat(names).ToArray());
+            string[] kept = names.Where((_, i) => observed[i] != null && expected[i] != null).ToArray();
+            var cells = new RecordCells(new object[] { "Observed" }.Concat(observed).ToArray(), new object[] { "Expected" }.Concat(expected).ToArray(), new object[] { "Category" }.Concat(names).ToArray());
             int rows = observed.Length + 1;
             var (run, output) = Run("ChiSquareGoodnessOfFit", new() { ["observed"] = Select539(cells, rows, 0), ["expected"] = Select539(cells, rows, 1), ["names"] = Select539(cells, rows, 2) });
             ParameterBag bag = output.ParameterBag;
+            Check(Rows539(bag, "*frequencies").Count == kept.Length, label + ": the report uses the " + kept.Length + " categories with both counts");
             string assertion = Equal539("sum(observed), test$parameter", new[] { Num539(bag, "n"), Num539(bag, "df") }) +
                 Equal539("test$expected", Rows539(bag, "*frequencies").Select(r => Num539(r, "e"))) +
                 (Num539(bag, "chi2") == 0 ? "stopifnot(abs(test$statistic) < 1e-12, abs(test$p.value - 1) < 1e-12)\n" : Equal539("test$statistic, test$p.value", new[] { Num539(bag, "chi2"), Num539(bag, "p") })) +
-                "stopifnot(identical(names(observed), " + RScriptWriter.Vector(names) + "))\n";
+                "stopifnot(identical(names(observed), " + RScriptWriter.Vector(kept) + "))\n";
             Replay539(run, assertion, Path.Combine(folder, label));
             if (!simulate) return;
             var (follow, _) = Run("ChiGFSimulateExactP", new() { ["iterations"] = 2000, ["seed"] = 11, ["ci"] = .99 }, bag);
@@ -137,6 +142,7 @@ internal static partial class Program
         Case("percentages", new double[] { 67, 83, 29, 8 }, new double[] { 44, 45, 8, 3 });
         Case("proportions-below-one", new double[] { 9, 21, 28, 30, 12 }, new double[] { .1, .2, .3, .25, .1 });
         Case("proportions-help", new double[] { 67, 83, 29, 8 }, new double[] { .44, .45, .08, .03 });
+        Cells("missing-counts", new object[] { 10d, 20d, null, 25d, 15d, 12d }, new object[] { 10d, 20d, 30d, 25d, null, 18d }, simulate: true);
     }
 
     // 2. Kendall's rank correlation: the replay used to stop on any tie, gave R's normal approximation as the exact test from
