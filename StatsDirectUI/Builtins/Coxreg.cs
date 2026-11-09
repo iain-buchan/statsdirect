@@ -2627,7 +2627,9 @@ namespace StatsDirect.Builtins
 
         /// <summary>
         /// The hazard ratio of each predictor, exp(b), with its confidence interval, exp(b - c se) to exp(b + c se), where c is the normal
-        /// deviate for the confidence that was asked for; and the coefficients with their standard errors.
+        /// deviate for the confidence that was asked for; and the coefficients with their standard errors. A confidence level that is not
+        /// above 0 and below 1 (0% or 100%, which the form allows) is taken as 95%, as the other reports take it: 100% used to give a point
+        /// interval at the hazard ratio, labelled 100%.
         /// </summary>
         public static StepOutput RptCoxHazardRatios(ParameterBag parameters)
         {
@@ -2636,6 +2638,8 @@ namespace StatsDirect.Builtins
             ColumnData[] CDAT1 = (ColumnData[])parameters["CDAT1"].AsObject;
 
             double GAMMA = parameters["gamma"].AsDouble;
+            if (!(GAMMA > 0.0 && GAMMA < 1.0))
+                GAMMA = 0.95;
             MathDbl.civ(0, out double cit, GAMMA, out double _);
             ParameterBag outputParameters = new();
             outputParameters.AddOutput("pc", 100 * GAMMA);

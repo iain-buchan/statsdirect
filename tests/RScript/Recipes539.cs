@@ -18,7 +18,7 @@ internal static partial class Program
     // Each case acquires its columns from worksheet cells through GridSelectionProcessor.FillFrameParameter (and the
     // CellArrayProcessor under it), runs the operation through the template processor, writes the script from the record
     // the report step left, runs it in R within a time limit, and compares R's figures with the native output bag.
-    private static readonly string[] Recipes539Parts = { "gof", "kendall", "mann-whitney", "routing", "agreement" };
+    private static readonly string[] Recipes539Parts = { "gof", "kendall", "mann-whitney", "routing", "agreement", "fallback" };
     private static void CheckRecipes539(string folder, string only = null)
     {
         if (only != null && !Recipes539Parts.Contains(only)) throw new ArgumentException("Unknown 5.3.9 recipe check: " + only);
@@ -29,6 +29,7 @@ internal static partial class Program
         if (only is null or "mann-whitney") CheckMannWhitney539(Path.Combine(folder, "mann-whitney"));
         if (only is null or "routing") CheckFollowOnRouting539(Path.Combine(folder, "routing"));
         if (only is null or "agreement") CheckAgreement539(Path.Combine(folder, "agreement"));
+        if (only is null or "fallback") CheckConfidenceFallback539(Path.Combine(folder, "fallback"));
         if (Failed539.Count > 0) throw new Exception("FAIL " + Failed539.Count + " of the 5.3.9 recipe cases: " + string.Join(" | ", Failed539));
     }
 
@@ -336,6 +337,159 @@ internal static partial class Program
         }
         double[] tiedMean = Enumerable.Range(0, 1200).Select(i => 500d + 3 * i).ToArray();
         Case("tied-1200", new[] { tiedMean.Select((m, i) => m + 1 + i % 37).ToArray(), tiedMean.Select((m, i) => m - 1 - i % 37).ToArray() }, timeout: 240);
+    }
+
+    // 6. A confidence level typed as 100% (recorded 1) or 0% is taken as 95% by every one of these reports (XLevel); their
+    //    recipes replayed the typed level, halted (Mann-Whitney), or printed 0 to infinity. The Cox hazard ratios had no
+    //    fallback in the report either and printed a point interval labelled 100%.
+    private static void CheckConfidenceFallback539(string folder)
+    {
+        double[] x = { 8, 12, 15, 11, 19, 14, 9, 16, 21, 18, 13, 17 }, y = { 9, 10, 13, 12, 17, 16, 14, 18, 22, 19, 15, 20 };
+        RecordCells two = new(Cells539("First", x), Cells539("Second", y));
+        double[] longer = Enumerable.Range(1, 30).Select(i => 50 + 9 * Math.Sin(i * 1.3) + i * .37).ToArray();
+        double[] partner = longer.Select((v, i) => v + 4 * Math.Cos(i * .9) - .6).ToArray();
+        RecordCells pairs = new(Cells539("Before", longer), Cells539("After", partner));
+        double[] weights = Enumerable.Range(1, 30).Select(i => 1d + i % 4).ToArray();
+        RecordCells weighted = new(Cells539("Value", longer), Cells539("Weight", weights));
+        foreach (double confidence in new[] { 0d, 1d })
+        {
+            string level = confidence.ToString("R", inv);
+            string Folder(string op) => Path.Combine(folder, op + "-" + level);
+            const string Used = "stopifnot(confidence == 0.95)\n";
+
+            Case539("fallback Wilcoxon " + level, () =>
+            {
+                var (run, output) = Run("Wilcoxon", new() { ["data"] = Select539(pairs, 31, 0, 1), ["gamma"] = confidence });
+                ParameterBag b = output.ParameterBag;
+                int k = int.Parse(Regex.Match(Convert.ToString(DeferredBags538(b).First(bag => bag.ContainsKey("k"))["k"].AsObject, inv), @"K = ([0-9]+)").Groups[1].Value, inv);
+                Replay539(run, Used + "stopifnot(K == " + k + ")\n" + Equal539("median(a), a[K], rev(a)[K]", new[] { Found539(b, "med_diff"), Found539(b, "from"), Found539(b, "to") }), Folder("Wilcoxon"));
+            });
+            Case539("fallback Spearman " + level, () =>
+            {
+                var (run, output) = Run("Spearman", new() { ["data"] = Select539(two, 13, 0, 1), ["gamma"] = confidence });
+                Replay539(run, Used + Equal539("ci", new[] { Found539(output.ParameterBag, "from"), Found539(output.ParameterBag, "to") }), Folder("Spearman"));
+            });
+            Case539("fallback ZUnpaired " + level, () =>
+            {
+                var (run, output) = Run("ZUnpaired", new() { ["data"] = Select539(two, 13, 0, 1), ["gamma"] = confidence });
+                Replay539(run, Used + Equal539("d - qnorm((1 + confidence) / 2) * se, d + qnorm((1 + confidence) / 2) * se", new[] { Found539(output.ParameterBag, "from"), Found539(output.ParameterBag, "to") }), Folder("ZUnpaired"));
+            });
+            Case539("fallback ReferenceRange " + level, () =>
+            {
+                var (run, output) = Run("ReferenceRange", new() { ["data"] = Select539(pairs, 31, 0), ["gamma"] = confidence, ["reference-interval"] = .9, ["do_conservative"] = true });
+                ParameterBag b = output.ParameterBag;
+                string text = Replay539(run, Used, Folder("ReferenceRange"));
+                double[] lower = Printed539(text, @"^95% confidence interval for lower range limit = " + Figure539 + " to " + Figure539);
+                double[] upper = Printed539(text, @"^95% confidence interval for upper range limit = " + Figure539 + " to " + Figure539);
+                Check(lower.Length == 2 && upper.Length == 2 && new[] { (lower[0], "lx_l"), (lower[1], "ux_l"), (upper[0], "lx_u"), (upper[1], "ux_u") }.All(p => Math.Abs(p.Item1 - Found539(b, p.Item2)) <= 5.1e-7),
+                    "ReferenceRange at a recorded " + level + ": the replay gives the report's 95% limits of the range limits");
+            });
+            Case539("fallback Quantile " + level, () =>
+            {
+                var (run, output) = Run("Quantile", new() { ["data"] = Select539(pairs, 31, 0), ["gamma"] = confidence, ["conservative-ci"] = false, ["quantile"] = .5 });
+                string text = Replay539(run, "stopifnot(conf == 0.95)\n", Folder("Quantile"));
+                double[] quantile = Printed539(text, @"^Approximate 95% CI \([^)]*\) = " + Figure539 + " to " + Figure539);
+                Check(quantile.Length == 2 && Math.Abs(quantile[0] - Found539(output.ParameterBag, "from")) <= 5.1e-6 * Math.Abs(quantile[0]) && Math.Abs(quantile[1] - Found539(output.ParameterBag, "to")) <= 5.1e-6 * Math.Abs(quantile[1]),
+                    "Quantile at a recorded " + level + ": the replay gives the report's 95% interval");
+            });
+            Case539("fallback QuickSummary " + level, () =>
+            {
+                // The quick summary is shown in a dialog rather than the report, so its record is written here as the report
+                // step writes one (RunRecord.Write), from the frame the grid acquired and the recorded level.
+                string summary = null;
+                ParameterBag acquired = null;
+                var select = Select539(pairs, 31, 0);
+                Func<ITemplateProcessor, Parameter, ParameterBag, ITemplateHost, ParameterBag> keep = (processor, parameter, context, host) => acquired = select(processor, parameter, context, host);
+                Run("QuickSummary", new() { ["data"] = keep, ["gamma"] = confidence }, amend: options => { if (options is SummaryStatisticsOptions s) summary = s.Text; });
+                OperationRun run = new(Load("QuickSummary"));
+                run.Note(new FrameParameter { Name = "data" }, "Select data for quick summary", value: acquired["data"]);
+                ParameterBag recorded = new(); recorded.AddInput("data", acquired["data"].AsDataFrame); recorded.AddInput("gamma", confidence);
+                run.Record = RunRecord.Write(run, recorded);
+                string text = Replay539(run, Used, Folder("QuickSummary"));
+                double[] nativeUpper = Printed539(summary ?? "", @"^95% Upper CL of mean\s+" + Figure539), nativeLower = Printed539(summary ?? "", @"^95% Lower CL of mean\s+" + Figure539);
+                double[] replayUpper = Printed539(text, @"^95% Upper CL of mean " + Figure539), replayLower = Printed539(text, @"^95% Lower CL of mean " + Figure539);
+                Check(nativeUpper.Length == 1 && nativeLower.Length == 1 && replayUpper.Length == 1 && replayLower.Length == 1 && Math.Abs(nativeUpper[0] - replayUpper[0]) <= 5.1e-7 && Math.Abs(nativeLower[0] - replayLower[0]) <= 5.1e-7,
+                    "QuickSummary at a recorded " + level + ": the replay gives the report's 95% limits of the mean");
+            });
+            Case539("fallback Gini " + level, () =>
+            {
+                var (run, output) = Run("Gini", new() { ["data"] = Select539(pairs, 31, 0), ["weights"] = null, ["gamma"] = confidence, ["boots"] = 200, ["seed"] = 7 });
+                Check(Found539(output.ParameterBag, "pc") == 95, "the native Gini report takes " + level + " as 95%");
+                string text = Replay539(run, Used, Folder("Gini"));
+                Check(!text.Contains("100%") && !Regex.IsMatch(text, @"(^|\s)0% "), "Gini at a recorded " + level + ": the replay labels its intervals 95%");
+            });
+            Case539("fallback Crossover " + level, () =>
+            {
+                double[] d1 = { 8, 14, 8, 9, 11, 3, 6, 0, 13, 10, 7, 13, 8, 7 }, p1 = { 5, 10, 0, 7, 6, 5, 0, 0, 12, 2, 5, 13, 10, 7 }, d2 = { 12, 6, 13, 8, 8, 4, 8, 2, 8, 9, 7, 7, 10 }, p2 = { 11, 8, 9, 8, 9, 8, 14, 4, 13, 7, 10, 6, 7 };
+                RecordCells crossover = new(Cells539("Drug 1", d1), Cells539("Placebo 1", p1), Cells539("Drug 2", d2), Cells539("Placebo 2", p2));
+                var (run, output) = Run("Crossover", new() { ["gamma"] = confidence, ["group1drug"] = Select539(crossover, 15, 0), ["group1placebo"] = Select539(crossover, 15, 1), ["group1baseline"] = null, ["group2drug"] = Select539(crossover, 15, 2), ["group2placebo"] = Select539(crossover, 15, 3), ["group2baseline"] = null });
+                ParameterBag b = output.ParameterBag;
+                string text = Replay539(run, Used, Folder("Crossover"));
+                double[] effect = Printed539(text, @"^effect magnitude = " + Figure539 + " 95% CI = " + Figure539 + " to " + Figure539);
+                Check(effect.Length == 3 && Math.Abs(effect[1] - Found539(b, "treatment_from")) <= 5.1e-7 && Math.Abs(effect[2] - Found539(b, "treatment_to")) <= 5.1e-7,
+                    "Crossover at a recorded " + level + ": the replay gives the report's 95% interval of the treatment effect");
+            });
+            Case539("fallback NonparametricLinearRegression " + level, () =>
+            {
+                var (run, output) = Run("NonparametricLinearRegression", new() { ["outcome"] = Select539(pairs, 31, 1), ["predictor"] = Select539(pairs, 31, 0), ["gamma"] = confidence });
+                Replay539(run, Used + Equal539("np_result$lower, np_result$upper", new[] { Found539(output.ParameterBag, "from"), Found539(output.ParameterBag, "to") }), Folder("NonparametricLinearRegression"));
+            });
+            Case539("fallback TSingleSummary " + level, () =>
+            {
+                var (run, output) = Run("TSingleSummary", new() { ["nx"] = 20, ["mu"] = 130.05, ["sd1"] = 9.79, ["mu0"] = 120d, ["gamma"] = confidence });
+                Replay539(run, Used + Equal539("r$conf.int - mu0", new[] { Found539(output.ParameterBag, "from"), Found539(output.ParameterBag, "to") }), Folder("TSingleSummary"));
+            });
+            Case539("fallback TUnpairedSummary " + level, () =>
+            {
+                var (run, output) = Run("TUnpairedSummary", new() { ["nx1"] = 12, ["um1"] = 120d, ["sd1"] = 21.6, ["nx2"] = 7, ["um2"] = 101d, ["sd2"] = 18.3, ["gamma"] = confidence });
+                Replay539(run, Used + Equal539("equal$conf.int", new[] { Found539(output.ParameterBag, "from"), Found539(output.ParameterBag, "to") }), Folder("TUnpairedSummary"));
+            });
+            Case539("fallback WeightedUnivariateSummary " + level, () =>
+            {
+                var (run, output) = Run("WeightedUnivariateSummary", new() { ["data"] = Select539(weighted, 31, 0), ["weights"] = Select539(weighted, 31, 1), ["gamma"] = confidence, ["report-centile-type"] = "1", ["report-udca"] = .05, ["report-udcb"] = .95, ["output-to-frame"] = false });
+                var fields = DeferredBags538(output.ParameterBag).Where(bag => bag.ContainsKey("title") && bag.ContainsKey("*results")).ToList();
+                double NativeRow(string title) => fields.Where(bag => Convert.ToString(bag["title"].AsObject, inv) == title).Select(bag => Num539(Rows539(bag, "*results")[0], "result")).DefaultIfEmpty(double.NaN).First();
+                string text = Replay539(run, Used, Folder("WeightedUnivariateSummary"));
+                double[] limits = Printed539(text, @"^Upper 95% CL of mean " + Figure539 + @"\s+Lower 95% CL of mean " + Figure539);
+                Check(limits.Length == 2 && Math.Abs(limits[0] - NativeRow("Upper 95% CL of mean")) <= 5.1e-7 && Math.Abs(limits[1] - NativeRow("Lower 95% CL of mean")) <= 5.1e-7,
+                    "WeightedUnivariateSummary at a recorded " + level + ": the replay gives the report's 95% limits of the mean");
+            });
+            Case539("fallback TimeSeriesSummary " + level, () =>
+            {
+                double[] times = { 0, 1, 2, 4, 0, 1, 2, 4, 0, 1, 2, 4, 0, 1, 2, 4 }, levels = { 0, 3.1, 4.2, 2.0, 0, 2.6, 3.9, 2.4, 0, 3.8, 5.1, 2.2, 0, 2.2, 3.3, 1.7 };
+                RecordCells series = new(Cells539("Time", times), Cells539("Level", levels), new object[] { "Patient" }.Concat(Enumerable.Range(0, 16).Select(i => (object)("P" + (i / 4 + 1)))).ToArray());
+                var (run, output) = Run("TimeSeriesSummary", new() { ["times"] = Select539(series, 17, 0), ["observations"] = Select539(series, 17, 1), ["subjectIds"] = Select539(series, 17, 2), ["groups"] = null, ["addZeroObservationAtZeroTime"] = false, ["ci"] = confidence, ["doExactP"] = false, ["iterations"] = 1000, ["seed"] = 1 });
+                ParameterBag b = output.ParameterBag;
+                Check(Num539(b, "ciOutput") == 95, "the native time series summary takes " + level + " as 95%");
+                ParameterBag group = Rows539(b, "*group")[0];
+                string text = Replay539(run, Used, Folder("TimeSeriesSummary"));
+                double[] auc = Printed539(text, @"^95% t-interval for mean AUC: " + Figure539 + " to " + Figure539);
+                Check(auc.Length == 2 && Math.Abs(auc[0] - Num539(group, "aucTLcl")) <= .0051 && Math.Abs(auc[1] - Num539(group, "aucTUcl")) <= .0051,
+                    "TimeSeriesSummary at a recorded " + level + ": the replay gives the report's 95% t-interval of the mean AUC");
+            });
+        }
+
+        // The Cox hazard ratios: the report now takes 0% or 100% as 95%, as its other reports do; R's coxph limits at 95%
+        // are the independent reference for the native limits at a recorded 100%.
+        double[] coxTimes = { 6, 6, 6, 7, 10, 13, 16, 22, 23, 6, 9, 10, 11, 17, 19, 20, 25, 32, 32, 34, 35, 1, 1, 2, 2, 3, 4, 4, 5, 5, 8, 8, 8, 8, 11, 11, 12, 12, 15, 17, 22, 23 };
+        double[] coxEvents = coxTimes.Select((_, i) => i % 5 == 4 ? 0d : 1d).ToArray();
+        double[] coxGroup = coxTimes.Select((_, i) => i < 21 ? 1d : 0d).ToArray();
+        RecordCells cox = new(Cells539("Time", coxTimes), Cells539("Event", coxEvents), Cells539("Treated", coxGroup));
+        var (_, coxFit) = Run("CoxRegression", new() { ["times"] = Select539(cox, coxTimes.Length + 1, 0), ["events"] = Select539(cox, coxTimes.Length + 1, 1), ["predictors"] = Select539(cox, coxTimes.Length + 1, 2), ["strata"] = null, ["accuracy"] = 1e-9, ["centre-continuous-covariates"] = true, ["useTimesAdjustment"] = false });
+        var (_, at95) = Run("CoxHazardRatios", new() { ["gamma"] = .95 }, coxFit.ParameterBag);
+        ParameterBag reference = Rows539(at95.ParameterBag, "*hazard")[0];
+        foreach (double confidence in new[] { 0d, 1d, .9 }) Case539("fallback CoxHazardRatios " + confidence.ToString("R", inv), () =>
+        {
+            var (run, output) = Run("CoxHazardRatios", new() { ["gamma"] = confidence }, coxFit.ParameterBag);
+            double used = confidence > 0 && confidence < 1 ? confidence : .95;
+            ParameterBag hazard = Rows539(output.ParameterBag, "*hazard")[0];
+            Check(Num539(output.ParameterBag, "pc2") == used * 100 && (used != .95 || new[] { "ec", "ell", "eul" }.All(key => Num539(hazard, key) == Num539(reference, key))),
+                "the native Cox hazard ratios at a recorded " + confidence.ToString("R", inv) + " use " + used * 100 + "%");
+            string text = Replay539(run, "stopifnot(confidence == " + used.ToString("R", inv) + ")\n" +
+                Equal539("exp(coef(fit)), exp(coef(fit) - qnorm((1 + confidence) / 2) * sqrt(diag(vcov(fit)))), exp(coef(fit) + qnorm((1 + confidence) / 2) * sqrt(diag(vcov(fit))))",
+                    new[] { "ec", "ell", "eul" }.Select(key => Num539(hazard, key)), 1e-6), Path.Combine(folder, "CoxHazardRatios-" + confidence.ToString("R", inv)), setup: "pdf(NULL)\n");
+            Check(text.Contains(" " + (used * 100).ToString("G", inv) + "% CI ="), "the replayed Cox hazard ratios are labelled " + used * 100 + "%");
+        });
     }
 
 }
