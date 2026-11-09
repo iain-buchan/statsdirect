@@ -1,3 +1,4 @@
+using System.Globalization;
 using StatsDirect.Data;
 using StatsDirect.R;
 using StatsDirect.Templates;
@@ -31,7 +32,7 @@ internal static partial class Program
             DataFrame x = new();
             for (int i = 2; i < columns.Length; i++)
                 x.Variables.Add(Select(i).Variables[0]);
-            var (_, model) = Run("MultipleLinearRegression", new()
+            var (run, model) = Run("MultipleLinearRegression", new()
             {
                 ["outcome"] = Select(0), ["weights"] = Select(1), ["predictors"] = x,
                 ["ci"] = .95, ["calculateIntercept"] = true, ["useWeights"] = true
@@ -66,8 +67,28 @@ internal static partial class Program
                 Expect("fitted(m)", fitted.Select(row => Number(row, "fit_y"))) +
                 Expect("e", fitted.Select(row => Number(row, "res"))) +
                 "cat('WEIGHTED_REFIT_OK\\n')\n";
-            Check(RunR(oracle, Path.Combine(folder, label)).Contains("WEIGHTED_REFIT_OK"),
+            RScript replay = RScriptWriter.Write(Record(run), null, null);
+            Check(replay.HasRecipe && !replay.DataUnavailable, label + " generates a replay of the recorded weighted model");
+            string output = RunR(replay.Text + "\n" + oracle +
+                "expect(fit$rank, m$rank)\n" +
+                "expect(fitted(fit), fitted(m))\n" +
+                "expect(residuals(fit), residuals(m))\n", Path.Combine(folder, label));
+            Check(output.Contains("WEIGHTED_REFIT_OK"),
                 label + " coefficients, SE, ANOVA, Durbin-Watson and residuals agree with independent weighted lm");
+            CheckAnovaRow("Regression", "reg_sum", "reg_df", "reg_mean");
+            CheckAnovaRow("Residual", "res_sum", "res_df", "res_mean");
+            CheckAnovaRow("Total (corrected)", "tot_sum", "tot_df");
+
+            void CheckAnovaRow(string heading, params string[] keys)
+            {
+                string[] fields = output.Split('\n').Where(line => line.StartsWith(heading + " ", StringComparison.Ordinal))
+                    .Select(line => line[heading.Length..].Split((char[])null, StringSplitOptions.RemoveEmptyEntries))
+                    .SingleOrDefault(cells => cells.Length == keys.Length);
+                Check(fields != null && fields.Zip(keys).All(pair =>
+                    double.TryParse(pair.First, NumberStyles.Float, inv, out double value) &&
+                    Math.Abs(value - Number(anova, pair.Second)) <= 6e-7),
+                    label + " generated replay prints the native " + heading + " ANOVA row");
+            }
         }
 
         static IList<ParameterBag> Rows(ParameterBag bag, string key) => (IList<ParameterBag>)bag["*" + key].AsObject;
