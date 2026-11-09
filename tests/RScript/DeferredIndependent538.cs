@@ -1,4 +1,6 @@
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using StatsDirect.Builtins;
 using StatsDirect.Charting;
@@ -81,6 +83,7 @@ internal static partial class Program
         Replay("multiple-blank-titles", blankTitles,
             "stopifnot(identical(names(samples),c('Same','Same','')))\n"+Equal("printed_means",blankRows.Select(b=>Number(b,"mean"))),
             "printed_means<-numeric()\ncat<-function(...) {parts<-list(...);if(length(parts)>=4L&&identical(parts[[1]],'Size ='))printed_means<<-c(printed_means,as.numeric(parts[[4]]));base::cat(...)}\n");
+        EmbeddedRepeatTitles();
         var (lowPoisson, lowPoissonOutput) = Run("PoissonConfidenceInterval",new(){["data"]=Frame(("Count sample",new[]{0d,1,2,4})),["gamma"]=.4});
         var lowPoissonBag=((IList<ParameterBag>)lowPoissonOutput.ParameterBag["*sample"].AsObject)[0];
         Replay("poisson-one-sided-unavailable",lowPoisson,Equal("r$conf.int,ci",new[]{Number(lowPoissonBag,"lower2"),Number(lowPoissonBag,"upper2"),Number(lowPoissonBag,"lower1"),Number(lowPoissonBag,"upper1")}));
@@ -106,16 +109,67 @@ internal static partial class Program
             var mode = operation == "Normality" ? DataAcquisitionMode.NumericSkipMissing : DataAcquisitionMode.NumericReplaceMissing;
             for (int i = 0; i < cells.Length; i++)
                 foreach (var variable in grid.Acquire(i, 0, cells[i].Length, mode).Variables) data.Variables.Add(variable);
+            var (run, native) = RunMultiple(operation, data);
+            CheckMultiple(operation, label, RScriptWriter.Write(Record(run), null, grid.Read), native, cells.Length);
+        }
+
+        (OperationRun run, ParameterBag[] native) RunMultiple(string operation, DataFrame data)
+        {
             var answers = new Dictionary<string, object> { ["data"] = data };
             if (operation != "Normality") answers["gamma"] = .95;
             if (operation == "Diversity") { answers["boots"] = 120; answers["seed"] = 2001; }
             var (run, output) = Run(operation, answers);
             string block = operation == "Normality" ? "*variable" : operation == "Diversity" ? "*var" : "*sample";
-            var native = ((IList<ParameterBag>)output.ParameterBag[block].AsObject).ToArray();
-            Check(native.Length == cells.Length, operation + " " + label + " has one native output per selected column");
-            var script = RScriptWriter.Write(Record(run), null, grid.Read);
+            return (run, ((IList<ParameterBag>)output.ParameterBag[block].AsObject).ToArray());
+        }
+
+        void EmbeddedRepeatTitles()
+        {
+            string[] titles = { "Same", "Same", "Same_2", "", "" };
+            string[] heldKeys = { "Same", "Same_2", "Same_2_2", "", "_2" };
+            foreach (string operation in new[] { "PoissonConfidenceInterval", "Diversity", "Normality" })
+            {
+                var data = SheetFrame(Workbook, "Original column titles", 0, 0, titles.Select((title, index) =>
+                    (title, Enumerable.Range(1, 12 + index).Select(value => (double)(value * (index + 1) + value % 3)).ToArray())).ToArray());
+                var (run, native) = RunMultiple(operation, data);
+                JsonElement record = Record(run);
+                JsonElement input = AcquisitionInput(record, "data");
+                Check(input.GetProperty("columns").EnumerateArray().Select(c => c.GetProperty("title").GetString()).SequenceEqual(titles)
+                    && record.GetProperty("data").GetProperty("data").EnumerateObject().Select(c => c.Name).SequenceEqual(heldKeys),
+                    operation + " records original worksheet titles separately from unique held keys");
+                CheckMultiple(operation, "held-titles", RScriptWriter.Write(record, null, null), native, titles.Length, titles);
+
+                JsonObject reread = JsonNode.Parse(record.GetRawText()).AsObject();
+                reread.Remove("data");
+                bool readCalled = false;
+                FrameValues Read(FramePointer pointer)
+                {
+                    readCalled = true;
+                    var values = new FrameValues();
+                    for (int i = 0; i < pointer.Columns.Count; i++)
+                        values.Columns.Add(new ColumnValues { Title = pointer.Columns[i].Title, Values = RunRecord.Values(data.Variables[i]) });
+                    return values;
+                }
+                CheckMultiple(operation, "reread-titles", RScriptWriter.Write(JsonSerializer.SerializeToElement(reread), null, Read), native, titles.Length, titles);
+                Check(readCalled, operation + " replays the same original titles and values from worksheet pointers");
+
+                if (operation != "PoissonConfidenceInterval") continue;
+                JsonObject legacy = JsonNode.Parse(record.GetRawText()).AsObject();
+                JsonArray columns = legacy["inputs"].AsArray().Single(i => i["name"].GetValue<string>() == "data")["columns"].AsArray();
+                columns[1].AsObject().Remove("title");
+                string[] legacyTitles = (string[])titles.Clone();
+                legacyTitles[1] = heldKeys[1];
+                CheckMultiple(operation, "missing-recorded-title", RScriptWriter.Write(JsonSerializer.SerializeToElement(legacy), null, null), native, titles.Length, legacyTitles);
+                columns.RemoveAt(columns.Count - 1);
+                CheckMultiple(operation, "unmatched-recorded-titles", RScriptWriter.Write(JsonSerializer.SerializeToElement(legacy), null, null), native, titles.Length, heldKeys);
+            }
+        }
+
+        void CheckMultiple(string operation, string label, RScript script, ParameterBag[] native, int columns, string[] titles = null)
+        {
+            Check(native.Length == columns, operation + " " + label + " has one native output per selected column");
             Check(!script.DataUnavailable && !script.Text.Contains("has changed in the workbook"), operation + " " + label + " retains every column and hash");
-            bool multiple = cells.Length > 1;
+            bool multiple = columns > 1;
             Check(script.Text.Contains("samples <- list(") == multiple && script.Text.Contains("for (sample_number in seq_along(samples))") == multiple,
                 operation + " " + label + " adds a loop only for multiple columns");
             string capture = operation == "PoissonConfidenceInterval" ? "captured[[sample_number]]<-if(is.null(r)) c(n,NA,NA,NA,NA,NA) else c(n,mean(counts),r$conf.int,ci)\n" :
@@ -125,6 +179,12 @@ internal static partial class Program
             if (multiple) { int end = code.LastIndexOf("\n}", StringComparison.Ordinal); Check(end >= 0, "multi-column script has its expected analysis loop"); code = code.Insert(end, "\n" + capture); }
             else code += "\nsample_number<-1L\n" + capture;
             var assertions = new StringBuilder("stopifnot(length(captured)==" + native.Length + "L)\n");
+            if (titles != null)
+            {
+                string expected = RScriptWriter.Vector(titles.Cast<object>().ToArray());
+                assertions.Append("stopifnot(identical(names(samples), ").Append(expected)
+                    .Append("), identical(headings, ").Append(expected).Append("))\n");
+            }
             for (int i = 0; i < native.Length; i++)
             {
                 var b = native[i];
@@ -141,10 +201,22 @@ internal static partial class Program
             }
             assertions.Append("cat('MULTIPLE_COLUMNS_OK\\n')\n");
             string setup = "captured<-list()\nplot_count<-0L\nplot<-function(...) {plot_count<<-plot_count+1L;invisible(NULL)}\nabline<-function(...)invisible(NULL)\n";
+            if (titles != null)
+                setup += """
+                    headings <- character()
+                    cat <- function(..., sep = " ") {
+                      parts <- list(...)
+                      if (length(parts) == 3L && identical(sep, "") &&
+                          identical(parts[[1]], "\n") && identical(parts[[3]], "\n"))
+                        headings <<- c(headings, parts[[2]])
+                      base::cat(..., sep = sep)
+                    }
+
+                    """;
             string result = RunR(setup + code + "\n" + assertions, Path.Combine(folder, operation + "-" + label));
             Check(result.Contains("MULTIPLE_COLUMNS_OK"), operation + " " + label + " reproduces every native column including distinct and duplicate titles");
             if (label == "supported-domains") Check(result.Contains("3 to 5000") && result.Contains("Normality cannot be tested") && result.Contains("Sample 18"), "normality unavailable tests are explicit and a later valid sample still completes");
-            if (operation == "Normality" && cells.Length == 3)
+            if (operation == "Normality" && columns == 3)
             {
                 string charts = Path.Combine(folder, "normality-three-svg-charts");
                 Check(RunR("svg('normality-%03d.svg',width=6,height=6)\n" + script.Text + "\ndev.off()\ncat('THREE_NORMALITY_CHARTS_OK\\n')\n", charts).Contains("THREE_NORMALITY_CHARTS_OK") && Directory.GetFiles(charts,"normality-*.svg").Length == 3,

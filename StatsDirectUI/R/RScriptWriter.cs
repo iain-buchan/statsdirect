@@ -183,9 +183,19 @@ namespace StatsDirect.R
                     string source = $"\"{pointer.File}\", sheet \"{pointer.Sheet}\"";
                     if (kept.ValueKind == JsonValueKind.Object && kept.TryGetProperty(Text(input, "held") ?? name, out JsonElement held) && held.ValueKind == JsonValueKind.Object)
                     {
+                        IList<ColumnValues> snapshot = Kept(held);
+                        // The record writes pointers and values in the same order. Repeated
+                        // analyses display the original titles, even when held keys differ.
+                        JsonElement titles = default;
+                        if (binding?.Repeat == name && pointer.Columns.Count == snapshot.Count &&
+                            input.TryGetProperty("columns", out JsonElement selected) && selected.ValueKind == JsonValueKind.Array)
+                            titles = selected;
                         int i = 0;
-                        foreach (ColumnValues c in Kept(held))
-                            columns.Add(new Column { Title = c.Title, Values = c.Values, Where = Where(pointer, i++) });
+                        foreach (ColumnValues c in snapshot)
+                        {
+                            string title = titles.ValueKind == JsonValueKind.Array ? Text(titles[i], "title") ?? c.Title : c.Title;
+                            columns.Add(new Column { Title = title, Values = c.Values, Where = Where(pointer, i++) });
+                        }
                         notes.Add($"Data: {source}, the values the analysis used.");
                         continue;
                     }
