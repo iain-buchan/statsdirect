@@ -39,6 +39,7 @@ internal static partial class Program
         CheckDeferredMeta538(folder);
         CheckPosthocMeta537(Path.Combine(folder, "posthoc-meta"));
         CheckMetaMissingStudies(Path.Combine(folder, "meta-missing"));
+        CheckMetaReview539(Path.Combine(folder, "meta-539"));
         Console.WriteLine("      acquisition regression artifacts: " + folder);
     }
 

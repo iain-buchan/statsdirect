@@ -2,6 +2,11 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
+##[Unreleased]
+
+### Fixed
+- Meta-analysis forest plots number studies without labels by their place among the studies analysed, as the report's tables and Continue in R do, when an incomplete study is left out.
+
 ##[v5.3.8] 2026-11-09
 
 ### Fixed

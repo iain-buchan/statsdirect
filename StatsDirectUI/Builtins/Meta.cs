@@ -66,7 +66,7 @@ namespace StatsDirect.Builtins
             double[] xn = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[2];
             double[] xr = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[3];
 
-            string[] title = MakeTitles(parameters, "strata", "stratum {0}", rawRows, out bool hasUserSuppliedLabels);
+            string[] title = MakeTitles(parameters, "strata", "stratum {0}", rawRows, out bool hasUserSuppliedLabels, keptRows: copiesRemovingMissingRows.ValidRowsInOriginal);
 
             int k = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0].Length - 1; /* 1-based */
             title = Numerics.Utilities.CopyValidRows(title, copiesRemovingMissingRows.ValidRowsInOriginal, 0, rawRows, 1, k);
@@ -590,7 +590,7 @@ namespace StatsDirect.Builtins
             double[] xn = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[2];
             double[] xr = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[3];
 
-            string[] title = MakeTitles(parameters, "strata", "stratum {0}", rawRows, out bool hasUserSuppliedLabels);
+            string[] title = MakeTitles(parameters, "strata", "stratum {0}", rawRows, out bool hasUserSuppliedLabels, keptRows: copiesRemovingMissingRows.ValidRowsInOriginal);
 
             int k = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0].Length - 1; /* 1-based */
             title = Numerics.Utilities.CopyValidRows(title, copiesRemovingMissingRows.ValidRowsInOriginal, 0, rawRows, 1, k);
@@ -770,7 +770,7 @@ namespace StatsDirect.Builtins
             double[] xn = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[2];
             double[] xr = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[3];
 
-            string[] title = MakeTitles(parameters, "strata", "stratum {0}", rawRows, out bool hasUserSuppliedLabels);
+            string[] title = MakeTitles(parameters, "strata", "stratum {0}", rawRows, out bool hasUserSuppliedLabels, keptRows: copiesRemovingMissingRows.ValidRowsInOriginal);
 
             int k = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0].Length - 1; /* 1-based */
             title = Numerics.Utilities.CopyValidRows(title, copiesRemovingMissingRows.ValidRowsInOriginal, 0, rawRows, 1, k);
@@ -914,8 +914,17 @@ namespace StatsDirect.Builtins
         /// <param name="expectedRows">The number of rows of data.</param>
         /// <param name="hasUserSuppliedLabels">On return, whether there is a column of labels.</param>
         /// <param name="extraElementsAtEnd">The number of elements to add at the end, for the label of a pooled estimate.</param>
-        internal static string[] MakeTitles(ParameterBag parameters, string parameterName, string missingTitleFormat, int expectedRows, out bool hasUserSuppliedLabels, int extraElementsAtEnd = 0)
+        /// <param name="keptRows">The rows the analysis keeps, if it leaves incomplete rows out: a row without a label is then numbered
+        /// by its place among the kept rows, as the report's tables and the R script number the studies, not by its place among all.</param>
+        internal static string[] MakeTitles(ParameterBag parameters, string parameterName, string missingTitleFormat, int expectedRows, out bool hasUserSuppliedLabels, int extraElementsAtEnd = 0, bool[] keptRows = null)
         {
+            int[] number = new int[expectedRows];
+            for (int i = 0, kept = 0; i < expectedRows; i++)
+            {
+                if (keptRows == null || keptRows[i])
+                    kept++;
+                number[i] = kept;
+            }
             string[] title;
             hasUserSuppliedLabels = parameters.ContainsKey(parameterName) && parameters[parameterName].HasData;
             if (hasUserSuppliedLabels)
@@ -943,14 +952,14 @@ namespace StatsDirect.Builtins
                         title[i] = buf;
                     }
                     else
-                        title[i] = string.Format(missingTitleFormat, i + 1);
+                        title[i] = string.Format(missingTitleFormat, number[i]);
                 }
             }
             else
             {
                 title = new string[expectedRows + extraElementsAtEnd];
                 for (int i = 0; i < expectedRows; i++)
-                    title[i] = string.Format(missingTitleFormat, i + 1);
+                    title[i] = string.Format(missingTitleFormat, number[i]);
             }
             return title;
         }
@@ -1037,7 +1046,7 @@ namespace StatsDirect.Builtins
             double[] cm = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[5];
             double[] cs = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[6];
 
-            string[] title = MakeTitles(parameters, "strata", "stratum {0}", rawRows, out bool hasUserSuppliedLabels);
+            string[] title = MakeTitles(parameters, "strata", "stratum {0}", rawRows, out bool hasUserSuppliedLabels, keptRows: copiesRemovingMissingRows.ValidRowsInOriginal);
 
             int k = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0].Length - 1; /* 1-based */
             title = Numerics.Utilities.CopyValidRows(title, copiesRemovingMissingRows.ValidRowsInOriginal, 0, rawRows, 1, k);
@@ -1955,7 +1964,7 @@ namespace StatsDirect.Builtins
             double[] b = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[2];
             double[] pt2 = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[3];
 
-            string[] title = MakeTitles(parameters, "strata", "stratum {0}", rawRows, out bool hasUserSuppliedLabels);
+            string[] title = MakeTitles(parameters, "strata", "stratum {0}", rawRows, out bool hasUserSuppliedLabels, keptRows: copiesRemovingMissingRows.ValidRowsInOriginal);
 
             int k = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0].Length - 1; /* 1-based */
             title = Numerics.Utilities.CopyValidRows(title, copiesRemovingMissingRows.ValidRowsInOriginal, 0, rawRows, 1, k);
@@ -2257,7 +2266,7 @@ namespace StatsDirect.Builtins
             double[] xn = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[2];
             double[] xr = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[3];
 
-            string[] title = MakeTitles(parameters, "strata", "stratum {0}", rawRows, out bool hasUserSuppliedLabels);
+            string[] title = MakeTitles(parameters, "strata", "stratum {0}", rawRows, out bool hasUserSuppliedLabels, keptRows: copiesRemovingMissingRows.ValidRowsInOriginal);
 
             int k = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0].Length - 1; /* 1-based */
             title = Numerics.Utilities.CopyValidRows(title, copiesRemovingMissingRows.ValidRowsInOriginal, 0, rawRows, 1, k);
@@ -3215,7 +3224,7 @@ namespace StatsDirect.Builtins
             // pooled indicator for last element - needed by plot_cp
             pg[k + 1] = CorrelationRowType.Pooled;
 
-            string[] title = MakeTitles(parameters, "studies", "study {0}", rawRows, out bool hasUserSuppliedLabels);
+            string[] title = MakeTitles(parameters, "studies", "study {0}", rawRows, out bool hasUserSuppliedLabels, keptRows: copiesRemovingMissingRows.ValidRowsInOriginal);
             title = Numerics.Utilities.CopyValidRows(title, copiesRemovingMissingRows.ValidRowsInOriginal, 0, rawRows, 1, k, 1);
             title[k + 1] = Charting.Renderer.AbstractForestishChartRenderer.ComboTi(string.Empty);
 
@@ -3916,7 +3925,7 @@ namespace StatsDirect.Builtins
             double[] sn = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0];
             double[] sr = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[1];
 
-            string[] title = MakeTitles(parameters, "strata", "stratum {0}", rawRows, out bool hasUserSuppliedLabels);
+            string[] title = MakeTitles(parameters, "strata", "stratum {0}", rawRows, out bool hasUserSuppliedLabels, keptRows: copiesRemovingMissingRows.ValidRowsInOriginal);
 
             int k = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0].Length - 2; /* 1-based, 1 extra for pooling */
             title = Numerics.Utilities.CopyValidRows(title, copiesRemovingMissingRows.ValidRowsInOriginal, 0, rawRows, 1, k, 1);
