@@ -18,7 +18,7 @@ internal static partial class Program
     // Each case acquires its columns from worksheet cells through GridSelectionProcessor.FillFrameParameter (and the
     // CellArrayProcessor under it), runs the operation through the template processor, writes the script from the record
     // the report step left, runs it in R within a time limit, and compares R's figures with the native output bag.
-    private static readonly string[] Recipes539Parts = { "gof", "kendall" };
+    private static readonly string[] Recipes539Parts = { "gof", "kendall", "mann-whitney" };
     private static void CheckRecipes539(string folder, string only = null)
     {
         if (only != null && !Recipes539Parts.Contains(only)) throw new ArgumentException("Unknown 5.3.9 recipe check: " + only);
@@ -26,6 +26,7 @@ internal static partial class Program
         Directory.CreateDirectory(folder);
         if (only is null or "gof") CheckGoodnessOfFit539(Path.Combine(folder, "gof"));
         if (only is null or "kendall") CheckKendall539(Path.Combine(folder, "kendall"));
+        if (only is null or "mann-whitney") CheckMannWhitney539(Path.Combine(folder, "mann-whitney"));
         if (Failed539.Count > 0) throw new Exception("FAIL " + Failed539.Count + " of the 5.3.9 recipe cases: " + string.Join(" | ", Failed539));
     }
 
@@ -177,6 +178,46 @@ internal static partial class Program
         foreach (double confidence in new[] { 0d, 1d }) Case("confidence-" + confidence, career, psychology, confidence);
         var (_, clamped) = Run("Kendall", new() { ["data"] = Select539(new RecordCells(Cells539("x", new double[] { 1, 2, 3, 4, 5, 6, 7, 8 }), Cells539("y", new double[] { 1, 2, 3, 4, 5, 6, 8, 7 })), 9, 0, 1), ["gamma"] = .95 });
         Check(Num539(clamped.ParameterBag, "ul") == 1, "the clamped case reaches the report's upper bound of tau");
+    }
+
+    // 3. Mann-Whitney: the report uses the normal approximation when both samples are above 100 or the exact distribution would
+    //    need more than a million cells, and K for the difference from the normal approximation when the exact distribution
+    //    of U would be too large; the replay always built the dense exact table (200 + 200 took 47 s and 3.2 GB).
+    private static void CheckMannWhitney539(string folder)
+    {
+        void Case(string label, double[] x, double[] y, double confidence, bool normal, bool approximateK, int timeout = 90) => Case539("mann-whitney " + label, () =>
+        {
+            Check(x.Concat(y).Distinct().Count() == x.Length + y.Length || label.StartsWith("ties", StringComparison.Ordinal) || label.StartsWith("confidence", StringComparison.Ordinal), label + ": an untied case has no ties");
+            var cells = new RecordCells(Cells539("First sample", x), Cells539("Second sample", y));
+            int rows = Math.Max(x.Length, y.Length) + 1;
+            var (run, output) = Run("MannWhitney", new() { ["data"] = Select539(cells, rows, 0, 1), ["gamma"] = confidence });
+            ParameterBag b = output.ParameterBag;
+            double used = confidence > 0 && confidence < 1 ? confidence : .95;
+            string stats = Convert.ToString(b["stats"].AsObject, inv);
+            Check(stats.StartsWith("Normalised statistic", StringComparison.Ordinal) == normal, label + ": the case exercises the report's " + (normal ? "normal approximation" : "exact distribution"));
+            ParameterBag conf = Rows539(b, "*conf")[0];
+            string k = Convert.ToString(conf["k"].AsObject, inv);
+            Check(k.EndsWith("(approx)", StringComparison.Ordinal) == approximateK, label + ": the case exercises the report's " + (approximateK ? "approximate" : "exact") + " K");
+            string assertion = "stopifnot(confidence == " + used.ToString("R", inv) + ", K == " + Regex.Match(k, @"^\d+").Value + ")\n" +
+                Equal539("lower", new[] { Num539(b, "p_l") }) + Equal539("upper", new[] { Num539(b, "p_u") }) + Equal539("min(1, 2 * min(lower, upper))", new[] { Num539(b, "p_2") }) +
+                Equal539("theta, ci", new[] { "theta", "tll", "tul" }.Select(key => Num539(b, key)), 1e-8) +
+                Equal539("median(d), d[K], rev(d)[K]", new[] { "median", "from", "to" }.Select(key => Num539(conf, key)), 1e-12);
+            string text = Replay539(run, assertion, Path.Combine(folder, label), cells.Read, timeout: timeout);
+            Match coverage = Regex.Match(text, @"^([0-9.]+)% confidence interval for the difference: K = (\d+)( \(approx\))?\s*$", RegexOptions.Multiline);
+            Check(coverage.Success && Math.Abs(double.Parse(coverage.Groups[1].Value, inv) - Num539(conf, "pc")) < .0051 && coverage.Groups[3].Success == approximateK,
+                label + ": the coverage and K of the interval are printed as the report has them");
+            Check(text.Contains("Normalised statistic") == normal, label + ": the P values say whether they are exact or from the normal approximation");
+        });
+        double[] Values(int n, double offset, bool ties) => Enumerable.Range(0, n).Select(i => ties ? Math.Round(20 + 8 * Math.Sin(i * .7 + offset) + i * 7 % 5) : 20 + 8 * Math.Sin(i * .7 + offset) + i / 997.0 + offset / 1e5).ToArray();
+        Case("ties-200-200", Values(200, 0, true), Values(200, 1.3, true), .95, normal: true, approximateK: false);
+        Case("untied-200-200", Values(200, 0, false), Values(200, 1.3, false), .95, normal: true, approximateK: false);
+        Case("ties-60-300", Values(60, 0, true), Values(300, 2.1, true), .9, normal: true, approximateK: false);
+        Case("untied-exact-120-60", Values(120, 0, false), Values(60, .4, false), .95, normal: false, approximateK: false);
+        // inside the report's exact range, where the dense table of the rank sums would need over 5 GB
+        Case("untied-exact-100-2500", Values(100, 0, false), Values(2500, .9, false), .95, normal: false, approximateK: true);
+        Case("untied-101-2000", Values(101, 0, false), Values(2000, .9, false), .9, normal: true, approximateK: true);
+        double[] farm = { 14.8, 7.3, 5.6, 6.3, 9, 4.2, 10.6, 12.5, 12.9, 16.1, 11.4, 2.7 }, town = { 12.7, 14.2, 12.6, 2.1, 17.7, 11.8, 16.9, 7.9, 16, 10.6, 5.6, 5.6, 7.6, 11.3, 8.3, 6.7, 3.6, 1, 2.4, 6.4, 9.1, 6.7, 18.6, 3.2, 6.2, 6.1, 15.3, 10.6, 1.8, 5.9, 9.9, 10.6, 14.8, 5, 2.6, 4 };
+        foreach (double confidence in new[] { 0d, 1d }) Case("confidence-" + confidence, farm, town, confidence, normal: false, approximateK: false);
     }
 
 }
