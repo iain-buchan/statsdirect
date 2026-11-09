@@ -1061,11 +1061,12 @@ namespace StatsDirect.UI
                 {
                     // The window was saved maximised, so we don't have sizes
                 }
-                WindowState = Settings.Default.MainWindowState;
-                // Prevent starting in a minimised state
-                if (FormWindowState.Minimized == WindowState)
-                    WindowState = FormWindowState.Normal;
             }
+            // A window closed maximised opens maximised, also when no normal bounds were saved with it
+            WindowState = Settings.Default.MainWindowState;
+            // Prevent starting in a minimised state
+            if (FormWindowState.Minimized == WindowState)
+                WindowState = FormWindowState.Normal;
         }
 
         /// <summary>
@@ -1073,15 +1074,7 @@ namespace StatsDirect.UI
         /// </summary>
         private void SaveWindowState()
         {
-            // No point saving maximised or minimised settings, they're 0,0 when minimised or screen size when maximised
-            if (FormWindowState.Normal == WindowState)
-            {
-                Settings.Default.MainTop = Top;
-                Settings.Default.MainLeft = Left;
-                Settings.Default.MainWidth = Width;
-                Settings.Default.MainHeight = Height;
-            }
-            Settings.Default.MainWindowState = WindowState;
+            Settings.Default.NoteMainWindow(WindowState, Bounds, RestoreBounds);
         }
 
         /// <summary>

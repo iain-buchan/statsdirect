@@ -189,6 +189,24 @@ namespace StatsDirect.UI.Properties
         }
 
         /// <summary>
+        /// Notes the main window as StatsDirect closes: its bounds when it is normal, or, when it is maximised, the bounds it returns to, so
+        /// that it opens maximised on the same screen next time. A minimised window's bounds are those of no window on the screen, so the
+        /// bounds last noted are kept.
+        /// </summary>
+        internal void NoteMainWindow(FormWindowState state, Rectangle bounds, Rectangle restoreBounds)
+        {
+            if (FormWindowState.Minimized != state)
+            {
+                Rectangle normalBounds = FormWindowState.Maximized == state ? restoreBounds : bounds;
+                MainTop = normalBounds.Top;
+                MainLeft = normalBounds.Left;
+                MainWidth = normalBounds.Width;
+                MainHeight = normalBounds.Height;
+            }
+            MainWindowState = state;
+        }
+
+        /// <summary>
         /// True if a window with these bounds can be seen and moved on screens with these working areas: it has a size, at least half of it
         /// is on them, and enough of its title bar is on one to drag it by, as the main window's own check asks. A monitor since
         /// disconnected, or a smaller remote desktop, can leave a saved window out of reach.

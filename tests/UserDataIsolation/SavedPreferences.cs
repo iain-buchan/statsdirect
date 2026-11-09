@@ -31,6 +31,7 @@ internal static partial class Program
         Check(Inside(SDConfiguration.SettingsPath) == Path.Combine(root, "statsdirect.json"), "the saved preferences checks use only the isolated profile");
         CheckSavedChartPreferences();
         CheckPreferencesLoader();
+        CheckMainWindowPlacement();
     }
 
     // Series markers as SaveMarkerTypes writes them: shape;red,green,blue;width;line style;filled;size, ten of them separated by |
@@ -346,5 +347,22 @@ internal static partial class Program
         Check(start >= 0 && load > start && load < firstRead && program.IndexOf("Settings.LoadSaved();", load + 1, StringComparison.Ordinal) < 0 &&
             loaders.SequenceEqual(new[] { Path.Combine("StatsDirectUI", "UI", "Program.cs"), Path.Combine("StatsDirectUI", "UI", "Settings.cs") }),
             "only the ordinary start-up loads saved preferences, before it reads one; the diagnostic modes keep the defaults");
+    }
+
+    // Closing notes a normal window's bounds, a maximised window's normal bounds, and keeps the bounds last noted for a minimised one
+    static void CheckMainWindowPlacement()
+    {
+        Settings noted = new();
+        noted.NoteMainWindow(FormWindowState.Normal, new Rectangle(200, 150, 1000, 700), new Rectangle(1, 2, 3, 4));
+        bool notedNormal = noted is { MainLeft: 200, MainTop: 150, MainWidth: 1000, MainHeight: 700, MainWindowState: FormWindowState.Normal };
+        noted.NoteMainWindow(FormWindowState.Maximized, new Rectangle(-8, -8, 1936, 1056), new Rectangle(300, 200, 900, 600));
+        bool notedMaximised = noted is { MainLeft: 300, MainTop: 200, MainWidth: 900, MainHeight: 600, MainWindowState: FormWindowState.Maximized };
+        noted.NoteMainWindow(FormWindowState.Minimized, new Rectangle(-32000, -32000, 160, 28), new Rectangle(5, 5, 5, 5));
+        bool notedMinimised = noted is { MainLeft: 300, MainTop: 200, MainWidth: 900, MainHeight: 600, MainWindowState: FormWindowState.Minimized };
+        Check(notedNormal && notedMaximised && notedMinimised, "closing notes a normal window's bounds, a maximised one's normal bounds, and keeps a minimised one's last bounds");
+        noted.NoteMainWindow(FormWindowState.Maximized, new Rectangle(-8, -8, 1936, 1056), new Rectangle(300, 200, 900, 600));
+        noted.Save(); // into the isolated profile
+        Check(Settings.Load(Inside(SDConfiguration.SettingsPath), Laptop) is { MainWindowState: FormWindowState.Maximized, MainLeft: 300, MainTop: 200, MainWidth: 900, MainHeight: 600 },
+            "a window closed maximised reopens maximised over the bounds it returns to");
     }
 }
