@@ -51,6 +51,9 @@ namespace StatsDirect.UI
                     if (IpcSender.TryToTellAnotherStatsDirectToOpen(args[1]))
                         return;
 
+            // The preferences the last session saved, before anything reads one: the window's place, then every option
+            Settings.LoadSaved();
+
             // As soon as possible, put up a loader - #1224 on the screen on which frmMain will open.
             double mainMidY = Settings.Default.MainTop + Settings.Default.MainHeight / 2.0;
             double mainMidX = Settings.Default.MainLeft + Settings.Default.MainWidth / 2.0;
@@ -101,7 +104,8 @@ namespace StatsDirect.UI
                 // Perform any UI hooks we need to...
                 SetupUserInterface();
 
-                // Get ready to show the main window...
+                // Get ready to show the main window, without the recent files the preferences' load found are no longer there
+                Settings.Default.SettleRecentFiles();
                 frmMain mainWindow = SdApplication.SoleInstance.CreateMainWindow();
                 loader.CloseWhenShown(mainWindow);
                 ConfigureStartupCommand(args, mainWindow);

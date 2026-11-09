@@ -45,14 +45,15 @@ namespace StatsDirect.Charting
                 if (string.IsNullOrWhiteSpace(fontStrings[0]))
                     return false;
                 string fontFamily = fontStrings[0];
-                if (!int.TryParse(fontStrings[1], out int style))
+                // A style of the four FontStyle flags and a size a font can have: a damaged descriptor gives way to the default font
+                if (!int.TryParse(fontStrings[1], out int style) || style < 0 || style > 15)
                     return false;
                 // ToString persists sizes with "pt"; older descriptors omit it.
                 // Accept both so saved user fonts do not silently reset on load.
                 string size = fontStrings[2].Trim();
                 if (size.EndsWith("pt", StringComparison.OrdinalIgnoreCase))
                     size = size[..^2].TrimEnd();
-                if (!float.TryParse(size, out float sizeInPoints))
+                if (!float.TryParse(size, out float sizeInPoints) || !float.IsFinite(sizeInPoints) || sizeInPoints <= 0f)
                     return false;
                 fontDescriptor = new FontDescriptor(fontFamily, style, sizeInPoints);
                 return true;

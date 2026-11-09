@@ -17,6 +17,7 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 - Time series summary and contraction of frequencies refuse a blank or missing subject identifier or category with the missing-data message when it is selected, instead of failing with an object reference or index error.
 - Opening an HTML report or a notebook removes external url(...) references from chart fill, stroke, filter, clip-path, mask and marker attributes, as pasting already did; a chart's references to its own definitions are kept.
 - Kappa of raters whose columns differ in length, when the jagged ends are padded with missing data as the selection's warning offers, leaves the padded rows out as missing ratings instead of counting them as ratings of the shorter column's first category, both natively and in Continue in R.
+- Preferences are kept between sessions: at start-up StatsDirect reads back the preferences it saves in Documents\StatsDirect\statsdirect.json, which it has saved since 2023 but never read, so the main window's position, size and maximised state, decimal places, the default confidence interval, data selection, meta-analysis, worksheet font and chart options, and the recent files that still exist are restored. A missing, damaged or older file, a value StatsDirect cannot use, or a window position no longer on any screen leaves that preference at its default, and nothing is written while the preferences load.
 
 ##[v5.3.8] 2026-11-09
 
