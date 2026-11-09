@@ -27,6 +27,8 @@ DOMPurify.addHook('afterSanitizeAttributes', (node, _data, config) => {
       if (!allowed) node.removeAttribute(attr.name);
     }
     if (attr.name === 'src' && !rasterURL(attr.value) && !(config.STATSDIRECT_ATTACHMENTS && attr.value.startsWith('attachment:'))) node.removeAttribute(attr.name);
+    // An SVG presentation attribute (fill, stroke, filter, clip-path, mask, marker-*) may name only the document's own definitions.
+    if (attr.name !== 'style' && /url\s*\(/i.test(attr.value.replace(/url\(\s*["']?#[^\s"'()<>]+["']?\s*\)/gi,''))) node.removeAttribute(attr.name);
   }
   node.removeAttribute('srcset'); node.removeAttribute('name');
   if (node.style) { const css=safeStyle(node.style); if(css)node.setAttribute('style',css);else node.removeAttribute('style'); }

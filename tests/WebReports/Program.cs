@@ -37,6 +37,7 @@ internal static partial class Program
             {
                 if (!args.Contains("--svg-import-only")) { await CheckLegacyReports(); await Run(); await InteroperabilityChecks(); await CheckToolbar(); await CheckChartAlignment(); await CheckNotebook(); await CheckNotebookImport(); }
                 await CheckSvgImportIsolation();
+                await CheckImportedUrlAttributes();
             }
             Console.WriteLine($"PASS {checks} Windows WebView2 checks"); exit = 0;
         }
@@ -183,6 +184,7 @@ internal static partial class Program
         await CheckClampedSelection();
         await CheckPanesHidden();
         await CheckRecordRoundTrip();
+        await CheckContinueInRLabel();
         await CheckChartFiles();
         await CheckFindReplace();
     }

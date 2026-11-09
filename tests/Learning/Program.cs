@@ -31,7 +31,7 @@ internal static partial class Program
         {var e=typeof(frmMain).GetEvent(evt)!;e.RemoveEventHandler(main,typeof(frmMain).GetMethod(method,Members)!.CreateDelegate(e.EventHandlerType!,main));}
         main.StartPosition=FormStartPosition.Manual;main.Location=new(-16000,-16000);main.Size=new(1500,1000);main.ShowInTaskbar=false;
         int exit=1;
-        main.Shown+=async(_,_)=>{try{if(Environment.GetEnvironmentVariable("STATSDIRECT_LEARNING_ONLY")=="filtered-replay")await TestFilteredReplay(main);else await Run(main);Console.WriteLine($"PASS {checks} Windows Learning/AI/R setup checks");exit=0;}catch(Exception ex){Console.WriteLine("FAIL "+ex);}finally{foreach(var child in main.MdiChildren)child.Dispose();main.Close();}};
+        main.Shown+=async(_,_)=>{try{if(Environment.GetEnvironmentVariable("STATSDIRECT_LEARNING_ONLY")=="filtered-replay"){await TestFilteredReplay(main);await TestSavedRunRereads(main);}else await Run(main);Console.WriteLine($"PASS {checks} Windows Learning/AI/R setup checks");exit=0;}catch(Exception ex){Console.WriteLine("FAIL "+ex);}finally{foreach(var child in main.MdiChildren)child.Dispose();main.Close();}};
         Application.Run(main);
         if (unhandled > 0) { Console.WriteLine($"FAIL {unhandled} unhandled exception(s) on the UI thread"); return 1; }
         return exit;
@@ -99,6 +99,7 @@ internal static partial class Program
         await TestRSetup(main);
         await TestReportWorkbookDefault(main,service,grid);
         await TestFilteredReplay(main);
+        await TestSavedRunRereads(main);
         await TestComposerKeys(service);
         await TestHelpTopics(main,service);
         view.Close();await Task.Delay(80);service.Show(true);await service.View.Ready.Task.WaitAsync(TimeSpan.FromSeconds(40));await Task.Delay(100);
