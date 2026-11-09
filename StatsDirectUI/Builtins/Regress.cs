@@ -908,6 +908,7 @@ namespace StatsDirect.Builtins
                     incep = 0;
                     indep = P;
                 }
+                iwtcol = iwt == 0 ? 0 : indep + 1;
                 r = new double[P + 1, P + 1];
                 D = new double[P + 1];
                 xMin = new double[P + 1];
