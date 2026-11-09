@@ -14,7 +14,7 @@ function safeStyle(style) {
   for (const name of style) {
     const value = style.getPropertyValue(name);
     const check=value.replace(/url\(\s*["']?#[^\s"'()<>]+["']?\s*\)/gi,'');
-    if (properties.has(name) && !/url\s*\(|expression|javascript|@|[<>]/i.test(check)) result.setProperty(name,value);
+    if (properties.has(name) && !/url\s*\(|image-set\s*\(|expression|javascript|@|[<>]/i.test(check)) result.setProperty(name,value);
   }
   return result.cssText;
 }
@@ -31,10 +31,10 @@ DOMPurify.addHook('afterSanitizeAttributes', (node, _data, config) => {
     if (attr.name !== 'style' && /url\s*\(/i.test(attr.value.replace(/url\(\s*["']?#[^\s"'()<>]+["']?\s*\)/gi,''))) node.removeAttribute(attr.name);
   }
   node.removeAttribute('srcset'); node.removeAttribute('name');
-  if (node.style) { const css=safeStyle(node.style); if(css)node.setAttribute('style',css);else node.removeAttribute('style'); }
+  if (node.style) { const css=safeStyle(node.style); if(css)node.setAttribute('style',css);else node.removeAttribute('style'); } else node.removeAttribute('style');
 });
 function purify(html, attachments=false) {
-  return DOMPurify.sanitize(html,{STATSDIRECT_ATTACHMENTS:attachments,ADD_URI_SAFE_ATTR:attachments?['src']:[],WHOLE_DOCUMENT:true,ADD_TAGS:['use'],FORBID_TAGS:['script','iframe','object','embed','form','input','button','textarea','select','link','base','meta','foreignObject','animate','animateMotion','animateTransform','set','video','audio','source','track'],FORBID_ATTR:['contenteditable','tabindex','autofocus','poster','background','cite','download'],ALLOW_DATA_ATTR:false,RETURN_DOM:true});
+  return DOMPurify.sanitize(html,{STATSDIRECT_ATTACHMENTS:attachments,ADD_URI_SAFE_ATTR:attachments?['src']:[],WHOLE_DOCUMENT:true,ADD_TAGS:['use'],FORBID_TAGS:['script','iframe','object','embed','form','input','button','textarea','select','link','base','meta','foreignObject','animate','animateColor','animateMotion','animateTransform','set','video','audio','source','track'],FORBID_ATTR:['contenteditable','tabindex','autofocus','poster','background','cite','download'],ALLOW_DATA_ATTR:false,RETURN_DOM:true});
 }
 
 // Render current notebook cells, then use the same import boundary as HTML
