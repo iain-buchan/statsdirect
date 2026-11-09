@@ -77,6 +77,10 @@ namespace StatsDirect.UI.Properties
         [JsonIgnore]
         public bool WasLoaded { get; set;} = false;
 
+        // The checks of whether the recent files are still there, from the load until SettleRecentFiles applies them
+        private Dictionary<string, Task<bool>> recentFileChecks;
+        private long recentFileChecksBegan;
+
         public void Save()
         {
             JsonSerializerOptions options = new()
@@ -93,13 +97,16 @@ namespace StatsDirect.UI.Properties
 
         /// <summary>
         /// Replaces Default with the preferences the last session saved. The program calls this once, as it starts and before anything
-        /// reads a preference; nothing else reads the file, so the diagnostic modes and the tests see only the defaults.
+        /// reads a preference; nothing else reads the file, so the diagnostic modes and the tests see only the defaults. The program puts
+        /// up its loader after this, so the checks of whether the recent files are still there are left to answer meanwhile: a disk slow
+        /// to answer, such as a server that cannot be reached, then holds up nothing before the loader is on the screen. The start-up
+        /// applies them with SettleRecentFiles before the main window lists the files.
         /// </summary>
         internal static void LoadSaved()
         {
             try
             {
-                Default = Load(SDConfiguration.SettingsPath, Screen.AllScreens.Select(screen => screen.WorkingArea).ToList());
+                Default = Load(SDConfiguration.SettingsPath, Screen.AllScreens.Select(screen => screen.WorkingArea).ToList(), settleRecentFiles: false);
             }
             catch (Exception)
             {
@@ -111,9 +118,10 @@ namespace StatsDirect.UI.Properties
         /// The preferences saved in a file, read without writing anything. Each keeps its default unless the file holds a value of its
         /// type that StatsDirect can use, so a missing, unreadable or damaged file gives the defaults, a file from an older version gives
         /// what it holds, and a value that cannot be used costs only itself. The main window's bounds are kept only if the window can be
-        /// seen and moved on the working areas of the screens there are now, and recent files only if they are still there.
+        /// seen and moved on the working areas of the screens there are now, and recent files only if they are still there, unless
+        /// settleRecentFiles is false, when SettleRecentFiles takes off those that are not.
         /// </summary>
-        internal static Settings Load(string path, IReadOnlyList<Rectangle> workingAreas)
+        internal static Settings Load(string path, IReadOnlyList<Rectangle> workingAreas, bool settleRecentFiles = true)
         {
             Settings settings = new();
             JsonDocument document;
@@ -136,6 +144,8 @@ namespace StatsDirect.UI.Properties
                     settings.WasLoaded = true;
                 }
             }
+            if (settleRecentFiles)
+                settings.SettleRecentFiles();
             return settings;
         }
 
@@ -164,7 +174,13 @@ namespace StatsDirect.UI.Properties
             DelayContinuityCorrection = ReadBoolean(saved, nameof(DelayContinuityCorrection), DelayContinuityCorrection);
             CanDefaultConfidenceInterval = ReadBoolean(saved, nameof(CanDefaultConfidenceInterval), CanDefaultConfidenceInterval);
             DefaultConfidenceInterval = ReadNumber(saved, nameof(DefaultConfidenceInterval), DefaultConfidenceInterval, level => level > 0.0 && level < 1.0);
-            RecentFileList = RecentFiles(saved) ?? RecentFileList;
+            if (RecentFiles(saved) is IReadOnlyList<string> recentFiles)
+            {
+                // Whether each is still there is asked of its disk now, all together; SettleRecentFiles applies the answers
+                RecentFileList = recentFiles;
+                recentFileChecks = recentFiles.ToDictionary(path => path, path => Task.Run(() => File.Exists(path)), StringComparer.Ordinal);
+                recentFileChecksBegan = Environment.TickCount64;
+            }
             SelectGroupsByIdentifier = ReadBoolean(saved, nameof(SelectGroupsByIdentifier), SelectGroupsByIdentifier);
             ShouldKeepData = ReadBoolean(saved, nameof(ShouldKeepData), ShouldKeepData);
             DisplayDecimalPlaces = ReadInteger(saved, nameof(DisplayDecimalPlaces), DisplayDecimalPlaces, 2, 12);
@@ -229,26 +245,46 @@ namespace StatsDirect.UI.Properties
         }
 
         /// <summary>
-        /// The saved recent files that are still there: the latest mention of each fully qualified path, the most recent last as
-        /// NoteRecentFile keeps them, and no more than the File menu lists. A file whose disk does not answer in time, such as one on a
-        /// server that cannot be reached, is kept, so the start is not held up; opening it then, if it has gone, takes it off the list.
+        /// The saved recent files: the latest mention of each fully qualified path, the most recent last as NoteRecentFile keeps them, and
+        /// no more than the File menu lists. Whether they are still there is for SettleRecentFiles.
         /// </summary>
         private static IReadOnlyList<string> RecentFiles(JsonElement saved)
         {
             if (Value(saved, nameof(RecentFileList)) is not { ValueKind: JsonValueKind.Array } list)
                 return null;
             JsonElement[] entries = list.EnumerateArray().ToArray();
-            List<string> latestFirst = new();
+            List<string> recentFiles = new();
             HashSet<string> seen = new(StringComparer.Ordinal); // the comparison NoteRecentFile uses
-            for (int i = entries.Length - 1; i >= 0 && latestFirst.Count < MAX_RECENT_FILES; i--)
+            for (int i = entries.Length - 1; i >= 0 && recentFiles.Count < MAX_RECENT_FILES; i--)
                 if (JsonValueKind.String == entries[i].ValueKind && entries[i].GetString() is string path
                     && !string.IsNullOrWhiteSpace(path) && Path.IsPathFullyQualified(path) && seen.Add(path))
-                    latestFirst.Add(path);
-            Task<bool>[] exists = latestFirst.Select(path => Task.Run(() => File.Exists(path))).ToArray();
-            Task.WaitAll(exists, RECENT_FILE_CHECK_MILLISECONDS);
-            List<string> recentFiles = latestFirst.Where((_, i) => !exists[i].IsCompleted || exists[i].Result).ToList();
+                    recentFiles.Add(path);
             recentFiles.Reverse();
             return recentFiles;
+        }
+
+        /// <summary>
+        /// Takes off the recent files those the load found are no longer there, waiting for the answers no longer than a second from the
+        /// load. A file whose disk has not answered by then, such as one on a server that cannot be reached, is kept, so the start is not
+        /// held up; opening it then, if it has gone, takes it off the list. Load applies the answers itself unless it is told not to, as
+        /// the start-up's own load is; the start-up applies them just before the main window lists the files.
+        /// </summary>
+        internal void SettleRecentFiles()
+        {
+            Dictionary<string, Task<bool>> checks = recentFileChecks;
+            if (null == checks)
+                return;
+            recentFileChecks = null;
+            long remaining = RECENT_FILE_CHECK_MILLISECONDS - (Environment.TickCount64 - recentFileChecksBegan);
+            try
+            {
+                Task.WaitAll(checks.Values.ToArray(), (int)Math.Clamp(remaining, 0, RECENT_FILE_CHECK_MILLISECONDS));
+            }
+            catch (AggregateException)
+            {
+                // A check that failed tells nothing, and its file is kept
+            }
+            RecentFileList = RecentFileList?.Where(path => !(checks.TryGetValue(path, out Task<bool> exists) && exists.IsCompletedSuccessfully && !exists.Result)).ToList();
         }
 
         /// <summary>

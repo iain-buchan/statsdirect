@@ -313,14 +313,21 @@ internal static partial class Program
         Rectangle window = new(work.Left + work.Width / 8, work.Top + work.Height / 8, work.Width / 2, work.Height / 2);
         File.WriteAllText(profileSettings, "{" + $"\"mainLeft\": {window.Left}, \"mainTop\": {window.Top}, \"mainWidth\": {window.Width}, \"mainHeight\": {window.Height}, " +
             "\"pDecimalPlaces\": 6, \"displayDecimalPlaces\": 9, \"defaultConfidenceInterval\": 0.9, \"selectGroupsByIdentifier\": true, " +
-            "\"markers\": " + Json(CustomMarkerSettings) + ", \"titleFont\": \"Georgia;1;20pt\", \"labelFont\": \"Georgia;0;12pt\", \"recentFileList\": [" + Json(files[3]) + "]}");
+            "\"markers\": " + Json(CustomMarkerSettings) + ", \"titleFont\": \"Georgia;1;20pt\", \"labelFont\": \"Georgia;0;12pt\", \"recentFileList\": [" +
+            Json(files[3]) + ", " + Json(deleted) + "]}");
         Check(Settings.Default is { WasLoaded: false, PDecimalPlaces: 4, DisplayDecimalPlaces: 6 }, "saved preferences are not read back until the start-up loads them");
         string beforeStart = FolderSnapshot(root);
         Settings.LoadSaved();
         Check(Settings.Default is { WasLoaded: true, PDecimalPlaces: 6, DisplayDecimalPlaces: 9, DefaultConfidenceInterval: 0.9, SelectGroupsByIdentifier: true } &&
             Settings.Default.MainLeft == window.Left && Settings.Default.MainTop == window.Top && Settings.Default.MainWidth == window.Width &&
-            Settings.Default.MainHeight == window.Height && Settings.Default.RecentFileList.SequenceEqual(new[] { files[3] }) && FolderSnapshot(root) == beforeStart,
+            Settings.Default.MainHeight == window.Height && Settings.Default.RecentFileList.SequenceEqual(new[] { files[3], deleted }) && FolderSnapshot(root) == beforeStart,
             "the start-up load replaces the defaults with the profile's preferences, on this computer's screens, and writes nothing");
+        // Before its loader is up the start-up waits for no disk: whether the recent files are still there is settled later
+        Settings.Default.SettleRecentFiles();
+        bool settled = Settings.Default.RecentFileList.SequenceEqual(new[] { files[3] });
+        Settings.Default.SettleRecentFiles();
+        Check(settled && Settings.Default.RecentFileList.SequenceEqual(new[] { files[3] }) && FolderSnapshot(root) == beforeStart,
+            "the start-up's load leaves its recent files' checks to answer while the loader is up, and settling them takes off a file no longer there, once");
         ChartPreferences.InitSharedValues();
         Check(ChartPreferences.DefaultTitleFont.Equals(new FontDescriptor("Georgia", 1, 20)) && (int)ChartPreferences.MarkerTypes[9].MarkerShape == 2 &&
             ChartPreferences.MarkerTypes[9].MarkerSize == 14, "preferences the start-up loads reach the chart defaults");
@@ -347,6 +354,18 @@ internal static partial class Program
         Check(start >= 0 && load > start && load < firstRead && program.IndexOf("Settings.LoadSaved();", load + 1, StringComparison.Ordinal) < 0 &&
             loaders.SequenceEqual(new[] { Path.Combine("StatsDirectUI", "UI", "Program.cs"), Path.Combine("StatsDirectUI", "UI", "Settings.cs") }),
             "only the ordinary start-up loads saved preferences, before it reads one; the diagnostic modes keep the defaults");
+        int loaderUp = start < 0 ? -1 : program.IndexOf("loader.Show();", start, StringComparison.Ordinal);
+        const string settleCall = "Settings.Default.SettleRecentFiles();";
+        int settle = start < 0 ? -1 : program.IndexOf(settleCall, start, StringComparison.Ordinal);
+        int mainWindow = start < 0 ? -1 : program.IndexOf(".CreateMainWindow();", start, StringComparison.Ordinal);
+        string[] settlers = Directory.EnumerateFiles(Path.Combine(source.FullName, "StatsDirectUI"), "*.cs", SearchOption.AllDirectories)
+            .Select(file => Path.GetRelativePath(source.FullName, file))
+            .Where(file => !file.Split(Path.DirectorySeparatorChar).Any(part => part is "bin" or "obj") &&
+                File.ReadAllText(Path.Combine(source.FullName, file)).Contains("SettleRecentFiles("))
+            .Order(StringComparer.Ordinal).ToArray();
+        Check(loaderUp > load && settle > loaderUp && mainWindow > settle && program.IndexOf("SettleRecentFiles(", settle + settleCall.Length, StringComparison.Ordinal) < 0 &&
+            settlers.SequenceEqual(new[] { Path.Combine("StatsDirectUI", "UI", "Program.cs"), Path.Combine("StatsDirectUI", "UI", "Settings.cs") }),
+            "the start-up settles its recent files once, after its loader is up and before the main window lists them");
     }
 
     // Closing notes a normal window's bounds, and otherwise the bounds it returns to; a minimised window as it was shown before it was minimised

@@ -104,7 +104,8 @@ namespace StatsDirect.UI
                 // Perform any UI hooks we need to...
                 SetupUserInterface();
 
-                // Get ready to show the main window...
+                // Get ready to show the main window, without the recent files the preferences' load found are no longer there
+                Settings.Default.SettleRecentFiles();
                 frmMain mainWindow = SdApplication.SoleInstance.CreateMainWindow();
                 loader.CloseWhenShown(mainWindow);
                 ConfigureStartupCommand(args, mainWindow);
