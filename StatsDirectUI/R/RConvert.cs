@@ -18,6 +18,37 @@ namespace StatsDirect.R
             return sb.ToString();
         }
 
+        /// <summary>
+        /// The R names of the columns of a frame, as ToR writes them.  A title that an earlier column has is first told apart as the run's
+        /// record keeps it (X, X_2, X_3), each is made a name by ToRName, and a name that is still taken, from titles that differ only in case
+        /// or punctuation, is made unique as R's make.unique makes it (age, age.1).  The LOESS recipe names the recorded columns the same way.
+        /// </summary>
+        /// <remarks>
+        /// Two columns with the same title were given the same name, so that the second replaced the first: the LOESS formula x + x fitted
+        /// the second column alone, where the replay's data frame gave the first.
+        /// </remarks>
+        public static string[] ToRVariableNames(DataFrame frame)
+        {
+            HashSet<string> titles = new();
+            string[] names = frame.Variables.Select(variable => ToRVariableName(RunRecord.UniqueTitle(variable.Title, titles))).ToArray();
+            HashSet<string> used = new(names, StringComparer.Ordinal);
+            HashSet<string> seen = new(StringComparer.Ordinal);
+            Dictionary<string, int> next = new(StringComparer.Ordinal);
+            for (int i = 0; i < names.Length; i++)
+            {
+                string name = names[i];
+                if (seen.Add(name))
+                    continue;
+                int count = next.TryGetValue(name, out int first) ? first : 1;
+                string unique;
+                while (!used.Add(unique = name + "." + count.ToString(CultureInfo.InvariantCulture)))
+                    count++;
+                next[name] = count + 1;
+                names[i] = unique;
+            }
+            return names;
+        }
+
         public static void ToRName(StringBuilder sb, string rawVariableName)
         {
             string[] reservedWords = { "if", "else", "repeat", "while", "function", "for", "in", "next", "break", "TRUE", "FALSE", "NULL", "Inf", "NaN", "NA", "NA_integer_", "NA_real_", "NA_complex_", "NA_character_" };
@@ -78,11 +109,10 @@ namespace StatsDirect.R
         {
             List<string> variableNames = new();
             List<string> columnNames = new();
+            string[] names = ToRVariableNames(frame);
             foreach (IVariable variable in frame.Variables)
             {
-                StringBuilder nameBuilder = new();
-                ToRName(nameBuilder, variable.Title);
-                string variableName = nameBuilder.ToString();
+                string variableName = names[variableNames.Count];
                 sb.Append(variableName);
                 sb.Append(" <- ");
                 ToR(sb, variable);

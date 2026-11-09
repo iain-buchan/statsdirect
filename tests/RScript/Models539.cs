@@ -24,6 +24,7 @@ internal static partial class Program
         CheckModels539HosmerLemeshowCuts(folder);
         CheckModels539ConstantPredictor(folder);
         CheckModels539CoxSplit(folder);
+        CheckModels539LoessTitles(folder);
         CheckModels539NoInterceptLrDf(folder);
         CheckModels539MissingPredictorStack(folder);
     }
@@ -394,6 +395,32 @@ internal static partial class Program
                 : "stopifnot(!grouped, curve_count == 1L)\n";
             Models539Verify(folder, "cox-split-" + label, plotRun, assertions);
         }
+    }
+
+    // Item 9: two LOESS predictors with the same title are both fitted. The default formula and the data the program writes for R give
+    // them distinct names (x and x_2, as the record keys them); the formula had named one column twice, and the program's R took the
+    // second column where the replay's data frame took the first.
+    private static void CheckModels539LoessTitles(string folder)
+    {
+        double[] lx = Enumerable.Range(1, 60).Select(i => i / 5d).ToArray(), lz = lx.Select(v => Math.Sin(v * .7)).ToArray();
+        double[] ly = lx.Select((v, i) => 10 + v + 2 * lz[i] + Math.Cos(i)).ToArray();
+        var sheet = Models539Sheet(("Y", ly), ("X", lx), ("X", lz));
+        // the formula offered, as the dialog offers it, from the acquired frames
+        Func<ITemplateProcessor, Parameter, ParameterBag, ITemplateHost, ParameterBag> byDefault =
+            (processor, parameter, context, host) => new ParameterBag(parameter.Name, FilledParameterFactory.Input(((StringParameter)parameter).DefaultValue(processor, context)));
+        var (run, output) = Run("LOESS", new()
+        {
+            ["outcome"] = sheet(DataAcquisitionMode.NumericReplaceMissing, new[] { 0 }), ["predictors"] = sheet(DataAcquisitionMode.NumericReplaceMissing, new[] { 1, 2 }),
+            ["model"] = byDefault, ["title"] = "Y vs. X + X", ["span"] = .8, ["degree"] = "2", ["saveFitsAndSe"] = false, ["saveRScript"] = true
+        });
+        ParameterBag bag = output.ParameterBag;
+        Check(bag["model"].AsString == "y~x+x_2", "the default LOESS formula names the two X columns x and x_2, as the record keys them (" + bag["model"].AsString + ")");
+        Check(bag["formattedRScript"].AsString.Contains("x_2 <- c("), "the program writes the second X column for R under its own name");
+        string oracle = "dd <- data.frame(y = " + Models539Vector(ly) + ", a = " + Models539Vector(lx) + ", b = " + Models539Vector(lz) + ")\n" +
+            "mm <- loess(y ~ a + b, data = dd, span = 0.8, degree = 2)\n" +
+            Models539Equal("mm$n, mm$enp, mm$s", new[] { Models539Number(bag, "observations"), Models539Number(bag, "parameters"), Models539Number(bag, "residualse") }, 1e-7) +
+            Models539Equal("m$n, m$enp, m$s, ncol(m$x)", new[] { Models539Number(bag, "observations"), Models539Number(bag, "parameters"), Models539Number(bag, "residualse"), 2 }, 1e-7);
+        Models539Verify(folder, "loess-duplicate-titles", run, "plot <- function(...) stop('two predictors have no one-dimensional chart')\n" + oracle);
     }
 
     // Item 11: without an intercept the likelihood ratio df is the report's, counted from the intercept-only model (R's null model is
