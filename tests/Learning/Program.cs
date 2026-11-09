@@ -79,8 +79,11 @@ internal static partial class Program
         help.DropDownItems["learningOptionsMenuItem"]!.PerformClick();await Task.Delay(150);
         Check((await JS(view,"Boolean(document.getElementById('statisticalSkills'))")).GetValue<bool>(),"Help > Learning Options selects the settings view");
         await JS(view,"document.getElementById('statisticalSkills').value='advanced';document.getElementById('statisticalSkills').dispatchEvent(new Event('input'));document.getElementById('courseTitle').value='Local assessment course';document.getElementById('courseTitle').dispatchEvent(new Event('input'));document.getElementById('assessmentType').value='self';document.getElementById('assessmentType').dispatchEvent(new Event('change'));");
-        await Wait(()=>service.State?["learning"].S("statisticalSkills")=="advanced"&&service.State?["training"].S("courseTitle")=="Local assessment course","learner and provider preferences persist as edited");
-        Check(service.State["training"].S("assessmentType")=="self","assessment preference is preserved");
+        await Wait(() =>
+            service.State?["learning"].S("statisticalSkills") == "advanced" &&
+            service.State?["training"].S("courseTitle") == "Local assessment course" &&
+            service.State?["training"].S("assessmentType") == "self",
+            "learner, course and assessment preferences persist as edited");
         using(var shot=File.Create(Path.Combine(artifacts,"learning-options.png")))await view.Browser.CoreWebView2.CapturePreviewAsync(CoreWebView2CapturePreviewImageFormat.Png,shot);
         await TestCourses(service,view);
         await TestTutor(tutor);
