@@ -270,7 +270,8 @@ namespace StatsDirect.UI
                 if (expand)
                     MaybeExpandCellColumnSelection(cellColumnSelection);
                 revisedCellSelection.ColumnSelections.Add(cellColumnSelection);
-                revisedCellSelection.LongestRowCount = cellColumnSelection.RowCount;
+                // the longest range of any column, as the acquisition counted it: a category frame is read into a buffer of that many rows
+                revisedCellSelection.LongestRowCount = Math.Max(revisedCellSelection.LongestRowCount, cellColumnSelection.RowCount);
             }
             return ProcessRecordedColumns(revisedCellSelection, origins, ((WindowInformation)Tag).FriendlyName);
         }

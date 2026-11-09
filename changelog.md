@@ -2,6 +2,11 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
+##[Unreleased]
+
+### Fixed
+- Continue in R and notebook export can read back a saved category selection of more than 5,000 values, such as the columns of a frequency, kappa or crosstabs result, when an earlier column's range is longer than the last column's, instead of reporting that the data could not be read.
+
 ##[v5.3.8] 2026-11-09
 
 ### Fixed
