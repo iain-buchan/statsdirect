@@ -104,7 +104,7 @@ internal static partial class Program
                         ["sn"] = Sheet("subjects", 50, 85, 43, 92), ["sr"] = Sheet("responses", 12, 36, 20, 63)
                     });
                     string assertion = $"stopifnot(near(inv(xf),{Number(Value(output.ParameterBag, "rmh"))}),near(inv(xr),{Number(Value(output.ParameterBag, "dspr"))}))";
-                    assertion += $"\nstopifnot(near(round(i2(lambda_at((1+confidence)/2)),1),{Number(Math.Round(Value(output.ParameterBag, "llisq"), 1))}),near(round(i2(lambda_at((1-confidence)/2)),1),{Number(Math.Round(Value(output.ParameterBag, "ulisq"), 1))}))";
+                    assertion += $"\nstopifnot(near(i2_ci,c({Number(Value(output.ParameterBag, "llisq"))},{Number(Value(output.ParameterBag, "ulisq"))})))";
                     if (method == "doubleArcsine") assertion += "\nstopifnot(inv(-1)==0,inv(4)==1)";
                     string text = RunScript("ProportionMeta-" + method + "-" + confidence, Script(run), assertion, 3);
                     Check(Regex.Matches(text, "(?m)^Method:").Count == 1 && Regex.Matches(text, "(?m)^Harbord:").Count == 1, "proportion meta-analysis prints only the selected inverse and its bias result");

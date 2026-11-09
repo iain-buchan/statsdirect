@@ -56,7 +56,8 @@ internal static partial class Program
             if (xml.Contains("<chart-type>")) parameters.Add("chartSettings");
             if (op is "Probit" or "Logit" || op.StartsWith("Probit", StringComparison.Ordinal)) parameters.Add("doseResponseModel");
             if (op == "ROCPlot") parameters.Add("rocCutoffs");
-            if (recipe.File is "relative-risk-meta.R" or "meta-summary.R" or "risk-difference.R" or "peto-meta.R")
+            if (recipe.File is "relative-risk-meta.R" or "meta-summary.R" or "risk-difference.R" or "peto-meta.R" or
+                "mantel.R" or "effect.R" or "meta-correlation.R" or "proportion-meta.R")
                 parameters.Add("metaExact"); // captured once by each native meta-analysis report, then retained for replay
             Match settings = Regex.Match(text, "^# settings:\\s*(.*)$", RegexOptions.Multiline);
             if (settings.Success)

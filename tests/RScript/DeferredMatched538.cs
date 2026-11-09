@@ -144,14 +144,20 @@ internal static partial class Program
 
     private static void CheckDeferredSignedRanks538(string folder)
     {
-        foreach (int n in new[] { 199, 200, 201, 250, 400, 1000, 1042, 1050, 1100 })
-        foreach (double confidence in n >= 250 && n != 1100 ? new[] { .9, .95, .99 } : new[] { .95 })
+        foreach (int n in new[] { 199, 200, 201, 250, 400, 1000, 1042, 1050, 1100, 3000 })
+        foreach (double confidence in n >= 250 && n != 1100 && n != 3000 ? new[] { .9, .95, .99 } : new[] { .95 })
         foreach (bool paired in new[] { false, true })
         foreach (bool mostlyZero in n == 1100 ? new[] { false, true } : new[] { false })
         {
             double[] difference = Enumerable.Range(0, n).Select(i => (double)((i * 37 % 101) - 40)).ToArray();
             if (n <= 201) difference = Enumerable.Range(1, n).Select(i => (i % 3 == 0 ? -1d : 1d) * i).ToArray();
             if (mostlyZero) difference = Enumerable.Range(0, n).Select(i => i < 180 ? (i % 3 == 0 ? -1d : 1d) * (i % 23 + 1) : 0d).ToArray();
+            if (n == 3000)
+            {
+                // Ties leave a half-rank above one million, where the old print lost the fraction.
+                difference = new double[300].Concat(Enumerable.Repeat(-2d, 799)).Concat(Enumerable.Repeat(2d, 801))
+                    .Concat(Enumerable.Repeat(-3d, 550)).Concat(Enumerable.Repeat(3d, 550)).ToArray();
+            }
             double[] before = difference.Select((v, i) => 10000d + i + v).ToArray(), after = Enumerable.Range(0, n).Select(i => 10000d + i).ToArray();
             DataFrame frame = paired ? DeferredFrame538(("Before", before), ("After", after)) : DeferredFrame538(("Difference", difference));
             var (run, output) = Run("Wilcoxon", new() { ["data"] = frame, ["gamma"] = confidence });
@@ -164,7 +170,11 @@ internal static partial class Program
             int k = int.Parse(Regex.Match(expectedK, @"K = ([0-9]+)").Groups[1].Value, inv);
             assertion += "stopifnot(K==" + k + ",n==" + n + ")\n";
             string text = DeferredVerify538(run, assertion, Path.Combine(folder, label));
-            Check(text.Contains(expectedK), label + " labels exact or approximate K as native");
+            Check(Regex.IsMatch(text, "^" + Regex.Escape(expectedK) + @"\s+Median difference =", RegexOptions.Multiline),
+                label + " prints all digits of exact or approximate K as native");
+            string expectedRankSum = Convert.ToString(bag["sum"].AsObject, inv);
+            Check(text.Split('\n').Any(line => line.TrimEnd() == expectedRankSum),
+                label + " prints the native positive rank sum without rounding");
             string expectedLevel = Convert.ToString(DeferredBags538(bag).First(b => b.ContainsKey("pc"))["pc"].AsObject, inv);
             Match level = Regex.Match(expectedLevel, @"([0-9.]+)% confidence interval");
             Match actual = Regex.Match(text, @"(Approximate )?([0-9.]+)% confidence interval for difference");
@@ -231,6 +241,29 @@ internal static partial class Program
                 Check(text.Contains(expectedLabel), label + " reports the original item labels after native PCA reversal");
             }
             else Check(DeferredNumber538(output.ParameterBag, "raw_cl") == 0, label + " exercises the native zero-clamped lower limit");
+        }
+        foreach (bool covariance in new[] { false, true })
+        foreach (bool reverse in new[] { false, true })
+        {
+            // Unequal column scales make the covariance and correlation eigenpairs distinct.
+            DataFrame frame = DeferredFrame538(scaled.Select((v, i) => (titles[i], v)).ToArray());
+            string parent = covariance ? "PCRCovariance" : "PCRCorrelation";
+            var (_, fit) = Run(parent, new() { ["data"] = frame, ["correctForReversal"] = reverse, ["ci"] = .95 });
+            var (run, coefficients) = Run("PCRCoefficients", new() { ["data"] = frame }, fit.ParameterBag);
+            double[] eigenvalues = DeferredBags538(fit.ParameterBag).Where(b => b.ContainsKey("eigen"))
+                .Select(b => DeferredNumber538(b, "eigen")).ToArray();
+            string nativeRotation = RScriptWriter.Vector(DeferredBags538(coefficients.ParameterBag)
+                .Where(b => b.ContainsKey("res")).Select(b => (object)DeferredNumber538(b, "res")).ToArray());
+            string assertion = DeferredEqual538("eig", RScriptWriter.Vector(eigenvalues.Cast<object>().ToArray())) +
+                "native_rotation <- matrix(" + nativeRotation + ", nrow=ncol(q), byrow=TRUE)\n" +
+                "aligned_rotation <- sweep(pc$rotation,2,sign(colSums(pc$rotation*native_rotation)),`*`)\n" +
+                DeferredEqual538("aligned_rotation", "native_rotation");
+            string label = "coefficients-" + parent + "-reverse-" + reverse;
+            string text = DeferredVerify538(run, assertion, Path.Combine(folder, label));
+            var printed = Regex.Matches(text, @"^\d+ ([-\d.]+) [\d.]+% [\d.]+%", RegexOptions.Multiline);
+            Check(printed.Count == eigenvalues.Length && printed.Zip(eigenvalues).All(pair =>
+                Math.Abs(double.Parse(pair.First.Groups[1].Value, inv) - pair.Second) < 5.1e-7),
+                label + " replays and displays the native parent eigenvalues");
         }
         // Correlation PCA itself requests no confidence level. Its own R recipe
         // retains the historical 95% reliability default when the setting is NULL.

@@ -50,6 +50,24 @@ internal static partial class Program
         {
             CheckTemporaryCleanupIsolation();
             _ = typeof(StatsDirect.R.RScriptWriter).Assembly.GetType("StatsDirect.UI.SdApplication").GetProperty("SoleInstance", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null);   // the application object, whose making registers the engine's functions, as the program does at its start
+            if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "posthoc-weighted")
+            {
+                CheckPosthocWeighted537(Path.Combine(TemporaryRoot, "weighted-refit"));
+                Console.WriteLine($"PASS {checks} weighted refit checks");
+                return 0;
+            }
+            if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "posthoc-meta")
+            {
+                CheckPosthocMeta537(Path.Combine(TemporaryRoot, "posthoc-meta"));
+                Console.WriteLine($"PASS {checks} post-release meta-analysis checks");
+                return 0;
+            }
+            if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "posthoc-missing")
+            {
+                CheckMetaMissingStudies(Path.Combine(TemporaryRoot, "meta-missing"));
+                Console.WriteLine($"PASS {checks} incomplete-study checks");
+                return 0;
+            }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") is string deferred && deferred.StartsWith("deferred", StringComparison.Ordinal))
             {
                 if (deferred is not ("deferred538" or "deferred-capture" or "deferred-matched" or "deferred-models" or "deferred-independent" or "deferred-meta"))

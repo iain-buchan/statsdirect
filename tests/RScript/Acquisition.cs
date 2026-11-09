@@ -33,8 +33,11 @@ internal static partial class Program
         CheckDeferredRecord538(folder);
         CheckDeferredMatched538(folder);
         CheckDeferredModels538(folder);
+        CheckPosthocWeighted537(Path.Combine(folder, "weighted-refit"));
         CheckDeferredIndependent538(folder);
         CheckDeferredMeta538(folder);
+        CheckPosthocMeta537(Path.Combine(folder, "posthoc-meta"));
+        CheckMetaMissingStudies(Path.Combine(folder, "meta-missing"));
         Console.WriteLine("      acquisition regression artifacts: " + folder);
     }
 
