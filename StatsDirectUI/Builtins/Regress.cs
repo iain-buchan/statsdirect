@@ -802,6 +802,10 @@ namespace StatsDirect.Builtins
             }
             if (context.N == 0)
                 throw new TemplateOperationCancelledException("No complete observations with positive prior weight.", "Multiple Linear Regression");
+            // Rows left out for missing values or zero weights can leave fewer rows than parameters, which no fit can estimate: the
+            // residual degrees of freedom would be negative.  As many rows as parameters is an exact fit, with no residual df.
+            if (context.N < context.P)
+                throw new TemplateOperationCancelledException("There are fewer complete observations with positive prior weight than parameters in the model.", "Multiple Linear Regression");
             (context.P, context.M) = x_glin(context, context.P, context.M);
             // context.DoC, not a literal true: a model fitted without an intercept had its first slope labelled "Intercept"
             return new StepOutput(MakeMultipleRegressionOutput(context, context.Se, context.B, context.DoC, context.N, context.P, false, context.M, dropWarning));
@@ -819,7 +823,7 @@ namespace StatsDirect.Builtins
         /// fitted values FV and the residuals R; and the sums of squares for regression and in total, SSREG and SSY.  Returned: the number of
         /// parameters that were fitted, and the fault.
         /// </remarks>
-        private static (int P, int ifault) x_glin(MultipleLinearRegressionContext context, int P, int ifault)
+        private static (int P, int ifault) x_glin(MultipleLinearRegressionContext context, int P, int ifault, bool polynomial = false)
         {
             int incep; int indep; int irank = 0;
             int nrmiss = 0;
@@ -869,7 +873,9 @@ namespace StatsDirect.Builtins
             }
             int iwtcol = iwt == 0 ? 0 : indep + 1;
             Regress1.glsqr(0, incep, 0, context.N, indep + iwt + 1, xx, -indep, idum, -1, idum, 0, iwtcol, context.B, r, D, ref irank, ref rdf, ref rss, ref nrmiss, xMin, xMax, wk, ref ifault);
-            if (irank != P & indep > 1)
+            // Refit whenever a predictor was dropped, in multiple regression a lone predictor too (a constant beside the intercept, or a
+            // column of zeros without one): it had been kept, and counted in the degrees of freedom.
+            if (irank != P && (indep > 1 || !polynomial))
             {
                 int ctr = incep;
                 for (int j = 1 + incep; j <= P; j++)
@@ -931,6 +937,15 @@ namespace StatsDirect.Builtins
                 }
                 Regress1.glsqr(0, incep, 0, context.N, indep + iwt + 1, xx, -indep, idum, -1, idum, 0, iwtcol, context.B, r, D, ref irank, ref rdf, ref rss, ref nrmiss, xMin, xMax, wk, ref ifault);
             }
+            // glsqr reports 12 when the fit leaves no degrees of freedom for error: as many rows as parameters.  In multiple regression
+            // the fit is complete and exact, and is kept; only what needs the residual mean square is undefined.  (It used to be made
+            // again by singular value decomposition, whose sums of squares are wrong with weights.)
+            bool saturated = ifault == 12 && !polynomial;
+            if (saturated)
+            {
+                ifault = 0;
+                context.warn = "saturated model (all degrees of freedom used, so there are no standard errors or tests)";
+            }
             if (ifault != 0)
             {
                 context.warn = "QR solution failed and SVD used, extreme results may be invalid.";
@@ -967,13 +982,26 @@ namespace StatsDirect.Builtins
             for (int j = 1; j <= P; j++)
                 if (context.VIF[j] != Constant.MISSING)
                     context.VIF[j] *= covb[j, j];
-            double rms = rss / rdf;
-            Regress1.rcovarb(P, r, rms, covb, ref ifault);
-            for (int i = 1; i <= P; i++)
-                context.Se[i] = Math.Sqrt(covb[i, i]);
-            for (int i = 1; i <= P; i++)
-                for (int j = 1; j <= P; j++)
-                    context.H[i, j] = covb[i, j] / rms;
+            if (saturated)
+            {
+                // No residual mean square, so no standard errors (they had been 0 or * by the sign of a rounding residual); H is the
+                // inverse of X'WX itself, which otherwise is the covariance divided by the residual mean square.
+                for (int i = 1; i <= P; i++)
+                    context.Se[i] = double.NaN;
+                for (int i = 1; i <= P; i++)
+                    for (int j = 1; j <= P; j++)
+                        context.H[i, j] = covb[i, j];
+            }
+            else
+            {
+                double rms = rss / rdf;
+                Regress1.rcovarb(P, r, rms, covb, ref ifault);
+                for (int i = 1; i <= P; i++)
+                    context.Se[i] = Math.Sqrt(covb[i, i]);
+                for (int i = 1; i <= P; i++)
+                    for (int j = 1; j <= P; j++)
+                        context.H[i, j] = covb[i, j] / rms;
+            }
             for (int i = 1; i <= context.N; i++)
             {
                 s = 0.0;
@@ -1168,12 +1196,15 @@ namespace StatsDirect.Builtins
             double ci = parameters["ci"].AsDouble;
 
             double rdf = context.N - context.P;
-            // A degree of freedom for regression for each parameter but the constant
-            double bdf = context.P == 1 || context.DoC == false ? context.P : context.P - 1;
-            double bms = context.SSREG / bdf;
+            // A degree of freedom for regression for each parameter but the constant: none when every predictor was dropped beside it
+            // (a model of the constant alone had been given one, and the correlation below then read a slope it does not have)
+            double bdf = context.DoC ? context.P - 1 : context.P;
+            // Without regression degrees of freedom there is no regression mean square or F (R gives no F); without residual degrees of
+            // freedom (as many rows as parameters, an exact fit) no residual mean square, root MSE, F or adjusted R squared (R gives NaN).
+            double bms = bdf > 0 ? context.SSREG / bdf : Constant.MISSING;
             double rss = context.SSY - context.SSREG;
-            double rms = rss / rdf;
-            double vr = bms / rms;
+            double rms = rdf > 0 ? rss / rdf : Constant.MISSING;
+            double vr = bdf > 0 && rdf > 0 ? bms / rms : Constant.MISSING;
             int tdf = context.DoC ? context.N - 1 : context.N;
             ParameterBag outputParameters = new();
             outputParameters.AddOutput("reg_sum", context.SSREG);
@@ -1184,9 +1215,9 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("res_mean", rms);
             outputParameters.AddOutput("tot_sum", context.SSY);
             outputParameters.AddOutput("tot_df", tdf);
-            outputParameters.AddOutput("mse", Math.Sqrt(rms));
+            outputParameters.AddOutput("mse", rdf > 0 ? Math.Sqrt(rms) : Constant.MISSING);
             outputParameters.AddOutput("f", vr);
-            double prob = PDF.fvalp(vr, bdf, rdf);
+            double prob = vr == Constant.MISSING ? Constant.MISSING : PDF.fvalp(vr, bdf, rdf);
             outputParameters.AddOutput("p", prob);
             double r2 = context.SSREG / context.SSY;
             double r = Math.Sqrt(r2);
@@ -1218,9 +1249,10 @@ namespace StatsDirect.Builtins
             // reported as it is, where earlier versions showed zero. The total sum of squares has N - 1
             // degrees of freedom with an intercept and N without one (tdf), where it is not corrected for the mean.
             r2 = 1.0 - rss / Convert.ToDouble(context.N - context.P) / (context.SSY / Convert.ToDouble(tdf));
-            outputParameters.AddOutput("ra2", r2 * 100);
+            outputParameters.AddOutput("ra2", rdf > 0 ? r2 * 100 : Constant.MISSING);
             Regress1.x_dwsd(context.R, context.N, out double dw);
-            outputParameters.AddOutput("dw", dw);
+            // the residuals of an exact fit are rounding errors, whose ratio means nothing
+            outputParameters.AddOutput("dw", rdf > 0 ? dw : Constant.MISSING);
             return new StepOutput(outputParameters);
         }
 
@@ -1811,6 +1843,10 @@ namespace StatsDirect.Builtins
                 while (true);
             }
 
+            // No subset was kept when there is nothing to choose (every predictor was dropped beside the intercept), or when the full model
+            // leaves no residual degrees of freedom for Mallows' Cp: the refit of an empty subset ran off the end of its arrays.
+            if (keep == null)
+                throw new TemplateOperationCancelledException("No subset of the predictors can be chosen: the model has no predictors left, or no residual degrees of freedom for Mallows' Cp.", "Best subset selection");
             ParameterBag outputParameters = new();
             IList<ParameterBag> selectedList = new List<ParameterBag>();
             outputParameters.AddOutput("*selected", selectedList);
@@ -2335,7 +2371,7 @@ namespace StatsDirect.Builtins
             string dropWarning = leftOut > 0
                 ? leftOut.ToString() + " observations dropped due to missing data. Make sure that observations with missing data are not a subgroup"
                 : null;
-            (context.P, context.M) = x_glin(context, context.P, context.M);
+            (context.P, context.M) = x_glin(context, context.P, context.M, polynomial: true);
             ParameterBag outputParameters = MakeMultipleRegressionOutput(context, context.Se, context.B, true, context.N, context.P, true, context.M, dropWarning);
             outputParameters[RecordsLeftOut] = FilledParameterFactory.Input(leftOut);
             return new StepOutput(outputParameters);
