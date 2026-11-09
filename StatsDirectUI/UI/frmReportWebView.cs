@@ -104,14 +104,15 @@ internal sealed class frmReportWebView : StatsDirectForm, IReport, IFindTarget
     {
         await view.Ready;
         var operation = TemplateFactory.Operations[operationName];
-        string item = await view.AppendAsync(html, operation.FriendlyName, operationName, operation.HelpContext?.ChmId ?? 0, record, () =>
+        return await view.AppendAsync(html, operation.FriendlyName, operationName, operation.HelpContext?.ChmId ?? 0, record, () =>
         {
             check();
             if (IsDisposed) throw new InvalidOperationException("The report closed before the calculation finished.");
             if (allowClosing) CancelParentClose();
             Dirty = true;
-        });
-        Activate(); return item;
+            Activate();
+            FocusResultEditor();
+        }, focusResult: true);
     }
 
     void IReport.AppendRenderable(IRenderable renderable, int helpContextId, Operation operation, object run)
@@ -129,9 +130,17 @@ internal sealed class frmReportWebView : StatsDirectForm, IReport, IFindTarget
         else
         {
             lastRun = run;
-            lastItem = view.AppendAsync(html, operation?.FriendlyName ?? "Analysis", operation?.Name ?? "", helpContextId, record);
-            _ = Guard(() => lastItem);
+            var item = lastItem = view.AppendAsync(html, operation?.FriendlyName ?? "Analysis", operation?.Name ?? "", helpContextId, record,
+                beforeAppend: FocusResultEditor, focusResult: true);
+            _ = Guard(() => item);
         }
+    }
+
+    private void FocusResultEditor()
+    {
+        // Focus the native browser before setting the caret in JavaScript. Focusing afterwards can clear its selection.
+        if (MdiParent?.ActiveMdiChild == this && !view.Browser.ContainsFocus)
+            view.Browser.Focus();
     }
 
     /// <summary>

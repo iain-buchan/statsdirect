@@ -19,7 +19,19 @@ const order=()=>entries.map(e=>e.id);
 function history(){StatsDirectReportEditor.history(undo.length>0,redo.length>0);document.getElementById('empty').hidden=entries.length>0;}
 function reveal(id){StatsDirectReportEditor.reveal(id);}
 function replace(e){StatsDirectReportEditor.replace(e.id,entryHTML(e));}
-function append(e){entries.push(e);StatsDirectReportEditor.replaceEntries([{id:e.id,html:entryHTML(e)}],order());history();reveal(e.id);}
+function append(e,focusResult=false){
+  entries.push(e);
+  StatsDirectReportEditor.replaceEntries([{id:e.id,html:entryHTML(e)}],order());
+  history();
+  if(focusResult){
+    const result=document.getElementById('result-'+e.id);
+    document.getElementById('results').focus({preventScroll:true});
+    getSelection().collapse(result,0);
+    // Publish the new topic before replying, so native Help can use it immediately.
+    tellContext();
+  }
+  reveal(e.id);
+}
 // More of a result into its block (a chart after its analysis): the block's current markup, then the more; the window stays at the result's start
 function extend(id,html,record){const e=entryOf(id);if(!e)throw Error('No such result.');const block=document.getElementById('result-'+id);if(block)e.html=StatsDirectReportEditor.serialize(block);e.html+=html;if(isRecord(record))e.record=record;if(!StatsDirectReportEditor.extend(id,html))replace(e);history();reveal(id);}
 function discardEntry(id){const i=entries.findIndex(e=>e.id===id);if(i>=0)entries.splice(i,1);StatsDirectReportEditor.replaceEntries([],order());}
@@ -74,7 +86,7 @@ document.addEventListener('focusin',tellContext);
 window.WindowsReport={async run(request){
   try {let value;
     switch(request.method){
-      case 'append':{if(!isRecord(request.args.record))delete request.args.record;append(request.args);changed();value=true;break;}
+      case 'append':{const {focusResult,...entry}=request.args;if(!isRecord(entry.record))delete entry.record;append(entry,focusResult);changed();value=true;break;}
       case 'extend':extend(request.args.id,request.args.html,request.args.record);changed();value=true;break;
       case 'record':{const e=entryOf(request.args.id);if(!e)throw Error('No such result.');value={title:e.title,operation:e.operation,record:isRecord(e.record)?e.record:null};break;}
       case 'chartImage':value=await StatsDirectReportEditor.chartImage(request.args.format,request.args.scale);break;

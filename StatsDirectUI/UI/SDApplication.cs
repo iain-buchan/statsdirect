@@ -658,8 +658,9 @@ namespace StatsDirect.UI
             }
             if (null == report)
                 throw new TemplateOperationCancelledException();
-            report.AppendRenderable(renderable, ActiveHelpTopic, operation, run);
+            int helpContextId = ActiveHelpTopic;
             report.EnsureActive();
+            report.AppendRenderable(renderable, helpContextId, operation, run);
             return report.SelectedPane;
         }
 
