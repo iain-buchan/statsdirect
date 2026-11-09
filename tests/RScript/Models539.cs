@@ -421,6 +421,21 @@ internal static partial class Program
                 : "stopifnot(!grouped, curve_count == 1L)\n";
             Models539Verify(folder, "cox-split-" + label, plotRun, assertions);
         }
+
+        // A record that the fit leaves out (here one without a time) can hold a third value of a predictor that is binary in the records
+        // the fit uses. The replay judges the predictors binary by those records, as the report does, so that the choices are the same and
+        // it splits by the one chosen (it had counted the third value, and split by the next binary predictor, Female, instead).
+        var incomplete = Models539Sheet(("Time", times.Append(Constant.MISSING).ToArray()), ("Event", events.Append(1d).ToArray()),
+            ("Treated", treated.Append(2d).ToArray()), ("Female", female.Append(1d).ToArray()), ("Age", age.Append(50d).ToArray()));
+        var (_, incompleteOutput) = Run("CoxRegression", Models539CoxAnswers(incomplete, new[] { 2, 3, 4 }));
+        var offered = (StringVariable)incompleteOutput.ParameterBag["subgroups"].AsDataFrame.Variables[0];
+        Check(offered.Length == 3 && offered.Data[0] == "Treated" && offered.Data[1] == "Female" && offered.Data[2] == "None",
+            "Cox with an incomplete record: Treated and Female are binary in the records the fit uses");
+        var (incompletePlotRun, incompletePlots) = Run("CoxHazardPlots", new() { ["use-tics"] = true, ["use-markers"] = true, ["group"] = new[] { true, false, false } }, incompleteOutput.ParameterBag);
+        var incompleteSurvival = (CoxSurvivalOrHazardOptions)((ChartDefinition)Models539Block(incompletePlots.ParameterBag, "chart")[0]["chart"].AsObject).ChartOptions;
+        Check(incompleteSurvival.grouped && incompleteSurvival.groupid == 1, "Cox with an incomplete record: the native plots are split by Treated");
+        Models539Verify(folder, "cox-split-incomplete-record", incompletePlotRun,
+            "stopifnot(identical(split_choices, c('Treated', 'Female', 'None')), grouped, split_by == 'Treated', curve_count == 2L, identical(unname(baseline_rows[[1]]), c(0, 1)), all(unlist(baseline_rows[-1]) == 0))\n");
     }
 
     // Item 12: the replay's unique predictor names, beyond linear regression, for Cox regression and its hazard ratio follow-on, from each

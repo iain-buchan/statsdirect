@@ -11,7 +11,11 @@
 # side if their hazards are proportional. Tics mark censored times and markers
 # every observed time when the follow-on asked for them.
 predictor_frame <- as.data.frame(predictors, optional = TRUE)
-binary <- which(vapply(predictor_frame, function(v) length(unique(v[!is.na(v)])) == 2, logical(1)))
+# A predictor is binary, as the report judges it, by its values in the records
+# that the fit used: those with a time, an event code, every predictor and the
+# stratum (a record left out can hold a third value)
+used <- if (is.null(stratum)) complete.cases(predictor_frame, time, censor) else complete.cases(predictor_frame, time, censor, stratum)
+binary <- which(vapply(predictor_frame, function(v) length(unique(v[used])) == 2, logical(1)))
 split_choices <- if (!is.null(stratum)) "Strata" else c(names(predictor_frame)[binary], "None")
 # A choice is known by its place in the list, as the report knows it, since a
 # predictor may itself be named "None" or "Strata"
@@ -24,7 +28,7 @@ baseline_rows <- as.data.frame(lapply(predictor_frame, function(v) 0), optional 
 grouped <- is.null(stratum) && choice <= length(binary)
 if (grouped) {
   split_column <- binary[[choice]]
-  group_values <- sort(unique(predictor_frame[[split_column]][!is.na(predictor_frame[[split_column]])]))
+  group_values <- sort(unique(predictor_frame[[split_column]][used]))
   baseline_rows <- baseline_rows[rep(1, 2), , drop = FALSE]
   baseline_rows[[split_column]] <- group_values
 }
