@@ -37,6 +37,9 @@ stat <- c(oddsRatio = "Odds Ratio", relativeRisk = "Relative Risk", riskDifferen
           otherRatio = "* Ratio", otherDifference = "* Difference")[[type]]
 null_value <- if (ratio) 1 else 0
 y <- if (ratio) log(or) else or
+# Limits selected the wrong way round, the upper before the lower, are put the right
+# way round, as the report puts them
+if (!is.null(lower)) { lower_in <- lower; lower <- pmin(lower_in, upper); upper <- pmax(lower_in, upper) }
 se <- if (!is.null(se_in)) se_in else if (ratio) (log(upper) - log(lower)) / (2 * z) else (upper - lower) / (2 * z)
 if (is.null(lower)) { lower <- if (ratio) exp(y - z * se) else y - z * se; upper <- if (ratio) exp(y + z * se) else y + z * se }
 back <- if (ratio) exp else identity

@@ -68,7 +68,7 @@ internal static partial class Program
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") is string meta539 && (meta539 == "meta-539" || meta539.StartsWith("meta-539-", StringComparison.Ordinal)))
             {
                 string part = meta539 == "meta-539" ? null : meta539["meta-539-".Length..];
-                if (part is not (null or "forest" or "bias" or "summary" or "empty"))
+                if (part is not (null or "forest" or "bias" or "summary" or "empty" or "limits"))
                     throw new ArgumentException("Unknown 5.3.9 meta-analysis test group: " + meta539);
                 CheckMetaReview539(Path.Combine(TemporaryRoot, "meta-539"), part);
                 Console.WriteLine($"PASS {checks} 5.3.9 meta-analysis checks");

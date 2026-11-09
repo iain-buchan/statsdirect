@@ -248,8 +248,10 @@ cat("Chi2 (test odds ratio differs from 1) =", six(x2), " ", pv(pchisq(x2, 1, lo
 
 # The pooled exact analysis: the conditional maximum likelihood estimate, the exact
 # Fisher and mid-P limits, and the P values at odds ratio 1 (the Fisher two sided P
-# sums the probabilities of totals no more probable than the one observed); an
-# observed total at an end of its support gives an estimate of 0 or infinity
+# sums the probabilities of totals no more probable than the one observed, within a
+# relative 1e-7 as the report and fisher.test have it, so that a total exactly as
+# probable is counted whatever its rounding); an observed total at an end of its
+# support gives an estimate of 0 or infinity
 if (isTRUE(exact_meta)) {
   all <- conditional(a, b, c, d)
   s <- sum(a)
@@ -260,7 +262,7 @@ if (isTRUE(exact_meta)) {
   p_lower <- cond_p(all, 1, all$support <= s)
   p_at_s <- cond_p(all, 1, all$support == s)
   w1 <- exp(all$logc - max(all$logc))
-  p2_fisher <- sum(w1[w1 <= w1[all$support == s]]) / sum(w1)
+  p2_fisher <- sum(w1[w1 <= w1[all$support == s] * (1 + 1e-7)]) / sum(w1)
   p1_mid <- min(p_upper - p_at_s / 2, 1 - (p_upper - p_at_s / 2))
   cat("Fixed effects (conditional maximum likelihood)\n")
   cat("Pooled odds ratio =", six(cml), "\n")

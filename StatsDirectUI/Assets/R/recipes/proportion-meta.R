@@ -62,9 +62,14 @@ inv <- function(t) {
   if (t >= asin(sqrt(hmn / (hmn + 1))) + pi / 2) return(1)
   0.5 * (1 - sign(cos(t)) * sqrt(max(0, 1 - (sin(t) + (sin(t) - 1 / sin(t)) / hmn)^2)))
 }
+# As the report has it, the pooled proportion is 0, with a lower limit of 0, when no
+# study has a responder, and 1, with an upper limit of 1, when every subject of every
+# study responds; the inverse transform alone would leave them just inside
+fixed <- c(inv(xf), inv(xf - z * se_f), inv(xf + z * se_f))
+if (all(adherent == 0)) fixed[1:2] <- 0 else if (all(adherent == total)) fixed[c(1, 3)] <- 1
 cat("Fixed effects (inverse variance)\n")
-cat("Pooled proportion = ", six(inv(xf)), " (", pct, "CI = ", six(inv(xf - z * se_f)),
-    " to ", six(inv(xf + z * se_f)), ")\n", sep = "")
+cat("Pooled proportion = ", six(fixed[1]), " (", pct, "CI = ", six(fixed[2]),
+    " to ", six(fixed[3]), ")\n", sep = "")
 
 cat("Non-combinability of studies\n")
 cat("Cochran Q = ", six(q), "  (df = ", k - 1, ")  ",
@@ -118,7 +123,7 @@ cat("Pooled proportion = ", six(inv(xr)), " (", pct, "CI = ", six(inv(xr - z * s
 # proportion on precision, with its t test
 cat("Bias indicators\n")
 se <- (ci[, 2] - ci[, 1]) / 2 / z
-pf <- inv(xf)
+pf <- fixed[1]
 # Egger's interval is at the level of the bias tests, twice the analysis's alpha
 # (90% for a 95% analysis); as the report has it, there is no figure when every
 # study has the same precision or the line fits every study exactly
@@ -144,11 +149,17 @@ if (k > 3) {
   # Harbord's test as StatsDirect adapts it to proportions: each study's score is the
   # excess of responders over the number expected at the pooled fixed effects proportion,
   # with the binomial variance, and the bias is the intercept of the regression of
-  # score / sqrt(variance) on sqrt(variance)
-  score <- adherent - total * pf
-  vs <- total * pf * (1 - pf)
-  harbord_figures <- regression(score / sqrt(vs), sqrt(vs), "Harbord",
-                                sum((sqrt(vs) - mean(sqrt(vs)))^2) > 1e-12 * sum(vs))
+  # score / sqrt(variance) on sqrt(variance). A pooled proportion of 0 or 1 leaves no
+  # score a variance, and the report then gives no figure
+  if (pf > 0 && pf < 1) {
+    score <- adherent - total * pf
+    vs <- total * pf * (1 - pf)
+    harbord_figures <- regression(score / sqrt(vs), sqrt(vs), "Harbord",
+                                  sum((sqrt(vs) - mean(sqrt(vs)))^2) > 1e-12 * sum(vs))
+  } else {
+    harbord_figures <- rep(NA, 4)
+    cat("Harbord: bias = * (", round(100 * bias_level, 2), "% CI = * to *)  P = *\n", sep = "")
+  }
 } else cat("Bias indicators need more than three studies with an estimate\n")
 
 # The report's charts: a funnel plot of each proportion against its standard error,
@@ -176,7 +187,7 @@ forest <- function(est, lower, upper, weight, title) {
        labels = sprintf("%.2f (%.2f, %.2f)", est, lower, upper))
   par(old)
 }
-forest(c(p, inv(xf)), c(ci[, 1], inv(xf - z * se_f)), c(ci[, 2], inv(xf + z * se_f)), w,
+forest(c(p, fixed[1]), c(ci[, 1], fixed[2]), c(ci[, 2], fixed[3]), w,
        "Proportion meta-analysis plot [fixed effects]")
 forest(c(p, inv(xr)), c(ci[, 1], inv(xr - z * se_r)), c(ci[, 2], inv(xr + z * se_r)),
        wr, "Proportion meta-analysis plot [random effects]")

@@ -13,8 +13,9 @@ internal static partial class Program
     // script do; the R replays of tables with empty cells apply the native exclusion rules and continuity correction; the
     // bias indicators are given only with more than three studies, at the bias tests' level; the summary meta-analysis of a
     // difference is labelled and plotted as a difference; and two studies have the test-based I-squared interval when Q > k.
+    // The replays also hold at the limits: a pooled proportion of 0 or 1, and summary limits selected the wrong way round.
     // Every run goes through the real cell acquisition, the real template run and its saved record, and R.
-    // One part can be checked alone: "forest", "bias", "summary" or "empty".
+    // One part can be checked alone: "forest", "bias", "summary", "empty" or "limits".
     private static void CheckMetaReview539(string folder, string part = null)
     {
         RRecipes.Folder = Metadata("Recipes");
@@ -26,6 +27,7 @@ internal static partial class Program
             if (part is null or "bias") CheckMeta539BiasIndicators(Path.Combine(folder, "bias"));
             if (part is null or "summary") CheckMeta539SummaryDifferences(Path.Combine(folder, "summary-differences"));
             if (part is null or "empty") CheckMeta539EmptyCells(Path.Combine(folder, "empty-cells"));
+            if (part is null or "limits") CheckMeta539Limits(Path.Combine(folder, "limits"));
         }
         finally { MetaExact = exact; MetaCC = correction; DelayContinuityCorrection = delay; }
     }
@@ -300,8 +302,9 @@ internal static partial class Program
 
     // Tables with empty cells, from the sparse and boundary sets of the meta-analysis benchmarks (tests/MetaAnalysis) and the
     // study with every subject of one group an event and none of the other (10/10 v 0/10), put through the four analyses of
-    // fourfold tables under the calculation options (exact methods on or off; the treatment arm, 0.5 or 0.01 correction;
-    // delayed or not). The R replay must complete and give the native figures, the excluded studies and the corrections.
+    // fourfold tables and the typed-in Mantel-Haenszel test under the calculation options (exact methods on or off; the
+    // treatment arm, 0.5 or 0.01 correction; delayed or not). The R replay must complete and give the native figures, the
+    // excluded studies and the corrections.
     private static void CheckMeta539EmptyCells(string folder)
     {
         // events and total of the first group, events and total of the second, one row for each study
@@ -328,7 +331,10 @@ internal static partial class Program
                 new double[] { 1, 20, 4, 24 }, new double[] { 15, 40, 37, 75 }, new double[] { 8, 30, 10, 47 } }),
             ("one.each", new[] { new double[] { 16, 57, 6, 21 }, new double[] { 1, 1, 0, 1 }, new double[] { 4, 17, 8, 19 }, new double[] { 20, 54, 7, 27 }, new double[] { 3, 12, 36, 99 } }),
             ("empty.group", new[] { new double[] { 59, 172, 12, 35 }, new double[] { 11, 45, 23, 63 }, new double[] { 49, 148, 27, 42 }, new double[] { 0, 0, 3, 10 }, new double[] { 8, 40, 27, 63 } }),
-            ("one.subject", new[] { new double[] { 1, 1, 0, 0 }, new double[] { 4, 17, 8, 32 }, new double[] { 13, 43, 25, 53 }, new double[] { 8, 25, 10, 41 }, new double[] { 1, 13, 6, 21 } })
+            ("one.subject", new[] { new double[] { 1, 1, 0, 0 }, new double[] { 4, 17, 8, 32 }, new double[] { 13, 43, 25, 53 }, new double[] { 8, 25, 10, 41 }, new double[] { 1, 13, 6, 21 } }),
+            // given the margins, the total of the a cells is exactly as probable at 10 as at the observed 3 (7056 ways each), so
+            // the exact two sided P counts both, as the report does, whatever the rounding of the two probabilities
+            ("tied.total", new[] { new double[] { 0, 6, 6, 9 }, new double[] { 3, 9, 2, 2 } })
         };
         var settings = new (bool exact, double cc, bool delay, double level)[]
         {
@@ -336,7 +342,9 @@ internal static partial class Program
             (true, .01, false, .99), (false, .01, false, .9), (true, -9, true, .95), (false, .5, true, .95), (false, -9, true, .9)
         };
         List<string> failures = new();
-        foreach (string operation in new[] { "RelativeRiskMeta", "RiskDifference", "PetoMeta", "Mantel" })
+        // the typed-in Mantel-Haenszel test pools the tables as the odds ratio meta-analysis does, with the exact methods of its
+        // own option: each table's exposed and unexposed columns, cases above non-cases
+        foreach (string operation in new[] { "RelativeRiskMeta", "RiskDifference", "PetoMeta", "Mantel", "MantelHaenszelScreen" })
         foreach (var setting in settings)
         {
             // the Peto odds ratio has no continuity correction, so it needs only the two methods
@@ -347,10 +355,23 @@ internal static partial class Program
             foreach (var (name, rows) in sets)
             {
                 string label = operation + "-" + name + "-" + settingLabel;
-                var cells = new RecordCells(Enumerable.Range(0, 4).Select(j => rows.Select(r => (object)r[j]).ToArray()).ToArray());
-                Dictionary<string, object> answers = new() { ["gamma"] = setting.level, ["strata"] = null,
-                    ["sr"] = Meta539Frame(cells, 0, rows.Length), ["sn"] = Meta539Frame(cells, 1, rows.Length),
-                    ["xr"] = Meta539Frame(cells, 2, rows.Length), ["xn"] = Meta539Frame(cells, 3, rows.Length) };
+                RecordCells cells;
+                Dictionary<string, object> answers;
+                if (operation == "MantelHaenszelScreen")
+                {
+                    double[][] typed = { rows.SelectMany(r => new[] { r[0], r[1] - r[0] }).ToArray(), rows.SelectMany(r => new[] { r[2], r[3] - r[2] }).ToArray() };
+                    cells = new RecordCells(typed.Select(c => c.Cast<object>().ToArray()).ToArray());
+                    DataFrame data = new();
+                    for (int j = 0; j < 2; j++) data.Variables.Add(Meta539Frame(cells, j, typed[j].Length).Variables[0]);
+                    answers = new() { ["cco"] = setting.level, ["try_exact"] = setting.exact, ["plot_forest"] = false, ["data"] = data };
+                }
+                else
+                {
+                    cells = new RecordCells(Enumerable.Range(0, 4).Select(j => rows.Select(r => (object)r[j]).ToArray()).ToArray());
+                    answers = new() { ["gamma"] = setting.level, ["strata"] = null,
+                        ["sr"] = Meta539Frame(cells, 0, rows.Length), ["sn"] = Meta539Frame(cells, 1, rows.Length),
+                        ["xr"] = Meta539Frame(cells, 2, rows.Length), ["xn"] = Meta539Frame(cells, 3, rows.Length) };
+                }
                 OperationRun run; StepOutput native;
                 try { (run, native) = Run(operation, answers); }
                 catch (Exception ex)
@@ -364,13 +385,99 @@ internal static partial class Program
                 Check(script.HasRecipe && !script.DataUnavailable, label + " replays the acquired tables");
                 if (script.Text.Contains("delay_cc <- ") == (operation != "PetoMeta")) Check(true, label + " replays with the recorded continuity correction");
                 else failures.Add(label + ": the replay does not take the recorded continuity correction");
-                replays.Add((label, script.Text + "\n" + Meta539Assertions(operation, bag)));
+                replays.Add((label, script.Text + "\n" + Meta539Assertions(operation == "MantelHaenszelScreen" ? "Mantel" : operation, bag)));
             }
             failures.AddRange(Meta539Batch(Path.Combine(folder, operation + "-" + settingLabel), replays));
         }
         // every disagreement is listed before the check fails, so that one run shows them all
         foreach (string failure in failures) Console.WriteLine("      " + failure);
         Check(failures.Count == 0, failures.Count + " empty-cell replays disagree with the native analysis");
+    }
+
+    // The replays at the limits of their data. A proportion meta-analysis in which no study has a responder, every subject of
+    // every study responds, or so few respond that the Miller inverse gives 0: the report pools the proportion to 0 or 1 (and
+    // its near limit with it) and gives no Harbord figure, since no score then has a variance; the replay used to stop at
+    // Harbord's regression ("0 (non-NA) cases"), or print a pooled proportion just inside 0 or 1 with Harbord figures. And a
+    // summary meta-analysis whose limits were selected the wrong way round, the upper before the lower: the report puts them
+    // the right way round, where the replay used to take each standard error as negative and give Egger's bias the other sign.
+    private static void CheckMeta539Limits(string folder)
+    {
+        List<(string, string)> replays = new();
+        var proportions = new (string name, double[] n, double[] r)[]
+        {
+            ("no-responder-equal", new double[] { 20, 20, 20, 20, 20 }, new double[] { 0, 0, 0, 0, 0 }),
+            ("no-responder", new double[] { 12, 20, 35, 50, 80 }, new double[] { 0, 0, 0, 0, 0 }),
+            ("all-responders-equal", new double[] { 20, 20, 20, 20, 20 }, new double[] { 20, 20, 20, 20, 20 }),
+            ("all-responders", new double[] { 12, 20, 35, 50, 80 }, new double[] { 12, 20, 35, 50, 80 }),
+            ("one-responder", new double[] { 12, 20, 35, 50, 80 }, new double[] { 0, 0, 1, 0, 0 }),
+            ("ordinary", new double[] { 311, 65, 67, 285, 73, 116 }, new double[] { 214, 58, 59, 182, 65, 66 })
+        };
+        foreach (var (name, n, r) in proportions)
+        foreach (string method in new[] { "arcsine", "doubleArcsine" })
+        foreach (double confidence in new[] { .95, .8 })
+        foreach (bool exact in new[] { false, true })
+        {
+            MetaExact = exact;
+            string label = "ProportionMeta-" + name + "-" + method + "-" + confidence.ToString(inv) + (exact ? "-exact" : "");
+            var cells = new RecordCells(new[] { n, r }.Select(c => c.Cast<object>().ToArray()).ToArray());
+            Dictionary<string, object> answers = new() { ["gamma"] = confidence, ["method"] = method, ["strata"] = null,
+                ["sn"] = Meta539Frame(cells, 0, n.Length), ["sr"] = Meta539Frame(cells, 1, n.Length) };
+            var (run, native) = Run("ProportionMeta", answers);
+            ParameterBag bag = native.ParameterBag;
+            RScript script = RScriptWriter.Write(Record(run), null, cells.Read);
+            Check(script.HasRecipe && !script.DataUnavailable, label + " replays its acquired studies");
+            ParameterBag egger = Meta539Rows(bag, "*egger").Single(), harbord = Meta539Rows(bag, "*harbord").Single();
+            IEnumerable<double> Figures(params string[] keys) => keys.Select(key => Meta539Number(bag, key));
+            string checks = "if (!identical(grep('^Pooled proportion = ', printed, value = TRUE)[1], paste0('Pooled proportion = ', six(" + Meta539Value(Meta539Number(bag, "rmh"))
+                + "), ' (', pct, 'CI = ', six(" + Meta539Value(Meta539Number(bag, "from")) + "), ' to ', six(" + Meta539Value(Meta539Number(bag, "to"))
+                + "), ')'))) stop('the printed fixed effects line differs: ', grep('^Pooled proportion = ', printed, value = TRUE)[1])\n"
+                + Meta539Compare("fixed effects", "fixed", Figures("rmh", "from", "to"))
+                + Meta539Compare("random effects", "inv(xr), inv(xr - z * se_r), inv(xr + z * se_r)", Figures("dspr", "from_ds", "to_ds"))
+                + Meta539Compare("heterogeneity", "q, tau2, i2", Figures("qc", "tausq", "isq"))
+                + Meta539Compare("I-squared interval", "i2_ci", Figures("llisq", "ulisq"), 1e-6)
+                + Meta539Compare("study limits", "ci[, 1], ci[, 2]", Meta539Rows(bag, "*proportions").Select(row => Meta539Number(row, "from_y"))
+                    .Concat(Meta539Rows(bag, "*proportions").Select(row => Meta539Number(row, "to_y"))))
+                + Meta539Compare("Begg-Mazumdar", "begg$estimate, begg$p.value", new[] { "tau", "p2" }.Select(key => Meta539Number(egger, key)))
+                + Meta539Compare("Egger", "egger_figures", new[] { "a", "cl", "cu", "p" }.Select(key => Meta539Number(egger, key)))
+                + Meta539Compare("Harbord", "harbord_figures", new[] { "a", "cl", "cu", "p" }.Select(key => Meta539Number(harbord, key)))
+                + "if (sum(grepl('^Harbord: bias = ', printed)) != 1 || sum(grepl('^Egger: bias = ', printed)) != 1) stop('the replay prints the Egger and Harbord lines other than once each')\n";
+            replays.Add((label, "printed <- capture.output({\n" + script.Text + "\n})\ncat(printed, sep = '\\n')\n" + checks));
+        }
+
+        // every one of the five types of summary statistic, with all of its limits, or two of them, selected the wrong way round
+        foreach (string type in new[] { "oddsRatio", "relativeRisk", "otherRatio", "riskDifference", "otherDifference" })
+        foreach (bool all in new[] { true, false })
+        foreach (bool exact in new[] { false, true })
+        {
+            MetaExact = exact;
+            bool ratio = type.EndsWith("Ratio", StringComparison.Ordinal) || type == "relativeRisk";
+            double[] y = ratio ? new[] { 1.5, .8, 2, 1.15, 2.6, 1.3 } : new[] { .05, -.02, .10, .03, .08, -.04 };
+            double[] se = { .12, .18, .21, .15, .25, .2 };
+            double[] lower = y.Select((v, i) => ratio ? Math.Exp(Math.Log(v) - 1.959964 * se[i]) : v - 1.959964 * se[i]).ToArray();
+            double[] upper = y.Select((v, i) => ratio ? Math.Exp(Math.Log(v) + 1.959964 * se[i]) : v + 1.959964 * se[i]).ToArray();
+            double[] first = lower.Select((v, i) => all || i % 3 == 1 ? upper[i] : v).ToArray(), second = upper.Select((v, i) => all || i % 3 == 1 ? lower[i] : v).ToArray();
+            string label = "MetaSummary-" + type + (all ? "-all" : "-some") + "-limits-reversed" + (exact ? "-exact" : "");
+            var cells = new RecordCells(new[] { y, first, second }.Select(c => c.Cast<object>().ToArray()).ToArray());
+            Dictionary<string, object> answers = new() { ["gamma"] = .95, ["type"] = type, ["use_ci"] = "true", ["studies"] = null,
+                ["y"] = Meta539Frame(cells, 0, 6), ["ll_y"] = Meta539Frame(cells, 1, 6), ["ul_y"] = Meta539Frame(cells, 2, 6) };
+            var (run, native) = Run("MetaSummary", answers);
+            ParameterBag bag = native.ParameterBag;
+            RScript script = RScriptWriter.Write(Record(run), null, cells.Read);
+            Check(script.HasRecipe && !script.DataUnavailable, label + " replays its acquired summaries");
+            IList<ParameterBag> studies = Meta539Rows(bag, "*studies");
+            ParameterBag bias = Meta539Rows(bag, "*bias").Single();
+            string checks = Meta539Compare("Egger", "egger_figures", new[] { "a", "cl", "cu", "p" }.Select(key => Meta539Number(bias, key)))
+                + Meta539Compare("study limits and standard errors", "lower, upper, se", studies.Select(row => Meta539Number(row, "from"))
+                    .Concat(studies.Select(row => Meta539Number(row, "to"))).Concat(studies.Select(row => Meta539Number(row, "se"))))
+                + Meta539Compare("fixed effects", "back(pooled), back(pooled + c(-1, 1) * z * se_pooled), z_fixed", new[] { "rmh", "from_fixed", "to_fixed", "z" }.Select(key => Meta539Number(bag, key)))
+                + Meta539Compare("random effects", "back(pooled_dl), back(pooled_dl + c(-1, 1) * z * se_dl), z_dl", new[] { "dsrr", "dsll", "dsul", "dz" }.Select(key => Meta539Number(bag, key)))
+                + Meta539Compare("heterogeneity", "q, tau2, i2, i2_ci", new[] { "qc", "tausq", "isq", "llisq", "ulisq" }.Select(key => Meta539Number(bag, key)), 1e-6)
+                + Meta539Compare("Begg-Mazumdar", "kt$estimate, kt$p.value", new[] { "tau", "p2" }.Select(key => Meta539Number(bias, key)));
+            replays.Add((label, script.Text + "\n" + checks));
+        }
+        List<string> failures = Meta539Batch(folder, replays);
+        foreach (string failure in failures) Console.WriteLine("      " + failure);
+        Check(failures.Count == 0, failures.Count + " replays at the limits of their data disagree with the native analysis");
     }
 
     // The checks of a replay against the native output bag of its analysis

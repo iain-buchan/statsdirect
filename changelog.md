@@ -10,6 +10,9 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 - Meta-analysis replay gives the bias indicators only with more than three studies, as the report does, and Egger's and Harbord's intervals at the report's level of 1 - 2(1 - confidence), 90% for a 95% analysis, instead of always 90%.
 - Summary meta-analysis replay of a risk difference or another difference names the statistic and draws its forest plots on a linear scale about 0, instead of stopping at a logarithmic axis.
 - Meta-analysis replay of tables with empty cells, including a study with an event in every subject of one group and in none of the other, completes with the report's figures: it leaves out the studies the report leaves out and applies the recorded continuity correction (treatment arm, 0.5 or 0.01, delayed or not) in the relative risk, risk difference, Peto and Mantel-Haenszel analyses and the typed-in Mantel-Haenszel test.
+- Proportion meta-analysis replay gives the report's pooled proportion of 0 or 1, and no Harbord figure, when no study has a responder, every subject responds or the double arcsine inverse reaches 0 or 1, instead of stopping at Harbord's test or giving figures that the report does not.
+- Summary meta-analysis replay puts confidence limits selected the wrong way round the right way round, as the report does, instead of giving Egger's bias the opposite sign.
+- Odds ratio meta-analysis and Mantel-Haenszel test replay counts a total exactly as probable as the observed one in the exact two sided Fisher P, as the report does.
 
 ##[v5.3.8] 2026-11-09
 
