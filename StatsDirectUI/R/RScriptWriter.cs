@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using StatsDirect.Templates;
 
 namespace StatsDirect.R
 {
@@ -242,9 +243,23 @@ namespace StatsDirect.R
             // as a grid of new values a prediction asks for, are not the analysis's and are left out of its script
             bool namedOnly = binding != null && binding.List == null && binding.Matrix == null && binding.Table == null && binding.Data.All(i => i.Input != null) && (binding.Data.Count > 0 || binding.Nested.Count > 0);
             bool ownFrames = columns.Any(c => !c.Inherited);   // the run asked for frames itself: the bag's inherited frames are not its data
-            void ListOf(string variable, IEnumerable<int> indices)
+            void ListOf(string variable, IEnumerable<int> indices, bool modelPredictors = false)
             {
-                s.Append(variable).Append(" <- list(").Append(string.Join(",\n  ", indices.Select(i => Quote(columns[i].Title) + " = " + Vector(columns[i].Values)))).Append(")\n");
+                string[] titles = null;
+                if (modelPredictors)
+                {
+                    // Held values already use these ordered keys. Apply the same rule to entered and reread predictors so
+                    // different columns do not become the same term in the model formula.
+                    HashSet<string> used = new(StringComparer.Ordinal);
+                    titles = indices.Select(i => RunRecord.UniqueTitle(columns[i].Title, used)).ToArray();
+                    for (int i = 0; i < titles.Length; i++)
+                    {
+                        // R cannot use an empty name and Quote represents a NUL as a space. Reserve all stored keys first.
+                        if (titles[i].Length == 0) titles[i] = RunRecord.UniqueTitle("Column", used);
+                        else if (titles[i].Contains('\0')) titles[i] = RunRecord.UniqueTitle(titles[i].Replace('\0', ' '), used);
+                    }
+                }
+                s.Append(variable).Append(" <- list(").Append(string.Join(",\n  ", indices.Select((i, j) => Quote(titles == null ? columns[i].Title : titles[j]) + " = " + Vector(columns[i].Values)))).Append(")\n");
                 names.Add(variable);
             }
             void Missing(string variable, string why)
@@ -293,7 +308,12 @@ namespace StatsDirect.R
                     // their columns, a vector the first not yet taken
                     List<int> indices = groups.Where(g => g.name == item.Input).SelectMany(g => Enumerable.Range(g.start, g.count)).Where(i => !bound.Contains(i)).ToList();
                     if (!groups.Any(g => g.name == item.Input)) { Missing(item.Variable, $"no \"{item.Input}\" in this run"); continue; }
-                    if (item.IsList) { ListOf(item.Variable, indices); foreach (int i in indices) bound.Add(i); }
+                    if (item.IsList)
+                    {
+                        // These regression recipes build their formula from the predictor list. LOESS uses its saved formula.
+                        ListOf(item.Variable, indices, modelPredictors: item.Input == "predictors" && item.Variable == "predictors");
+                        foreach (int i in indices) bound.Add(i);
+                    }
                     else if (indices.Count > 0) { int i = indices[0]; Assign(s, item.Variable, columns[i], names); bound.Add(i); }
                     else Missing(item.Variable, $"no column of \"{item.Input}\" is left for it");
                 }
