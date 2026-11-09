@@ -24,6 +24,7 @@ internal static partial class Program
         CheckModels539HosmerLemeshowCuts(folder);
         CheckModels539ConstantPredictor(folder);
         CheckModels539CoxSplit(folder);
+        CheckModels539CoxNames(folder);
         CheckModels539LoessTitles(folder);
         CheckModels539NoInterceptLrDf(folder);
         CheckModels539MissingPredictorStack(folder);
@@ -394,6 +395,57 @@ internal static partial class Program
                 ? "stopifnot(grouped, curve_count == 2L, identical(unname(baseline_rows[[" + expectedGroup + "]]), sort(unique(predictor_frame[[" + expectedGroup + "]]))), all(unlist(baseline_rows[-" + expectedGroup + "]) == 0))\n"
                 : "stopifnot(!grouped, curve_count == 1L)\n";
             Models539Verify(folder, "cox-split-" + label, plotRun, assertions);
+        }
+    }
+
+    // Item 12: the replay's unique predictor names, beyond linear regression, for Cox regression and its hazard ratio follow-on, from each
+    // of the record's paths: values held in the record, a reread of the worksheet (above the 5,000 values a record holds), and values
+    // entered without a worksheet. Held values had unique keys already; the other two paths gave both predictors the name Z.
+    private static void CheckModels539CoxNames(string folder)
+    {
+        foreach (var (path, n) in new[] { ("held", 14), ("reread", 1100), ("entered", 14) })
+        {
+            Random random = new(539);
+            double[] time = new double[n], events = new double[n], treated = new double[n], female = new double[n], age = new double[n];
+            for (int i = 0; i < n; i++)
+            {
+                treated[i] = i % 2;
+                female[i] = i / 3 % 2;
+                age[i] = 40 + i * 7 % 35;
+                time[i] = Math.Ceiling(-Math.Log(1 - random.NextDouble()) / Math.Exp(.6 * treated[i] - .4 * female[i] + .02 * (age[i] - 57)) * 20);
+                events[i] = random.NextDouble() < .75 ? 1 : 0;
+            }
+            var columns = new[] { ("Time", time), ("Event", events), ("Z", treated), ("Z", female), ("Age", age) };
+            RecordCells cells = new(columns.Select(c => new object[] { c.Item1 }.Concat(c.Item2.Cast<object>()).ToArray()).ToArray());
+            DataFrame Frame(params int[] selected)
+            {
+                DataFrame frame = new();
+                foreach (int c in selected)
+                    frame.Variables.Add(path == "entered" ? Column(columns[c].Item1, (double[])columns[c].Item2.Clone()) : cells.Acquire(c, 0, n + 1, DataAcquisitionMode.NumericPreserveRows).Variables[0]);
+                return frame;
+            }
+            var (run, output) = Run("CoxRegression", new()
+            {
+                ["times"] = Frame(0), ["events"] = Frame(1), ["predictors"] = Frame(2, 3, 4), ["strata"] = null,
+                ["accuracy"] = 1e-11, ["centre-continuous-covariates"] = true, ["useTimesAdjustment"] = false
+            });
+            ParameterBag fit = output.ParameterBag;
+            var (ratioRun, ratios) = Run("CoxHazardRatios", new() { ["gamma"] = .9 }, fit);
+            foreach (var (label, record) in new[] { ("model", Record(run)), ("ratios", Record(ratioRun)) })
+            {
+                var predictors = record.GetProperty("inputs").EnumerateArray().First(input => input.GetProperty("name").GetString() == "predictors");
+                bool held = record.TryGetProperty("data", out _);
+                Check(predictors.GetProperty("kind").GetString() == (path == "entered" ? "entered" : "frame") && held == (path == "held"),
+                    "Cox " + label + " record keeps its predictors as " + path + " values");
+                RScript script = RScriptWriter.Write(record, null, path == "reread" ? cells.Read : null);
+                Check(script.HasRecipe && !script.DataUnavailable, "Cox " + label + " from " + path + " values exports its data for replay");
+                string assertions = "stopifnot(identical(names(predictors), c('Z', 'Z_2', 'Age')))\n" + (label == "model"
+                    ? Models539Equal("coef(fit)", Models539Block(fit, "pred").Select(row => Models539Number(row, "b")), 1e-7)
+                    : Models539Equal("exp(coef(fit)), exp(coef(fit) - qnorm(0.95) * sqrt(diag(vcov(fit)))), exp(coef(fit) + qnorm(0.95) * sqrt(diag(vcov(fit))))",
+                        new[] { "ec", "ell", "eul" }.SelectMany(key => Models539Block(ratios.ParameterBag, "hazard").Select(row => Models539Number(row, key))), 1e-7));
+                string result = RunR(script.Text + "\n" + assertions + "cat('MODELS_539_OK\\n')\n", Path.Combine(folder, "cox-names-" + path + "-" + label));
+                Check(result.Contains("MODELS_539_OK"), "Cox " + label + " from " + path + " values replays Z and Z_2 as two predictors, with the native figures");
+            }
         }
     }
 
