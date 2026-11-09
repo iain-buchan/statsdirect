@@ -19,18 +19,29 @@ internal static partial class Program
         (string, double[])[] tables = { ("sn", exposed), ("sr", events), ("xn", control), ("xr", controlEvents) };
         (string, double[])[] rates = { ("pt1", exposed), ("a", events), ("pt2", control), ("b", controlEvents) };
 
+        // Each pattern is put through the operation's own validators as the picker puts it. A pattern the picker refuses is
+        // record-only: it reaches a replay only in a stored record (one saved before the validator, or a pointer-only record
+        // reread after the cell was cleared), so its replay is still checked, and the case says that the picker refuses it.
         foreach (string operation in new[] { "RelativeRiskMeta", "RiskDifference", "PetoMeta", "Mantel" })
             CheckPatterns(operation, tables, "xr");
         foreach (string operation in new[] { "MetaIncidenceRateRatio", "MetaIncidenceRateDifference" })
             CheckPatterns(operation, rates, "pt2");
 
+        // A ratio's estimate must be positive, so the picker refuses a blank one; a blank standard error it takes.
         CheckPatterns("MetaSummary", new[] { ("y", estimates), ("se_y", errors) }, "se_y",
-            new() { ["type"] = "oddsRatio", ["use_ci"] = "false" });
-        // The current picker requires complete confidence-limit columns. An
-        // estimate may still be missing; stored runs can also carry blank limits.
+            new() { ["type"] = "oddsRatio", ["use_ci"] = "false" }, recordOnly: (true, false));
+        // The picker also requires complete confidence-limit columns: a ratio with limits has no reachable blank.
         CheckPatterns("MetaSummary", new[] { ("y", estimates), ("ll_y", new[] { 1.2, .55, 1.1, 1.3, .85, 1.6 }),
             ("ul_y", new[] { 1.9, 1.2, 2.2, 3.1, 1.6, 4.2 }) }, "y",
-            new() { ["type"] = "oddsRatio", ["use_ci"] = "true" });
+            new() { ["type"] = "oddsRatio", ["use_ci"] = "true" }, recordOnly: (true, true));
+        // A difference may be negative or blank: a blank estimate, standard error or whole row reaches the analysis from the
+        // picker, apart from a whole row with blank limits.
+        double[] differences = { .05, -.02, .10, .03, .08, -.04 }, differenceErrors = { .03, .04, .05, .02, .06, .03 };
+        CheckPatterns("MetaSummary", new[] { ("y", differences), ("se_y", differenceErrors) }, "se_y",
+            new() { ["type"] = "riskDifference", ["use_ci"] = "false" });
+        CheckPatterns("MetaSummary", new[] { ("y", differences), ("ll_y", differences.Select(v => v - .06).ToArray()),
+            ("ul_y", differences.Select(v => v + .06).ToArray()) }, "y",
+            new() { ["type"] = "riskDifference", ["use_ci"] = "true" }, recordOnly: (true, false));
 
         double[] en = { 34, 50, 39, 24, 41, 28 };
         double[] cn = { 39, 44, 35, 29, 48, 36 };
@@ -40,11 +51,12 @@ internal static partial class Program
             CheckPatterns("Effect", new[] { ("en", en), ("cn", cn), ("em", new[] { 11d, 8, 9, 10, 14, 13 }),
                 ("es", new[] { 2.1, 2.5, 2.8, 3.4, 2.2, 2.6 }), ("cm", new[] { 8d, 10, 9, 8, 11, 8 }),
                 ("cs", new[] { 1.8, 2, 3.1, 3.2, 2.9, 2.4 }) }, "cs", new() { ["type"] = type });
+        // The picker takes positive totals and nonnegative counts only: a blank in either is record-only.
         CheckPatterns("ProportionMeta", new[] { ("sn", exposed), ("sr", propEvents) }, "sr",
-            new() { ["fudge"] = .5, ["method"] = "doubleArcsine" });
+            new() { ["fudge"] = .5, ["method"] = "doubleArcsine" }, recordOnly: (true, true));
 
         void CheckPatterns(string operation, (string name, double[] values)[] columns, string missingInput,
-            Dictionary<string, object> settings = null)
+            Dictionary<string, object> settings = null, (bool wholeRow, bool cell) recordOnly = default)
         {
             bool original = MetaExact;
             try
@@ -52,15 +64,15 @@ internal static partial class Program
                 foreach (bool exact in new[] { false, true })
                 {
                     MetaExact = exact;
-                    Verify(operation, columns, missingInput, settings, wholeRow: true, labelled: false);
-                    Verify(operation, columns, missingInput, settings, wholeRow: false, labelled: true);
+                    Verify(operation, columns, missingInput, settings, wholeRow: true, labelled: false, recordOnly.wholeRow);
+                    Verify(operation, columns, missingInput, settings, wholeRow: false, labelled: true, recordOnly.cell);
                 }
             }
             finally { MetaExact = original; }
         }
 
         void Verify(string operation, (string name, double[] values)[] columns, string missingInput,
-            Dictionary<string, object> settings, bool wholeRow, bool labelled)
+            Dictionary<string, object> settings, bool wholeRow, bool labelled, bool recordOnly)
         {
             const int omitted = 2;
             int count = columns[0].values.Length;
@@ -77,9 +89,11 @@ internal static partial class Program
                 labelled ? cells.Acquire(columns.Length, 0, namedColumn.Length, DataAcquisitionMode.Text) : null;
             for (int i = 0; i < columns.Length; i++)
                 answers[columns[i].name] = cells.Acquire(i, 0, count, DataAcquisitionMode.NumericReplaceMissing);
-            var (run, native) = Run(operation, answers);
+            var (run, native, refusals) = RunAtPicker(operation, answers);
             string label = operation + "-" + (settings?.Values.FirstOrDefault()?.ToString() ?? "default") +
-                "-" + (settings?.GetValueOrDefault("use_ci") ?? "") + "-" + MetaExact + "-" + (wholeRow ? "row" : "cell");
+                "-" + (settings?.GetValueOrDefault("use_ci") ?? "") + "-" + MetaExact + "-" + (wholeRow ? "row" : "cell") + (recordOnly ? "-record-only" : "");
+            Check(refusals.Count > 0 == recordOnly, label + (recordOnly ? ": the picker refuses this selection (" + string.Join(", ", refusals) + "), so it is record-only"
+                : ": the picker accepts this selection" + (refusals.Count > 0 ? ", but it refused " + string.Join(", ", refusals) : "")));
             ParameterBag report = native.ParameterBag;
             var (block, labelVector, defaultLabel, q, limits, low, high) = operation switch
             {

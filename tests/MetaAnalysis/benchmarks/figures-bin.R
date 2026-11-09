@@ -48,7 +48,7 @@ heterogeneity <- function(key, m, s, level) {
   if (is.finite(m$tau2)) put(paste0(key, "|tausq"), m$tau2)
   if (k > 1) put(paste0(key, "|xp_cochran"), m$pval.Q)
   if (s$exact) { if (k > 1) put(paste0(key, c("|llisq", "|ulisq")), isq_exact(m$Q, k - 1, level)) }
-  else if (k > 2) put(paste0(key, c("|llisq", "|ulisq")), 100 * c(m$lower.I2, m$upper.I2))
+  else if (k > 1) put(paste0(key, c("|llisq", "|ulisq")), 100 * c(m$lower.I2, m$upper.I2))
 }
 bias <- function(key, m, harbord) {
   if (sum(is.finite(m$TE) & is.finite(m$seTE)) < 4) return(invisible())
@@ -135,7 +135,7 @@ while (at <= length(lines)) {
         k1 <- m$k
         put(paste0(key, c("|qc", "|isq")), c(if (k1 > 1) m$Q else 0, if (k1 > 1) 100 * m$I2 else NA))
         if (s$exact) { if (k1 > 1) put(paste0(key, c("|llisq", "|ulisq")), isq_exact(m$Q, k1 - 1, level)) }
-        else if (k1 > 2) put(paste0(key, c("|llisq", "|ulisq")), 100 * c(m$lower.I2, m$upper.I2))
+        else if (k1 > 1) put(paste0(key, c("|llisq", "|ulisq")), 100 * c(m$lower.I2, m$upper.I2))
         i <- which(is.finite(m$TE))
         put(paste0(key, "|odds.", i, "|or"), exp(m$TE[i]))
         put(c(paste0(key, "|odds.", i, "|lci"), paste0(key, "|odds.", i, "|uci")), exp(c(m$lower[i], m$upper[i])))
