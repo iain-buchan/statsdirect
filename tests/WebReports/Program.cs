@@ -183,6 +183,7 @@ internal static partial class Program
         await CheckClampedSelection();
         await CheckPanesHidden();
         await CheckRecordRoundTrip();
+        await CheckContinueInRLabel();
         await CheckChartFiles();
         await CheckFindReplace();
     }
