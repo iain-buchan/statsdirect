@@ -18,7 +18,7 @@ internal static partial class Program
     // Each case acquires its columns from worksheet cells through GridSelectionProcessor.FillFrameParameter (and the
     // CellArrayProcessor under it), runs the operation through the template processor, writes the script from the record
     // the report step left, runs it in R within a time limit, and compares R's figures with the native output bag.
-    private static readonly string[] Recipes539Parts = { "gof", "kendall", "mann-whitney", "routing", "agreement", "fallback", "paired", "pca" };
+    private static readonly string[] Recipes539Parts = { "gof", "kendall", "mann-whitney", "routing", "agreement", "fallback", "paired", "pca", "k2" };
     private static void CheckRecipes539(string folder, string only = null)
     {
         if (only != null && !Recipes539Parts.Contains(only)) throw new ArgumentException("Unknown 5.3.9 recipe check: " + only);
@@ -32,6 +32,7 @@ internal static partial class Program
         if (only is null or "fallback") CheckConfidenceFallback539(Path.Combine(folder, "fallback"));
         if (only is null or "paired") CheckPairedNearConstant539(Path.Combine(folder, "paired"));
         if (only is null or "pca") CheckPcaTitles539(Path.Combine(folder, "pca"));
+        if (only is null or "k2") CheckRoystonK2539(Path.Combine(folder, "k2"));
         if (Failed539.Count > 0) throw new Exception("FAIL " + Failed539.Count + " of the 5.3.9 recipe cases: " + string.Join(" | ", Failed539));
     }
 
@@ -542,4 +543,22 @@ internal static partial class Program
         });
     }
 
+    // 9. Royston's adjustment of K2 when the raw K2 is 1,400 or more: the report's normal deviate of exp(-K2 / 2) was the
+    //    leading term of the tail's expansion only, so its adjusted K2 differed from R's in the 7th figure.
+    private static void CheckRoystonK2539(string folder)
+    {
+        foreach (int n in new[] { 400, 2001, 4000, 5200 }) Case539("k2 skewed " + n, () =>
+        {
+            // a long right tail: a few very large values among small ones
+            double[] values = Enumerable.Range(1, n).Select(i => i % 97 == 0 ? 400 + i % 13 : 10 + Math.Sin(i * .37) + (i % 7) * .1).ToArray();
+            var cells = new RecordCells(Cells539("Skewed", values));
+            var (run, output) = Run("Normality", new() { ["data"] = Select539(cells, n + 1, 0) });
+            ParameterBag b = Rows539(output.ParameterBag, "*variable")[0];
+            double k2 = Num539(b, "k2");
+            string assertion = "stopifnot(n == " + n + ", (z1^2 + z2^2 >= 1400) == " + (n > 400 ? "TRUE" : "FALSE") + ")\n" + Equal539("-2 * log_pk", new[] { k2 }, 1e-12) + Equal539("skew, kurt", new[] { Num539(b, "skewness"), Num539(b, "kurtosis") }, 1e-12);
+            string text = Replay539(run, assertion, Path.Combine(folder, "skewed-" + n), cells.Read, setup: "pdf(NULL)\n", timeout: 180);
+            double[] printed = Printed539(text, @"^Royston chi-sq " + Figure539 + ",");
+            Check(printed.Length == 1 && Math.Abs(printed[0] - k2) <= 5.1e-7, "n = " + n + ": the replay prints the report's adjusted K2 (" + k2.ToString("R", inv) + ")");
+        });
+    }
 }

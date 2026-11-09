@@ -206,5 +206,38 @@ refused("RptZSingle", list(data = frame(c(5, 6, 7)), gamma = 0.95, popmean = 4, 
 refused("RptReferenceRange", list(data = frame(1:7), do_conservative = TRUE, gamma = 0.95, `reference-interval` = 0.95), "Too few data for this method (minimum 8)")
 for (cover in c(0, 1, 95, -0.2)) refused("RptReferenceRange", list(data = frame(1:8), do_conservative = TRUE, gamma = 0.95, `reference-interval` = cover), "the reference interval must be greater than 0% and less than 100%")
 
+# ---- the test of skewness and kurtosis together (K2) with Royston's adjustment, for samples so far from normal that the raw
+# K2 is near or above 1,400, where its P, exp(-K2 / 2), passes below the smallest double: the normal deviate of that P is R's
+# quantile in log space, checked against the root of R's log-space normal tail, and the adjusted K2 is -2 ln P of Royston's
+# adjusted deviate. The P values themselves (1e-105 and below) are not compared: a part in a thousand million of K2 is far
+# more than that of P.
+k2_royston <- function(x) {
+  n <- length(x); x0 <- x - x[1]; d <- x0 - mean(x0); m2 <- mean(d^2); g1 <- mean(d^3) / m2^1.5; b2 <- mean(d^4) / m2^2
+  y <- g1 * sqrt((n + 1) * (n + 3) / (6 * (n - 2)))
+  b <- 3 * (n^2 + 27 * n - 70) * (n + 1) * (n + 3) / ((n - 2) * (n + 5) * (n + 7) * (n + 9))
+  w2 <- -1 + sqrt(2 * (b - 1)); z1 <- abs(asinh(y / sqrt(2 / (w2 - 1))) / sqrt(log(sqrt(w2))))
+  e <- 3 * (n - 1) / (n + 1); v <- 24 * n * (n - 2) * (n - 3) / ((n + 1)^2 * (n + 3) * (n + 5)); xk <- (b2 - e) / sqrt(v)
+  rb <- 6 * (n^2 - 5 * n + 2) / ((n + 7) * (n + 9)) * sqrt(6 * (n + 3) * (n + 5) / (n * (n - 2) * (n - 3)))
+  A <- 6 + 8 / rb * (2 / rb + sqrt(1 + 4 / rb^2))
+  z2 <- abs(((1 - 2 / (9 * A)) - ((1 - 2 / A) / (1 + xk * sqrt(2 / (A - 4))))^(1 / 3)) / sqrt(2 / (9 * A)))
+  raw <- z1^2 + z2^2
+  zc <- -qnorm(-raw / 2, log.p = TRUE)
+  root <- uniroot(function(z) pnorm(z, lower.tail = FALSE, log.p = TRUE) + raw / 2, c(1, 300), tol = 1e-13)$root
+  stopifnot(abs(zc - root) < 1e-12 * zc)
+  logn <- log(n); cut <- 0.55 * n^0.2 - 0.21
+  a1 <- (-5 + 3.46 * logn) * exp(-1.37 * logn); b1 <- 1 + (0.854 - 0.148 * logn) * exp(-0.55 * logn)
+  b2mb1 <- 2.13 / (1 - 2.37 * logn); z <- if (zc < -1) zc else if (zc < cut) a1 + b1 * zc else a1 - b2mb1 * cut + (b2mb1 + b1) * zc
+  list(raw = raw, k2 = -2 * pnorm(z, lower.tail = FALSE, log.p = TRUE))
+}
+far_samples <- lapply(list(c(400, 97), c(880, 97), c(900, 97), c(1200, 401), c(2001, 401)), function(s)
+  sapply(seq_len(s[1]), function(i) if (i %% s[2] == 0) 400 + i %% 13 else 10 + sin(i * 0.37) + (i %% 7) * 0.1))
+want <- list(`*variable.rows` = length(far_samples))
+for (j in seq_along(far_samples)) {
+  r <- k2_royston(far_samples[[j]]); k <- paste0("*variable[", j, "].")
+  want[[paste0(k, "n")]] <- length(far_samples[[j]])
+  want[[paste0(k, "k2")]] <- paste0(format(r$k2, digits = 17), ",")
+}
+do.call(case, c(list("RptNormality", list(data = do.call(frame, far_samples))), want))
+
 writeLines(cases, args[1]); writeLines(expected, args[2])
 cat(length(cases), "cases,", length(expected), "figures\n")

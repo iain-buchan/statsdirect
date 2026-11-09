@@ -13,6 +13,7 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 - A confidence level typed as 0% or 100% is taken as 95% by the R replay of every report that takes it so, including Mann-Whitney, Wilcoxon, Spearman, Kendall, the z test of two samples, reference ranges and quantiles; the Cox hazard ratios now take it so in the report too, where 100% gave a point interval.
 - Paired t replay completes for differences that are constant but for rounding, such as decimal data with a constant shift.
 - Principal components replay names items with repeated worksheet titles as the report does.
+- The normality report's K2 with Royston's adjustment is accurate when the raw K2 is 1,400 or more, where it was wrong in the seventh figure.
 
 ##[v5.3.8] 2026-11-09
 
