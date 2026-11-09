@@ -4120,3 +4120,14 @@ RptReferenceRange|c0389|refused	the reference interval must be greater than 0% a
 RptReferenceRange|c0390|refused	the reference interval must be greater than 0% and less than 100%
 RptReferenceRange|c0391|refused	the reference interval must be greater than 0% and less than 100%
 RptReferenceRange|c0392|refused	the reference interval must be greater than 0% and less than 100%
+RptNormality|c0393|*variable.rows	5
+RptNormality|c0393|*variable[1].n	400
+RptNormality|c0393|*variable[1].k2	482.72496000518322,
+RptNormality|c0393|*variable[2].n	880
+RptNormality|c0393|*variable[2].k2	1032.4135964593013,
+RptNormality|c0393|*variable[3].n	900
+RptNormality|c0393|*variable[3].k2	1062.7083850439576,
+RptNormality|c0393|*variable[4].n	1200
+RptNormality|c0393|*variable[4].k2	2203.838118087172,
+RptNormality|c0393|*variable[5].n	2001
+RptNormality|c0393|*variable[5].k2	3552.8162975672535,

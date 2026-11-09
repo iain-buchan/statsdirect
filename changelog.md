@@ -29,6 +29,15 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 - Proportion meta-analysis replay gives the report's pooled proportion of 0 or 1, and no Harbord figure, when no study has a responder, every subject responds or the double arcsine inverse reaches 0 or 1, instead of stopping at Harbord's test or giving figures that the report does not.
 - Summary meta-analysis replay puts confidence limits selected the wrong way round the right way round, as the report does, instead of giving Egger's bias the opposite sign.
 - Odds ratio meta-analysis and Mantel-Haenszel test replay counts a total exactly as probable as the observed one in the exact two sided Fisher P, as the report does.
+- Chi-square goodness of fit replay accepts expected counts, percentages or proportions that do not add up to 1, scaling them to the observed total as the report does, and leaves out a category whose observed or expected value is missing, as the report does, instead of stopping.
+- Kendall rank correlation replay handles ties as the report does (tau b, the tie-adjusted variance and the report's count of tied pairs), gives the report's exact P from 50 pairs, and keeps the limits of tau within -1 and 1.
+- Mann-Whitney replay uses the report's normal approximations for large samples, its exact count without ties, and only the rank sums that can occur with ties, so it no longer runs out of time or memory where the report completes; like the report, it gives no interval for the difference with fewer than 4 values in a sample or when the samples are too small for the confidence asked for.
+- Multiple comparisons after a two-way or replicated two-way analysis of variance replay that analysis rather than a one-way analysis, and the analysis of variance after a polynomial regression replays the polynomial regression.
+- Agreement replay shows Kendall's tau and its P as unavailable when every subject has the same standard deviation or mean, instead of stopping, and gives the report's P above 1,000 subjects without ties.
+- A confidence level typed as 0% or 100% is taken as 95% by the R replay of every report that takes it so, including Mann-Whitney, Wilcoxon, Spearman, Kendall, the z test of two samples, reference ranges and quantiles; the Cox hazard ratios now take it so in the report too, where 100% gave a point interval.
+- Paired t replay completes for differences that are constant but for rounding, such as decimal data with a constant shift.
+- Principal components replay names items with repeated worksheet titles as the report does.
+- The normality report's K2 with Royston's adjustment is accurate when the raw K2 is 1,400 or more, where it was wrong in the seventh figure.
 
 ##[v5.3.8] 2026-11-09
 
