@@ -41,6 +41,11 @@ namespace StatsDirect.Builtins
             public double[] R { get; set; }
             public double[,] R2 { get; set; }
             public int RANK { get; set; }
+            /// <summary>
+            /// The records of a logistic regression whose prior weight is positive, counted before the fit: the n of the Schwarz criterion.
+            /// (The fit gives a weight of zero to records it drops at the boundary, so WT cannot tell them apart afterwards.)
+            /// </summary>
+            public int PositiveWeightRecords { get; set; }
             public double[] RV { get; set; }
             public int[] RXI { get; set; }
 
@@ -2865,6 +2870,14 @@ namespace StatsDirect.Builtins
             {
                 if (merged[i] || tt[i] == Constant.MISSING || tr[i] == Constant.MISSING || tw[i] == Constant.MISSING)
                     continue;
+                // nor a row that lacks a predictor: MISSING equals itself, so rows lacking the same value were stacked, and the
+                // missing-data warning then counted them as one
+                bool missingPredictor = false;
+                for (int k = 0; k < prd; k++)
+                    if (pt[k, i] == Constant.MISSING)
+                        missingPredictor = true;
+                if (missingPredictor)
+                    continue;
                 for (int j = i + 1; j <= rows; j++)
                 {
                     if (!merged[j] && tt[j] != Constant.MISSING && tr[j] != Constant.MISSING && tw[j] == tw[i])
@@ -2976,6 +2989,10 @@ namespace StatsDirect.Builtins
                 AddDropWarning(warnList, records - cnt);
                 records = cnt;
             }
+            int positiveWeightRecords = 0;
+            for (int j = 1; j <= records; j++)
+                if (!useWeights || wt[j] > 0.0)
+                    positiveWeightRecords++;
             //  get intercept deviance - drop predictors
             double[,] x2 = new double[records + 1, 1 + 1];
             for (int j = 1; j <= records; j++)
@@ -3183,6 +3200,7 @@ namespace StatsDirect.Builtins
             context.DEVX = devx;
             context.LLX = llx;
             context.DFX = idfx;
+            context.PositiveWeightRecords = positiveWeightRecords;
             outputParameters["candidatePredictors"] = FilledParameterFactory.Input(x_prep_interlr(context));
             return new StepOutput(outputParameters);
         }
@@ -3726,17 +3744,20 @@ namespace StatsDirect.Builtins
             });
             double totalFrequency = ordered.Sum(pattern => pattern.Total);
             double tenth = totalFrequency / 10.0;
-            double nextCut = Math.Floor(tenth), cumulative = 0.0;
+            // Cuts are decided with a tolerance of 1e-9 of the total: decimal weights whose exact sum lands on a cut could otherwise
+            // fall either side of it with rounding, or with the order in which the rows were added.
+            double tolerance = 1e-9 * totalFrequency;
+            double nextCut = Math.Floor(tenth + tolerance), cumulative = 0.0;
             double[] observed = new double[10], total = new double[10], expected = new double[10];
             int group = 0;
             foreach (HosmerLemeshowPattern pattern in ordered)
             {
                 // Advance only after assigning observations to this group, and
                 // never beyond ten groups (fractional totals used to reach 11).
-                if (cumulative > 0.0 && cumulative >= nextCut && group < 9)
+                if (cumulative > 0.0 && cumulative >= nextCut - tolerance && group < 9)
                 {
                     group++;
-                    nextCut = Math.Floor(Math.Max(cumulative + tenth, (group + 1) * tenth));
+                    nextCut = Math.Floor(Math.Max(cumulative + tenth, (group + 1) * tenth) + tolerance);
                 }
                 total[group] += pattern.Total;
                 observed[group] += pattern.Observed;
@@ -3916,7 +3937,9 @@ namespace StatsDirect.Builtins
                 double z;
                 if (sse == 0.0 || sse == Constant.MISSING)
                 {
+                    // no z, and so no P: it had been 0, or that of the parameter before, printed as P < 0.0000001
                     z = Constant.MISSING;
+                    prob = Constant.MISSING;
                 }
                 else
                 {
@@ -3990,7 +4013,9 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("idf", idf);
             outputParameters.AddOutput("rank", irank);
             outputParameters.AddOutput("aka", dev + 2 * p); // p parameters: the predictors, and the intercept only when one was fitted
-            outputParameters.AddOutput("sch", dev + p * Math.Log(n)); // the same p parameters as the Akaike criterion; it used to count one more
+            // the same p parameters as the Akaike criterion (it used to count one more), and as n the covariate patterns with a positive
+            // prior weight: one with none adds nothing to the likelihood (the Poisson model and multiple regression do not count it either)
+            outputParameters.AddOutput("sch", dev + p * Math.Log(context.PositiveWeightRecords));
             outputParameters.AddOutput("devx", devx);
             double x2Dev = devx - dev;
             if (!DoC || devx == Constant.MISSING)

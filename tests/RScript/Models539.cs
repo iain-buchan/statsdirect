@@ -19,7 +19,12 @@ internal static partial class Program
         CheckModels539LonePredictor(folder);
         CheckModels539NoPredictorLeft(folder);
         CheckModels539ZeroResidualDf(folder);
+        CheckModels539ScaledWald(folder);
+        CheckModels539Schwarz(folder);
+        CheckModels539HosmerLemeshowCuts(folder);
         CheckModels539ConstantPredictor(folder);
+        CheckModels539NoInterceptLrDf(folder);
+        CheckModels539MissingPredictorStack(folder);
     }
 
     private static readonly double[] Models539Y = { 8.73, 8.83, 14.58, 9.89, 9.16, 11.35, 5.24, 7.19, 13.24, 7.65 };
@@ -213,6 +218,31 @@ internal static partial class Program
     private static readonly double[] Models539Exposures = { 100, 120, 140, 160, 180, 150, 110, 90, 130, 120, 150, 170 };
     private static readonly double[] Models539Dose = Enumerable.Range(0, 12).Select(i => 1.5 + i).ToArray();
 
+    // Item 4: a scaled Wald z that cannot be had (no scale at zero residual df, or a standard error of 0) has no P; it had been 0, or
+    // the P of the parameter before, printed as P < 0.0000001.
+    private static void CheckModels539ScaledWald(string folder)
+    {
+        var saturated = Models539Sheet(("Outcome", new[] { 2d, 5, 8, 13, 7, 11 }), ("Prior", new[] { 1d, 1, 1, 1, 0, 0 }), ("Exposure", Enumerable.Repeat(1d, 6).ToArray()),
+            ("X1", new[] { 0d, 1, 0, 0, 1, 1 }), ("X2", new[] { 0d, 0, 1, 0, 1, 1 }), ("X3", new[] { 0d, 0, 0, 1, 1, 1 }));
+        var (run, output) = Run("PoissonRegression", Models539PoissonAnswers(saturated, new[] { 3, 4, 5 }, true, false, true));
+        ParameterBag model = Run("PoissonRegressionModel", new(), output.ParameterBag).output.ParameterBag;
+        Check(Models539Number(model, "idf") == 0 && Models539Number(model, "sp") == Constant.MISSING &&
+            Models539Block(model, "scaled").All(row => Models539Number(row, "z") == Constant.MISSING && Models539Number(row, "p") == Constant.MISSING),
+            "saturated Poisson: no scale, so no scaled Wald z or P");
+        string rendered = Models539Verify(folder, "scaled-wald-saturated", run, "stopifnot(fit$df.residual == 0L, is.na(scale))\n");
+        Check(Regex.Matches(rendered, @"^(?:Intercept|X\d)(?: +[-+0-9.eE*]+){4} +P = \*\s*$", RegexOptions.Multiline).Count == 4, "saturated Poisson: the replay's scaled Wald P is * for each parameter");
+
+        var aliased = Models539Sheet(("Outcome", Models539Counts), ("Prior", Enumerable.Repeat(1d, 12).ToArray()), ("Exposure", Models539Exposures), ("Dose", Models539Dose), ("Zero", new double[12]));
+        (run, output) = Run("PoissonRegression", Models539PoissonAnswers(aliased, new[] { 3, 4 }, true, true, false));
+        model = Run("PoissonRegressionModel", new(), output.ParameterBag).output.ParameterBag;
+        var scaled = Models539Block(model, "scaled");
+        Check(Models539Number(model, "idf") == 10 && Models539Number(scaled[2], "z") == Constant.MISSING && Models539Number(scaled[2], "p") == Constant.MISSING &&
+            scaled.Take(2).All(row => Models539Number(row, "p") >= 0 && Models539Number(row, "p") <= 1),
+            "Poisson with a column of zeros: its scaled Wald z and P are unavailable, not the P of the predictor before");
+        Models539Verify(folder, "scaled-wald-aliased", run,
+            Models539Equal("2 * pnorm(-abs(s[1:2, 1] / (s[1:2, 2] * sqrt(scale))))", scaled.Take(2).Select(row => Models539Number(row, "p")), 1e-7) + "stopifnot(is.na(coef(fit)[3]))\n");
+    }
+
     private static Dictionary<string, object> Models539LogisticAnswers(Func<DataAcquisitionMode, int[], DataFrame> sheet, int[] predictors, bool intercept = true, bool grouped = true) => grouped
         ? new()
         {
@@ -224,6 +254,62 @@ internal static partial class Program
             ["response"] = Models539Select(sheet, 0), ["weight"] = Models539Select(sheet, 1), ["predictors"] = Models539Select(sheet, predictors),
             ["gamma"] = .95, ["grouping"] = "individual", ["accuracy"] = "0.00000000001", ["intercept"] = intercept, ["weights"] = true
         };
+
+    // Item 5: the logistic Schwarz criterion counts the covariate patterns that have a positive prior weight, so that zero weights give
+    // what deleting those rows gives (it had counted them: dev + 4 ln 13 where deletion gives dev + 4 ln 10).
+    private static void CheckModels539Schwarz(string folder)
+    {
+        double[] total = { 41, 14, 17, 54, 15, 46, 25, 45, 43, 30, 57, 9, 38 }, responders = { 7, 6, 13, 30, 7, 28, 23, 28, 23, 16, 32, 1, 11 };
+        double[] weight = { 3, 2, 4, 2, 0, 1, 2, 0, 2, 4, 0, 4, 3 };
+        double[] dose = { 0.7, 1.5, 6, 4.6, 1.3, 4.4, 2.6, 0.9, 3.9, 3.9, 4.1, 2.1, 2.3 }, male = { 0, 0, 1, 0, 1, 1, 1, 1, 0, 1, 1, 0, 0 };
+        double[] age = { 51.5, 41.5, 52.5, 21.5, 44.5, 35.5, 58.5, 58.5, 28.5, 30.5, 54.5, 23.5, 46.5 };
+        int[] kept = Enumerable.Range(0, 13).Where(i => weight[i] > 0).ToArray();
+        double[] Kept(double[] v) => kept.Select(i => v[i]).ToArray();
+        var withZeros = Models539Sheet(("Responders", responders), ("Total", total), ("Prior weight", weight), ("Dose", dose), ("Male", male), ("Age", age));
+        var deleted = Models539Sheet(("Responders", Kept(responders)), ("Total", Kept(total)), ("Prior weight", Kept(weight)), ("Dose", Kept(dose)), ("Male", Kept(male)), ("Age", Kept(age)));
+        var (run, output) = Run("LogisticRegression", Models539LogisticAnswers(withZeros, new[] { 3, 4, 5 }));
+        ParameterBag zero = Run("LogisticRegressionModel", new(), output.ParameterBag).output.ParameterBag;
+        ParameterBag removed = Run("LogisticRegressionModel", new(), Run("LogisticRegression", Models539LogisticAnswers(deleted, new[] { 3, 4, 5 })).output.ParameterBag).output.ParameterBag;
+        Check(Close(Models539Number(zero, "sch"), Models539Number(removed, "sch"), 1e-12) && Close(Models539Number(zero, "aka"), Models539Number(removed, "aka"), 1e-12),
+            "logistic zero prior weights: the Schwarz criterion is that of the run without those rows (" + Models539Number(zero, "sch").ToString("R", inv) + ")");
+        string oracle = "r <- " + Models539Vector(Kept(responders)) + "\nn <- " + Models539Vector(Kept(total)) + "\nw <- " + Models539Vector(Kept(weight)) +
+            "\nd <- " + Models539Vector(Kept(dose)) + "\nm <- " + Models539Vector(Kept(male)) + "\na <- " + Models539Vector(Kept(age)) + "\n" +
+            "g <- glm(cbind(r, n - r) ~ d + m + a, family = binomial, weights = w, control = glm.control(epsilon = 1e-12, maxit = 100))\n" +
+            Models539Equal("deviance(g) + length(coef(g)) * log(nobs(g))", new[] { Models539Number(zero, "sch") }, 1e-8);
+        string rendered = Models539Verify(folder, "schwarz-zero-weights", run, oracle);
+        Check(rendered.Contains("Schwarz information criterion = " + Models539R(zero, "sch")), "logistic zero prior weights: the replay prints the native Schwarz criterion");
+    }
+
+    // Item 6: Hosmer-Lemeshow cuts are decided within 1e-9 of the total. Forty records whose decimal weights total exactly 1 for each of
+    // ten doses give ten groups and 8 df in any row order (in one order the sums came to 0.9999999999999999 and gave 7 df).
+    private static void CheckModels539HosmerLemeshowCuts(string folder)
+    {
+        double[] firstResponse = { 0, 1, 0, 1, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 0, 0, 1, 0 };
+        double[] firstDose = { 2.5, 4.5, 1.5, 7.5, 4.5, 5.5, 6.5, 9.5, 7.5, 8.5, 4.5, 8.5, 5.5, 7.5, 9.5, 1.5, 2.5, 6.5, 2.5, 6.5, 2.5, 8.5, 1.5, 6.5, 5.5, 1.5, 7.5, 3.5, 10.5, 10.5, 8.5, 3.5, 3.5, 9.5, 10.5, 3.5, 5.5, 4.5, 10.5, 9.5 };
+        double[] firstWeight = { 0.2, 0.4, 0.3, 0.2, 0.2, 0.3, 0.1, 0.1, 0.3, 0.3, 0.1, 0.2, 0.4, 0.1, 0.3, 0.1, 0.3, 0.2, 0.4, 0.4, 0.1, 0.4, 0.4, 0.3, 0.1, 0.2, 0.4, 0.1, 0.2, 0.4, 0.1, 0.3, 0.2, 0.4, 0.3, 0.4, 0.2, 0.3, 0.1, 0.2 };
+        double[] secondResponse = { 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 0 };
+        double[] secondDose = { 6.5, 9.5, 7.5, 6.5, 10.5, 10.5, 5.5, 1.5, 2.5, 4.5, 4.5, 9.5, 3.5, 9.5, 1.5, 1.5, 9.5, 3.5, 8.5, 1.5, 6.5, 5.5, 4.5, 2.5, 8.5, 6.5, 3.5, 7.5, 7.5, 8.5, 2.5, 10.5, 3.5, 8.5, 7.5, 10.5, 4.5, 2.5, 5.5, 5.5 };
+        double[] secondWeight = { 0.1, 0.4, 0.1, 0.4, 0.3, 0.2, 0.4, 0.3, 0.4, 0.2, 0.1, 0.2, 0.2, 0.1, 0.4, 0.2, 0.3, 0.1, 0.3, 0.1, 0.3, 0.2, 0.4, 0.3, 0.4, 0.2, 0.4, 0.3, 0.2, 0.1, 0.2, 0.1, 0.3, 0.2, 0.4, 0.4, 0.3, 0.1, 0.1, 0.3 };
+        string Records(double[] r, double[] d, double[] w) => string.Join(";", Enumerable.Range(0, 40).Select(i => (r[i], d[i], w[i]).ToString()).OrderBy(s => s, StringComparer.Ordinal));
+        Check(Records(firstResponse, firstDose, firstWeight) == Records(secondResponse, secondDose, secondWeight), "the two Hosmer-Lemeshow fixtures hold the same forty records");
+        double? firstHl = null;
+        foreach (var (label, response, dose, weight) in new[] { ("first", firstResponse, firstDose, firstWeight), ("second", secondResponse, secondDose, secondWeight) })
+        {
+            var sheet = Models539Sheet(("Outcome", response), ("Prior weight", weight), ("Dose", dose));
+            var (run, output) = Run("LogisticRegression", Models539LogisticAnswers(sheet, new[] { 2 }, grouped: false));
+            ParameterBag model = Run("LogisticRegressionModel", new(), output.ParameterBag).output.ParameterBag;
+            double hl = Models539Number(model, "hl");
+            Check(Models539Number(model, "df_hl") == 8 && (firstHl == null || Close(hl, firstHl.Value, 1e-9)), "Hosmer-Lemeshow in the " + label + " row order has ten groups and 8 df, whatever the order of the rows");
+            firstHl ??= hl;
+            // Each dose totals exactly 1 of the 10: the documented rule puts each in a group of its own.
+            string oracle = "oracle <- rowsum(cbind(observed = responders * weight, expected = fitted(fit) * total * weight, total = total * weight), predictors[[1]])\n" +
+                "stopifnot(isTRUE(all.equal(unname(oracle[, 'total']), rep(1, 10))))\n" +
+                "oracle_hl <- sum((oracle[, 'observed'] - oracle[, 'expected'])^2 / (oracle[, 'expected'] * (1 - oracle[, 'expected'] / oracle[, 'total'])))\n" +
+                Models539Equal("oracle_hl, hl, hldf", new[] { hl, hl, 8 }, 1e-9);
+            string rendered = Models539Verify(folder, "hl-cuts-" + label, run, oracle);
+            Check(rendered.Contains("Hosmer-Lemeshow test = " + Models539R(model, "hl") + "  df = 8 "), "the " + label + " order's replay prints the native Hosmer-Lemeshow test");
+        }
+    }
 
     // Item 7: with an intercept, a nonzero constant predictor is aliased: rank 1 and n - 1 residual df, the fit of the intercept alone,
     // with a coefficient of 0 for it (it had stopped the singular value decomposition, or left rank 2, 10 df and coefficients of 1e14).
@@ -268,4 +354,46 @@ internal static partial class Program
         }
     }
 
+    // Item 11: without an intercept the likelihood ratio df is the report's, counted from the intercept-only model (R's null model is
+    // then the zero model, one df more).
+    private static void CheckModels539NoInterceptLrDf(string folder)
+    {
+        double[] response = { 2, 3, 4, 5, 6, 8, 10, 11, 12, 14, 15, 17 }, weights = { 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2 };
+        double[] square = Models539Dose.Select(v => v * v / 10).ToArray();
+        var logistic = Models539Sheet(("Outcome", response), ("Total", Enumerable.Repeat(20d, 12).ToArray()), ("Prior", weights), ("Dose", Models539Dose), ("Square", square));
+        var (run, output) = Run("LogisticRegression", Models539LogisticAnswers(logistic, new[] { 3, 4 }, intercept: false));
+        ParameterBag model = Run("LogisticRegressionModel", new(), output.ParameterBag).output.ParameterBag;
+        Check(Models539Number(output.ParameterBag, "df_lr") == 1 && Models539Number(model, "x2df") == 1 && Models539Number(model, "rank") == 2, "logistic without intercept: native LR df is rank - 1");
+        string rendered = Models539Verify(folder, "lr-df-logistic-no-intercept", run, Models539Equal("df_lr", new[] { 1.0 }));
+        Check(Regex.IsMatch(rendered, @"Deviance \(likelihood ratio\) chi-square = \* +df = 1 +P = \*"), "logistic without intercept: the replay prints the native LR df");
+
+        var poisson = Models539Sheet(("Outcome", Models539Counts), ("Prior", weights), ("Exposure", Models539Exposures), ("Dose", Models539Dose), ("Square", square));
+        (run, output) = Run("PoissonRegression", Models539PoissonAnswers(poisson, new[] { 3, 4 }, false, true, true));
+        model = Run("PoissonRegressionModel", new(), output.ParameterBag).output.ParameterBag;
+        Check(Models539Number(output.ParameterBag, "df_x2") == 1 && Models539Number(model, "x2df") == 1 && Models539Number(model, "rank") == 2, "Poisson without intercept: native LR df is rank - 1");
+        rendered = Models539Verify(folder, "lr-df-poisson-no-intercept", run, Models539Equal("df_lr", new[] { 1.0 }));
+        Check(Regex.IsMatch(rendered, @"Deviance \(likelihood ratio\) chi-square = \* +df = 1 +P = \*") && Regex.IsMatch(rendered, @"Scaled G2 = \* +df = 1 +P = \*"),
+            "Poisson without intercept: the replay prints the native LR df in both lines");
+    }
+
+    // Item 13: logistic rows that lack the same predictor value are not stacked before the rows with missing values are left out, so
+    // that the warning counts each of them; the fit is that of the complete rows.
+    private static void CheckModels539MissingPredictorStack(string folder)
+    {
+        double[] response = { 2, 3, 4, 5, 6, 8, 6, 10, 11, 12, 14, 6, 15, 17 }, total = Enumerable.Repeat(20d, 14).ToArray(), weights = Enumerable.Repeat(1d, 14).ToArray();
+        double[] dose = { 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, Constant.MISSING, 7.5, 8.5, 9.5, 10.5, Constant.MISSING, 11.5, 12.5 };
+        int[] complete = Enumerable.Range(0, 14).Where(i => dose[i] != Constant.MISSING).ToArray();
+        double[] Complete(double[] v) => complete.Select(i => v[i]).ToArray();
+        var sheet = Models539Sheet(("Outcome", response), ("Total", total), ("Prior", weights), ("Dose", dose));
+        var (run, output) = Run("LogisticRegression", Models539LogisticAnswers(sheet, new[] { 3 }));
+        Check(Models539Warnings(output.ParameterBag).Any(w => w.StartsWith("2 observations dropped due to missing data", StringComparison.Ordinal)), "logistic: two rows lacking the same dose are both counted as dropped");
+        var fewer = Models539Sheet(("Outcome", Complete(response)), ("Total", Complete(total)), ("Prior", Complete(weights)), ("Dose", Complete(dose)));
+        ParameterBag expected = Run("LogisticRegression", Models539LogisticAnswers(fewer, new[] { 3 })).output.ParameterBag;
+        double[] Coefficients(ParameterBag bag) => Models539Block(bag, "var").Select(row => row.ContainsKey("or") && row["or"].AsObject is double or ? Math.Log(or) : double.NaN).ToArray();
+        Check(Models539Number(output.ParameterBag, "dev") == Models539Number(expected, "dev") && Models539Number(output.ParameterBag, "df") == Models539Number(expected, "df") &&
+            Coefficients(output.ParameterBag).Skip(1).SequenceEqual(Coefficients(expected).Skip(1)), "logistic: the fit is that of the complete rows");
+        ParameterBag model = Run("LogisticRegressionModel", new(), output.ParameterBag).output.ParameterBag;
+        Models539Verify(folder, "logistic-missing-predictor", run, Models539Equal("coef(fit), fit$df.residual", Models539Block(model, "parameters").Select(row => Models539Number(row, "coef")).Append(Models539Number(model, "idf")), 1e-8) +
+            "stopifnot(length(responders) == 12L)\n");
+    }
 }
