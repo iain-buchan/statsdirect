@@ -2,6 +2,11 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
+##[Unreleased]
+
+### Fixed
+- Preferences are kept between sessions: at start-up StatsDirect reads back the preferences it saves in Documents\StatsDirect\statsdirect.json, which it has saved since 2023 but never read, so the main window's position, size and maximised state, decimal places, the default confidence interval, data selection, meta-analysis, worksheet font and chart options, and the recent files that still exist are restored. A missing, damaged or older file, a value StatsDirect cannot use, or a window position no longer on any screen leaves that preference at its default, and nothing is written while the preferences load.
+
 ##[v5.3.8] 2026-11-09
 
 ### Fixed
