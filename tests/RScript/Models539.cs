@@ -102,6 +102,31 @@ internal static partial class Program
                 Check(true, "multiple regression with " + label + " refuses fewer usable rows than parameters");
             }
         }
+
+        // Not refused: fewer rows than parameters where predictors that the others account for leave fewer parameters than rows. The
+        // refit has residual df, as lm's fit has (5.3.8 fitted these as lm does; the refusal had reached them). Both routes: zero weights
+        // and missing outcomes leave 5 rows for an intercept and 5 predictors of rank 3.
+        double[] w5 = { 1, 2, 0, 1, 0, 3, 0, 1, 0, 0 };
+        double[] gappy5 = Models539Y.Select((v, i) => w5[i] > 0 ? v : Constant.MISSING).ToArray();
+        double[] a2 = Models539X1.Select(v => 2 * v).ToArray(), b3 = Models539X2.Select(v => 3 * v).ToArray();
+        var aliased = Models539Sheet(("Y", Models539Y), ("W", w5), ("A", Models539X1), ("B", Models539X2), ("A2", a2), ("B3", b3), ("Acopy", (double[])Models539X1.Clone()), ("Gappy", gappy5));
+        int[] used = Enumerable.Range(0, 10).Where(i => w5[i] > 0).ToArray();
+        foreach (var (label, outcome, weighted) in new[] { ("zero-weights", 0, true), ("missing-outcomes", 7, false) })
+        {
+            var (run, model) = Models539Linear(aliased, outcome, weighted ? 1 : -1, new[] { 2, 3, 4, 5, 6 }, true);
+            Check(Models539Warnings(model).Any(w => w.StartsWith("A2, B3, Acopy dropped from the model", StringComparison.Ordinal)),
+                "aliased predictors with " + label + ": fewer rows than parameters, but the three aliased predictors are dropped and the model refitted");
+            var coefficients = Models539Block(Models539Block(model, "row")[0], "col");
+            ParameterBag anova = Models539Anova(model);
+            string data = "Y <- " + Models539Vector(used.Select(i => Models539Y[i])) + "\nA <- " + Models539Vector(used.Select(i => Models539X1[i])) +
+                "\nB <- " + Models539Vector(used.Select(i => Models539X2[i])) + "\nA2 <- 2 * A\nB3 <- 3 * B\nAcopy <- A\nW <- " + Models539Vector(used.Select(i => weighted ? w5[i] : 1.0)) + "\n";
+            string oracle = data + "m <- lm(Y ~ A + B + A2 + B3 + Acopy, weights = W)\nms <- summary(m)\nstopifnot(m$rank == 3L, m$df.residual == 2L)\n" +
+                Models539Equal("coef(m)[1:3]", coefficients.Select(c => Models539Number(c, "val_b")), 1e-9) +
+                Models539Equal("m$df.residual, ms$sigma, 100 * ms$r.squared, 100 * ms$adj.r.squared", new[] { "res_df", "mse", "r2", "ra2" }.Select(key => Models539Number(anova, key)), 1e-9) +
+                "stopifnot(fit$rank == 3L)\n";
+            Check(coefficients.Count == 3 && Models539Number(anova, "res_df") == 2, "aliased predictors with " + label + ": three parameters on five rows, with 2 residual df");
+            Models539Verify(folder, "aliased-fewer-rows-" + label, run, oracle);
+        }
     }
 
     // Item 2: a lone aliased predictor (a constant beside the intercept, a column of zeros without one) is dropped and refitted, so that

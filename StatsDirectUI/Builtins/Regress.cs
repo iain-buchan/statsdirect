@@ -807,11 +807,15 @@ namespace StatsDirect.Builtins
             }
             if (context.N == 0)
                 throw new TemplateOperationCancelledException("No complete observations with positive prior weight.", "Multiple Linear Regression");
-            // Rows left out for missing values or zero weights can leave fewer rows than parameters, which no fit can estimate: the
-            // residual degrees of freedom would be negative.  As many rows as parameters is an exact fit, with no residual df.
-            if (context.N < context.P)
-                throw new TemplateOperationCancelledException("There are fewer complete observations with positive prior weight than parameters in the model.", "Multiple Linear Regression");
+            int modelParameters = context.P;
             (context.P, context.M) = x_glin(context, context.P, context.M);
+            // Rows left out for missing values or zero weights can leave fewer rows than parameters.  Predictors that the others account
+            // for are dropped and the model refitted, as lm leaves them out, and if that leaves fewer parameters than rows the fit has
+            // residual degrees of freedom and stands.  Otherwise the rows ran out before the parameters did, which no fit can estimate:
+            // the residual degrees of freedom would be negative, or predictors would be dropped for the want of rows alone.  (As many rows
+            // as parameters, with none dropped, is an exact fit with no residual df.)
+            if (context.N < modelParameters && context.P >= context.N)
+                throw new TemplateOperationCancelledException("There are fewer complete observations with positive prior weight than parameters in the model.", "Multiple Linear Regression");
             // context.DoC, not a literal true: a model fitted without an intercept had its first slope labelled "Intercept"
             return new StepOutput(MakeMultipleRegressionOutput(context, context.Se, context.B, context.DoC, context.N, context.P, false, context.M, dropWarning));
         }
