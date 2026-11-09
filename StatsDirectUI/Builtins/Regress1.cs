@@ -2804,9 +2804,12 @@ namespace StatsDirect.Builtins
             bool final = false;
             int indqy = 1;
             iterations = 0;
+            bool[] aliasedConstant = AliasedConstantPredictors(useIntercept, useWeights, records, x, predictors, select_x, weight);
+            bool[] zeroCoefficient = new bool[parameters + 1];
             // setup x matrix
             // The design matrix goes into decomposition: a column of ones for the constant, then the selected predictors in order.  (With a constant, every
-            // column up to the number of predictors is set to one first, and the selected predictors then overwrite from the second.)
+            // column up to the number of predictors is set to one first, and the selected predictors then overwrite from the second.)  A constant
+            // predictor that the constant, or an earlier constant predictor, already accounts for is given a column of zeros (AliasedConstantPredictors).
             if (useIntercept)
             {
                 for (i = 1; i <= records; i++)
@@ -2827,8 +2830,9 @@ namespace StatsDirect.Builtins
                 if (select_x[j])
                 {
                     k++;
+                    zeroCoefficient[k] = aliasedConstant[j];
                     for (i = 1; i <= records; i++)
-                        decomposition[i, k] = x[i, j];
+                        decomposition[i, k] = aliasedConstant[j] ? 0.0 : x[i, j];
                 }
             }
             // working weights and response
@@ -2958,6 +2962,10 @@ namespace StatsDirect.Builtins
                             beta[i] += fit[j] * decomposition[j, i];
                     }
                 }
+                // an aliased constant's coefficient is 0, not the trace that the rotations mixing its column of zeros with the others leave
+                for (i = 1; i <= parameters; i++)
+                    if (zeroCoefficient[i])
+                        beta[i] = 0.0;
                 // The design matrix again, since the decomposition was made in its place, for the linear predictor eta = X b + offset
                 if (useIntercept)
                 {
@@ -2981,7 +2989,7 @@ namespace StatsDirect.Builtins
                     {
                         k++;
                         for (i = 1; i <= records; i++)
-                            decomposition[i, k] = x[i, j];
+                            decomposition[i, k] = aliasedConstant[j] ? 0.0 : x[i, j];
                     }
                 }
                 if (records == observations)
@@ -3116,6 +3124,52 @@ namespace StatsDirect.Builtins
             while (true);
         }
 
+
+        /// <summary>
+        /// Which of the selected predictors take one value, not zero, in every observation that the fit uses, beside the constant or, without
+        /// one, beside an earlier predictor that does the same.  Such a predictor adds nothing to the model.
+        /// </summary>
+        /// <remarks>
+        /// glsqr drops a second constant from a multiple regression.  Here the predictor is given a column of zeros, whose singular value is
+        /// exactly zero: its coefficient and standard error are 0, and the rank and degrees of freedom do not count it, as R's glm leaves it
+        /// out.  Left as it was, a constant beside the constant could leave a singular value that rounding put just above the tolerance of
+        /// IsRank, making the rank and the residual degrees of freedom wrong, or stop the singular value decomposition.  An observation is
+        /// used if it has a positive prior weight, or if there are no prior weights.
+        /// </remarks>
+        private static bool[] AliasedConstantPredictors(bool useIntercept, bool useWeights, int records, double[,] x, int predictors, bool[] select_x, double[] weight)
+        {
+            bool[] aliased = new bool[predictors + 1];
+            bool constant = useIntercept;
+            for (int j = 1; j <= predictors; j++)
+            {
+                if (!select_x[j])
+                    continue;
+                bool seen = false;
+                bool varies = false;
+                double value = 0.0;
+                for (int i = 1; i <= records && !varies; i++)
+                {
+                    if (useWeights && !(weight[i] > 0.0))
+                        continue;
+                    if (!seen)
+                    {
+                        value = x[i, j];
+                        seen = true;
+                    }
+                    else if (x[i, j] != value)
+                    {
+                        varies = true;
+                    }
+                }
+                // a column of zeros is left as it is: the decomposition already finds it to be of rank zero
+                if (!seen || varies || value == 0.0)
+                    continue;
+                if (constant)
+                    aliased[j] = true;
+                constant = true;
+            }
+            return aliased;
+        }
 
         /// <summary>
         /// The leverage of each observation: the diagonal of the hat matrix, h = w x'(X'WX)^-1 x.

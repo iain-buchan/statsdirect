@@ -52,9 +52,16 @@ internal static partial class Program
             _ = typeof(StatsDirect.R.RScriptWriter).Assembly.GetType("StatsDirect.UI.SdApplication").GetProperty("SoleInstance", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null);   // the application object, whose making registers the engine's functions, as the program does at its start
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "posthoc-weighted")
             {
+                StatsDirect.R.RRecipes.Folder = Metadata("Recipes");
                 CheckPosthocWeighted537(Path.Combine(TemporaryRoot, "weighted-refit"));
                 CheckDuplicatePredictorReplay(Path.Combine(TemporaryRoot, "duplicate-predictors"));
                 Console.WriteLine($"PASS {checks} weighted refit checks");
+                return 0;
+            }
+            if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "models539")
+            {
+                CheckModels539(Path.Combine(TemporaryRoot, "models-539"));
+                Console.WriteLine($"PASS {checks} 5.3.9 model checks");
                 return 0;
             }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "posthoc-meta")

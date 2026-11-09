@@ -30,7 +30,7 @@
           <name>model</name>
           <prompt>Formula</prompt>
           <must-request>true</must-request>
-          <default-value>=RConvert.ToRVariableName(parameters["outcome"].AsDataFrame.Variables[0].Title) + "~" + parameters["predictors"].AsDataFrame.Variables.Select(v => RConvert.ToRVariableName(v.Title)).Aggregate((names, name) => names + "+" + name)</default-value>
+          <default-value>=RConvert.ToRVariableName(parameters["outcome"].AsDataFrame.Variables[0].Title) + "~" + string.Join("+", RConvert.ToRVariableNames(parameters["predictors"].AsDataFrame))</default-value>
         </string>
         <string>
           <name>title</name>

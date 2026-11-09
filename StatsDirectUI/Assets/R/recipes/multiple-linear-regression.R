@@ -30,10 +30,11 @@ print(a)
 # The report's lines to 6 places. The partial correlation r of each predictor is
 # its t over root(t squared + residual degrees of freedom); the Durbin-Watson
 # statistic is the sum of squared successive residual differences over the
-# residual sum of squares
-six <- function(x) formatC(x, digits = 6, format = "f", drop0trailing = TRUE)
+# residual sum of squares. With no residual degrees of freedom (as many rows as
+# parameters) R gives NaN for each test, which the report shows as *
+six <- function(x) ifelse(is.na(x), "*", formatC(x, digits = 6, format = "f", drop0trailing = TRUE))
 pv <- function(p) {
-  if (p < 0.0001) "P < 0.0001" else
+  if (is.na(p)) "P = *" else if (p < 0.0001) "P < 0.0001" else
     paste("P =", formatC(p, digits = 4, format = "f", drop0trailing = TRUE))
 }
 s <- fit_summary$coefficients
