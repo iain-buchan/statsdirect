@@ -740,7 +740,7 @@ namespace StatsDirect.Templates
             w.WriteEndArray();
         }
 
-        private static string UniqueTitle(string title, HashSet<string> titles)
+        internal static string UniqueTitle(string title, HashSet<string> titles)
         {
             string candidate = title ?? "";
             for (int n = 2; !titles.Add(candidate); n++)

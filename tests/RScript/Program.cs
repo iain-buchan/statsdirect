@@ -53,6 +53,7 @@ internal static partial class Program
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "posthoc-weighted")
             {
                 CheckPosthocWeighted537(Path.Combine(TemporaryRoot, "weighted-refit"));
+                CheckDuplicatePredictorReplay(Path.Combine(TemporaryRoot, "duplicate-predictors"));
                 Console.WriteLine($"PASS {checks} weighted refit checks");
                 return 0;
             }
