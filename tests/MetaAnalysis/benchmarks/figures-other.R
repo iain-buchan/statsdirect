@@ -34,7 +34,7 @@ heterogeneity <- function(key, m, exact, level, prefix = "") {
   if (is.finite(m$tau2)) put(paste0(key, prefix, "|tausq"), m$tau2)
   if (k > 1) put(paste0(key, prefix, "|xp"), m$pval.Q)
   if (exact) { if (k > 1) put(paste0(key, prefix, c("|llisq", "|ulisq")), isq_exact(m$Q, k - 1, level)) }
-  else if (k > 2) put(paste0(key, prefix, c("|llisq", "|ulisq")), 100 * c(m$lower.I2, m$upper.I2))
+  else if (k > 1) put(paste0(key, prefix, c("|llisq", "|ulisq")), 100 * c(m$lower.I2, m$upper.I2))
 }
 bias <- function(key, m, block = "egger") {
   ok <- is.finite(m$TE) & is.finite(m$seTE) & m$seTE > 0
@@ -150,7 +150,7 @@ while (at <= length(lines)) {
         put(paste0(key, c("|qc", "|isq")), c(if (k > 1) m$Q else 0, if (k > 1) 100 * m$I2 else NA))
         if (is.finite(m$tau2)) put(paste0(key, "|tausq"), 4 * m$tau2)
         if (exact) { if (k > 1) put(paste0(key, c("|llisq", "|ulisq")), isq_exact(m$Q, k - 1, level)) }
-        else if (k > 2) put(paste0(key, c("|llisq", "|ulisq")), 100 * c(m$lower.I2, m$upper.I2))
+        else if (k > 1) put(paste0(key, c("|llisq", "|ulisq")), 100 * c(m$lower.I2, m$upper.I2))
       }
     }
     if (kind == "cor") {

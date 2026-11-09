@@ -4374,8 +4374,8 @@ namespace StatsDirect.Builtins
 
         /// <summary>
         /// I-squared, 100 (Q - df) / Q and not below 0, with its confidence limits.  With the exact method off the limits are
-        /// test-based: those of the logarithm of H, H^2 being Q / df, from its standard error; they need three studies.  With the
-        /// exact method on they are from the non-central chi-square distribution of Q (see the comments below).
+        /// test-based: those of the logarithm of H, H^2 being Q / df, from its standard error; they need three studies, or two with
+        /// Q above 2.  With the exact method on they are from the non-central chi-square distribution of Q (see the comments below).
         /// </summary>
         /// <param name="host">The preferences: the exact method.</param>
         /// <param name="q">Cochran's Q.</param>
@@ -4410,12 +4410,14 @@ namespace StatsDirect.Builtins
             //  The interval is given at whatever level the analysis uses
             if (cco <= 0.0 || cco >= 1.0)
                 return;
-            //  With one degree of freedom (two studies) the test-based interval has no standard error; the exact interval is still given
-            if (df < 2 && !useExact)
+            //  With one degree of freedom (two studies) the test-based interval has a standard error only when Q > k, by the first form below
+            //  (Higgins & Thompson 2002, as meta's isquared has it); the second form divides by k - 2.  The exact interval is still given
+            bool testBased = df >= 2 || q > dk;
+            if (!testBased && !useExact)
                 return;
             double levelci = 1.0 - (1.0 - cco) / 2.0;
             double clevelci = 1.0 - levelci;
-            if (df >= 2)
+            if (testBased)
             {
             //  H^2 = Q/df, truncated at 1 where Q < df
             double h2 = Math.Max(1.0, q / df);

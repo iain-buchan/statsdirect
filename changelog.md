@@ -6,6 +6,7 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
 ### Fixed
 - Meta-analysis forest plots number studies without labels by their place among the studies analysed, as the report's tables and Continue in R do, when an incomplete study is left out.
+- With the exact methods off, the I-squared interval of two studies is given when Cochran's Q exceeds 2, by Higgins and Thompson's test-based method, as meta's isquared gives it, in the report and in Continue in R.
 
 ##[v5.3.8] 2026-11-09
 

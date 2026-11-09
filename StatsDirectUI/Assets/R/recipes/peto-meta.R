@@ -109,9 +109,10 @@ if (k >= 2 && confidence > 0 && confidence < 1) {
     }
     lim <- c(lambda((1 + confidence) / 2), lambda((1 - confidence) / 2))
     i2_ci <- 100 * lim / (df_i2 + lim)
-  } else if (k >= 3) {
+  } else if (k >= 3 || Q > k) {
     # Test-based log(H) interval (Higgins & Thompson, 2002), as in
-    # StatsDirect's MIT Meta.IsquareNcc. H is at least one.
+    # StatsDirect's MIT Meta.IsquareNcc. H is at least one; with two studies
+    # only Q > k gives a standard error (the first form below).
     h2 <- max(1, Q / df_i2)
     se_log_h <- if (Q > k) 0.5 * (log(Q) - log(df_i2)) /
       (sqrt(2 * Q) - sqrt(2 * k - 3)) else
