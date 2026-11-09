@@ -6,6 +6,7 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
 ### Fixed
 - Chi-square goodness of fit replay accepts expected counts, percentages or proportions that do not add up to 1, scaling them to the observed total as the report does.
+- Kendall rank correlation replay handles ties as the report does (tau b, the tie-adjusted variance and the report's count of tied pairs), gives the report's exact P from 50 pairs, and keeps the limits of tau within -1 and 1.
 
 ##[v5.3.8] 2026-11-09
 

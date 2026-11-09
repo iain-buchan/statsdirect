@@ -18,13 +18,14 @@ internal static partial class Program
     // Each case acquires its columns from worksheet cells through GridSelectionProcessor.FillFrameParameter (and the
     // CellArrayProcessor under it), runs the operation through the template processor, writes the script from the record
     // the report step left, runs it in R within a time limit, and compares R's figures with the native output bag.
-    private static readonly string[] Recipes539Parts = { "gof" };
+    private static readonly string[] Recipes539Parts = { "gof", "kendall" };
     private static void CheckRecipes539(string folder, string only = null)
     {
         if (only != null && !Recipes539Parts.Contains(only)) throw new ArgumentException("Unknown 5.3.9 recipe check: " + only);
         RRecipes.Folder = Metadata("Recipes");
         Directory.CreateDirectory(folder);
         if (only is null or "gof") CheckGoodnessOfFit539(Path.Combine(folder, "gof"));
+        if (only is null or "kendall") CheckKendall539(Path.Combine(folder, "kendall"));
         if (Failed539.Count > 0) throw new Exception("FAIL " + Failed539.Count + " of the 5.3.9 recipe cases: " + string.Join(" | ", Failed539));
     }
 
@@ -129,6 +130,53 @@ internal static partial class Program
         Case("percentages", new double[] { 67, 83, 29, 8 }, new double[] { 44, 45, 8, 3 });
         Case("proportions-below-one", new double[] { 9, 21, 28, 30, 12 }, new double[] { .1, .2, .3, .25, .1 });
         Case("proportions-help", new double[] { 67, 83, 29, 8 }, new double[] { .44, .45, .08, .03 });
+    }
+
+    // 2. Kendall's rank correlation: the replay used to stop on any tie, gave R's normal approximation as the exact test from
+    //    50 pairs, and did not keep tau's limits within -1 and 1. The report's exact P counts the orderings without ties
+    //    through 1,000 pairs and uses its Edgeworth series above (kendp), whether or not there are ties.
+    private static void CheckKendall539(string folder)
+    {
+        void Case(string label, double[] x, double[] y, double confidence = .95, int timeout = 120) => Case539("kendall " + label, () =>
+        {
+            int n = x.Length;
+            var cells = new RecordCells(Cells539("First ranking", x), Cells539("Second ranking", y));
+            var (run, output) = Run("Kendall", new() { ["data"] = Select539(cells, n + 1, 0, 1), ["gamma"] = confidence });
+            ParameterBag b = output.ParameterBag;
+            double used = confidence > 0 && confidence < 1 ? confidence : .95;
+            bool ties = Num539(b, "tie") > 0;
+            Check(Num539(b, "pc") == used * 100, label + ": the native report uses its confidence fallback");
+            string assertion = "stopifnot(n == " + Num539(b, "obs").ToString(inv) + ", confidence == " + used.ToString("R", inv) + ")\n" +
+                Equal539("concordant, discordant, tied, score", new[] { "con", "dis", "tie", "s" }.Select(k => Num539(b, k))) +
+                Equal539("se, score / (concordant + discordant), tau, limits", new[] { "ses", "gam", "tau", "ll", "ul" }.Select(k => Num539(b, k))) +
+                Equal539("upper", new[] { Num539(b, "p_uexact") }) + Equal539("lower", new[] { Num539(b, "p_lexact") }) +
+                Equal539("min(1, 2 * min(upper, lower))", new[] { Num539(b, "p_2exact") });
+            string text = Replay539(run, assertion, Path.Combine(folder, label), timeout: timeout);
+            Check(text.Contains("Kendall's tau b =") == ties && text.Contains("Kendall's tau =") == !ties, label + ": tau b is named when there are ties, as in the report");
+            var z = Regex.Matches(text, @"^z = ([-0-9.]+)\s+Upper side P = ([0-9.]+)\s+Lower side P = ([0-9.]+)\s+Two sided P = ([0-9.]+)", RegexOptions.Multiline);
+            bool Near(Match m, string zKey, string upperKey, string lowerKey, string twoKey) =>
+                Math.Abs(double.Parse(m.Groups[1].Value, inv) - Num539(b, zKey)) <= 5.1e-7 * Math.Max(1, Math.Abs(Num539(b, zKey))) &&
+                new[] { (2, upperKey), (3, lowerKey), (4, twoKey) }.All(g => Math.Abs(double.Parse(m.Groups[g.Item1].Value, inv) - Num539(b, g.Item2)) <= 5.1e-5);
+            Check(z.Count == 2 && Near(z[0], "kz", "p_u", "p_l", "p_2") && Near(z[1], "kzcc", "p_ucc", "p_lcc", "p_2cc"), label + ": the normal approximations, with and without the continuity correction, are the report's");
+        });
+        double[] career = { 4, 10, 3, 1, 9, 2, 6, 7, 8, 5 }, psychology = { 5, 8, 6, 2, 10, 3, 9, 4, 7, 1 };
+        Case("help-example", career, psychology);
+        foreach (int n in new[] { 49, 50, 80, 171, 400, 1000, 1001, 1500 })
+        {
+            long pairs = (long)n * (n - 1) / 2;
+            int[] order = Permutation539(n, (long)(pairs * .48));
+            Case("untied-" + n, Enumerable.Range(1, n).Select(i => 100 + 2.5 * i).ToArray(), order.Select(v => (double)v).ToArray(), .9, timeout: 240);
+        }
+        Case("ties-x", new double[] { 1, 2, 2, 3, 4, 4, 4, 5, 6, 7, 8, 8 }, new double[] { 3, 1, 4, 2, 6, 5, 9, 7, 8, 12, 10, 11 });
+        Case("ties-y", new double[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 }, new double[] { 2, 1, 1, 3, 5, 5, 4, 7, 7, 7, 9, 8, 10, 10, 12 });
+        Case("ties-in-both", new double[] { 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10 }, new double[] { 1, 1, 3, 2, 2, 4, 4, 4, 6, 5, 5, 7, 9, 9, 8, 8, 10, 12, 11, 11 });
+        Case("ties-heavy-60", Enumerable.Range(0, 60).Select(i => (double)(i % 6)).ToArray(), Enumerable.Range(0, 60).Select(i => (double)((i * 7 + i / 6) % 5)).ToArray(), .99);
+        Case("ties-1100", Enumerable.Range(0, 1100).Select(i => (double)(i / 3)).ToArray(), Permutation539(1100, 1100L * 1099 / 2 * 47 / 100).Select(v => (double)(v / 2)).ToArray(), timeout: 240);
+        Case("clamped-upper", new double[] { 1, 2, 3, 4, 5, 6, 7, 8 }, new double[] { 1, 2, 3, 4, 5, 6, 8, 7 });
+        Case("clamped-lower", new double[] { 1, 2, 3, 4, 5, 6, 7, 8 }, new double[] { 8, 7, 6, 5, 4, 3, 1, 2 });
+        foreach (double confidence in new[] { 0d, 1d }) Case("confidence-" + confidence, career, psychology, confidence);
+        var (_, clamped) = Run("Kendall", new() { ["data"] = Select539(new RecordCells(Cells539("x", new double[] { 1, 2, 3, 4, 5, 6, 7, 8 }), Cells539("y", new double[] { 1, 2, 3, 4, 5, 6, 8, 7 })), 9, 0, 1), ["gamma"] = .95 });
+        Check(Num539(clamped.ParameterBag, "ul") == 1, "the clamped case reaches the report's upper bound of tau");
     }
 
 }
