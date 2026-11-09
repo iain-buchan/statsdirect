@@ -18,7 +18,7 @@ internal static partial class Program
     // Each case acquires its columns from worksheet cells through GridSelectionProcessor.FillFrameParameter (and the
     // CellArrayProcessor under it), runs the operation through the template processor, writes the script from the record
     // the report step left, runs it in R within a time limit, and compares R's figures with the native output bag.
-    private static readonly string[] Recipes539Parts = { "gof", "kendall", "mann-whitney" };
+    private static readonly string[] Recipes539Parts = { "gof", "kendall", "mann-whitney", "routing" };
     private static void CheckRecipes539(string folder, string only = null)
     {
         if (only != null && !Recipes539Parts.Contains(only)) throw new ArgumentException("Unknown 5.3.9 recipe check: " + only);
@@ -27,6 +27,7 @@ internal static partial class Program
         if (only is null or "gof") CheckGoodnessOfFit539(Path.Combine(folder, "gof"));
         if (only is null or "kendall") CheckKendall539(Path.Combine(folder, "kendall"));
         if (only is null or "mann-whitney") CheckMannWhitney539(Path.Combine(folder, "mann-whitney"));
+        if (only is null or "routing") CheckFollowOnRouting539(Path.Combine(folder, "routing"));
         if (Failed539.Count > 0) throw new Exception("FAIL " + Failed539.Count + " of the 5.3.9 recipe cases: " + string.Join(" | ", Failed539));
     }
 
@@ -218,6 +219,90 @@ internal static partial class Program
         Case("untied-101-2000", Values(101, 0, false), Values(2000, .9, false), .9, normal: true, approximateK: true);
         double[] farm = { 14.8, 7.3, 5.6, 6.3, 9, 4.2, 10.6, 12.5, 12.9, 16.1, 11.4, 2.7 }, town = { 12.7, 14.2, 12.6, 2.1, 17.7, 11.8, 16.9, 7.9, 16, 10.6, 5.6, 5.6, 7.6, 11.3, 8.3, 6.7, 3.6, 1, 2.4, 6.4, 9.1, 6.7, 18.6, 3.2, 6.2, 6.1, 15.3, 10.6, 1.8, 5.9, 9.9, 10.6, 14.8, 5, 2.6, 4 };
         foreach (double confidence in new[] { 0d, 1d }) Case("confidence-" + confidence, farm, town, confidence, normal: false, approximateK: false);
+    }
+
+    // 4. The multiple comparisons continue a one way, two way or replicated two way analysis of variance, and the regression
+    //    analysis of variance a multiple linear or polynomial regression: each follow-on replays the analysis it continues,
+    //    whose residual mean square and degrees of freedom are those the native comparisons use.
+    private static void CheckFollowOnRouting539(string folder)
+    {
+        string[] comparisons = { "Tukey", "Bonferroni", "Scheffe", "NewmanKeuls", "Dunnett" };
+        Dictionary<string, object> Answers(string op) => op switch
+        {
+            "Bonferroni" => new() { ["gamma"] = .95, ["variables"] = new[] { 0, 1 }, ["comparisons"] = 6 },
+            "Dunnett" => new() { ["gamma"] = .95, ["indexvariable"] = new[] { 0 } },
+            _ => new() { ["gamma"] = .95 }
+        };
+        void Comparisons(string root, ParameterBag rootBag, string file, string table, double residualMeanSquare, double residualDf)
+        {
+            foreach (string op in comparisons) Case539("routing " + op + " after " + root, () =>
+            {
+                var (run, output) = Run(op, Answers(op), rootBag);
+                JsonElement record = Record(run);
+                Check(record.GetProperty("rootOperation").GetString() == root && RRecipes.Find(record)?.File == file, op + " after " + root + " is replayed by " + file);
+                RScript legacy = RScriptWriter.Write(Legacy539(run), null, null);
+                Check(RRecipes.Find(Legacy539(run)) == null && !legacy.HasRecipe && legacy.Detail.Contains("does not identify its original analysis", StringComparison.Ordinal),
+                    op + " after " + root + " saved without its root analysis (before 5.2.3) asks for a rerun rather than guessing the analysis");
+                ParameterBag b = output.ParameterBag;
+                string error = op switch
+                {
+                    "Tukey" => Equal539("sqrt(anova(fit)['Residuals', 'Mean Sq'])", new[] { Num539(b, "psd") }),
+                    "Bonferroni" => Equal539("anova(fit)['Residuals', 'Df']", new[] { Num539(b, "df") }),
+                    _ => ""
+                };
+                Replay539(run, table + Equal539("anova(fit)['Residuals', 'Mean Sq'], anova(fit)['Residuals', 'Df']", new[] { residualMeanSquare, residualDf }) + error,
+                    Path.Combine(folder, root + "-" + op), setup: "pdf(NULL)\n");
+            });
+        }
+        // Clotting times of plasma from eight subjects treated in four ways (Armitage and Berry 1994), the help's two way example.
+        double[][] treatments = {
+            new[] { 8.4, 12.8, 9.6, 9.8, 8.4, 8.6, 8.9, 7.9 }, new[] { 9.4, 15.2, 9.1, 8.8, 8.2, 9.9, 9.0, 8.1 },
+            new[] { 9.8, 12.9, 11.2, 9.9, 8.5, 9.8, 9.2, 8.2 }, new[] { 12.2, 14.4, 9.8, 12.0, 8.5, 10.9, 10.4, 10.0 } };
+        var cells = new RecordCells(treatments.Select((t, i) => Cells539("Treatment " + (char)('A' + i), t)).ToArray());
+        var (_, oneWay) = Run("OneWay", new() { ["data"] = Select539(cells, 9, 0, 1, 2, 3) });
+        ParameterBag o = oneWay.ParameterBag;
+        Comparisons("OneWay", o, "one-way-anova.R", Equal539("a$'Sum Sq', a$Df", new[] { "b_sum", "w_sum", "b_df", "w_df" }.Select(k => Num539(o, k))), Num539(o, "w_mean"), Num539(o, "w_df"));
+        var (_, twoWay) = Run("TwoWay", new() { ["data"] = Select539(cells, 9, 0, 1, 2, 3) });
+        ParameterBag t2 = twoWay.ParameterBag;
+        Comparisons("TwoWay", t2, "two-way.R", Equal539("anova(fit)$'Sum Sq', anova(fit)$Df", new[] { "sub_sum", "grp_sum", "res_sum", "sub_df", "grp_df", "res_df" }.Select(k => Num539(t2, k))), Num539(t2, "res_mean"), Num539(t2, "res_df"));
+        // The replicated two-way example (three subjects, three treatments, three repeats). Its two-level frame is asked
+        // repeat by repeat through dialogs that need a window, so the checks give the frame as the grid builds it (TwoLevel.cs).
+        DataFrame2D replicated = new();
+        foreach (double[][] block in new[] {
+            new[] { new[] { 9.8, 10.1, 9.8 }, new[] { 9.9, 9.5, 10.0 }, new[] { 11.3, 10.7, 10.7 } },
+            new[] { new[] { 9.2, 8.6, 9.2 }, new[] { 9.1, 9.1, 9.4 }, new[] { 10.3, 10.7, 10.2 } },
+            new[] { new[] { 8.4, 7.9, 8.0 }, new[] { 8.6, 8.0, 8.0 }, new[] { 9.8, 10.1, 10.1 } } })
+            replicated.Variables.Add(block.Select(values => (IVariable)new DoubleVariable(values, "")).ToList());
+        var (_, replicate) = Run("ReplicateTwoWay", new() { ["data2d"] = replicated });
+        ParameterBag r2 = replicate.ParameterBag;
+        Comparisons("ReplicateTwoWay", r2, "replicate-two-way.R", Equal539("anova(fit)$'Sum Sq', anova(fit)$Df", new[] { "sub_sum", "grp_sum", "int_sum", "res_sum", "sub_df", "grp_df", "int_df", "res_df" }.Select(k => Num539(r2, k))), Num539(r2, "res_mean"), Num539(r2, "res_df"));
+
+        // The regression analysis of variance after a polynomial regression (the help's example, degree 2 and then 3)
+        double[] size = { 1290, 1350, 1470, 1600, 1710, 1840, 1980, 2230, 2400, 2930 }, kwh = { 1182, 1172, 1264, 1493, 1571, 1711, 1804, 1840, 1956, 1954 };
+        var poly = new RecordCells(Cells539("Size", size), Cells539("kWh", kwh));
+        string Anova(ParameterBag a) => Equal539("ssreg, degree, ssreg / degree, ssres, df, ssres / df, ssreg + ssres, df + degree, sqrt(ssres / df), f[1], pf(f[1], f[2], f[3], lower.tail = FALSE), 100 * summary(fit)$r.squared, 100 * summary(fit)$adj.r.squared, sum(diff(e)^2) / sum(e^2)",
+            new[] { "reg_sum", "reg_df", "reg_mean", "res_sum", "res_df", "res_mean", "tot_sum", "tot_df", "mse", "f", "p", "r2", "ra2", "dw" }.Select(k => Num539(a, k)));
+        foreach (string root in new[] { "PolynomialRegression", "PolynomialRegressionChangeDegree" }) Case539("routing regression ANOVA after " + root, () =>
+        {
+            var (_, fitted) = Run(root, new() { ["y"] = Select539(poly, 11, 1), ["x"] = Select539(poly, 11, 0), ["degree"] = root == "PolynomialRegression" ? "2" : "3" });
+            var (run, anova) = Run("MultipleLinearRegressionAnova", new() { ["ci"] = .95 }, fitted.ParameterBag);
+            JsonElement record = Record(run);
+            Check(record.GetProperty("rootOperation").GetString() == root && RRecipes.Find(record)?.File == "polynomial-regression.R", "the regression ANOVA after " + root + " is replayed by polynomial-regression.R");
+            Check(RRecipes.Find(Legacy539(run))?.File == "polynomial-regression.R", "a regression ANOVA after " + root + " saved without its root analysis is known by its y and x frames");
+            Replay539(run, Anova(anova.ParameterBag), Path.Combine(folder, root + "-anova"));
+        });
+        // ... and after the multiple linear regression it continues, as before
+        Case539("routing regression ANOVA after MultipleLinearRegression", () =>
+        {
+        double[] x1 = { 2.26, 1.81, 1.78, 1.54, 2.06, 1.74, 2.56, 2.29, 1.80, 2.32, 2.04, 1.88 }, x2 = { 66.2, 52.7, 72.1, 67.4, 69.9, 71.3, 88.6, 68.2, 59.5, 73.8, 68.4, 58.1 }, y = { 7, 10, 18, 4, 10, 13, 21, 12, 9, 65, 20, 31 };
+        var mlr = new RecordCells(Cells539("Outcome", y), Cells539("First", x1), Cells539("Second", x2));
+        var (_, model) = Run("MultipleLinearRegression", new() { ["outcome"] = Select539(mlr, 13, 0), ["predictors"] = Select539(mlr, 13, 1, 2), ["ci"] = .95, ["calculateIntercept"] = true, ["useWeights"] = false });
+        var (mlrRun, mlrAnova) = Run("MultipleLinearRegressionAnova", new() { ["ci"] = .95 }, model.ParameterBag);
+        Check(RRecipes.Find(Record(mlrRun))?.File == "multiple-linear-regression.R" && RRecipes.Find(Legacy539(mlrRun))?.File == "multiple-linear-regression.R",
+            "the regression ANOVA after a multiple linear regression keeps its recipe, with or without its saved root analysis");
+        Replay539(mlrRun, Equal539("ssreg, k, ssres, df, sqrt(ssres / df), summary(fit)$fstatistic[1], 100 * summary(fit)$r.squared, 100 * summary(fit)$adj.r.squared",
+            new[] { "reg_sum", "reg_df", "res_sum", "res_df", "mse", "f", "r2", "ra2" }.Select(k => Num539(mlrAnova.ParameterBag, k))), Path.Combine(folder, "MultipleLinearRegression-anova"));
+        });
     }
 
 }
