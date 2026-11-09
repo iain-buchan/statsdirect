@@ -627,6 +627,9 @@ namespace StatsDirect.Builtins
 
             ParameterBag outputParameters = new();
             outputParameters.AddInput("metaExact", exactMeta);
+            // the continuity correction of a table with an empty cell, which the replay applies as the report did
+            outputParameters.AddInput("metaCC", host.Preferences.MetaCC);
+            outputParameters.AddInput("delayContinuityCorrection", host.Preferences.DelayContinuityCorrection);
 
             IList<ParameterBag> inputsList = new List<ParameterBag>();
             outputParameters.AddOutput("*inputs", inputsList);
@@ -799,6 +802,9 @@ namespace StatsDirect.Builtins
 
             ParameterBag outputParameters = new();
             outputParameters.AddInput("metaExact", exactMeta);
+            // the continuity correction of a table with an empty cell, which the replay applies as the report did
+            outputParameters.AddInput("metaCC", host.Preferences.MetaCC);
+            outputParameters.AddInput("delayContinuityCorrection", host.Preferences.DelayContinuityCorrection);
 
             IList<ParameterBag> inputsList = new List<ParameterBag>();
             outputParameters.AddOutput("*inputs", inputsList);
@@ -2336,6 +2342,9 @@ namespace StatsDirect.Builtins
 
             ParameterBag outputParameters = new();
             outputParameters.AddInput("metaExact", exactMeta);
+            // the continuity correction of a table with an empty cell, which the replay applies as the report did
+            outputParameters.AddInput("metaCC", host.Preferences.MetaCC);
+            outputParameters.AddInput("delayContinuityCorrection", host.Preferences.DelayContinuityCorrection);
             outputParameters.AddOutput("pc", cco * 100);
 
             IList<ParameterBag> inputsList = new List<ParameterBag>();

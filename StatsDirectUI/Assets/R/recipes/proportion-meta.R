@@ -19,9 +19,9 @@ if (is.null(trial)) trial <- paste("Trial", seq_along(total))
 # arcsine, pooled with inverse variance weights (n + 0.5), and the pooled transform is
 # taken back to a proportion by the Stuart-Ord inverse, sin(x/2)^2
 pct <- paste0(100 * confidence, "%")
-six <- function(x) formatC(x, digits = 6, format = "f", drop0trailing = TRUE)
+six <- function(x) ifelse(is.na(x), "*", formatC(x, digits = 6, format = "f", drop0trailing = TRUE))
 pv <- function(p) {
-  if (p < 0.0001) "P < 0.0001" else
+  if (is.na(p)) "P = *" else if (p < 0.0001) "P < 0.0001" else
     paste("P =", formatC(p, digits = 4, format = "f", drop0trailing = TRUE))
 }
 k <- length(total)
@@ -111,34 +111,45 @@ cat("Pooled proportion = ", six(inv(xr)), " (", pct, "CI = ", six(inv(xr - z * s
     " to ", six(inv(xr + z * se_r)), ")\n", sep = "")
 
 # Bias indicators, all on the proportion scale with each study's standard error taken
-# from its exact confidence interval. Begg-Mazumdar: Kendall's tau between the
-# standardised deviates from the pooled proportion and the variances, with the exact P
-# that cor.test() gives when there are no ties. Egger: the intercept of the regression
-# of the standardised proportion on precision, with a 90% interval and its t test
+# from its exact confidence interval, which the report gives only with more than three
+# studies. Begg-Mazumdar: Kendall's tau between the standardised deviates from the
+# pooled proportion and the variances, with the exact P that cor.test() gives when
+# there are no ties. Egger: the intercept of the regression of the standardised
+# proportion on precision, with its t test
 cat("Bias indicators\n")
 se <- (ci[, 2] - ci[, 1]) / 2 / z
-wx <- 1 / se^2
-ts <- (p - sum(p * wx) / sum(wx)) / sqrt(se^2 - 1 / sum(wx))
-begg <- cor.test(ts, se^2, method = "kendall", conf.level = confidence)
-cat("Begg-Mazumdar: Kendall's tau =", six(begg$estimate), " ", pv(begg$p.value), "\n")
-egger <- lm(I(p / se) ~ I(1 / se))
-cat("Egger: bias = ", six(coef(egger)[1]), " (90% CI = ",
-    six(confint(egger, level = 0.9)[1, 1]), " to ",
-    six(confint(egger, level = 0.9)[1, 2]), ")  ",
-    pv(summary(egger)$coefficients[1, 4]), "\n", sep = "")
-
-# Harbord's test as StatsDirect adapts it to proportions: each study's score is the
-# excess of responders over the number expected at the pooled fixed effects proportion,
-# with the binomial variance, and the bias is the intercept of the regression of
-# score / sqrt(variance) on sqrt(variance)
 pf <- inv(xf)
-score <- adherent - total * pf
-vs <- total * pf * (1 - pf)
-harbord <- lm(I(score / sqrt(vs)) ~ sqrt(vs))
-cat("Harbord: bias = ", six(coef(harbord)[1]), " (90% CI = ",
-    six(confint(harbord, level = 0.9)[1, 1]), " to ",
-    six(confint(harbord, level = 0.9)[1, 2]), ")  ",
-    pv(summary(harbord)$coefficients[1, 4]), "\n", sep = "")
+# Egger's interval is at the level of the bias tests, twice the analysis's alpha
+# (90% for a 95% analysis); as the report has it, there is no figure when every
+# study has the same precision or the line fits every study exactly
+bias_level <- 1 - 2 * (1 - confidence)
+if (!(bias_level > 0 && bias_level < 1)) bias_level <- 0.9
+regression <- function(y, x, label, spread) {
+  fit <- lm(y ~ x)
+  if (spread && sum(residuals(fit)^2) > 1e-12 * sum(y^2)) {
+    fit_ci <- confint(fit, level = bias_level)
+    figures <- c(coef(fit)[1], fit_ci[1, 1], fit_ci[1, 2], summary(fit)$coefficients[1, 4])
+  } else figures <- rep(NA, 4)
+  cat(label, ": bias = ", six(figures[1]), " (", round(100 * bias_level, 2), "% CI = ",
+      six(figures[2]), " to ", six(figures[3]), ")  ", pv(figures[4]), "\n", sep = "")
+  invisible(unname(figures))
+}
+if (k > 3) {
+  wx <- 1 / se^2
+  ts <- (p - sum(p * wx) / sum(wx)) / sqrt(se^2 - 1 / sum(wx))
+  begg <- cor.test(ts, se^2, method = "kendall", conf.level = confidence)
+  cat("Begg-Mazumdar: Kendall's tau =", six(begg$estimate), " ", pv(begg$p.value), "\n")
+  egger_figures <- regression(p / se, 1 / se, "Egger", diff(range(1 / se)) > 1e-12 * max(1 / se))
+
+  # Harbord's test as StatsDirect adapts it to proportions: each study's score is the
+  # excess of responders over the number expected at the pooled fixed effects proportion,
+  # with the binomial variance, and the bias is the intercept of the regression of
+  # score / sqrt(variance) on sqrt(variance)
+  score <- adherent - total * pf
+  vs <- total * pf * (1 - pf)
+  harbord_figures <- regression(score / sqrt(vs), sqrt(vs), "Harbord",
+                                sum((sqrt(vs) - mean(sqrt(vs)))^2) > 1e-12 * sum(vs))
+} else cat("Bias indicators need more than three studies with an estimate\n")
 
 # The report's charts: a funnel plot of each proportion against its standard error,
 # with the pooled fixed effects proportion and its 95% limits, then a forest plot for

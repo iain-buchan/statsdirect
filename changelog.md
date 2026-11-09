@@ -7,6 +7,9 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 ### Fixed
 - Meta-analysis forest plots number studies without labels by their place among the studies analysed, as the report's tables and Continue in R do, when an incomplete study is left out.
 - With the exact methods off, the I-squared interval of two studies is given when Cochran's Q exceeds 2, by Higgins and Thompson's test-based method, as meta's isquared gives it, in the report and in Continue in R.
+- Meta-analysis replay gives the bias indicators only with more than three studies, as the report does, and Egger's and Harbord's intervals at the report's level of 1 - 2(1 - confidence), 90% for a 95% analysis, instead of always 90%.
+- Summary meta-analysis replay of a risk difference or another difference names the statistic and draws its forest plots on a linear scale about 0, instead of stopping at a logarithmic axis.
+- Meta-analysis replay of tables with empty cells, including a study with an event in every subject of one group and in none of the other, completes with the report's figures: it leaves out the studies the report leaves out and applies the recorded continuity correction (treatment arm, 0.5 or 0.01, delayed or not) in the relative risk, risk difference, Peto and Mantel-Haenszel analyses and the typed-in Mantel-Haenszel test.
 
 ##[v5.3.8] 2026-11-09
 

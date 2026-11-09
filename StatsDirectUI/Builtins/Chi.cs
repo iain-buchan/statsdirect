@@ -571,6 +571,9 @@ namespace StatsDirect.Builtins
             }
 
             ParameterBag outputParameters = new();
+            // the continuity correction of a table with an empty cell, which the replay applies as the report did
+            outputParameters.AddInput("metaCC", host.Preferences.MetaCC);
+            outputParameters.AddInput("delayContinuityCorrection", host.Preferences.DelayContinuityCorrection);
             List<ParameterBag> inputsList = new();
             outputParameters.AddOutput("*inputs", inputsList);
             for (int i = 1; i <= k; i++)

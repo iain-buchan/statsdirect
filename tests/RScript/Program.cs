@@ -15,6 +15,8 @@ internal static partial class Program
 {
     private static int checks;
     internal static bool MetaExact;   // whether the host's preferences ask the meta-analyses for their exact methods
+    internal static double MetaCC;   // the continuity correction the preferences give the meta-analyses' tables with an empty cell (0, a half, unless a check sets it)
+    internal static bool DelayContinuityCorrection;   // whether the preferences delay that correction in the pooling
     private static readonly CultureInfo inv = CultureInfo.InvariantCulture;
     private static void Check(bool ok, string description) { if (!ok) throw new Exception("FAIL " + description); checks++; Console.WriteLine("PASS " + description); }
     private static readonly string TemporaryRoot = CreateTemporaryRoot();
@@ -66,7 +68,7 @@ internal static partial class Program
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") is string meta539 && (meta539 == "meta-539" || meta539.StartsWith("meta-539-", StringComparison.Ordinal)))
             {
                 string part = meta539 == "meta-539" ? null : meta539["meta-539-".Length..];
-                if (part is not (null or "forest"))
+                if (part is not (null or "forest" or "bias" or "summary" or "empty"))
                     throw new ArgumentException("Unknown 5.3.9 meta-analysis test group: " + meta539);
                 CheckMetaReview539(Path.Combine(TemporaryRoot, "meta-539"), part);
                 Console.WriteLine($"PASS {checks} 5.3.9 meta-analysis checks");
@@ -296,6 +298,8 @@ public class PreferencesProxy : System.Reflection.DispatchProxy
             case "get_DisplayDecimalPlaces": return 6;
             case "get_DefaultConfidenceInterval": return 0.95;
             case "get_MetaExact": return Program.MetaExact;   // the exact methods of the meta-analyses, for the checks that want them
+            case "get_MetaCC": return Program.MetaCC;
+            case "get_DelayContinuityCorrection": return Program.DelayContinuityCorrection;
         }
         Type type = method.ReturnType;
         return type == typeof(void) ? null : type.IsValueType ? Activator.CreateInstance(type) : null;
