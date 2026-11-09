@@ -100,7 +100,7 @@ internal static partial class Program
             if (missing && model == "ConditionalLogisticRegression")
                 for (int k = observations + 1; k < Math.Min(total, observations + 11); k++) raw[2][k] = levels[k % 3];
             var cells = new RecordCells(raw);
-            Dictionary<string, (int length, string[] hashes)> acquired = new();
+            Dictionary<string, (int length, object[][] values)> acquired = new();
             object Select(string name, params int[] columns) => new Func<ITemplateProcessor, Parameter, ParameterBag, ITemplateHost, ParameterBag>((processor, parameter, context, host) =>
             {
                 IGrid grid = DispatchProxy.Create<IGrid, AlignedGrid>();
@@ -113,7 +113,7 @@ internal static partial class Program
                     .Invoke(Activator.CreateInstance(type, grid), new object[] { parameter, processor, context }); }
                 catch (TargetInvocationException ex) { throw new InvalidOperationException(ex.GetBaseException().ToString(), ex); }
                 DataFrame frame = filled[parameter.Name].AsDataFrame;
-                acquired[name] = (frame.MaxRows, frame.Variables.Select(RunRecord.Hash).ToArray());
+                acquired[name] = (frame.MaxRows, frame.Variables.Select(RunRecord.Values).ToArray());
                 return filled;
             });
             Dictionary<string, object> answers;
@@ -122,6 +122,8 @@ internal static partial class Program
             else if (model == "MultipleLinearRegression") answers = new() { ["outcome"] = Select("outcome", 0), ["predictors"] = Select("predictors", 1, 2), ["ci"] = .95, ["calculateIntercept"] = true, ["useWeights"] = false };
             else answers = new() { ["response"] = Select("response", 0), ["predictors"] = Select("predictors", 1, 2), ["gamma"] = .95, ["grouping"] = "individual", ["accuracy"] = "0.000000001", ["intercept"] = true, ["weights"] = false, ["has-exposure"] = "false" };
             var (run, output) = Run(model, answers);
+            int kept = acquired.Values.SelectMany(a => a.values).Select(v =>
+            { int count = v.Length; while (count > 0 && v[count - 1] == null) count--; return count; }).Max();
             JsonElement record = Record(run);
             ValidateRecord(record, false);
             double[] coefficients;
@@ -149,6 +151,9 @@ internal static partial class Program
             int expectedN = observations - (missing && model != "ConditionalLogisticRegression" ? 3 : 0);
             Check(nativeN == expectedN, label + ": native model fits the expected complete observations");
             Execute(record, coefficients, nativeN, label);
+            var pointerRecord = JsonDocument.Parse(RunRecord.Write(run, bag, threshold: 0)).RootElement.Clone();
+            ValidateRecord(pointerRecord, false);
+            Execute(pointerRecord, coefficients, nativeN, label + "-pointer-only");
             if (model is "CoxRegression" or "MultipleLinearRegression")
             {
                 var (follow, _) = Run(model == "CoxRegression" ? "CoxModelAnalysis" : "MultipleLinearRegressionAnova", model == "CoxRegression" ? new() : new() { ["ci"] = .95 }, bag);
@@ -159,13 +164,13 @@ internal static partial class Program
             void ValidateRecord(JsonElement saved, bool inherited)
             {
                 var predictors = AcquisitionInput(saved, "predictors");
-                Check(predictors.GetProperty("kind").GetString() == "entered" && predictors.GetProperty("columns").EnumerateArray().All(c => c.GetProperty("values").GetArrayLength() == acquired["predictors"].length), label + ": dummy-coded predictor frame keeps its acquired length");
+                Check(predictors.GetProperty("kind").GetString() == "entered" && predictors.GetProperty("columns").EnumerateArray().All(c => c.GetProperty("values").GetArrayLength() == kept), label + ": dummy-coded predictor frame shares the same observed-row cutoff");
                 foreach (var pair in acquired.Where(p => p.Key != "predictors"))
                 {
                     var input = AcquisitionInput(saved, pair.Key);
-                    Check(input.GetProperty("columns").EnumerateArray().Select((c, i) => c.GetProperty("rows")[1].GetInt32() == total && c.GetProperty("hash").GetString() == pair.Value.hashes[i]).All(x => x), label + ": " + pair.Key + " retains acquired physical bounds and hash");
+                    Check(input.GetProperty("columns").EnumerateArray().Select((c, i) => c.GetProperty("rows")[1].GetInt32() == kept + 1 && c.GetProperty("hash").GetString() == RunRecord.Hash(pair.Value.values[i].Take(kept).ToArray())).All(x => x), label + ": " + pair.Key + " retains physical bounds and hash of the original aligned prefix");
                     if (saved.TryGetProperty("data", out var held) && held.TryGetProperty(pair.Key, out var data))
-                        Check(data.EnumerateObject().All(p => p.Value.GetArrayLength() == pair.Value.length), label + ": held pointer values remain aligned");
+                        Check(data.EnumerateObject().All(p => p.Value.GetArrayLength() == kept), label + ": held pointer values remain aligned");
                 }
                 if (inherited) Check(predictors.GetProperty("inherited").GetBoolean(), label + ": follow-on inherits aligned dummy predictor acquisition");
                 Check(!saved.GetRawText().Contains("AlignedEntered"), label + ": runtime safeguard does not change saved record format");
@@ -179,7 +184,7 @@ internal static partial class Program
                 DataFrame frame = (DataFrame)typeof(CellSelection).Assembly.GetType("StatsDirect.UI.frmSpreadsheetGear").GetMethod("ProcessRecordedColumns", BindingFlags.NonPublic | BindingFlags.Static).Invoke(null, new object[] { selection, origins, "Aligned models" });
                 FrameValues result = new();
                 for (int i = 0; i < frame.VariableCount; i++) result.Columns.Add(new ColumnValues { Title = pointer.Columns[i].Title, Values = RunRecord.Values(frame.Variables[i]), Changed = RunRecord.Hash(frame.Variables[i]) != pointer.Columns[i].Hash });
-                Check(result.Columns.All(c => !c.Changed && c.Values.Length == acquired[pointer.Name].length), label + ": recorded columns reread with identical hash and acquired length");
+                Check(result.Columns.All(c => !c.Changed && c.Values.Length == kept), label + ": recorded columns reread with identical hash and aligned length");
                 return result;
             }
             void Execute(JsonElement saved, double[] expected, double n, string file)

@@ -12,6 +12,7 @@
 # Each gives t, df, the two sided P and the confidence interval.
 high <- high[!is.na(high)]
 low <- low[!is.na(low)]
+if (is.null(confidence) || !is.finite(confidence) || confidence <= 0 || confidence >= 1) confidence <- 0.95
 pct <- paste0(100 * confidence, "%")
 alpha <- 1 - confidence
 equal <- t.test(high, low, var.equal = TRUE, conf.level = confidence)

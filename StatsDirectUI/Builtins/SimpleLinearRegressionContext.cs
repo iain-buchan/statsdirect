@@ -147,6 +147,7 @@ namespace StatsDirect.Builtins
         /// <param name="regressionGamma">The confidence, as a proportion.</param>
         public void CalcRcia(double regressionGamma)
         {
+            if (!(regressionGamma > 0.0 && regressionGamma < 1.0)) regressionGamma = 0.95;
             // Either this will have data, or CalculateLeastSquaresMethod() will have been run and NX will have been set.
             if (null != X)
                 NX = X.Length;

@@ -13,7 +13,7 @@ internal static partial class Program
     private static void CheckOptions()
     {
         RRecipes.Folder = Metadata("Recipes");
-        string folder = Path.Combine(Path.GetTempPath(), "statsdirect-rscript-checks", "options");
+        string folder = Path.Combine(TemporaryRoot, "statsdirect-rscript-checks", "options");
         Directory.CreateDirectory(folder);
         int column = 1;
         DataFrame Sheet(params (string title, double[] values)[] columns) { DataFrame f = SheetFrame(Workbook, "Options", column, 1, columns); column += columns.Length; return f; }
@@ -45,9 +45,9 @@ internal static partial class Program
         double[] w = { 1, 2, 1, 3, 1, 2, 1, 3, 1, 2, 1, 3 };
         var (run, output) = Run("MultipleLinearRegression", new() { ["ci"] = 0.95, ["calculateIntercept"] = false, ["useWeights"] = true, ["outcome"] = Sheet(("y", y)), ["weights"] = Sheet(("w", w)), ["predictors"] = Sheet(("x1", x1), ("x2", x2)) });
         string script = Script(run);
-        Check(script.Contains("intercept <- FALSE") && script.Contains("weights <- c(1, 2, 1, 3") && script.Contains("intercept = intercept") && script.Contains("weights = weights"),
-              "the regression's script carries the run's intercept option and weights and hands them to lm");
-        string r = RunR(script, Path.Combine(folder, "mlr"));
+        string r = RunR(script + "\nstopifnot(attr(terms(fit), 'intercept') == 0L, identical(as.double(weights(fit)), "
+                        + RScriptWriter.Vector(w.Cast<object>().ToArray()) + "))\ncat('MLR_OPTIONS_OK\\n')\n", Path.Combine(folder, "mlr"));
+        Check(r.Contains("MLR_OPTIONS_OK"), "the fitted R regression uses the run's weights and no intercept");
         IList<ParameterBag> cols = Block(Block(output.ParameterBag, "row")[0], "col");
         double[] engineB = cols.Select(c => Num(c, "val_b")).ToArray(), engineT = cols.Select(c => Num(c, "t")).ToArray();
         double[] rB = Numbers(r, "^.+ b\\d+ = (-?[0-9.]+)"), rT = Numbers(r, "^.+ b\\d+ = .*  t = (-?[0-9.]+)");
@@ -114,10 +114,12 @@ internal static partial class Program
         double[] times = { 6, 7, 10, 15, 19, 25, 2, 4, 8, 12, 14, 20, 23, 30 }, events = { 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0 }, treatment = { 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1 }, stratum = { 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2 };
         (run, output) = Run("CoxRegression", new() { ["accuracy"] = 0.000000001, ["centre-continuous-covariates"] = true, ["useTimesAdjustment"] = false, ["times"] = Sheet(("times", times)), ["events"] = Sheet(("events", events)), ["predictors"] = Sheet(("treatment", treatment)), ["strata"] = Classifier("stratum", stratum) });
         script = Script(run);
-        r = RunR(script, Path.Combine(folder, "cox"));
+        r = RunR(script + "\nstopifnot(length(attr(terms(fit),'specials')$strata)==1L)\ncat('STRATUM_MODEL_OK\\n')\n", Path.Combine(folder, "cox"));
         double engineCox = Num(Block(output.ParameterBag, "pred")[0], "b"), rCox = Numbers(r, "^\\S+ b1 = (-?[0-9.]+)")[0];
         Console.WriteLine($"      stratified Cox: engine b {engineCox:G7}, R b {rCox:G7}");
-        Check(script.Contains("stratum <- c(") && script.Contains("strata(sd_stratum)") && Near(rCox, engineCox), "R's stratified Cox regression gives the engine's coefficient");
+        Check(script.Contains("stratum <- c(") && Near(rCox, engineCox) &&
+            r.Contains("STRATUM_MODEL_OK"),
+            "R's stratified Cox model actually includes its selected stratum and gives the native coefficient");
 
         // conditional logistic regression with one predictor: the loops take the run's number of coefficients
         // ten matched pairs, case then control: five pairs with the case alone exposed, one with the control alone, four concordant, so that

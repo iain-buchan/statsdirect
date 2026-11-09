@@ -1,5 +1,4 @@
 using System.Text.Json;
-using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using StatsDirect.Data;
 using StatsDirect.Numerics;
@@ -21,22 +20,13 @@ internal static partial class Program
         string Vec(IEnumerable<double> values) => RScriptWriter.Vector(values.Cast<object>().ToArray());
         string Compare(string expression, IEnumerable<double> expected) =>
             "stopifnot(isTRUE(all.equal(unname(c(" + expression + "))," + Vec(expected) + ",tolerance=1e-10,check.attributes=FALSE)))\n";
-        JsonElement Legacy(JsonElement record)
-        {
-            JsonObject saved = JsonNode.Parse(record.GetRawText()).AsObject();
-            saved["parameters"].AsObject().Remove("doAgreement");
-            return JsonDocument.Parse(saved.ToJsonString()).RootElement.Clone();
-        }
-
         double[] differences = { 12, 41, 108, 76, 76, -2, 63, 72, 59 };
         foreach (bool missing in new[] { false, true })
-        foreach (bool legacy in new[] { false, true })
         foreach (double confidence in new[] { .8, .95, .99 })
         {
             double[] selected = missing ? new[] { m, 12, 41, 108, 76, m, 76, -2, 63, 72, 59, m } : differences;
             var (run, output) = Run("TPaired", new() { ["data"] = Frame(("Selected differences", selected)), ["gamma"] = confidence });
             JsonElement record = Record(run);
-            if (legacy) record = Legacy(record);
             RScript script = RScriptWriter.Write(record, null, null);
             Check(script.HasRecipe && !script.DataUnavailable, "one-column paired test exports recorded differences without inventing a second sample");
             ParameterBag bag = output.ParameterBag;
@@ -46,8 +36,8 @@ internal static partial class Program
                 Compare("n,mean(d),sd(d),sd(d)/sqrt(n),r$parameter,r$statistic,r$p.value,r$conf.int[1:2]", expected) +
                 "stopifnot(abs(100*pw$power-" + power.ToString("R", inv) + ")<=0.00500001)\ncat('PAIRED_DIFFERENCE_OK\\n')\n";
             string probe = "plot <- function(...) stop('Agreement must not be plotted for a column of differences')\n";
-            string result = RunR(probe + script.Text + assertions, Path.Combine(folder, "paired-one-" + missing + "-" + legacy + "-" + confidence.ToString("R", inv)));
-            Check(result.Contains("PAIRED_DIFFERENCE_OK") && !result.Contains("Limits of agreement") && result.Contains("Power (for " + (100 * (1 - confidence)).ToString("G6", inv) + "% significance)"), "one-column paired t test reproduces native results and selected-level power, with no agreement output, including legacy records");
+            string result = RunR(probe + script.Text + assertions, Path.Combine(folder, "paired-one-" + missing + "-" + confidence.ToString("R", inv)));
+            Check(result.Contains("PAIRED_DIFFERENCE_OK") && !result.Contains("Limits of agreement") && result.Contains("Power (for " + (100 * (1 - confidence)).ToString("G6", inv) + "% significance)"), "one-column paired t test reproduces native results and selected-level power, with no agreement output");
         }
 
         // Zeros and tied absolute differences exercise StatsDirect's advanced

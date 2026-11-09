@@ -10,7 +10,7 @@ internal static partial class Program
     {
         RRecipes.Folder = Metadata("Recipes");
         string examples = Metadata("Examples");
-        string folder = Path.Combine(Path.GetTempPath(), "statsdirect-rscript-checks", "inverse");
+        string folder = Path.Combine(TemporaryRoot, "statsdirect-rscript-checks", "inverse");
         Directory.CreateDirectory(folder);
         (string op, string settings)[] cases =
         {

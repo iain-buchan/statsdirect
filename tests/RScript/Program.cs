@@ -17,24 +17,52 @@ internal static partial class Program
     internal static bool MetaExact;   // whether the host's preferences ask the meta-analyses for their exact methods
     private static readonly CultureInfo inv = CultureInfo.InvariantCulture;
     private static void Check(bool ok, string description) { if (!ok) throw new Exception("FAIL " + description); checks++; Console.WriteLine("PASS " + description); }
-    /// <summary>The folders the checks made under the temporary folder, statsdirect-*, removed when every check passed; kept for a look when one failed.</summary>
-    private static void CleanTemporaryFolders(DateTime since)
+    private static readonly string TemporaryRoot = CreateTemporaryRoot();
+    private static string CreateTemporaryRoot()
     {
-        foreach (string folder in Directory.EnumerateDirectories(Path.GetTempPath(), "statsdirect-*"))
-            try { if (Directory.GetCreationTime(folder) >= since) Directory.Delete(folder, true); }
+        // R and CreateProcess still have working-directory length limits on
+        // Windows. Keep the private parent short even under sandbox Temp paths.
+        string root = Path.Combine(Path.GetTempPath(), "sd-r-" + Guid.NewGuid().ToString("N")[..16]);
+        Directory.CreateDirectory(root);
+        AppDomain.CurrentDomain.ProcessExit += (_, _) =>
+        {
+            if (Environment.ExitCode != 0) return;
+            try { RemoveOwnedTemporaryFolder(root); }
             catch (IOException) { }
             catch (UnauthorizedAccessException) { }
+        };
+        return root;
     }
-
+    private static void RemoveOwnedTemporaryFolder(string folder)
+    {
+        string path = Path.GetFullPath(folder);
+        if (!path.Equals(TemporaryRoot, StringComparison.OrdinalIgnoreCase) &&
+            !path.StartsWith(TemporaryRoot + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("Test cleanup cannot delete a folder outside this run's temporary root.");
+        if (Directory.Exists(path)) Directory.Delete(path, true);
+    }
     private static string Metadata(string key) => typeof(Program).Assembly.GetCustomAttributes<AssemblyMetadataAttribute>().First(a => a.Key == key).Value;
 
     [STAThread]
     static int Main()
     {
-        DateTime started = DateTime.Now;
         try
         {
+            CheckTemporaryCleanupIsolation();
             _ = typeof(StatsDirect.R.RScriptWriter).Assembly.GetType("StatsDirect.UI.SdApplication").GetProperty("SoleInstance", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null);   // the application object, whose making registers the engine's functions, as the program does at its start
+            if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") is string deferred && deferred.StartsWith("deferred", StringComparison.Ordinal))
+            {
+                if (deferred is not ("deferred538" or "deferred-capture" or "deferred-matched" or "deferred-models" or "deferred-independent" or "deferred-meta"))
+                    throw new ArgumentException("Unknown deferred test group: " + deferred);
+                StatsDirect.R.RRecipes.Folder = Metadata("Recipes");
+                string folder = Path.Combine(TemporaryRoot, "deferred-538"); Directory.CreateDirectory(folder);
+                if (deferred is "deferred538" or "deferred-capture") CheckDeferredRecord538(folder);
+                if (deferred is "deferred538" or "deferred-matched") CheckDeferredMatched538(folder);
+                if (deferred is "deferred538" or "deferred-models") CheckDeferredModels538(folder);
+                if (deferred is "deferred538" or "deferred-independent") CheckDeferredIndependent538(folder);
+                if (deferred is "deferred538" or "deferred-meta") CheckDeferredMeta538(folder);
+                Console.WriteLine($"PASS {checks} deferred 5.3.8 checks"); return 0;
+            }
             // one group of checks alone, while it is being written: STATSDIRECT_RSCRIPT_ONLY=options runs the options checks and stops
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "window") { CheckScriptWindowNumbers(); Console.WriteLine($"PASS {checks} script window checks"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "options") { CheckOptions(); Console.WriteLine($"PASS {checks} Continue in R checks (the options alone)"); return 0; }
@@ -50,8 +78,8 @@ internal static partial class Program
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "recipes") { CheckRecipes(); CheckRecipesAgainstHelp(); Console.WriteLine($"PASS {checks} R recipe checks"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "recipe-bindings") { CheckRecipes(); Console.WriteLine($"PASS {checks} recipe binding checks"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "acquisition") { CheckAcquisition(); Console.WriteLine($"PASS {checks} acquisition checks"); return 0; }
-            if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "review-acquisition") { StatsDirect.R.RRecipes.Folder = Metadata("Recipes"); CheckDummyPredictorReplay(Path.Combine(Path.GetTempPath(), "statsdirect-dummy-review-" + Guid.NewGuid().ToString("N"))); Console.WriteLine($"PASS {checks} dummy predictor acquisition checks"); return 0; }
-            if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "paired-missing") { StatsDirect.R.RRecipes.Folder = Metadata("Recipes"); CheckPairedMissingReplay(Path.Combine(Path.GetTempPath(), "statsdirect-paired-missing-" + Guid.NewGuid().ToString("N"))); Console.WriteLine($"PASS {checks} paired missing-data replay checks"); return 0; }
+            if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "review-acquisition") { StatsDirect.R.RRecipes.Folder = Metadata("Recipes"); CheckDummyPredictorReplay(Path.Combine(TemporaryRoot, "statsdirect-dummy-review-" + Guid.NewGuid().ToString("N"))); Console.WriteLine($"PASS {checks} dummy predictor acquisition checks"); return 0; }
+            if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "paired-missing") { StatsDirect.R.RRecipes.Folder = Metadata("Recipes"); CheckPairedMissingReplay(Path.Combine(TemporaryRoot, "statsdirect-paired-missing-" + Guid.NewGuid().ToString("N"))); Console.WriteLine($"PASS {checks} paired missing-data replay checks"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "charts-a") { CheckChartRecipesA(); Console.WriteLine($"PASS {checks} chart recipe A checks"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "charts-b") { CheckChartRecipesB(); Console.WriteLine($"PASS {checks} chart recipe B checks"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "charts-c") { CheckChartRecipesC(); Console.WriteLine($"PASS {checks} chart recipe C checks"); return 0; }
@@ -63,7 +91,7 @@ internal static partial class Program
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "routed-replay") { CheckRoutedReplay(); Console.WriteLine($"PASS {checks} routed replay checks"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "records") { CheckRecord(); CheckThreshold(); CheckHash(); CheckScript(); CheckTable(); CheckFollowOn(); CheckRealRuns(); CheckRegressionFollowOn(); CheckTwoLevel(); CheckColumnLocator(); Console.WriteLine($"PASS {checks} saved record checks"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "follow-on-plots") { CheckFollowOnPlots(); Console.WriteLine($"PASS {checks} follow-on plot checks"); return 0; }
-            if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "acquisition-modes") { StatsDirect.R.RRecipes.Folder = Metadata("Recipes"); string folder = Path.Combine(Path.GetTempPath(), "statsdirect-acquisition-modes-" + Guid.NewGuid().ToString("N")); Directory.CreateDirectory(folder); CheckAcquisitionModeReplay(folder); Console.WriteLine($"PASS {checks} acquisition-mode replay checks"); return 0; }
+            if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "acquisition-modes") { StatsDirect.R.RRecipes.Folder = Metadata("Recipes"); string folder = Path.Combine(TemporaryRoot, "statsdirect-acquisition-modes-" + Guid.NewGuid().ToString("N")); Directory.CreateDirectory(folder); CheckAcquisitionModeReplay(folder); Console.WriteLine($"PASS {checks} acquisition-mode replay checks"); return 0; }
             CheckRecord();
             CheckNativeAxisLabels();
             CheckRecipeGeneralSimplicity();
@@ -96,19 +124,20 @@ internal static partial class Program
             CheckOptions();
             CheckOptions2();
             CheckOptions3();
-            CheckScriptWindowNumbers();
+            if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") != "headless") CheckScriptWindowNumbers();
             CheckRegressionFollowOn();
             CheckTwoLevel();
             CheckColumnLocator();
             CheckBoxWhisker();
             CheckTukeyHinges();
-            CleanTemporaryFolders(started);
-            Console.WriteLine($"PASS {checks} Continue in R checks");
+            string coverage = Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "headless" ? "headless Continue in R" : "Continue in R";
+            Console.WriteLine($"PASS {checks} {coverage} checks");
             return 0;
         }
         catch (Exception ex)
         {
             Console.WriteLine(ex.Message.StartsWith("FAIL") ? ex.Message : "FAIL " + ex);
+            Console.WriteLine("Retained test artifacts: " + TemporaryRoot);
             return 1;
         }
     }

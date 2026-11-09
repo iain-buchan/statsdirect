@@ -18,9 +18,24 @@ if (paired) {
 } else {
   d <- before[!is.na(before)]   # one column already contains the differences
 }
+if (is.null(confidence) || !is.finite(confidence) || confidence <= 0 || confidence >= 1) confidence <- 0.95
 pct <- paste0(100 * confidence, "%")
-r <- if (paired) t.test(before, after, paired = TRUE, conf.level = confidence) else
-  t.test(d, mu = 0, conf.level = confidence)
+n <- length(d)
+if (n >= 2 && sd(d) == 0) {
+  # R's t.test rejects constant differences. The report's limiting result has
+  # a point interval, infinite t for a nonzero mean, and undefined t/P at zero.
+  t <- mean(d) / 0
+  r <- structure(list(statistic = c(t = t), parameter = c(df = n - 1),
+    p.value = 2 * pt(-abs(t), n - 1),
+    conf.int = structure(rep(mean(d), 2), conf.level = confidence),
+    estimate = c("mean difference" = mean(d)), null.value = c("mean difference" = 0),
+    stderr = 0, alternative = "two.sided", method = "Paired t-test (constant differences)",
+    data.name = "Recorded differences"), class = "htest")
+  if (mean(d) == 0) cat("All differences are zero: t and P are undefined.\n")
+} else {
+  r <- if (paired) t.test(before, after, paired = TRUE, conf.level = confidence) else
+    t.test(d, mu = 0, conf.level = confidence)
+}
 print(r)
 
 # The report's other lines, to 6 decimal places
@@ -37,9 +52,14 @@ cat(sprintf("One sided P = %.4f   Two sided P = %.4f\n", r$p.value / 2, r$p.valu
 # seen, from the noncentral t distribution; strict = TRUE counts rejections in
 # both tails, as StatsDirect does.
 alpha <- 1 - confidence
-pw <- power.t.test(n = n, delta = mean(d), sd = sd(d), sig.level = alpha,
-                   type = "paired", strict = TRUE)
-cat(sprintf("Power (for %g%% significance) = %.2f%%\n", 100 * alpha, 100 * pw$power))
+if (sd(d) == 0) {
+  pw <- list(power = NA_real_)
+  cat(sprintf("Power (for %g%% significance) not calculated: zero standard deviation\n", 100 * alpha))
+} else {
+  pw <- power.t.test(n = n, delta = mean(d), sd = sd(d), sig.level = alpha,
+                     type = "paired", strict = TRUE)
+  cat(sprintf("Power (for %g%% significance) = %.2f%%\n", 100 * alpha, 100 * pw$power))
+}
 
 # StatsDirect's agreement analysis option adds the 95% limits of agreement of
 # Bland and Altman: the mean difference plus or minus 1.96 standard deviations.
@@ -50,6 +70,7 @@ if (paired && isTRUE(agreement)) {
 
 # The agreement plot that follows in the report: each difference against the mean
 # of its pair, with the mean difference (black) and the limits of agreement (red)
+  if (sd(d) > 0) {
   if (!exists("before_title")) before_title <- "before"
   if (!exists("after_title")) after_title <- "after"
   plot((before + after) / 2, d, xlab = paste0("Mean ((", before_title, " + ", after_title, ") / 2)"),
@@ -58,4 +79,5 @@ if (paired && isTRUE(agreement)) {
   abline(h = loa, col = "red")
   mtext(paste0("Mean difference and ", pct, " limits of agreement"),
         side = 3, line = 0.5, cex = 0.8)
+  } else cat("No agreement plot: the differences do not vary.\n")
 }

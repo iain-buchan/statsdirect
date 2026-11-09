@@ -12,7 +12,7 @@ internal static partial class Program
     private static void CheckFollowOnPlots()
     {
         RRecipes.Folder = Metadata("Recipes");
-        string folder = Path.Combine(Path.GetTempPath(), "statsdirect-rscript-checks", "follow-on-plots");
+        string folder = Path.Combine(TemporaryRoot, "statsdirect-rscript-checks", "follow-on-plots");
         double[] x1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 }, x2 = { 3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5, 8 }, y = { 2.9, 5.2, 7.4, 8.1, 11.3, 14.2, 13.8, 17.1, 18.6, 19.9, 23.2, 25.1 };
         DataFrame outcome = SheetFrame("test.xlsx", "Plots", 3, 1, ("y", y));
         DataFrame predictors = SheetFrame("test.xlsx", "Plots", 1, 1, ("x1", x1), ("(log) x2", x2));   // a title that starts as the fit's weights column does

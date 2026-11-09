@@ -31,15 +31,33 @@ internal static partial class Program
                 if (parent.Contains("<frame>")) xml += "<frame>";
                 if (parent.Contains("<chart-type>")) parameters.Add("chartSettings");
             }
+            if (recipe.ParentFiles != null)
+                foreach (string parentName in recipe.ParentFiles.Keys)
+                {
+                    string parent = File.ReadAllText(Path.Combine(Metadata("Operations"), parentName + ".xml"));
+                    parameters.UnionWith(Regex.Matches(parent, "<name>([^<]+)</name>").Select(m => m.Groups[1].Value.Trim()).Skip(1));
+                    if (parent.Contains("<frame>")) xml += "<frame>";
+                }
             parameters.UnionWith(Regex.Matches(xml, "<(?:top-left|top-right|bottom-left|bottom-right)-name>([^<]+)</").Select(m => m.Groups[1].Value.Trim()));   // the cells of a 2 by 2 table typed in
             if (Regex.IsMatch(xml, "<builtin function-name=\"dist[A-Za-z]+\""))
                 parameters.UnionWith(new[] { "value", "df", "df2", "lower", "upper", "two_sided", "asked" });   // the Distributions calculator's boxes, which it records itself
             if (xml.Contains("<grouped-covariance>")) parameters.Add("ci");   // its confidence level is asked through the grid and recorded as the setting ci
+            // A shared base/continuation recipe defaults its optional level until
+            // the confidence-bearing continuation has actually asked for it.
+            string confidenceOwner = recipe.File is "pca.R" or "pca-covariance.R" ? "Cronbach" : recipe.File == "cox-regression.R" ? "CoxHazardRatios" : null;
+            if (confidenceOwner != null)
+            {
+                string owner = File.ReadAllText(Path.Combine(Metadata("Operations"), confidenceOwner + ".xml"));
+                foreach (Match input in Regex.Matches(owner, "<confidence-interval>.*?<name>([^<]+)</name>.*?</confidence-interval>", RegexOptions.Singleline))
+                    parameters.Add(input.Groups[1].Value.Trim());
+            }
             // The chart dialog records its final settings as a neutral parameter bag after it closes; those settings are not XML inputs.
             if ((op is "BoxWhiskerPlot" or "BoxWhiskerPlotText") && xml.Contains("<chart-type>BoxWhisker</chart-type>")) parameters.Add("boxWhisker");
             if (xml.Contains("<chart-type>")) parameters.Add("chartSettings");
             if (op is "Probit" or "Logit" || op.StartsWith("Probit", StringComparison.Ordinal)) parameters.Add("doseResponseModel");
             if (op == "ROCPlot") parameters.Add("rocCutoffs");
+            if (recipe.File is "relative-risk-meta.R" or "meta-summary.R" or "risk-difference.R" or "peto-meta.R")
+                parameters.Add("metaExact"); // captured once by each native meta-analysis report, then retained for replay
             Match settings = Regex.Match(text, "^# settings:\\s*(.*)$", RegexOptions.Multiline);
             if (settings.Success)
                 foreach (string item in settings.Groups[1].Value.Split(',').Select(x => x.Trim()).Where(x => x.Contains('=')))
@@ -139,7 +157,7 @@ internal static partial class Program
               "the data are plain named vectors with the column's title and place beside them, and the settings plain values");
         Check(!text.Contains("setNames") && !text.Contains("data_frames") && !text.Contains("sd_columns") && !text.Contains("original_results") && !text.Contains("input_history"), "nothing of the program's machinery is in the script");
         Check(text.Contains("t.test(before, after, paired = TRUE, conf.level = confidence)"), "the paired recipe follows, taking the confidence level from the settings");
-        string folder = Path.Combine(Path.GetTempPath(), "statsdirect-rscript-checks");
+        string folder = Path.Combine(TemporaryRoot, "statsdirect-rscript-checks");
         string output = RunR(text, folder);
         double t = Figure(output, "t = ([-0-9.eE+]+), df = 19"), p = Figure(output, "p-value = ([0-9.eE-]+)");
         Match ci = Regex.Match(output, "percent confidence interval:\\s*\\n\\s*([-0-9.eE+]+)\\s+([-0-9.eE+]+)");

@@ -7,6 +7,7 @@
 # Single sample t test: the StatsDirect help example (resting systolic blood
 # pressure of 20 first year resident doctors) in R
 bp <- bp[!is.na(bp)]
+if (is.null(confidence) || !is.finite(confidence) || confidence <= 0 || confidence >= 1) confidence <- 0.95
 pct <- paste0(100 * confidence, "%")
 n <- length(bp)
 

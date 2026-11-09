@@ -8,7 +8,7 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 - Continue in R and notebook replay trim trailing blank worksheet rows even when selections exceed the embedded-data limit, while keeping acquisition hashes and row alignment intact.
 - Recorded filtered selections retain the physical worksheet rows of their observations; legacy filtered origins without a row map keep their original bounds.
 - R replay retains explicitly typed missing markers in numeric selections without shortening their worksheet pointers or falsely reporting changed data. Only positional acquisition modes trim unused blank-row tails.
-- Dummy-coded predictors keep their row-aligned model inputs at the acquired length, including in follow-on analyses. Conditional logistic replay refuses unequal input lengths before R can recycle values.
+- Continue in R and notebook export trim unused blank rows across aligned worksheet and dummy-coded frames together, including in follow-on analyses, and preserve explicitly padded selections. Small observed selections can be embedded even when the selected worksheet range is large, within the existing 5,000-value limit. Conditional logistic replay refuses unequal input lengths before R can recycle values.
 - Independent-sample R recipes omit missing observations within each sample, while matched tests and models omit incomplete observations jointly. Summary missing-value counts are retained; weighted summaries and Poisson exposure rules match the native analyses.
 - Variance-ratio replay orders the samples with the native double-precision variance calculation and uses the selected group names, matching the native F statistic and degrees of freedom even for near-equal variances.
 - Paired t and signed-rank replay support a single column of differences as well as two matched columns. Agreement is offered only for paired measurements. Power calculations use the selected significance level in t tests, simple regression and prospective-risk replay. Exact signed-rank probabilities and advanced confidence limits are preserved.
@@ -16,8 +16,13 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 - Poisson confidence intervals and diversity replay omit typed missing counts; diversity also applies the native positive-integer count rule.
 - Reference-range replay distinguishes population coverage from confidence in the limits, retains distribution-free results at all supported sample sizes, and calculates lognormal results only for positive data.
 - Risk, diagnostic and number-needed-to-treat replay uses the selected confidence level throughout. Exact heterogeneity intervals in meta-analysis use its selected confidence tails.
+- Agreement uses exact Kendall probabilities where available and consistent groups for near ties. Signed ranks uses bounded, appropriate approximations for large samples; Spearman works beyond twelve observations. PCA reliability retains the selected confidence, method and item names and handles two-item scales.
+- Normality, Poisson confidence intervals and diversity replay every selected column. Diversity handles absent singletons or doubletons and nonnegative variances; t, z and regression replay handle the native confidence defaults and degenerate paired differences.
+- Model replay keeps responses, exposures and weights distinct from predictor headings, preserves exact predictor patterns, and improves GLM standard errors without treating aliased columns as independent. Native weighted models omit zero-weight rows correctly; Hosmer–Lemeshow grouping is deterministic and safe with fractional weights. Undefined diagnostics are reported as unavailable.
+- Cox, agreement and LOESS replay use the selected confidence levels. Meta-analysis records its exact or approximate method, including the chosen I-squared and study intervals.
 - Acquisition, missing-data and numerical R replay regressions, including a native filtered-grid reread, now block Windows CI.
 - Automated tests and diagnostic test modes use isolated user-data folders instead of writing to the user's preferences, R workspace or example workbook.
+- R regression checks clean only their own temporary files. Failed diagnostics retain their isolated crash evidence, and replay tests compare acquired data with native results and real R.
 ##[v5.3.6] 2026-11-08
 
 ### Fixed

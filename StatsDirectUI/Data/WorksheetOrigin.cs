@@ -70,6 +70,11 @@ namespace StatsDirect.Data
         [XmlIgnore]
         public int[] DataRowIndices { get; set; }
 
+        /// <summary>The selection was explicitly padded after acquisition. These
+        /// virtual missing values cannot be reproduced by rereading its original range.</summary>
+        [XmlIgnore]
+        public bool WasPadded { get; set; }
+
         public int OriginGroup { get; set; }
     }
 }

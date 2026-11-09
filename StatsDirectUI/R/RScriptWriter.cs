@@ -126,6 +126,7 @@ namespace StatsDirect.R
             public string List;                         // a variable that takes every column not named above, as a named list
             public string Table;                        // a variable that takes a table of counts as a matrix
             public string Matrix;                       // a variable that takes a frame of counts as a matrix
+            public string Repeat;                       // run a one-column recipe for every column of this input
             public List<(string variable, string parameter)> Settings = new();
             public List<(string variable, string input)> Nested = new();   // variables that take a two-level input (a frame2d, the grouped covariance's data) as a list of lists
             public string Body = "";
@@ -182,9 +183,19 @@ namespace StatsDirect.R
                     string source = $"\"{pointer.File}\", sheet \"{pointer.Sheet}\"";
                     if (kept.ValueKind == JsonValueKind.Object && kept.TryGetProperty(Text(input, "held") ?? name, out JsonElement held) && held.ValueKind == JsonValueKind.Object)
                     {
+                        IList<ColumnValues> snapshot = Kept(held);
+                        // The record writes pointers and values in the same order. Repeated
+                        // analyses display the original titles, even when held keys differ.
+                        JsonElement titles = default;
+                        if (binding?.Repeat == name && pointer.Columns.Count == snapshot.Count &&
+                            input.TryGetProperty("columns", out JsonElement selected) && selected.ValueKind == JsonValueKind.Array)
+                            titles = selected;
                         int i = 0;
-                        foreach (ColumnValues c in Kept(held))
-                            columns.Add(new Column { Title = c.Title, Values = c.Values, Where = Where(pointer, i++) });
+                        foreach (ColumnValues c in snapshot)
+                        {
+                            string columnTitle = titles.ValueKind == JsonValueKind.Array ? Text(titles[i], "title") ?? c.Title : c.Title;
+                            columns.Add(new Column { Title = columnTitle, Values = c.Values, Where = Where(pointer, i++) });
+                        }
                         notes.Add($"Data: {source}, the values the analysis used.");
                         continue;
                     }
@@ -255,9 +266,29 @@ namespace StatsDirect.R
                 s.Append(variable).Append(" <- list(\n  ").Append(string.Join(",\n  ", frames.EnumerateArray().Select(level =>
                     "list(" + string.Join(", ", level.EnumerateArray().Select(c => (string.IsNullOrEmpty(Text(c, "title")) ? "" : Quote(Text(c, "title")) + " = ") + Vector(c.TryGetProperty("values", out JsonElement v) ? Objects(v) : Array.Empty<object>()))) + ")"))).Append(")\n");
             }
+            // Keep the ordinary, short one-column script. Only a multi-column
+            // selection needs a list and a loop around the same analysis.
+            DataItem repeated = binding?.Repeat != null && binding.Data.Count == 1 && !binding.Data[0].IsList ? binding.Data[0] : null;
+            List<int> repeatColumns = repeated == null ? new() : groups.Where(g => g.name == binding.Repeat)
+                .SelectMany(g => Enumerable.Range(g.start, g.count)).ToList();
+            bool repeat = repeatColumns.Count > 1;
+            if (repeat)
+            {
+                if (repeatColumns.Any(i => string.IsNullOrEmpty(columns[i].Title)))
+                {
+                    // R does not accept list("" = ...). Assigning names afterwards
+                    // preserves an untitled column as well as duplicate titles.
+                    s.Append("samples <- list(").Append(string.Join(",\n  ", repeatColumns.Select(i => Vector(columns[i].Values)))).Append(")\n")
+                        .Append("names(samples) <- c(").Append(string.Join(", ", repeatColumns.Select(i => Quote(columns[i].Title ?? "")))).Append(")\n");
+                    names.Add("samples");
+                }
+                else ListOf("samples", repeatColumns);
+                foreach (int i in repeatColumns) bound.Add(i);
+            }
             if (binding != null)
                 foreach (DataItem item in binding.Data.Where(i => i.Input != null))
                 {
+                    if (repeat && item == repeated) continue;
                     // a prompt repeated for each series, group or period gives several inputs of one name: a list takes every one of
                     // their columns, a vector the first not yet taken
                     List<int> indices = groups.Where(g => g.name == item.Input).SelectMany(g => Enumerable.Range(g.start, g.count)).Where(i => !bound.Contains(i)).ToList();
@@ -279,6 +310,7 @@ namespace StatsDirect.R
             if (binding != null)
                 foreach (DataItem item in binding.Data.Where(i => i.Input == null))
                 {
+                    if (repeat && item == repeated) continue;
                     Skip();
                     if (next >= columns.Count) { Missing(item.Variable, "no column for it in this run"); continue; }
                     Assign(s, item.Variable, columns[next], names);
@@ -356,7 +388,15 @@ namespace StatsDirect.R
                     s.Append(RRecipes.Recipe("chart-common.R").TrimEnd('\n')).Append('\n');
                 if (binding.Settings.Any(setting => setting.parameter == "doseResponseModel"))
                     s.Append(RRecipes.Recipe("dose-response-common.R").TrimEnd('\n')).Append('\n');
-                s.Append(binding.Body.TrimEnd('\n')).Append('\n');
+                if (repeat)
+                {
+                    // Index rather than look up names: worksheet titles may repeat.
+                    s.Append("for (sample_number in seq_along(samples)) {\n  ").Append(repeated.Variable).Append(" <- samples[[sample_number]]\n  ")
+                        .Append(repeated.Variable).Append("_title <- names(samples)[sample_number]\n  cat(\"\\n\", ").Append(repeated.Variable).Append("_title, \"\\n\", sep = \"\")\n");
+                    foreach (string line in binding.Body.TrimEnd('\n').Split('\n')) s.Append("  ").Append(line).Append('\n');
+                    s.Append("}\n");
+                }
+                else s.Append(binding.Body.TrimEnd('\n')).Append('\n');
                 if (plots != null) s.Append('\n').Append(plots.Body.TrimEnd('\n')).Append('\n');
             }
             else
@@ -402,7 +442,7 @@ namespace StatsDirect.R
             int last = -1;
             for (int i = 0; i < lines.Length && (lines[i].Trim().Length == 0 || lines[i].StartsWith("#", StringComparison.Ordinal)); i++)
             {
-                Match m = Regex.Match(lines[i], "^#\\s*(data|table|matrix|nested|settings|recipe):\\s*(.*)$", RegexOptions.IgnoreCase);
+                Match m = Regex.Match(lines[i], "^#\\s*(data|table|matrix|nested|settings|recipe|repeat):\\s*(.*)$", RegexOptions.IgnoreCase);
                 if (!m.Success)
                 {
                     if (Regex.IsMatch(lines[i], "^# (StatsDirect recipe|From the help|hand-edited)", RegexOptions.IgnoreCase))
@@ -426,6 +466,7 @@ namespace StatsDirect.R
                         break;
                     case "table": b.Table = rest; break;
                     case "matrix": b.Matrix = rest; break;
+                    case "repeat": b.Repeat = rest; break;
                     case "nested":
                         foreach (string item in rest.Split(',').Select(x => x.Trim()).Where(x => x.Length > 0))
                         {

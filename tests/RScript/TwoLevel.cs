@@ -14,7 +14,7 @@ internal static partial class Program
     {
         RRecipes.Folder = Metadata("Recipes");
         string examples = Metadata("Examples");
-        string folder = Path.Combine(Path.GetTempPath(), "statsdirect-rscript-checks", "two-level");
+        string folder = Path.Combine(TemporaryRoot, "statsdirect-rscript-checks", "two-level");
         Directory.CreateDirectory(folder);
         List<string> failures = new();
         void Compare(string op, OperationRun run)

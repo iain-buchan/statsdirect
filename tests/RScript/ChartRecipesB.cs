@@ -11,7 +11,7 @@ internal static partial class Program
     private static void CheckChartRecipesB()
     {
         RRecipes.Folder = Metadata("Recipes");
-        string folder = Path.Combine(Path.GetTempPath(), "statsdirect-chart-b-" + Guid.NewGuid().ToString("N"));
+        string folder = Path.Combine(TemporaryRoot, "statsdirect-chart-b-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(folder);
         bool passed = false;
         try
@@ -233,7 +233,7 @@ internal static partial class Program
         }
         finally
         {
-            if (passed && Path.GetFullPath(folder).StartsWith(Path.GetFullPath(Path.GetTempPath()), StringComparison.OrdinalIgnoreCase)) Directory.Delete(folder, true);
+            if (passed && Path.GetFullPath(folder).StartsWith(Path.GetFullPath(TemporaryRoot), StringComparison.OrdinalIgnoreCase)) Directory.Delete(folder, true);
             else if (!passed) Console.WriteLine("      chart group B failure artifacts: " + folder);
         }
     }

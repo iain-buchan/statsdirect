@@ -18,7 +18,7 @@ internal static class Program
     static string Snapshot(string path) => !File.Exists(path) ? "missing" :
         new FileInfo(path).Length + ":" + File.GetLastWriteTimeUtc(path).Ticks + ":" +
         Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(path)));
-    static string Run(ProcessStartInfo start)
+    static string Run(ProcessStartInfo start, int expectedExitCode = 0)
     {
         start.UseShellExecute = false; start.CreateNoWindow = true;
         start.RedirectStandardOutput = true; start.RedirectStandardError = true;
@@ -27,7 +27,7 @@ internal static class Program
         var error = child.StandardError.ReadToEndAsync();
         if (!child.WaitForExit(30000)) { child.Kill(true); throw new Exception("Isolation child timed out"); }
         string stdout = output.GetAwaiter().GetResult(), stderr = error.GetAwaiter().GetResult();
-        if (child.ExitCode != 0) throw new Exception("Isolation child failed: " + stderr + stdout);
+        if (child.ExitCode != expectedExitCode) throw new Exception("Isolation child exited " + child.ExitCode + ", expected " + expectedExitCode + ": " + stderr + stdout);
         return stdout.Trim();
     }
     static ProcessStartInfo Self(params string[] args)
@@ -42,6 +42,21 @@ internal static class Program
     {
         try
         {
+            if (args.Length == 2 && args[0] == "--diagnostic-failure-child")
+            {
+                string initializerRoot = Environment.GetEnvironmentVariable(Variable)!;
+                Environment.SetEnvironmentVariable(Variable, null);
+                SDConfiguration.IsolateDiagnosticUserData(new[] { args[1] });
+                Settings.Default.DefaultConfidenceInterval = 0.81;
+                Settings.Default.Save();
+                string blackbox = Path.Combine(SDConfiguration.MyStatsDirectFolder, "Blackbox.txt");
+                File.WriteAllText(blackbox, "Synthetic failed diagnostic; exit code 17.\n");
+                Console.WriteLine(JsonSerializer.Serialize(new {
+                    root = SDConfiguration.MyStatsDirectFolder, initializerRoot,
+                    settingsSnapshot = Snapshot(SDConfiguration.SettingsPath), blackboxSnapshot = Snapshot(blackbox)
+                }));
+                Environment.Exit(17); // The real diagnostic exits must retain their crash context on failure.
+            }
             if (args.Length >= 2 && args[0] == "--diagnostic-child")
             {
                 Environment.SetEnvironmentVariable(Variable, args.Length == 3 ? args[2] : null);
@@ -107,6 +122,38 @@ internal static class Program
                 using var caller = JsonDocument.Parse(Run(Self("--diagnostic-child", flag, callerRoot)));
                 Check(caller.RootElement.GetProperty("root").GetString() == callerRoot &&
                     File.Exists(Path.Combine(callerRoot, "statsdirect.json")), flag + " honors a caller's profile without deleting it");
+
+                using var failed = JsonDocument.Parse(Run(Self("--diagnostic-failure-child", flag), expectedExitCode: 17));
+                string failedRoot = failed.RootElement.GetProperty("root").GetString()!;
+                string initializerRoot = failed.RootElement.GetProperty("initializerRoot").GetString()!;
+                Check(failedRoot != root && failedRoot != normal && Directory.Exists(failedRoot),
+                    flag + " retains its automatic diagnostic profile after a real nonzero child exit");
+                Check(Snapshot(Path.Combine(failedRoot, "Blackbox.txt")) == failed.RootElement.GetProperty("blackboxSnapshot").GetString() &&
+                    Snapshot(Path.Combine(failedRoot, "statsdirect.json")) == failed.RootElement.GetProperty("settingsSnapshot").GetString(),
+                    flag + " retains Blackbox.txt and the saved diagnostic preferences byte for byte");
+
+                // Both failed child profiles belong to this invocation: the shared
+                // test initializer's profile and the production diagnostic's own.
+                // Validate exact synthetic roots before deleting either one; never
+                // enumerate or clean another test process's profile or real data.
+                bool OwnProfile(string path, string prefix)
+                {
+                    string full = Path.GetFullPath(path);
+                    string container = Path.GetFullPath(Path.Combine(Path.GetTempPath(), "StatsDirectTests"));
+                    string name = Path.GetFileName(full);
+                    return path == full && full != root && full != normal &&
+                        string.Equals(Path.GetDirectoryName(full), container, StringComparison.OrdinalIgnoreCase) &&
+                        name.StartsWith(prefix, StringComparison.Ordinal) && Guid.TryParseExact(name[prefix.Length..], "N", out _) &&
+                        Directory.Exists(full) &&
+                        (File.GetAttributes(container) & FileAttributes.ReparsePoint) == 0 &&
+                        (File.GetAttributes(full) & FileAttributes.ReparsePoint) == 0;
+                }
+                Check(OwnProfile(failedRoot, "diagnostic-") && OwnProfile(initializerRoot, Assembly.GetExecutingAssembly().GetName().Name + "-"),
+                    flag + " failed-profile cleanup is restricted to this child's verified synthetic directories");
+                Directory.Delete(failedRoot, true);
+                Directory.Delete(initializerRoot, true);
+                Check(!Directory.Exists(failedRoot) && !Directory.Exists(initializerRoot) && Directory.Exists(root),
+                    flag + " removes only its verified failed fixtures after preservation is proved");
             }
             try
             {

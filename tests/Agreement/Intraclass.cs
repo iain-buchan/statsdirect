@@ -117,6 +117,7 @@ internal static partial class Program
     private static void Intraclass()
     {
         Console.WriteLine("Agreement of continuous measurements");
+        IntraclassAnchorTieGroups();
         // the example of the help: four peak flow measurements of twenty children (Bland and Altman 1996a)
         double[][] peak =
         {
@@ -168,6 +169,31 @@ internal static partial class Program
                 columns[1][r] = Math.Round(columns[0][r] + offset + random.NextDouble() - 0.5, 1);
             }
             IntraclassCase($"two columns {offset:G3} apart, the differences with a spread of tenths", columns, 0.95, 1e-9);
+        }
+    }
+
+    private static void IntraclassAnchorTieGroups()
+    {
+        // Independent rank-count oracle: the sorted anchor policy makes exactly
+        // one tied pair, not all three points of an adjacency chain. For eight
+        // increasing subjects S=27, tie correction=1 and Var(S)=1158/18.
+        double expectedTau=27/Math.Sqrt(27d*28),expectedP=2*NormalUpper(26/Math.Sqrt(1158d/18));
+        foreach(string kind in new[]{"sd chain","mean chain","exact tie","no ties"})
+        for(int permutation=0;permutation<12;permutation++)
+        {
+            double[] sd=kind=="sd chain"?new[]{1d,1+2.5e-12,1+5e-12,2,3,4,5,6}:
+                kind=="exact tie"?new[]{1d,1,2,3,4,5,6,7}:Enumerable.Range(1,8).Select(i=>(double)i).ToArray();
+            double[] mean=kind=="mean chain"?new[]{100d,100+7.5e-11,100+15e-11,400,500,600,700,800}:Enumerable.Range(1,8).Select(i=>100d*i).ToArray();
+            System.Random random=new(991+permutation);int[] order=Enumerable.Range(0,8).OrderBy(_=>random.Next()).ToArray();
+            sd=order.Select(i=>sd[i]).ToArray();mean=order.Select(i=>mean[i]).ToArray();
+            double[] savedSd=(double[])sd.Clone(),savedMean=(double[])mean.Clone();int n=8;
+            Anova.XAgreeKendall(new NoProgress(),sd,mean,0,ref n,out double tau,out double p,out _,out bool tied,3.3e-12);
+            string label="anchor tie groups "+kind+" permutation "+permutation;
+            bool hasTies=kind!="no ties";
+            Check(label+": tau",Math.Abs(tau-(hasTies?expectedTau:1)),1e-12);
+            Check(label+": independent P",Math.Abs(p-(hasTies?expectedP:2/40320d)),1e-12);
+            Say(tied==hasTies,label+": tie label");
+            Say(sd.SequenceEqual(savedSd)&&mean.SequenceEqual(savedMean),label+": caller values retain their original order and precision");
         }
     }
 }

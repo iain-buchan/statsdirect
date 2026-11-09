@@ -24,6 +24,12 @@ internal static partial class Program
         JsonElement Save(DataFrame frame, bool inherited = false, int threshold = RunRecord.EmbeddingThreshold)
         {
             ParameterBag bag = new(); bag.AddInput("data",frame);bag.AddInput("gamma",0.95);bag.AddInput("doAgreement",true);
+            if (inherited)
+            {
+                OperationRun parent = new(new Operation { Name="TPaired" });
+                parent.Note(new FrameParameter { Name="data" }, "Pairs", value:bag["data"]);
+                RunRecord.Write(parent,bag,threshold);
+            }
             OperationRun run = new(new Operation { Name="TPaired" },inherited?bag:null);
             if(!inherited)run.Note(new FrameParameter { Name="data" },"Pairs",value:bag["data"]);
             return JsonDocument.Parse(RunRecord.Write(run,bag,threshold)).RootElement.Clone();
@@ -47,7 +53,7 @@ internal static partial class Program
             JsonElement record=Save(Frame(x,y));
             JsonElement input=AcquisitionInput(record,"data");
             Check(input.GetProperty("columns").EnumerateArray().All(c=>c.GetProperty("rows")[1].GetInt32()==10),"padding "+selected+": pointer bounds trim independently of embedding");
-            bool expectedHeld=selected*2<=RunRecord.EmbeddingThreshold;
+            bool expectedHeld=before.Length+after.Length<=RunRecord.EmbeddingThreshold;
             Check(record.TryGetProperty("data",out _)==expectedHeld,"padding "+selected+": storage limit remains bounded");
             int reads=0;
             FrameValues Read(FramePointer pointer)
@@ -126,6 +132,12 @@ internal static partial class Program
         {
             double[] a=Pad(new[]{1.0,2,3},3000),b=Pad(new[]{4.0,5,6,7,8},3000);
             var frame=Frame(a,b);ParameterBag bag=new();bag.AddInput("data",frame);
+            if(inherited)
+            {
+                OperationRun parent=new(new Operation{Name="TPaired"});
+                parent.Note(new FrameParameter{Name="data"},"Pairs",value:bag["data"]);
+                RunRecord.Write(parent,bag);
+            }
             OperationRun run=new(new Operation{Name="TPaired"},inherited?bag:null);
             if(!inherited)run.Note(new FrameParameter{Name="data"},"Pairs",value:bag["data"]);
             Array.Fill(a,999);Array.Fill(b,999);rows[0]=99;

@@ -14,7 +14,7 @@ internal static partial class Program
     {
         RRecipes.Folder = Metadata("Recipes");
         string examples = Metadata("Examples");
-        string folder = Path.Combine(Path.GetTempPath(), "statsdirect-rscript-checks", "real");
+        string folder = Path.Combine(TemporaryRoot, "statsdirect-rscript-checks", "real");
         Directory.CreateDirectory(folder);
         // the answers beyond the example's inputs and settings: the prompts the dialog would show; null skips an optional frame
         // mode: "" the example's own (exact, cut or subset), or "subset" where the dialog's labels differ from the help's (the 2 by 2
@@ -78,12 +78,19 @@ internal static partial class Program
                 RScript script = RScriptWriter.Write(Record(run), null, null);
                 if (!script.HasRecipe) { failures.Add(op + ": the run's script has no recipe"); continue; }
                 string scriptText = script.Text;
+                string reference = File.ReadAllText(Path.Combine(examples, op + ".R"));
+                string recipe = RRecipes.Find(op).File;
+                if (IsModelWorkedExample(recipe))
+                {
+                    CheckModelWorkedExample(op, recipe, example, scriptText, reference, Path.Combine(folder, op));
+                    continue;
+                }
                 string chartProbe = SelectedChartExampleProbe(op);
                 if (chartProbe != null)
                     scriptText = "invisible(capture.output({\n" + scriptText + "\n}))\n"
                         + "emit <- function(x) cat(formatC(as.double(x), digits = 8, format = 'f'), '\\n')\n" + chartProbe;
                 string ours = Figures(RunR(scriptText, Path.Combine(folder, op)));
-                string expected = Figures(RunR(File.ReadAllText(Path.Combine(examples, op + ".R")).Replace("\r", ""), Path.Combine(folder, op + "-help")));
+                string expected = Figures(RunR(reference.Replace("\r", ""), Path.Combine(folder, op + "-help")));
                 bool cut = example.TryGetProperty("cut", out JsonElement c2) && c2.ValueKind == JsonValueKind.True;
                 bool subset = mode == "subset" || (example.TryGetProperty("subset", out JsonElement sb) && sb.ValueKind == JsonValueKind.True);
                 HashSet<string> helpFigures = expected.Split(' ', StringSplitOptions.RemoveEmptyEntries).ToHashSet();

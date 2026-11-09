@@ -11,7 +11,7 @@ internal static partial class Program
     private static void CheckRecipeAdvancedSimplicity()
     {
         RRecipes.Folder = Metadata("Recipes");
-        string folder = Path.Combine(Path.GetTempPath(), "statsdirect-advanced-simplicity-" + Guid.NewGuid().ToString("N"));
+        string folder = Path.Combine(TemporaryRoot, "statsdirect-advanced-simplicity-" + Guid.NewGuid().ToString("N"));
         int column = 0;
         DataFrame Sheet(string title, params double[] values) => SheetFrame(Workbook, "Advanced", column++, 0, (title, values));
         string Number(double value) => value.ToString("R", inv);

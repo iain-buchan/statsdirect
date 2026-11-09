@@ -306,6 +306,32 @@ namespace StatsDirect.Builtins
         }
 
         /// <summary>
+        /// Gives calculated values consistent tie groups. A tolerance comparison
+        /// alone is not transitive: a can be near b and b near c while a is not
+        /// near c. Anchoring each sorted group at its first value makes ranking
+        /// and tie-count variance use the same equivalence relation, independent
+        /// of the order in which the subjects were supplied.
+        /// </summary>
+        private static void XAgreeCanonicalTies(double[] values, int count, double tolerance = 0.0)
+        {
+            if (count < 2)
+                return;
+            int[] order = new int[count];
+            for (int i = 0; i < count; i++)
+                order[i] = i + 1;
+            Array.Sort(order, (a, b) => values[a].CompareTo(values[b]));
+            double anchor = values[order[0]];
+            for (int i = 1; i < count; i++)
+            {
+                int at = order[i];
+                if (XAgreeTied(anchor, values[at], tolerance))
+                    values[at] = anchor;
+                else
+                    anchor = values[at];
+            }
+        }
+
+        /// <summary>
         /// Records a tied value so that each tie group is credited once (cf. RptKendall); returns false if already recorded
         /// </summary>
         /// <param name="v">tied value</param>
@@ -373,6 +399,10 @@ namespace StatsDirect.Builtins
                     y[nx] = av[n];
                 }
             }
+            // x/y are private copies. The actual means and standard deviations
+            // passed to the plots retain their original values and subject order.
+            XAgreeCanonicalTies(x, nx, xTolerance);
+            XAgreeCanonicalTies(y, nx);
             try
             {
                 if (nx >= 2)

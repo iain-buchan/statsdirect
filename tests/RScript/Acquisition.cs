@@ -14,7 +14,7 @@ internal static partial class Program
     private static void CheckAcquisition()
     {
         RRecipes.Folder = Metadata("Recipes");
-        string folder = Path.Combine(Path.GetTempPath(), "statsdirect-acquisition-" + Guid.NewGuid().ToString("N"));
+        string folder = Path.Combine(TemporaryRoot, "statsdirect-acquisition-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(folder);
         foreach (int count in new[] { 12, 5001 })
             foreach (bool missing in new[] { false, true }) CheckPolynomialAcquisition(count, missing, folder);
@@ -30,6 +30,11 @@ internal static partial class Program
         CheckDummyPredictorReplay(folder);
         CheckIndependentReview537(folder);
         CheckSelectedConfidenceReview(folder);
+        CheckDeferredRecord538(folder);
+        CheckDeferredMatched538(folder);
+        CheckDeferredModels538(folder);
+        CheckDeferredIndependent538(folder);
+        CheckDeferredMeta538(folder);
         Console.WriteLine("      acquisition regression artifacts: " + folder);
     }
 
