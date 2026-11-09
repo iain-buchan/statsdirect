@@ -47,5 +47,34 @@ internal static partial class Program
             "follow-ons saved without the analysis they continued, operations without a recipe and results without a record offer only their data and settings: " + string.Join(" | ", labels));
         Check(await view.ContinueInRTextAsync("no-such-result", true) == "Open data and settings in &R",
             "a result whose record cannot be read still has its menu, with the data and settings item");
+
+        // An opened report's record is kept whatever it holds, so long as it is an object. One whose parameters are not an object (a
+        // report file edited by hand, or written elsewhere) makes the recipe's resolution throw for an operation that looks into them:
+        // the right-click must still give the menu, with the data and settings item, as an exception there would end the program.
+        var malformed = new (string operation, JsonNode parameters)[] { ("BoxWhiskerPlot", new JsonArray(1)), ("Cronbach", JsonValue.Create("settings")), ("Ranv", JsonValue.Create(3)) };
+        var odd = malformed.Select((m, i) =>
+        {
+            JsonObject record = NotebookRecord(m.operation);
+            record["parameters"] = m.parameters;
+            return new { id = "odd-" + i, title = "Malformed " + m.operation, operation = m.operation, helpContextId = 0, html = "<p>Malformed " + m.operation + "</p>",
+                record = (JsonElement?)JsonSerializer.SerializeToElement(record) };
+        }).ToList();
+        await view.CallAsync("load", new { entries = odd });
+        for (int i = 0; i < odd.Count; i++)
+        {
+            await Js($"document.querySelectorAll('.report-entry')[{i}].dispatchEvent(new MouseEvent('contextmenu',{{bubbles:true,cancelable:true}}))");
+            var target = await view.CallAsync("contextTarget");
+            string id = target.GetProperty("resultId").GetString();
+            JsonElement record = (await view.RecordAsync(id)).GetProperty("record");
+            bool throws = false;
+            try { RRecipes.Find(record); }
+            catch (InvalidOperationException) { throws = true; }
+            string label = null;
+            Exception failure = null;
+            try { label = await view.ContinueInRTextAsync(id, target.GetProperty("hasRecord").GetBoolean()); }
+            catch (Exception ex) { failure = ex; }
+            Check(target.GetProperty("hasRecord").GetBoolean() && throws && failure == null && label == "Open data and settings in &R",
+                $"a reopened {odd[i].operation} record whose parameters are not an object, which its recipe cannot resolve, still has its menu with the data and settings item: {label ?? failure?.GetType().Name + " " + failure?.Message}");
+        }
     }
 }

@@ -414,12 +414,17 @@ internal sealed class ReportView : UserControl
     /// </summary>
     internal async Task<string> ContinueInRTextAsync(string resultId, bool hasRecord)
     {
-        JsonElement entry = default;
+        bool recipe = false;
         if (hasRecord && resultId != null)
-            try { entry = await RecordAsync(resultId); }
-            catch (Exception) { }   // the menu is shown all the same; continuing in R then says why the record cannot be read
-        bool recipe = entry.ValueKind == JsonValueKind.Object && entry.TryGetProperty("record", out JsonElement record)
-                      && record.ValueKind == JsonValueKind.Object && StatsDirect.R.RRecipes.Find(record) != null;
+            try
+            {
+                JsonElement entry = await RecordAsync(resultId);
+                recipe = entry.ValueKind == JsonValueKind.Object && entry.TryGetProperty("record", out JsonElement record)
+                         && record.ValueKind == JsonValueKind.Object && StatsDirect.R.RRecipes.Find(record) != null;
+            }
+            // the menu is shown all the same, also for a record of an opened report that is not as the program writes one (its
+            // parameters not an object, say), which would otherwise end the program from the right-click: continuing in R then says why
+            catch (Exception) { }
         return recipe ? "Continue in &R" : "Open data and settings in &R";
     }
 
