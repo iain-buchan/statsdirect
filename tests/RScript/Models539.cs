@@ -19,6 +19,7 @@ internal static partial class Program
         CheckModels539LonePredictor(folder);
         CheckModels539NoPredictorLeft(folder);
         CheckModels539ZeroResidualDf(folder);
+        CheckModels539ConstantPredictor(folder);
     }
 
     private static readonly double[] Models539Y = { 8.73, 8.83, 14.58, 9.89, 9.16, 11.35, 5.24, 7.19, 13.24, 7.65 };
@@ -198,6 +199,72 @@ internal static partial class Program
             string output = Models539Verify(folder, "zero-df-" + label, run, oracle);
             Check(Regex.Matches(output, @"t = \*  P = \*").Count == 3 && output.Contains("Root MSE = *") && Regex.IsMatch(output, @"F = \* +P = \*") && output.Contains("Ra2 = *%"),
                 label + ": the replay prints * for each statistic that needs residual df");
+        }
+    }
+
+    private static Dictionary<string, object> Models539PoissonAnswers(Func<DataAcquisitionMode, int[], DataFrame> sheet, int[] predictors, bool intercept, bool exposed, bool weighted) => new()
+    {
+        ["response"] = Models539Select(sheet, 0), ["weight"] = weighted ? Models539Select(sheet, 1) : null, ["exposure"] = exposed ? Models539Select(sheet, 2) : null,
+        ["predictors"] = Models539Select(sheet, predictors), ["gamma"] = .95, ["grouping"] = "individual", ["accuracy"] = "0.00000000001",
+        ["intercept"] = intercept, ["weights"] = weighted, ["has-exposure"] = exposed ? "true" : "false"
+    };
+
+    private static readonly double[] Models539Counts = { 2, 5, 9, 14, 20, 11, 6, 4, 8, 7, 12, 16 };
+    private static readonly double[] Models539Exposures = { 100, 120, 140, 160, 180, 150, 110, 90, 130, 120, 150, 170 };
+    private static readonly double[] Models539Dose = Enumerable.Range(0, 12).Select(i => 1.5 + i).ToArray();
+
+    private static Dictionary<string, object> Models539LogisticAnswers(Func<DataAcquisitionMode, int[], DataFrame> sheet, int[] predictors, bool intercept = true, bool grouped = true) => grouped
+        ? new()
+        {
+            ["response"] = Models539Select(sheet, 0), ["total"] = Models539Select(sheet, 1), ["weight"] = Models539Select(sheet, 2), ["predictors"] = Models539Select(sheet, predictors),
+            ["gamma"] = .95, ["grouping"] = "grouped", ["accuracy"] = "0.00000000001", ["intercept"] = intercept, ["weights"] = true
+        }
+        : new()
+        {
+            ["response"] = Models539Select(sheet, 0), ["weight"] = Models539Select(sheet, 1), ["predictors"] = Models539Select(sheet, predictors),
+            ["gamma"] = .95, ["grouping"] = "individual", ["accuracy"] = "0.00000000001", ["intercept"] = intercept, ["weights"] = true
+        };
+
+    // Item 7: with an intercept, a nonzero constant predictor is aliased: rank 1 and n - 1 residual df, the fit of the intercept alone,
+    // with a coefficient of 0 for it (it had stopped the singular value decomposition, or left rank 2, 10 df and coefficients of 1e14).
+    // The logistic fit shares the routine.
+    private static void CheckModels539ConstantPredictor(string folder)
+    {
+        foreach (double c in new[] { 0.7, 1.3, 2, 3 })
+            foreach (bool exposed in new[] { false, true })
+            {
+                var sheet = Models539Sheet(("Outcome", Models539Counts), ("Prior", Enumerable.Repeat(1d, 12).ToArray()), ("Exposure", Models539Exposures), ("Constant", Enumerable.Repeat(c, 12).ToArray()));
+                string label = "poisson-constant-" + c.ToString(inv) + (exposed ? "-exposed" : "");
+                var (run, output) = Run("PoissonRegression", Models539PoissonAnswers(sheet, new[] { 3 }, true, exposed, false));
+                ParameterBag model = Run("PoissonRegressionModel", new(), output.ParameterBag).output.ParameterBag;
+                var unscaled = Models539Block(model, "unscaled");
+                double intercept = Math.Log(Models539Counts.Sum() / (exposed ? Models539Exposures.Sum() : 12.0));
+                Check(Models539Number(model, "rank") == 1 && Models539Number(model, "idf") == 11 && Close(Models539Number(unscaled[0], "coef"), intercept, 1e-9) &&
+                    Models539Number(unscaled[1], "coef") == 0 && Models539Number(unscaled[1], "err") == 0,
+                    label + ": rank 1, 11 residual df and the intercept log(sum y / sum t), with no coefficient for the constant");
+                string oracle = "y <- " + Models539Vector(Models539Counts) + "\nt <- " + Models539Vector(exposed ? Models539Exposures : Enumerable.Repeat(1.0, 12)) + "\n" +
+                    "g <- glm(y ~ 1, offset = log(t), family = poisson, control = glm.control(epsilon = 1e-14, maxit = 100))\n" +
+                    Models539Equal("deviance(g), g$df.residual, coef(g), sqrt(vcov(g)[1, 1])", new[] { Models539Number(model, "dev"), Models539Number(model, "idf"), Models539Number(unscaled[0], "coef"), Models539Number(unscaled[0], "err") }, 1e-8) +
+                    Models539Equal("fit$rank, fit$df.residual, coef(fit)[1]", new[] { 1, 11, Models539Number(unscaled[0], "coef") }, 1e-8) + "stopifnot(is.na(coef(fit)[2]))\n";
+                Models539Verify(folder, label, run, oracle);
+            }
+        double[] response = { 2, 3, 4, 5, 6, 8, 10, 11, 12, 14, 15, 17 }, weights = { 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3 };
+        foreach (double c in new[] { 0.7, 2 })
+        {
+            var sheet = Models539Sheet(("Outcome", response), ("Total", Enumerable.Repeat(20d, 12).ToArray()), ("Prior", weights), ("Constant", Enumerable.Repeat(c, 12).ToArray()));
+            string label = "logistic-constant-" + c.ToString(inv);
+            var (run, output) = Run("LogisticRegression", Models539LogisticAnswers(sheet, new[] { 3 }));
+            ParameterBag model = Run("LogisticRegressionModel", new(), output.ParameterBag).output.ParameterBag;
+            var parameters = Models539Block(model, "parameters");
+            Check(Models539Number(model, "rank") == 1 && Models539Number(model, "idf") == 2 && Models539Number(parameters[1], "coef") == 0,
+                label + ": the three weight patterns give rank 1 and 2 residual df, with no coefficient for the constant");
+            // the records stacked into their three patterns of prior weight, as the native analysis stacks them
+            double[] r = Enumerable.Range(1, 3).Select(w => response.Where((_, i) => weights[i] == w).Sum()).ToArray(), n = Enumerable.Repeat(80.0, 3).ToArray();
+            string oracle = "r <- " + Models539Vector(r) + "\nn <- " + Models539Vector(n) + "\nw <- c(1, 2, 3)\n" +
+                "g <- glm(cbind(r, n - r) ~ 1, family = binomial, weights = w, control = glm.control(epsilon = 1e-14, maxit = 100))\n" +
+                Models539Equal("deviance(g), g$df.residual, coef(g)", new[] { Models539Number(model, "dev"), Models539Number(model, "idf"), Models539Number(parameters[0], "coef") }, 1e-8) +
+                "stopifnot(fit$rank == 1L, is.na(coef(fit)[2]))\n";
+            Models539Verify(folder, label, run, oracle);
         }
     }
 
