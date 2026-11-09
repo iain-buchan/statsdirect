@@ -41,6 +41,7 @@ internal static partial class Program
         Check(output.Contains("Mean of differences = 56.111111  (n = 9)") && output.Contains("Power (for 5% significance) = 98.98%")
               && output.Contains("95% Limits of agreement = -10.868665 to 123.090887") && !output.Contains("= NA") && !output.Contains("Error") && output.Contains("TRAILING BLANK ROWS VERIFIED"),
             "the paired t recipe reproduces the report from the kept rows, with its agreement plot and no NA lines");
+        CheckRecordPadding(folder);
         // interior missing values stay, and a column's own blank within the rows another column still fills stays too
         double[] x = { 1, 2, Constant.MISSING, 4, 5, Constant.MISSING, Constant.MISSING }, y = { 2, 4, 6, 8, Constant.MISSING, 12, Constant.MISSING };
         DataFrame ragged = new();

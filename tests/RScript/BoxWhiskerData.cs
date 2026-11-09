@@ -11,7 +11,7 @@ internal static partial class Program
     // Sorting that series must not rewrite the selected data, its saved snapshot or the locator hash.
     private static void CheckBoxWhiskerDataOrder()
     {
-        string folder = Path.Combine(Path.GetTempPath(), "statsdirect-box-order-" + Guid.NewGuid().ToString("N"));
+        string folder = Path.Combine(TemporaryRoot, "statsdirect-box-order-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(folder);
         bool passed = false;
         try
@@ -104,7 +104,7 @@ internal static partial class Program
         }
         finally
         {
-            if (passed && Path.GetFullPath(folder).StartsWith(Path.GetFullPath(Path.GetTempPath()), StringComparison.OrdinalIgnoreCase))
+            if (passed && Path.GetFullPath(folder).StartsWith(Path.GetFullPath(TemporaryRoot), StringComparison.OrdinalIgnoreCase))
                 Directory.Delete(folder, true);
             else if (!passed) Console.WriteLine("      box plot order failure artifacts: " + folder);
         }

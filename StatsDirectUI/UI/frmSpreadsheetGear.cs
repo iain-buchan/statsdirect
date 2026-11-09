@@ -940,6 +940,20 @@ namespace StatsDirect.UI
             });
         }
 
+        int[] IGetCells.GetVisibleRowIndices(int column, int firstRow, int lastRow)
+        {
+            if (lastRow < firstRow)
+                return Array.Empty<int>();
+            return workbookView.WithLock(() =>
+            {
+                List<int> rows = new();
+                for (int row = firstRow; row <= lastRow; row++)
+                    if (!workbookView.ActiveWorksheet.Cells[row, column].EntireRow.Hidden)
+                        rows.Add(row);
+                return rows.ToArray();
+            });
+        }
+
         (double[], int) IGetCells.GetCellValues(int column, int firstRow, int lastRow)
         {
             if (IsHiddenColumn(column))

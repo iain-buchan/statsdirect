@@ -20,7 +20,7 @@ internal static partial class Program
         };
         void Replay(string operation, object[] inputs, Dictionary<string, object> options, string assertions, int panels = 1)
         {
-            string folder = Path.Combine(Path.GetTempPath(), "statsdirect-chart-a-" + Guid.NewGuid().ToString("N"));
+            string folder = Path.Combine(TemporaryRoot, "statsdirect-chart-a-" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(folder);
             string json = JsonSerializer.Serialize(new
             {
@@ -127,7 +127,7 @@ stopifnot(length(spread_stacks)==2L, sum(spread_stacks[[1]]$count)==5L, sum(spre
                 && settings.GetProperty("titleFontSize").GetDouble() == 18,
                 name + " records actual dialog title and fonts through the engine");
             string script = RScriptWriter.Write(record, null, null).Text;
-            string folder = Path.Combine(Path.GetTempPath(), "statsdirect-chart-a-real-" + name + "-" + Guid.NewGuid().ToString("N"));
+            string folder = Path.Combine(TemporaryRoot, "statsdirect-chart-a-real-" + name + "-" + Guid.NewGuid().ToString("N"));
             string prefix = "options(device=function(...)grDevices::svg(filename='actual-%03d.svg',...))\n";
             string output = RunR(prefix + script + "\n" + assertions + "\ncat('REAL_A_OK\\n')\n", folder);
             Check(output.Contains("REAL_A_OK") && Directory.GetFiles(folder, "actual-*.svg").Length == 1,
@@ -200,7 +200,7 @@ stopifnot(length(spread_stacks)==2L, sum(spread_stacks[[1]]$count)==5L, sum(spre
         // The auto device grows for multiple panels, while an explicitly opened
         // standard-size device must keep the caller's dimensions and one page.
         string histogramScript = RScriptWriter.Write(Record(histogramRun), null, null).Text;
-        string multiFolder = Path.Combine(Path.GetTempPath(), "statsdirect-chart-a-multihist-" + Guid.NewGuid().ToString("N"));
+        string multiFolder = Path.Combine(TemporaryRoot, "statsdirect-chart-a-multihist-" + Guid.NewGuid().ToString("N"));
         string fixedOutput = RunR("grDevices::pdf('fixed.pdf',width=7,height=7)\n" + histogramScript +
             "\nstopifnot(max(abs(dev.size('in')-c(7,7)))<1e-8)\ncat('FIXED_OK\\n')\n", multiFolder);
         Check(fixedOutput.Contains("FIXED_OK"), "two histogram panels respect an explicitly opened fixed-size PDF device");

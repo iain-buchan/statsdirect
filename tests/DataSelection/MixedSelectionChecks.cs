@@ -76,7 +76,7 @@ internal static class MixedSelectionChecks
     static void Snapshot(DataFrame frame, bool entered, string label)
     {
         var bag = new ParameterBag(); bag.AddInput("data", frame);
-        object snapshot = typeof(RunRecord).GetMethod("Capture", Flags).Invoke(null, new object[] { bag["data"], "frame" });
+        object snapshot = typeof(RunRecord).GetMethod("Capture", Flags).Invoke(null, new object[] { bag["data"], "frame", false, true });
         var json = (JsonElement)snapshot.GetType().GetField("Content", Flags).GetValue(snapshot);
         Check(json.GetProperty("kind").GetString() == (entered ? "entered" : "frame"), label + " retains the correct recorded-data contract");
         if (!entered) { Check(json.GetProperty("mode").GetString() == "NumericPreserveRows", label + " persists numeric108 for replay"); return; }

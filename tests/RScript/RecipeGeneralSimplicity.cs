@@ -7,7 +7,7 @@ internal static partial class Program
     private static void CheckRecipeGeneralSimplicity()
     {
         RRecipes.Folder = Metadata("Recipes");
-        string folder = Path.Combine(Path.GetTempPath(), "statsdirect-general-simplicity-" + Guid.NewGuid().ToString("N"));
+        string folder = Path.Combine(TemporaryRoot, "statsdirect-general-simplicity-" + Guid.NewGuid().ToString("N"));
         int number = 0;
         void Probe(string description, string script, string assertions)
         {
@@ -102,13 +102,13 @@ internal static partial class Program
                 """);
         foreach (double level in new[] { .8, .99 })
         {
-            Probe("regression correlation power remains defined at 5% for confidence " + level,
+            Probe("regression correlation power uses the selected significance for confidence " + level,
                 Recipe("simple-linear-regression.R", $"increase<-c(8,7,10,12,10,15,14,18);weight<-1:8;confidence<-{level.ToString("R", inv)}"),
-                "stopifnot(near(power,pnorm(z-qnorm(.975))+pnorm(-z-qnorm(.975))),near(attr(ct$conf.int,'conf.level'),confidence))");
-            Probe("unpaired t power remains defined at 5% for confidence " + level,
+                "stopifnot(near(power,pnorm(z-qnorm((1+confidence)/2))+pnorm(-z-qnorm((1+confidence)/2))),near(attr(ct$conf.int,'conf.level'),confidence))");
+            Probe("unpaired t power uses the selected significance for confidence " + level,
                 Recipe("unpaired-t.R", $"high<-c(8,10,12,9,14,11,15,10,13,16);low<-c(7,9,8,11,6,12,9,7,10,8);confidence<-{level.ToString("R", inv)}"), """
                 pooled <- sqrt((var(high)+var(low))/2)
-                expected <- power.t.test(n=length(high),delta=mean(high)-mean(low),sd=pooled,sig.level=.05,type='two.sample',strict=TRUE)$power
+                expected <- power.t.test(n=length(high),delta=mean(high)-mean(low),sd=pooled,sig.level=1-confidence,type='two.sample',strict=TRUE)$power
                 printed <- capture.output(report(equal,'equal'))
                 stopifnot(any(grepl(sprintf('%.2f%%',100*expected),printed,fixed=TRUE)))
                 """);

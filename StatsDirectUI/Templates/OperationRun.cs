@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 
 namespace StatsDirect.Templates
 {
@@ -41,7 +42,7 @@ namespace StatsDirect.Templates
                         try
                         {
                             InheritedInputs[pair.Key] = previous?.TryGetValue(pair.Key, out RunRecord.InputSnapshot original) == true
-                                ? original.Copy() : RunRecord.Capture(pair.Value, pair.Value.IsDataFrame ? "frame" : "frame2d");
+                                ? original.Copy() : RunRecord.Capture(pair.Value, pair.Value.IsDataFrame ? "frame" : "frame2d", acquired: false);
                         }
                         catch (Exception) { }   // keeping provenance must not prevent the analysis
             LimitHeldValues();
@@ -62,8 +63,12 @@ namespace StatsDirect.Templates
             for (int i = Inputs.Count - 1; i >= 0; i--)
                 if (Inputs[i].Name == parameter.Name && Inputs[i].Pass == pass)
                     Inputs.RemoveAt(i);
-            RunInput input = new(parameter.Name, prompt, RunRecord.KindOf(parameter)) { Pass = pass, Value = value };
-            try { input.Snapshot = RunRecord.Capture(value, input.Kind); }
+            RunInput input = new(parameter.Name, prompt, RunRecord.KindOf(parameter))
+                { Pass = pass, Value = value, PreserveRowAlignment = parameter is FrameParameter { PreserveRowAlignment: true } };
+            try
+            {
+                input.Snapshot = RunRecord.Capture(value, input.Kind, input.PreserveRowAlignment);
+            }
             catch (Exception) { }   // the report can still attempt its previous best-effort capture
             if (parameter is Double2By2Parameter table)
             {
@@ -86,7 +91,7 @@ namespace StatsDirect.Templates
                 if (input.Snapshot != null) snapshots.Add(input.Snapshot);
             foreach (KeyValuePair<string, RunRecord.InputSnapshot> pair in InheritedInputs)
                 if (!Inputs.Any(input => input.Name == pair.Key) && pair.Value != null) snapshots.Add(pair.Value);
-            if (snapshots.Sum(snapshot => (long)snapshot.PointerCount) > RunRecord.EmbeddingThreshold)
+            if (snapshots.Sum(snapshot => (long)snapshot.HeldCount) > RunRecord.EmbeddingThreshold)
                 foreach (RunRecord.InputSnapshot snapshot in snapshots) snapshot.Held = default;
         }
 
@@ -118,6 +123,7 @@ namespace StatsDirect.Templates
         public string Pass { get; set; } = "";
         /// <summary>The value as it was asked, when the processor had it to hand; the bag's current value stands in otherwise.</summary>
         public FilledParameter Value { get; set; }
+        internal bool PreserveRowAlignment { get; set; }
         internal RunRecord.InputSnapshot Snapshot { get; set; }
         internal double[] TableCounts { get; set; }
 

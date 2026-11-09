@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.Linq;
 
 namespace StatsDirect.Builtins
 {
@@ -761,6 +762,7 @@ namespace StatsDirect.Builtins
             for (int i = 0; i < predictorsFrame.VariableCount; i++)
                 context.Titles[i + 1 + iq] = predictorsFrame.Variables[i].Title;
             int cnt = 0;
+            int zeroWeights = 0;
             for (int j = 0; j < context.N; j++)
             {
                 bool ok = outcomeVariable.Data[j] != Constant.MISSING;
@@ -771,6 +773,14 @@ namespace StatsDirect.Builtins
                 for (int k = 1; k <= ip; k++)
                     if (((DoubleVariable)predictorsFrame.Variables[k - 1]).Data[j] == Constant.MISSING)
                         ok = false;
+                // A zero prior weight contributes neither information nor a
+                // residual degree of freedom. Exclude it from the context too,
+                // so the ANOVA, predictions and residual sequence use the fit's rows.
+                if (ok && weightsVariable.Data[j] == 0.0)
+                {
+                    zeroWeights++;
+                    ok = false;
+                }
                 if (ok)
                 {
                     cnt += 1;
@@ -783,9 +793,15 @@ namespace StatsDirect.Builtins
             string dropWarning = null;
             if (context.N != cnt)
             {
-                dropWarning = (context.N - cnt).ToString() + " observations dropped due to missing data. Make sure that observations with missing data are not a subgroup";
+                int missingRows = context.N - cnt - zeroWeights;
+                if (missingRows > 0)
+                    dropWarning = missingRows.ToString() + " observations dropped due to missing data. Make sure that observations with missing data are not a subgroup";
+                if (zeroWeights > 0)
+                    dropWarning = (dropWarning == null ? "" : dropWarning + ". ") + zeroWeights.ToString() + " observations with zero prior weight were not used";
                 context.N = cnt;
             }
+            if (context.N == 0)
+                throw new TemplateOperationCancelledException("No complete observations with positive prior weight.", "Multiple Linear Regression");
             (context.P, context.M) = x_glin(context, context.P, context.M);
             // context.DoC, not a literal true: a model fitted without an intercept had its first slope labelled "Intercept"
             return new StepOutput(MakeMultipleRegressionOutput(context, context.Se, context.B, context.DoC, context.N, context.P, false, context.M, dropWarning));
@@ -2982,9 +2998,9 @@ namespace StatsDirect.Builtins
                 warnList.Add(new ParameterBag("warn", new FilledStringParameter(FilledParameterDirection.Output, dropped)));
             outputParameters.AddOutput("dev", deviance);
             outputParameters.AddOutput("df", df);
-            double prob = PDF.chivalp(deviance, df);
+            double prob = df > 0 ? PDF.chivalp(deviance, df) : Constant.MISSING;
             outputParameters.AddOutput("p", prob);
-            outputParameters.AddOutput("w", prob < 0.05 ? Formatting.ASTERISK : string.Empty);
+            outputParameters.AddOutput("w", df > 0 && prob < 0.05 ? Formatting.ASTERISK : string.Empty);
             double x2Dev = devx - deviance;
             if (x2Dev < 0.0)
                 x2Dev = Constant.MISSING;
@@ -3145,6 +3161,8 @@ namespace StatsDirect.Builtins
             for (i = 1; i <= n; i++)
             {
                 double ww = useWeights ? wt[i] : 1.0;
+                if (ww == 0.0)
+                    continue; // 0 * log(0) is NaN, not a likelihood contribution.
                 ll += ww * y[i] * Math.Log(fvl[i]) - ww * fvl[i] - ww * PDF.alogam(y[i] + 1.0);
             }
             return ll;
@@ -3612,6 +3630,98 @@ namespace StatsDirect.Builtins
             public double S;
         }
 
+        private sealed class HosmerLemeshowPattern
+        {
+            public double[] Predictors;
+            public double Observed;
+            public double Total;
+            public double Expected;
+            public double Probability => Expected / Total;
+        }
+
+        private sealed class ExactPredictorPattern : IEqualityComparer<double[]>
+        {
+            public bool Equals(double[] x, double[] y) => x.AsSpan().SequenceEqual(y);
+
+            public int GetHashCode(double[] values)
+            {
+                HashCode hash = new();
+                foreach (double value in values)
+                    hash.Add(value);
+                return hash.ToHashCode();
+            }
+        }
+
+        /// <summary>
+        /// Groups weighted observed and fitted counts without splitting a covariate
+        /// pattern. Equal predictors are one HL observation even when prior weights
+        /// differ; otherwise unstable sorting could split a tie differently after a
+        /// row permutation. Zero-frequency rows contribute neither a group nor df.
+        /// </summary>
+        private static (double Statistic, int DegreesOfFreedom) HosmerLemeshow(MultipleLinearRegressionContext context)
+        {
+            Dictionary<double[], HosmerLemeshowPattern> patterns = new(new ExactPredictorPattern());
+            for (int i = 1; i <= context.N; i++)
+            {
+                double frequency = context.T[i] * (context.WEIGHT ? context.WT[i] : 1.0);
+                if (frequency <= 0.0)
+                    continue;
+                double[] predictors = new double[context.M];
+                for (int j = 0; j < predictors.Length; j++)
+                    predictors[j] = context.X[i, j + 1];
+                if (!patterns.TryGetValue(predictors, out HosmerLemeshowPattern pattern))
+                {
+                    pattern = new HosmerLemeshowPattern { Predictors = predictors };
+                    patterns.Add(predictors, pattern);
+                }
+                double prior = context.WEIGHT ? context.WT[i] : 1.0;
+                pattern.Total += frequency;
+                pattern.Observed += context.Y[i] * prior;
+                pattern.Expected += context.FV[i] * prior;
+            }
+            List<HosmerLemeshowPattern> ordered = patterns.Values.ToList();
+            ordered.Sort((a, b) =>
+            {
+                int comparison = a.Probability.CompareTo(b.Probability);
+                for (int j = 0; comparison == 0 && j < a.Predictors.Length; j++)
+                    comparison = a.Predictors[j].CompareTo(b.Predictors[j]);
+                return comparison;
+            });
+            double totalFrequency = ordered.Sum(pattern => pattern.Total);
+            double tenth = totalFrequency / 10.0;
+            double nextCut = Math.Floor(tenth), cumulative = 0.0;
+            double[] observed = new double[10], total = new double[10], expected = new double[10];
+            int group = 0;
+            foreach (HosmerLemeshowPattern pattern in ordered)
+            {
+                // Advance only after assigning observations to this group, and
+                // never beyond ten groups (fractional totals used to reach 11).
+                if (cumulative > 0.0 && cumulative >= nextCut && group < 9)
+                {
+                    group++;
+                    nextCut = Math.Floor(Math.Max(cumulative + tenth, (group + 1) * tenth));
+                }
+                total[group] += pattern.Total;
+                observed[group] += pattern.Observed;
+                expected[group] += pattern.Expected;
+                cumulative += pattern.Total;
+            }
+            double statistic = 0.0;
+            int occupied = 0;
+            for (int i = 0; i <= group; i++)
+            {
+                if (total[i] <= 0.0)
+                    continue;
+                occupied++;
+                double variance = expected[i] * (1.0 - expected[i] / total[i]);
+                if (variance > 0.0)
+                    statistic += Math.Pow(observed[i] - expected[i], 2.0) / variance;
+                else if (observed[i] != expected[i])
+                    return (Constant.MISSING, occupied - 2);
+            }
+            return (statistic, occupied - 2);
+        }
+
 
         private class TriByDAscending : IComparer<Tri>
         {
@@ -3668,15 +3778,14 @@ namespace StatsDirect.Builtins
             double prob = 0;
             string q;
 
-            if (idf > 0)
+            // Likelihood and Pearson's statistic remain defined for saturated
+            // models; only their residual goodness-of-fit test needs positive df.
+            ll = x_loglik_p(weight, n, wt, y, fvl);
+            for (i = 1; i <= n; i++)
             {
-                x2 = 0.0;
-                for (i = 1; i <= n; i++)
-                {
-                    double ww = weight ? wt[i] : 1.0;
+                double ww = weight ? wt[i] : 1.0;
+                if (ww > 0.0)
                     x2 += Math.Pow((y[i] - fvl[i]) * Math.Sqrt(ww), 2.0) / Math.Max(fvl[i], Constant.EPSNEG);
-                }
-                ll = x_loglik_p(weight, n, wt, y, fvl);
             }
 
             ParameterBag outputParameters = new();
@@ -3691,22 +3800,23 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("sch", dev + p * Math.Log(n)); // the same p parameters as the Akaike criterion; it used to count one more
             outputParameters.AddOutput("devx", devx);
             double x2Dev = devx - dev;
-            if (x2Dev < 0.0)
+            if (!DoC || devx == Constant.MISSING)
             {
                 x2Dev = Constant.MISSING;
                 r2 = Constant.MISSING;
             }
             else
             {
-                r2 = x2Dev / devx;
+                x2Dev = Math.Max(0.0, x2Dev);
+                r2 = devx > 0.0 ? x2Dev / devx : Constant.MISSING;
             }
-            r2I = llx == Constant.MISSING
+            r2I = !DoC || llx == Constant.MISSING || llx == 0.0
                 ? Constant.MISSING
                 : 1.0 - ll / llx;
             if (idf > 0 && x2 != 0.0)
             {
-                sp = x2 / (n - p);
-                sX2Dev = x2Dev / sp;
+                sp = x2 / idf;
+                sX2Dev = x2Dev == Constant.MISSING ? Constant.MISSING : x2Dev / sp;
                 sX2 = x2 / sp;
                 sDev = dev / sp;
             }
@@ -3719,24 +3829,16 @@ namespace StatsDirect.Builtins
             }
             outputParameters.AddOutput("x2dev", x2Dev);
             outputParameters.AddOutput("x2df", idfx - idf);
-            if (idf > 0)
-            {
-                outputParameters.AddOutput("x2p", PDF.chivalp(x2Dev, idfx - idf));
-            }
-            else
-            {
-                outputParameters.AddOutput("x2p", "* saturated model: goodness of fit not valid");
-                x2Dev = Constant.MISSING;
-                x2 = Constant.MISSING;
-                dev = Constant.MISSING;
-            }
+            // This is a comparison with a nested null model, not the residual
+            // goodness-of-fit test: it is valid for a saturated full model too.
+            outputParameters.AddOutput("x2p", DoC && idfx > idf ? PDF.chivalp(x2Dev, idfx - idf) : Constant.MISSING);
             outputParameters.AddOutput("r2", r2);
             outputParameters.AddOutput("r2i", r2I);
             outputParameters.AddOutput("x2_pearson", x2);
             outputParameters.AddOutput("idf", idf);
-            outputParameters.AddOutput("p_pearson", PDF.chivalp(x2, idf));
+            outputParameters.AddOutput("p_pearson", idf > 0 ? PDF.chivalp(x2, idf) : Constant.MISSING);
             outputParameters.AddOutput("dev_gf", dev);
-            outputParameters.AddOutput("p_dev", PDF.chivalp(dev, idf));
+            outputParameters.AddOutput("p_dev", idf > 0 ? PDF.chivalp(dev, idf) : Constant.MISSING);
             // scaled for overdispersion
             outputParameters.AddOutput("sp", sp);
             outputParameters.AddOutput("x2dev_scaled", sX2Dev);
@@ -3830,63 +3932,17 @@ namespace StatsDirect.Builtins
             double x2 = 0; double ll = 0;
             double chat = 0;
             double r2; double r2I;
+            ll = x_loglik_l(weight, n, wt, y, t, fvl);
+            for (i = 1; i <= n; i++)
+            {
+                double pp = fvl[i] / t[i];
+                double ww = weight ? wt[i] : 1;
+                if (ww > 0.0 && pp > 0.0 && pp < 1.0)
+                    x2 += Math.Pow((y[i] - t[i] * pp) * Math.Sqrt(ww), 2.0) / (t[i] * pp * (1.0 - pp));
+            }
             if (idf > 0)
             {
-                x2 = 0.0;
-                double ntot = 0;
-                double pp;
-                for (i = 1; i <= n; i++)
-                {
-                    pp = fvl[i] / t[i];
-                    double ww = weight ? wt[i] : 1;
-                    if (pp != 0.0)
-                        x2 += Math.Pow((y[i] - t[i] * pp) * Math.Sqrt(ww), 2.0) / (t[i] * pp * (1.0 - pp));
-                    ntot += t[i] * ww;
-                }
-                ll = x_loglik_l(weight, n, wt, y, t, fvl);
-                double[] obs = new double[10 + 1];
-                double[] tot = new double[10 + 1];
-                double[] mpi = new double[10 + 1];
-                Tri[] z = new Tri[n + 1];
-                for (i = 1; i <= n; i++)
-                {
-                    //  The prior weights count as frequencies in the Hosmer-Lemeshow groups, as they do in the Pearson chi-square above
-                    double ww = weight ? wt[i] : 1;
-                    pp = fvl[i] / t[i];
-                    z[i].D = pp;
-                    z[i].R = y[i] * ww;
-                    z[i].S = t[i] * ww;
-                }
-                Array.Sort(z, 1, n, new TriByDAscending());
-                int ctr = 1;
-                double ndiv = ntot / 10.0;
-                double ncut = Math.Floor(ndiv);
-                double ncum = 0;
-                for (i = 1; i <= n; i++)
-                {
-                    if (ncum >= ncut & ctr <= 10)
-                    {
-                        ctr++;
-                        ncut = Math.Floor(Math.Max(ncum + ndiv, ctr * ndiv));
-                    }
-                    tot[ctr] = tot[ctr] + z[i].S;
-                    ncum += z[i].S;
-                    obs[ctr] = obs[ctr] + z[i].R;
-                    mpi[ctr] = mpi[ctr] + z[i].D * z[i].S;
-                    if (ncum >= ntot)
-                        break;
-                }
-                hldf = ctr - 2;
-                chat = 0.0;
-                for (i = 1; i <= ctr; i++)
-                {
-                    if (tot[i] > 0.0 & mpi[i] > 0.0)
-                    {
-                        double numer = (obs[i] - mpi[i]) * (obs[i] - mpi[i]);
-                        mpi[i] = mpi[i] / tot[i];
-                        chat += numer / (tot[i] * mpi[i] * (1.0 - mpi[i]));
-                    }
-                }
+                (chat, hldf) = HosmerLemeshow(context);
             }
             if (DoC)
                 iq = 1;
@@ -3900,22 +3956,23 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("sch", dev + p * Math.Log(n)); // the same p parameters as the Akaike criterion; it used to count one more
             outputParameters.AddOutput("devx", devx);
             double x2Dev = devx - dev;
-            if (devx == Constant.MISSING)
+            if (!DoC || devx == Constant.MISSING)
             {
                 x2Dev = Constant.MISSING;
                 r2 = Constant.MISSING;
             }
             else
             {
-                r2 = x2Dev / devx;
+                x2Dev = Math.Max(0.0, x2Dev);
+                r2 = devx > 0.0 ? x2Dev / devx : Constant.MISSING;
             }
-            r2I = llx == Constant.MISSING
+            r2I = !DoC || llx == Constant.MISSING || llx == 0.0
                 ? Constant.MISSING 
                 : 1.0 - ll / llx;
             outputParameters.AddOutput("x2dev", x2Dev);
             outputParameters.AddOutput("x2df", idfx - idf);
             outputParameters.AddOutput("x2p",
-                idfx > 0
+                DoC && idfx > idf
                     ? PDF.chivalp(x2Dev, idfx - idf)
                     : Constant.MISSING);
             outputParameters.AddOutput("r2", r2);
@@ -3923,8 +3980,6 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("x2", x2);
             if (idf <= 0)
             {
-                x2 = Constant.MISSING;
-                dev = Constant.MISSING;
                 chat = Constant.MISSING;
                 outputParameters.AddOutput("p", "* saturated model: can't assess goodness of fit");
             }
@@ -3934,7 +3989,7 @@ namespace StatsDirect.Builtins
             }
             outputParameters.AddOutput("dev_good", dev);
             outputParameters.AddOutput("df_good", idf);
-            outputParameters.AddOutput("p_good", PDF.chivalp(dev, idf));
+            outputParameters.AddOutput("p_good", idf > 0 ? PDF.chivalp(dev, idf) : Constant.MISSING);
             outputParameters.AddOutput("hl", chat);
             outputParameters.AddOutput("df_hl", hldf);
             double hlp = hldf < 1
@@ -5097,6 +5152,7 @@ namespace StatsDirect.Builtins
 
             //  Copy down the remaining observations
             int targetRow = 1;
+            int zeroWeightRows = 0;
             for (int sourceRow = 1; sourceRow <= rows; sourceRow++)
             {
                 bool OK = y[sourceRow] != Constant.MISSING;
@@ -5110,6 +5166,13 @@ namespace StatsDirect.Builtins
                 {
                     if (x[sourceRow, pred] == Constant.MISSING)
                         OK = false;
+                }
+                if (weighted && weight[sourceRow] != Constant.MISSING && weight[sourceRow] < 0.0)
+                    throw new TemplateOperationCancelledException("Weights must not be negative.", "Poisson regression");
+                if (OK && weighted && weight[sourceRow] == 0.0)
+                {
+                    zeroWeightRows++;
+                    OK = false;
                 }
                 if (OK)
                 {
@@ -5151,9 +5214,15 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*warn", warnList);
             if (records != targetRow - 1)
             {
-                AddDropWarning(warnList, records - (targetRow - 1));
+                int missingRows = records - (targetRow - 1) - zeroWeightRows;
+                if (missingRows > 0)
+                    AddDropWarning(warnList, missingRows);
+                if (zeroWeightRows > 0)
+                    warnList.Add(new ParameterBag("warn", new FilledStringParameter(FilledParameterDirection.Output, zeroWeightRows.ToString() + " observations with zero prior weight were not used.")));
                 records = targetRow - 1;
             }
+            if (records == 0)
+                throw new TemplateOperationCancelledException("No complete observations with positive prior weight.", "Poisson regression");
             bool use_offset = ptime;
             //  get intercept deviance - drop predictors
             double[,] x2 = new double[records + 1, 1 + 1];
@@ -5220,9 +5289,9 @@ namespace StatsDirect.Builtins
 
             outputParameters.AddOutput("dev", deviance);
             outputParameters.AddOutput("df_dev", df);
-            double prob = PDF.chivalp(deviance, df);
+            double prob = df > 0 ? PDF.chivalp(deviance, df) : Constant.MISSING;
             outputParameters.AddOutput("p_dev", prob);
-            warn = prob < 0.05 ? Formatting.ASTERISK : string.Empty;
+            warn = df > 0 && prob < 0.05 ? Formatting.ASTERISK : string.Empty;
             outputParameters.AddOutput("w", warn);
             double x2dev = devx - deviance;
             if (x2dev < 0.0)
@@ -5230,7 +5299,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("x2", x2dev);
             outputParameters.AddOutput("df_x2", idfx - df);
             outputParameters.AddOutput("p_x2",
-                df > 0
+                mean && idfx > df
                     ? PDF.chivalp(x2dev, idfx - df)
                     : Constant.MISSING);
             IList<ParameterBag> predList = new List<ParameterBag>();

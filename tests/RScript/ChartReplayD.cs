@@ -12,7 +12,7 @@ internal static partial class Program
     private static void CheckChartReplayD()
     {
         RRecipes.Folder = Metadata("Recipes");
-        string folder = Path.Combine(Path.GetTempPath(), "statsdirect-chart-d-" + Guid.NewGuid().ToString("N"));
+        string folder = Path.Combine(TemporaryRoot, "statsdirect-chart-d-" + Guid.NewGuid().ToString("N"));
         Console.WriteLine("      chart D artifacts: " + folder);
         DataFrame Frame(string title, params double[] values) => SheetFrame(Workbook, "Replay D selections", 0, 0, (title, values));
         void Common(GenericOptions options, string title, string x, string y, string[] labels)

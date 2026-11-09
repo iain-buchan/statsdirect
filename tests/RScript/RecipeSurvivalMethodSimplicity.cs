@@ -9,7 +9,7 @@ internal static partial class Program
     private static void CheckRecipeSurvivalMethodSimplicity()
     {
         RRecipes.Folder = Metadata("Recipes");
-        string folder = Path.Combine(Path.GetTempPath(), "statsdirect-survival-method-" + Guid.NewGuid().ToString("N"));
+        string folder = Path.Combine(TemporaryRoot, "statsdirect-survival-method-" + Guid.NewGuid().ToString("N"));
         double[] time = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
         double[] events = { 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1 };
         double[] groups = { 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1 };

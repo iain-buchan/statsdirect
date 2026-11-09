@@ -13,7 +13,7 @@ internal static partial class Program
     private static void CheckProbitReplay()
     {
         RRecipes.Folder = Metadata("Recipes");
-        string folder = Path.Combine(Path.GetTempPath(), "statsdirect-probit-replay-" + Guid.NewGuid().ToString("N"));
+        string folder = Path.Combine(TemporaryRoot, "statsdirect-probit-replay-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(folder);
         using JsonDocument example = JsonDocument.Parse(File.ReadAllText(Path.Combine(Metadata("Examples"), "Probit.json")));
         double[] Column(string input) => example.RootElement.GetProperty("inputs").EnumerateArray()

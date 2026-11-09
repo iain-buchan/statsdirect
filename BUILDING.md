@@ -39,6 +39,35 @@ You may want:
   * Note that these environment variables are set at process start, so you'll need to restart any IDE or terminal you had open at this point if you want to use them.
   * The build stops with an error if `SPREADSHEETGEAR_LICENSE_STRING` is not set, because the resulting StatsDirect would not start. To build without a license anyway (for example, to run `-sanity-check` or `-test-operations`), add `-p:AllowMissingSpreadsheetGearLicense=true` to the `dotnet build` command.
 
+## Fork pull requests and CI coverage
+
+The required **Build and deterministic checks** job also runs on fork and
+Dependabot pull requests without access to the SpreadsheetGear licence secret.
+These runs explicitly build with `AllowMissingSpreadsheetGearLicense=true` and
+an empty licence, then verify the compiled assembly contains no licence string.
+They run the full deterministic and R replay suites, the headless sanity and
+operation diagnostics, and the Learning JavaScript tests. The sanity checker
+reports its existing skip of the sample-workbook opening when unlicensed.
+
+The native Learning filtered-grid check and the advisory window-driven job are
+deferred. Several window suites instantiate the licensed worksheet control;
+other advisory UI coverage is deferred with that job. The run's summary states
+this reduced native/UI coverage. A green fork result is not a substitute for
+those checks on a reviewed, trusted branch.
+
+Trusted repository runs keep the licence secret scoped to their build steps
+and retain the full native/window checks. Missing trusted credentials still
+fail the normal build guard; CI does not silently downgrade those runs. These
+workflows use ordinary `pull_request` with read-only repository permissions,
+not `pull_request_target` or a privileged follow-up workflow. Compiled binaries
+are never shared with fork runs or uploaded as CI artifacts.
+
+The repository owner can select **unlicensed** in **Run workflow** to validate
+the same headless path on a trusted branch without supplying or using the
+licence. Other contributors cannot force this override on a trusted run. The
+option only removes access/coverage; it cannot enable secrets for a fork.
+It does not build installers or change the normal application's licence guard.
+
 ## Building the StatsDirect program, installer, and bundled executable installer
 
 ### Solution configurations

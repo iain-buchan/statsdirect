@@ -7,7 +7,7 @@ internal static partial class Program
     private static void CheckChartRecipeSimplicity()
     {
         string helper = File.ReadAllText(Path.Combine(Metadata("Recipes"), "recipes", "chart-common.R"));
-        string folder = Path.Combine(Path.GetTempPath(), "statsdirect-chart-simple-" + Guid.NewGuid().ToString("N"));
+        string folder = Path.Combine(TemporaryRoot, "statsdirect-chart-simple-" + Guid.NewGuid().ToString("N"));
         string checks = """
             svg('simple.svg')
             old <- par(c('mar','family','cex.main','cex.lab','cex.axis','font.main','xpd'))

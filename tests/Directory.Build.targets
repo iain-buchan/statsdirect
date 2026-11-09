@@ -1,0 +1,6 @@
+<Project>
+  <!-- Every managed test executable gets isolation before Main or its static fields. -->
+  <ItemGroup Condition="'$(OutputType)' == 'Exe' or '$(OutputType)' == 'WinExe'">
+    <Compile Include="$(MSBuildThisFileDirectory)TestUserDataIsolation.cs" Link="TestUserDataIsolation.cs" />
+  </ItemGroup>
+</Project>

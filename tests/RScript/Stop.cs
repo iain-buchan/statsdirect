@@ -38,7 +38,7 @@ internal static partial class Program
               "the installed R has its own window program, and the profile Open in R starts it on runs the script as a session and opens it in R's editor, with the program's library on the path");
         // the profile runs before R attaches its default packages: a script using the stats package must still run from it (Iain's R
         // window said it could not find t.test); R run headlessly on the profile shows the script as a session and its result
-        string folder = Path.Combine(Path.GetTempPath(), "statsdirect-rscript-checks", "open-in-r");
+        string folder = Path.Combine(TemporaryRoot, "statsdirect-rscript-checks", "open-in-r");
         Directory.CreateDirectory(folder);
         string statsScript = Path.Combine(folder, "stats.R");
         File.WriteAllText(statsScript, "r <- t.test(c(1, 2, 3), mu = 0)\ncat(\"p\", format(r$p.value, digits = 4), \"\n\")\n");

@@ -13,7 +13,7 @@ internal static partial class Program
     private static void CheckRegressionFollowOn()
     {
         RRecipes.Folder = Metadata("Recipes");
-        string folder = Path.Combine(Path.GetTempPath(), "statsdirect-rscript-checks", "longley");
+        string folder = Path.Combine(TemporaryRoot, "statsdirect-rscript-checks", "longley");
         double[] y = { 60323, 61122, 60171, 61187, 63221, 63639, 64989, 63761, 66019, 67857, 68169, 66513, 68655, 69564, 69331, 70551 };
         double[][] x =
         {

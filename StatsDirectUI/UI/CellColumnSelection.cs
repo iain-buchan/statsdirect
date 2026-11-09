@@ -156,7 +156,15 @@ namespace StatsDirect.UI
 
         internal IOrigin GetWorksheetOrigin(DataAcquisitionMode mode, bool titleIsInData, int originGroup)
         {
-            return new WorksheetOrigin(WorkbookPath, WorksheetName, ColumnIndex, RowIndex, RowCount, mode, titleIsInData, WasFiltered, originGroup);
+            WorksheetOrigin origin = new(WorkbookPath, WorksheetName, ColumnIndex, RowIndex, RowCount, mode, titleIsInData, WasFiltered, originGroup);
+            if (mode == DataAcquisitionMode.NumericPreserveRows && origin.WasFiltered)
+            {
+                int[] rows = cellGetter.GetVisibleRowIndices(ColumnIndex, RowIndex, RowIndex + RowCount - 1);
+                // Match ReadSelectedNumericColumn: only a visible physical first row can be the selected title.
+                int offset = titleIsInData && rows.Length > 0 && rows[0] == RowIndex ? 1 : 0;
+                origin.DataRowIndices = offset == 0 ? rows : rows[offset..];
+            }
+            return origin;
         }
 
         internal string[] GetTexts()
