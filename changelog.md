@@ -2,7 +2,7 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
-##[Unreleased]
+##[v5.3.9] 2026-11-09
 
 ### Fixed
 - Multiple linear regression refuses fewer usable rows than parameters (it still fits, as before, a model whose aliased predictors once dropped leave residual degrees of freedom), refits without a lone constant or all-zero predictor, runs its analysis of variance and other follow-ons when every predictor is dropped, and reports an exact fit (as many usable rows as parameters) with its true sums of squares and its tests unavailable, natively and in R replay.
