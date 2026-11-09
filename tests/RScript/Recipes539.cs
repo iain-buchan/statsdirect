@@ -232,6 +232,23 @@ internal static partial class Program
         Case("ties-exact-20-1000", Enumerable.Range(0, 20).Select(i => Math.Round(20 + 8 * Math.Sin(i * 3.1) + i * 7 % 5)).ToArray(), Values(1000, 1.7, true), .95, normal: false, approximateK: false);
         double[] farm = { 14.8, 7.3, 5.6, 6.3, 9, 4.2, 10.6, 12.5, 12.9, 16.1, 11.4, 2.7 }, town = { 12.7, 14.2, 12.6, 2.1, 17.7, 11.8, 16.9, 7.9, 16, 10.6, 5.6, 5.6, 7.6, 11.3, 8.3, 6.7, 3.6, 1, 2.4, 6.4, 9.1, 6.7, 18.6, 3.2, 6.2, 6.1, 15.3, 10.6, 1.8, 5.9, 9.9, 10.6, 14.8, 5, 2.6, 4 };
         foreach (double confidence in new[] { 0d, 1d }) Case("confidence-" + confidence, farm, town, confidence, normal: false, approximateK: false);
+        // The report gives no interval for the difference, and says why, with fewer than 4 values in a sample or when even
+        // the widest interval falls short of the confidence asked for (4 + 4 at 99%, K = 0); the replay printed an interval
+        // for the first and a "100.00% ... K = 0" line for the second.
+        foreach ((string label, double[] x, double[] y, double confidence) in new[] {
+            ("no-interval-3-6", new[] { 1.2, 3.4, 2.2 }, new[] { 4.4, 6.1, 5.5, 7.3, 8.8, 2.9 }, .95),
+            ("no-interval-4-4-at-99", new[] { 1.2, 3.4, 2.2, 5.1 }, new[] { 4.4, 6.1, 5.5, 7.3 }, .99) }) Case539("mann-whitney " + label, () =>
+        {
+            var cells = new RecordCells(Cells539("First sample", x), Cells539("Second sample", y));
+            var (run, output) = Run("MannWhitney", new() { ["data"] = Select539(cells, Math.Max(x.Length, y.Length) + 1, 0, 1), ["gamma"] = confidence });
+            ParameterBag b = output.ParameterBag;
+            Check(Rows539(b, "*conf") == null && Rows539(b, "*noconf")?.Count == 1, label + ": the report gives no interval for the difference");
+            string reason = Convert.ToString(Rows539(b, "*noconf")[0]["reason"].AsObject, inv);
+            string text = Replay539(run, Equal539("lower", new[] { Num539(b, "p_l") }) + Equal539("upper", new[] { Num539(b, "p_u") }) +
+                Equal539("theta, ci", new[] { "theta", "tll", "tul" }.Select(key => Num539(b, key)), 1e-8), Path.Combine(folder, label), cells.Read);
+            Check(text.Contains(reason) && !text.Contains("confidence interval for the difference: K =") && !text.Contains("median difference ="),
+                label + ": the replay gives no interval either, and says why as the report does (" + reason + ")");
+        });
     }
 
     // 4. The multiple comparisons continue a one way, two way or replicated two way analysis of variance, and the regression

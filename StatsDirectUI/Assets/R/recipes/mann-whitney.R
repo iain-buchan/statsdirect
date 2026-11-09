@@ -2,7 +2,7 @@
 # From the help's R code (nonparametric_methods/mann_whitney.htm); the data and settings above come from the run.
 # data: farm, town
 # settings: confidence = gamma
-# hand-edited: the confidence level and the data come from the run, as the header says; large samples use the report's normal approximations
+# hand-edited: the confidence level and the data come from the run, as the header says; large samples use the report's normal approximations; no interval for the difference where the report gives none
 
 # Mann-Whitney U test: the StatsDirect help example (Conover 1999, p. 218) in R
 farm <- farm[!is.na(farm)]
@@ -120,7 +120,16 @@ if (approximate_k) {
   coverage <- 100 * (1 - 2 * pwilcox(K - 1, n1, n2))
 }
 d <- sort(outer(farm, town, "-"))
-cat(sprintf("%.2f%% confidence interval for the difference: K = %d%s\n",
-            coverage, K, if (approximate_k) " (approx)" else ""))
-cat(sprintf("median difference = %g   CI = %g to %g\n",
-            median(d), d[K], rev(d)[K]))
+# As in the report, there is no interval (nor median difference) with fewer than
+# 4 values in a sample, or when even the widest interval, from the smallest to the
+# largest difference, falls short of the confidence asked for (K = 0)
+if (n1 < 4 || n2 < 4) {
+  cat("confidence interval not calculated with fewer than 4 observations in either sample\n")
+} else if (K == 0) {
+  cat("confidence interval not calculated: the samples are too small for ", pct, " confidence\n", sep = "")
+} else {
+  cat(sprintf("%.2f%% confidence interval for the difference: K = %d%s\n",
+              coverage, K, if (approximate_k) " (approx)" else ""))
+  cat(sprintf("median difference = %g   CI = %g to %g\n",
+              median(d), d[K], rev(d)[K]))
+}
