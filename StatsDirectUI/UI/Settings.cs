@@ -189,21 +189,20 @@ namespace StatsDirect.UI.Properties
         }
 
         /// <summary>
-        /// Notes the main window as StatsDirect closes: its bounds when it is normal, or, when it is maximised, the bounds it returns to, so
-        /// that it opens maximised on the same screen next time. A minimised window's bounds are those of no window on the screen, so the
-        /// bounds last noted are kept.
+        /// Notes the main window as StatsDirect closes, so that it opens next time where it was, on the same screen, and maximised if it
+        /// was: its bounds when it is normal, and otherwise the bounds it returns to (RestoreBounds), which Windows Forms keeps for a
+        /// minimised window as for a maximised one. A window closed while minimised, as from its taskbar button, opens as it was shown
+        /// before it was minimised, maximised or normal.
         /// </summary>
-        internal void NoteMainWindow(FormWindowState state, Rectangle bounds, Rectangle restoreBounds)
+        internal void NoteMainWindow(FormWindowState state, Rectangle bounds, Rectangle restoreBounds, FormWindowState stateBeforeMinimising)
         {
-            if (FormWindowState.Minimized != state)
-            {
-                Rectangle normalBounds = FormWindowState.Maximized == state ? restoreBounds : bounds;
-                MainTop = normalBounds.Top;
-                MainLeft = normalBounds.Left;
-                MainWidth = normalBounds.Width;
-                MainHeight = normalBounds.Height;
-            }
-            MainWindowState = state;
+            Rectangle normalBounds = FormWindowState.Normal == state ? bounds : restoreBounds;
+            MainTop = normalBounds.Top;
+            MainLeft = normalBounds.Left;
+            MainWidth = normalBounds.Width;
+            MainHeight = normalBounds.Height;
+            MainWindowState = FormWindowState.Minimized != state ? state
+                : FormWindowState.Maximized == stateBeforeMinimising ? FormWindowState.Maximized : FormWindowState.Normal;
         }
 
         /// <summary>

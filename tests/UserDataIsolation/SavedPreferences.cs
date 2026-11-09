@@ -349,20 +349,29 @@ internal static partial class Program
             "only the ordinary start-up loads saved preferences, before it reads one; the diagnostic modes keep the defaults");
     }
 
-    // Closing notes a normal window's bounds, a maximised window's normal bounds, and keeps the bounds last noted for a minimised one
+    // Closing notes a normal window's bounds, and otherwise the bounds it returns to; a minimised window as it was shown before it was minimised
     static void CheckMainWindowPlacement()
     {
         Settings noted = new();
-        noted.NoteMainWindow(FormWindowState.Normal, new Rectangle(200, 150, 1000, 700), new Rectangle(1, 2, 3, 4));
+        noted.NoteMainWindow(FormWindowState.Normal, new Rectangle(200, 150, 1000, 700), new Rectangle(1, 2, 3, 4), FormWindowState.Normal);
         bool notedNormal = noted is { MainLeft: 200, MainTop: 150, MainWidth: 1000, MainHeight: 700, MainWindowState: FormWindowState.Normal };
-        noted.NoteMainWindow(FormWindowState.Maximized, new Rectangle(-8, -8, 1936, 1056), new Rectangle(300, 200, 900, 600));
+        noted.NoteMainWindow(FormWindowState.Maximized, new Rectangle(-8, -8, 1936, 1056), new Rectangle(300, 200, 900, 600), FormWindowState.Maximized);
         bool notedMaximised = noted is { MainLeft: 300, MainTop: 200, MainWidth: 900, MainHeight: 600, MainWindowState: FormWindowState.Maximized };
-        noted.NoteMainWindow(FormWindowState.Minimized, new Rectangle(-32000, -32000, 160, 28), new Rectangle(5, 5, 5, 5));
-        bool notedMinimised = noted is { MainLeft: 300, MainTop: 200, MainWidth: 900, MainHeight: 600, MainWindowState: FormWindowState.Minimized };
-        Check(notedNormal && notedMaximised && notedMinimised, "closing notes a normal window's bounds, a maximised one's normal bounds, and keeps a minimised one's last bounds");
-        noted.NoteMainWindow(FormWindowState.Maximized, new Rectangle(-8, -8, 1936, 1056), new Rectangle(300, 200, 900, 600));
+        Check(notedNormal && notedMaximised, "closing notes a normal window's bounds and a maximised one's normal bounds");
+        // Closed while minimised, as from its taskbar button: Windows Forms keeps the bounds it returns to, and the window opens as it was shown before
+        Rectangle minimised = new(-32000, -32000, 160, 28);
+        noted.NoteMainWindow(FormWindowState.Minimized, minimised, new Rectangle(400, 250, 800, 500), FormWindowState.Maximized);
+        bool fromMaximised = noted is { MainLeft: 400, MainTop: 250, MainWidth: 800, MainHeight: 500, MainWindowState: FormWindowState.Maximized };
+        noted.NoteMainWindow(FormWindowState.Minimized, minimised, new Rectangle(500, 300, 700, 400), FormWindowState.Normal);
+        bool fromNormal = noted is { MainLeft: 500, MainTop: 300, MainWidth: 700, MainHeight: 400, MainWindowState: FormWindowState.Normal };
+        Check(fromMaximised && fromNormal, "closing a minimised window notes the bounds it returns to and the state it was shown in before it was minimised");
+        noted.NoteMainWindow(FormWindowState.Maximized, new Rectangle(-8, -8, 1936, 1056), new Rectangle(300, 200, 900, 600), FormWindowState.Maximized);
         noted.Save(); // into the isolated profile
         Check(Settings.Load(Inside(SDConfiguration.SettingsPath), Laptop) is { MainWindowState: FormWindowState.Maximized, MainLeft: 300, MainTop: 200, MainWidth: 900, MainHeight: 600 },
             "a window closed maximised reopens maximised over the bounds it returns to");
+        noted.NoteMainWindow(FormWindowState.Minimized, minimised, new Rectangle(400, 250, 800, 500), FormWindowState.Maximized);
+        noted.Save(); // into the isolated profile
+        Check(Settings.Load(Inside(SDConfiguration.SettingsPath), Laptop) is { MainWindowState: FormWindowState.Maximized, MainLeft: 400, MainTop: 250, MainWidth: 800, MainHeight: 500 },
+            "a window maximised, minimised and closed from its taskbar button reopens maximised over the bounds it returns to");
     }
 }

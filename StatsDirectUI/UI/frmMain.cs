@@ -1067,6 +1067,17 @@ namespace StatsDirect.UI
             // Prevent starting in a minimised state
             if (FormWindowState.Minimized == WindowState)
                 WindowState = FormWindowState.Normal;
+            windowStateBeforeMinimising = WindowState;
+        }
+
+        // The state the window was last shown in, normal or maximised, so that a window closed while minimised opens as it was
+        private FormWindowState windowStateBeforeMinimising = FormWindowState.Normal;
+
+        protected override void OnResize(EventArgs e)
+        {
+            base.OnResize(e);
+            if (FormWindowState.Minimized != WindowState)
+                windowStateBeforeMinimising = WindowState;
         }
 
         /// <summary>
@@ -1074,7 +1085,7 @@ namespace StatsDirect.UI
         /// </summary>
         private void SaveWindowState()
         {
-            Settings.Default.NoteMainWindow(WindowState, Bounds, RestoreBounds);
+            Settings.Default.NoteMainWindow(WindowState, Bounds, RestoreBounds, windowStateBeforeMinimising);
         }
 
         /// <summary>
