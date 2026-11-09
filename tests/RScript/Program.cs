@@ -191,6 +191,16 @@ internal static partial class Program
         return (host.LastRun, output);
     }
 
+    /// <summary>The run of an operation whose answers also go through each parameter's validators, as the picker puts them, with
+    /// what the validators refuse: the run itself goes on, so that the record of a selection the picker would refuse can be checked.</summary>
+    private static (OperationRun run, StepOutput output, IReadOnlyList<string> refusals) RunAtPicker(string name, Dictionary<string, object> answers)
+    {
+        Host host = new(answers) { Validates = true };
+        ITemplateProcessor processor = new TemplateProcessor(host);
+        StepOutput output = processor.Execute(Load(name), new ParameterBag());
+        return (host.LastRun, output, host.Refusals);
+    }
+
     private static JsonElement Record(OperationRun run)
     {
         if (run?.Record == null) throw new Exception("FAIL the run left no record");
@@ -217,6 +227,12 @@ internal sealed class Host : ITemplateHost, IProgressBar
     private readonly Action<IFillable> amend;
     public OperationRun LastRun { get; private set; }
     public Host(Dictionary<string, object> answers, Action<IFillable> amend = null) { this.answers = answers; this.amend = amend; }
+    /// <summary>Whether each filled parameter is put through its validators as the program's picker puts it.</summary>
+    public bool Validates { get; init; }
+    /// <summary>The validators that refused a filled parameter: its name and the validator's.</summary>
+    public List<string> Refusals { get; } = new();
+    private static readonly MethodInfo validate = typeof(StatsDirect.R.RScriptWriter).Assembly
+        .GetType("StatsDirect.TemplateProcessing.ValidationProcessor").GetMethod("Validate", BindingFlags.Static | BindingFlags.Public);
 
     public Operation Operation { get; set; }
     public IDictionary<string, ParameterBag> SessionParametersPerOperation { get; } = new Dictionary<string, ParameterBag>();
@@ -229,6 +245,18 @@ internal sealed class Host : ITemplateHost, IProgressBar
     public bool GetBoolean(string prompt, string title, bool initialValue, out bool cancelled) { cancelled = false; return initialValue; }
     public ParameterBag FillAndValidateCombinedParameters(ITemplateProcessor processor, ParameterBag context) => throw new NotImplementedException();
     public ParameterBag FillParameter(ITemplateProcessor processor, Parameter parameter, ParameterBag context, bool shouldCombine)
+    {
+        ParameterBag filled = Fill(processor, parameter, context);
+        if (Validates && parameter.Validators != null && filled != null && filled.ContainsKey(parameter.Name) && filled[parameter.Name] != null)
+            foreach (Validator validator in parameter.Validators)
+                if (!validator.HasTestIfTrueExpression || (bool)processor.Evaluate(validator.TestIfTrueExpression, filled))
+                {
+                    var result = (StatsDirect.TemplateProcessing.ValidationResult)validate.Invoke(null, new object[] { this, validator.ValidatorName, parameter, filled, parameter.ValidationFailMessage });
+                    if (result.Validity != StatsDirect.TemplateProcessing.Validity.Valid) Refusals.Add(parameter.Name + ": " + validator.ValidatorName);
+                }
+        return filled;
+    }
+    private ParameterBag Fill(ITemplateProcessor processor, Parameter parameter, ParameterBag context)
     {
         if (parameter.HasAcquireIfTrue && !parameter.AcquireIfTrue(processor, context)) return new ParameterBag();   // not acquired, as the dialog leaves such a parameter
         if (parameter is OptionsParameter unnamed && string.IsNullOrEmpty(parameter.Name))
