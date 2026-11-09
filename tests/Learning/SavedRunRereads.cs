@@ -74,7 +74,81 @@ internal static partial class Program
                 "SAVED_KAPPA_OK");
             Notebook(record, "Kappa", "the kappa notebook export");
         });
+
+        // A run saved by 5.3.5 or 5.3.6 after the user accepted padding: its frame is pointers, and the hash of the shorter column
+        // includes the missing values that padded it to the longer one. 5.3.7 saves such a frame as entered values (WasPadded), so the
+        // older record is made here by the same writer without that flag: Before and After hash as that record of these data does.
+        await WithGrid(main, "Saved paired t, padded by 5.3.6", async grid =>
+        {
+            Fill(grid, 0, "Before", Enumerable.Range(0, 6000).Select(k => (object)(200.0 + 3 * k + k % 4 * 0.25)));
+            Fill(grid, 1, "After", Enumerable.Range(0, 15).Select(k => (object)(195.0 + 2.5 * k + k % 3 * 0.5)));
+            ((IGrid)grid).SetValues(6004, 0, new object[,] { { 999.0, 999.0 } });   // beyond both selections: never read
+            var (run, output) = RunOnGrid(grid, "TPaired", new() { ["data"] = new Padded("A1:A6001,B1:B16"), ["gamma"] = 0.95, ["doAgreement"] = false });
+            JsonElement record = JsonDocument.Parse(run.Record).RootElement.Clone();
+            JsonElement input = SavedInput(record, "data");
+            JsonElement columns = input.GetProperty("columns");
+            Check(input.GetProperty("kind").GetString() == "frame" && !record.TryGetProperty("data", out _)
+                && columns[0].GetProperty("rows")[1].GetInt32() == 6001 && columns[1].GetProperty("rows")[1].GetInt32() == 16
+                && columns[0].GetProperty("hash").GetString() == "072508da8fc71fc2" && columns[1].GetProperty("hash").GetString() == "2ee352f51ee9c6a9",
+                "the padded pair is saved as the 5.3.6 pointer record: rows 1 to 6001 and 1 to 16, the After hash over 6,000 values");
+            ParameterBag native = output.ParameterBag;
+            Check(Number(native, "n") == 15, "native paired t uses the 15 complete pairs");
+            FrameValues reread = FrameReader.Read(FramePointer.From(input));
+            Check(reread.Unavailable == null && reread.Columns.All(c => !c.Changed && c.Values.Length == 6000) && reread.Columns[1].Values.Skip(15).All(v => v == null),
+                "the actual reread pads the shorter column back to its recorded hash, without a false change");
+            RScript script = RScriptWriter.Write(record, "Paired t test", FrameReader.Read);
+            Check(script.HasRecipe && !script.DataUnavailable && !script.Text.Contains("has changed in the workbook"), "the padded record replays without a change note");
+            string expected = Vector(new[] { "n", "mean", "sd", "df", "t", "tail_2", "from", "to" }.Select(key => Number(native, key)));
+            string assertion = "stopifnot(isTRUE(all.equal(unname(c(n, mean(d), sd(d), r$parameter, r$statistic, r$p.value, r$conf.int)), " + expected + ", tolerance = 1e-10, check.attributes = FALSE)))\ncat('SAVED_PADDED_OK\\n')";
+            await RunConversationR(script.Text, "saved-padded-pairs", assertion, "SAVED_PADDED_OK");
+            // the notebook's replay runs in its own local scope: its printed figures are those of the native run
+            await RunConversationR(Notebook(record, "Paired t test", "the padded notebook export"), "saved-padded-notebook", "cat('SAVED_PADDED_NOTEBOOK_OK\\n')", "SAVED_PADDED_NOTEBOOK_OK");
+            string printed = File.ReadAllText(Path.Combine(artifacts, "saved-padded-notebook", "output.txt"));
+            Check(printed.Contains("(n = 15)") && printed.Contains("95% CI = " + Number(native, "from").ToString("F6", inv) + " to " + Number(native, "to").ToString("F6", inv)),
+                "the notebook replay of the padded record prints the native pairs and interval");
+
+            // An edit to the shorter column is still a change: padding never hides it, and the notebook refuses the edited values.
+            ((IGrid)grid).SetValues(4, 1, new object[,] { { 1000.0 } });
+            FrameValues edited = FrameReader.Read(FramePointer.From(input));
+            Check(edited.Unavailable == null && !edited.Columns[0].Changed && edited.Columns[1].Changed && edited.Columns[1].Values.Length == 15,
+                "an edited cell of the padded column is reported as changed and is not padded");
+            Check(RScriptWriter.Write(record, "Paired t test", FrameReader.Read).Text.Contains("NOTE: \"After\" has changed in the workbook"), "the edited padded column keeps its change note");
+            Check(!NotebookAccepted(record, "Paired t test"), "the notebook export refuses the edited padded column");
+            ((IGrid)grid).SetValues(4, 1, new object[,] { { 195.0 + 2.5 * 3 } });
+            Check(FrameReader.Read(FramePointer.From(input)).Columns.All(c => !c.Changed), "restoring the edited cell restores the padded record's values");
+        });
+
+        // Padding with hidden rows in the selections: the hash is of the visible values the analysis took, padded to the longer column.
+        await WithGrid(main, "Saved paired t, padded and filtered", async grid =>
+        {
+            Fill(grid, 0, "Before", Enumerable.Range(0, 6000).Select(k => (object)(150.0 + 2 * k + k % 5 * 0.5)));
+            Fill(grid, 1, "After", Enumerable.Range(0, 20).Select(k => (object)(149.0 + 2 * k + k % 3 * 0.25)));
+            var view = (SpreadsheetGear.Windows.Forms.WorkbookView)Field(grid, "workbookView");
+            view.GetLock();
+            try { foreach (int row in new[] { 5, 12, 3000 }) view.ActiveWorksheet.Cells[row, 0].EntireRow.Hidden = true; }
+            finally { view.ReleaseLock(); }
+            var (run, output) = RunOnGrid(grid, "TPaired", new() { ["data"] = new Padded("A1:A6001,B1:B21"), ["gamma"] = 0.95, ["doAgreement"] = false });
+            JsonElement record = JsonDocument.Parse(run.Record).RootElement.Clone();
+            JsonElement input = SavedInput(record, "data");
+            FrameValues reread = FrameReader.Read(FramePointer.From(input));
+            Check(input.GetProperty("kind").GetString() == "frame" && reread.Unavailable == null && reread.Columns.All(c => !c.Changed && c.Values.Length == 5997),
+                "a padded record with hidden rows rereads its visible values, padded back to the recorded hash");
+            ParameterBag native = output.ParameterBag;
+            string expected = Vector(new[] { "n", "mean", "sd", "df", "t", "tail_2", "from", "to" }.Select(key => Number(native, key)));
+            await RunConversationR(RScriptWriter.Write(record, "Paired t test", FrameReader.Read).Text, "saved-padded-filtered",
+                "stopifnot(n == 18, isTRUE(all.equal(unname(c(n, mean(d), sd(d), r$parameter, r$statistic, r$p.value, r$conf.int)), " + expected + ", tolerance = 1e-10, check.attributes = FALSE)))\ncat('SAVED_FILTERED_PADDED_OK\\n')",
+                "SAVED_FILTERED_PADDED_OK");
+            // showing a hidden row inside the shorter range changes what the analysis would read: never padded into a match
+            view.GetLock();
+            try { view.ActiveWorksheet.Cells[12, 0].EntireRow.Hidden = false; }
+            finally { view.ReleaseLock(); }
+            Check(FrameReader.Read(FramePointer.From(input)).Columns.All(c => c.Changed), "showing a hidden row after the run is still reported as a change of both columns");
+        });
     }
+
+    /// <summary>A frame answered as the user's selection of these ranges, padded as 5.3.5 and 5.3.6 padded it when the user accepted
+    /// unequal columns: the production acquisition and padding, without the warning's dialog and without the flag 5.3.7 added.</summary>
+    sealed record Padded(string Address);
 
     static async Task WithGrid(frmMain main, string name, Func<frmSpreadsheetGear, Task> test)
     {
@@ -122,6 +196,12 @@ internal static partial class Program
         return code;
     }
 
+    static bool NotebookAccepted(JsonElement record, string title)
+    {
+        try { ReportNotebook.Write(NotebookSnapshot(record, title), title, FrameReader.Read, "test"); return true; }
+        catch (InvalidOperationException) { return false; }
+    }
+
     static JsonElement NotebookSnapshot(JsonElement record, string title) => JsonSerializer.SerializeToElement(new JsonObject
     {
         ["version"] = 1, ["engineVersion"] = "test", ["reportHtml"] = "<p>" + title + "</p>",
@@ -158,6 +238,17 @@ internal static partial class Program
             {
                 Select(grid, address);
                 return new GridSelectionProcessor(grid).FillFrameParameter(parameter, processor, context);
+            }
+            if (parameter is FrameParameter legacy && value is Padded padded)
+            {
+                // the acquisition GetCellEqual makes and, on OK to its unequal-length warning, its padding of the jagged ends
+                Select(grid, padded.Address);
+                DataFrame acquired = grid.GetCellArray(0, legacy.SelectionMode, legacy.MinimumColumns(processor, context), legacy.MaximumColumns(processor, context),
+                    legacy.Prompt(processor, context), null, false, false, out bool cancelled, out bool pivoted, processor.NextOriginGroup());
+                if (acquired == null || cancelled || pivoted || acquired.Variables.All(v => v.Length == acquired.MaxRows)) throw new Exception("the padded selection was not acquired as unequal columns");
+                GridSelectionProcessor.PadAcquiredFrame(acquired, acquired.MaxRows);
+                foreach (IVariable variable in acquired.Variables) ((WorksheetOrigin)variable.Origin).WasPadded = false;
+                return new ParameterBag(parameter.Name, FilledParameterFactory.Input(acquired));
             }
             return new ParameterBag(parameter.Name, FilledParameterFactory.Input(value));
         }

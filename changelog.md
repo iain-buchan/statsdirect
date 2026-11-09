@@ -6,6 +6,7 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
 ### Fixed
 - Continue in R and notebook export can read back a saved category selection of more than 5,000 values, such as the columns of a frequency, kappa or crosstabs result, when an earlier column's range is longer than the last column's, instead of reporting that the data could not be read.
+- Results of more than 5,000 values that 5.3.5 or 5.3.6 saved after padding unequal columns with missing values replay from their workbook again: Continue in R and notebook export recognise the padding by the recorded hash instead of reporting a changed column, and an edited column is still reported.
 
 ##[v5.3.8] 2026-11-09
 

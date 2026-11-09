@@ -4,6 +4,7 @@ using StatsDirect.Templates;
 using StatsDirect.Utilities;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace StatsDirect.UI
 {
@@ -74,6 +75,18 @@ namespace StatsDirect.UI
                     Moved = moved
                 });
             }
+            // A record saved before 5.3.7 kept the padding of unequal columns, accepted at the selection, as pointers: the hash of each
+            // shorter column takes in the missing values that padded it to the longest. Such columns are padded so again, and are the
+            // values the analysis used only if every one of them then has its recorded hash.
+            int longest = values.Columns.Max(c => c.Values.Length);
+            List<int> shorter = Enumerable.Range(0, values.Columns.Count).Where(i => values.Columns[i].Changed && values.Columns[i].Values.Length < longest).ToList();
+            List<object[]> padded = shorter.Select(i => values.Columns[i].Values.Concat(new object[longest - values.Columns[i].Values.Length]).ToArray()).ToList();
+            if (shorter.Count > 0 && shorter.Select((i, j) => RunRecord.Hash(padded[j]) == pointer.Columns[i].Hash).All(same => same))
+                for (int j = 0; j < shorter.Count; j++)
+                {
+                    values.Columns[shorter[j]].Values = padded[j];
+                    values.Columns[shorter[j]].Changed = false;
+                }
             return values;
         }
     }
