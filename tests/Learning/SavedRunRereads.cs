@@ -144,11 +144,59 @@ internal static partial class Program
             finally { view.ReleaseLock(); }
             Check(FrameReader.Read(FramePointer.From(input)).Columns.All(c => c.Changed), "showing a hidden row after the run is still reported as a change of both columns");
         });
+
+        // Raters whose columns are unequal, padded when the user accepts the warning that "the jagged ends of columns will be padded with
+        // missing data": the padded rows are missing ratings, not ratings of the shorter column's first category (its id, 0, was the
+        // padding). Kappa is then of the seven subjects both raters rated, as base R computes it from those pairs alone.
+        await WithGrid(main, "Kappa, padded raters", async grid =>
+        {
+            double[] first = { 1, 2, 3, 2, 1, 3, 2, 2, 1, 3, 3, 1 }, second = { 1, 2, 2, 2, 3, 3, 1 };
+            Fill(grid, 0, "First rater", first.Select(v => (object)v));
+            Fill(grid, 1, "Second rater", second.Select(v => (object)v));
+            var (run, output) = RunOnGrid(grid, "Kappa", new() { ["ci"] = 0.95, ["responses"] = new Padded("A1:A13,B1:B8", Legacy: false), ["method"] = "1" });
+            ParameterBag k = output.ParameterBag;
+            double pairs = ((IEnumerable<ParameterBag>)k["*y"].AsObject).SelectMany(y => (IEnumerable<ParameterBag>)y["*tot"].AsObject).Sum(c => Number(c, "tot"));
+            Check(pairs == 7, "native kappa of padded raters tabulates the 7 subjects both rated, not the 12 rows of the padded frame (" + pairs + ")");
+            JsonElement record = JsonDocument.Parse(run.Record).RootElement.Clone();
+            JsonElement input = SavedInput(record, "responses");
+            JsonElement padded = input.GetProperty("columns")[1].GetProperty("values");
+            Check(input.GetProperty("kind").GetString() == "entered" && padded.GetArrayLength() == 12 && padded.EnumerateArray().Skip(7).All(v => v.ValueKind == JsonValueKind.Null),
+                "the record keeps the padded rows of the second rater as missing values");
+            RScript script = RScriptWriter.Write(record, "Kappa", FrameReader.Read);
+            Check(script.HasRecipe && !script.DataUnavailable, "the padded kappa replays from its record");
+            string reference = "first <- " + Vector(first.Take(7)) + "\nsecond <- " + Vector(second) + "\n" +
+                "tab <- table(factor(first, 1:3), factor(second, 1:3))\nN <- sum(tab)\npo_ref <- sum(diag(tab)) / N\npe_ref <- sum(rowSums(tab) * colSums(tab)) / N^2\n" +
+                "kappa_ref <- (po_ref - pe_ref) / (1 - pe_ref)\n";
+            await RunConversationR(script.Text, "saved-kappa-padded",
+                reference + "stopifnot(N == 7, n == 7, isTRUE(all.equal(kappa_ref, 11 / 32)), isTRUE(all.equal(c(" + Number(k, "kappa").ToString("R", inv) + ", " + (Number(k, "po") / 100).ToString("R", inv) + "), c(kappa_ref, po_ref), tolerance = 1e-12)), " +
+                "isTRUE(all.equal(unname(c(kappa, se0, se, kappaw, se0w, sew, (po - spe) / (1 - spe))), " +
+                Vector(new[] { "kappa", "se", "seci", "kappaw", "sekw", "sekwci", "spi" }.Select(key => Number(k, key))) + ", tolerance = 1e-10, check.attributes = FALSE)))\ncat('SAVED_KAPPA_PADDED_OK\\n')",
+                "SAVED_KAPPA_PADDED_OK");
+        });
+
+        // Three raters, the third with fewer ratings: the padded subjects have two ratings, not a third of the first category, and the
+        // kappa of Fleiss and Cuzick (1979) for unequal numbers of ratings is that of the ratings given, computed in base R.
+        await WithGrid(main, "Kappa, three padded raters", async grid =>
+        {
+            double[][] raters = { new double[] { 1, 2, 1, 1, 2, 2, 1, 2 }, new double[] { 1, 2, 2, 1, 2, 1, 1, 2 }, new double[] { 1, 1, 2, 1, 2 } };
+            for (int c = 0; c < raters.Length; c++) Fill(grid, c, "Rater " + (c + 1), raters[c].Select(v => (object)v));
+            var (_, output) = RunOnGrid(grid, "Kappa", new() { ["ci"] = 0.95, ["responses"] = new Padded("A1:A9,B1:B9,C1:C6", Legacy: false) });
+            ParameterBag k = output.ParameterBag;
+            Check(Convert.ToInt32(k["categories"].AsObject, inv) == 2 && k["r"].AsObject as string == "2 to 3 (median 3)",
+                "native kappa of three padded raters counts 2 to 3 ratings per subject (" + k["r"].AsObject + ")");
+            string reference = "X <- cbind(" + string.Join(", ", raters.Select(r => Vector(r.Concat(Enumerable.Repeat(double.NaN, 8 - r.Length))).Replace("NaN", "NA"))) + ")\n" +
+                "m <- rowSums(!is.na(X))\nx <- rowSums(X == 1, na.rm = TRUE)\nn <- length(m)\nmbar <- mean(m)\npbar <- sum(x) / sum(m)\n" +
+                "B <- sum((x - m * pbar)^2 / m) / n\nW <- sum(x * (m - x) / m) / (n * (mbar - 1))\nkappa_ref <- (B - W) / (B + (mbar - 1) * W)\n";
+            await RunConversationR("", "saved-kappa-three-padded",
+                reference + "stopifnot(identical(as.vector(m), c(3, 3, 3, 3, 3, 2, 2, 2)), isTRUE(all.equal(" + Number(k, "k").ToString("R", inv) + ", kappa_ref, tolerance = 1e-12)))\ncat('SAVED_KAPPA_THREE_OK\\n')",
+                "SAVED_KAPPA_THREE_OK");
+        });
     }
 
-    /// <summary>A frame answered as the user's selection of these ranges, padded as 5.3.5 and 5.3.6 padded it when the user accepted
-    /// unequal columns: the production acquisition and padding, without the warning's dialog and without the flag 5.3.7 added.</summary>
-    sealed record Padded(string Address);
+    /// <summary>A frame answered as the user's selection of these ranges, padded as the program pads it when the user accepts unequal
+    /// columns: the production acquisition and padding, without the warning's dialog. A legacy answer is as 5.3.5 and 5.3.6 padded it,
+    /// without the flag 5.3.7 added; otherwise the flag stays, as the program now sets it.</summary>
+    sealed record Padded(string Address, bool Legacy = true);
 
     static async Task WithGrid(frmMain main, string name, Func<frmSpreadsheetGear, Task> test)
     {
@@ -247,7 +295,8 @@ internal static partial class Program
                     legacy.Prompt(processor, context), null, false, false, out bool cancelled, out bool pivoted, processor.NextOriginGroup());
                 if (acquired == null || cancelled || pivoted || acquired.Variables.All(v => v.Length == acquired.MaxRows)) throw new Exception("the padded selection was not acquired as unequal columns");
                 GridSelectionProcessor.PadAcquiredFrame(acquired, acquired.MaxRows);
-                foreach (IVariable variable in acquired.Variables) ((WorksheetOrigin)variable.Origin).WasPadded = false;
+                if (padded.Legacy)
+                    foreach (IVariable variable in acquired.Variables) ((WorksheetOrigin)variable.Origin).WasPadded = false;
                 return new ParameterBag(parameter.Name, FilledParameterFactory.Input(acquired));
             }
             return new ParameterBag(parameter.Name, FilledParameterFactory.Input(value));
