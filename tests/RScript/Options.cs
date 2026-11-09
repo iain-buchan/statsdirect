@@ -45,9 +45,9 @@ internal static partial class Program
         double[] w = { 1, 2, 1, 3, 1, 2, 1, 3, 1, 2, 1, 3 };
         var (run, output) = Run("MultipleLinearRegression", new() { ["ci"] = 0.95, ["calculateIntercept"] = false, ["useWeights"] = true, ["outcome"] = Sheet(("y", y)), ["weights"] = Sheet(("w", w)), ["predictors"] = Sheet(("x1", x1), ("x2", x2)) });
         string script = Script(run);
-        Check(script.Contains("intercept <- FALSE") && script.Contains("weights <- c(1, 2, 1, 3") && script.Contains("intercept = intercept") && script.Contains("weights = weights"),
-              "the regression's script carries the run's intercept option and weights and hands them to lm");
-        string r = RunR(script, Path.Combine(folder, "mlr"));
+        string r = RunR(script + "\nstopifnot(attr(terms(fit), 'intercept') == 0L, identical(as.double(weights(fit)), "
+                        + RScriptWriter.Vector(w.Cast<object>().ToArray()) + "))\ncat('MLR_OPTIONS_OK\\n')\n", Path.Combine(folder, "mlr"));
+        Check(r.Contains("MLR_OPTIONS_OK"), "the fitted R regression uses the run's weights and no intercept");
         IList<ParameterBag> cols = Block(Block(output.ParameterBag, "row")[0], "col");
         double[] engineB = cols.Select(c => Num(c, "val_b")).ToArray(), engineT = cols.Select(c => Num(c, "t")).ToArray();
         double[] rB = Numbers(r, "^.+ b\\d+ = (-?[0-9.]+)"), rT = Numbers(r, "^.+ b\\d+ = .*  t = (-?[0-9.]+)");
