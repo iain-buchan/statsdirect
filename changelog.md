@@ -11,6 +11,7 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 - Multiple comparisons after a two-way or replicated two-way analysis of variance replay that analysis rather than a one-way analysis, and the analysis of variance after a polynomial regression replays the polynomial regression.
 - Agreement replay shows Kendall's tau and its P as unavailable when every subject has the same standard deviation or mean, instead of stopping, and gives the report's P above 1,000 subjects without ties.
 - A confidence level typed as 0% or 100% is taken as 95% by the R replay of every report that takes it so, including Mann-Whitney, Wilcoxon, Spearman, Kendall, the z test of two samples, reference ranges and quantiles; the Cox hazard ratios now take it so in the report too, where 100% gave a point interval.
+- Paired t replay completes for differences that are constant but for rounding, such as decimal data with a constant shift.
 
 ##[v5.3.8] 2026-11-09
 

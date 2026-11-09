@@ -18,7 +18,7 @@ internal static partial class Program
     // Each case acquires its columns from worksheet cells through GridSelectionProcessor.FillFrameParameter (and the
     // CellArrayProcessor under it), runs the operation through the template processor, writes the script from the record
     // the report step left, runs it in R within a time limit, and compares R's figures with the native output bag.
-    private static readonly string[] Recipes539Parts = { "gof", "kendall", "mann-whitney", "routing", "agreement", "fallback" };
+    private static readonly string[] Recipes539Parts = { "gof", "kendall", "mann-whitney", "routing", "agreement", "fallback", "paired" };
     private static void CheckRecipes539(string folder, string only = null)
     {
         if (only != null && !Recipes539Parts.Contains(only)) throw new ArgumentException("Unknown 5.3.9 recipe check: " + only);
@@ -30,6 +30,7 @@ internal static partial class Program
         if (only is null or "routing") CheckFollowOnRouting539(Path.Combine(folder, "routing"));
         if (only is null or "agreement") CheckAgreement539(Path.Combine(folder, "agreement"));
         if (only is null or "fallback") CheckConfidenceFallback539(Path.Combine(folder, "fallback"));
+        if (only is null or "paired") CheckPairedNearConstant539(Path.Combine(folder, "paired"));
         if (Failed539.Count > 0) throw new Exception("FAIL " + Failed539.Count + " of the 5.3.9 recipe cases: " + string.Join(" | ", Failed539));
     }
 
@@ -489,6 +490,27 @@ internal static partial class Program
                 Equal539("exp(coef(fit)), exp(coef(fit) - qnorm((1 + confidence) / 2) * sqrt(diag(vcov(fit)))), exp(coef(fit) + qnorm((1 + confidence) / 2) * sqrt(diag(vcov(fit))))",
                     new[] { "ec", "ell", "eul" }.Select(key => Num539(hazard, key)), 1e-6), Path.Combine(folder, "CoxHazardRatios-" + confidence.ToString("R", inv)), setup: "pdf(NULL)\n");
             Check(text.Contains(" " + (used * 100).ToString("G", inv) + "% CI ="), "the replayed Cox hazard ratios are labelled " + used * 100 + "%");
+        });
+    }
+
+    // 7. Paired t: R's t.test refuses differences whose standard error is below 10 eps times their mean ("data are essentially
+    //    constant"), such as decimal data with a constant shift, where the report still gives t, P and the interval.
+    private static void CheckPairedNearConstant539(string folder)
+    {
+        foreach (double shift in new[] { .1, .3, 1.1 })
+        foreach (bool paired in new[] { true, false })
+        foreach (bool agreement in paired ? new[] { false, true } : new[] { false }) Case539("paired shift " + shift + " " + paired + " " + agreement, () =>
+        {
+            // typed decimals, as in a worksheet: 5.1, 6.2 ... and 5.1 - shift, 6.2 - shift ... each the double nearest its decimal
+            double[] first = Enumerable.Range(0, 6).Select(i => Math.Round(5.1 + 1.1 * i, 10)).ToArray(), second = first.Select(v => Math.Round(v - shift, 10)).ToArray();
+            RecordCells cells = paired ? new(Cells539("First", first), Cells539("Second", second)) : new(Cells539("Differences", first.Select((v, i) => v - second[i])));
+            var (run, output) = Run("TPaired", new() { ["data"] = Select539(cells, 7, paired ? new[] { 0, 1 } : new[] { 0 }), ["gamma"] = .95, ["doAgreement"] = agreement });
+            ParameterBag b = output.ParameterBag;
+            Check(Num539(b, "sd") > 0, "the shift of " + shift + " leaves differences that are not exactly constant");
+            string assertion = Equal539("n, mean(d), sd(d), r$parameter", new[] { "n", "mean", "sd", "df" }.Select(k => Num539(b, k)), 1e-12) +
+                Equal539("r$statistic", new[] { Num539(b, "t") }, 1e-6) + Equal539("r$p.value", new[] { Num539(b, "tail_2") }, 1e-5) +
+                Equal539("r$conf.int", new[] { Num539(b, "from"), Num539(b, "to") }, 1e-12);
+            Replay539(run, assertion, Path.Combine(folder, "shift-" + shift + "-" + paired + "-" + agreement), setup: "pdf(NULL)\n");
         });
     }
 
