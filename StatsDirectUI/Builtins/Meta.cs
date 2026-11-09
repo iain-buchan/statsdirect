@@ -66,7 +66,7 @@ namespace StatsDirect.Builtins
             double[] xn = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[2];
             double[] xr = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[3];
 
-            string[] title = MakeTitles(parameters, "strata", "stratum {0}", rawRows, out bool hasUserSuppliedLabels);
+            string[] title = MakeTitles(parameters, "strata", "stratum {0}", rawRows, out bool hasUserSuppliedLabels, keptRows: copiesRemovingMissingRows.ValidRowsInOriginal);
 
             int k = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0].Length - 1; /* 1-based */
             title = Numerics.Utilities.CopyValidRows(title, copiesRemovingMissingRows.ValidRowsInOriginal, 0, rawRows, 1, k);
@@ -590,7 +590,7 @@ namespace StatsDirect.Builtins
             double[] xn = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[2];
             double[] xr = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[3];
 
-            string[] title = MakeTitles(parameters, "strata", "stratum {0}", rawRows, out bool hasUserSuppliedLabels);
+            string[] title = MakeTitles(parameters, "strata", "stratum {0}", rawRows, out bool hasUserSuppliedLabels, keptRows: copiesRemovingMissingRows.ValidRowsInOriginal);
 
             int k = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0].Length - 1; /* 1-based */
             title = Numerics.Utilities.CopyValidRows(title, copiesRemovingMissingRows.ValidRowsInOriginal, 0, rawRows, 1, k);
@@ -627,6 +627,9 @@ namespace StatsDirect.Builtins
 
             ParameterBag outputParameters = new();
             outputParameters.AddInput("metaExact", exactMeta);
+            // the continuity correction of a table with an empty cell, which the replay applies as the report did
+            outputParameters.AddInput("metaCC", host.Preferences.MetaCC);
+            outputParameters.AddInput("delayContinuityCorrection", host.Preferences.DelayContinuityCorrection);
 
             IList<ParameterBag> inputsList = new List<ParameterBag>();
             outputParameters.AddOutput("*inputs", inputsList);
@@ -770,7 +773,7 @@ namespace StatsDirect.Builtins
             double[] xn = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[2];
             double[] xr = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[3];
 
-            string[] title = MakeTitles(parameters, "strata", "stratum {0}", rawRows, out bool hasUserSuppliedLabels);
+            string[] title = MakeTitles(parameters, "strata", "stratum {0}", rawRows, out bool hasUserSuppliedLabels, keptRows: copiesRemovingMissingRows.ValidRowsInOriginal);
 
             int k = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0].Length - 1; /* 1-based */
             title = Numerics.Utilities.CopyValidRows(title, copiesRemovingMissingRows.ValidRowsInOriginal, 0, rawRows, 1, k);
@@ -799,6 +802,9 @@ namespace StatsDirect.Builtins
 
             ParameterBag outputParameters = new();
             outputParameters.AddInput("metaExact", exactMeta);
+            // the continuity correction of a table with an empty cell, which the replay applies as the report did
+            outputParameters.AddInput("metaCC", host.Preferences.MetaCC);
+            outputParameters.AddInput("delayContinuityCorrection", host.Preferences.DelayContinuityCorrection);
 
             IList<ParameterBag> inputsList = new List<ParameterBag>();
             outputParameters.AddOutput("*inputs", inputsList);
@@ -914,8 +920,17 @@ namespace StatsDirect.Builtins
         /// <param name="expectedRows">The number of rows of data.</param>
         /// <param name="hasUserSuppliedLabels">On return, whether there is a column of labels.</param>
         /// <param name="extraElementsAtEnd">The number of elements to add at the end, for the label of a pooled estimate.</param>
-        internal static string[] MakeTitles(ParameterBag parameters, string parameterName, string missingTitleFormat, int expectedRows, out bool hasUserSuppliedLabels, int extraElementsAtEnd = 0)
+        /// <param name="keptRows">The rows the analysis keeps, if it leaves incomplete rows out: a row without a label is then numbered
+        /// by its place among the kept rows, as the report's tables and the R script number the studies, not by its place among all.</param>
+        internal static string[] MakeTitles(ParameterBag parameters, string parameterName, string missingTitleFormat, int expectedRows, out bool hasUserSuppliedLabels, int extraElementsAtEnd = 0, bool[] keptRows = null)
         {
+            int[] number = new int[expectedRows];
+            for (int i = 0, kept = 0; i < expectedRows; i++)
+            {
+                if (keptRows == null || keptRows[i])
+                    kept++;
+                number[i] = kept;
+            }
             string[] title;
             hasUserSuppliedLabels = parameters.ContainsKey(parameterName) && parameters[parameterName].HasData;
             if (hasUserSuppliedLabels)
@@ -943,14 +958,14 @@ namespace StatsDirect.Builtins
                         title[i] = buf;
                     }
                     else
-                        title[i] = string.Format(missingTitleFormat, i + 1);
+                        title[i] = string.Format(missingTitleFormat, number[i]);
                 }
             }
             else
             {
                 title = new string[expectedRows + extraElementsAtEnd];
                 for (int i = 0; i < expectedRows; i++)
-                    title[i] = string.Format(missingTitleFormat, i + 1);
+                    title[i] = string.Format(missingTitleFormat, number[i]);
             }
             return title;
         }
@@ -1037,7 +1052,7 @@ namespace StatsDirect.Builtins
             double[] cm = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[5];
             double[] cs = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[6];
 
-            string[] title = MakeTitles(parameters, "strata", "stratum {0}", rawRows, out bool hasUserSuppliedLabels);
+            string[] title = MakeTitles(parameters, "strata", "stratum {0}", rawRows, out bool hasUserSuppliedLabels, keptRows: copiesRemovingMissingRows.ValidRowsInOriginal);
 
             int k = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0].Length - 1; /* 1-based */
             title = Numerics.Utilities.CopyValidRows(title, copiesRemovingMissingRows.ValidRowsInOriginal, 0, rawRows, 1, k);
@@ -1955,7 +1970,7 @@ namespace StatsDirect.Builtins
             double[] b = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[2];
             double[] pt2 = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[3];
 
-            string[] title = MakeTitles(parameters, "strata", "stratum {0}", rawRows, out bool hasUserSuppliedLabels);
+            string[] title = MakeTitles(parameters, "strata", "stratum {0}", rawRows, out bool hasUserSuppliedLabels, keptRows: copiesRemovingMissingRows.ValidRowsInOriginal);
 
             int k = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0].Length - 1; /* 1-based */
             title = Numerics.Utilities.CopyValidRows(title, copiesRemovingMissingRows.ValidRowsInOriginal, 0, rawRows, 1, k);
@@ -2257,7 +2272,7 @@ namespace StatsDirect.Builtins
             double[] xn = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[2];
             double[] xr = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[3];
 
-            string[] title = MakeTitles(parameters, "strata", "stratum {0}", rawRows, out bool hasUserSuppliedLabels);
+            string[] title = MakeTitles(parameters, "strata", "stratum {0}", rawRows, out bool hasUserSuppliedLabels, keptRows: copiesRemovingMissingRows.ValidRowsInOriginal);
 
             int k = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0].Length - 1; /* 1-based */
             title = Numerics.Utilities.CopyValidRows(title, copiesRemovingMissingRows.ValidRowsInOriginal, 0, rawRows, 1, k);
@@ -2327,6 +2342,9 @@ namespace StatsDirect.Builtins
 
             ParameterBag outputParameters = new();
             outputParameters.AddInput("metaExact", exactMeta);
+            // the continuity correction of a table with an empty cell, which the replay applies as the report did
+            outputParameters.AddInput("metaCC", host.Preferences.MetaCC);
+            outputParameters.AddInput("delayContinuityCorrection", host.Preferences.DelayContinuityCorrection);
             outputParameters.AddOutput("pc", cco * 100);
 
             IList<ParameterBag> inputsList = new List<ParameterBag>();
@@ -3215,7 +3233,7 @@ namespace StatsDirect.Builtins
             // pooled indicator for last element - needed by plot_cp
             pg[k + 1] = CorrelationRowType.Pooled;
 
-            string[] title = MakeTitles(parameters, "studies", "study {0}", rawRows, out bool hasUserSuppliedLabels);
+            string[] title = MakeTitles(parameters, "studies", "study {0}", rawRows, out bool hasUserSuppliedLabels, keptRows: copiesRemovingMissingRows.ValidRowsInOriginal);
             title = Numerics.Utilities.CopyValidRows(title, copiesRemovingMissingRows.ValidRowsInOriginal, 0, rawRows, 1, k, 1);
             title[k + 1] = Charting.Renderer.AbstractForestishChartRenderer.ComboTi(string.Empty);
 
@@ -3916,7 +3934,7 @@ namespace StatsDirect.Builtins
             double[] sn = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0];
             double[] sr = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[1];
 
-            string[] title = MakeTitles(parameters, "strata", "stratum {0}", rawRows, out bool hasUserSuppliedLabels);
+            string[] title = MakeTitles(parameters, "strata", "stratum {0}", rawRows, out bool hasUserSuppliedLabels, keptRows: copiesRemovingMissingRows.ValidRowsInOriginal);
 
             int k = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0].Length - 2; /* 1-based, 1 extra for pooling */
             title = Numerics.Utilities.CopyValidRows(title, copiesRemovingMissingRows.ValidRowsInOriginal, 0, rawRows, 1, k, 1);
@@ -4365,8 +4383,8 @@ namespace StatsDirect.Builtins
 
         /// <summary>
         /// I-squared, 100 (Q - df) / Q and not below 0, with its confidence limits.  With the exact method off the limits are
-        /// test-based: those of the logarithm of H, H^2 being Q / df, from its standard error; they need three studies.  With the
-        /// exact method on they are from the non-central chi-square distribution of Q (see the comments below).
+        /// test-based: those of the logarithm of H, H^2 being Q / df, from its standard error; they need three studies, or two with
+        /// Q above 2.  With the exact method on they are from the non-central chi-square distribution of Q (see the comments below).
         /// </summary>
         /// <param name="host">The preferences: the exact method.</param>
         /// <param name="q">Cochran's Q.</param>
@@ -4401,12 +4419,14 @@ namespace StatsDirect.Builtins
             //  The interval is given at whatever level the analysis uses
             if (cco <= 0.0 || cco >= 1.0)
                 return;
-            //  With one degree of freedom (two studies) the test-based interval has no standard error; the exact interval is still given
-            if (df < 2 && !useExact)
+            //  With one degree of freedom (two studies) the test-based interval has a standard error only when Q > k, by the first form below
+            //  (Higgins & Thompson 2002, as meta's isquared has it); the second form divides by k - 2.  The exact interval is still given
+            bool testBased = df >= 2 || q > dk;
+            if (!testBased && !useExact)
                 return;
             double levelci = 1.0 - (1.0 - cco) / 2.0;
             double clevelci = 1.0 - levelci;
-            if (df >= 2)
+            if (testBased)
             {
             //  H^2 = Q/df, truncated at 1 where Q < df
             double h2 = Math.Max(1.0, q / df);

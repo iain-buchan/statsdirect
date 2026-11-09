@@ -933,9 +933,12 @@ namespace StatsDirect.Builtins
             k2 = z_b1 * z_b1 + z_b2 * z_b2;
             p_k2 = double.IsPositiveInfinity(k2) ? 0.0 : PDF.chivalp(k2, 2.0);
             // Royston adjustment. The P of the raw K2 is exp(-k2 / 2); its normal deviate is found in log space when that would
-            // underflow (k2 above about 1400), from the asymptotic upper tail Q(z) ~ exp(-z^2 / 2) / (z sqrt(2 pi)), that is
-            // z^2 = k2 - 2 ln z - ln(2 pi); the underflow had left K2 unadjusted (1,780 printed for 17 zeros and 17 ones where
-            // the adjusted value is 1,047). An infinite K2 (from the kurtosis guard above) is left as it is.
+            // underflow (k2 above about 1400), from the asymptotic expansion of the upper tail,
+            // Q(z) = exp(-z^2 / 2) / (z sqrt(2 pi)) (1 - 1/z^2 + 3/z^4 - 15/z^6 + 105/z^8 ...), that is
+            // z^2 = k2 - 2 ln z - ln(2 pi) + 2 ln(1 - 1/z^2 + 3/z^4 - 15/z^6 + 105/z^8), within 1e-12 of ln Q for z above 37; the
+            // underflow had left K2 unadjusted (1,780 printed for 17 zeros and 17 ones where the adjusted value is 1,047), and the
+            // leading term alone left z about 5e-6 too large, so the adjusted K2 was wrong in its 7th figure. An infinite K2 (from
+            // the kurtosis guard above) is left as it is.
             double zc2 = 0.0;
             int ifault = double.IsPositiveInfinity(k2) ? 1 : 0;
             if (ifault == 0 && k2 < 1400.0)
@@ -946,7 +949,10 @@ namespace StatsDirect.Builtins
             {
                 zc2 = Math.Sqrt(k2);
                 for (int it = 0; it < 8; it++)
-                    zc2 = Math.Sqrt(k2 - 2.0 * Math.Log(zc2) - Math.Log(2.0 * Math.PI));
+                {
+                    double w = 1.0 / (zc2 * zc2);
+                    zc2 = Math.Sqrt(k2 - 2.0 * Math.Log(zc2) - Math.Log(2.0 * Math.PI) + 2.0 * Math.Log(1.0 - w * (1.0 - w * (3.0 - w * (15.0 - w * 105.0)))));
+                }
             }
             if (ifault == 0)
             {

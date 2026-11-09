@@ -14,29 +14,39 @@ internal static partial class Program
         double[] x2 = { 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 0, 0 };
         var predictors = new[] { ("X1", x1), ("X2", x2) };
         var twice = ("TwiceX1", x1.Select(x => 2 * x).ToArray());
-        var thrice = ("ThreeX2", x2.Select(x => 3 * x).ToArray());
         CheckFit("scaled-duplicate", y, w, predictors, twice);
-        CheckFit("two-duplicates", y, w, predictors, twice, thrice);
+        // One dropped predictor, so that the refit of 5.3.7 read the outcome as the weights. (Two or more dropped left it the untouched
+        // weights column of the first fit, so a case with two duplicates passed there by coincidence.) A negative outcome made that
+        // refit fault and fall back to the singular value decomposition; equal weights must give least squares.
+        CheckFit("negative-outcome", y.Select(v => v - 10).ToArray(), w, predictors, twice);
+        CheckFit("equal-weights", y, Enumerable.Repeat(2.0, y.Length).ToArray(), predictors, twice);
 
         double[] sbp = { 72.9, 68.4, 83, 63.2, 65.5, 71.9, 68.4, 72.2, 80, 69.9, 68, 72.4, 62.5, 76.4, 70, 63.6, 63.7, 79.4, 66.8, 64.8, 79.3, 67.7, 65, 80.5, 67.5, 76.5, 72.5, 67.7, 65.2, 62.5 };
         double[] prior = { 3, 2, 1, 2, 3, 1, 2, 3, 1, 1, 3, 1, 2, 3, 1, 2, 1, 1, 3, 1, 1, 1, 3, 3, 1, 1, 3, 1, 1, 2 };
         double[] age = { 63.6, 25.6, 55, 24.4, 27.8, 44.6, 55.1, 63.9, 60.3, 43, 21.5, 40.7, 30.7, 39.6, 47.5, 27.4, 28.7, 60.6, 30.3, 41.8, 58.5, 51.5, 28.7, 60.1, 40.2, 48.1, 34.3, 53, 59.3, 26.5 };
         double[] Dummy(int group) => Enumerable.Range(0, sbp.Length).Select(i => i % 3 == group ? 1d : 0d).ToArray();
         CheckFit("full-dummy-set", sbp, prior, new[] { ("Age", age), ("GroupA", Dummy(0)), ("GroupB", Dummy(1)) }, ("GroupC", Dummy(2)));
+        // the same aliased dummy without weights: the replay's ANOVA rows leave out the aliased predictor as lm's anova does
+        CheckFit("unweighted-dummy-set", sbp, null, new[] { ("Age", age), ("GroupA", Dummy(0)), ("GroupB", Dummy(1)) }, ("GroupC", Dummy(2)));
 
         void CheckFit(string label, double[] outcome, double[] weights, (string title, double[] values)[] retained, params (string title, double[] values)[] dropped)
         {
-            var columns = new[] { ("Y", outcome), ("W", weights) }.Concat(retained).Concat(dropped).ToArray();
+            // without weights there is no W column, and the fit and its oracle are unweighted
+            bool weighted = weights != null;
+            int first = weighted ? 2 : 1;
+            var columns = new[] { ("Y", outcome) }.Concat(weighted ? new[] { ("W", weights) } : Array.Empty<(string, double[])>()).Concat(retained).Concat(dropped).ToArray();
             var sheet = new RecordCells(columns.Select(c => new object[] { c.Item1 }.Concat(c.Item2.Cast<object>()).ToArray()).ToArray());
             DataFrame Select(int column) => sheet.Acquire(column, 0, outcome.Length + 1, DataAcquisitionMode.NumericPreserveRows);
             DataFrame x = new();
-            for (int i = 2; i < columns.Length; i++)
+            for (int i = first; i < columns.Length; i++)
                 x.Variables.Add(Select(i).Variables[0]);
-            var (run, model) = Run("MultipleLinearRegression", new()
+            Dictionary<string, object> answers = new()
             {
-                ["outcome"] = Select(0), ["weights"] = Select(1), ["predictors"] = x,
-                ["ci"] = .95, ["calculateIntercept"] = true, ["useWeights"] = true
-            });
+                ["outcome"] = Select(0), ["predictors"] = x, ["ci"] = .95, ["calculateIntercept"] = true, ["useWeights"] = weighted
+            };
+            if (weighted)
+                answers["weights"] = Select(1);
+            var (run, model) = Run("MultipleLinearRegression", answers);
             ParameterBag bag = model.ParameterBag;
             var warnings = Rows(bag, "warn").Select(row => row["warn"].AsString).ToArray();
             Check(dropped.All(c => warnings.Any(warning => warning.Contains(c.title, StringComparison.Ordinal) &&
@@ -52,9 +62,9 @@ internal static partial class Program
             Check(fitted.Count == outcome.Length, label + " reports every residual from the refit");
 
             // Construct the reduced model independently from the fixture, with the actual prior weights.
-            string inputs = string.Join(", ", columns.Take(retained.Length + 2).Select(c => c.Item1 + " = " + Vector(c.Item2)));
+            string inputs = string.Join(", ", columns.Take(retained.Length + first).Select(c => c.Item1 + " = " + Vector(c.Item2)));
             string oracle = "d <- data.frame(" + inputs + ")\n" +
-                "m <- lm(Y ~ " + string.Join(" + ", retained.Select(c => c.title)) + ", data = d, weights = W)\n" +
+                "m <- lm(Y ~ " + string.Join(" + ", retained.Select(c => c.title)) + ", data = d" + (weighted ? ", weights = W" : "") + ")\n" +
                 "s <- summary(m)\na <- anova(m)\ne <- residuals(m)\n" +
                 "expect <- function(actual, expected) {\n" +
                 "  comparison <- all.equal(as.double(actual), as.double(expected), tolerance = 1e-9)\n" +
@@ -68,13 +78,13 @@ internal static partial class Program
                 Expect("e", fitted.Select(row => Number(row, "res"))) +
                 "cat('WEIGHTED_REFIT_OK\\n')\n";
             RScript replay = RScriptWriter.Write(Record(run), null, null);
-            Check(replay.HasRecipe && !replay.DataUnavailable, label + " generates a replay of the recorded weighted model");
+            Check(replay.HasRecipe && !replay.DataUnavailable, label + " generates a replay of the recorded " + (weighted ? "weighted " : "") + "model");
             string output = RunR(replay.Text + "\n" + oracle +
                 "expect(fit$rank, m$rank)\n" +
                 "expect(fitted(fit), fitted(m))\n" +
                 "expect(residuals(fit), residuals(m))\n", Path.Combine(folder, label));
             Check(output.Contains("WEIGHTED_REFIT_OK"),
-                label + " coefficients, SE, ANOVA, Durbin-Watson and residuals agree with independent weighted lm");
+                label + " coefficients, SE, ANOVA, Durbin-Watson and residuals agree with independent " + (weighted ? "weighted " : "") + "lm");
             CheckAnovaRow("Regression", "reg_sum", "reg_df", "reg_mean");
             CheckAnovaRow("Residual", "res_sum", "res_df", "res_mean");
             CheckAnovaRow("Total (corrected)", "tot_sum", "tot_df");

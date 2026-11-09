@@ -376,9 +376,9 @@ internal sealed class ReportView : UserControl
             string resultId = target.ValueKind == JsonValueKind.Object && target.TryGetProperty("resultId", out var r) && r.ValueKind == JsonValueKind.String ? r.GetString() : null;
             int help = target.ValueKind == JsonValueKind.Object && target.TryGetProperty("helpContextId", out var h) && h.ValueKind == JsonValueKind.Number ? h.GetInt32() : 0;
             bool hasRecord = target.ValueKind == JsonValueKind.Object && target.TryGetProperty("hasRecord", out var hr) && hr.ValueKind == JsonValueKind.True;
-            string operation = target.ValueKind == JsonValueKind.Object && target.TryGetProperty("operation", out var op) && op.ValueKind == JsonValueKind.String ? op.GetString() : "";
             bool chart = target.ValueKind == JsonValueKind.Object && target.TryGetProperty("chart", out var ch) && ch.ValueKind == JsonValueKind.True;
             bool vector = chart && target.TryGetProperty("chartKind", out var ck) && ck.ValueKind == JsonValueKind.String && ck.GetString() == "svg";
+            string continueInR = await ContinueInRTextAsync(resultId, hasRecord);
             // the menu lives until the next right-click: an item's click is handled after the menu has closed
             contextMenu?.Dispose();
             var menu = contextMenu = new ContextMenuStrip();
@@ -393,8 +393,8 @@ internal sealed class ReportView : UserControl
             menu.Items.Add(new ToolStripSeparator());
             menu.Items.Add(new ToolStripMenuItem("&Help", null, (_, _) => Try(() => TopicRequested?.Invoke(help))) { Enabled = help > 0, ShortcutKeyDisplayString = "F1" });
             menu.Items.Add(new ToolStripMenuItem("&AI assistance", null, (_, _) => Try(() => AIRequested?.Invoke(resultId))));
-            // the result in R: its script from the record of its run, with the recipe of its operation when there is one
-            menu.Items.Add(new ToolStripMenuItem(StatsDirect.R.RRecipes.Has(operation) ? "Continue in &R" : "Open data and settings in &R", null, (_, _) => Try(() => RRequested?.Invoke(resultId))) { Enabled = hasRecord && resultId != null });
+            // the result in R: its script from the record of its run, with the recipe that record resolves to when there is one
+            menu.Items.Add(new ToolStripMenuItem(continueInR, null, (_, _) => Try(() => RRequested?.Invoke(resultId))) { Enabled = hasRecord && resultId != null });
             if (chart)
             {
                 // the chart under the pointer as a file: its own markup, or a picture drawn from it
@@ -406,6 +406,26 @@ internal sealed class ReportView : UserControl
         }
         catch (Exception ex) { Notice?.Invoke(ex.Message); }
         finally { deferral.Complete(); }
+    }
+
+    /// <summary>
+    /// The R item of a result's context menu: Continue in R when the record of its run resolves to a recipe (a follow-on's, that of
+    /// the analysis it continues), as the script written from that record will use it; otherwise Open data and settings in R.
+    /// </summary>
+    internal async Task<string> ContinueInRTextAsync(string resultId, bool hasRecord)
+    {
+        bool recipe = false;
+        if (hasRecord && resultId != null)
+            try
+            {
+                JsonElement entry = await RecordAsync(resultId);
+                recipe = entry.ValueKind == JsonValueKind.Object && entry.TryGetProperty("record", out JsonElement record)
+                         && record.ValueKind == JsonValueKind.Object && StatsDirect.R.RRecipes.Find(record) != null;
+            }
+            // the menu is shown all the same, also for a record of an opened report that is not as the program writes one (its
+            // parameters not an object, say), which would otherwise end the program from the right-click: continuing in R then says why
+            catch (Exception) { }
+        return recipe ? "Continue in &R" : "Open data and settings in &R";
     }
 
     private void OpenExternal(string url)

@@ -5,7 +5,7 @@ using System.Text.Json;
 using StatsDirect.Configuration;
 using StatsDirect.UI.Properties;
 
-internal static class Program
+internal static partial class Program
 {
     const string Variable = "STATSDIRECT_USER_DATA_ROOT";
     static int checks;
@@ -155,6 +155,7 @@ internal static class Program
                 Check(!Directory.Exists(failedRoot) && !Directory.Exists(initializerRoot) && Directory.Exists(root),
                     flag + " removes only its verified failed fixtures after preservation is proved");
             }
+            CheckSavedPreferences(root, normal);
             try
             {
                 Environment.SetEnvironmentVariable(Variable, null);

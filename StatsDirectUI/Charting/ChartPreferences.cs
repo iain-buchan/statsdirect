@@ -136,45 +136,15 @@ namespace StatsDirect.Charting
             for (int i = sharedMarkerTypes.GetLowerBound(0); i <= sharedMarkerTypes.GetUpperBound(0); i++)
                 sharedMarkerTypes[i] = new MarkerType();
 
-            string savedSettings = Settings.Default.Markers;
-
-            if (savedSettings == null || savedSettings.Length < 10)
+            // Saved markers that cannot be read, as from a damaged preferences file, give way to the defaults
+            if (!TryParseMarkerTypes(Settings.Default.Markers, out MarkerType[] savedMarkerTypes))
             {
                 InitFirstMarkerTypes();
             }
             else
             {
-                string[] markerStrings = savedSettings.Split('|');
                 for (int i = 0; i <= 9; i++)
-                {
-                    string[] parameterStrings = markerStrings[i].Split(';');
-                    //  Shape
-                    MarkerShape shape = (MarkerShape)int.Parse(parameterStrings[0]);
-                    //  Colour
-                    string[] colourValues = parameterStrings[1].Split(',');
-                    ColorDescriptor col = ColorDescriptor.FromArgb(int.Parse(colourValues[0]), int.Parse(colourValues[1]), int.Parse(colourValues[2]));
-                    //  Width
-                    float width = float.Parse(parameterStrings[2]);
-                    //  Style
-                    DashStyleDescriptor style = (DashStyleDescriptor)int.Parse(parameterStrings[3]);
-                    //  Filled (1 = yes, missing or 0 = no)
-                    bool isFilled = false;
-                    if (parameterStrings.Length > 4)
-                        isFilled = "1".Equals(parameterStrings[4]);
-                    //  Marker size
-                    int markerSize = 0;
-                    if (parameterStrings.Length > 5)
-                        int.TryParse(parameterStrings[5], out markerSize);
-                    if (markerSize <= 0)
-                        markerSize = 6;
-                    sharedMarkerTypes[i].MarkerColor = col;
-                    sharedMarkerTypes[i].LineColor = col;
-                    sharedMarkerTypes[i].IsMarkerFilled = isFilled;
-                    sharedMarkerTypes[i].MarkerSize = markerSize;
-                    sharedMarkerTypes[i].MarkerShape = shape;
-                    sharedMarkerTypes[i].LineDashStyle = style;
-                    sharedMarkerTypes[i].Width = width;
-                }
+                    sharedMarkerTypes[i] = savedMarkerTypes[i];
 
                 // fixed style
                 sharedMarkerTypes[10].MarkerShape = MarkerShape.Circle;
@@ -241,6 +211,62 @@ namespace StatsDirect.Charting
             Settings.Default.Markers = savedSettings.ToString();
             SaveSettings(Settings.Default);
         }
+
+        /// <summary>
+        /// Reads the ten series markers SaveMarkerTypes writes: shape;red,green,blue;width;line style;filled;size, separated by |, in the
+        /// invariant culture it writes them in. False, with no markers, unless each is one the graphics options can show: one of their
+        /// eight shapes, a colour, a width from 1 to 4 and one of their five line styles. A missing or unreadable filled flag or size
+        /// reads as hollow and 6, as markers saved before those were added do.
+        /// </summary>
+        internal static bool TryParseMarkerTypes(string savedSettings, out MarkerType[] markerTypes)
+        {
+            markerTypes = null;
+            string[] markerStrings = savedSettings?.Split('|');
+            if (null == markerStrings || markerStrings.Length < 10)
+                return false;
+            MarkerType[] parsed = new MarkerType[10];
+            for (int i = 0; i <= 9; i++)
+            {
+                string[] parameterStrings = markerStrings[i].Split(';');
+                if (parameterStrings.Length < 4)
+                    return false;
+                string[] colourValues = parameterStrings[1].Split(',');
+                if (!int.TryParse(parameterStrings[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out int shape)
+                    || shape < (int)MarkerShape.Circle || shape > (int)MarkerShape.SquareCross
+                    || 3 != colourValues.Length
+                    || !TryParseColourComponent(colourValues[0], out int red) || !TryParseColourComponent(colourValues[1], out int green)
+                    || !TryParseColourComponent(colourValues[2], out int blue)
+                    || !float.TryParse(parameterStrings[2], NumberStyles.Float, CultureInfo.InvariantCulture, out float width)
+                    || !(width >= 1f && width < 5f)
+                    || !int.TryParse(parameterStrings[3], NumberStyles.Integer, CultureInfo.InvariantCulture, out int style)
+                    || style < (int)DashStyleDescriptor.Solid || style > (int)DashStyleDescriptor.DashDotDot)
+                    return false;
+                //  Filled (1 = yes, missing or 0 = no)
+                bool isFilled = parameterStrings.Length > 4 && "1".Equals(parameterStrings[4]);
+                //  Marker size
+                int markerSize = 0;
+                if (parameterStrings.Length > 5)
+                    int.TryParse(parameterStrings[5], NumberStyles.Integer, CultureInfo.InvariantCulture, out markerSize);
+                if (markerSize <= 0)
+                    markerSize = 6;
+                ColorDescriptor col = ColorDescriptor.FromArgb(red, green, blue);
+                parsed[i] = new MarkerType
+                {
+                    MarkerColor = col,
+                    LineColor = col,
+                    IsMarkerFilled = isFilled,
+                    MarkerSize = markerSize,
+                    MarkerShape = (MarkerShape)shape,
+                    LineDashStyle = (DashStyleDescriptor)style,
+                    Width = width
+                };
+            }
+            markerTypes = parsed;
+            return true;
+        }
+
+        private static bool TryParseColourComponent(string text, out int component)
+            => int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out component) && component >= 0 && component <= 255;
 
         private static void InitFirstMarkerTypes()
         {

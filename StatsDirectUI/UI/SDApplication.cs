@@ -21,7 +21,7 @@ namespace StatsDirect.UI
     /// <remarks>This class is a Singleton (ref Gamma et al "Design Patterns")</remarks>
     public sealed class SdApplication : ITemplateHost
     {
-        private const int MAX_RECENT_FILES = 7;
+        private const int MAX_RECENT_FILES = Properties.Settings.MAX_RECENT_FILES;
 
         private int sActiveHelpTopic;
         private string activeHelpUrl;

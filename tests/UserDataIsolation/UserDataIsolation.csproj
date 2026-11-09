@@ -8,5 +8,7 @@
   <ItemGroup>
     <Compile Include="../../StatsDirectUI/Configuration/SDConfiguration.cs" Link="Production/SDConfiguration.cs" />
     <Compile Include="../../StatsDirectUI/UI/Settings.cs" Link="Production/Settings.cs" />
+    <!-- the readers of the saved chart preferences, with the types they read into -->
+    <Compile Include="../../StatsDirectUI/Charting/ChartPreferences.cs;../../StatsDirectUI/Charting/FontDescriptor.cs;../../StatsDirectUI/Charting/MarkerType.cs;../../StatsDirectUI/Charting/ColorDescriptor.cs;../../StatsDirectUI/Charting/DashStyleDescriptor.cs;../../StatsDirectUI/Charting/Enums/MarkerShape.cs;../../StatsDirectUI/Charting/Enums/FillStyle.cs" Link="Production/%(Filename)%(Extension)" />
   </ItemGroup>
 </Project>

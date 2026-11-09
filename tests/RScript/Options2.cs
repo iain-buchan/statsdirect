@@ -128,7 +128,7 @@ internal static partial class Program
         (run, output) = Run("MetaSummary", new() { ["gamma"] = 0.95, ["type"] = "relativeRisk", ["use_ci"] = "false", ["studies"] = null, ["y"] = Sheet(("rr", new double[] { 1.2, 0.8, 1.5 })), ["se_y"] = Sheet(("se", new double[] { 0.1, 0.2, 0.15 })) });
         script = Script(run);
         r = Rr(script, Path.Combine(folder, "meta-summary"));
-        double rMeta = Numbers(r, "^Pooled odds ratio = (-?[0-9.]+)")[0], engineMeta = Found(output.ParameterBag, "rmh")[0];
+        double rMeta = Numbers(r, "^Pooled relative risk = (-?[0-9.]+)")[0], engineMeta = Found(output.ParameterBag, "rmh")[0];   // the report names the statistic it pools
         Console.WriteLine($"      relative risks with standard errors: engine pooled {engineMeta:G7}, R {rMeta:G7}");
         Check(script.Contains("se_in <- c(0.1, 0.2, 0.15)") && script.Contains("lower <- NULL") && Near(rMeta, engineMeta, 1e-4), "R's pooled relative risk from the standard errors given gives the engine's");
 

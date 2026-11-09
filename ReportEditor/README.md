@@ -38,6 +38,8 @@ The SVG import/paste correction from Mac commit **d1494f2ac214f04bd8252f17c6c232
 
 The readback canvases of Mac commit **8ed33c3** (18 Oct 2026, "Use readback canvases for reliable report image exports") are included: the three `getContext('2d')` calls that are read back for a PNG take `{willReadFrequently:true}` in `editor.mjs` and `export.mjs`.
 
+Since 5.3.9 the importer's attribute hook in `import.mjs` also removes an external `url(...)` from any attribute other than `style` (the SVG `fill`, `stroke`, `filter`, `clip-path`, `mask` and marker attributes), as the paste sanitizer in `fragment.mjs` already did; references to a chart's own definitions are kept. The Mac importer needs the same line. The paste sanitizer in `fragment.mjs` now also forbids the importer's media tags and attributes (`video`, `audio`, `source`, `track`; `poster`, `background`, `cite`, `download`). Both sanitizers forbid `animateColor`, remove a `style` attribute from an element that has no style object, and refuse `image-set(` in a style value (StatsDirect Mac review F8). The Mac copies need the same changes.
+
 - `upstream/Report` contains the baseline plus the recorded shared changes, locked dependency manifest and JavaScript tests; `upstream/Tests/Fixtures/Reports` contains their fixtures.
 - `upstream/LICENSE` retains the Mac repository licence.
 - `StatsDirectUI/Assets/ReportEditor/vendor` contains offline browser bundles and their third-party notices. `workspace.css` is based on the same Mac commit, with two chart-default selectors excluding the Windows importer's temporary container.

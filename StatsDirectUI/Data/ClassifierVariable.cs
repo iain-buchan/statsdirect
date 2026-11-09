@@ -2,6 +2,7 @@ using System.Xml.Serialization;
 using System.Text;
 using System;
 using System.Collections.Generic;
+using StatsDirect.Numerics;
 
 namespace StatsDirect.Data
 {
@@ -77,6 +78,16 @@ namespace StatsDirect.Data
         public override void Accept(IVariableVisitor visitor)
         {
             visitor.Visit(this);
+        }
+
+        /// <summary>
+        /// Lengthens the variable with missing values, the code a blank or "*" cell is read as, as the unequal-length warning of a
+        /// selection says the jagged ends are padded. The inherited padding filled them with 0, the id of the first category, so that
+        /// the padded rows of a shorter column of ratings counted as ratings of that category.
+        /// </summary>
+        public override void EnsureLengthAndPadWithMissing(int minimumLength)
+        {
+            EnsureLength(minimumLength, Constant.MISSING);
         }
     }
 }

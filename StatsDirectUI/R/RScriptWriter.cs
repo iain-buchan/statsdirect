@@ -128,6 +128,7 @@ namespace StatsDirect.R
             public string Table;                        // a variable that takes a table of counts as a matrix
             public string Matrix;                       // a variable that takes a frame of counts as a matrix
             public string Repeat;                       // run a one-column recipe for every column of this input
+            public HashSet<string> Titles = new();      // list variables named by the worksheet titles the run recorded, repeated ones included
             public List<(string variable, string parameter)> Settings = new();
             public List<(string variable, string input)> Nested = new();   // variables that take a two-level input (a frame2d, the grouped covariance's data) as a list of lists
             public string Body = "";
@@ -186,9 +187,11 @@ namespace StatsDirect.R
                     {
                         IList<ColumnValues> snapshot = Kept(held);
                         // The record writes pointers and values in the same order. Repeated
-                        // analyses display the original titles, even when held keys differ.
+                        // analyses display the original titles, even when held keys differ, as
+                        // do the lists a recipe names by their worksheet titles ("# titles:").
                         JsonElement titles = default;
-                        if (binding?.Repeat == name && pointer.Columns.Count == snapshot.Count &&
+                        bool titled = binding != null && (binding.Repeat == name || binding.Data.Any(item => item.IsList && item.Input == name && binding.Titles.Contains(item.Variable)));
+                        if (titled && pointer.Columns.Count == snapshot.Count &&
                             input.TryGetProperty("columns", out JsonElement selected) && selected.ValueKind == JsonValueKind.Array)
                             titles = selected;
                         int i = 0;
@@ -452,7 +455,8 @@ namespace StatsDirect.R
         }
 
         /// <summary>The recipe's header and body.  The header lines at the top of the file: "# data: a, b", "# data: a, b, rest...",
-        /// "# table: counts", "# matrix: counts", "# settings: confidence = gamma, mu = population-mean".</summary>
+        /// "# table: counts", "# matrix: counts", "# settings: confidence = gamma, mu = population-mean", "# titles: q" (a list
+        /// named by the worksheet titles that the run recorded, repeated titles included).</summary>
         private static Binding Parse(string recipe)
         {
             Binding b = new();
@@ -462,7 +466,7 @@ namespace StatsDirect.R
             int last = -1;
             for (int i = 0; i < lines.Length && (lines[i].Trim().Length == 0 || lines[i].StartsWith("#", StringComparison.Ordinal)); i++)
             {
-                Match m = Regex.Match(lines[i], "^#\\s*(data|table|matrix|nested|settings|recipe|repeat):\\s*(.*)$", RegexOptions.IgnoreCase);
+                Match m = Regex.Match(lines[i], "^#\\s*(data|table|matrix|nested|settings|recipe|repeat|titles):\\s*(.*)$", RegexOptions.IgnoreCase);
                 if (!m.Success)
                 {
                     if (Regex.IsMatch(lines[i], "^# (StatsDirect recipe|From the help|hand-edited)", RegexOptions.IgnoreCase))
@@ -487,6 +491,7 @@ namespace StatsDirect.R
                     case "table": b.Table = rest; break;
                     case "matrix": b.Matrix = rest; break;
                     case "repeat": b.Repeat = rest; break;
+                    case "titles": b.Titles.UnionWith(rest.Split(',').Select(x => x.Trim()).Where(x => x.Length > 0)); break;
                     case "nested":
                         foreach (string item in rest.Split(',').Select(x => x.Trim()).Where(x => x.Length > 0))
                         {

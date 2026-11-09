@@ -348,6 +348,14 @@ internal static partial class Program
                 worstRatio = Math.Max(worstRatio, Math.Abs(hazards[j]["eul"].AsDouble - Math.Exp(reference.beta[j] + 1.959963984540054 * reference.se[j])) / scale);
             }
             Check("hazard ratios and their 95% confidence limits", worstRatio, 1e-6);
+            // a level of 0% or 100%, which the form allows, is taken as 95%, as the other reports take it (100% gave a point interval)
+            foreach (double level in new[] { 0.0, 1.0 })
+            {
+                StepOutput atLevel = Coxreg.RptCoxHazardRatios(PassedOn(bag, fit, "gamma", level));
+                List<ParameterBag> taken = Rows(atLevel, "*hazard");
+                bool same = taken.Count == p && Enumerable.Range(0, p).All(j => new[] { "ec", "ell", "eul" }.All(key => taken[j][key].AsDouble == hazards[j][key].AsDouble));
+                Say(same && atLevel.ParameterBag["pc"].AsDouble == 95 && atLevel.ParameterBag["pc2"].AsDouble == 95, $"hazard ratios at a confidence level of {level * 100}%: the limits at 95%, so labelled");
+            }
             StepOutput analysis = Coxreg.RptCoxModelAnalysis(passedOn);
             Check("model analysis: the two log likelihoods", Math.Max(Math.Abs(analysis.ParameterBag["ll"].AsDouble - reference.ll), Math.Abs(analysis.ParameterBag["ll0"].AsDouble - reference.ll0)), 1e-7);
             Say(analysis.ParameterBag["df"].AsDouble == p, "model analysis: degrees of freedom");

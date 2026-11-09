@@ -46,5 +46,7 @@ x <- matrix(rep(c(12, 40, 7, 38), each = 5), 5); put("identical", x)
 x <- rbind(c(10, 50, 5, 50), c(10, 50, 5, 50), c(3, 40, 9, 41), c(22, 80, 20, 78)); put("tied", x)
 # large studies
 put("large", draw(9, 2000, 0.11, 0.1, 0.1))
+# two studies that differ: Q is above 2, so the test-based limits of I-squared have a standard error on one degree of freedom
+put("two.studies", rbind(c(30, 120, 15, 110), c(12, 90, 20, 95)))
 close(out)
 cat("cases written to", args[1], "\n")

@@ -2,6 +2,43 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
+##[v5.3.9] 2026-11-09
+
+### Fixed
+- Multiple linear regression refuses fewer usable rows than parameters (it still fits, as before, a model whose aliased predictors once dropped leave residual degrees of freedom), refits without a lone constant or all-zero predictor, runs its analysis of variance and other follow-ons when every predictor is dropped, and reports an exact fit (as many usable rows as parameters) with its true sums of squares and its tests unavailable, natively and in R replay.
+- Logistic and Poisson regression treat a constant predictor beside the intercept as aliased, giving the intercept-only fit with its rank and residual degrees of freedom instead of failing or reporting invalid degrees of freedom.
+- Logistic regression counts only covariate patterns with positive prior weight in the Schwarz criterion and puts Hosmer–Lemeshow cut points in the same place in any row order when decimal weights land on a cut, natively and in R replay; its missing-data warning counts every row that lacks a predictor value.
+- The Poisson model analysis shows an unavailable scaled Wald P wherever the scaled z is unavailable, and no-intercept logistic and Poisson replay give the report's likelihood-ratio degrees of freedom.
+- Cox survival and hazard plots are split by the chosen predictor even when it is titled None or Strata or shares its title with another predictor, natively and in R replay; the replay also judges a predictor binary by the records the fit uses, as the report does, when a record left out holds a third value.
+- LOESS fits both of two predictors with the same title, natively and in R replay.
+- Continue in R and notebook export can read back a saved category selection of more than 5,000 values, such as the columns of a frequency, kappa or crosstabs result, when an earlier column's range is longer than the last column's, instead of reporting that the data could not be read.
+- Results of more than 5,000 values saved after padding unequal columns with missing values, as 5.3.5 and 5.3.6 saved them, replay from their workbook: Continue in R and notebook export recognise the padding by the recorded hash instead of reporting a changed column, and an edited column is still reported.
+- A report's context menu offers Continue in R only for a result whose script will run an R recipe: a reopened follow-on saved without the analysis it continued, whose script has only its data and settings, offers Open data and settings in R.
+- Time series summary and contraction of frequencies refuse a blank or missing subject identifier or category with the missing-data message when it is selected, instead of failing with an object reference or index error.
+- Opening an HTML report or a notebook removes external url(...) references from chart fill, stroke, filter, clip-path, mask and marker attributes, as pasting already did; a chart's references to its own definitions are kept.
+- Pasting into a report removes video and audio elements and poster and background addresses, as opening a report already did, and both remove animateColor animations; on either path a style attribute keeps only its permitted declarations, never an image-set() address.
+- Kappa of raters whose columns differ in length, when the jagged ends are padded with missing data as the selection's warning offers, leaves the padded rows out as missing ratings instead of counting them as ratings of the shorter column's first category, both natively and in Continue in R.
+- Preferences are kept between sessions: at start-up StatsDirect reads back the preferences it saves in Documents\StatsDirect\statsdirect.json, which it has saved since 2023 but never read, so the main window's position, size and maximised state, decimal places, the default confidence interval, data selection, meta-analysis, worksheet font and chart options, and the recent files that still exist are restored. A missing, damaged or older file, a value StatsDirect cannot use, or a window position no longer on any screen leaves that preference at its default, and nothing is written while the preferences load.
+- Continue in R reproduces the analysis of variance of a weighted multiple linear regression that drops collinear predictors, and gives predictors with the same or a blank title their own columns.
+- A new analysis result takes the focus in the report, so the ? button and F1 open the help for that analysis instead of the general report help.
+- Meta-analysis forest plots number studies without labels by their place among the studies analysed, as the report's tables and Continue in R do, when an incomplete study is left out.
+- With the exact methods off, the I-squared interval of two studies is given when Cochran's Q exceeds 2, by Higgins and Thompson's test-based method, as meta's isquared gives it, in the report and in Continue in R.
+- Meta-analysis replay gives the bias indicators only with more than three studies, as the report does, and Egger's and Harbord's intervals at the report's level of 1 - 2(1 - confidence), 90% for a 95% analysis, instead of always 90%.
+- Summary meta-analysis replay of a risk difference or another difference names the statistic and draws its forest plots on a linear scale about 0, instead of stopping at a logarithmic axis.
+- Meta-analysis replay of tables with empty cells, including a study with an event in every subject of one group and in none of the other, completes with the report's figures: it leaves out the studies the report leaves out and applies the recorded continuity correction (treatment arm, 0.5 or 0.01, delayed or not) in the relative risk, risk difference, Peto and Mantel-Haenszel analyses and the typed-in Mantel-Haenszel test.
+- Proportion meta-analysis replay gives the report's pooled proportion of 0 or 1, and no Harbord figure, when no study has a responder, every subject responds or the double arcsine inverse reaches 0 or 1, instead of stopping at Harbord's test or giving figures that the report does not.
+- Summary meta-analysis replay puts confidence limits selected the wrong way round the right way round, as the report does, instead of giving Egger's bias the opposite sign.
+- Odds ratio meta-analysis and Mantel-Haenszel test replay counts a total exactly as probable as the observed one in the exact two sided Fisher P, as the report does.
+- Chi-square goodness of fit replay accepts expected counts, percentages or proportions that do not add up to 1, scaling them to the observed total as the report does, and leaves out a category whose observed or expected value is missing, as the report does, instead of stopping.
+- Kendall rank correlation replay handles ties as the report does (tau b, the tie-adjusted variance and the report's count of tied pairs), gives the report's exact P from 50 pairs, and keeps the limits of tau within -1 and 1.
+- Mann-Whitney replay uses the report's normal approximations for large samples, its exact count without ties, and only the rank sums that can occur with ties, so it no longer runs out of time or memory where the report completes; like the report, it gives no interval for the difference with fewer than 4 values in a sample or when the samples are too small for the confidence asked for.
+- Multiple comparisons after a two-way or replicated two-way analysis of variance replay that analysis rather than a one-way analysis, and the analysis of variance after a polynomial regression replays the polynomial regression.
+- Agreement replay shows Kendall's tau and its P as unavailable when every subject has the same standard deviation or mean, instead of stopping, and gives the report's P above 1,000 subjects without ties.
+- A confidence level typed as 0% or 100% is taken as 95% by the R replay of every report that takes it so, including Mann-Whitney, Wilcoxon, Spearman, Kendall, the z test of two samples, reference ranges and quantiles; the Cox hazard ratios now take it so in the report too, where 100% gave a point interval.
+- Paired t replay completes for differences that are constant but for rounding, such as decimal data with a constant shift.
+- Principal components replay names items with repeated worksheet titles as the report does.
+- The normality report's K2 with Royston's adjustment is accurate when the raw K2 is 1,400 or more, where it was wrong in the seventh figure.
+
 ##[v5.3.8] 2026-11-09
 
 ### Fixed

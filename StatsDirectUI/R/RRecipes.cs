@@ -68,11 +68,22 @@ namespace StatsDirect.R
             {
                 // Legacy records already retain the explicit linearized model choice, while simple regression has none.
                 if (operation == "Ranv") parent = parameters.TryGetProperty("model", out _) ? "LinearizedEstimates" : "SimpleLinearRegression";
+                // The regression analysis of variance names the frames of the fit it continues: a polynomial regression's y and x.
+                else if (operation == "MultipleLinearRegressionAnova")
+                    parent = HasInput(record, "y") && HasInput(record, "x") ? "PolynomialRegression" : HasInput(record, "outcome") ? "MultipleLinearRegression" : null;
                 else if (parameters.TryGetProperty("doseResponseModel", out JsonElement model) && model.ValueKind == JsonValueKind.String)
                     parent = model.GetString() == "probit" ? "Probit" : model.GetString() == "logit" ? "Logit" : null;
             }
             return parent != null && recipe.ParentFiles.TryGetValue(parent, out string file)
                 ? new RRecipe { File = file, Detail = recipe.Detail, After = recipe.After } : null;
+        }
+
+        private static bool HasInput(JsonElement record, string name)
+        {
+            if (!record.TryGetProperty("inputs", out JsonElement inputs) || inputs.ValueKind != JsonValueKind.Array) return false;
+            foreach (JsonElement input in inputs.EnumerateArray())
+                if (RScriptWriter.Text(input, "name") == name) return true;
+            return false;
         }
 
         /// <summary>A recipe file: a header naming the variables it takes, then the analysis as the help shows it in R.</summary>

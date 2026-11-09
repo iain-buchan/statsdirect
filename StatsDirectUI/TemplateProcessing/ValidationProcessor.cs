@@ -124,10 +124,11 @@ namespace StatsDirect.TemplateProcessing
 
         private static ValidationResult ValidateNoMissingData(string failedValidationMessage, DataFrame dataFrame)
         {
-            // Ensure there's no missing data in any of the numeric variables in the frame
+            // Ensure there's no missing data in the frame: no missing number in its numeric variables, and no blank identifier or
+            // category in its classifiers, which hold one as the missing code
             foreach (IVariable variable in dataFrame.Variables)
-                if (variable is DoubleVariable doubleVariable)
-                    foreach (double value in doubleVariable.Data)
+                if (variable is GenericVariable<double> numbers)   // a DoubleVariable or a ClassifierVariable
+                    foreach (double value in numbers.Data)
                         if (value == Constant.MISSING)
                             return ValidationResult.Invalid(failedValidationMessage ?? "Data with missing values cannot be used here");
             return ValidationResult.Valid;
