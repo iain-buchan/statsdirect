@@ -18,7 +18,7 @@ internal static partial class Program
     // Each case acquires its columns from worksheet cells through GridSelectionProcessor.FillFrameParameter (and the
     // CellArrayProcessor under it), runs the operation through the template processor, writes the script from the record
     // the report step left, runs it in R within a time limit, and compares R's figures with the native output bag.
-    private static readonly string[] Recipes539Parts = { "gof", "kendall", "mann-whitney", "routing" };
+    private static readonly string[] Recipes539Parts = { "gof", "kendall", "mann-whitney", "routing", "agreement" };
     private static void CheckRecipes539(string folder, string only = null)
     {
         if (only != null && !Recipes539Parts.Contains(only)) throw new ArgumentException("Unknown 5.3.9 recipe check: " + only);
@@ -28,6 +28,7 @@ internal static partial class Program
         if (only is null or "kendall") CheckKendall539(Path.Combine(folder, "kendall"));
         if (only is null or "mann-whitney") CheckMannWhitney539(Path.Combine(folder, "mann-whitney"));
         if (only is null or "routing") CheckFollowOnRouting539(Path.Combine(folder, "routing"));
+        if (only is null or "agreement") CheckAgreement539(Path.Combine(folder, "agreement"));
         if (Failed539.Count > 0) throw new Exception("FAIL " + Failed539.Count + " of the 5.3.9 recipe cases: " + string.Join(" | ", Failed539));
     }
 
@@ -303,6 +304,38 @@ internal static partial class Program
         Replay539(mlrRun, Equal539("ssreg, k, ssres, df, sqrt(ssres / df), summary(fit)$fstatistic[1], 100 * summary(fit)$r.squared, 100 * summary(fit)$adj.r.squared",
             new[] { "reg_sum", "reg_df", "res_sum", "res_df", "mse", "f", "r2", "ra2" }.Select(k => Num539(mlrAnova.ParameterBag, k))), Path.Combine(folder, "MultipleLinearRegression-anova"));
         });
+    }
+
+    // 5. Agreement: Kendall's tau of the subjects' SDs against their means is undefined when every subject has the same SD
+    //    (or mean), which stopped the replay; above 1,000 untied subjects the report's P is its Edgeworth series (kendp).
+    private static void CheckAgreement539(string folder)
+    {
+        void Case(string label, double[][] raters, double confidence = .95, int timeout = 120) => Case539("agreement " + label, () =>
+        {
+            int n = raters[0].Length;
+            var cells = new RecordCells(raters.Select((r, i) => Cells539("Rater " + (i + 1), r)).ToArray());
+            var (run, output) = Run("Agreement", new() { ["data"] = Select539(cells, n + 1, Enumerable.Range(0, raters.Length).ToArray()), ["ci"] = confidence });
+            ParameterBag b = output.ParameterBag;
+            bool undefined = Num539(b, "tau") == Constant.MISSING;
+            string assertion = Equal539("sqrt(2) * qnorm((1 + confidence) / 2) * sw, sw", new[] { Num539(b, "rep"), Num539(b, "wssd") }, 1e-8) +
+                (undefined ? "stopifnot(is.na(kt$estimate), is.na(kt$p.value))\n" : Equal539("kt$estimate", new[] { Num539(b, "tau") }) + Equal539("kt$p.value", new[] { Num539(b, "p2") }, 1e-12));
+            string text = Replay539(run, assertion, Path.Combine(folder, label), setup: "pdf(NULL)\n", timeout: timeout);
+            if (undefined) Check(Regex.IsMatch(text, @"Kendall's tau b = \*\s+two sided P = \*"), label + ": tau and its P are shown as undefined, as the report shows them");
+            Match repeatability = Regex.Match(text, @"Repeatability \(for alpha = [0-9.]+\) = " + Figure539);
+            Check(repeatability.Success && Math.Abs(double.Parse(repeatability.Groups[1].Value, inv) - Num539(b, "rep")) <= 5.1e-7, label + ": the repeatability line is printed");
+        });
+        double[] first = { 12, 15, 9, 20, 17, 11, 14, 18, 10, 16 };
+        Case("perfect-agreement", new[] { first, first.ToArray() });
+        Case("constant-offset", new[] { first, first.Select(v => v + 2).ToArray() });
+        Case("three-offsets", new[] { first, first.Select(v => v + 1).ToArray(), first.Select(v => v + 2).ToArray() }, .9);
+        foreach ((int n, double share) in new[] { (1001, .4925), (1001, .495), (1100, .497), (1500, .499) })
+        {
+            int[] d = Permutation539(n, (long)((long)n * (n - 1) / 2 * share));
+            double[] mean = Enumerable.Range(0, n).Select(i => 1000d + 10 * i).ToArray();
+            Case("untied-" + n + "-" + share, new[] { mean.Select((m, i) => m + d[i]).ToArray(), mean.Select((m, i) => m - d[i]).ToArray() }, timeout: 240);
+        }
+        double[] tiedMean = Enumerable.Range(0, 1200).Select(i => 500d + 3 * i).ToArray();
+        Case("tied-1200", new[] { tiedMean.Select((m, i) => m + 1 + i % 37).ToArray(), tiedMean.Select((m, i) => m - 1 - i % 37).ToArray() }, timeout: 240);
     }
 
 }
