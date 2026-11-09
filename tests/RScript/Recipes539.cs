@@ -18,7 +18,7 @@ internal static partial class Program
     // Each case acquires its columns from worksheet cells through GridSelectionProcessor.FillFrameParameter (and the
     // CellArrayProcessor under it), runs the operation through the template processor, writes the script from the record
     // the report step left, runs it in R within a time limit, and compares R's figures with the native output bag.
-    private static readonly string[] Recipes539Parts = { "gof", "kendall", "mann-whitney", "routing", "agreement", "fallback", "paired" };
+    private static readonly string[] Recipes539Parts = { "gof", "kendall", "mann-whitney", "routing", "agreement", "fallback", "paired", "pca" };
     private static void CheckRecipes539(string folder, string only = null)
     {
         if (only != null && !Recipes539Parts.Contains(only)) throw new ArgumentException("Unknown 5.3.9 recipe check: " + only);
@@ -31,6 +31,7 @@ internal static partial class Program
         if (only is null or "agreement") CheckAgreement539(Path.Combine(folder, "agreement"));
         if (only is null or "fallback") CheckConfidenceFallback539(Path.Combine(folder, "fallback"));
         if (only is null or "paired") CheckPairedNearConstant539(Path.Combine(folder, "paired"));
+        if (only is null or "pca") CheckPcaTitles539(Path.Combine(folder, "pca"));
         if (Failed539.Count > 0) throw new Exception("FAIL " + Failed539.Count + " of the 5.3.9 recipe cases: " + string.Join(" | ", Failed539));
     }
 
@@ -511,6 +512,33 @@ internal static partial class Program
                 Equal539("r$statistic", new[] { Num539(b, "t") }, 1e-6) + Equal539("r$p.value", new[] { Num539(b, "tail_2") }, 1e-5) +
                 Equal539("r$conf.int", new[] { Num539(b, "from"), Num539(b, "to") }, 1e-12);
             Replay539(run, assertion, Path.Combine(folder, "shift-" + shift + "-" + paired + "-" + agreement), setup: "pdf(NULL)\n");
+        });
+    }
+
+    // 8. PCA: worksheet titles that repeat are kept apart in the record by held keys ("dup", "dup_2"); the replay printed the
+    //    key where the report prints the title in the line of reversed items.
+    private static void CheckPcaTitles539(string folder)
+    {
+        double[][] items = {
+            new[] { 1.2, .4, -.3, 2.1, .8, -1, .2, 1.5, -.6, .9, .1, -.2 }, new[] { -1, -.7, .1, -1.8, -.6, 1.3, -.5, -1.2, .4, -1.1, .2, 0 },
+            new[] { 1.5, .2, -.6, 2.4, .6, -.8, 0, 1.9, -.9, .6, .3, -.5 }, new[] { .9, .5, .1, 1.7, 1, -1.1, .4, 1.4, -.3, 1.2, 0, .1 },
+            new[] { -.8, -.6, .2, -1.6, -1.1, .9, -.2, -1.3, .5, -.7, -.1, .3 } };
+        foreach (string[] titles in new[] { new[] { "A", "dup", "C", "D", "dup" }, new[] { "Same", "Same", "Same", "Other", "Same" } })
+        foreach (string operation in new[] { "PCRCorrelation", "PCRCovariance", "PCRCovarianceNoFollowOns" }) Case539("pca " + operation + " " + string.Join("-", titles), () =>
+        {
+            var cells = new RecordCells(items.Select((v, i) => Cells539(titles[i], v)).ToArray());
+            var answers = new Dictionary<string, object> { ["data"] = Select539(cells, 13, 0, 1, 2, 3, 4), ["correctForReversal"] = true };
+            if (operation != "PCRCorrelation") answers["ci"] = .95;
+            var (run, output) = Run(operation, answers);
+            string reversed = Convert.ToString(DeferredBags538(output.ParameterBag).First(b => b.ContainsKey("warn"))["warn"].AsObject, inv);
+            Check(reversed.StartsWith("Sign was reversed for:", StringComparison.Ordinal), operation + ": the native report reverses items");
+            string label = operation + "-" + string.Join("-", titles.Distinct());
+            string text = Replay539(run, "stopifnot(identical(names(q), " + RScriptWriter.Vector(titles) + "))\n", Path.Combine(folder, label));
+            Check(text.Contains(reversed), label + ": the replay names the reversed items by their worksheet titles, as the report does");
+            if (operation != "PCRCovariance") return;
+            var (follow, _) = Run("Cronbach", new() { ["ci"] = .9 }, output.ParameterBag);
+            text = Replay539(follow, "stopifnot(identical(names(q), " + RScriptWriter.Vector(titles) + "))\n", Path.Combine(folder, label + "-cronbach"));
+            Check(text.Contains(reversed), label + ": the reliability follow-on keeps the worksheet titles");
         });
     }
 
