@@ -17,6 +17,7 @@ internal static partial class Program
         InfiniteCoefficient();
         JointSeparation();
         DefaultPrecision();
+        SplitChoices();
     }
 
     private static ParameterBag Regression(double[] time, double[] code, double[][] columns, double accuracy)

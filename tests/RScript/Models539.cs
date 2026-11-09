@@ -23,6 +23,7 @@ internal static partial class Program
         CheckModels539Schwarz(folder);
         CheckModels539HosmerLemeshowCuts(folder);
         CheckModels539ConstantPredictor(folder);
+        CheckModels539CoxSplit(folder);
         CheckModels539NoInterceptLrDf(folder);
         CheckModels539MissingPredictorStack(folder);
     }
@@ -351,6 +352,47 @@ internal static partial class Program
                 Models539Equal("deviance(g), g$df.residual, coef(g)", new[] { Models539Number(model, "dev"), Models539Number(model, "idf"), Models539Number(parameters[0], "coef") }, 1e-8) +
                 "stopifnot(fit$rank == 1L, is.na(coef(fit)[2]))\n";
             Models539Verify(folder, label, run, oracle);
+        }
+    }
+
+    private static Dictionary<string, object> Models539CoxAnswers(Func<DataAcquisitionMode, int[], DataFrame> sheet, int[] predictors) => new()
+    {
+        ["times"] = Models539Select(sheet, 0), ["events"] = Models539Select(sheet, 1), ["predictors"] = Models539Select(sheet, predictors), ["strata"] = null,
+        ["accuracy"] = 1e-11, ["centre-continuous-covariates"] = true, ["useTimesAdjustment"] = false
+    };
+
+    // Item 8: the survival plots are split by the choice in its place in the list, so that a predictor titled "None" or "Strata" is split
+    // by, and of two predictors with one title the one chosen; natively and in the replay.
+    private static void CheckModels539CoxSplit(string folder)
+    {
+        double[] times = { 6, 7, 10, 15, 19, 25, 2, 4, 8, 12, 14, 20, 23, 30 }, events = { 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0 };
+        double[] treated = { 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1 }, female = { 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 0 };
+        double[] age = { 51, 63, 47, 58, 66, 49, 71, 55, 60, 44, 68, 52, 57, 62 };
+        var cases = new (string label, (string, double[])[] predictors, int choice, int expectedGroup)[]
+        {
+            ("none-title-split", new[] { ("None", treated), ("Age", age) }, 0, 1),
+            ("none-title-no-split", new[] { ("None", treated), ("Age", age) }, 1, 0),
+            ("strata-title-split", new[] { ("Age", age), ("Strata", treated) }, 0, 2),
+            ("duplicate-title-second", new[] { ("Z", treated), ("Z", female), ("Age", age) }, 1, 2),
+        };
+        foreach (var (label, predictors, choice, expectedGroup) in cases)
+        {
+            var sheet = Models539Sheet(new[] { ("Time", times), ("Event", events) }.Concat(predictors).ToArray());
+            int[] columns = Enumerable.Range(2, predictors.Length).ToArray();
+            var (run, output) = Run("CoxRegression", Models539CoxAnswers(sheet, columns));
+            ParameterBag fit = output.ParameterBag;
+            int choices = ((StringVariable)fit["subgroups"].AsDataFrame.Variables[0]).Length;
+            bool[] split = new bool[choices];
+            split[choice] = true;
+            var (plotRun, plots) = Run("CoxHazardPlots", new() { ["use-tics"] = true, ["use-markers"] = true, ["group"] = split }, fit);
+            var charts = Models539Block(plots.ParameterBag, "chart").Select(row => ((ChartDefinition)row["chart"].AsObject).ChartOptions).ToList();
+            var survival = (CoxSurvivalOrHazardOptions)charts[0];
+            Check(charts.Count == (expectedGroup > 0 ? 3 : 2) && survival.grouped == expectedGroup > 0 && !survival.stratified && (expectedGroup == 0 || survival.groupid == expectedGroup &&
+                ((Cox2Options)charts[2]).groupid == expectedGroup), label + ": the native plots are split by choice " + choice + " of " + choices + (expectedGroup > 0 ? ", predictor " + expectedGroup : ", not at all"));
+            string assertions = expectedGroup > 0
+                ? "stopifnot(grouped, curve_count == 2L, identical(unname(baseline_rows[[" + expectedGroup + "]]), sort(unique(predictor_frame[[" + expectedGroup + "]]))), all(unlist(baseline_rows[-" + expectedGroup + "]) == 0))\n"
+                : "stopifnot(!grouped, curve_count == 1L)\n";
+            Models539Verify(folder, "cox-split-" + label, plotRun, assertions);
         }
     }
 

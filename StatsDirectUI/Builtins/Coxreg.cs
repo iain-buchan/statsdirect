@@ -6,7 +6,6 @@ using StatsDirect.Data;
 using StatsDirect.Templates;
 using StatsDirect.Numerics;
 using StatsDirect.Utilities;
-using System.Globalization;
 
 namespace StatsDirect.Builtins
 {
@@ -2265,13 +2264,13 @@ namespace StatsDirect.Builtins
         /// <summary>The baseline survival and cumulative hazard at each time with an event, as a report.</summary>
         public static StepOutput RptCoxBaselineToReport(ParameterBag parameters)
         {
-            return RptCoxBaseline(parameters, false, string.Empty, false);
+            return RptCoxBaseline(parameters, false, -1, false);
         }
 
         /// <summary>The baseline survival and cumulative hazard at the time of each record, and its hazard ratio, saved to the worksheet.</summary>
         public static StepOutput RptCoxBaselineToWorksheet(ParameterBag parameters)
         {
-            return RptCoxBaseline(parameters, false, string.Empty, true);
+            return RptCoxBaseline(parameters, false, -1, true);
         }
 
         /// <summary>
@@ -2283,13 +2282,10 @@ namespace StatsDirect.Builtins
             bool[] selectedGroups = (bool[])parameters["group"].AsObject;
             DataFrame subgroupsFrame = parameters["subgroups"].AsDataFrame;
             StringVariable subgroupsVariable = (StringVariable)subgroupsFrame.Variables[0];
-            for (int i = 0; i < selectedGroups.Length; i++)
+            for (int i = 0; i < selectedGroups.Length && i < subgroupsVariable.Length; i++)
             {
                 if (selectedGroups[i])
-                {
-                    string selectedGroup = subgroupsVariable.Data[i];
-                    return RptCoxBaseline(parameters, true, selectedGroup, false);
-                }
+                    return RptCoxBaseline(parameters, true, i, false);
             }
             return StepOutput.Empty();
         }
@@ -2299,14 +2295,14 @@ namespace StatsDirect.Builtins
         /// </summary>
         /// <param name="parameters">What RptCoxRegression passed on.</param>
         /// <param name="plot">True to make the plots.</param>
-        /// <param name="groupVar">For the plots: "Strata", the title of a binary predictor, or "None".</param>
+        /// <param name="choice">For the plots: the place in the list of subgroups of the choice that was made.</param>
         /// <param name="createGrid">True to save the figures to the worksheet.</param>
         /// <remarks>
         /// The baseline is a subject whose predictors are all 0, which for a predictor that was centred is its mean.  The report has a row for
         /// each time at which there is an event, stratum by stratum, and gives with it the hazard ratio of the record that has the greatest
         /// among those with events at that time.
         /// </remarks>
-        private static StepOutput RptCoxBaseline(ParameterBag parameters, bool plot, string groupVar, bool createGrid)
+        private static StepOutput RptCoxBaseline(ParameterBag parameters, bool plot, int choice, bool createGrid)
         {
             int i;
             double watch_time;
@@ -2367,7 +2363,7 @@ namespace StatsDirect.Builtins
             if (plot)
             {
                 // bypass reporting and plot if called by the plot function
-                CoxPlot(parameters, z, iobs, istrata, groupVar, outputParameters);
+                CoxPlot(parameters, z, iobs, istrata, choice, outputParameters);
             }
             else if (createGrid)
             {
@@ -2401,7 +2397,7 @@ namespace StatsDirect.Builtins
         /// When the plots are split by a binary predictor, the survival of a group is the baseline survival to the power exp(b v), where v is
         /// the value that the predictor has in the group and b is its coefficient.
         /// </remarks>
-        private static void CoxPlot(ParameterBag parameters, CoxP[] z, int iobs, int istrata, string groupVar, ParameterBag outputParameters)
+        private static void CoxPlot(ParameterBag parameters, CoxP[] z, int iobs, int istrata, int choice, ParameterBag outputParameters)
         {
             int igroups;
             int groupid = 0;
@@ -2415,47 +2411,27 @@ namespace StatsDirect.Builtins
             bool use_marker = parameters["use-markers"].AsBoolean;
 
             int ncoef = Convert.ToInt32(ARR2[1, 0]);
-            IComparer<CoxP> comparer;
-            switch (groupVar.ToLower(CultureInfo.InvariantCulture))
+            // The choices are those RptCoxRegression offered: "Strata" alone for a stratified model, and otherwise each binary predictor
+            // (one with Groups) in turn and then "None".  A choice is known by its place, not its text: a predictor can be titled "None"
+            // or "Strata", and two can have the same title (the first of them used to be taken).
+            StringVariable choices = (StringVariable)parameters["subgroups"].AsDataFrame.Variables[0];
+            stratified = choices.Length == 1 && choices.Data[0] == "Strata";
+            grouped = false;
+            igroups = 0;
+            if (choices.Length > 1 && choice < choices.Length - 1)
             {
-                case "none":
-                case "":
-                    stratified = false;
-                    grouped = false;
-                    igroups = 0;
-                    comparer = new CoxpByTm();
-                    break;
-                case "strata":
-                    stratified = true;
-                    grouped = false;
-                    igroups = 0;
-                    comparer = new CoxpByStratumThenTime();
-                    break;
-                default:
-                    stratified = false;
-                    groupid = -1;
-                    igroups = 0;
-                    for (int i = 1; i <= ncoef; i++)
+                for (int i = 1, binary = 0; i <= ncoef; i++)
+                {
+                    if (CDAT1[i].Groups != null && binary++ == choice)
                     {
-                        if (CDAT1[i].Title.Trim().ToLower(CultureInfo.CurrentCulture).Equals(groupVar.ToLower(CultureInfo.CurrentCulture)))
-                        {
-                            groupid = i;
-                            igroups = CDAT1[i].Groups.Count;
-                            break;
-                        }
-                    }
-                    if (groupid >= 0)
-                    {
+                        groupid = i;
+                        igroups = CDAT1[i].Groups.Count;
                         grouped = true;
-                        comparer = new CoxpByIdThenTm();
+                        break;
                     }
-                    else
-                    {
-                        grouped = false;
-                        comparer = new CoxpByTm();
-                    }
-                    break;
+                }
             }
+            IComparer<CoxP> comparer = grouped ? new CoxpByIdThenTm() : stratified ? new CoxpByStratumThenTime() : new CoxpByTm();
 
 
             // set group indicator
