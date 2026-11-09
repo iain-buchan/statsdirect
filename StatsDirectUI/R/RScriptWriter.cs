@@ -193,8 +193,8 @@ namespace StatsDirect.R
                         int i = 0;
                         foreach (ColumnValues c in snapshot)
                         {
-                            string title = titles.ValueKind == JsonValueKind.Array ? Text(titles[i], "title") ?? c.Title : c.Title;
-                            columns.Add(new Column { Title = title, Values = c.Values, Where = Where(pointer, i++) });
+                            string columnTitle = titles.ValueKind == JsonValueKind.Array ? Text(titles[i], "title") ?? c.Title : c.Title;
+                            columns.Add(new Column { Title = columnTitle, Values = c.Values, Where = Where(pointer, i++) });
                         }
                         notes.Add($"Data: {source}, the values the analysis used.");
                         continue;
