@@ -2,6 +2,11 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
+##[Unreleased]
+
+### Fixed
+- Chi-square goodness of fit replay accepts expected counts, percentages or proportions that do not add up to 1, scaling them to the observed total as the report does.
+
 ##[v5.3.8] 2026-11-09
 
 ### Fixed
