@@ -86,12 +86,13 @@ if ((n1 > 100 && n2 > 100) || cells > 1e6) {
   }
 } else {
   # Exact P given the ties, in any version of R: count the ways of choosing n1
-  # of the ranks, by their sum. Ranks are doubled to make mid-ranks whole numbers.
+  # of the ranks, by their sum. Ranks are doubled to make mid-ranks whole numbers;
+  # no n1 of them sum to more than S, the sum of the n1 largest.
   r2 <- 2 * r
-  S <- sum(r2)
+  S <- sum(sort(r2, decreasing = TRUE)[seq_len(n1)])
   ways <- matrix(0, n1 + 1, S + 1)        # rows: how many ranks, columns: sum
   ways[1, 1] <- 1
-  for (v in r2) ways[-1, (v + 1):(S + 1)] <-
+  for (v in r2[r2 <= S]) ways[-1, (v + 1):(S + 1)] <-
     ways[-1, (v + 1):(S + 1)] + ways[-(n1 + 1), 1:(S + 1 - v)]
   p <- ways[n1 + 1, ] / choose(n1 + n2, n1) # P(doubled rank sum = 0, 1, ... S)
   w <- 2 * ranksum + 1                    # position of the observed value

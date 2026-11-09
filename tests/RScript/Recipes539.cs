@@ -222,6 +222,8 @@ internal static partial class Program
         // inside the report's exact range, where the dense table of the rank sums would need over 5 GB
         Case("untied-exact-100-2500", Values(100, 0, false), Values(2500, .9, false), .95, normal: false, approximateK: true);
         Case("untied-101-2000", Values(101, 0, false), Values(2000, .9, false), .9, normal: true, approximateK: true);
+        // with ties, a small first sample beside a large one is still inside the report's exact count
+        Case("ties-exact-20-1000", Enumerable.Range(0, 20).Select(i => Math.Round(20 + 8 * Math.Sin(i * 3.1) + i * 7 % 5)).ToArray(), Values(1000, 1.7, true), .95, normal: false, approximateK: false);
         double[] farm = { 14.8, 7.3, 5.6, 6.3, 9, 4.2, 10.6, 12.5, 12.9, 16.1, 11.4, 2.7 }, town = { 12.7, 14.2, 12.6, 2.1, 17.7, 11.8, 16.9, 7.9, 16, 10.6, 5.6, 5.6, 7.6, 11.3, 8.3, 6.7, 3.6, 1, 2.4, 6.4, 9.1, 6.7, 18.6, 3.2, 6.2, 6.1, 15.3, 10.6, 1.8, 5.9, 9.9, 10.6, 14.8, 5, 2.6, 4 };
         foreach (double confidence in new[] { 0d, 1d }) Case("confidence-" + confidence, farm, town, confidence, normal: false, approximateK: false);
     }
