@@ -2,7 +2,7 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
-##[Unreleased]
+##[v5.3.8] 2026-11-09
 
 ### Fixed
 - Weighted multiple linear regression retains the selected prior weights when it refits after dropping collinear predictors.
