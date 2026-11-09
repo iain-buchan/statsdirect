@@ -196,7 +196,10 @@ internal static partial class Program
             var sheet=Sheet(("Time",times),("Event",events),(title,treatment),("Stratum",strata));
             var(run,output)=Run("CoxRegression",new(){["times"]=Select(sheet,0),["events"]=Select(sheet,1),["predictors"]=Select(sheet,2),["strata"]=stratified?sheet(DataAcquisitionMode.CategoryReplaceMissing,new[]{3}):null,["accuracy"]=1e-11,["centre-continuous-covariates"]=true,["useTimesAdjustment"]=false});
             double coefficient=Num(Block(output.ParameterBag,"pred")[0],"b");
-            Verify("cox-heading-"+headingNumber++,run,Equal("coef(fit)",new[]{coefficient}));
+            string coxText=Verify("cox-heading-"+headingNumber++,run,Equal("coef(fit)",new[]{coefficient})+
+                "stopifnot(identical(all.vars(fit$call$formula),c(sd_own[1:2],names(predictors),if(!is.null(stratum))sd_own[3])))\n");
+            Check(Regex.IsMatch(coxText,@"^Call:\s*coxph\(formula\s*=\s*Surv\(",RegexOptions.Multiline),
+                "Cox displays the fitted survival formula for " + title + ", stratified = " + stratified);
             var(plotRun,_)=Run("CoxHazardPlots",new(){["use-tics"]=true,["use-markers"]=true,["group"]=stratified?new[]{true}:new[]{true,false}},output.ParameterBag);
             Verify("cox-heading-plots-"+headingNumber,plotRun,"stopifnot(curve_count==2L,all(is.finite(curves$surv)),all(curves$surv>=0 & curves$surv<=1))\n");
             foreach(double confidence in new[]{.8,.9,.95,.99})

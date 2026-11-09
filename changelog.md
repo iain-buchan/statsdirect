@@ -2,6 +2,15 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
+##[v5.3.8] 2026-11-09
+
+### Fixed
+- Weighted multiple linear regression retains the selected prior weights when it refits after dropping collinear predictors.
+- Risk difference replay gives valid Miettinen–Nurminen confidence limits for symmetric tables and when one study arm has all events and the other has none.
+- Meta-analysis replay excludes incomplete studies with their labels and uses the recorded exact or approximate method for heterogeneity intervals and Mantel–Haenszel limits.
+- Principal components coefficient replay uses the same covariance or correlation method as the original analysis.
+- Cox replay shows the fitted formula, and Wilcoxon replay prints the full rank sum and confidence interval rank for large samples.
+
 ##[v5.3.7] 2026-11-09
 
 ### Fixed

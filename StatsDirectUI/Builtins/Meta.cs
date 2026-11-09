@@ -970,6 +970,8 @@ namespace StatsDirect.Builtins
         /// "cn", "cm", "cs": those of the second (control) group; "g": g, if it is given; "strata" (may be left out); "gamma".</param>
         public static StepOutput RptEffect(IPreferencesAndProgressBar host, ParameterBag parameters)
         {
+            bool exactMeta = host.Preferences.MetaExact;
+
             double cco = parameters["gamma"].AsDouble;
             if (cco <= 0)
                 cco = 0.95;
@@ -1104,6 +1106,7 @@ namespace StatsDirect.Builtins
                 }
 
                 ParameterBag outputParameters = new();
+                outputParameters.AddInput("metaExact", exactMeta);
                 outputParameters.AddOutput("pc", cco * 100);
 
                 IList<ParameterBag> exactList = new List<ParameterBag>();
@@ -1213,7 +1216,7 @@ namespace StatsDirect.Builtins
                     poolOkParameters.AddOutput("df", k - 1);
                     poolOkParameters.AddOutput("xp", PDF.chivalp(qc, k - 1));
                     poolOkParameters.AddOutput("tausq", tausq);
-                    IsquareNcc(host, qc, k, cco, cit, out double isq, out double llisq, out double ulisq);
+                    IsquareNcc(host, qc, k, cco, cit, out double isq, out double llisq, out double ulisq, exact: exactMeta);
                     poolOkParameters.AddOutput("isq", isq);
                     poolOkParameters.AddOutput("pc1", cco * 100);
                     poolOkParameters.AddOutput("llisq", llisq);
@@ -1296,6 +1299,7 @@ namespace StatsDirect.Builtins
                 }
 
                 ParameterBag outputParameters = new();
+                outputParameters.AddInput("metaExact", exactMeta);
                 outputParameters.AddOutput("pc", cco * 100);
                 IList<ParameterBag> approximateList = new List<ParameterBag>();
                 outputParameters.AddOutput("*approximate", approximateList);
@@ -1378,7 +1382,7 @@ namespace StatsDirect.Builtins
                     poolOkParameters.AddOutput("df", k - 1);
                     poolOkParameters.AddOutput("xp", PDF.chivalp(qc, k - 1));
                     poolOkParameters.AddOutput("tausq", tausq);
-                    IsquareNcc(host, qc, k, cco, cit, out double isq, out double llisq, out double ulisq);
+                    IsquareNcc(host, qc, k, cco, cit, out double isq, out double llisq, out double ulisq, exact: exactMeta);
                     poolOkParameters.AddOutput("isq", isq);
                     poolOkParameters.AddOutput("pc1", cco * 100);
                     poolOkParameters.AddOutput("llisq", llisq);
@@ -2227,6 +2231,8 @@ namespace StatsDirect.Builtins
         /// <param name="parameters">As for RptPetoMeta.</param>
         public static StepOutput RptMantel(IPreferencesAndProgressBar host, ParameterBag parameters)
         {
+            bool exactMeta = host.Preferences.MetaExact;
+
             double p2M = 0; double p1M = 0;
             double p2F = 0; double p1F = 0; double llm = 0; double ulm = 0; double llf = 0; double ulf = 0; double eor = 0;
 
@@ -2271,7 +2277,7 @@ namespace StatsDirect.Builtins
                     throw new InvalidDataException();
             }
 
-            Mantel(host, 1, k, out int realk, o, out double rmh, out double ll, out double ul, out double x2, out double sk, cit, cco, out double[] odr, out double[] odw, out double[] dswt, out double[] odrl, out double[] odru, out double[] odx, out bool[] lerr, out bool[] uerr, out double qc, out double bd, out double dsor, out double dsx2, out double dsll, out double dsul, out bool[] cced, out double tausq, out bool[] included, out int ierr);
+            Mantel(host, 1, k, out int realk, o, out double rmh, out double ll, out double ul, out double x2, out double sk, cit, cco, out double[] odr, out double[] odw, out double[] dswt, out double[] odrl, out double[] odru, out double[] odx, out bool[] lerr, out bool[] uerr, out double qc, out double bd, out double dsor, out double dsx2, out double dsll, out double dsul, out bool[] cced, out double tausq, out bool[] included, out int ierr, exact: exactMeta);
             if (ierr != 0)
             {
                 if (ierr != 99)
@@ -2282,7 +2288,7 @@ namespace StatsDirect.Builtins
                 throw new TemplateOperationCancelledException("None of the studies can be pooled: each of them has no events, or events in every subject, or a group with no subjects.", "Odds ratio meta-analysis");
 
             // Try exact Mantel
-            if (host.Preferences.MetaExact)
+            if (exactMeta)
             {
                 // An exact method is of counts: counts that are not whole numbers are rounded, a half to the even number
                 Rec2X2[] tbl = new Rec2X2[k + 1];
@@ -2320,6 +2326,7 @@ namespace StatsDirect.Builtins
             }
 
             ParameterBag outputParameters = new();
+            outputParameters.AddInput("metaExact", exactMeta);
             outputParameters.AddOutput("pc", cco * 100);
 
             IList<ParameterBag> inputsList = new List<ParameterBag>();
@@ -2336,7 +2343,7 @@ namespace StatsDirect.Builtins
                 inputsParameters.AddOutput("lb", hasUserSuppliedLabels ? title[i] : string.Empty);
             }
 
-            outputParameters.AddOutput("method", host.Preferences.MetaExact ? "CML" : "logit");
+            outputParameters.AddOutput("method", exactMeta ? "CML" : "logit");
 
             IList<ParameterBag> orList = new List<ParameterBag>();
             outputParameters.AddOutput("*or", orList);
@@ -2415,7 +2422,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("xp_cochran", PDF.chivalp(qc, realk - 1));
             outputParameters.AddOutput("tausq", tausq);
 
-            IsquareNcc(host, qc, realk, cco, cit, out double isq, out double llisq, out double ulisq);
+            IsquareNcc(host, qc, realk, cco, cit, out double isq, out double llisq, out double ulisq, exact: exactMeta);
             outputParameters.AddOutput("isq", isq);
             outputParameters.AddOutput("pc1", cco * 100);
             outputParameters.AddOutput("llisq", llisq);
@@ -3400,6 +3407,8 @@ namespace StatsDirect.Builtins
         /// "studies" (may be left out): the labels; "gamma".</param>
         public static StepOutput RptMetaCorrelation(IPreferencesAndProgressBar host, ParameterBag parameters)
         {
+            bool exactMeta = host.Preferences.MetaExact;
+
             double tausq;
             double cit;
             int i;
@@ -3575,6 +3584,7 @@ namespace StatsDirect.Builtins
 
             const string stat = "Correlation";
             ParameterBag outputParameters = new();
+            outputParameters.AddInput("metaExact", exactMeta);
             outputParameters.AddOutput("stat", stat);
             outputParameters.AddOutput("pc", cco * 100);
 
@@ -3610,7 +3620,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("xp", PDF.chivalp(qc, k - 1));
             outputParameters.AddOutput("tausq", tausq);
 
-            IsquareNcc(host, qc, k, cco, cit, out double isq, out double llisq, out double ulisq);
+            IsquareNcc(host, qc, k, cco, cit, out double isq, out double llisq, out double ulisq, exact: exactMeta);
             outputParameters.AddOutput("isq", isq);
             outputParameters.AddOutput("pc1", cco * 100);
             outputParameters.AddOutput("llisq", llisq);
@@ -3886,6 +3896,8 @@ namespace StatsDirect.Builtins
         /// for the square of the sine of half the pooled value; "strata" (may be left out); "gamma".</param>
         public static StepOutput RptProportionMeta(IPreferencesAndProgressBar host, ParameterBag parameters)
         {
+            bool exactMeta = host.Preferences.MetaExact;
+
             double cco = parameters["gamma"].AsDouble;
             VarianceStabilisationMethod method = "doubleArcsine".Equals(parameters["method"].AsString) ? VarianceStabilisationMethod.DoubleArcsine : VarianceStabilisationMethod.ArcsineSquareRoot;
             if (cco < 0)
@@ -4017,6 +4029,7 @@ namespace StatsDirect.Builtins
             }
 
             ParameterBag outputParameters = new();
+            outputParameters.AddInput("metaExact", exactMeta);
 
             IList<ParameterBag> inputsList = new List<ParameterBag>();
             outputParameters.AddOutput("*inputs", inputsList);
@@ -4063,7 +4076,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("df", k - 1);
             outputParameters.AddOutput("xp", PDF.chivalp(qc, k - 1));
             outputParameters.AddOutput("tausq", tausq);
-            IsquareNcc(host, qc, k, cco, cit, out double isq, out double llisq, out double ulisq);
+            IsquareNcc(host, qc, k, cco, cit, out double isq, out double llisq, out double ulisq, exact: exactMeta);
             outputParameters.AddOutput("isq", isq);
             outputParameters.AddOutput("pc1", cco * 100);
             outputParameters.AddOutput("llisq", llisq);

@@ -76,13 +76,15 @@ internal static partial class Program
         });
         Check(true, "concurrent exports clone the captured hash state safely and retain every expected prefix hash");
 
-        foreach (string operation in new[] { "Cronbach", "PCRMatrix", "PCRScores" })
-        foreach (string parent in new[] { "PCRCorrelation", "PCRCovariance", "PCRCovarianceNoFollowOns" })
+        foreach (string operation in new[] { "Cronbach", "PCRCoefficients", "PCRMatrix", "PCRScores" })
         {
-            using var record = JsonDocument.Parse(JsonSerializer.Serialize(new { operation, rootOperation = parent }));
-            Check(RRecipes.Find(record.RootElement).File == (parent == "PCRCorrelation" ? "pca.R" : "pca-covariance.R"), "PCA continuation selects its actual correlation/covariance parent: " + operation + "/" + parent);
+            foreach (string parent in new[] { "PCRCorrelation", "PCRCovariance", "PCRCovarianceNoFollowOns" })
+            {
+                using var record = JsonDocument.Parse(JsonSerializer.Serialize(new { operation, rootOperation = parent }));
+                Check(RRecipes.Find(record.RootElement).File == (parent == "PCRCorrelation" ? "pca.R" : "pca-covariance.R"), "PCA continuation selects its actual correlation/covariance parent: " + operation + "/" + parent);
+            }
+            using var unknown = JsonDocument.Parse(JsonSerializer.Serialize(new { operation }));
+            Check(RRecipes.Find(unknown.RootElement) == null, "ambiguous legacy PCA continuation cannot silently choose the wrong parent: " + operation);
         }
-        using var unknown = JsonDocument.Parse("{\"operation\":\"Cronbach\"}");
-        Check(RRecipes.Find(unknown.RootElement) == null, "ambiguous legacy PCA continuation cannot silently choose the wrong parent model");
     }
 }
