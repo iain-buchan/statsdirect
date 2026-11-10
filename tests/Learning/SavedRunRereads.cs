@@ -67,13 +67,31 @@ internal static partial class Program
             Check(reread.Unavailable == null && reread.Columns.Count == 2 && reread.Columns.All(c => !c.Changed)
                 && reread.Columns[0].Values.Length == 3000 && reread.Columns[1].Values.Length == 2600,
                 "the actual reread of a category frame with its longer range first gives every value with its recorded hash (" + Read(reread) + ")");
-            var first = ((IList<ParameterBag>)output.ParameterBag["*variable"].AsObject)[0];
-            var bins = ((IList<ParameterBag>)first["*bin"].AsObject).ToList();
             RScript script = RScriptWriter.Write(record, "Frequency", FrameReader.Read);
             Check(script.HasRecipe && !script.DataUnavailable && !script.Text.Contains("has changed in the workbook"), "the frequency replay reads its pointer-only data without a change note");
-            string expected = "stopifnot(n == " + Number(first, "n").ToString("R", inv) + ", identical(names(counts), c(" + string.Join(", ", bins.Select(b => "\"" + b["x"].AsObject + "\"")) + ")), " +
-                "identical(as.vector(counts), " + Vector(bins.Select(b => Number(b, "fx"))).Replace("c(", "as.integer(c(") + ")))\ncat('SAVED_FREQUENCY_OK\\n')";
-            await RunConversationR(script.Text, "saved-frequency-longer-first", expected, "SAVED_FREQUENCY_OK");
+            const string checkColumn = """
+                check_column <- function(title, total, labels, frequencies) {
+                  first <- match(title, output)
+                  header <- first + match("Value  Frequency  Relative %  Cumulative  Cumulative Relative %",
+                                          output[seq.int(first + 1L, length(output))])
+                  stopifnot(identical(output[header - 1L], paste("Total =", total)))
+                  rows <- strsplit(trimws(output[header + seq_along(labels)]), "[[:space:]]+")
+                  stopifnot(identical(vapply(rows, `[`, "", 1L), labels),
+                            identical(as.numeric(vapply(rows, `[`, "", 2L)), frequencies))
+                }
+                """;
+            var columns = (IList<ParameterBag>)output.ParameterBag["*variable"].AsObject;
+            var expected = columns.Select(column =>
+            {
+                var bins = (IList<ParameterBag>)column["*bin"].AsObject;
+                string title = RScriptWriter.Quote((string)column["ti"].AsObject);
+                string total = Number(column, "n").ToString("R", inv);
+                string labels = "c(" + string.Join(", ", bins.Select(b => RScriptWriter.Quote((string)b["x"].AsObject))) + ")";
+                string frequencies = Vector(bins.Select(b => Number(b, "fx")));
+                return $"check_column({title}, {total}, {labels}, {frequencies})";
+            });
+            await RunConversationR("output <- capture.output({\n" + script.Text + "\n})", "saved-frequency-longer-first",
+                checkColumn + "\n" + string.Join("\n", expected) + "\ncat('SAVED_FREQUENCY_OK\\n')", "SAVED_FREQUENCY_OK");
             Notebook(record, "Frequency", "the frequency notebook export");
 
             // the longer range last, which was always read right, reads as before
