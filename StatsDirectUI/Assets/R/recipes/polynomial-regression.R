@@ -47,13 +47,14 @@ for (i in seq_len(nrow(s))) {
 }
 cat("y =", six(s[1, 1]), paste(paste0(ifelse(s[-1, 1] >= 0, "+", ""), six(s[-1, 1]), " ", lab[-1]), collapse = " "), "\n")
 a <- anova(fit)
-ssreg <- a$"Sum Sq"[1]
-ssres <- a$"Sum Sq"[2]
-cat("Regression", six(ssreg), terms, six(ssreg / terms), "\n")
+ssreg <- sum(head(a$"Sum Sq", -1))
+ssres <- tail(a$"Sum Sq", 1)
+cat("Regression", six(ssreg), terms, six(if (terms > 0) ssreg / terms else NA_real_), "\n")
 cat("Residual", six(ssres), df, six(ssres / df), "\n")
 cat("Total (corrected)", six(ssreg + ssres), df + terms, "\n")
 cat("Root MSE =", six(sqrt(ssres / df)), "\n")
 f <- summary(fit)$fstatistic
+if (is.null(f)) f <- rep(NA_real_, 3)
 cat("F =", six(f[1]), " ", pv(pf(f[1], f[2], f[3], lower.tail = FALSE)), "\n")
 cat("Multiple correlation coefficient (R) =", six(sqrt(summary(fit)$r.squared)), "\n")
 cat("R2 =", paste0(six(100 * summary(fit)$r.squared), "%"), "\n")
@@ -66,7 +67,8 @@ cat("Durbin-Watson test statistic =", six(sum(diff(e)^2) / sum(e^2)), "\n")
 # area under the data by the trapezoidal rule
 b <- coef(fit)
 b[is.na(b)] <- 0
-curve_area <- integrate(function(x) sapply(x, function(v) sum(b * v^(0:degree))), min(size), max(size))
-cat("AUC (polynomial function) =", six(curve_area$value), "\n")
+curve_area <- if (min(size) == max(size)) 0 else
+  integrate(function(x) sapply(x, function(v) sum(b * v^(0:degree))), min(size), max(size))$value
+cat("AUC (polynomial function) =", six(curve_area), "\n")
 trapezia <- sum(diff(size) * (head(kwh, -1) + tail(kwh, -1)) / 2)
 cat("AUC (by trapezoidal rule) =", six(trapezia), "\n")

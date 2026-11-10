@@ -809,17 +809,37 @@ namespace StatsDirect.Builtins
                 throw new TemplateOperationCancelledException("No complete observations with positive prior weight.", "Multiple Linear Regression");
             int modelParameters = context.P;
             (context.P, context.M) = x_glin(context, context.P, context.M);
-            // Rows left out for missing values or zero weights can leave fewer rows than parameters.  Predictors that the others account
-            // for are dropped and the model refitted, as lm leaves them out, and if that leaves fewer parameters than rows the fit has
-            // residual degrees of freedom and stands.  Otherwise the rows ran out before the parameters did, which no fit can estimate:
-            // the residual degrees of freedom would be negative, or predictors would be dropped for the want of rows alone.  (As many rows
-            // as parameters, with none dropped, is an exact fit with no residual df.)
-            if (context.N < modelParameters && context.P >= context.N)
+            // A saturated refit is valid when the predictor design itself
+            // contains redundant columns. Losing outcome or weight rows from
+            // a higher-rank design must not manufacture such a dependency.
+            if (context.N < context.P || (context.N < modelParameters && context.P == context.N &&
+                context.N < PredictorDesignRank(predictorsFrame, context.DoC)))
                 throw new TemplateOperationCancelledException("There are fewer complete observations with positive prior weight than parameters in the model.", "Multiple Linear Regression");
             // context.DoC, not a literal true: a model fitted without an intercept had its first slope labelled "Intercept"
             return new StepOutput(MakeMultipleRegressionOutput(context, context.Se, context.B, context.DoC, context.N, context.P, false, context.M, dropWarning));
         }
 
+        private static int PredictorDesignRank(DataFrame predictors, bool intercept)
+        {
+            int columns = predictors.VariableCount;
+            int rows = predictors.MaxRows;
+            double[,] design = new double[rows + 1, columns + 1];
+            int complete = 0;
+            for (int i = 0; i < rows; i++)
+            {
+                bool usable = true;
+                for (int j = 0; j < columns; j++)
+                {
+                    double value = ((DoubleVariable)predictors.Variables[j]).Data[i];
+                    design[complete + 1, j + 1] = value;
+                    if (value == Constant.MISSING) usable = false;
+                }
+                if (usable) complete++;
+            }
+            bool[] selected = Enumerable.Repeat(true, columns + 1).ToArray();
+            return Regress1.EstimableGlmCoefficients(intercept, false, complete, design, columns, selected,
+                columns + (intercept ? 1 : 0), null, null, complete, out _).Length;
+        }
 
         /// <summary>
         /// Fits the linear model that is held in the context, and leaves there what the reports need.
@@ -944,6 +964,7 @@ namespace StatsDirect.Builtins
                         xx[i, indep + 1] = context.Y[i];
                     }
                 }
+                ifault = 0;
                 Regress1.glsqr(0, incep, 0, context.N, indep + iwt + 1, xx, -indep, idum, -1, idum, 0, iwtcol, context.B, r, D, ref irank, ref rdf, ref rss, ref nrmiss, xMin, xMax, wk, ref ifault);
             }
             // glsqr reports 12 when the fit leaves no degrees of freedom for error: as many rows as parameters.  The fit is complete
@@ -953,7 +974,9 @@ namespace StatsDirect.Builtins
             if (saturated)
             {
                 ifault = 0;
-                context.warn = "saturated model (all degrees of freedom used, so there are no standard errors or tests)";
+                if (context.warn.Length > 0)
+                    context.warn += "\n";
+                context.warn += "saturated model (all degrees of freedom used, so there are no standard errors or tests)";
             }
             if (ifault != 0)
             {
@@ -1049,7 +1072,8 @@ namespace StatsDirect.Builtins
             IList<ParameterBag> warnList = new List<ParameterBag>();
             outputParameters.AddOutput("*warn", warnList);
             if (context.warn.Length > 0 || errcode != 0)
-                warnList.Add(new ParameterBag("warn", new FilledStringParameter(FilledParameterDirection.Output, context.warn)));
+                foreach (string warning in context.warn.Split('\n'))
+                    warnList.Add(new ParameterBag("warn", new FilledStringParameter(FilledParameterDirection.Output, warning)));
             if (null != dropWarning)
                 warnList.Add(new ParameterBag("warn", new FilledStringParameter(FilledParameterDirection.Output, dropWarning)));
             outputParameters.AddOutput("isPoly", pol);
@@ -1224,6 +1248,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("res_mean", rms);
             outputParameters.AddOutput("tot_sum", context.SSY);
             outputParameters.AddOutput("tot_df", tdf);
+            outputParameters.AddOutput("tot_label", context.DoC ? "Total (corrected)" : "Total (uncorrected)");
             outputParameters.AddOutput("mse", rdf > 0 ? Math.Sqrt(rms) : Constant.MISSING);
             outputParameters.AddOutput("f", vr);
             double prob = vr == Constant.MISSING ? Constant.MISSING : PDF.fvalp(vr, bdf, rdf);
@@ -2582,7 +2607,7 @@ namespace StatsDirect.Builtins
             ParameterBag outputParameters = new();
             double auc = 0;
             outputParameters.AddOutput("poly_auc",
-                x_qromb(vX.Data[0], vX.Data[vX.Length - 1], ref auc, bd, p)
+                (vX.Data[0] == vX.Data[vX.Length - 1] || x_qromb(vX.Data[0], vX.Data[vX.Length - 1], ref auc, bd, p))
                     ? host.RoundU(auc)
                     : Formatting.ERRR);
             double aucg = x_giabaldi(nx, vY.Data, vX.Data);
