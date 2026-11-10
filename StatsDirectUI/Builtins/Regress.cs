@@ -2784,15 +2784,29 @@ namespace StatsDirect.Builtins
         /// in deviance from the model with a constant only, likewise; and each coefficient as an odds ratio, exp(b), with a confidence interval
         /// exp(b -/+ z se) and the two-sided P of b / se.  What the later reports need is kept in the context.
         /// </remarks>
+        private static double GlmPrecision(ParameterBag parameters)
+        {
+            double value = Parsing.Cdbl_Txt(parameters["accuracy"].AsString);
+            return double.IsFinite(value) && value > 0 ? Math.Min(value, 0.01) : 0.0000001;
+        }
+
+        private static void AddGlmAliasWarning(IList<ParameterBag> warnings, string[] labels, double[] se, int p, bool intercept)
+        {
+            int first = intercept ? 2 : 1;
+            string[] aliases = Enumerable.Range(first, p - first + 1).Where(i => se[i] == 0)
+                .Select(i => labels[i - (intercept ? 1 : 0)]).ToArray();
+            string message = aliases.Length > 0
+                ? string.Join(", ", aliases) + " dropped from the model because the predictors do not vary or are determined by other variables."
+                : "The fitted model is not of full rank. Check for closely correlated predictors.";
+            warnings.Add(new ParameterBag("warn", new FilledStringParameter(FilledParameterDirection.Output, Formatting.WRNCOLON + message)));
+        }
+
         public static StepOutput RptLogisticRegression(IFormatting host, ParameterBag parameters)
         {
             int rows;
-            int totObs;
             double[] tt; double[] tr; double[] tw;
 
-            double accuracy = Parsing.Cdbl_Txt(parameters["accuracy"].AsString);
-            if (accuracy > 0.01)
-                accuracy = 0.01;
+            double accuracy = GlmPrecision(parameters);
             bool grouped = "grouped".Equals(parameters["grouping"].AsString);
             bool shouldCalculateIntercept = parameters["intercept"].AsBoolean;
             //  The weight frame's prompt offers "skip for none", so the option ticked and the selection skipped means no weights
@@ -2808,12 +2822,8 @@ namespace StatsDirect.Builtins
                 tt = new double[rows + 1];
                 tr = new double[rows + 1];
                 tw = new double[rows + 1];
-                totObs = 0;
                 for (int c = 1; c <= rows; c++)
-                {
                     tt[c] = totalVariable.Data[c - 1];
-                    if (tt[c] != Constant.MISSING) totObs += Convert.ToInt32(tt[c]);
-                }
                 DataFrame responseFrame = parameters["response"].AsDataFrame;
                 responseVariable = (DoubleVariable)responseFrame.Variables[0];
                 // Store the response data
@@ -2835,8 +2845,6 @@ namespace StatsDirect.Builtins
                     if (tr[c] > 1.0 && tr[c] != Constant.MISSING)
                         throw new TemplateOperationCancelledException("Response data must be either 0 (not responded) or 1 (responded), if you want to use grouped response data then please select this option at the start", "Logistic Regression");
                 }
-                // Total observations = rows
-                totObs = rows;
                 // set denominator/total as 1
                 for (int c = 1; c <= rows; c++)
                     tt[c] = 1.0;
@@ -2866,15 +2874,25 @@ namespace StatsDirect.Builtins
                 for (r = 1; r <= rows; r++)
                     pt[c, r] = data[r - 1];
             }
-            // check predictors for categorical data not yet dummied
-            if (prd + 1 >= totObs)
-                throw new TemplateOperationCancelledException("You must have more observations than parameters", "Logistic Regression");
-
             // stack entries with duplicate covariate patterns
             // Do not let a missing total or response consume a valid duplicate pattern
             // before the complete-case omission below.
             //  Rows are merged only when their prior weights are equal (the merged row keeps that weight); a row whose weight is blank is left alone and dropped below with the missing-data message
             bool[] merged = new bool[rows + 1];
+            int usableRows = 0;
+            for (int row = 1; row <= rows; row++)
+            {
+                if (tt[row] == Constant.MISSING || tt[row] == 0 || tr[row] == Constant.MISSING ||
+                    tw[row] == Constant.MISSING || tw[row] == 0)
+                    continue;
+                bool complete = true;
+                for (int predictor = 0; predictor < prd; predictor++)
+                    if (pt[predictor, row] == Constant.MISSING) { complete = false; break; }
+                if (complete) usableRows++;
+            }
+            if (usableRows > 0 && usableRows < prd + (shouldCalculateIntercept ? 1 : 0) &&
+                usableRows < PredictorDesignRank(predictorsFrame, shouldCalculateIntercept))
+                throw new TemplateOperationCancelledException("There are fewer usable observations than the rank of the predictor design.", "Logistic Regression");
             int cutrows = 0;
             for (int i = 1; i < rows; i++)
             {
@@ -3040,7 +3058,7 @@ namespace StatsDirect.Builtins
                 selectX[j] = true;
 
             beta = new double[p + 1];
-            seBeta = new double[records + 1];
+            seBeta = new double[p + 1];
             covariance = new double[(int)Math.Floor((double)p * (p + 1) / 2) + 1];
             fit = new double[records + 1];
             residual = new double[records + 1];
@@ -3055,12 +3073,13 @@ namespace StatsDirect.Builtins
             if (fault == 3 && errMsg.Length > 0)
                 warnList.Add(new ParameterBag("warn", new FilledStringParameter(FilledParameterDirection.Output, Formatting.WRNCOLON + errMsg)));
             if (rank != p)
-                warnList.Add(new ParameterBag("warn", new FilledStringParameter(FilledParameterDirection.Output, Formatting.WRNCOLON + "result not of full rank, there is more than one solution for the model. Look for correlated predictor variables that you might drop: the mutliple linear regression function does this automatically.")));
+                AddGlmAliasWarning(warnList, labels, seBeta, p, mean);
             if (df <= 0)
                 warnList.Add(new ParameterBag("warn", new FilledStringParameter(FilledParameterDirection.Output, Formatting.WRNCOLON + "saturated model (all degrees of freedom used, can't assess goodness of fit)")));
             if (dropped.Length > 0)
                 warnList.Add(new ParameterBag("warn", new FilledStringParameter(FilledParameterDirection.Output, dropped)));
             outputParameters.AddOutput("dev", deviance);
+            outputParameters.AddOutput("accuracy", accuracy);
             outputParameters.AddOutput("df", df);
             double prob = df > 0 ? PDF.chivalp(deviance, df) : Constant.MISSING;
             outputParameters.AddOutput("p", prob);
@@ -3170,9 +3189,11 @@ namespace StatsDirect.Builtins
             else
                 tx += "Y";
             tx += " = ";
+            int written = 0;
             for (int j = 1; j <= p; j++)
             {
-                if (j > 1 && beta[j] >= 0.0)
+                if (rank < p && seBeta[j] == 0) continue;
+                if (written++ > 0 && beta[j] >= 0.0)
                     tx += "+";
                 tx += host.RoundU(beta[j]);
                 string Q = mean
@@ -3183,7 +3204,7 @@ namespace StatsDirect.Builtins
                 else
                     tx += " " + Q + " ";
             }
-            outputParameters.AddOutput("logit", tx);
+            outputParameters.AddOutput("logit", written == 0 ? tx + "0" : tx);
             MultipleLinearRegressionContext context = new();
             outputParameters.AddInput("context", context.StripForOutput());
             context.Se = seBeta;
@@ -3866,8 +3887,8 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("dev", dev);
             outputParameters.AddOutput("df", idf);
             outputParameters.AddOutput("rank", irank);
-            outputParameters.AddOutput("aka", dev + 2 * p); // p parameters: the predictors, and the intercept only when one was fitted
-            outputParameters.AddOutput("sch", dev + p * Math.Log(n)); // the same p parameters as the Akaike criterion; it used to count one more
+            outputParameters.AddOutput("aka", dev + 2 * irank);
+            outputParameters.AddOutput("sch", dev + irank * Math.Log(n));
             outputParameters.AddOutput("devx", devx);
             double x2Dev = devx - dev;
             if (!DoC || devx == Constant.MISSING)
@@ -4024,10 +4045,10 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("dev", dev);
             outputParameters.AddOutput("idf", idf);
             outputParameters.AddOutput("rank", irank);
-            outputParameters.AddOutput("aka", dev + 2 * p); // p parameters: the predictors, and the intercept only when one was fitted
+            outputParameters.AddOutput("aka", dev + 2 * irank);
             // the same p parameters as the Akaike criterion (it used to count one more), and as n the covariate patterns with a positive
             // prior weight: one with none adds nothing to the likelihood (the Poisson model and multiple regression do not count it either)
-            outputParameters.AddOutput("sch", dev + p * Math.Log(context.PositiveWeightRecords));
+            outputParameters.AddOutput("sch", dev + irank * Math.Log(context.PositiveWeightRecords));
             outputParameters.AddOutput("devx", devx);
             double x2Dev = devx - dev;
             if (!DoC || devx == Constant.MISSING)
@@ -4170,20 +4191,14 @@ namespace StatsDirect.Builtins
             }
 
             // relative to dichotomous covariates
-            if (parameters["hasDichotomousCovariates"].AsBoolean)
+            bool hasSubpopulations = parameters["hasDichotomousCovariates"].AsBoolean;
+            bool[] selected = parameters.TryGetValue("cov", out FilledParameter covariate) ? covariate?.AsObject as bool[] : null;
+            if (hasSubpopulations || selected != null)
             {
-                double[] nsel = ((DoubleVariable)parameters["dichotomousCovariates"].AsDataFrame.Variables[1]).Data;
-                bool[] cov = (bool[])parameters["cov"].AsObject;
-                int selectedIndex = 0;
-                for (int i = 0; i <= cov.GetUpperBound(0); i++)
-                {
-                    if (cov[i])
-                    {
-                        selectedIndex = i;
-                        break;
-                    }
-                }
-                int l = (int)nsel[selectedIndex];
+                DoubleVariable offsets = (DoubleVariable)parameters["dichotomousCovariates"].AsDataFrame.Variables[1];
+                if (!hasSubpopulations || selected == null || selected.Length != offsets.Length || selected.Count(value => value) != 1)
+                    throw new TemplateOperationCancelledException("The selected sub-population is no longer available. Choose a covariate from the current list.", "Poisson regression");
+                int l = (int)offsets.Data[Array.IndexOf(selected, true)];
                 double[] covariance = context.Covariance;
                 static int Packed(int r, int c) => Math.Max(r, c) * (Math.Max(r, c) - 1) / 2 + Math.Min(r, c);   //  the lower triangle, row by row
                 for (int j = 2; j >= 1; j--)
@@ -5198,9 +5213,7 @@ namespace StatsDirect.Builtins
         public static StepOutput RptPoissonRegression(IFormatting host, ParameterBag parameters)
         {
             //  Dim PASSX(4, 1) As Double ' (1, 1) = calc intercept (1 = yes); (2, 1) = accuracy; (3, 1) = weights (1 = yes); (4, 1) = ptime (1 = yes)
-            double tol = Parsing.Cdbl_Txt(parameters["accuracy"].AsString);
-            if (tol > 0.01)
-                tol = 0.01;
+            double tol = GlmPrecision(parameters);
 
             bool ptime = "true".Equals(parameters["has-exposure"].AsString);
             bool weighted = parameters["weights"].AsBoolean && parameters.ContainsKey("weight") && parameters["weight"] != null;
@@ -5248,10 +5261,6 @@ namespace StatsDirect.Builtins
                 }
             }
 
-            // is n<p
-            if (prd + 1 >= rows)
-                throw new TemplateOperationCancelledException("You must have more observations than parameters", "Poisson regression");
-
             //  Copy down the remaining observations
             int targetRow = 1;
             int zeroWeightRows = 0;
@@ -5284,8 +5293,6 @@ namespace StatsDirect.Builtins
                         y[targetRow] = y[sourceRow];
                         if (ptime)
                             t[targetRow] = t[sourceRow];
-                        else
-                            t[targetRow] = 1.0;
                         if (weighted)
                             weight[targetRow] = weight[sourceRow];
                         for (int pred = 1; pred <= prd; pred++)
@@ -5325,6 +5332,8 @@ namespace StatsDirect.Builtins
             }
             if (records == 0)
                 throw new TemplateOperationCancelledException("No complete observations with positive prior weight.", "Poisson regression");
+            if (p > records)
+                throw new TemplateOperationCancelledException("More parameters than complete observations with positive prior weight.", "Poisson regression");
             bool use_offset = ptime;
             //  get intercept deviance - drop predictors
             double[,] x2 = new double[records + 1, 1 + 1];
@@ -5379,7 +5388,7 @@ namespace StatsDirect.Builtins
             if (fault == 3 && err_msg.Length > 0)
                 warnList.Add(new ParameterBag("warn", new FilledStringParameter(FilledParameterDirection.Output, Formatting.WRNCOLON + err_msg)));
             if (rank != p)
-                warnList.Add(new ParameterBag("warn", new FilledStringParameter(FilledParameterDirection.Output, Formatting.WRNCOLON + "result not of full rank, there is more than one solution for the model. Look for correlated predictor variables that you might drop: the mutliple linear regression function does this automatically.")));
+                AddGlmAliasWarning(warnList, labels, se_beta, p, mean);
             if (df <= 0)
                 warnList.Add(new ParameterBag("warn", new FilledStringParameter(FilledParameterDirection.Output, Formatting.WRNCOLON + "saturated model (all degrees of freedom used, can't assess goodness of fit)")));
             if (dropped.Length > 0)
@@ -5390,6 +5399,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("pc", 100 * (1.0 - P0));
 
             outputParameters.AddOutput("dev", deviance);
+            outputParameters.AddOutput("accuracy", tol);
             outputParameters.AddOutput("df_dev", df);
             double prob = df > 0 ? PDF.chivalp(deviance, df) : Constant.MISSING;
             outputParameters.AddOutput("p_dev", prob);
@@ -5465,9 +5475,11 @@ namespace StatsDirect.Builtins
                 tx += " [offset log(" + (exposureTitle.Length > 0 ? exposureTitle : "exposure") + ")]";   //  the exposure variable (the first predictor had been named here)
             }
             tx += " = ";
+            int written = 0;
             for (int j = 1; j <= p; j++)
             {
-                if (j > 1 && beta[j] >= 0.0)
+                if (rank < p && se_beta[j] == 0) continue;
+                if (written++ > 0 && beta[j] >= 0.0)
                     tx += "+";
                 tx += host.RoundU(beta[j]);
                 string Q = mean
@@ -5477,7 +5489,7 @@ namespace StatsDirect.Builtins
                     ? " X" + j.ToString()
                     : " " + Q + " ";
             }
-            outputParameters.AddOutput("logit", tx);
+            outputParameters.AddOutput("logit", written == 0 ? tx + "0" : tx);
 
             MultipleLinearRegressionContext context = new()
             {

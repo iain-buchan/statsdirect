@@ -64,6 +64,8 @@ internal static partial class Program
                 parameters.UnionWith(new[] { "metaCC", "delayContinuityCorrection" }); // the continuity correction those reports applied, recorded with them
             if (recipe.File is "meta-incidence-rate-ratio.R" or "meta-incidence-rate-difference.R")
                 parameters.Add("metaCC"); // the constant the incidence-rate report adds to a stratum with no events in one group, recorded with it
+            if (recipe.File == "poisson-regression.R")
+                parameters.Add("cov"); // optional sub-population chosen by PoissonRegressionIRR
             Match settings = Regex.Match(text, "^# settings:\\s*(.*)$", RegexOptions.Multiline);
             if (settings.Success)
                 foreach (string item in settings.Groups[1].Value.Split(',').Select(x => x.Trim()).Where(x => x.Contains('=')))

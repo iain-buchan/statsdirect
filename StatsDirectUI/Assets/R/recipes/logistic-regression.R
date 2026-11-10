@@ -1,7 +1,7 @@
 # StatsDirect recipe: Logistic regression of grouped counts, as the help shows it in R.
 # From the help's R code (regression_and_correlation/logistic.htm); the data and settings above come from the run.
 # data: total = total, responders = response, predictors... = predictors, weight = weight
-# settings: confidence = gamma, intercept = intercept
+# settings: confidence = gamma, intercept = intercept, precision = accuracy
 # hand-edited: omit incomplete model rows before grouping and all calculations
 
 keep <- complete.cases(responders, total, predictors, weight)
@@ -35,16 +35,21 @@ sd_own <- tail(make.unique(c(names(sd_data), "responders", "nonresponders", "pri
 sd_data[sd_own] <- list(responders, total - responders, if (is.null(weight)) rep(1, length(responders)) else weight)
 sd_terms <- encodeString(names(predictors), quote = "`")
 sd_terms[names(predictors) == "."] <- "I(`.`)" # an actual column, not the formula shorthand
+precision <- suppressWarnings(as.numeric(sub("[dD]", "e", precision)))
+if (length(precision) != 1L || !is.finite(precision) || precision <= 0) precision <- 1e-7
+precision <- min(precision, 0.01)
 model <- reformulate(sd_terms,
                      response = call("cbind", as.name(sd_own[1]), as.name(sd_own[2])), intercept = intercept)
 fit <- eval(bquote(glm(.(model), data = sd_data, family = binomial,
                       weights = .(as.name(sd_own[3])), control = glm.control(maxit = 100))))
-# A warm start updates covariance at the fitted values without changing glm's
-# rank tolerance (which also depends on its convergence epsilon).
+# R also uses epsilon to decide QR rank. Establish rank at its default
+# tolerance, then apply the recorded precision to the full-rank refinement.
+# Keep the default tolerance when a tighter epsilon could resurrect an alias.
 if (fit$converged && !fit$boundary) {
   refit_start <- coef(fit)
   refit_start[is.na(refit_start)] <- 0
-  fit <- update(fit, start = refit_start)
+  refit_epsilon <- if (fit$rank == length(refit_start)) min(precision, 1e-8) else 1e-8
+  fit <- update(fit, start = refit_start, control = glm.control(epsilon = refit_epsilon, maxit = 100))
 }
 print(summary(fit))
 print(exp(cbind(OR = coef(fit), confint.default(fit, level = confidence))))
@@ -72,6 +77,8 @@ for (i in if (intercept) seq_len(nrow(s))[-1] else seq_len(nrow(s))) {
   cat(lab[i], "odds ratio =", six(exp(s[i, 1])), " (", six(exp(ci[i, 1])), "to",
       six(exp(ci[i, 2])), ")  z =", six(s[i, 3]), " ", pv(s[i, 4]), "\n")
 }
+every <- if (intercept) c("(Intercept)", names(predictors)) else names(predictors)
+for (j in which(is.na(coef(fit)))) cat(every[j], "* error: drop this variable *\n")
 slopes <- if (intercept) s[-1, 1] else s[, 1]
 cat("logit =", if (intercept) six(s[1, 1]) else "", paste0(ifelse(slopes >= 0, "+", ""), six(slopes), " ", if (intercept) lab[-1] else lab, collapse = " "), "\n")
 
@@ -81,7 +88,7 @@ cat("logit =", if (intercept) six(s[1, 1]) else "", paste0(ifelse(slopes >= 0, "
 # for the n rows of data), and the two pseudo R-squares are 1 minus the ratio of
 # the deviances and 1 minus the ratio of the log likelihoods (McFadden's). Rows
 # with a prior weight of zero add nothing to the likelihood, and are not in n
-k <- length(coef(fit))
+k <- fit$rank
 n <- if (is.null(weight)) length(total) else sum(weight > 0)
 p <- fitted(fit)
 w <- if (is.null(weight)) 1 else weight   # the prior weights, as the report weights the rows
