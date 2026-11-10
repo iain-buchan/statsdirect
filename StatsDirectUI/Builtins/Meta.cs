@@ -2036,6 +2036,9 @@ namespace StatsDirect.Builtins
             }
 
             ParameterBag outputParameters = new();
+            // the exact method and the continuity correction, which the replay applies as the report did
+            outputParameters.AddInput("metaExact", host.Preferences.MetaExact);
+            outputParameters.AddInput("metaCC", host.Preferences.MetaCC);
             outputParameters.AddOutput("pc", cco * 100);
 
             IList<ParameterBag> inputsList = new List<ParameterBag>();
