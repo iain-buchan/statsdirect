@@ -10,7 +10,7 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 - Peto odds ratio meta-analysis refuses a study with no subjects, as the relative risk, risk difference and Mantel-Haenszel analyses do, instead of reporting it with a weight of minus infinity.
 - The exact confidence limits of I-squared are found to full precision: a limit near 0 agreed with R's to about five significant figures only (0.4052802% against 0.4052719%). Limits already printed are unchanged at the precision shown.
 - Meta-analysis replay labels a study whose cell in the labels column is blank as the report and its plots do, stratum (or study) and its place among the studies kept, instead of leaving the label blank.
-- Meta-analysis replay gives the forest plot axis the confidence level of the analysis, instead of always 95%, in the relative risk, risk difference, Peto and correlation analyses; notes low power beside the Begg-Mazumdar test only with fewer than eleven studies, as the report does; and, when studies tie, gives the report's Kendall tau b with its tie-corrected and continuity-corrected normal P.
+- Meta-analysis replay gives the forest plot axis the confidence level of the analysis, instead of always 95%, in the relative risk, risk difference, Peto and correlation analyses, and so does the line above each effect size forest plot that gives the pooled estimate with its interval; notes low power beside the Begg-Mazumdar test only with fewer than eleven studies, as the report does; and, when studies tie, gives the report's Kendall tau b with its tie-corrected and continuity-corrected normal P.
 
 ##[v5.3.9] 2026-11-09
 

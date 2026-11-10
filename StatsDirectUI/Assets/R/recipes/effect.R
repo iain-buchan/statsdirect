@@ -181,7 +181,7 @@ if (k > 3) {
 
 # The bias assessment plot that follows in the report: each study's d against its
 # standard error, with the smallest standard errors at the top, the fixed effects
-# pooled d+ as a vertical line and the 95% limits expected around it as a funnel
+# pooled d+ as a vertical line and the limits expected around it as a funnel
 plot(d, se, ylim = rev(range(0, se)), xlim = range(lcid, ucid), pch = 1,
      xlab = "Effect size", ylab = "Standard error", main = "Bias assessment plot")
 abline(v = dplus)
@@ -189,7 +189,7 @@ se_line <- seq(0, max(se), length.out = 100)
 lines(dplus + z * se_line, se_line)
 lines(dplus - z * se_line, se_line)
 
-# The forest plots: each study's d with its approximate 95% interval and a square
+# The forest plots: each study's d with its approximate interval and a square
 # proportional to its size, then the pooled estimate as a diamond, for the fixed
 # and the random effects models (the program prefixes the random effects label
 # with DL for DerSimonian-Laird)
@@ -204,7 +204,7 @@ forest <- function(pooled, lower, upper, label) {
   abline(v = pooled, lty = 2)
   if (min(lcid) < 0) abline(v = 0)
   prefix <- if (grepl("random", label)) "DL " else ""
-  mtext(paste0(prefix, "pooled effect size = ", six(pooled), "  (95% CI = ",
+  mtext(paste0(prefix, "pooled effect size = ", six(pooled), "  (", pct, " CI = ",
                six(lower), " to ", six(upper), ")"), side = 3, line = 0.3, cex = 0.9)
 }
 op <- par(mar = c(3, 9, 4, 1))

@@ -424,6 +424,34 @@ internal static partial class Program
             replays.Add((label, wrapper + script.Text + "\nif (!any(axis_labels == " + Meta5310Strings(axes) + ") || any(grepl('95%', axis_labels, fixed = TRUE))) " +
                 "stop('the forest plot axis differs from the report (" + axes[0] + "): ', paste(axis_labels, collapse = ' | '))\n"));
         }
+        // The effect size forest plots have no x axis label: the level is in the line above each plot that gives the pooled
+        // estimate ("pooled effect size = 0.5  (90% CI = 0.3 to 0.7)"), which the replay gave as a 95% CI whatever the level,
+        // beside limits that were those of the analysis's level. The replay's lines are kept by a wrapper of mtext.
+        {
+            const string annotated = """
+                annotations <- character()
+                mtext <- function(text, ...) {
+                  annotations <<- c(annotations, text)
+                  graphics::mtext(text, ...)
+                }
+
+                """;
+            const string label = "Effect-90-percent";
+            var (run, native) = Run("Effect", Meta5310Answers("Effect", Enumerable.Range(0, 6).ToArray(), .9, out RecordCells cells));
+            string[] levels = Meta539Rows(native.ParameterBag, "*chart")
+                .Select(chart => chart.TryGetValue("chart", out FilledParameter value) && value.AsObject is ChartDefinition { ChartOptions: EffectOptions effect }
+                    ? "(" + Formatting.XRound(effect.cco * 100, 1) + "% CI = " : null)
+                .Where(level => level != null).ToArray();
+            if (levels.Length == 2 && levels.All(level => level == "(90% CI = "))
+            {
+                Check(true, label + ": the native forest plots give the pooled effect size with a 90% CI");
+                RScript script = RScriptWriter.Write(Record(run), null, cells.Read);
+                Check(script.HasRecipe && !script.DataUnavailable, label + " replays the acquired studies");
+                replays.Add((label, annotated + script.Text + "\nif (length(annotations) != 2 || !all(grepl('(90% CI = ', annotations, fixed = TRUE)) || any(grepl('95%', annotations, fixed = TRUE))) " +
+                    "stop('the level above the forest plots differs from the report (90% CI): ', paste(annotations, collapse = ' | '))\n"));
+            }
+            else failures.Add(label + ": the native forest plots give the pooled effect size with " + string.Join(" | ", levels));
+        }
         failures.AddRange(Meta539Batch(folder, replays));
         foreach (string failure in failures) Console.WriteLine("      " + failure);
         Check(failures.Count == 0, failures.Count + " forest plot axis labels differ from the native plots at the 90% level");
