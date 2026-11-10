@@ -60,6 +60,7 @@ internal static partial class Program
                 Console.WriteLine($"PASS {checks} weighted refit checks");
                 return 0;
             }
+            if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") is string r2Models && (r2Models == "round2-models" || r2Models.StartsWith("round2-models-", StringComparison.Ordinal))) { CheckRound2Models(Path.Combine(TemporaryRoot, "round2-models"), r2Models == "round2-models" ? null : r2Models["round2-models-".Length..]); Console.WriteLine($"PASS {checks} round-two model checks"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") is string models5310 && models5310.StartsWith("models5310", StringComparison.Ordinal))
             {
                 CheckModels5310(Path.Combine(TemporaryRoot, "models-5310"), models5310 == "models5310" ? null : models5310["models5310-".Length..]);

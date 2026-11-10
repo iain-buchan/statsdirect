@@ -5,6 +5,13 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 ##[Unreleased]
 
 ### Fixed
+- Logistic and Poisson regression leave out later predictors that are determined by earlier ones, name them in the report and count only the fitted rank in the Akaike and Schwarz criteria. Logistic regression can fit a single or a few distinct covariate patterns when the remaining model is estimable.
+- Poisson regression accepts an exact fit when the number of complete observations with positive weight equals the number of parameters. The fits report leaves both incidence columns unavailable throughout when there is no exposure column.
+- Multiple regression keeps an exact fit after dropping redundant predictors and warns about both the dropped predictors and the lack of residual degrees of freedom. Its ANOVA labels the total uncorrected when the model has no intercept.
+- Cox predictor coding ignores categories found only on rows without a time or event. R replay gives the fitted rank and marks aliased coefficients as unavailable.
+- Logistic and Poisson regression use the default precision for a zero or negative entry and record the precision used.
+- Poisson incidence-rate ratio replay uses the selected sub-population even when an earlier predictor is aliased. An older selection from a different list asks for a new choice.
+- Polynomial regression reports an area of zero when all predictor values are identical, and its R replay finishes with the intercept-only fit.
 - Offline report HTML sanitization uses DOMPurify 3.4.17 again: the report editor, import and export bundles of 5.3.9 had been built with 3.4.16, although the licence notice and this changelog said 3.4.17, and the build now refuses to bundle a library at a version other than the stated one.
 - A recently used file on a drive that is not there, such as a USB stick not plugged in or a network drive that is mapped later, stays in the recent files list, both when StatsDirect starts and when the file is chosen from the list and cannot be opened: a file is taken off the list only when its drive is there and the file is not, or cannot be read.
 - The default workbook font and the chart title and label fonts keep their sizes between regional settings: a size is saved with a point as its decimal separator and is read with a point or a comma, so that the 10.5 points saved as "10,5" where the decimal separator is a comma are no longer 105 points where it is a point.

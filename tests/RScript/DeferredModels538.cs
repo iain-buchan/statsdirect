@@ -260,7 +260,9 @@ internal static partial class Program
             Match line=Regex.Match(rendered,limits,RegexOptions.Multiline);
             Check(line.Success&&Math.Abs(double.Parse(line.Groups[1].Value,inv)-expected[0])<5.1e-7&&
                 Math.Abs(double.Parse(line.Groups[2].Value,inv)-expected[1])<5.1e-7,"rendered Dose Wald limits use the estimable coefficient's row "+logistic);
-            Check(!Regex.IsMatch(rendered,@"^Aliased (?:odds ratio =|b\d+ =|= 1:)",RegexOptions.Multiline),"aliased predictor is not labelled as an estimable result "+logistic);
+            Check(Regex.IsMatch(rendered,@"^Aliased \* error: drop this variable \*",RegexOptions.Multiline) &&
+                !Regex.IsMatch(rendered,@"^Aliased (?:odds ratio =|b\d+ =|= 1:)",RegexOptions.Multiline),
+                "the replay names the aliased predictor without an estimable result "+logistic);
         }
 
         // No-intercept fits have no intercept-null comparison under the report's
