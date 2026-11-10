@@ -1,7 +1,10 @@
 using StatsDirect.Data;
+using StatsDirect.TemplateProcessing;
 using StatsDirect.Templates;
 using StatsDirect.UI;
+using System.Globalization;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 
 // Checks of the writing of an operation's output frames to a worksheet by the real document host: the sheet the user picks is written
@@ -125,6 +128,128 @@ internal static class Program
         Application.DoEvents();
         Check(target.ActiveWorksheetName == "Sheet1" && Titles(target, 8, 8) == "Fit 2", "a pick made afresh is taken again for a step that keeps the selection");
         Check(Titles(data, 0, 2) == "Y|After|X" && data.UsedArea.Columns == 3, "the grid of the data is untouched by the later pick");
+
+        // The workbook font of the preferences, as a new grid takes it. 5.3.9 and earlier wrote and read its size in the culture of the
+        // day: the 10,5 points saved where the decimal separator is a comma were 105 points where it is a point.
+        object settings = typeof(frmMain).Assembly.GetType("StatsDirect.UI.Properties.Settings")!.GetProperty("Default", BindingFlags.Static | BindingFlags.Public)!.GetValue(null)!;
+        PropertyInfo workbookFont = settings.GetType().GetProperty("DefaultWorkbookFont", Members)!;
+        object? fontBefore = workbookFont.GetValue(settings);
+        CultureInfo culture = CultureInfo.CurrentCulture;
+        List<string> sizes = new();
+        string written;
+        try
+        {
+            foreach ((string reader, string saved) in new[] { ("en-GB", "Arial;0;10,5"), ("de-DE", "Arial;0;10.5"), ("de-DE", "Arial;0;10,5"), ("en-GB", "Arial;0;10.5") })
+            {
+                CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(reader);
+                workbookFont.SetValue(settings, saved);
+                sizes.Add(DefaultFontSize((IGrid)createGrid.Invoke(main, new object?[] { "Font " + sizes.Count })!).ToString(CultureInfo.InvariantCulture));
+            }
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("de-DE");
+            using Font chosen = new("Arial", 10.5f);
+            written = StatsDirect.Utilities.Utilities.SaveStringFromFont(chosen);
+        }
+        finally { CultureInfo.CurrentCulture = culture; workbookFont.SetValue(settings, fontBefore); }
+        Application.DoEvents();
+        Check(string.Join(" ", sizes) == "10.5 10.5 10.5 10.5",
+            "a new grid takes the saved workbook font at its 10.5 points, whether the size was saved with a comma or with a point: " + string.Join(" ", sizes));
+        Check(written == "Arial;0;10.5", "a workbook font chosen where the decimal separator is a comma is saved with its size in the invariant culture: " + written);
+
+        // The "Precision of estimates:" prompt of logistic and of Poisson regression, with a precision typed into its box and Run pressed.
+        // Up to 5.3.9 the definitions of the two limited the box to 12 characters: a typed 0.00000000001 was cut at "0.0000000000", which
+        // is read as a precision of 0.
+        const string precision = "0.00000000001";
+        string[] taken = new[] { "LogisticRegression", "PoissonRegression" }.Select(operation => operation + " " + Typed(main, app, operation, "accuracy", precision)).ToArray();
+        Check(taken.All(answer => answer.EndsWith(" " + precision + " = 1E-11")),
+            "the precision prompts of logistic and of Poisson regression take a typed " + precision + " in full: " + string.Join(", ", taken));
+
+        // A recent file that could not be opened leaves the list, but not one whose volume is not there, such as a USB stick not plugged
+        // in: the failure says nothing of that file, as its absence says nothing at start-up. Up to 5.3.9 choosing such a file from the
+        // list took it off the list. The path on the absent volume is only named here; nothing is made there.
+        PropertyInfo recentFiles = settings.GetType().GetProperty("RecentFileList", Members)!;
+        MethodInfo noteRecentFile = app.GetType().GetMethod("NoteRecentFile", Members)!;
+        object? recentBefore = recentFiles.GetValue(settings);
+        string gone = Path.Combine(Path.GetTempPath(), "recent file that has gone " + Guid.NewGuid().ToString("N") + ".xlsx");
+        string absent = OnAbsentVolume("recent file on a drive not plugged in.xlsx");
+        string[] listed;
+        try
+        {
+            recentFiles.SetValue(settings, new List<string> { gone, absent });
+            noteRecentFile.Invoke(app, new object[] { gone, false });
+            noteRecentFile.Invoke(app, new object[] { absent, false });
+            listed = ((IReadOnlyList<string>)recentFiles.GetValue(settings)!).ToArray();
+        }
+        finally { recentFiles.SetValue(settings, recentBefore); main.UpdateFileList(); }
+        Check(listed.SequenceEqual(new[] { absent }),
+            $"a recent file that could not be opened stays listed when its volume is absent ({absent[..2]}) and leaves the list when its volume is there: " +
+            (listed.Length == 0 ? "none listed" : string.Join(" | ", listed.Select(Path.GetFileName))));
+    }
+
+    static string OnAbsentVolume(string name)
+    {
+        HashSet<char> present = DriveInfo.GetDrives().Select(drive => char.ToUpperInvariant(drive.Name[0])).ToHashSet();
+        for (char letter = 'Z'; letter >= 'D'; letter--)
+            if (!present.Contains(letter) && !Directory.Exists(letter + ":" + Path.DirectorySeparatorChar))
+                return letter + ":" + Path.DirectorySeparatorChar + name;
+        throw new InvalidOperationException("Every drive letter has a volume, so a file on an absent one cannot be named.");
+    }
+
+    [DllImport("user32.dll")]
+    static extern IntPtr SendMessage(IntPtr window, int message, IntPtr wParam, IntPtr lParam);
+
+    // What the program takes from a text prompt of an operation when a text is typed into its box and Run is pressed, with the number
+    // the regressions read from it. The prompt is prepared from the operation's definition and is read by the real main window, and the
+    // characters reach the box as key presses do: the limit of a text box applies to what is typed, not to a text that is set.
+    static string Typed(frmMain main, object app, string operation, string name, string text)
+    {
+        Parameter parameter = TemplateFactory.Operations[operation].Steps.OfType<ParametersStep>().SelectMany(step => step.Parameters).Single(asked => asked.Name == name);
+        ITemplateHost host = (ITemplateHost)app;
+        bool typed = false;
+        DateTime patience = DateTime.UtcNow.AddSeconds(20);
+        using System.Windows.Forms.Timer typist = new() { Interval = 50 };
+        typist.Tick += (_, _) =>
+        {
+            TextBox? box = Descendants(main).OfType<TextBox>().FirstOrDefault(control => ReferenceEquals(control.Tag, parameter) && control.Visible && control.IsHandleCreated);
+            if (box != null && !typed)
+            {
+                typed = true;
+                box.SelectAll(); // over the default, as a user who tabs to the box types
+                foreach (char character in text) SendMessage(box.Handle, 0x0102 /* WM_CHAR */, (IntPtr)character, IntPtr.Zero);
+                ((Button)Get(main, "cmdCalculate")!).PerformClick();
+            }
+            else if (DateTime.UtcNow > patience)
+            {
+                // Return, so that a prompt that was not answered cannot hold the checks
+                typist.Stop();
+                typeof(frmMain).GetMethod("cmdClose_Click", Members)!.Invoke(main, new object?[] { null, EventArgs.Empty });
+            }
+        };
+        typist.Start();
+        ParameterBag? filled;
+        try
+        {
+            filled = (ParameterBag?)typeof(frmMain).GetMethod("FillAndValidateCombinedParameters", Members)!
+                .Invoke(main, new object[] { host, new TemplateProcessor(host), new ParameterBag(), new List<Parameter> { parameter } });
+        }
+        finally { typist.Stop(); }
+        if (filled == null || !filled.ContainsKey(name)) return typed ? "(typed, but Run gave no answer)" : "(the prompt's box was not shown)";
+        string answer = filled[name].AsString;
+        return answer + " = " + StatsDirect.Utilities.Parsing.Cdbl_Txt(answer).ToString("R", CultureInfo.InvariantCulture);
+    }
+
+    static IEnumerable<Control> Descendants(Control control) => control.Controls.Cast<Control>().SelectMany(child => Descendants(child).Prepend(child));
+
+    // The default font size of the grid's workbook set, read under the workbook set's lock as the program reads it
+    static double DefaultFontSize(IGrid grid)
+    {
+        object view = Get(grid, "workbookView")!;
+        view.GetType().GetMethod("GetLock", Type.EmptyTypes)!.Invoke(view, null);
+        try
+        {
+            object set = view.GetType().GetProperty("ActiveWorkbookSet")!.GetValue(view)!;
+            return Convert.ToDouble(set.GetType().GetInterface("SpreadsheetGear.IWorkbookSet")!.GetProperty("DefaultFontSize")!.GetValue(set), CultureInfo.InvariantCulture);
+        }
+        finally { view.GetType().GetMethod("ReleaseLock", Type.EmptyTypes)!.Invoke(view, null); }
     }
 
     static object? ActiveGrid(object app) => Get(Get(app, "ActiveGrid")!, "Window");

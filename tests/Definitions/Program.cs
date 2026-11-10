@@ -5,7 +5,8 @@ using System.Xml.Linq;
 // Checks of the operation definitions (StatsDirectUI/Assets/Operations/*.xml) that need no build of the program.  A parameter may be
 // asked for on a condition (acquire-if-true), an expression over the parameters acquired so far; a condition that names a parameter
 // which is itself asked for only on a condition must first ask whether it is there (parameters.ContainsKey), because the bag's
-// indexer throws "Cannot find parameter" for one that is not, and the operation stops.  Run with: dotnet run -c Release
+// indexer throws "Cannot find parameter" for one that is not, and the operation stops.  The bundled libraries are checked too
+// (BundledLibraries.cs).  Run with: dotnet run -c Release
 static class Program
 {
     private static int Main()
@@ -43,6 +44,7 @@ static class Program
             }
         }
         Console.WriteLine($"ok    {files} definitions read, {conditions} conditions of asking looked at");
+        failures += BundledLibraries.Check(typeof(Program).Assembly.GetCustomAttributes<AssemblyMetadataAttribute>().First(a => a.Key == "Repository").Value);
         Console.WriteLine(failures == 0 ? "ALL CHECKS PASS" : $"{failures} CHECKS FAILED");
         return failures == 0 ? 0 : 1;
     }

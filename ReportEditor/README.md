@@ -59,6 +59,8 @@ pnpm --dir ReportEditor/upstream/Report install --frozen-lockfile
 node ReportEditor/build.mjs
 ```
 
+`build.mjs` refuses to bundle unless every package named in `package.json` is installed at the version stated there. esbuild bundles whatever is in `node_modules`, and an install that fails or is skipped leaves the older packages in place: the 5.3.9 bundles carried DOMPurify 3.4.16 that way while the manifest, the lock file and the notice said 3.4.17. The manifest names its package manager (`pnpm@11.19.0`); an install that stops with "Failed to switch pnpm" has installed nothing. `tests/Definitions` checks that every shipped bundle with DOMPurify in it holds the version that its manifest, lock file and third-party notice state.
+
 The editor, export and import bundles are rebuilt from the recorded shared source and adapters above. The shared sanitizers permit the twelve border longhands that Chromium produces from CSS shorthand, so explicit borders survive copying and reopening, and the shared Office clipboard uses point units for its styles. The Windows adapter keeps 96-dpi image attributes: this preserves chart sizes at high display scaling. Do not transfer the Windows image-attribute adjustment to Mac without testing its clipboard path. Editable HTML metadata is taken from the styled export snapshot so styles also survive reopening. Normal .NET builds require no JavaScript package installation. Update sources, bundles, styles, fixtures and notices together when changing the upstream pin; retain its export and sanitization tests.
 
 ## Hosting and deployment
