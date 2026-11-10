@@ -1,6 +1,6 @@
 # StatsDirect recipe: Kappa agreement of more than two raters from their responses.
 # data: ratings... = responses
-# settings: confidence = ci
+# settings: confidence = ci, saved_grades = kappaGrades
 
 # Agreement of more than two raters: a row for each subject and a column for each rater, with
 # an empty cell where a rater did not rate the subject.  With two categories this is the kappa
@@ -27,7 +27,7 @@ n <- sum(rated)
 mbar <- sum(m) / n
 mbarh <- n / sum(1 / m[rated])
 constant <- min(m[rated]) == max(m)
-categories <- sort(unique(ratings[!is.na(ratings)]))
+categories <- kappa_grade_order(ratings, saved_grades)
 cat("General agreement over all (", length(categories), ") categories with ",
     if (constant) max(m) else paste0(min(m[rated]), " to ", max(m), " (median ", six(median(m)), ")"),
     " raters per subject\n\n", sep = "")

@@ -1094,6 +1094,12 @@ namespace StatsDirect.Builtins
                 ParameterBag outputParameters = new();
                 outputParameters.AddOutput("ylab", ylab);
                 outputParameters.AddOutput("xlab", xlab);
+                string[] grades = Array.ConvertAll(ycat, grade => grade.Title);
+                outputParameters.AddInput("kappaGrades", grades);
+                bool textGrades = Array.Exists(grades, label => !double.TryParse(label, out double value) || !double.IsFinite(value));
+                outputParameters.AddInput("kappaTextGrades", textGrades);
+                if (textGrades)
+                    outputParameters.AddOutput("*kappaGradeOrder", new List<ParameterBag> { new() });
                 ICollection<ParameterBag> xList = new List<ParameterBag>();
                 for (int i = 0; i < xcats; i++)
                 {
@@ -1285,9 +1291,10 @@ namespace StatsDirect.Builtins
                 string[] catz = new string[cats];
                 for (int i = 0; i < cats; i++)
                     catz[i] = categoryList[i];
-                Array.Sort(catz, 0, cats);
+                Array.Sort(catz, Formatting.CompareLabels);
                 ParameterBag outputParameters = new();
                 outputParameters.AddOutput("categories", cats); //  To ensure that any test on the result can find the number of categories
+                outputParameters.AddInput("kappaGrades", catz);
                 if (cats == 2)
                 {
                     // ----> Fleiss Cuzick for > 2 raters and 2 responses

@@ -1,11 +1,11 @@
 # StatsDirect recipe: Kappa agreement of two raters from their responses, as the help shows it in R.
 # From the help's R code (agreement/kappa.htm); the data and settings above come from the run.
 # data: mast = responses, rast = responses, weights... = weights
-# settings: confidence = ci, method = method
+# settings: confidence = ci, method = method, saved_grades = kappaGrades, text_grades = kappaTextGrades
 
-# the grades in the order they appear (numbers in their own order), and the table of the two raters' responses
-grades <- if (is.numeric(c(mast, rast))) sort(unique(c(mast, rast))) else unique(c(mast, rast))
-counts <- table(factor(mast, grades), factor(rast, grades), dnn = c("First rater", "Second rater"))
+# the report's grade order and the table of the two raters' responses
+grades <- kappa_grade_order(c(mast, rast), saved_grades)
+counts <- table(factor(as.character(mast), grades), factor(as.character(rast), grades), dnn = c("First rater", "Second rater"))
 # Agreement of categorical measurements: the StatsDirect help example (Altman 1991,
 # the RAST and MAST tests of 363 sera graded in five categories) in R
 pct <- paste0(100 * confidence, "%")
@@ -63,6 +63,9 @@ for (i in 1:g) for (j in 1:g) {
 }
 sew <- sqrt((s - (pow * pew - 2 * pew + pow)^2) / (n * (1 - pew)^4))
 cat("Cohen's kappa (weighted by ", c("1" = "1-abs(i-j)/(k-1)", "2" = "1-[(i-j)/(k-1)]^2", "3" = "the table of weights")[as.character(method)], ")\n", sep = "")
+if (is.null(text_grades)) text_grades <- any(!is.finite(kappa_numeric_labels(grades)))
+if (text_grades)
+  cat("Weighted kappa uses the grade order shown in the crosstab. Code grades as numbers to set their order.\n")
 cat("Observed agreement =", pc2(pow), "\n")
 cat("Expected agreement =", pc2(pew), "\n")
 cat("Kappa = ", six(kappaw), " (se_0 = ", six(se0w), ", se = ", six(sew), ")\n",
