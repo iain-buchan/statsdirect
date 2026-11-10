@@ -94,14 +94,39 @@ cat(pct, "confidence interval =", six(ac1 - z * sqrt(v)), "to", six(ac1 + z * sq
     "\n")
 
 # Maxwell's test of marginal homogeneity: the differences between the row and column
-# totals of the first g - 1 grades against their covariance matrix
-d <- (rowSums(counts) - colSums(counts))[-g]
+# totals against their covariance matrix. Two grades are in the same group when a subject
+# was given one of them by one rater and the other by the other rater, or when they are
+# joined in that way through other grades. The differences of a group add up to nothing,
+# so its last grade is left out; a grade that was never taken for another adds nothing
+d <- rowSums(counts) - colSums(counts)
 V <- -(counts + t(counts))
 diag(V) <- rowSums(counts) + colSums(counts) - 2 * diag(counts)
-V <- V[-g, -g]
-x2 <- as.numeric(t(d) %*% solve(V) %*% d)
-cat("Marginal homogeneity (Maxwell) chi-square =", six(x2), " df =", g - 1, " ",
-    pv(pchisq(x2, g - 1, lower.tail = FALSE)), "\n")
+group <- seq_len(g)
+repeat {
+  joined <- FALSE
+  for (i in 1:g) for (j in 1:g) if (counts[i, j] + counts[j, i] > 0 && group[i] != group[j]) {
+    from <- max(group[i], group[j])
+    to <- min(group[i], group[j])
+    group[group == from] <- to
+    joined <- TRUE
+  }
+  if (!joined) break
+}
+x2 <- 0
+df <- 0
+for (first in unique(group)) {
+  member <- which(group == first)
+  keep <- member[-length(member)]
+  if (length(keep) == 0) next
+  x2 <- x2 + as.numeric(t(d[keep]) %*% solve(V[keep, keep, drop = FALSE]) %*% d[keep])
+  df <- df + length(keep)
+}
+if (df > 0) {
+  cat("Marginal homogeneity (Maxwell) chi-square =", six(x2), " df =", df, " ",
+      pv(pchisq(x2, df, lower.tail = FALSE)), "\n")
+} else {
+  cat("Marginal homogeneity (Maxwell) chi-square not calculated: the raters never disagree\n")
+}
 
 # The generalised McNemar (Bowker) test of symmetry, as mcnemar.test(counts) computes
 # it, except that the pair of cells that are both empty (weak MAST, very high RAST and
@@ -112,5 +137,9 @@ below <- t(counts)[upper.tri(counts)]
 filled <- above + below > 0
 x2m <- sum((above - below)[filled]^2 / (above + below)[filled])
 dfm <- sum(filled)
-cat("Symmetry (generalised McNemar) chi-square =", six(x2m), " df =", dfm, " ",
-    pv(pchisq(x2m, dfm, lower.tail = FALSE)), "\n")
+if (dfm > 0) {
+  cat("Symmetry (generalised McNemar) chi-square =", six(x2m), " df =", dfm, " ",
+      pv(pchisq(x2m, dfm, lower.tail = FALSE)), "\n")
+} else {
+  cat("Symmetry (generalised McNemar) chi-square = [not calculated - zero cells]  df = 0\n")
+}

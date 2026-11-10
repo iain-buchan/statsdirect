@@ -72,6 +72,12 @@ internal static partial class Program
                 Console.WriteLine($"PASS {checks} 5.3.9 recipe checks");
                 return 0;
             }
+            if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") is string recipes5310 && recipes5310.StartsWith("recipes5310", StringComparison.Ordinal))
+            {
+                CheckRecipes5310(Path.Combine(TemporaryRoot, "recipes-5310"), recipes5310 == "recipes5310" ? null : recipes5310["recipes5310-".Length..]);
+                Console.WriteLine($"PASS {checks} 5.3.10 recipe checks");
+                return 0;
+            }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "posthoc-meta")
             {
                 CheckPosthocMeta537(Path.Combine(TemporaryRoot, "posthoc-meta"));

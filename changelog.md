@@ -2,6 +2,11 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
+##[Unreleased]
+
+### Fixed
+- Kappa replay of two raters, from their columns or from a typed table, gives the report's Maxwell test when a grade is never taken for another, grouping the grades that disagreements join as the report does, instead of stopping at a matrix with no inverse; when the raters never disagree it says that the Maxwell and generalised McNemar tests were not calculated.
+
 ##[v5.3.9] 2026-11-09
 
 ### Fixed
