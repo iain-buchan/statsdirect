@@ -2,6 +2,11 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
+##[Unreleased]
+
+### Fixed
+- The incidence rate ratios that follow a Poisson regression, and the bootstrap odds ratios that follow a logistic regression, mark the row of an aliased predictor "* error: drop this variable *" as the main reports do, instead of showing a ratio of 1 with limits of 1 to 1; an aliased predictor is no longer offered as a sub-population for the incidence rate ratios, and R replay marks the same rows.
+
 ##[v5.3.9] 2026-11-09
 
 ### Fixed

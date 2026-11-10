@@ -4134,6 +4134,14 @@ namespace StatsDirect.Builtins
                     parList.Add(parParameters);
                     parParameters.AddOutput("par", labels[i - iq]);
                     parParameters.AddOutput("est", b[i]);
+                    if (se[i] == 0.0)
+                    {
+                        //  an aliased column has no ratio: its row is marked as in the main report, not shown as 1 (1 to 1)
+                        parParameters.AddOutput("irr", "* error: drop this variable *");
+                        parParameters.AddOutput("lci", Constant.MISSING);
+                        parParameters.AddOutput("uci", Constant.MISSING);
+                        continue;
+                    }
                     double rr = Formatting.SafeExp(b[i]);
                     double lci;
                     double uci;
@@ -4192,6 +4200,13 @@ namespace StatsDirect.Builtins
                                 parList.Add(parParameters);
                                 parParameters.AddOutput("par", labels[i - iq]);
                                 parParameters.AddOutput("est", b[i]);
+                                if (se[i] == 0.0)
+                                {
+                                    parParameters.AddOutput("irr", "* error: drop this variable *");
+                                    parParameters.AddOutput("lci", Constant.MISSING);
+                                    parParameters.AddOutput("uci", Constant.MISSING);
+                                    continue;
+                                }
                                 double rr = Formatting.SafeExp(b[i]) * bx;
                                 double lci;
                                 double uci;
@@ -4253,7 +4268,8 @@ namespace StatsDirect.Builtins
                             break;
                         }
                     }
-                    if (ok)
+                    //  an aliased column (standard error 0) was dropped from the fit, so it defines no sub-population
+                    if (ok && context.Se[l] != 0.0)
                     {
                         okLabels.Add(context.Labels[l - iq]);
                         nsel.Add(l);
@@ -4759,6 +4775,18 @@ namespace StatsDirect.Builtins
                     ? "Constant"
                     : labels[i - iq];
                 parametersParameters.AddOutput("par", q);
+                if (context.Se[i] == 0.0)
+                {
+                    //  an aliased column has no odds ratio: its row is marked as in the main report, not shown as 1 (1 to 1)
+                    parametersParameters.AddOutput("obs", "* error: drop this variable *");
+                    if (i > 1 || !mean)
+                    {
+                        parametersParameters.AddOutput("bias", Constant.MISSING);
+                        parametersParameters.AddOutput("lci", Constant.MISSING);
+                        parametersParameters.AddOutput("uci", Constant.MISSING);
+                    }
+                    continue;
+                }
                 parametersParameters.AddOutput("obs", ob[i]);
                 if (i > 1 || !mean)
                 {

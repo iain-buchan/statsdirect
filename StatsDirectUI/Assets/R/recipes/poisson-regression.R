@@ -68,11 +68,16 @@ signed <- paste0(ifelse(s[slopes, 1] >= 0, "+", ""), six(s[slopes, 1]), " ", lab
 cat("log(response)", if (is.null(exposure)) "" else "[offset log(exposure)]", "=", if (intercept) six(s[1, 1]) else "", paste(signed, collapse = " "), "\n")
 
 # Incidence rate ratios: exp of the coefficients, with Wald limits (the intercept's
-# row is the baseline rate per subject-year)
+# row is the baseline rate per subject-year). A predictor that R dropped as aliased
+# (its coefficient is NA) has no ratio: its row carries the report's marker
 ci <- confint.default(fit, level = confidence)[rownames(s), , drop = FALSE]
-for (i in seq_len(nrow(s))) {
-  cat(lab[i], six(s[i, 1]), six(exp(s[i, 1])), six(exp(ci[i, 1])), "to",
-      six(exp(ci[i, 2])), "\n")
+every <- if (intercept) c("Intercept", names(predictors)) else names(predictors)
+dropped <- "* error: drop this variable *"
+for (j in seq_along(every)) {
+  i <- match(j, position)
+  if (is.na(i)) cat(every[j], dropped, "\n") else
+    cat(lab[i], six(s[i, 1]), six(exp(s[i, 1])), six(exp(ci[i, 1])), "to",
+        six(exp(ci[i, 2])), "\n")
 }
 
 # The report also gives the ratios in each veteran status: among the veterans
@@ -81,7 +86,12 @@ for (i in seq_len(nrow(s))) {
 # from the covariance matrix; among the non-veterans they are the ratios above
 vc <- vcov(fit)[rownames(s), rownames(s), drop = FALSE]
 first <- match(1 + as.integer(intercept), position) # first predictor, if estimable
-if (!is.na(first)) for (i in setdiff(slopes, first)) {
+if (!is.na(first)) for (j in setdiff(seq_along(every), c(if (intercept) 1L, position[first]))) {
+  i <- match(j, position)
+  if (is.na(i)) {
+    cat(paste0(lab[first], " = 1:"), every[j], dropped, "\n")
+    next
+  }
   est <- s[i, 1] + s[first, 1]
   se_sum <- sqrt(vc[i, i] + vc[first, first] + 2 * vc[i, first])
   half <- qnorm((1 + confidence) / 2) * se_sum
