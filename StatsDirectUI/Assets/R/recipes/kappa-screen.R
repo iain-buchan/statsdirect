@@ -14,8 +14,9 @@ print(counts)
 # Base R has no kappa function, so the statistics are computed from the table as the
 # formulae above give them: the proportions in the cells, the row and column margins
 # and the proportion of sera the two tests graded alike
-six <- function(x) formatC(x, digits = 6, format = "f", drop0trailing = TRUE)
+six <- function(x) if (is.na(x)) "*" else formatC(x, digits = 6, format = "f", drop0trailing = TRUE)
 pv <- function(p) {
+  if (is.na(p)) return("P = *")
   if (p < 0.0001) "P < 0.0001" else
     paste("P =", formatC(p, digits = 4, format = "f", drop0trailing = TRUE))
 }
@@ -79,6 +80,9 @@ cat("Scott's pi\n")
 cat("Observed agreement =", pc2(po), "\n")
 cat("Expected agreement =", pc2(spe), "\n")
 cat("Pi =", six((po - spe) / (1 - spe)), "\n")
+donner <- kappa_donner_interval(counts, confidence)
+if (!is.null(donner))
+  cat(pct, "Donner-Eliasziw confidence interval =", six(donner[1]), "to", six(donner[2]), "\n")
 
 # Gwet's AC1, with its variance (Gwet 2008)
 pe1 <- sum(margin * (1 - margin)) / (g - 1)
