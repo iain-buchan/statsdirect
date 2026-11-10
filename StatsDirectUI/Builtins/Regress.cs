@@ -946,10 +946,10 @@ namespace StatsDirect.Builtins
                 }
                 Regress1.glsqr(0, incep, 0, context.N, indep + iwt + 1, xx, -indep, idum, -1, idum, 0, iwtcol, context.B, r, D, ref irank, ref rdf, ref rss, ref nrmiss, xMin, xMax, wk, ref ifault);
             }
-            // glsqr reports 12 when the fit leaves no degrees of freedom for error: as many rows as parameters.  In multiple regression
-            // the fit is complete and exact, and is kept; only what needs the residual mean square is undefined.  (It used to be made
-            // again by singular value decomposition, whose sums of squares are wrong with weights.)
-            bool saturated = ifault == 12 && !polynomial;
+            // glsqr reports 12 when the fit leaves no degrees of freedom for error: as many rows as parameters.  The fit is complete
+            // and exact, and is kept, for a polynomial as for multiple regression; only what needs the residual mean square is
+            // undefined.  (It used to be made again by singular value decomposition, whose sums of squares are wrong with weights.)
+            bool saturated = ifault == 12;
             if (saturated)
             {
                 ifault = 0;

@@ -21,10 +21,12 @@ size <- size[ordered]
 fit <- eval(bquote(lm(kwh ~ poly(size, .(degree), raw = TRUE))))
 print(summary(fit))
 
-# The report's lines to 6 places, as for multiple linear regression
-six <- function(x) formatC(x, digits = 6, format = "f", drop0trailing = TRUE)
+# The report's lines to 6 places, as for multiple linear regression. With no
+# residual degrees of freedom (as many points as coefficients: a quadratic through
+# 3 points) R gives NaN for each test, which the report shows as *
+six <- function(x) ifelse(is.na(x), "*", formatC(x, digits = 6, format = "f", drop0trailing = TRUE))
 pv <- function(p) {
-  if (p < 0.0001) "P < 0.0001" else
+  if (is.na(p)) "P = *" else if (p < 0.0001) "P < 0.0001" else
     paste("P =", formatC(p, digits = 4, format = "f", drop0trailing = TRUE))
 }
 s <- summary(fit)$coefficients
