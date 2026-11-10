@@ -19,7 +19,7 @@
           <name>meta-cc</name>
           <prompt>Continuity correction for sparse tables</prompt>
           <prompt-precedes-parameter>true</prompt-precedes-parameter>
-          <default-value>=host.Preferences.MetaCC.ToString()</default-value>
+          <default-value>=host.Preferences.MetaCC.ToString(CultureInfo.InvariantCulture)</default-value>
           <format-type>Dropdown</format-type>
           <options>
             <option value="-9">Treatment arm</option>
@@ -33,7 +33,8 @@
 SDPreferences preferences = host.Preferences;
 preferences.MetaExact = parameters["meta-exact"].AsBoolean;
 preferences.DelayContinuityCorrection = parameters["meta-delay"].AsBoolean;
-preferences.MetaCC = Parsing.Cdbl_Txt(parameters["meta-cc"].AsString);
+// the values of the options are written with a dot, whatever the culture: read in a culture with a decimal comma, 0.5 was 5 and 0.01 was 1
+preferences.MetaCC = double.TryParse(parameters["meta-cc"].AsString, NumberStyles.Float, CultureInfo.InvariantCulture, out double cc) && (cc == -9.0 || cc > 0.0 && cc < 1.0) ? cc : -9.0;
 return new ParameterBag();
     ]]></script>
 	</steps>
