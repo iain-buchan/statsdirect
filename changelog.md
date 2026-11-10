@@ -5,6 +5,7 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 ##[Unreleased]
 
 ### Fixed
+- R replay uses the selected confidence level for printed exact tests, summary t-test power and Kruskal–Wallis comparisons. Frequency replay includes every selected column in the chosen sort order, and 2-by-2 cohort replay includes risk difference and power.
 
 - Continue in R handles single-study meta-analyses and prints no Cochran Q P value with zero degrees of freedom. The effect size replay shows the individual estimate and leaves out pooled results, as the report does.
 - Correlation and proportion meta-analysis omit incomplete studies while keeping the labels on the corresponding rows in the report and the replay.

@@ -46,7 +46,10 @@ namespace StatsDirect.UI
                 {
                     result /= 100.0;
                     if (result >= 0.0 && result <= 1.0)
+                    {
                         OutputParameters = new ParameterBag(parameter.Name, FilledParameterFactory.Input(result));
+                        return;
+                    }
                 }
                 // else go round again
             }

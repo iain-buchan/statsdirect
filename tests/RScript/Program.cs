@@ -115,6 +115,12 @@ internal static partial class Program
                 Console.WriteLine($"PASS {checks} incomplete-study checks");
                 return 0;
             }
+            if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "round-two-levels")
+            {
+                CheckRoundTwoLevels(Path.Combine(TemporaryRoot, "round-two-levels"));
+                Console.WriteLine($"PASS {checks} round-two level and replay checks");
+                return 0;
+            }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") is string deferred && deferred.StartsWith("deferred", StringComparison.Ordinal))
             {
                 if (deferred is not ("deferred538" or "deferred-capture" or "deferred-matched" or "deferred-models" or "deferred-independent" or "deferred-meta"))
