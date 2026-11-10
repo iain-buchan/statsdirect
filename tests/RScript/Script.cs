@@ -206,7 +206,26 @@ internal static partial class Program
         Check(script.Text.Contains("# NOTE: \"y\" has changed in the workbook since the analysis ran; these are its values now.") && !script.Text.Contains("\"x\" has changed")
               && Regex.IsMatch(script.Text, "# Data: \"test.xlsx\", sheet \"Big\", read on \\d+ \\w+ 20\\d\\d \\d\\d:\\d\\d\\."),
               "a column whose hash no longer matches is noted, and the head says where and when the data were read");
-        Check(Regex.IsMatch(script.Text, "^before <- c\\(100, 108\\.414709848078\\d*, ", RegexOptions.Multiline) && script.Text.Contains("   # x, column 4, rows 1 to 2601\n"), "the values read are written into the script under the recipe's names");
+        Check(Regex.IsMatch(script.Text, "^# before <- c\\(100, 108\\.414709848078\\d*, ", RegexOptions.Multiline)
+            && Regex.IsMatch(script.Text, "^before <- c\\(100, 0x", RegexOptions.Multiline)
+            && script.Text.Contains("   # x, column 4, rows 1 to 2601\n"),
+            "the worksheet values have exact literals and a readable decimal comment under the recipe's names");
+        string worksheetFolder = Path.Combine(folder, "worksheet-read");
+        Directory.CreateDirectory(worksheetFolder);
+        using (var valuesWritten = new BinaryWriter(File.Create(Path.Combine(worksheetFolder, "expected-pairs.bin"))))
+        {
+            foreach (double value in x) valuesWritten.Write(value);
+            foreach (double value in y) valuesWritten.Write(value);
+        }
+        output = RunR(script.Text + $$"""
+
+            n_expected <- {{x.Length}}L
+            expected <- readBin("expected-pairs.bin", "double", n = 2L * n_expected, size = 8L, endian = "little")
+            stopifnot(identical(before, expected[seq_len(n_expected)]),
+                      identical(after, expected[n_expected + seq_len(n_expected)]))
+            cat("WORKSHEET_VALUES_OK\n")
+            """, worksheetFolder);
+        Check(output.Contains("WORKSHEET_VALUES_OK"), "R reads the complete worksheet vectors at their original precision");
         script = RScriptWriter.Write(record, null, pointer => new FrameValues { Unavailable = "the workbook test.xlsx is not open and was not found" });
         Check(script.DataUnavailable && script.Text.Contains("before <- NULL   # x, column 4, rows 1 to 2601: not read, see above") && script.Text.Contains("could not be read (the workbook test.xlsx is not open and was not found): put the values in by hand."),
               "when the workbook cannot be read the script says so and leaves the vectors for the user");
