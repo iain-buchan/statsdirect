@@ -9,6 +9,7 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 - A recently used file on a drive that is not there, such as a USB stick not plugged in or a network drive that is mapped later, stays in the recent files list, both when StatsDirect starts and when the file is chosen from the list and cannot be opened: a file is taken off the list only when its drive is there and the file is not, or cannot be read.
 - The default workbook font and the chart title and label fonts keep their sizes between regional settings: a size is saved with a point as its decimal separator and is read with a point or a comma, so that the 10.5 points saved as "10,5" where the decimal separator is a comma are no longer 105 points where it is a point.
 - The "Precision of estimates" box of logistic regression and of Poisson regression takes a value of any length: it stopped at 12 characters, so that a precision typed as 0.00000000001 was cut at 0.0000000000 and was taken as zero.
+- Time series summary refuses a blank or missing group with the missing-data message when the groups are selected, as it refuses a blank subject identifier, instead of failing with an index error; a summary whose groups are complete or skipped is unchanged.
 
 ##[v5.3.9] 2026-11-09
 
