@@ -2003,19 +2003,25 @@ namespace StatsDirect.Builtins
                 // Try exact IRR
                 if (host.Preferences.MetaExact)
                 {
-                    Rec2X2[] tbl = new Rec2X2[k + 1];
+                    Rec2X2[] tbl = new Rec2X2[(int)realk + 1];
+                    int pooled = 0;
                     for (int i = 1; i <= k; i++)
                     {
-                        tbl[i].Freq = 1;
-                        tbl[i].A = a[i];
-                        tbl[i].M1 = b[i] + a[i];
-                        tbl[i].N1 = pt1[i];
-                        tbl[i].N0 = pt2[i];
-                        tbl[i].IsInformative = (a[i] * pt1[i] != 0.0) | (b[i] * pt2[i] != 0.0);
+                        if (rkr[i] == Constant.MISSING)
+                            continue;
+                        tbl[++pooled] = new Rec2X2
+                        {
+                            Freq = 1,
+                            A = a[i],
+                            M1 = b[i] + a[i],
+                            N1 = pt1[i],
+                            N0 = pt2[i],
+                            IsInformative = true
+                        };
                     }
                     bool useLogScale = false;
                     // person-time data: the conditional distribution of a given a + b is binomial with the person-times as its odds
-                    new ExactBB().Exact22K(host, 1, k, Exact22KDataType.Type3, tbl, cco, out eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
+                    new ExactBB().Exact22K(host, 1, pooled, Exact22KDataType.Type3, tbl, cco, out eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
                 }
                 else
                 {
