@@ -390,7 +390,7 @@ internal static partial class Program
         await (Task)Call(view, "OpenHtmlAsync", File.ReadAllText(path), "Reopened copied picture");
         Check(await Pictures() == 2, kind + " copied report pictures survive redo, HTML saving and reopening");
 
-        await (Task)Call(view, "AppendAsync", "<p>Text kept as editable text</p>", "Text copy check", "", 0, null, null);
+        await (Task)Call(view, "AppendAsync", "<p>Text kept as editable text</p>", "Text copy check", "", 0, null, null, false);
         await browser.CoreWebView2.ExecuteScriptAsync("(()=>{const p=document.querySelector('#results .report-entry:last-child p'),r=document.createRange();document.getElementById('results').focus();r.selectNodeContents(p);getSelection().removeAllRanges();getSelection().addRange(r);})()");
         if (!await publish("copy")) return false;
         Check(!Clipboard.ContainsImage() && Clipboard.GetDataObject()?.GetDataPresent("PNG", false) != true

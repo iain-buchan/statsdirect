@@ -128,6 +128,13 @@ internal static partial class Program
                 Console.WriteLine($"PASS {checks} deferred 5.3.8 checks"); return 0;
             }
             // one group of checks alone, while it is being written: STATSDIRECT_RSCRIPT_ONLY=options runs the options checks and stops
+            if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "round2-host")
+            {
+                StatsDirect.R.RRecipes.Folder = Metadata("Recipes");
+                CheckRound2Host(Path.Combine(TemporaryRoot, "round2-host"));
+                Console.WriteLine($"PASS {checks} exact number checks");
+                return 0;
+            }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "window") { CheckScriptWindowNumbers(); Console.WriteLine($"PASS {checks} script window checks"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "options") { CheckOptions(); Console.WriteLine($"PASS {checks} Continue in R checks (the options alone)"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "options2") { CheckOptions2(); Console.WriteLine($"PASS {checks} Continue in R checks (the second batch of options alone)"); return 0; }

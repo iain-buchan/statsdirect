@@ -32,6 +32,7 @@
           <prompt>Select observations</prompt>
           <acquire-if-true>=parameters.ContainsKey("type") &amp;&amp; null != parameters["type"] &amp;&amp; parameters["type"].AsString.Contains("categories")</acquire-if-true>
           <mode>CategoryReplaceMissing</mode>
+          <preserve-row-alignment>true</preserve-row-alignment>
           <clear-selection-first>true</clear-selection-first>
           <min-columns>1</min-columns>
           <max-columns>1</max-columns>

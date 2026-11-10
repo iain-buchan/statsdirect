@@ -262,7 +262,8 @@ namespace StatsDirect.R
                         else if (titles[i].Contains('\0')) titles[i] = RunRecord.UniqueTitle(titles[i].Replace('\0', ' '), used);
                     }
                 }
-                s.Append(variable).Append(" <- list(").Append(string.Join(",\n  ", indices.Select((i, j) => Quote(titles == null ? columns[i].Title : titles[j]) + " = " + Vector(columns[i].Values)))).Append(")\n");
+                AppendDataAssignment(s, variable, exact => "list(" + string.Join(",\n  ", indices.Select((i, j) =>
+                    Quote(titles == null ? columns[i].Title : titles[j]) + " = " + Vector(columns[i].Values, exact))) + ")");
                 names.Add(variable);
             }
             void Missing(string variable, string why)
@@ -281,8 +282,9 @@ namespace StatsDirect.R
                     s.Append(variable).Append(" <- NULL   # the run's data were too many to keep with the result\n");
                     return;
                 }
-                s.Append(variable).Append(" <- list(\n  ").Append(string.Join(",\n  ", frames.EnumerateArray().Select(level =>
-                    "list(" + string.Join(", ", level.EnumerateArray().Select(c => (string.IsNullOrEmpty(Text(c, "title")) ? "" : Quote(Text(c, "title")) + " = ") + Vector(c.TryGetProperty("values", out JsonElement v) ? Objects(v) : Array.Empty<object>()))) + ")"))).Append(")\n");
+                AppendDataAssignment(s, variable, exact => "list(\n  " + string.Join(",\n  ", frames.EnumerateArray().Select(level =>
+                    "list(" + string.Join(", ", level.EnumerateArray().Select(c => (string.IsNullOrEmpty(Text(c, "title")) ? "" : Quote(Text(c, "title")) + " = ")
+                        + Vector(c.TryGetProperty("values", out JsonElement v) ? Objects(v) : Array.Empty<object>(), exact))) + ")")) + ")");
             }
             // Keep the ordinary, short one-column script. Only a multi-column
             // selection needs a list and a loop around the same analysis.
@@ -296,8 +298,8 @@ namespace StatsDirect.R
                 {
                     // R does not accept list("" = ...). Assigning names afterwards
                     // preserves an untitled column as well as duplicate titles.
-                    s.Append("samples <- list(").Append(string.Join(",\n  ", repeatColumns.Select(i => Vector(columns[i].Values)))).Append(")\n")
-                        .Append("names(samples) <- c(").Append(string.Join(", ", repeatColumns.Select(i => Quote(columns[i].Title ?? "")))).Append(")\n");
+                    AppendDataAssignment(s, "samples", exact => "list(" + string.Join(",\n  ", repeatColumns.Select(i => Vector(columns[i].Values, exact))) + ")");
+                    s.Append("names(samples) <- c(").Append(string.Join(", ", repeatColumns.Select(i => Quote(columns[i].Title ?? "")))).Append(")\n");
                     names.Add("samples");
                 }
                 else ListOf("samples", repeatColumns);
@@ -371,7 +373,7 @@ namespace StatsDirect.R
                 if (detail != null)
                     s.Append("# ").Append(Plain(detail)).Append('\n');
                 s.Append('\n');
-                s.Append(binding.Matrix).Append(" <- cbind(").Append(string.Join(",\n  ", columns.Select(c => Quote(c.Title) + " = " + Vector(c.Values)))).Append(")\n");
+                AppendDataAssignment(s, binding.Matrix, exact => "cbind(" + string.Join(",\n  ", columns.Select(c => Quote(c.Title) + " = " + Vector(c.Values, exact))) + ")");
                 names.Add(binding.Matrix);
             }
             // the settings
@@ -394,7 +396,7 @@ namespace StatsDirect.R
                         : parameter == "statsdirectRootOperation" ? record.TryGetProperty("rootOperation", out value)
                         : parameters.ValueKind == JsonValueKind.Object && parameters.TryGetProperty(parameter, out value);
                     if (found && (IsScalar(value) || value.ValueKind is JsonValueKind.Array or JsonValueKind.Object or JsonValueKind.Null))
-                        s.Append(variable).Append(" <- ").Append(Literal(value)).Append('\n');
+                        AppendSetting(s, variable, value);
                     else
                         s.Append(variable).Append(" <- NULL   # the run had no ").Append(Plain(parameter)).Append('\n');   // an option the run was not asked, or skipped
                 }
@@ -402,7 +404,7 @@ namespace StatsDirect.R
             else if (parameters.ValueKind == JsonValueKind.Object)
                 foreach (JsonProperty property in parameters.EnumerateObject())
                     if (IsScalar(property.Value) && !property.Name.StartsWith("statsdirect", StringComparison.OrdinalIgnoreCase))
-                        s.Append(SafeName(property.Name, names)).Append(" <- ").Append(Literal(property.Value)).Append("   # ").Append(Plain(property.Name)).Append('\n');
+                        AppendSetting(s, SafeName(property.Name, names), property.Value, Plain(property.Name));
             s.Append('\n');
             // the analysis
             if (binding != null)
@@ -430,20 +432,43 @@ namespace StatsDirect.R
         private static void Assign(StringBuilder s, string variable, Column column, HashSet<string> names)
         {
             names.Add(variable);
-            s.Append(variable).Append(" <- ");
-            if (column.Unavailable)
-                s.Append("NULL");
-            else
-                s.Append(Vector(column.Values));
-            s.Append("   # ").Append(Plain(column.Title));
+            string suffix = "   # " + Plain(column.Title);
             if (column.Where != null)
-                s.Append(", ").Append(column.Where);
+                suffix += ", " + column.Where;
             if (column.Unavailable)
-                s.Append(": not read, see above");
-            s.Append('\n');
+                s.Append(variable).Append(" <- NULL").Append(suffix).Append(": not read, see above\n");
+            else
+                AppendDataAssignment(s, variable, exact => Vector(column.Values, exact), suffix);
             // the column's title, for a recipe's labels: the help example's names must not label the user's data
             s.Append(variable).Append("_title <- ").Append(Quote(column.Title)).Append('\n');
             names.Add(variable + "_title");
+        }
+
+        private static void AppendDataAssignment(StringBuilder s, string variable, Func<bool, string> format, string suffix = "")
+        {
+            string literal = format(true), decimals = format(false);
+            if (literal != decimals)
+                s.Append("# ").Append(variable).Append(" <- ").Append(decimals.Replace("\n", "\n# ")).Append('\n');
+            s.Append(variable).Append(" <- ").Append(literal).Append(suffix).Append('\n');
+        }
+
+        private static void AppendSetting(StringBuilder s, string variable, JsonElement value, string label = null)
+        {
+            if (value.ValueKind is JsonValueKind.Array or JsonValueKind.Object)
+            {
+                AppendDataAssignment(s, variable, exact => Literal(value, exact));
+                return;
+            }
+            string literal = Literal(value), decimals = Literal(value, false);
+            s.Append(variable).Append(" <- ").Append(literal);
+            if (literal != decimals)
+            {
+                s.Append("   # ").Append(decimals);
+                if (label != null) s.Append(" (").Append(label).Append(')');
+            }
+            else if (label != null)
+                s.Append("   # ").Append(label);
+            s.Append('\n');
         }
 
         private static string Where(FramePointer pointer, int index)
@@ -601,35 +626,60 @@ namespace StatsDirect.R
         }
 
         /// <summary>A vector of a column's values: numeric when every value is a number or missing, else text.</summary>
-        public static string Vector(object[] values)
+        public static string Vector(object[] values) => Vector(values, true);
+
+        private static string Vector(object[] values, bool exact)
         {
             bool numeric = values.All(v => v == null || v is double);
             if (values.Length == 0)
                 return numeric ? "numeric(0)" : "character(0)";
-            return "c(" + string.Join(", ", values.Select(v => numeric ? Number(v) : v == null ? "NA" : Quote(v is double x ? x.ToString("R", inv) : v is bool b ? (b ? "TRUE" : "FALSE") : v is DateTime t ? t.ToString("yyyy-MM-dd", inv) : v.ToString()))) + ")";
+            return "c(" + string.Join(", ", values.Select(v => numeric ? Number(v, exact) : v == null ? "NA" : Quote(v is double x ? x.ToString("R", inv) : v is bool b ? (b ? "TRUE" : "FALSE") : v is DateTime t ? t.ToString("yyyy-MM-dd", inv) : v.ToString()))) + ")";
         }
 
-        private static string Number(object value)
+        private static string Number(object value, bool exact)
         {
             if (value is not double x)
                 return "NA";
             if (double.IsNaN(x)) return "NaN";
             if (double.IsPositiveInfinity(x)) return "Inf";
             if (double.IsNegativeInfinity(x)) return "-Inf";
-            return x.ToString("R", inv);
+            string decimalText = x.ToString("R", inv);
+            if (!exact) return decimalText;
+
+            int digits = 0, significant = 0;
+            foreach (char ch in decimalText)
+            {
+                if (ch == 'E') break;
+                if (ch is < '0' or > '9' || (ch == '0' && digits == 0)) continue;
+                digits++;
+                if (ch != '0') significant = digits;
+            }
+            if (significant <= 15) return decimalText;
+
+            // Some R builds parse long decimal constants a bit away from the recorded double.
+            // Emit the binary significand and exponent directly, including subnormals.
+            ulong bits = BitConverter.DoubleToUInt64Bits(x);
+            int exponent = (int)((bits >> 52) & 0x7ff);
+            string fraction = (bits & 0x000f_ffff_ffff_ffff).ToString("x13", inv).TrimEnd('0');
+            string significand = exponent == 0 ? "0" : "1";
+            if (fraction.Length != 0) significand += "." + fraction;
+            return (bits >> 63 == 0 ? "0x" : "-0x") + significand + "p"
+                + (exponent == 0 ? -1022 : exponent - 1023).ToString(inv);
         }
 
         private static bool IsScalar(JsonElement value) => value.ValueKind is JsonValueKind.Number or JsonValueKind.True or JsonValueKind.False or JsonValueKind.String;
 
         /// <summary>The R literal of a JSON value: numbers, TRUE/FALSE, strings, lists and named lists, NULL.</summary>
-        public static string Literal(JsonElement value) => value.ValueKind switch
+        public static string Literal(JsonElement value) => Literal(value, true);
+
+        private static string Literal(JsonElement value, bool exact) => value.ValueKind switch
         {
-            JsonValueKind.Number => Number(value.GetDouble()),
+            JsonValueKind.Number => Number(value.GetDouble(), exact),
             JsonValueKind.True => "TRUE",
             JsonValueKind.False => "FALSE",
             JsonValueKind.String => Quote(value.GetString()),
-            JsonValueKind.Array => "list(" + string.Join(", ", value.EnumerateArray().Select(Literal)) + ")",
-            JsonValueKind.Object => "list(" + string.Join(", ", value.EnumerateObject().Select(p => Quote(p.Name) + " = " + Literal(p.Value))) + ")",
+            JsonValueKind.Array => "list(" + string.Join(", ", value.EnumerateArray().Select(item => Literal(item, exact))) + ")",
+            JsonValueKind.Object => "list(" + string.Join(", ", value.EnumerateObject().Select(p => Quote(p.Name) + " = " + Literal(p.Value, exact))) + ")",
             _ => "NULL"
         };
     }

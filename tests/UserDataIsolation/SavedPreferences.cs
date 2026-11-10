@@ -379,6 +379,8 @@ internal static partial class Program
         // A file whose volume is not there (a USB stick not plugged in, a drive that a login script maps later) is kept: only a file that
         // its own volume says has gone is taken off, or the next save would forget it. The path is only named here; nothing is made there.
         string absent = OnAbsentVolume("recent file on a drive not plugged in.xlsx");
+        Check(!Settings.VolumeIsThere(absent) && Settings.VolumeIsThere(deleted),
+            "the failed-open recent-file rule distinguishes an absent volume from a missing file on a present volume");
         IReadOnlyList<string> away = LoadText("{\"recentFileList\": [" + Json(absent) + ", " + Json(deleted) + ", " + Json(files[0]) + "]}").RecentFileList;
         Check(away.SequenceEqual(new[] { absent, files[0] }),
             $"a recent file whose volume is absent ({absent[..2]}) is kept, while one that its volume says has gone is taken off: " + string.Join(" | ", away.Select(Path.GetFileName)));

@@ -978,9 +978,15 @@ namespace StatsDirect.Builtins
                 }
                 // ln P of the adjusted deviate, the upper tail asked for directly (1 - alnorm(z) was 0 for z above about 8) and in
                 // log space beyond z = 30, so that the adjusted K2 = -2 ln P is printed even when P is below the smallest double
-                double logP = z < 30.0
-                    ? Math.Log(PDF.alnorm(-z))
-                    : -0.5 * z * z - Math.Log(z) - 0.5 * Math.Log(2.0 * Math.PI) + Math.Log(1.0 - 1.0 / (z * z) + 3.0 / (z * z * z * z));
+                double logP;
+                if (z < 30.0)
+                    logP = Math.Log(PDF.alnorm(-z));
+                else
+                {
+                    double w = 1.0 / (z * z);
+                    logP = -0.5 * z * z - Math.Log(z) - 0.5 * Math.Log(2.0 * Math.PI)
+                        + Math.Log(1.0 - w * (1.0 - w * (3.0 - w * (15.0 - w * 105.0))));
+                }
                 if (!double.IsNaN(logP) && !double.IsPositiveInfinity(logP))
                 {
                     k2 = -2.0 * logP;

@@ -99,14 +99,16 @@ internal static class ValidationPolicyChecks
 
             // A blank identifier or category, or a typed missing marker, is a missing value of a classifier frame. Explicit NoMissingData
             // refuses it with its message, as it refuses a missing number, before the analysis meets the missing code.
-            foreach (var (operation, name) in new[] { ("TimeSeriesSummary", "subjectIds"), ("ContractFrequencies", "categories") })
+            foreach (var (operation, name) in new[] { ("TimeSeriesSummary", "subjectIds"), ("TimeSeriesSummary", "groups"), ("ContractFrequencies", "categories") })
             {
                 var parameter = Parameter<FrameParameter>(operation, name, "frame");
-                Check(parameter.SelectionMode == DataAcquisitionMode.CategoryReplaceMissing && parameter.Validators.Any(v => v.ValidatorName == "NoMissingData"),
-                    operation + " " + name + " deserializes its category mode and its NoMissingData");
+                Check(parameter.SelectionMode == DataAcquisitionMode.CategoryCombineAllColumns && parameter.Validators.Any(v => v.ValidatorName == "NoMissingData"),
+                    operation + " " + name + " keeps the selected category rows for NoMissingData");
                 foreach (var (label, cells) in new[] {
                     ("a blank cell", new object[] { "Subject", "p1", "p2", null, "p4", "p2" }),
                     ("a typed * marker", new object[] { "Subject", "p1", "*", "p3", "p4", "p2" }),
+                    ("a final blank cell", new object[] { "Subject", "p1", "p2", "p3", "p4", null }),
+                    ("a final typed * marker", new object[] { "Subject", "p1", "p2", "p3", "p4", "*" }),
                     ("every value present", new object[] { "Subject", "p1", "p2", "p3", "p4", "p2" }) })
                 {
                     DataFrame frame = Acquired(parameter, cells);
@@ -147,7 +149,7 @@ internal static class ValidationPolicyChecks
             // one typed as a missing marker, is the missing code, which the analysis took as the index of a group (Index was out of range):
             // the prompt refuses it, as the subject identifiers' does. Complete groups, and a run with its groups skipped, are as before.
             var groupsPrompt = Parameter<FrameParameter>("TimeSeriesSummary", "groups", "frame");
-            Check(groupsPrompt.SelectionMode == DataAcquisitionMode.CategoryReplaceMissing && groupsPrompt.CancelSkipsParameter == "Skip"
+            Check(groupsPrompt.SelectionMode == DataAcquisitionMode.CategoryCombineAllColumns && groupsPrompt.CancelSkipsParameter == "Skip"
                 && groupsPrompt.Validators?.Any(v => v.ValidatorName == "NoMissingData") == true,
                 "TimeSeriesSummary groups deserializes its category mode, its skip and its NoMissingData");
             Check(new[] { null, new ParameterBag() }.All(skipped => ((ValidationResult)validate.Invoke(null, new object[] { "NoMissingData", groupsPrompt, skipped, null })).Validity == Validity.Valid),

@@ -45,6 +45,7 @@ internal static partial class Program
         CheckMetaReview5310(Path.Combine(folder, "meta-5310"));
         CheckRecipes539(Path.Combine(folder, "recipes-539"));
         CheckRecipes5310(Path.Combine(folder, "recipes-5310"));
+        CheckRound2Host(Path.Combine(folder, "round2-host"));
         Console.WriteLine("      acquisition regression artifacts: " + folder);
     }
 
