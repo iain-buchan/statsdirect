@@ -73,7 +73,7 @@ namespace StatsDirect.UI
                         false,
                         out userCancelled,
                         out wasPivoted,
-                        processor.NextOriginGroup(), rowReference);
+                        processor.NextOriginGroup(), rowReference, CoxCodingRows(frameParameter, parameters));
                 }
                 else
                 {
@@ -142,6 +142,19 @@ namespace StatsDirect.UI
                 // User error - go round again, but clear the selection to avoid unbreakable loops!
                 ClearSelection();
             }
+        }
+
+        // Incomplete time/event rows cannot introduce categories into the Cox predictor prompt.
+        internal static IReadOnlyList<bool> CoxCodingRows(FrameParameter parameter, ParameterBag parameters)
+        {
+            if (parameter.Name != "predictors" || parameter.SelectionMode != DataAcquisitionMode.NumericCodingTextToDummiesPreserveRows ||
+                !parameters.TryGetValue("times", out FilledParameter time) || !parameters.TryGetValue("events", out FilledParameter events) ||
+                time?.AsDataFrame?.Variables[0] is not DoubleVariable t || events?.AsDataFrame?.Variables[0] is not DoubleVariable e)
+                return null;
+            bool[] usable = new bool[Math.Min(t.Length, e.Length)];
+            for (int row = 0; row < usable.Length; row++)
+                usable[row] = t.Data[row] != Constant.MISSING && e.Data[row] != Constant.MISSING;
+            return usable;
         }
 
         internal DataFrame2D FillFrameParameter2D(Parameter parameter, ITemplateProcessor processor, ParameterBag parameters)
@@ -549,7 +562,7 @@ namespace StatsDirect.UI
         /// <param name="wasPivoted">If true, the user switched from selecting groups by column to by identifier or vice versa.</param>
         /// <param name="originGroup"></param>
         /// <returns></returns>
-        private DataFrame GetCellEqual(int requiredRows, DataAcquisitionMode mode, GroupIdentifierMode groupIdentifierMode, int minimumColumns, int maximumColumns, string selectionMessage, string cancelButtonLabel, bool allowUserToPivot, DataAcquisitionWidth width, bool mightBeBatching, out bool userCancelled, out bool wasPivoted, int originGroup, WorksheetOrigin groupHeaderReference = null)
+        private DataFrame GetCellEqual(int requiredRows, DataAcquisitionMode mode, GroupIdentifierMode groupIdentifierMode, int minimumColumns, int maximumColumns, string selectionMessage, string cancelButtonLabel, bool allowUserToPivot, DataAcquisitionWidth width, bool mightBeBatching, out bool userCancelled, out bool wasPivoted, int originGroup, WorksheetOrigin groupHeaderReference = null, IReadOnlyList<bool> codingRows = null)
         {
             while (true)
             {
@@ -584,7 +597,7 @@ namespace StatsDirect.UI
                     }
                 }
                 else
-                    frame = grid.GetCellArray(requiredRows, mode, minimumColumns, maximumColumns, selectionMessage, cancelButtonLabel, allowUserToPivot, mightBeBatching, out userCancelled, out wasPivoted, originGroup, groupHeaderReference);
+                    frame = grid.GetCellArray(requiredRows, mode, minimumColumns, maximumColumns, selectionMessage, cancelButtonLabel, allowUserToPivot, mightBeBatching, out userCancelled, out wasPivoted, originGroup, groupHeaderReference, codingRows);
                 if (wasPivoted)
                     return null;
 

@@ -774,7 +774,7 @@ namespace StatsDirect.UI
         /// <param name="wasPivoted">If true, the user changed from selecting groups by column to by identifier, or vice versa</param>
         /// <param name="originGroup"></param>
         /// <returns></returns>
-        public DataFrame GetCellArray(int rowLengthHint, DataAcquisitionMode mode, int minimumColumns, int maximumColumns, string selectionMessage, string cancelButtonLabel, bool allowUserToPivot, bool mightBeBatching, out bool userCancelled, out bool wasPivoted, int originGroup, WorksheetOrigin rowReference = null)
+        public DataFrame GetCellArray(int rowLengthHint, DataAcquisitionMode mode, int minimumColumns, int maximumColumns, string selectionMessage, string cancelButtonLabel, bool allowUserToPivot, bool mightBeBatching, out bool userCancelled, out bool wasPivoted, int originGroup, WorksheetOrigin rowReference = null, IReadOnlyList<bool> codingRows = null)
         {
             bool shouldDefaultSelection = null != mostRecentCellSelectionDuringBatch && mightBeBatching;
             if (shouldDefaultSelection)
@@ -799,7 +799,7 @@ namespace StatsDirect.UI
                 return null;
             }
 
-            return CellArrayProcessor.ProcessCellArrayWithReference(cellSelection, mode, rowLengthHint, false, false, originGroup, ((WindowInformation)Tag).FriendlyName, rowReference);
+            return CellArrayProcessor.ProcessCellArrayWithReference(cellSelection, mode, rowLengthHint, false, false, originGroup, ((WindowInformation)Tag).FriendlyName, rowReference, codingRows);
         }
 
         /// <summary>
