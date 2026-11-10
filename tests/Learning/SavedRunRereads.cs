@@ -145,6 +145,50 @@ internal static partial class Program
             Check(FrameReader.Read(FramePointer.From(input)).Columns.All(c => c.Changed), "showing a hidden row after the run is still reported as a change of both columns");
         });
 
+        // Two columns padded to a third in one record of 5.3.5 or 5.3.6. The padding is taken for every shorter column or for none: when
+        // both recover their recorded hashes the record replays as it was saved, and when one of them has been edited the other's padding
+        // alone would still recover its hash, but the frame is then not the one the analysis used, so neither column is padded.
+        await WithGrid(main, "Saved Friedman, two columns padded by 5.3.6", async grid =>
+        {
+            double[] second = { 24.5, 22.5, 26.5, 25.5, 21.5, 28.5, 23.5, 27.5, 24.25, 26.25, 22.25, 25.25 }, third = { 26.75, 25.75, 21.75, 27.75, 29.75, 20.75, 24.75, 23.75, 28.75 };
+            Fill(grid, 0, "Diet A", Enumerable.Range(0, 6000).Select(k => (object)(20.0 + k * 7 % 11 + k * 0.001)));
+            Fill(grid, 1, "Diet B", second.Select(v => (object)v));
+            Fill(grid, 2, "Diet C", third.Select(v => (object)v));
+            var (run, output) = RunOnGrid(grid, "Friedman", new() { ["data"] = new Padded("A1:A6001,B1:B13,C1:C10") });
+            JsonElement record = JsonDocument.Parse(run.Record).RootElement.Clone();
+            JsonElement input = SavedInput(record, "data");
+            JsonElement columns = input.GetProperty("columns");
+            Check(input.GetProperty("kind").GetString() == "frame" && !record.TryGetProperty("data", out _)
+                && new[] { 6001, 13, 10 }.Select((last, c) => columns[c].GetProperty("rows")[1].GetInt32() == last).All(same => same),
+                "three columns, two of them padded, are saved as the 5.3.6 pointer record: rows 1 to 6001, 1 to 13 and 1 to 10");
+            ParameterBag native = output.ParameterBag;
+            Check(Number(native, "nb") == 9 && Number(native, "df") == 2, "native Friedman uses the 9 complete blocks of the three treatments");
+            FrameValues reread = FrameReader.Read(FramePointer.From(input));
+            Check(reread.Unavailable == null && reread.Columns.All(c => !c.Changed && c.Values.Length == 6000)
+                && reread.Columns[1].Values.Skip(12).All(v => v == null) && reread.Columns[2].Values.Skip(9).All(v => v == null),
+                "the actual reread pads both shorter columns back to their recorded hashes, without a false change (" + Read(reread) + ")");
+            RScript script = RScriptWriter.Write(record, "Friedman test", FrameReader.Read);
+            Check(script.HasRecipe && !script.DataUnavailable && !script.Text.Contains("has changed in the workbook"), "the record with two padded columns replays without a change note");
+            await RunConversationR(script.Text, "saved-two-padded",
+                "stopifnot(isTRUE(all.equal(unname(friedman_result[c('n', 'k', 'a2', 't1', 't2', 'p')]), " + Vector(new[] { Number(native, "nb"), Number(native, "df") + 1 }.Concat(new[] { "a2", "t1", "t2", "p" }.Select(key => Number(native, key)))) +
+                ", tolerance = 1e-10, check.attributes = FALSE)))\ncat('SAVED_TWO_PADDED_OK\n')",
+                "SAVED_TWO_PADDED_OK");
+
+            // An edit to either shorter column leaves the other's padding able to recover its hash: neither is padded, the edited column
+            // keeps its change note and the notebook refuses the values, whichever of the two comes first in the selection.
+            foreach (var (column, row, title, entered) in new[] { (2, 4, "Diet C", third[3]), (1, 7, "Diet B", second[6]) })
+            {
+                ((IGrid)grid).SetValues(row, column, new object[,] { { 1000.0 } });
+                FrameValues edited = FrameReader.Read(FramePointer.From(input));
+                Check(edited.Unavailable == null && !edited.Columns[0].Changed && edited.Columns.Skip(1).All(c => c.Changed) && edited.Columns.Select(c => c.Values.Length).SequenceEqual(new[] { 6000, 12, 9 }),
+                    "with an edited cell in " + title + ", one of two padded columns, neither column is padded and both are reported as changed (" + Read(edited) + ")");
+                Check(RScriptWriter.Write(record, "Friedman test", FrameReader.Read).Text.Contains("NOTE: \"" + title + "\" has changed in the workbook"), "the edited " + title + " keeps its change note beside the other padded column");
+                Check(!NotebookAccepted(record, "Friedman test"), "the notebook export refuses the record with " + title + " edited");
+                ((IGrid)grid).SetValues(row, column, new object[,] { { entered } });
+                Check(FrameReader.Read(FramePointer.From(input)).Columns.All(c => !c.Changed && c.Values.Length == 6000), "restoring the edited cell of " + title + " restores both paddings of the record");
+            }
+        });
+
         // Raters whose columns are unequal, padded when the user accepts the warning that "the jagged ends of columns will be padded with
         // missing data": the padded rows are missing ratings, not ratings of the shorter column's first category (its id, 0, was the
         // padding). Kappa is then of the seven subjects both raters rated, as base R computes it from those pairs alone.
