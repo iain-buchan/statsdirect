@@ -51,9 +51,9 @@ internal static partial class Program
             CheckPatterns("Effect", new[] { ("en", en), ("cn", cn), ("em", new[] { 11d, 8, 9, 10, 14, 13 }),
                 ("es", new[] { 2.1, 2.5, 2.8, 3.4, 2.2, 2.6 }), ("cm", new[] { 8d, 10, 9, 8, 11, 8 }),
                 ("cs", new[] { 1.8, 2, 3.1, 3.2, 2.9, 2.4 }) }, "cs", new() { ["type"] = type });
-        // The picker takes positive totals and nonnegative counts only: a blank in either is record-only.
+        // Missing totals and counts stay aligned so the analysis can omit the incomplete study.
         CheckPatterns("ProportionMeta", new[] { ("sn", exposed), ("sr", propEvents) }, "sr",
-            new() { ["fudge"] = .5, ["method"] = "doubleArcsine" }, recordOnly: (true, true));
+            new() { ["fudge"] = .5, ["method"] = "doubleArcsine" });
 
         void CheckPatterns(string operation, (string name, double[] values)[] columns, string missingInput,
             Dictionary<string, object> settings = null, (bool wholeRow, bool cell) recordOnly = default)
