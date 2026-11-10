@@ -4,6 +4,9 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
 ##[Unreleased]
 
+### Changed
+- Windows installers and application binaries use Microsoft Artifact Signing.
+
 ### Fixed
 - R replay uses the selected confidence level for printed exact tests, summary t-test power and Kruskal–Wallis comparisons. Frequency replay includes every selected column in the chosen sort order, and 2-by-2 cohort replay includes risk difference and power.
 
