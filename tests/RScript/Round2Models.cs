@@ -297,7 +297,7 @@ internal static partial class Program
                     operation + ": saved precision is the effective value for " + text);
                 if (text != "1d-3") Check(Round2Coefficients(logistic, model).SequenceEqual(Round2Coefficients(logistic, fallback ? defaults : tight)),
                     operation + ": alternate precision entry produces the identical native fit for " + text);
-                string oracle = "stopifnot(precision==" + expected.ToString("R", inv) + ")\n";
+                string oracle = "stopifnot(precision==" + expected.ToString("R", inv) + ",fit$control$epsilon==precision)\n";
                 if (text is "0" or "0.00000000001")
                     oracle += "Y <- " + Models539Vector(y) + "\nX <- 1:10\noracle <- glm(Y~X,family=" +
                         (logistic ? "binomial" : "poisson") + ",control=glm.control(epsilon=1e-14,maxit=100))\n" +

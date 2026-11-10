@@ -2809,10 +2809,12 @@ namespace StatsDirect.Builtins
         /// in deviance from the model with a constant only, likewise; and each coefficient as an odds ratio, exp(b), with a confidence interval
         /// exp(b -/+ z se) and the two-sided P of b / se.  What the later reports need is kept in the context.
         /// </remarks>
-        private static double GlmPrecision(ParameterBag parameters)
+        private static double GlmPrecision(ParameterBag parameters, int roundingUnits)
         {
             double value = Parsing.Cdbl_Txt(parameters["accuracy"].AsString);
-            return double.IsFinite(value) && value > 0 ? Math.Min(value, 0.01) : 0.0000001;
+            if (!double.IsFinite(value) || value <= 0) return 0.0000001;
+            // Match the solvers' existing lower limit before saving the setting.
+            return value < Constant.EPSNEG ? roundingUnits * Constant.EPSNEG : Math.Min(value, 0.01);
         }
 
         private static void AddGlmAliasWarning(IList<ParameterBag> warnings, string[] labels, double[] se, int p, bool intercept)
@@ -2831,7 +2833,7 @@ namespace StatsDirect.Builtins
             int rows;
             double[] tt; double[] tr; double[] tw;
 
-            double accuracy = GlmPrecision(parameters);
+            double accuracy = GlmPrecision(parameters, 10);
             bool grouped = "grouped".Equals(parameters["grouping"].AsString);
             bool shouldCalculateIntercept = parameters["intercept"].AsBoolean;
             //  The weight frame's prompt offers "skip for none", so the option ticked and the selection skipped means no weights
@@ -5238,7 +5240,7 @@ namespace StatsDirect.Builtins
         public static StepOutput RptPoissonRegression(IFormatting host, ParameterBag parameters)
         {
             //  Dim PASSX(4, 1) As Double ' (1, 1) = calc intercept (1 = yes); (2, 1) = accuracy; (3, 1) = weights (1 = yes); (4, 1) = ptime (1 = yes)
-            double tol = GlmPrecision(parameters);
+            double tol = GlmPrecision(parameters, 20);
 
             bool ptime = "true".Equals(parameters["has-exposure"].AsString);
             bool weighted = parameters["weights"].AsBoolean && parameters.ContainsKey("weight") && parameters["weight"] != null;

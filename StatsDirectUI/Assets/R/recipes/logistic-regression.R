@@ -48,8 +48,9 @@ fit <- eval(bquote(glm(.(model), data = sd_data, family = binomial,
 if (fit$converged && !fit$boundary) {
   refit_start <- coef(fit)
   refit_start[is.na(refit_start)] <- 0
-  refit_epsilon <- if (fit$rank == length(refit_start)) min(precision, 1e-8) else 1e-8
-  fit <- update(fit, start = refit_start, control = glm.control(epsilon = refit_epsilon, maxit = 100))
+  refit_epsilon <- if (fit$rank == length(refit_start)) precision else 1e-8
+  refined <- update(fit, start = refit_start, control = glm.control(epsilon = refit_epsilon, maxit = 100))
+  if (refined$converged && !refined$boundary && refined$rank == fit$rank) fit <- refined
 }
 print(summary(fit))
 print(exp(cbind(OR = coef(fit), confint.default(fit, level = confidence))))
