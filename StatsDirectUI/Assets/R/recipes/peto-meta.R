@@ -81,7 +81,7 @@ pooled <- exp(sum_oe / sum_V)
 pooled_lower <- exp((sum_oe - z * sqrt(sum_V)) / sum_V)
 pooled_upper <- exp((sum_oe + z * sqrt(sum_V)) / sum_V)
 z_pooled <- sum_oe / sqrt(sum_V)
-cat("Pooled odds ratio = ", six(pooled), " (", pct, "CI = ", six(pooled_lower), " to ",
+cat("Pooled odds ratio = ", six(pooled), " (", pct, " CI = ", six(pooled_lower), " to ",
     six(pooled_upper), ")\n", sep = "")
 cat("Z (test of odds ratio differs from 1) =", six(z_pooled), " ",
     pv(2 * pnorm(-abs(z_pooled))), "\n")
@@ -99,7 +99,7 @@ cat("Z (test of odds ratio differs from 1) =", six(z_pooled), " ",
 Q <- if (k > 1) sum((V * (log(or) - log(pooled))^2)[included]) else 0
 dfq <- k - 1
 cat("Cochran Q = ", six(Q), "  (df = ", dfq, ")  ",
-    pv(pchisq(Q, dfq, lower.tail = FALSE)), "\n", sep = "")
+    pv(if (k > 1) pchisq(Q, dfq, lower.tail = FALSE) else NA_real_), "\n", sep = "")
 one <- function(x) formatC(x, digits = 1, format = "f", drop0trailing = TRUE)
 # I-squared interval: recorded exact/test-based choice.
 # Older records have no preference: retain the non-central interval they used.
@@ -132,7 +132,7 @@ if (k >= 2 && confidence > 0 && confidence < 1) {
 }
 if (k < 2) cat("I2 not calculated: at least two studies are required.\n") else if (anyNA(i2_ci))
   cat("I2 (inconsistency) =", one(i2), "% (interval unavailable for this number of studies and confidence level)\n") else
-  cat("I2 (inconsistency) = ", one(i2), "% (", pct, "CI = ",
+  cat("I2 (inconsistency) = ", one(i2), "% (", pct, " CI = ",
       one(i2_ci[1]), "% to ", one(i2_ci[2]), "%)\n", sep = "")
 # End of I-squared interval.
 

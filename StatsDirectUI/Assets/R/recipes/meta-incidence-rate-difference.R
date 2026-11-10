@@ -59,7 +59,7 @@ pool <- function(y, v) {
   fixed <- sum(w * y) / sum(w)
   q <- if (k > 1) sum(w * (y - fixed)^2) else 0
   spread <- sum(w) - sum(w^2) / sum(w)
-  tau2 <- if (spread == 0) 0 else max(0, (q - (k - 1)) / spread)
+  tau2 <- if (k < 2 || spread == 0) 0 else max(0, (q - (k - 1)) / spread)
   wr <- ifelse(included, 1 / (v + tau2), 0)
   list(fixed = fixed, se = sqrt(1 / sum(w)), q = q, tau2 = tau2,
        random = sum(wr * y) / sum(wr), se_r = sqrt(1 / sum(wr)),
@@ -77,7 +77,7 @@ summarise <- function(p, name, null, f = identity) {
       pv(2 * pnorm(-abs(p$fixed / p$se))), "\n", sep = "")
   cat("Non-combinability of studies\n")
   cat("Cochran Q = ", six(p$q), "  (df = ", k - 1, ")  ",
-      pv(pchisq(p$q, k - 1, lower.tail = FALSE)), "\n", sep = "")
+      pv(if (k > 1) pchisq(p$q, k - 1, lower.tail = FALSE) else NA_real_), "\n", sep = "")
   cat("Moment-based estimate of between studies variance =", six(p$tau2), "\n")
   # I2 is the share of Q beyond its degrees of freedom, with the interval of the
   # report. With the exact methods on, Q is treated as non-central chi-square and its
