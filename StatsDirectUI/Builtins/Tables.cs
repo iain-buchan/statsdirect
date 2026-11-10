@@ -1151,6 +1151,7 @@ namespace StatsDirect.Builtins
                     outputParameters.AddOutput("pe", pe * 100);
                     outputParameters.AddOutput("kappa", k);
                     outputParameters.AddInput("kDouble", k);
+                    outputParameters.AddInput("kappaConfidence", cco);
                     outputParameters.AddOutput("se", sek);
                     outputParameters.AddOutput("seci", sekci);
                     outputParameters.AddOutput("pc", cco * 100);

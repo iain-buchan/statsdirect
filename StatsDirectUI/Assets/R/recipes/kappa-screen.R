@@ -1,8 +1,10 @@
 # StatsDirect recipe: Kappa agreement of two raters from their table of counts, as the help shows it in R.
 # From the help's R code (agreement/kappa.htm); the data and settings above come from the run.
 # data: counts... = responsesCrosstab, weights... = weights
-# settings: confidence = ci, method = method
+# settings: confidence = ci, analysis_confidence = kappaConfidence, method = method
 
+# An exact-P follow-on has its own level, but this interval belongs to the original analysis.
+if (!is.null(analysis_confidence)) confidence <- analysis_confidence
 if (is.null(confidence) || !is.finite(confidence) || confidence <= 0 || confidence >= 1) confidence <- 0.95
 counts <- as.matrix(do.call(cbind, counts))   # the table typed in: the first rater's grades as rows, the second's as columns
 grades <- paste("Grade", LETTERS[seq_len(nrow(counts))])
