@@ -148,7 +148,7 @@ namespace StatsDirect.R
                 : null);
             List<string> notes = new();
             List<Column> columns = new();
-            List<(string[][] counts, string[] rows, string[] cols, string rowsTitle, string colsTitle)> tables = new();
+            List<(JsonElement input, string[] rows, string[] cols, string rowsTitle, string colsTitle)> tables = new();
             bool unavailable = false;
             JsonElement kept = record.TryGetProperty("data", out JsonElement d) && d.ValueKind == JsonValueKind.Object ? d : default;
             string now = DateTime.Now.ToString("d MMM yyyy HH:mm", inv);
@@ -164,7 +164,7 @@ namespace StatsDirect.R
                     {
                     if (kind == "table")
                     {
-                        tables.Add((Rows(input, "counts"), Strings(input, "rowLabels"), Strings(input, "columnLabels"), Text(input, "rowsTitle"), Text(input, "columnsTitle")));
+                        tables.Add((input, Strings(input, "rowLabels"), Strings(input, "columnLabels"), Text(input, "rowsTitle"), Text(input, "columnsTitle")));
                         continue;
                     }
                     if ((kind == "frame2d" || kind == "covariance") && input.TryGetProperty("value", out JsonElement levels))
@@ -353,14 +353,19 @@ namespace StatsDirect.R
             foreach (KeyValuePair<string, (JsonElement value, bool inherited)> pair in nested)
                 if (!nestedTaken.Contains(pair.Key) && !(binding != null && pair.Value.inherited) && !namedOnly)   // as for the columns: without a recipe every input is written
                     NestedList(SafeName(pair.Key, names), pair.Value.value);
-            foreach ((string[][] counts, string[] rows, string[] cols, string rowsTitle, string colsTitle) in tables)
+            foreach ((JsonElement input, string[] rows, string[] cols, string rowsTitle, string colsTitle) in tables)
             {
                 string variable = binding?.Table ?? SafeName("counts", names);
-                s.Append(variable).Append(" <- matrix(c(").Append(string.Join(", ", counts.SelectMany(r => r))).Append("), ").Append(counts.Length).Append(", byrow = TRUE");
-                if (rows.Length == counts.Length && cols.Length == (counts.Length > 0 ? counts[0].Length : 0))
-                    s.Append(",\n  dimnames = list(").Append(rowsTitle != null ? Quote(rowsTitle) + " = " : "").Append("c(").Append(string.Join(", ", rows.Select(Quote))).Append("), ")
-                     .Append(colsTitle != null ? Quote(colsTitle) + " = " : "").Append("c(").Append(string.Join(", ", cols.Select(Quote))).Append("))");
-                s.Append(")\n");
+                AppendDataAssignment(s, variable, exact =>
+                {
+                    string[][] counts = Rows(input, "counts", exact);
+                    StringBuilder table = new("matrix(c(");
+                    table.Append(string.Join(", ", counts.SelectMany(r => r))).Append("), ").Append(counts.Length).Append(", byrow = TRUE");
+                    if (rows.Length == counts.Length && cols.Length == (counts.Length > 0 ? counts[0].Length : 0))
+                        table.Append(",\n  dimnames = list(").Append(rowsTitle != null ? Quote(rowsTitle) + " = " : "").Append("c(").Append(string.Join(", ", rows.Select(Quote))).Append("), ")
+                            .Append(colsTitle != null ? Quote(colsTitle) + " = " : "").Append("c(").Append(string.Join(", ", cols.Select(Quote))).Append("))");
+                    return table.Append(')').ToString();
+                });
                 names.Add(variable);
             }
             if (binding?.Matrix != null && columns.Count > 0 && binding.Data.Count == 0 && binding.List == null)
@@ -548,11 +553,12 @@ namespace StatsDirect.R
             return run != null && DateTime.TryParse(run, inv, DateTimeStyles.RoundtripKind, out DateTime time) ? time.ToLocalTime().ToString("d MMM yyyy HH:mm", inv) : Plain(run ?? "");   // not a date, as a notebook's record may carry: kept to the comment line
         }
 
-        private static string[][] Rows(JsonElement input, string property)
+        private static string[][] Rows(JsonElement input, string property, bool exact)
         {
             if (!input.TryGetProperty(property, out JsonElement rows) || rows.ValueKind != JsonValueKind.Array)
                 return Array.Empty<string[]>();
-            return rows.EnumerateArray().Select(r => r.ValueKind == JsonValueKind.Array ? r.EnumerateArray().Select(Literal).ToArray() : new[] { Literal(r) }).ToArray();
+            return rows.EnumerateArray().Select(r => r.ValueKind == JsonValueKind.Array
+                ? r.EnumerateArray().Select(cell => Literal(cell, exact)).ToArray() : new[] { Literal(r, exact) }).ToArray();
         }
 
         private static string[] Strings(JsonElement input, string property) =>

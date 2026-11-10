@@ -1,4 +1,5 @@
 using StatsDirect.R;
+using System.Text.Json;
 
 internal static partial class Program
 {
@@ -22,6 +23,15 @@ internal static partial class Program
             + "stopifnot(paste(sprintf('%02x', as.integer(writeBin(x, raw(), size=8L, endian='little'))), collapse='') == '" + bytes + "')\n"
             + "cat('EXACT_NUMBERS_OK\\n')\n", Path.Combine(folder, "exact-bits"), 30);
         Check(result.Contains("EXACT_NUMBERS_OK"), "R reads the generated literals as the original doubles");
+
+        using var tableRecord = JsonDocument.Parse("""
+            {"operation":"UnknownForR","inputs":[{"name":"table","kind":"table","counts":[[0.10000000000000053,2]],"rowLabels":["row"],"columnLabels":["a","b"]}],"parameters":{"threshold":0.10000000000000053}}
+            """);
+        string table = RScriptWriter.Write(tableRecord.RootElement, null, null).Text;
+        Check(table.Contains("# counts <- matrix(c(0.10000000000000053, 2)") &&
+            table.Contains("\ncounts <- matrix(c(0x1.99999999999cp-4, 2)") &&
+            table.Contains("threshold <- 0x1.99999999999cp-4   # 0.10000000000000053"),
+            "the matrix and scalar assignments include the original decimals in comments");
 
         foreach (double shift in new[] { 0.1, 1.1 })
         {
