@@ -1,6 +1,7 @@
 using StatsDirect.Data;
 using StatsDirect.Templates;
 using StatsDirect.UI;
+using System.Globalization;
 using System.Reflection;
 using System.Text.Json;
 
@@ -125,6 +126,45 @@ internal static class Program
         Application.DoEvents();
         Check(target.ActiveWorksheetName == "Sheet1" && Titles(target, 8, 8) == "Fit 2", "a pick made afresh is taken again for a step that keeps the selection");
         Check(Titles(data, 0, 2) == "Y|After|X" && data.UsedArea.Columns == 3, "the grid of the data is untouched by the later pick");
+
+        // The workbook font of the preferences, as a new grid takes it. 5.3.9 and earlier wrote and read its size in the culture of the
+        // day: the 10,5 points saved where the decimal separator is a comma were 105 points where it is a point.
+        object settings = typeof(frmMain).Assembly.GetType("StatsDirect.UI.Properties.Settings")!.GetProperty("Default", BindingFlags.Static | BindingFlags.Public)!.GetValue(null)!;
+        PropertyInfo workbookFont = settings.GetType().GetProperty("DefaultWorkbookFont", Members)!;
+        object? fontBefore = workbookFont.GetValue(settings);
+        CultureInfo culture = CultureInfo.CurrentCulture;
+        List<string> sizes = new();
+        string written;
+        try
+        {
+            foreach ((string reader, string saved) in new[] { ("en-GB", "Arial;0;10,5"), ("de-DE", "Arial;0;10.5"), ("de-DE", "Arial;0;10,5"), ("en-GB", "Arial;0;10.5") })
+            {
+                CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(reader);
+                workbookFont.SetValue(settings, saved);
+                sizes.Add(DefaultFontSize((IGrid)createGrid.Invoke(main, new object?[] { "Font " + sizes.Count })!).ToString(CultureInfo.InvariantCulture));
+            }
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("de-DE");
+            using Font chosen = new("Arial", 10.5f);
+            written = StatsDirect.Utilities.Utilities.SaveStringFromFont(chosen);
+        }
+        finally { CultureInfo.CurrentCulture = culture; workbookFont.SetValue(settings, fontBefore); }
+        Application.DoEvents();
+        Check(string.Join(" ", sizes) == "10.5 10.5 10.5 10.5",
+            "a new grid takes the saved workbook font at its 10.5 points, whether the size was saved with a comma or with a point: " + string.Join(" ", sizes));
+        Check(written == "Arial;0;10.5", "a workbook font chosen where the decimal separator is a comma is saved with its size in the invariant culture: " + written);
+    }
+
+    // The default font size of the grid's workbook set, read under the workbook set's lock as the program reads it
+    static double DefaultFontSize(IGrid grid)
+    {
+        object view = Get(grid, "workbookView")!;
+        view.GetType().GetMethod("GetLock", Type.EmptyTypes)!.Invoke(view, null);
+        try
+        {
+            object set = view.GetType().GetProperty("ActiveWorkbookSet")!.GetValue(view)!;
+            return Convert.ToDouble(set.GetType().GetInterface("SpreadsheetGear.IWorkbookSet")!.GetProperty("DefaultFontSize")!.GetValue(set), CultureInfo.InvariantCulture);
+        }
+        finally { view.GetType().GetMethod("ReleaseLock", Type.EmptyTypes)!.Invoke(view, null); }
     }
 
     static object? ActiveGrid(object app) => Get(Get(app, "ActiveGrid")!, "Window");

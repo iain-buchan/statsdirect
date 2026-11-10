@@ -1,4 +1,7 @@
-﻿using System.Drawing;
+﻿using StatsDirect.Charting;
+using System;
+using System.Drawing;
+using System.Globalization;
 using System.Xml.Serialization;
 
 namespace StatsDirect.Utilities
@@ -28,13 +31,15 @@ namespace StatsDirect.Utilities
             string[] fontStrings = descriptor.Split(';');
             string familyName = fontStrings[0];
             FontStyle style = (FontStyle)Parsing.Cint_Txt(fontStrings[1]);
-            float emSize = float.Parse(fontStrings[2]);
+            // The size as either culture wrote it: 5.3.9 and earlier saved it in the culture of the day
+            if (!FontDescriptor.TryParseSize(fontStrings[2], out float emSize))
+                throw new FormatException("The font size '" + fontStrings[2] + "' is not a number.");
             return new Font(familyName, emSize, style);
         }
 
         public static string SaveStringFromFont(Font f)
         {
-            return f.FontFamily.Name + ";" + (int)f.Style + ";" + f.Size;
+            return f.FontFamily.Name + ";" + (int)f.Style + ";" + f.Size.ToString(CultureInfo.InvariantCulture);
         }
     }
 }

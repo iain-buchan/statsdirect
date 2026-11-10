@@ -304,7 +304,7 @@ namespace StatsDirect.UI.Properties
             string[] parts = font.Split(';');
             return 3 == parts.Length && !string.IsNullOrWhiteSpace(parts[0])
                 && int.TryParse(parts[1], out int style) && style >= 0 && style <= 15
-                && float.TryParse(parts[2], out float size) && size >= 1f && size <= 409f;
+                && FontDescriptor.TryParseSize(parts[2], out float size) && size >= 1f && size <= 409f;
         }
 
         // A saved value by the name Save gives the property, if the file has it

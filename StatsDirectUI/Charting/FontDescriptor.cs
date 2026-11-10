@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 
 namespace StatsDirect.Charting
 {
@@ -31,7 +32,19 @@ namespace StatsDirect.Charting
 
         public override string ToString()
         {
-            return $"{FontFamily};{Style};{SizeInPoints}pt";
+            // In the invariant culture: a size written in the culture of the day was misread wherever the decimal separator differs
+            return $"{FontFamily};{Style};{SizeInPoints.ToString(CultureInfo.InvariantCulture)}pt";
+        }
+
+        /// <summary>
+        /// Reads a saved font size as either culture wrote it. 5.3.9 and earlier wrote sizes in the culture of the day, so that ten and a
+        /// half points are "10,5" in a file saved where the decimal separator is a comma and "10.5" elsewhere. No size was ever written
+        /// with digit grouping, so a comma or a point between digits is always the decimal separator: "10,5" is never 105.
+        /// </summary>
+        public static bool TryParseSize(string text, out float size)
+        {
+            text = text.Trim().Replace(NumberFormatInfo.CurrentInfo.NumberDecimalSeparator, ".").Replace(',', '.').Replace('\u066B', '.');
+            return float.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out size);
         }
 
         public static bool TryParse(string descriptor, out FontDescriptor fontDescriptor)
@@ -53,7 +66,7 @@ namespace StatsDirect.Charting
                 string size = fontStrings[2].Trim();
                 if (size.EndsWith("pt", StringComparison.OrdinalIgnoreCase))
                     size = size[..^2].TrimEnd();
-                if (!float.TryParse(size, out float sizeInPoints) || !float.IsFinite(sizeInPoints) || sizeInPoints <= 0f)
+                if (!TryParseSize(size, out float sizeInPoints) || !float.IsFinite(sizeInPoints) || sizeInPoints <= 0f)
                     return false;
                 fontDescriptor = new FontDescriptor(fontFamily, style, sizeInPoints);
                 return true;

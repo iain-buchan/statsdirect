@@ -116,6 +116,42 @@ internal static partial class Program
         ChartPreferences.InitSharedValues();
         Check(ChartPreferences.DefaultTitleFont.Equals(new FontDescriptor("Georgia", 1, 20)) && ChartPreferences.DefaultAxisLabelFont.Equals(new FontDescriptor("Georgia", 0, 12)) &&
             ChartPreferences.DefaultLegendFont.Equals(new FontDescriptor("Georgia", 0, 12)), "saved chart fonts reach the chart defaults");
+        // Font sizes: 5.3.9 and earlier wrote and read them in the culture of the day, so that the 10,5 points saved where the decimal
+        // separator is a comma were 105 points where it is a point. They are written in the invariant culture and read as either wrote them.
+        List<string> sizesMisread = new();
+        string fontsWritten;
+        try
+        {
+            foreach (string reader in new[] { "en-GB", "de-DE", "fa-IR" })
+            {
+                CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(reader);
+                foreach (string size in new[] { "10.5", "10,5", 10.5f.ToString(CultureInfo.CurrentCulture) }.Distinct())
+                {
+                    Settings.Default.TitleFont = "Georgia;1;" + size + "pt";
+                    Settings.Default.LabelFont = "Georgia;0;" + size;
+                    ChartPreferences.InitSharedValues();
+                    float[] sizes = { ChartPreferences.DefaultTitleFont.SizeInPoints, ChartPreferences.DefaultAxisLabelFont.SizeInPoints };
+                    if (sizes.Any(points => points != 10.5f))
+                        sizesMisread.Add($"{size} in {reader} as " + string.Join("/", sizes.Select(points => points.ToString(CultureInfo.InvariantCulture))));
+                }
+            }
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("de-DE");
+            Settings.Default.TitleFont = "Georgia;1;10,5pt";
+            Settings.Default.LabelFont = "Georgia;0;10,5pt";
+            ChartPreferences.InitSharedValues();
+            ChartPreferences.SaveFonts(); // into the isolated profile
+            string saved = File.ReadAllText(Inside(SDConfiguration.SettingsPath));
+            fontsWritten = Settings.Default.TitleFont + " | " + Settings.Default.LabelFont +
+                (saved.Contains("\"Georgia;1;10.5pt\"") && saved.Contains("\"Georgia;0;10.5pt\"") ? " | both in the file" : " | not in the file");
+        }
+        finally { CultureInfo.CurrentCulture = culture; }
+        Check(sizesMisread.Count == 0, "a chart font size is read as it was written, with a point or with a comma, whatever the culture of the day" +
+            (sizesMisread.Count == 0 ? "" : ": misread " + string.Join("; ", sizesMisread)));
+        Check(fontsWritten == "Georgia;1;10.5pt | Georgia;0;10.5pt | both in the file",
+            "chart font sizes are written in the invariant culture where the decimal separator is a comma: " + fontsWritten);
+        Settings.Default.TitleFont = "Georgia;1;20pt";
+        Settings.Default.LabelFont = "Georgia;0;12pt";
+        ChartPreferences.InitSharedValues();
         List<string> fontsKept = new();
         foreach (string font in new[] { "Arial;1;NaNpt", "Arial;1;-4pt", "Arial;1;0pt", "Arial;1;Infinitypt", "Arial;64;12pt", "Arial;-1;12pt" })
         {
@@ -318,6 +354,29 @@ internal static partial class Program
             $"no more than the {Settings.MAX_RECENT_FILES} most recent files are kept");
         // A file whose volume is not there (a USB stick not plugged in, a drive that a login script maps later) is kept: only a file that
         // its own volume says has gone is taken off, or the next save would forget it. The path is only named here; nothing is made there.
+        // A file that 5.3.9 saved where the decimal separator is a comma, read where it is a point, and the other way about. Read in the
+        // culture of the day, 50,5 points were 505 and so not a size a workbook font can have, and a title of 10,5 points was one of 105.
+        List<string> fontsLost = new();
+        CultureInfo culture = CultureInfo.CurrentCulture;
+        try
+        {
+            foreach (string reader in new[] { "en-GB", "de-DE" })
+            {
+                CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(reader);
+                foreach (string font in new[] { "Calibri;0;10,5", "Calibri;0;10.5", "Calibri;0;50,5", "Calibri;0;50.5" })
+                {
+                    Settings kept = LoadText("{\"defaultWorkbookFont\": " + Json(font) + ", \"titleFont\": " + Json(font + "pt") + "}");
+                    float size = font.Contains("50") ? 50.5f : 10.5f;
+                    if (kept.DefaultWorkbookFont != font || kept.TitleFont != font + "pt" || !FontDescriptor.TryParse(kept.TitleFont, out FontDescriptor title) ||
+                        title.SizeInPoints != size)
+                        fontsLost.Add($"{font} in {reader} as the workbook font {kept.DefaultWorkbookFont} and the title font {kept.TitleFont}" +
+                            (FontDescriptor.TryParse(kept.TitleFont, out FontDescriptor misread) ? " of " + misread.SizeInPoints.ToString(CultureInfo.InvariantCulture) + " points" : ""));
+                }
+            }
+        }
+        finally { CultureInfo.CurrentCulture = culture; }
+        Check(fontsLost.Count == 0, "workbook and title fonts of 10.5 and 50.5 points, saved with a comma or with a point, load at those sizes in either culture" +
+            (fontsLost.Count == 0 ? "" : ": " + string.Join("; ", fontsLost)));
         string absent = OnAbsentVolume("recent file on a drive not plugged in.xlsx");
         IReadOnlyList<string> away = LoadText("{\"recentFileList\": [" + Json(absent) + ", " + Json(deleted) + ", " + Json(files[0]) + "]}").RecentFileList;
         Check(away.SequenceEqual(new[] { absent, files[0] }),
