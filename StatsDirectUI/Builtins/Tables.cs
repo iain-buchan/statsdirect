@@ -983,7 +983,7 @@ namespace StatsDirect.Builtins
         {
             double cco = parameters["ci"].AsDouble;
             double cit; double p;
-            if (cco > 0)
+            if (cco > 0 && cco < 1)
             {
                 p = (1.0 - cco) / 2.0;
                 cit = PDF.gauinv(1.0 - p);

@@ -3,6 +3,7 @@
 # data: mast = responses, rast = responses, weights... = weights
 # settings: confidence = ci, method = method, saved_grades = kappaGrades, text_grades = kappaTextGrades
 
+if (is.null(confidence) || !is.finite(confidence) || confidence <= 0 || confidence >= 1) confidence <- 0.95
 # the report's grade order and the table of the two raters' responses
 grades <- kappa_grade_order(c(mast, rast), saved_grades)
 counts <- table(factor(as.character(mast), grades), factor(as.character(rast), grades), dnn = c("First rater", "Second rater"))

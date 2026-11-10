@@ -3,6 +3,7 @@
 # data: counts... = responsesCrosstab, weights... = weights
 # settings: confidence = ci, method = method
 
+if (is.null(confidence) || !is.finite(confidence) || confidence <= 0 || confidence >= 1) confidence <- 0.95
 counts <- as.matrix(do.call(cbind, counts))   # the table typed in: the first rater's grades as rows, the second's as columns
 grades <- paste("Grade", LETTERS[seq_len(nrow(counts))])
 dimnames(counts) <- list(First = grades, Second = grades)
