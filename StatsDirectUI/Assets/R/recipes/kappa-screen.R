@@ -95,7 +95,7 @@ cat("Gwet's AC1\n")
 cat("Observed agreement =", pc2(po), "\n")
 cat("Chance-independent agreement =", pc2(pe1), "\n")
 cat("AC1 = ", six(ac1), " (se = ", six(sqrt(v)), ")\n", sep = "")
-cat(pct, "confidence interval =", six(ac1 - z * sqrt(v)), "to", six(ac1 + z * sqrt(v)),
+cat(pct, "confidence interval =", six(max(-1, ac1 - z * sqrt(v))), "to", six(min(1, ac1 + z * sqrt(v))),
     "\n")
 
 # Maxwell's test of marginal homogeneity: the differences between the row and column

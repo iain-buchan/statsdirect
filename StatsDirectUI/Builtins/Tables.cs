@@ -637,8 +637,8 @@ namespace StatsDirect.Builtins
                     quantity[i, j] = (i == j ? 1.0 : 0.0) - 2.0 * (1.0 - gama) * (1.0 - ((pdotj[i] + pidot[i]) / 2.0 + (pdotj[j] + pidot[j]) / 2.0) / 2.0) / (g - 1.0);
             double vgama = (1.0 - f) / (gt * Math.Pow(1.0 - pegama, 2.0)) * CentredVariance(quantity, share, g);
             segama = Math.Sqrt(vgama);
-            gamacil = gama - cit * segama;
-            gamaciu = gama + cit * segama;
+            gamacil = Math.Max(-1.0, gama - cit * segama);
+            gamaciu = Math.Min(1.0, gama + cit * segama);
             // vgamma is the variance of Gwett's AC1 statistic and epgamma its standard error
             double[] wibar = new double[g];
             double[] wjbar = new double[g];
