@@ -15,7 +15,7 @@ const vendor=name=>fileURLToPath(new URL('../StatsDirectUI/Assets/ReportEditor/v
 const manifest=JSON.parse(await readFile(upstream('package.json'),'utf8'));
 for(const [name,stated] of Object.entries({...manifest.dependencies,...manifest.devDependencies})){
   const installed=await readFile(upstream('node_modules/'+name+'/package.json'),'utf8').then(text=>JSON.parse(text).version,()=>'nothing');
-  if(installed!==stated)throw new Error('Refusing to bundle: package.json states '+name+' '+stated+', but '+installed+' is installed in upstream/Report/node_modules. Run "pnpm --dir ReportEditor/upstream/Report install --frozen-lockfile" and see that it succeeds.');
+  if(installed!==stated)throw new Error('Refusing to bundle: package.json states '+name+' '+stated+', but '+installed+' is installed in upstream/Report/node_modules. Run the frozen-lockfile install command in ReportEditor/README.md.');
 }
 
 const bundle=(entry,globalName,plugins)=>build({entryPoints:[upstream(entry+'.mjs')],bundle:true,format:'iife',globalName,target:'chrome120',minify:true,legalComments:'eof',outfile:vendor(entry+'.js'),plugins});

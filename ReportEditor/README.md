@@ -55,7 +55,7 @@ and distinct uncached SVGs through both paths.
 Rebuild the Windows editor bundle after changing its pinned source or adapter:
 
 ```powershell
-pnpm --dir ReportEditor/upstream/Report install --frozen-lockfile
+npm exec --yes --package=pnpm@11.19.0 -- pnpm --dir ReportEditor/upstream/Report install --frozen-lockfile --ignore-scripts
 node ReportEditor/build.mjs
 ```
 
