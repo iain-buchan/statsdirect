@@ -1,11 +1,14 @@
 # StatsDirect recipe: Kappa agreement of two raters from their responses, as the help shows it in R.
 # From the help's R code (agreement/kappa.htm); the data and settings above come from the run.
 # data: mast = responses, rast = responses, weights... = weights
-# settings: confidence = ci, method = method
+# settings: confidence = ci, analysis_confidence = kappaConfidence, method = method, saved_grades = kappaGrades, text_grades = kappaTextGrades
 
-# the grades in the order they appear (numbers in their own order), and the table of the two raters' responses
-grades <- if (is.numeric(c(mast, rast))) sort(unique(c(mast, rast))) else unique(c(mast, rast))
-counts <- table(factor(mast, grades), factor(rast, grades), dnn = c("First rater", "Second rater"))
+# An exact-P follow-on has its own level, but this interval belongs to the original analysis.
+if (!is.null(analysis_confidence)) confidence <- analysis_confidence
+if (is.null(confidence) || !is.finite(confidence) || confidence <= 0 || confidence >= 1) confidence <- 0.95
+# the report's grade order and the table of the two raters' responses
+grades <- kappa_grade_order(c(mast, rast), saved_grades)
+counts <- table(factor(as.character(mast), grades), factor(as.character(rast), grades), dnn = c("First rater", "Second rater"))
 # Agreement of categorical measurements: the StatsDirect help example (Altman 1991,
 # the RAST and MAST tests of 363 sera graded in five categories) in R
 pct <- paste0(100 * confidence, "%")
@@ -14,8 +17,9 @@ print(counts)
 # Base R has no kappa function, so the statistics are computed from the table as the
 # formulae above give them: the proportions in the cells, the row and column margins
 # and the proportion of sera the two tests graded alike
-six <- function(x) formatC(x, digits = 6, format = "f", drop0trailing = TRUE)
+six <- function(x) if (is.na(x)) "*" else formatC(x, digits = 6, format = "f", drop0trailing = TRUE)
 pv <- function(p) {
+  if (is.na(p)) return("P = *")
   if (p < 0.0001) "P < 0.0001" else
     paste("P =", formatC(p, digits = 4, format = "f", drop0trailing = TRUE))
 }
@@ -63,6 +67,10 @@ for (i in 1:g) for (j in 1:g) {
 }
 sew <- sqrt((s - (pow * pew - 2 * pew + pow)^2) / (n * (1 - pew)^4))
 cat("Cohen's kappa (weighted by ", c("1" = "1-abs(i-j)/(k-1)", "2" = "1-[(i-j)/(k-1)]^2", "3" = "the table of weights")[as.character(method)], ")\n", sep = "")
+if (is.null(text_grades) || !setequal(grades, unlist(saved_grades, use.names = FALSE)))
+  text_grades <- any(!is.finite(kappa_numeric_labels(grades)))
+if (text_grades)
+  cat("Weighted kappa uses the grade order shown in the crosstab. Code grades as numbers to set their order.\n")
 cat("Observed agreement =", pc2(pow), "\n")
 cat("Expected agreement =", pc2(pew), "\n")
 cat("Kappa = ", six(kappaw), " (se_0 = ", six(se0w), ", se = ", six(sew), ")\n",
@@ -79,6 +87,9 @@ cat("Scott's pi\n")
 cat("Observed agreement =", pc2(po), "\n")
 cat("Expected agreement =", pc2(spe), "\n")
 cat("Pi =", six((po - spe) / (1 - spe)), "\n")
+donner <- kappa_donner_interval(counts, confidence)
+if (!is.null(donner))
+  cat(pct, "Donner-Eliasziw confidence interval =", six(donner[1]), "to", six(donner[2]), "\n")
 
 # Gwet's AC1, with its variance (Gwet 2008)
 pe1 <- sum(margin * (1 - margin)) / (g - 1)
@@ -91,7 +102,7 @@ cat("Gwet's AC1\n")
 cat("Observed agreement =", pc2(po), "\n")
 cat("Chance-independent agreement =", pc2(pe1), "\n")
 cat("AC1 = ", six(ac1), " (se = ", six(sqrt(v)), ")\n", sep = "")
-cat(pct, "confidence interval =", six(ac1 - z * sqrt(v)), "to", six(ac1 + z * sqrt(v)),
+cat(pct, "confidence interval =", six(max(-1, ac1 - z * sqrt(v))), "to", six(min(1, ac1 + z * sqrt(v))),
     "\n")
 
 # Maxwell's test of marginal homogeneity: the differences between the row and column

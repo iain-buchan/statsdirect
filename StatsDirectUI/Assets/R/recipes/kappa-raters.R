@@ -1,6 +1,6 @@
 # StatsDirect recipe: Kappa agreement of more than two raters from their responses.
 # data: ratings... = responses
-# settings: confidence = ci
+# settings: confidence = ci, saved_grades = kappaGrades
 
 # Agreement of more than two raters: a row for each subject and a column for each rater, with
 # an empty cell where a rater did not rate the subject.  With two categories this is the kappa
@@ -27,7 +27,7 @@ n <- sum(rated)
 mbar <- sum(m) / n
 mbarh <- n / sum(1 / m[rated])
 constant <- min(m[rated]) == max(m)
-categories <- sort(unique(ratings[!is.na(ratings)]))
+categories <- kappa_grade_order(ratings, saved_grades)
 cat("General agreement over all (", length(categories), ") categories with ",
     if (constant) max(m) else paste0(min(m[rated]), " to ", max(m), " (median ", six(median(m)), ")"),
     " raters per subject\n\n", sep = "")
@@ -54,8 +54,9 @@ if (length(categories) < 2) {
   # are both made with it
   se <- sqrt(2 * (mbarh - 1) + (mbar - mbarh) * (1 - 4 * p * q) / (mbar * p * q)) /
     ((mbar - 1) * sqrt(n * mbarh))
-  # kappa cannot be more than 1, so the upper limit of its interval stops there
-  lower <- kappa - z_ci * se
+  # With the same m ratings per subject the lower bound is -1/(m - 1);
+  # with a varying number of ratings use -1.
+  lower <- max(if (constant) -1 / (max(m) - 1) else -1, kappa - z_ci * se)
   upper <- min(1, kappa + z_ci * se)
   cat("Cohen's kappa (Fleiss-Cuzick extension)\n")
   cat("Kappa = ", six(kappa), " (se = ", six(se), ")\n", sep = "")
@@ -75,8 +76,7 @@ if (length(categories) < 2) {
     mm <- max(m)
     se_j <- sqrt(2 / (n * mm * (mm - 1)))
     se <- sqrt(2) / (sum(p * q) * sqrt(n * mm * (mm - 1))) * sqrt(sum(p * q)^2 - sum(p * q * (q - p)))
-    # kappa cannot be more than 1, so the upper limit of its interval stops there
-    lower <- kappa - z_ci * se
+    lower <- max(-1 / (mm - 1), kappa - z_ci * se)
     upper <- min(1, kappa + z_ci * se)
     print(data.frame(Response = categories, Kappa = six(kappa_j), se = six(se_j), z = six(kappa_j / se_j),
                      Probability = vapply(pnorm(kappa_j / se_j, lower.tail = FALSE), pv, "")),

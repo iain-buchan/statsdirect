@@ -413,6 +413,8 @@ namespace StatsDirect.R
                     s.Append(RRecipes.Recipe("chart-common.R").TrimEnd('\n')).Append('\n');
                 if (binding.Settings.Any(setting => setting.parameter == "doseResponseModel"))
                     s.Append(RRecipes.Recipe("dose-response-common.R").TrimEnd('\n')).Append('\n');
+                if (recipe.File is "kappa.R" or "kappa-screen.R" or "kappa-raters.R")
+                    s.Append(RRecipes.Recipe("kappa-common.R").TrimEnd('\n')).Append('\n');
                 if (repeat)
                 {
                     // Index rather than look up names: worksheet titles may repeat.

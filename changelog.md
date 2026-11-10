@@ -13,6 +13,12 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 - Report imports and pastes remove external SVG presentation references written with CSS escapes or image functions, while keeping references to the chart's own definitions.
 - Continue in R and Jupyter notebook export write exact hexadecimal literals for numbers with more than 15 significant decimal figures. A comment shows the original decimal values.
 - Royston's adjusted K-squared uses a more accurate normal tail approximation for large deviates.
+- Weighted kappa uses the report's grade order in R, including for saved analyses from the Mac, and explains the order beside the weighted result when grades are text.
+- R replay shows the Donner-Eliasziw confidence interval for Scott's pi when two grades have usable counts.
+- Kappa uses a 95% interval when the recorded level is 0% or 100%.
+- The lower confidence limit of multi-rater kappa stops at -1/(m - 1) with m ratings for every subject and at -1 when the number varies.
+- Gwet's AC1 confidence limits stop at -1 and 1 in the report and in R.
+- Continuing in R from a simulated kappa P value uses the confidence level from the original agreement analysis for the kappa intervals.
 - Offline report HTML sanitization uses DOMPurify 3.4.17 again: the report editor, import and export bundles of 5.3.9 had been built with 3.4.16, although the licence notice and this changelog said 3.4.17, and the build now refuses to bundle a library at a version other than the stated one.
 - A recently used file on a drive that is not there, such as a USB stick not plugged in or a network drive that is mapped later, stays in the recent files list, both when StatsDirect starts and when the file is chosen from the list and cannot be opened: a file is taken off the list only when its drive is there and the file is not, or cannot be read.
 - The default workbook font and the chart title and label fonts keep their sizes between regional settings: a size is saved with a point as its decimal separator and is read with a point or a comma, so that the 10.5 points saved as "10,5" where the decimal separator is a comma are no longer 105 points where it is a point.

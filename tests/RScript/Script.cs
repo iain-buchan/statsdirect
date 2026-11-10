@@ -64,6 +64,12 @@ internal static partial class Program
                 parameters.UnionWith(new[] { "metaCC", "delayContinuityCorrection" }); // the continuity correction those reports applied, recorded with them
             if (recipe.File is "meta-incidence-rate-ratio.R" or "meta-incidence-rate-difference.R")
                 parameters.Add("metaCC"); // the constant the incidence-rate report adds to a stratum with no events in one group, recorded with it
+            if (op is "Kappa" or "KappaScreen" or "KappaSimulateExactP")
+            {
+                parameters.Add("kappaConfidence"); // the native kappa report's level, retained through the simulated-P follow-on
+                if (recipe.File == "kappa.R")
+                    parameters.UnionWith(new[] { "kappaGrades", "kappaTextGrades" }); // the native report's grade order and whether it contains text
+            }
             Match settings = Regex.Match(text, "^# settings:\\s*(.*)$", RegexOptions.Multiline);
             if (settings.Success)
                 foreach (string item in settings.Groups[1].Value.Split(',').Select(x => x.Trim()).Where(x => x.Contains('=')))
