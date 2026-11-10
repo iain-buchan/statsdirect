@@ -3749,8 +3749,10 @@ namespace StatsDirect.Builtins
             double totalFrequency = ordered.Sum(pattern => pattern.Total);
             double tenth = totalFrequency / 10.0;
             // Cuts are decided with a tolerance of 1e-9 of the total: decimal weights whose exact sum lands on a cut could otherwise
-            // fall either side of it with rounding, or with the order in which the rows were added.
-            double tolerance = 1e-9 * totalFrequency;
+            // fall either side of it with rounding, or with the order in which the rows were added.  The tolerance stays under 0.1,
+            // however large the total: a tenth of a whole total ends in .0 to .9, so neither it nor a whole cumulative count is moved
+            // across a whole number, and whole frequencies are grouped as they always were.
+            double tolerance = Math.Min(1e-9 * totalFrequency, 0.05);
             double nextCut = Math.Floor(tenth + tolerance), cumulative = 0.0;
             double[] observed = new double[10], total = new double[10], expected = new double[10];
             int group = 0;

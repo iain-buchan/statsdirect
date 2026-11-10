@@ -7,6 +7,7 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 ### Fixed
 - The incidence rate ratios that follow a Poisson regression, and the bootstrap odds ratios that follow a logistic regression, mark the row of an aliased predictor "* error: drop this variable *" as the main reports do, instead of showing a ratio of 1 with limits of 1 to 1; an aliased predictor is no longer offered as a sub-population for the incidence rate ratios, and R replay marks the same rows.
 - Polynomial regression through as many points as it has coefficients (a quadratic through three points) keeps its exact fit and reports t, P and the partial correlations as unavailable, with a warning that the model is saturated, instead of fitting again by singular value decomposition with "QR solution failed and SVD used" and t = 0; its R replay, which had stopped with an error, prints * for t, P, F, root MSE and adjusted R squared.
+- The Hosmer–Lemeshow test groups whole frequencies as it did before 5.3.9 however large the total: above a total of about a hundred million the tolerance of its cut points, 1e-9 of the total, could merge two groups and lose a degree of freedom, and it now stays below a tenth of a count, natively and in R replay.
 
 ##[v5.3.9] 2026-11-09
 
