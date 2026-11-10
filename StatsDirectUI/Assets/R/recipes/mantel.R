@@ -12,6 +12,9 @@ nonsmokers <- nonsmokers[keep]
 nonsmokers_cancer <- nonsmokers_cancer[keep]
 strata <- strata[keep]
 if (is.null(strata)) strata <- paste("stratum", seq_along(smokers))
+# A stratum whose label is blank has its place among the strata kept, as in the report.
+blank <- is.na(strata) | !nzchar(trimws(strata))
+strata[blank] <- paste("stratum", which(blank))
 
 # Odds ratio meta-analysis (Mantel-Haenszel and exact): the StatsDirect help example
 # (Armitage and Berry 1994, smoking among lung cancer patients and controls in ten
@@ -331,8 +334,8 @@ cat("Chi2 (test odds ratio differs from 1) =", six(x2_re), " (df = 1) ",
 # standard errors, which the report gives only when more than three studies are
 # pooled. Begg-Mazumdar: Kendall's tau between the deviations of the log odds ratios
 # from their weighted mean, standardised, and the variances; cor.test gives the
-# exact two sided P because there are fewer than 50 studies and no ties. With tied
-# variances the report uses tau-b and a continuity-corrected normal approximation,
+# exact two sided P because there are fewer than 50 studies and no ties. With ties
+# the report uses tau-b and a continuity-corrected normal approximation, which is
 # cor.test(..., exact = FALSE, continuity = TRUE). The report adds "(low power)"
 # with fewer than eleven studies: the rank correlation test then has little power
 se <- sqrt(v_woolf)
@@ -355,9 +358,11 @@ regression <- function(y, x, label, spread) {
 }
 if (k > 3) {
   dev <- (yi - sum((w * yi)[included]) / sum(w)) / sqrt(v_woolf - 1 / sum(w))
-  begg <- cor.test(dev[included], v_woolf[included], method = "kendall", conf.level = confidence)
+  tied <- anyDuplicated(dev[included]) > 0 || anyDuplicated(v_woolf[included]) > 0
+  begg <- cor.test(dev[included], v_woolf[included], method = "kendall",
+                   exact = if (tied) FALSE else NULL, continuity = TRUE, conf.level = confidence)
   cat("Begg-Mazumdar: Kendall's tau =", six(begg$estimate), " ", pv(begg$p.value),
-      "(low power)\n")
+      if (k < 11 && !is.na(begg$estimate)) "(low power)\n" else "\n")
   # Egger: the standardised effect regressed on precision, the intercept being the
   # bias
   precision <- 1 / se[included]

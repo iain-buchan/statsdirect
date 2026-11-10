@@ -57,10 +57,13 @@ internal static partial class Program
             if (op is "Probit" or "Logit" || op.StartsWith("Probit", StringComparison.Ordinal)) parameters.Add("doseResponseModel");
             if (op == "ROCPlot") parameters.Add("rocCutoffs");
             if (recipe.File is "relative-risk-meta.R" or "meta-summary.R" or "risk-difference.R" or "peto-meta.R" or
-                "mantel.R" or "effect.R" or "meta-correlation.R" or "proportion-meta.R")
+                "mantel.R" or "effect.R" or "meta-correlation.R" or "proportion-meta.R" or
+                "meta-incidence-rate-ratio.R" or "meta-incidence-rate-difference.R")
                 parameters.Add("metaExact"); // captured once by each native meta-analysis report, then retained for replay
             if (recipe.File is "relative-risk-meta.R" or "risk-difference.R" or "mantel.R" or "mantel-haenszel-screen.R")
                 parameters.UnionWith(new[] { "metaCC", "delayContinuityCorrection" }); // the continuity correction those reports applied, recorded with them
+            if (recipe.File is "meta-incidence-rate-ratio.R" or "meta-incidence-rate-difference.R")
+                parameters.Add("metaCC"); // the constant the incidence-rate report adds to a stratum with no events in one group, recorded with it
             Match settings = Regex.Match(text, "^# settings:\\s*(.*)$", RegexOptions.Multiline);
             if (settings.Success)
                 foreach (string item in settings.Groups[1].Value.Split(',').Select(x => x.Trim()).Where(x => x.Contains('=')))

@@ -136,13 +136,8 @@ namespace StatsDirect.Builtins
                 }
                 else
                 {
-                    included[i] = false;
-                    odr[i] = Constant.MISSING;
-                    odw[i] = Constant.MISSING;
-                    odrv[i] = Constant.MISSING;
-                    odrl[i] = Constant.MISSING;
-                    odru[i] = Constant.MISSING;
-                    odz[i] = Constant.MISSING;
+                    // a study with no subjects is refused, as the relative risk, risk difference and Mantel-Haenszel analyses refuse it
+                    throw new InvalidDataException();
                 }
             }
 
@@ -648,7 +643,7 @@ namespace StatsDirect.Builtins
                     tmp += " [CC = ";
                     tmp += host.Preferences.MetaCC == -9.0
                               ? "treatment arm"
-                              : host.Preferences.MetaCC.ToString();
+                              : host.Preferences.MetaCC.ToString(CultureInfo.InvariantCulture);
                     tmp += "]";
                 }
                 if (!included[i])
@@ -2041,6 +2036,9 @@ namespace StatsDirect.Builtins
             }
 
             ParameterBag outputParameters = new();
+            // the exact method and the continuity correction, which the replay applies as the report did
+            outputParameters.AddInput("metaExact", host.Preferences.MetaExact);
+            outputParameters.AddInput("metaCC", host.Preferences.MetaCC);
             outputParameters.AddOutput("pc", cco * 100);
 
             IList<ParameterBag> inputsList = new List<ParameterBag>();
@@ -2059,7 +2057,7 @@ namespace StatsDirect.Builtins
                 if (rkr[i] == Constant.MISSING)
                     label = "* (excluded)";
                 else if (cced[i])
-                    label += " [CC = " + cc.ToString() + "]";
+                    label += " [CC = " + cc.ToString(CultureInfo.InvariantCulture) + "]";
                 inputsParameters.AddOutput("lb", label);
             }
 
@@ -3815,44 +3813,6 @@ namespace StatsDirect.Builtins
         }
 
         /// <summary>
-        /// I-squared with its test-based limits, as IsquareNcc gives them when the exact method is off.  No report calls it at present.
-        /// </summary>
-        /// <param name="q">Cochran's Q.</param>
-        /// <param name="k">The number of studies.</param>
-        /// <param name="cit">The normal deviate of the confidence level.</param>
-        /// <param name="isq">On return, I-squared as a percentage.</param>
-        /// <param name="ll">On return, the lower limit; missing with fewer than three studies.</param>
-        /// <param name="ul">On return, the upper limit.</param>
-        /// <remarks>Higgins P, Thompson S. Quantifying heterogeneity in meta-analysis. Stats in Medicine 2002; 21: 1539-1558</remarks>
-        public static void Isquare(double q, int k, double cit, out double isq, out double ll, out double ul)
-        {
-            double df = Convert.ToDouble(k - 1);
-            double hsq = q / df;
-            isq = 100.0 * Math.Max(0, (hsq - 1.0) / hsq);
-            if (k < 3)
-            {
-                ll = Constant.MISSING;
-                ul = Constant.MISSING;
-            }
-            else
-            {
-                double selh;
-                if (q > Convert.ToDouble(k))
-                {
-                    selh = 0.5 * (Math.Log(q) - Math.Log(df)) / (Math.Sqrt(2.0 * q) - Math.Sqrt(2.0 * Convert.ToDouble(k) - 3.0));
-                }
-                else
-                {
-                    selh = Math.Sqrt(1.0 / (2.0 * Convert.ToDouble(k - 2)) * (1.0 - 1.0 / (3.0 * Math.Pow(Convert.ToDouble(k - 2), 2.0))));
-                }
-                double llh = Math.Exp(Math.Log(Math.Sqrt(hsq)) - cit * selh);
-                double ulh = Math.Exp(Math.Log(Math.Sqrt(hsq)) + cit * selh);
-                ll = 100.0 * Math.Max(0, (Math.Pow(llh, 2.0) - 1.0) / Math.Pow(llh, 2.0));
-                ul = 100.0 * Math.Max(0, (Math.Pow(ulh, 2.0) - 1.0) / Math.Pow(ulh, 2.0));
-            }
-        }
-
-        /// <summary>
         /// The continuity correction of a table with a cell of nothing, by the preference MetaCC.  A number between 0 and 1 (0.5 if
         /// the preference is 0) is added to every cell.  For the treatment arm correction (-9) what is added to the cells of a group
         /// is in proportion to the size of the group: n1 / (n1 + n2) to a and c, the cells of the first group, and n2 / (n1 + n2) to
@@ -4248,7 +4208,7 @@ namespace StatsDirect.Builtins
             if (included)
                 return (stratlab ? title[i] : string.Empty)
                     + (cced[i]
-                        ? " [CC = " + (host.Preferences.MetaCC == -9.0 ? "treatment arm" : host.Preferences.MetaCC.ToString()) + "]"
+                        ? " [CC = " + (host.Preferences.MetaCC == -9.0 ? "treatment arm" : host.Preferences.MetaCC.ToString(CultureInfo.InvariantCulture)) + "]"
                         : string.Empty);
             else
                 return "* (excluded)";
@@ -4526,7 +4486,9 @@ namespace StatsDirect.Builtins
         private static double IsquareBrentRoot(double xl, double xu, double qobs, double df, double clev, ref int ierr)
         {
             double d = 0;
-            const double tolerance = 0.000001;
+            // the parameter is found to 5e-15, or to its last figures when it is large, so that a limit of I-squared near 0 is as
+            // good as one further up: found to 5e-7, as it used to be, a limit of 0.4% was right only to 2 in 100,000
+            const double tolerance = 1e-14;
             const int maxIter = 300;
 
             double e = 0.0;

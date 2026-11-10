@@ -16,6 +16,9 @@ cs <- cs[keep]
 gin <- gin[keep]
 trial <- trial[keep]
 if (is.null(trial)) trial <- paste("Trial", seq_along(en))
+# A study whose label is blank has its place among the studies kept, as in the report.
+blank <- is.na(trial) | !nzchar(trimws(trial))
+trial[blank] <- paste("stratum", which(blank))
 # Effect size meta-analysis: the StatsDirect help example (Freemantle, personal
 # communication, test outcomes of seven comparisons from six trials of an educational
 # intervention; the test workbook's meta worksheet columns J to P) in R
@@ -140,8 +143,9 @@ print(data.frame(trial, fixed = six(100 * w / sum(w)),
 # Bias indicators. Begg and Mazumdar's test is Kendall's rank correlation between
 # each study's standardised deviation from the pooled effect and its variance,
 # with the exact P value; cor.test computes it by default only for fewer than 50
-# studies, so exact = TRUE asks for it whatever their number (with tied ranks the
-# program uses tau-b with a normal approximation and a continuity correction instead).
+# studies, so exact = TRUE asks for it whatever their number (with ties the program
+# uses tau-b with a normal approximation and a continuity correction instead, which
+# is cor.test(..., exact = FALSE, continuity = TRUE)).
 # The report notes the test's low power with fewer than eleven studies. Egger's test
 # regresses the standard normal deviate d / se on the precision 1 / se: the
 # intercept estimates the bias, judged on k - 2 degrees of freedom. The report gives
@@ -155,8 +159,10 @@ bias_level <- 1 - 2 * (1 - confidence)
 if (!(bias_level > 0 && bias_level < 1)) bias_level <- 0.9
 if (k > 3) {
   ts <- (d - dplus) / sqrt(vard - 1 / sum(w))
-  begg <- cor.test(ts, vard, method = "kendall", exact = TRUE, conf.level = confidence)
-  power_note <- if (k < 11) "(low power)" else ""
+  tied <- anyDuplicated(ts) > 0 || anyDuplicated(vard) > 0
+  begg <- cor.test(ts, vard, method = "kendall", exact = !tied, continuity = TRUE,
+                   conf.level = confidence)
+  power_note <- if (k < 11 && !is.na(begg$estimate)) "(low power)" else ""
   cat("Begg-Mazumdar: Kendall's tau =", six(begg$estimate), " ", pv(begg$p.value),
       power_note, "\n")
   egger <- lm(I(d / se) ~ I(1 / se))
@@ -175,7 +181,7 @@ if (k > 3) {
 
 # The bias assessment plot that follows in the report: each study's d against its
 # standard error, with the smallest standard errors at the top, the fixed effects
-# pooled d+ as a vertical line and the 95% limits expected around it as a funnel
+# pooled d+ as a vertical line and the limits expected around it as a funnel
 plot(d, se, ylim = rev(range(0, se)), xlim = range(lcid, ucid), pch = 1,
      xlab = "Effect size", ylab = "Standard error", main = "Bias assessment plot")
 abline(v = dplus)
@@ -183,7 +189,7 @@ se_line <- seq(0, max(se), length.out = 100)
 lines(dplus + z * se_line, se_line)
 lines(dplus - z * se_line, se_line)
 
-# The forest plots: each study's d with its approximate 95% interval and a square
+# The forest plots: each study's d with its approximate interval and a square
 # proportional to its size, then the pooled estimate as a diamond, for the fixed
 # and the random effects models (the program prefixes the random effects label
 # with DL for DerSimonian-Laird)
@@ -198,7 +204,7 @@ forest <- function(pooled, lower, upper, label) {
   abline(v = pooled, lty = 2)
   if (min(lcid) < 0) abline(v = 0)
   prefix <- if (grepl("random", label)) "DL " else ""
-  mtext(paste0(prefix, "pooled effect size = ", six(pooled), "  (95% CI = ",
+  mtext(paste0(prefix, "pooled effect size = ", six(pooled), "  (", pct, " CI = ",
                six(lower), " to ", six(upper), ")"), side = 3, line = 0.3, cex = 0.9)
 }
 op <- par(mar = c(3, 9, 4, 1))

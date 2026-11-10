@@ -10,6 +10,9 @@ total <- total[keep]
 adherent <- adherent[keep]
 trial <- trial[keep]
 if (is.null(trial)) trial <- paste("Trial", seq_along(total))
+# A study whose label is blank has its place among the studies kept, as in the report.
+blank <- is.na(trial) | !nzchar(trimws(trial))
+trial[blank] <- paste("stratum", which(blank))
 # Proportion meta-analysis: the StatsDirect help example (adherence with medication in
 # 22 fictitious trials; the test workbook's Meta-analysis worksheet columns Trial,
 # Adherent and Total) in R
@@ -119,7 +122,9 @@ cat("Pooled proportion = ", six(inv(xr)), " (", pct, "CI = ", six(inv(xr - z * s
 # from its exact confidence interval, which the report gives only with more than three
 # studies. Begg-Mazumdar: Kendall's tau between the standardised deviates from the
 # pooled proportion and the variances, with the exact P that cor.test() gives when
-# there are no ties. Egger: the intercept of the regression of the standardised
+# there are no ties (with ties the report gives tau-b and a continuity corrected normal
+# approximation, cor.test(..., exact = FALSE, continuity = TRUE)); the report notes
+# the test's low power with fewer than eleven studies. Egger: the intercept of the regression of the standardised
 # proportion on precision, with its t test
 cat("Bias indicators\n")
 se <- (ci[, 2] - ci[, 1]) / 2 / z
@@ -142,8 +147,11 @@ regression <- function(y, x, label, spread) {
 if (k > 3) {
   wx <- 1 / se^2
   ts <- (p - sum(p * wx) / sum(wx)) / sqrt(se^2 - 1 / sum(wx))
-  begg <- cor.test(ts, se^2, method = "kendall", conf.level = confidence)
-  cat("Begg-Mazumdar: Kendall's tau =", six(begg$estimate), " ", pv(begg$p.value), "\n")
+  tied <- anyDuplicated(ts) > 0 || anyDuplicated(se^2) > 0
+  begg <- cor.test(ts, se^2, method = "kendall", exact = if (tied) FALSE else NULL,
+                   continuity = TRUE, conf.level = confidence)
+  cat("Begg-Mazumdar: Kendall's tau =", six(begg$estimate), " ", pv(begg$p.value),
+      if (k < 11 && !is.na(begg$estimate)) "(low power)\n" else "\n")
   egger_figures <- regression(p / se, 1 / se, "Egger", diff(range(1 / se)) > 1e-12 * max(1 / se))
 
   # Harbord's test as StatsDirect adapts it to proportions: each study's score is the

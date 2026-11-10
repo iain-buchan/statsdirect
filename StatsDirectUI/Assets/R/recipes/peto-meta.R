@@ -12,6 +12,9 @@ control <- control[keep]
 control_deaths <- control_deaths[keep]
 study <- study[keep]
 if (is.null(study)) study <- paste("Trial", seq_along(aspirin))
+# A study whose label is blank has its place among the studies kept, as in the report.
+blank <- is.na(study) | !nzchar(trimws(study))
+study[blank] <- paste("stratum", which(blank))
 # Peto odds ratio meta-analysis: the StatsDirect help example (Fleiss 1993, deaths after
 # heart attack in seven trials of aspirin; the test workbook's Meta-analysis worksheet
 # columns Exposed total, Exposed cases, Non-exposed total, Non-exposed cases and Study)
@@ -137,8 +140,10 @@ if (k < 2) cat("I2 not calculated: at least two studies are required.\n") else i
 # pooled. Each study's standard error of the log odds ratio is 1 / sqrt(V).
 # Begg and Mazumdar's test is Kendall's tau between the standardised deviates of the
 # studies from the pooled log odds ratio and their variances; the exact P holds when
-# there are no ties among either, as here. The report notes the test's low power with
-# fewer than eleven studies.
+# there are no ties among either, as here. With ties the report gives tau-b and a
+# continuity corrected normal approximation, cor.test(..., exact = FALSE,
+# continuity = TRUE). The report notes the test's low power with fewer than eleven
+# studies.
 se <- ifelse(included, 1 / sqrt(V), NA)
 # Egger's and Harbord's intervals are at the level of the bias tests, twice the
 # analysis's alpha (90% for a 95% analysis); as the report has it, there is no
@@ -157,10 +162,11 @@ regression <- function(y, x, label, spread) {
 }
 if (k > 3) {
   deviate <- (log(or) - log(pooled)) / sqrt(se^2 - 1 / sum_V)
-  begg <- cor.test(deviate[included], se[included]^2, method = "kendall", exact = TRUE,
-                   conf.level = confidence)
+  tied <- anyDuplicated(deviate[included]) > 0 || anyDuplicated(se[included]^2) > 0
+  begg <- cor.test(deviate[included], se[included]^2, method = "kendall", exact = !tied,
+                   continuity = TRUE, conf.level = confidence)
   cat("Begg-Mazumdar: Kendall's tau =", six(begg$estimate), " ", pv(begg$p.value),
-      "(low power)\n")
+      if (k < 11 && !is.na(begg$estimate)) "(low power)\n" else "\n")
 
   # Egger's test regresses each log odds ratio divided by its standard error on the
   # precision, 1 / standard error: the bias is the intercept, tested with Student's t on
@@ -209,7 +215,7 @@ par(mar = c(5, 6, 4, 8))
 plot(c(lower, pooled_lower), c(rows, 0), type = "n", log = "x", yaxt = "n",
      xlim = range(lower, upper, pooled_lower, pooled_upper, na.rm = TRUE),
      ylim = c(-0.5, length(a) + 0.5), ylab = "",
-     xlab = "Peto odds ratio (95% confidence interval)", main = "Peto odds ratio plot")
+     xlab = paste0("Peto odds ratio (", pct, " confidence interval)"), main = "Peto odds ratio plot")
 segments(lower, rows, upper, rows)
 points(or, rows, pch = 15, cex = 3 * sqrt(V / max(V)))
 segments(pooled_lower, 0, pooled_upper, 0)

@@ -99,6 +99,15 @@ internal static partial class Program
                 Console.WriteLine($"PASS {checks} 5.3.9 meta-analysis checks");
                 return 0;
             }
+            if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") is string meta5310 && (meta5310 == "meta-5310" || meta5310.StartsWith("meta-5310-", StringComparison.Ordinal)))
+            {
+                string part = meta5310 == "meta-5310" ? null : meta5310["meta-5310-".Length..];
+                if (part is not (null or "rates" or "correction" or "labels" or "axis" or "bias"))
+                    throw new ArgumentException("Unknown 5.3.10 meta-analysis test group: " + meta5310);
+                CheckMetaReview5310(Path.Combine(TemporaryRoot, "meta-5310"), part);
+                Console.WriteLine($"PASS {checks} 5.3.10 meta-analysis checks");
+                return 0;
+            }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "posthoc-missing")
             {
                 CheckMetaMissingStudies(Path.Combine(TemporaryRoot, "meta-missing"));
@@ -353,6 +362,9 @@ public class PreferencesProxy : System.Reflection.DispatchProxy
             case "get_MetaExact": return Program.MetaExact;   // the exact methods of the meta-analyses, for the checks that want them
             case "get_MetaCC": return Program.MetaCC;
             case "get_DelayContinuityCorrection": return Program.DelayContinuityCorrection;
+            case "set_MetaExact": Program.MetaExact = (bool)arguments[0]; return null;   // the calculation options operation stores its choices
+            case "set_MetaCC": Program.MetaCC = (double)arguments[0]; return null;
+            case "set_DelayContinuityCorrection": Program.DelayContinuityCorrection = (bool)arguments[0]; return null;
         }
         Type type = method.ReturnType;
         return type == typeof(void) ? null : type.IsValueType ? Activator.CreateInstance(type) : null;
