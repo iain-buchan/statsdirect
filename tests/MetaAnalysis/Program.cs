@@ -183,7 +183,7 @@ internal static partial class Program
     private static double Number(string text) => text switch { "Inf" => double.PositiveInfinity, "-Inf" => double.NegativeInfinity, "NA" => M, _ => double.Parse(text, inv) };
 
     // The figures of the program against the benchmarks of a file: a figure may differ from its benchmark by one part in ten million
-    // (of itself, or of 1 if it is less than 1), and a limit of I-squared by one in a million, which is what the search for it is good to
+    // (of itself, or of 1 if it is less than 1), and a limit of I-squared by one in a thousand million (the search for it used to be good to one in a million only)
     private static void Compare(string title, Dictionary<string, object> figures, string file)
     {
         int before = failures, compared = 0;
@@ -196,7 +196,7 @@ internal static partial class Program
             double expected = Number(part[1]);
             string[] names = key.Split('|');
             string name = names[^1], group = names[2] + " " + (names.Length > 4 ? names[3].Split('.')[0] + "." : "") + name;
-            double tolerance = name is "llisq" or "ulisq" ? 1e-6 : 1e-7;
+            double tolerance = name is "llisq" or "ulisq" ? 1e-9 : 1e-7;
             double given = figures.TryGetValue(key, out object value) ? value switch { double d => d, int i => i, _ => double.NaN } : double.NaN;
             double by = given == expected ? 0 : double.IsNaN(given) || given == M || expected == M || double.IsInfinity(given) || double.IsInfinity(expected) ? double.PositiveInfinity
                 : Math.Abs(given - expected) / Math.Max(1, Math.Abs(expected));

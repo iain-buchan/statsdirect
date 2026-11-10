@@ -27,11 +27,16 @@ internal static partial class Program
             Type type = typeof(CellSelection).Assembly.GetType("StatsDirect.UI.CellArrayProcessor");
             var mode = (DataAcquisitionMode)args[1];
             WorksheetOrigin reference = args.Length > 11 ? args[11] as WorksheetOrigin : null;
+            object Read(string name, params object[] arguments)
+            {
+                MethodInfo read = type.GetMethod(name, BindingFlags.Static | BindingFlags.NonPublic);
+                if (read.GetParameters().Length > arguments.Length)
+                    arguments = arguments.Append(args.Length > 12 ? args[12] : null).ToArray();
+                return read.Invoke(null, arguments);
+            }
             if (mode != DataAcquisitionMode.NumericCodingTextToDummiesPreserveRows)
-                return type.GetMethod("ProcessCellArrayWithReference", BindingFlags.Static | BindingFlags.NonPublic)
-                    .Invoke(null, new object[] { selected, mode, (int)args[0], false, false, (int)args[10], "Aligned model", reference });
-            DataFrame frame = (DataFrame)type.GetMethod("ProcessCellArrayNumericCodingPreserveRows", BindingFlags.Static | BindingFlags.NonPublic)
-                .Invoke(null, new object[] { selected, (int)args[0], false, false, (int)args[10], Host, reference });
+                return Read("ProcessCellArrayWithReference", selected, mode, (int)args[0], false, false, (int)args[10], "Aligned model", reference);
+            DataFrame frame = (DataFrame)Read("ProcessCellArrayNumericCodingPreserveRows", selected, (int)args[0], false, false, (int)args[10], Host, reference);
             if (frame != null && frame.VariableCount > 1)
                 foreach (IVariable v in frame.Variables.Where(v => v.Length == 0).ToList()) frame.Variables.Remove(v);
             return frame;

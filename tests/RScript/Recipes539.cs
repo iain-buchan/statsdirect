@@ -214,6 +214,16 @@ internal static partial class Program
                 Equal539("lower", new[] { Num539(b, "p_l") }) + Equal539("upper", new[] { Num539(b, "p_u") }) + Equal539("min(1, 2 * min(lower, upper))", new[] { Num539(b, "p_2") }) +
                 Equal539("theta, ci", new[] { "theta", "tll", "tul" }.Select(key => Num539(b, key)), 1e-8) +
                 Equal539("median(d), d[K], rev(d)[K]", new[] { "median", "from", "to" }.Select(key => Num539(conf, key)), 1e-12);
+            if (!normal && x.Concat(y).Distinct().Count() < x.Length + y.Length)
+            {
+                // With ties the ways of choosing the first sample are counted by their sum of doubled mid-ranks, and since 5.3.9 no
+                // further than the largest sum that n1 of them can have. 5.3.8 took the table to the sum of all of them (26 times as
+                // wide for 20 + 1,000) and gave the same P values, so that only the time allowed told the two apart: the size of the
+                // table does, on any machine. The doubled mid-rank of a value is twice the number below it, the number equal to it, and 1.
+                double[] pooled = x.Concat(y).ToArray();
+                double largest = pooled.Select(v => 2d * pooled.Count(o => o < v) + pooled.Count(o => o == v) + 1).OrderByDescending(v => v).Take(x.Length).Sum();
+                assertion += "stopifnot(S == " + largest.ToString("R", inv) + ", identical(dim(ways), c(" + (x.Length + 1) + "L, " + (largest + 1).ToString("R", inv) + "L)))\n";
+            }
             string text = Replay539(run, assertion, Path.Combine(folder, label), cells.Read, timeout: timeout);
             Match coverage = Regex.Match(text, @"^([0-9.]+)% confidence interval for the difference: K = (\d+)( \(approx\))?\s*$", RegexOptions.Multiline);
             Check(coverage.Success && Math.Abs(double.Parse(coverage.Groups[1].Value, inv) - Num539(conf, "pc")) < .0051 && coverage.Groups[3].Success == approximateK,
@@ -230,6 +240,9 @@ internal static partial class Program
         Case("untied-101-2000", Values(101, 0, false), Values(2000, .9, false), .9, normal: true, approximateK: true);
         // with ties, a small first sample beside a large one is still inside the report's exact count
         Case("ties-exact-20-1000", Enumerable.Range(0, 20).Select(i => Math.Round(20 + 8 * Math.Sin(i * 3.1) + i * 7 % 5)).ToArray(), Values(1000, 1.7, true), .95, normal: false, approximateK: false);
+        Case("ties-exact-20-200", Enumerable.Range(0, 20).Select(i => Math.Round(20 + 8 * Math.Sin(i * 3.1) + i * 7 % 5)).ToArray(), Values(200, 1.7, true), .95, normal: false, approximateK: false);
+        // and a small one, which the table of 5.3.8 also finished at once: here nothing but the size of the table can tell the versions apart
+        Case("ties-exact-8-40", Enumerable.Range(0, 8).Select(i => Math.Round(20 + 8 * Math.Sin(i * 3.1) + i * 7 % 5)).ToArray(), Values(40, 1.7, true), .95, normal: false, approximateK: false);
         double[] farm = { 14.8, 7.3, 5.6, 6.3, 9, 4.2, 10.6, 12.5, 12.9, 16.1, 11.4, 2.7 }, town = { 12.7, 14.2, 12.6, 2.1, 17.7, 11.8, 16.9, 7.9, 16, 10.6, 5.6, 5.6, 7.6, 11.3, 8.3, 6.7, 3.6, 1, 2.4, 6.4, 9.1, 6.7, 18.6, 3.2, 6.2, 6.1, 15.3, 10.6, 1.8, 5.9, 9.9, 10.6, 14.8, 5, 2.6, 4 };
         foreach (double confidence in new[] { 0d, 1d }) Case("confidence-" + confidence, farm, town, confidence, normal: false, approximateK: false);
         // The report gives no interval for the difference, and says why, with fewer than 4 values in a sample or when even
@@ -572,7 +585,7 @@ internal static partial class Program
     //    leading term of the tail's expansion only, so its adjusted K2 differed from R's in the 7th figure.
     private static void CheckRoystonK2539(string folder)
     {
-        foreach (int n in new[] { 400, 2001, 4000, 5200 }) Case539("k2 skewed " + n, () =>
+        foreach (int n in new[] { 400, 752, 753, 800, 1000, 2001, 4000, 5200 }) Case539("k2 skewed " + n, () =>
         {
             // a long right tail: a few very large values among small ones
             double[] values = Enumerable.Range(1, n).Select(i => i % 97 == 0 ? 400 + i % 13 : 10 + Math.Sin(i * .37) + (i % 7) * .1).ToArray();
@@ -580,7 +593,10 @@ internal static partial class Program
             var (run, output) = Run("Normality", new() { ["data"] = Select539(cells, n + 1, 0) });
             ParameterBag b = Rows539(output.ParameterBag, "*variable")[0];
             double k2 = Num539(b, "k2");
-            string assertion = "stopifnot(n == " + n + ", (z1^2 + z2^2 >= 1400) == " + (n > 400 ? "TRUE" : "FALSE") + ")\n" + Equal539("-2 * log_pk", new[] { k2 }, 1e-12) + Equal539("skew, kurt", new[] { Num539(b, "skewness"), Num539(b, "kurtosis") }, 1e-12);
+            // The cases on either side of adjusted z = 30 exercise the tail switch independently of the raw K2 cutoff.
+            string assertion = "stopifnot(n == " + n + ", (z1^2 + z2^2 >= 1400) == " + (n >= 1000 ? "TRUE" : "FALSE") + ", (zr >= 30) == " + (n >= 753 ? "TRUE" : "FALSE") + ")\n" +
+                Equal539("-2 * log_pk", new[] { k2 }, 1e-12) +
+                Equal539("skew, kurt", new[] { Num539(b, "skewness"), Num539(b, "kurtosis") }, 1e-12);
             string text = Replay539(run, assertion, Path.Combine(folder, "skewed-" + n), cells.Read, setup: "pdf(NULL)\n", timeout: 180);
             double[] printed = Printed539(text, @"^Royston chi-sq " + Figure539 + ",");
             Check(printed.Length == 1 && Math.Abs(printed[0] - k2) <= 5.1e-7, "n = " + n + ": the replay prints the report's adjusted K2 (" + k2.ToString("R", inv) + ")");

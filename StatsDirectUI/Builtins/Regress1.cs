@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using StatsDirect.Numerics;
 
@@ -2311,12 +2312,6 @@ namespace StatsDirect.Builtins
         {
             double ti = 0;
 
-            double[] eta = new double[records + 1];
-            double[,] decomposition = new double[records + 1, records + 1];
-            double[] vstd = new double[records + 1];
-            double[] wwt = new double[records + 1];
-            double[] tmp = new double[records * 2 + 1];
-
             maxIterations = maxIterations == 0 ? 10 : Math.Abs(maxIterations);
             accuracy = accuracy < Constant.EPSNEG ? Constant.EPSNEG * 20.0 : Math.Abs(accuracy);
 
@@ -2326,7 +2321,7 @@ namespace StatsDirect.Builtins
             //err_level 3 calculation errors carry on
 
             errLevel = 0;
-            if (records < 2)
+            if (records < 1)
             {
                 errLevel = 1;
                 errMsg = "insufficient observations";
@@ -2407,9 +2402,30 @@ namespace StatsDirect.Builtins
                     }
                 }
             }
+            int[] kept = EstimableGlmCoefficients(useIntercept, useWeights, records, x, predictors, selectX, parameters, weight, null, observations, out bool[] reduced);
+            if (observations == 0)
+            {
+                errLevel = 1;
+                errMsg = "insufficient observations";
+                return;
+            }
+            if (kept.Length > 0 && kept.Length < parameters)
+            {
+                double[] compactBeta = new double[kept.Length + 1], compactSe = new double[kept.Length + 1];
+                double[] compactCovariance = new double[kept.Length * (kept.Length + 1) / 2 + 1];
+                X_Poisson_Regression(useIntercept, useOffset, ref useWeights, records, x, predictors, reduced, kept.Length, y, t, weight,
+                    ref deviance, ref df, compactBeta, ref rank, compactSe, compactCovariance, accuracy, maxIterations,
+                    fits, devianceResidual, leverage, offset, out errLevel, ref dropped, ref errMsg);
+                ExpandGlmCoefficients(kept, compactBeta, compactSe, compactCovariance, beta, seBeta, covariance);
+                return;
+            }
             if (!useOffset)
                 for (i = 1; i <= records; i++)
                     offset[i] = 0.0;
+            double[] eta = new double[records + 1];
+            double[,] decomposition = new double[records + 1, records + 1];
+            double[] vstd = new double[records + 1], wwt = new double[records + 1];
+            double[] tmp = new double[records * 2 + 1];
             // get starting values for linear predictor (eta) and fitted values (fvl)
             X_Poisson_Starting_Values(records, y, fits, eta, weight, observations);
             // iteratively re-weighted least squares by SVD
@@ -2485,17 +2501,12 @@ namespace StatsDirect.Builtins
         {
             int observations = 0;
 
-            double[] eta = new double[records + 1];
-            double[,] decomposition = new double[records + 1, records + 1];
-            double[] vstd = new double[records + 1];
-            double[] wwt = new double[records + 1];
-            double[] tmp = new double[records * 2 + 1];
             max_iterations = max_iterations == 0 ? 20 : Math.Abs(max_iterations);
             accuracy = accuracy < Constant.EPSNEG ? Constant.EPSNEG * 10.0 : Math.Abs(accuracy);
 
             err_level = 0;
             deviance = Constant.MISSING;
-            if (records < 2)
+            if (records < 1)
             {
                 err_level = 1;
                 err_msg = "insufficient observations";
@@ -2565,12 +2576,6 @@ namespace StatsDirect.Builtins
                 err_msg = "invalid number of available predictors";
                 return;
             }
-            if (parameters > observations)
-            {
-                err_level = 1;
-                err_msg = "more predictors than observations";
-                return;
-            }
             if (useWeights)
             {
                 for (int i = 1; i <= records; i++)
@@ -2598,6 +2603,29 @@ namespace StatsDirect.Builtins
                     }
                 }
             }
+            int[] kept = EstimableGlmCoefficients(useIntercept, useWeights, records, x, xVariables, selectX, parameters, weight, y_t, observations, out bool[] reduced);
+            if (observations == 0)
+            {
+                err_level = 1;
+                err_msg = "insufficient observations";
+                return;
+            }
+            if (kept.Length > 0 && kept.Length < parameters)
+            {
+                double[] compactBeta = new double[kept.Length + 1], compactSe = new double[kept.Length + 1];
+                double[] compactCovariance = new double[kept.Length * (kept.Length + 1) / 2 + 1];
+                X_Logistic_Regression(useIntercept, useOffset, ref useWeights, records, x, xVariables, reduced, kept.Length,
+                    y_r, y_t, weight, out deviance, ref df, compactBeta, ref rank, compactSe, compactCovariance,
+                    accuracy, max_iterations, fit, residual, leverage, offset, out err_level, ref dropped, ref err_msg);
+                ExpandGlmCoefficients(kept, compactBeta, compactSe, compactCovariance, beta, se_beta, covariance);
+                return;
+            }
+            if (parameters > observations)
+            {
+                err_level = 1;
+                err_msg = "more predictors than observations";
+                return;
+            }
             if (useOffset == false)
             {
                 for (int i = 1; i <= records; i++)
@@ -2605,6 +2633,10 @@ namespace StatsDirect.Builtins
             }
 
             // get starting values for linear predictor and fitted values
+            double[] eta = new double[records + 1];
+            double[,] decomposition = new double[records + 1, records + 1];
+            double[] vstd = new double[records + 1], wwt = new double[records + 1];
+            double[] tmp = new double[records * 2 + 1];
             X_Logistic_Starting_Values(records, y_r, y_t, fit, eta, weight, observations);
 
             // iteratively re-weighted least squares by SVD
@@ -2616,6 +2648,12 @@ namespace StatsDirect.Builtins
                 return;
 
             df = observations - rank;
+            if (df < 0)
+            {
+                err_level = 1;
+                err_msg = "more estimable parameters than usable observations";
+                return;
+            }
             if (df <= 0)
             {
                 err_level = 3;
@@ -2756,6 +2794,70 @@ namespace StatsDirect.Builtins
                         linearPredictor[i] = Math.Log(fitted_value[i] / (y_t[i] - fitted_value[i]));
                     }
                 }
+            }
+        }
+
+        // Use the same ordered rank-revealing QR as multiple regression. Rank
+        // depends on the usable design rows, not the values of positive weights
+        // or the current IRLS iteration. Keep the earlier predictors when a
+        // later column is determined by them. A zero response suffices for rank.
+        internal static int[] EstimableGlmCoefficients(bool intercept, bool weighted, int records, double[,] x, int predictors,
+            bool[] selected, int parameters, double[] weight, double[] totals, int observations, out bool[] reduced)
+        {
+            reduced = (bool[])selected.Clone();
+            if (observations == 0)
+                return Array.Empty<int>();
+            int constant = intercept ? 1 : 0, columns = parameters - constant;
+            int[] predictorIndices = new int[columns];
+            for (int j = 1, k = 0; j <= predictors; j++)
+                if (selected[j]) predictorIndices[k++] = j;
+
+            double[,] design = new double[observations + 1, columns + 2];
+            for (int i = 1, row = 0; i <= records; i++)
+                if ((!weighted || weight[i] > 0) && (totals == null || totals[i] > 0))
+                {
+                    row++;
+                    for (int j = 0; j < columns; j++)
+                        design[row, j + 1] = x[i, predictorIndices[j]];
+                }
+
+            int size = parameters + 1, rank = 0, missing = 0, fault = 0;
+            double df = 0, rss = 0;
+            double[,] triangle = new double[size, size];
+            int[] unused = new int[1];
+            glsqr(0, constant, 0, observations, columns + 1, design, -columns, unused, -1, unused, 0, 0,
+                new double[size], triangle, new double[size], ref rank, ref df, ref rss, ref missing,
+                new double[size], new double[size], new double[2 * size + 1], ref fault);
+
+            List<int> kept = new();
+            if (intercept) kept.Add(1);
+            for (int j = 0; j < columns; j++)
+            {
+                int position = j + constant + 1;
+                if (triangle[position, position] == 0)
+                    reduced[predictorIndices[j]] = false;
+                else
+                    kept.Add(position);
+            }
+            return kept.ToArray();
+        }
+
+        // Preserve the original coefficient positions for report labels,
+        // selected covariates and prediction. A dropped coefficient and its
+        // covariance row/column have zeros, the existing unavailable convention.
+        private static void ExpandGlmCoefficients(int[] kept, double[] fitBeta, double[] fitSe, double[] fitCovariance,
+            double[] beta, double[] se, double[] covariance)
+        {
+            Array.Clear(beta);
+            Array.Clear(se);
+            Array.Clear(covariance);
+            for (int i = 1; i <= kept.Length; i++)
+            {
+                int row = kept[i - 1];
+                beta[row] = fitBeta[i];
+                se[row] = fitSe[i];
+                for (int j = 1; j <= i; j++)
+                    covariance[row * (row - 1) / 2 + kept[j - 1]] = fitCovariance[i * (i - 1) / 2 + j];
             }
         }
 

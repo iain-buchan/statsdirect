@@ -49,7 +49,7 @@ internal static class MixedSelectionChecks
         var proxy = (MixedGridProxy)(object)grid; proxy.Cells = cells; proxy.Selection = cells.Selection(ranges); proxy.Host = host;
         var argsInfo = getEqual.GetParameters();
         object[] args = { outcome.MaxRows, parameter.SelectionMode, Enum.Parse(argsInfo[2].ParameterType, "GroupIdentifier"), 1, ranges.Length,
-            "mixed predictor fixture", null, false, Enum.Parse(argsInfo[8].ParameterType, "Wide"), false, false, false, 21, outcome.Variables[0].Origin };
+            "mixed predictor fixture", null, false, Enum.Parse(argsInfo[8].ParameterType, "Wide"), false, false, false, 21, outcome.Variables[0].Origin, null };
         using var guard = new MatchedSelectionChecks.UnexpectedDialogGuard();
         var result = (DataFrame)getEqual.Invoke(Activator.CreateInstance(selector, new object[] { grid }), args);
         if (guard.Blocked || proxy.ReadCount != 1 || (bool)args[10] || (bool)args[11])
@@ -140,13 +140,13 @@ internal static class MixedSelectionChecks
         var repeated = new object[] { 1.0,2.0,3.0,null,1.0,2.0,3.0,1.0,2.0,3.0,null };
         var cells = new MatchedCells(new[] { repeated });
         var choice = Host(true);
-        var continuous = (DataFrame)ReadMixed.Invoke(null, new object[] { cells.Selection(new[] { (0,0,repeated.Length) }), repeated.Length, false, false, 1, choice.host, null });
+        var continuous = (DataFrame)ReadMixed.Invoke(null, new object[] { cells.Selection(new[] { (0,0,repeated.Length) }), repeated.Length, false, false, 1, choice.host, null, null });
         Check(choice.options.Requests.Count == 1 && choice.options.Requests[0].AllowUserToTreatAsContinuous, "repeated numeric categories retain the user's continuous option");
         Check(((DoubleVariable)continuous.Variables[0]).Data.SequenceEqual(repeated.Select(MatchedSelectionChecks.Number)), "continuous numeric choice preserves every original missing position");
         ReplayNumeric(cells, (0,0,repeated.Length), continuous.Variables[0], "explicit continuous choice");
         Snapshot(continuous, false, "explicit continuous choice");
         choice = Host();
-        var coded = (DataFrame)ReadMixed.Invoke(null, new object[] { cells.Selection(new[] { (0,0,repeated.Length) }), repeated.Length, false, false, 1, choice.host, null });
+        var coded = (DataFrame)ReadMixed.Invoke(null, new object[] { cells.Selection(new[] { (0,0,repeated.Length) }), repeated.Length, false, false, 1, choice.host, null, null });
         Check(coded.VariableCount == 2 && coded.Variables.All(v => ((DoubleVariable)v).Data[3] == Constant.MISSING && ((DoubleVariable)v).Data[10] == Constant.MISSING),
             "numeric category dummy choice propagates missing rows to every dummy");
         Snapshot(coded, true, "explicit numeric dummy choice");
@@ -177,7 +177,7 @@ internal static class MixedSelectionChecks
             new("matched-fixture.xlsx", "Sheet1", 1, 2, 7, (DataAcquisitionMode)108, true, false, 1) })
         {
             var choice = Host();
-            var frame = (DataFrame)ReadMixed.Invoke(null, new object[] { cells.Selection(new[] { (0,0,7) }), 6, false, false, 1, choice.host, reference });
+            var frame = (DataFrame)ReadMixed.Invoke(null, new object[] { cells.Selection(new[] { (0,0,7) }), 6, false, false, 1, choice.host, reference, null });
             Check(frame.Variables.All(v => v.Length == 7 && ((DoubleVariable)v).Data[0] == Constant.MISSING && ((DoubleVariable)v).Data[1] == Constant.MISSING),
                 "an extra leading missing row is not treated as a categorical header without matching source/row evidence");
         }
@@ -236,7 +236,7 @@ public class MixedGridProxy : MatchedGridProxy
         if (method.Name == "GetCellArray" && (int)(DataAcquisitionMode)arguments[1] == 109)
         {
             ReadCount++; arguments[8] = arguments[9] = false;
-            return MixedSelectionChecks.ReadMixed.Invoke(null, new object[] { Selection, (int)arguments[0], false, false, (int)arguments[10], Host, arguments[11] });
+            return MixedSelectionChecks.ReadMixed.Invoke(null, new object[] { Selection, (int)arguments[0], false, false, (int)arguments[10], Host, arguments[11], arguments[12] });
         }
         return base.Invoke(method, arguments);
     }

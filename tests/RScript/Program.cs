@@ -60,6 +60,13 @@ internal static partial class Program
                 Console.WriteLine($"PASS {checks} weighted refit checks");
                 return 0;
             }
+            if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") is string r2Models && (r2Models == "round2-models" || r2Models.StartsWith("round2-models-", StringComparison.Ordinal))) { CheckRound2Models(Path.Combine(TemporaryRoot, "round2-models"), r2Models == "round2-models" ? null : r2Models["round2-models-".Length..]); Console.WriteLine($"PASS {checks} round-two model checks"); return 0; }
+            if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") is string models5310 && models5310.StartsWith("models5310", StringComparison.Ordinal))
+            {
+                CheckModels5310(Path.Combine(TemporaryRoot, "models-5310"), models5310 == "models5310" ? null : models5310["models5310-".Length..]);
+                Console.WriteLine($"PASS {checks} 5.3.10 model checks");
+                return 0;
+            }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "models539")
             {
                 CheckModels539(Path.Combine(TemporaryRoot, "models-539"));
@@ -70,6 +77,12 @@ internal static partial class Program
             {
                 CheckRecipes539(Path.Combine(TemporaryRoot, "recipes-539"), recipes539 == "recipes539" ? null : recipes539["recipes539-".Length..]);
                 Console.WriteLine($"PASS {checks} 5.3.9 recipe checks");
+                return 0;
+            }
+            if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") is string recipes5310 && recipes5310.StartsWith("recipes5310", StringComparison.Ordinal))
+            {
+                CheckRecipes5310(Path.Combine(TemporaryRoot, "recipes-5310"), recipes5310 == "recipes5310" ? null : recipes5310["recipes5310-".Length..]);
+                Console.WriteLine($"PASS {checks} 5.3.10 recipe checks");
                 return 0;
             }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "posthoc-meta")
@@ -87,10 +100,25 @@ internal static partial class Program
                 Console.WriteLine($"PASS {checks} 5.3.9 meta-analysis checks");
                 return 0;
             }
+            if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") is string meta5310 && (meta5310 == "meta-5310" || meta5310.StartsWith("meta-5310-", StringComparison.Ordinal)))
+            {
+                string part = meta5310 == "meta-5310" ? null : meta5310["meta-5310-".Length..];
+                if (part is not (null or "rates" or "correction" or "labels" or "axis" or "bias" or "round-two"))
+                    throw new ArgumentException("Unknown 5.3.10 meta-analysis test group: " + meta5310);
+                CheckMetaReview5310(Path.Combine(TemporaryRoot, "meta-5310"), part);
+                Console.WriteLine($"PASS {checks} 5.3.10 meta-analysis checks");
+                return 0;
+            }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "posthoc-missing")
             {
                 CheckMetaMissingStudies(Path.Combine(TemporaryRoot, "meta-missing"));
                 Console.WriteLine($"PASS {checks} incomplete-study checks");
+                return 0;
+            }
+            if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "round-two-levels")
+            {
+                CheckRoundTwoLevels(Path.Combine(TemporaryRoot, "round-two-levels"));
+                Console.WriteLine($"PASS {checks} round-two level and replay checks");
                 return 0;
             }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") is string deferred && deferred.StartsWith("deferred", StringComparison.Ordinal))
@@ -107,6 +135,13 @@ internal static partial class Program
                 Console.WriteLine($"PASS {checks} deferred 5.3.8 checks"); return 0;
             }
             // one group of checks alone, while it is being written: STATSDIRECT_RSCRIPT_ONLY=options runs the options checks and stops
+            if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "round2-host")
+            {
+                StatsDirect.R.RRecipes.Folder = Metadata("Recipes");
+                CheckRound2Host(Path.Combine(TemporaryRoot, "round2-host"));
+                Console.WriteLine($"PASS {checks} exact number checks");
+                return 0;
+            }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "window") { CheckScriptWindowNumbers(); Console.WriteLine($"PASS {checks} script window checks"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "options") { CheckOptions(); Console.WriteLine($"PASS {checks} Continue in R checks (the options alone)"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "options2") { CheckOptions2(); Console.WriteLine($"PASS {checks} Continue in R checks (the second batch of options alone)"); return 0; }
@@ -135,6 +170,8 @@ internal static partial class Program
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "records") { CheckRecord(); CheckThreshold(); CheckHash(); CheckScript(); CheckTable(); CheckFollowOn(); CheckRealRuns(); CheckRegressionFollowOn(); CheckTwoLevel(); CheckColumnLocator(); Console.WriteLine($"PASS {checks} saved record checks"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "follow-on-plots") { CheckFollowOnPlots(); Console.WriteLine($"PASS {checks} follow-on plot checks"); return 0; }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "acquisition-modes") { StatsDirect.R.RRecipes.Folder = Metadata("Recipes"); string folder = Path.Combine(TemporaryRoot, "statsdirect-acquisition-modes-" + Guid.NewGuid().ToString("N")); Directory.CreateDirectory(folder); CheckAcquisitionModeReplay(folder); Console.WriteLine($"PASS {checks} acquisition-mode replay checks"); return 0; }
+            CheckRound2Kappa();
+            if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "round2-kappa") { Console.WriteLine($"PASS {checks} round-two kappa checks"); return 0; }
             CheckRecord();
             CheckNativeAxisLabels();
             CheckRecipeGeneralSimplicity();
@@ -341,6 +378,9 @@ public class PreferencesProxy : System.Reflection.DispatchProxy
             case "get_MetaExact": return Program.MetaExact;   // the exact methods of the meta-analyses, for the checks that want them
             case "get_MetaCC": return Program.MetaCC;
             case "get_DelayContinuityCorrection": return Program.DelayContinuityCorrection;
+            case "set_MetaExact": Program.MetaExact = (bool)arguments[0]; return null;   // the calculation options operation stores its choices
+            case "set_MetaCC": Program.MetaCC = (double)arguments[0]; return null;
+            case "set_DelayContinuityCorrection": Program.DelayContinuityCorrection = (bool)arguments[0]; return null;
         }
         Type type = method.ReturnType;
         return type == typeof(void) ? null : type.IsValueType ? Activator.CreateInstance(type) : null;

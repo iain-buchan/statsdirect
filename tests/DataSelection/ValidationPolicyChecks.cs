@@ -99,14 +99,16 @@ internal static class ValidationPolicyChecks
 
             // A blank identifier or category, or a typed missing marker, is a missing value of a classifier frame. Explicit NoMissingData
             // refuses it with its message, as it refuses a missing number, before the analysis meets the missing code.
-            foreach (var (operation, name) in new[] { ("TimeSeriesSummary", "subjectIds"), ("ContractFrequencies", "categories") })
+            foreach (var (operation, name) in new[] { ("TimeSeriesSummary", "subjectIds"), ("TimeSeriesSummary", "groups"), ("ContractFrequencies", "categories") })
             {
                 var parameter = Parameter<FrameParameter>(operation, name, "frame");
-                Check(parameter.SelectionMode == DataAcquisitionMode.CategoryReplaceMissing && parameter.Validators.Any(v => v.ValidatorName == "NoMissingData"),
-                    operation + " " + name + " deserializes its category mode and its NoMissingData");
+                Check(parameter.SelectionMode == DataAcquisitionMode.CategoryCombineAllColumns && parameter.Validators.Any(v => v.ValidatorName == "NoMissingData"),
+                    operation + " " + name + " keeps the selected category rows for NoMissingData");
                 foreach (var (label, cells) in new[] {
                     ("a blank cell", new object[] { "Subject", "p1", "p2", null, "p4", "p2" }),
                     ("a typed * marker", new object[] { "Subject", "p1", "*", "p3", "p4", "p2" }),
+                    ("a final blank cell", new object[] { "Subject", "p1", "p2", "p3", "p4", null }),
+                    ("a final typed * marker", new object[] { "Subject", "p1", "p2", "p3", "p4", "*" }),
                     ("every value present", new object[] { "Subject", "p1", "p2", "p3", "p4", "p2" }) })
                 {
                     DataFrame frame = Acquired(parameter, cells);
@@ -142,6 +144,38 @@ internal static class ValidationPolicyChecks
                 Check(blank ? contracted == null && contractRefusal == "Data with missing values cannot be used here"
                             : contractRefusal == null && labels.Data.SequenceEqual(new[] { "red", "blue" }) && frequencies.Data.SequenceEqual(new double[] { 2, 2 }),
                     "contraction of frequencies with " + (blank ? "a blank category stops at its validation message" : "complete categories counts each category") + ": " + (contractRefusal ?? "completed"));
+            }
+            // The groups of a time series summary are a classifier of the same kind, behind a prompt that may be skipped. A blank group, or
+            // one typed as a missing marker, is the missing code, which the analysis took as the index of a group (Index was out of range):
+            // the prompt refuses it, as the subject identifiers' does. Complete groups, and a run with its groups skipped, are as before.
+            var groupsPrompt = Parameter<FrameParameter>("TimeSeriesSummary", "groups", "frame");
+            Check(groupsPrompt.SelectionMode == DataAcquisitionMode.CategoryCombineAllColumns && groupsPrompt.CancelSkipsParameter == "Skip"
+                && groupsPrompt.Validators?.Any(v => v.ValidatorName == "NoMissingData") == true,
+                "TimeSeriesSummary groups deserializes its category mode, its skip and its NoMissingData");
+            Check(new[] { null, new ParameterBag() }.All(skipped => ((ValidationResult)validate.Invoke(null, new object[] { "NoMissingData", groupsPrompt, skipped, null })).Validity == Validity.Valid),
+                "TimeSeriesSummary groups skipped leaves NoMissingData nothing to refuse");
+            DataFrame Groups(object third) => Acquired(groupsPrompt, "Group", "a", "b", third, "b");
+            foreach (var (label, groups, expected) in new (string, DataFrame, string)[] {
+                ("a blank group", Groups(null), null), ("a group typed as *", Groups("*"), null), ("a group typed as * (missing)", Groups("* (missing)"), null),
+                ("complete groups", Groups("a"), "a: AUC 2, means 1,3; b: AUC 3, means 2,4"), ("its groups skipped", null, "all: AUC 2.5, means 1.5,3.5") })
+            {
+                ParameterBag summary = null;
+                string refusal;
+                try
+                {
+                    (summary, refusal) = ValidatingHost.Run("TimeSeriesSummary", new()
+                    {
+                        ["times"] = new DataFrame(new DoubleVariable(new double[] { 0, 0, 1, 1 }, "Time")), ["observations"] = new DataFrame(new DoubleVariable(new double[] { 1, 2, 3, 4 }, "Level")),
+                        ["subjectIds"] = Acquired(Parameter<FrameParameter>("TimeSeriesSummary", "subjectIds", "frame"), "Subject", "p1", "p2", "p1", "p2"), ["groups"] = groups, ["ci"] = 0.95, ["doExactP"] = false
+                    });
+                }
+                catch (Exception ex) { refusal = "no validation message, but " + (ex.InnerException ?? ex).GetType().Name; }
+                var invariant = System.Globalization.CultureInfo.InvariantCulture;
+                string summarised = summary == null ? null : string.Join("; ", ((IEnumerable<ParameterBag>)summary["*group"].AsObject).Select(g =>
+                    g["groupName"].AsObject + ": AUC " + g["aucMean"].AsDouble.ToString("R", invariant) + ", means " + string.Join(",", ((IEnumerable<ParameterBag>)g["*time"].AsObject).Select(t => t["mean"].AsDouble.ToString("R", invariant)))));
+                int missing = groups == null ? 0 : ((ClassifierVariable)groups.Variables.Single()).Data.Count(id => id == Constant.MISSING);
+                Check(expected == null ? missing == 1 && summary == null && refusal == "Data with missing values cannot be used here" : missing == 0 && refusal == null && summarised == expected,
+                    "time series summary with " + label + (expected == null ? " stops at its validation message" : " is summarised as before") + ": " + (refusal ?? summarised));
             }
 
             double[] distinctWithTail = new[] { 1d, 2d, 3d, 4d }.Concat(Enumerable.Repeat(m, 196)).ToArray();
@@ -206,13 +240,15 @@ public class ValidatingHost : DispatchProxy
                     var (processor, parameter, context) = ((ITemplateProcessor)arguments[0], (Parameter)arguments[1], (ParameterBag)arguments[2]);
                     if (parameter.HasAcquireIfTrue && !parameter.AcquireIfTrue(processor, context)) return new ParameterBag();
                     if (!answers.TryGetValue(parameter.Name, out object value)) throw new InvalidOperationException("Unanswered parameter " + parameter.Name);
-                    if (value == null) { ParameterBag skipped = new(); skipped[parameter.Name] = null; return skipped; }
-                    ParameterBag filled = new(parameter.Name, FilledParameterFactory.Input(value));
-                    foreach (Validator validator in parameter.Validators ?? Enumerable.Empty<Validator>())
-                    {
-                        var result = (ValidationResult)dispatch.Invoke(null, new object[] { this, validator.ValidatorName, parameter, filled, parameter.ValidationFailMessage });
-                        if (result.Validity != Validity.Valid) throw new Refused(refusal = result.FailedValidationMessage ?? result.Validity.ToString());
-                    }
+                    // an answer of null is the prompt skipped: a prompt that may be skipped has its validators run on the empty answer, as the program runs them
+                    ParameterBag filled = value == null ? null : new(parameter.Name, FilledParameterFactory.Input(value));
+                    if (filled != null || parameter.CancelSkipsParameter != null)
+                        foreach (Validator validator in parameter.Validators ?? Enumerable.Empty<Validator>())
+                        {
+                            var result = (ValidationResult)dispatch.Invoke(null, new object[] { this, validator.ValidatorName, parameter, filled, parameter.ValidationFailMessage });
+                            if (result.Validity != Validity.Valid) throw new Refused(refusal = result.FailedValidationMessage ?? result.Validity.ToString());
+                        }
+                    if (filled == null) { ParameterBag skipped = new(); skipped[parameter.Name] = null; return skipped; }
                     return filled;
                 }
             case "StartProgress": return new NoProgress();

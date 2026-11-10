@@ -44,11 +44,17 @@ internal static partial class Program
             if (xml.Contains("<grouped-covariance>")) parameters.Add("ci");   // its confidence level is asked through the grid and recorded as the setting ci
             // A shared base/continuation recipe defaults its optional level until
             // the confidence-bearing continuation has actually asked for it.
-            string confidenceOwner = recipe.File is "pca.R" or "pca-covariance.R" ? "Cronbach" : recipe.File == "cox-regression.R" ? "CoxHazardRatios" : null;
-            if (confidenceOwner != null)
+            string settingOwner = recipe.File switch
             {
-                string owner = File.ReadAllText(Path.Combine(Metadata("Operations"), confidenceOwner + ".xml"));
-                foreach (Match input in Regex.Matches(owner, "<confidence-interval>.*?<name>([^<]+)</name>.*?</confidence-interval>", RegexOptions.Singleline))
+                "pca.R" or "pca-covariance.R" => "Cronbach",
+                "cox-regression.R" => "CoxHazardRatios",
+                "kruskal-wallis.R" => "KruskalWallisMulti",
+                _ => null
+            };
+            if (settingOwner != null)
+            {
+                string owner = File.ReadAllText(Path.Combine(Metadata("Operations"), settingOwner + ".xml"));
+                foreach (Match input in Regex.Matches(owner, "<(?:confidence-interval|option)>\\s*<name>([^<]+)</name>"))
                     parameters.Add(input.Groups[1].Value.Trim());
             }
             // The chart dialog records its final settings as a neutral parameter bag after it closes; those settings are not XML inputs.
@@ -57,10 +63,21 @@ internal static partial class Program
             if (op is "Probit" or "Logit" || op.StartsWith("Probit", StringComparison.Ordinal)) parameters.Add("doseResponseModel");
             if (op == "ROCPlot") parameters.Add("rocCutoffs");
             if (recipe.File is "relative-risk-meta.R" or "meta-summary.R" or "risk-difference.R" or "peto-meta.R" or
-                "mantel.R" or "effect.R" or "meta-correlation.R" or "proportion-meta.R")
+                "mantel.R" or "effect.R" or "meta-correlation.R" or "proportion-meta.R" or
+                "meta-incidence-rate-ratio.R" or "meta-incidence-rate-difference.R")
                 parameters.Add("metaExact"); // captured once by each native meta-analysis report, then retained for replay
             if (recipe.File is "relative-risk-meta.R" or "risk-difference.R" or "mantel.R" or "mantel-haenszel-screen.R")
                 parameters.UnionWith(new[] { "metaCC", "delayContinuityCorrection" }); // the continuity correction those reports applied, recorded with them
+            if (recipe.File is "meta-incidence-rate-ratio.R" or "meta-incidence-rate-difference.R")
+                parameters.Add("metaCC"); // the constant the incidence-rate report adds to a stratum with no events in one group, recorded with it
+            if (op is "Kappa" or "KappaScreen" or "KappaSimulateExactP")
+            {
+                parameters.Add("kappaConfidence"); // the native kappa report's level, retained through the simulated-P follow-on
+                if (recipe.File == "kappa.R")
+                    parameters.UnionWith(new[] { "kappaGrades", "kappaTextGrades" }); // the native report's grade order and whether it contains text
+            }
+            if (recipe.File == "poisson-regression.R")
+                parameters.Add("cov"); // optional sub-population chosen by PoissonRegressionIRR
             Match settings = Regex.Match(text, "^# settings:\\s*(.*)$", RegexOptions.Multiline);
             if (settings.Success)
                 foreach (string item in settings.Groups[1].Value.Split(',').Select(x => x.Trim()).Where(x => x.Contains('=')))
@@ -189,7 +206,26 @@ internal static partial class Program
         Check(script.Text.Contains("# NOTE: \"y\" has changed in the workbook since the analysis ran; these are its values now.") && !script.Text.Contains("\"x\" has changed")
               && Regex.IsMatch(script.Text, "# Data: \"test.xlsx\", sheet \"Big\", read on \\d+ \\w+ 20\\d\\d \\d\\d:\\d\\d\\."),
               "a column whose hash no longer matches is noted, and the head says where and when the data were read");
-        Check(Regex.IsMatch(script.Text, "^before <- c\\(100, 108\\.414709848078\\d*, ", RegexOptions.Multiline) && script.Text.Contains("   # x, column 4, rows 1 to 2601\n"), "the values read are written into the script under the recipe's names");
+        Check(Regex.IsMatch(script.Text, "^# before <- c\\(100, 108\\.414709848078\\d*, ", RegexOptions.Multiline)
+            && Regex.IsMatch(script.Text, "^before <- c\\(100, 0x", RegexOptions.Multiline)
+            && script.Text.Contains("   # x, column 4, rows 1 to 2601\n"),
+            "the worksheet values have exact literals and a readable decimal comment under the recipe's names");
+        string worksheetFolder = Path.Combine(folder, "worksheet-read");
+        Directory.CreateDirectory(worksheetFolder);
+        using (var valuesWritten = new BinaryWriter(File.Create(Path.Combine(worksheetFolder, "expected-pairs.bin"))))
+        {
+            foreach (double value in x) valuesWritten.Write(value);
+            foreach (double value in y) valuesWritten.Write(value);
+        }
+        output = RunR(script.Text + $$"""
+
+            n_expected <- {{x.Length}}L
+            expected <- readBin("expected-pairs.bin", "double", n = 2L * n_expected, size = 8L, endian = "little")
+            stopifnot(identical(before, expected[seq_len(n_expected)]),
+                      identical(after, expected[n_expected + seq_len(n_expected)]))
+            cat("WORKSHEET_VALUES_OK\n")
+            """, worksheetFolder);
+        Check(output.Contains("WORKSHEET_VALUES_OK"), "R reads the complete worksheet vectors at their original precision");
         script = RScriptWriter.Write(record, null, pointer => new FrameValues { Unavailable = "the workbook test.xlsx is not open and was not found" });
         Check(script.DataUnavailable && script.Text.Contains("before <- NULL   # x, column 4, rows 1 to 2601: not read, see above") && script.Text.Contains("could not be read (the workbook test.xlsx is not open and was not found): put the values in by hand."),
               "when the workbook cannot be read the script says so and leaves the vectors for the user");

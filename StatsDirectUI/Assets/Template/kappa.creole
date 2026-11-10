@@ -14,6 +14,7 @@ ratings weighted by:</p>
 <table>
 <block name="weights"><tr><block name="tot"><td>@tot</td></block></tr></block>
 </table>
+<block name="kappaGradeOrder"><p>Weighted kappa uses the grade order shown in the crosstab. Code grades as numbers to set their order.</p></block>
 <p>Observed agreement = @{pow:round2}%<br />
 Expected agreement = @{pew:round2}%<br />
 Kappa = @{kappaw:roundu} (se_0 = @{sekw:roundu}, se = @{sekwci:roundu})<br />

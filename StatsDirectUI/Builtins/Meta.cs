@@ -136,13 +136,8 @@ namespace StatsDirect.Builtins
                 }
                 else
                 {
-                    included[i] = false;
-                    odr[i] = Constant.MISSING;
-                    odw[i] = Constant.MISSING;
-                    odrv[i] = Constant.MISSING;
-                    odrl[i] = Constant.MISSING;
-                    odru[i] = Constant.MISSING;
-                    odz[i] = Constant.MISSING;
+                    // a study with no subjects is refused, as the relative risk, risk difference and Mantel-Haenszel analyses refuse it
+                    throw new InvalidDataException();
                 }
             }
 
@@ -648,7 +643,7 @@ namespace StatsDirect.Builtins
                     tmp += " [CC = ";
                     tmp += host.Preferences.MetaCC == -9.0
                               ? "treatment arm"
-                              : host.Preferences.MetaCC.ToString();
+                              : host.Preferences.MetaCC.ToString(CultureInfo.InvariantCulture);
                     tmp += "]";
                 }
                 if (!included[i])
@@ -2008,19 +2003,25 @@ namespace StatsDirect.Builtins
                 // Try exact IRR
                 if (host.Preferences.MetaExact)
                 {
-                    Rec2X2[] tbl = new Rec2X2[k + 1];
+                    Rec2X2[] tbl = new Rec2X2[(int)realk + 1];
+                    int pooled = 0;
                     for (int i = 1; i <= k; i++)
                     {
-                        tbl[i].Freq = 1;
-                        tbl[i].A = a[i];
-                        tbl[i].M1 = b[i] + a[i];
-                        tbl[i].N1 = pt1[i];
-                        tbl[i].N0 = pt2[i];
-                        tbl[i].IsInformative = (a[i] * pt1[i] != 0.0) | (b[i] * pt2[i] != 0.0);
+                        if (rkr[i] == Constant.MISSING)
+                            continue;
+                        tbl[++pooled] = new Rec2X2
+                        {
+                            Freq = 1,
+                            A = a[i],
+                            M1 = b[i] + a[i],
+                            N1 = pt1[i],
+                            N0 = pt2[i],
+                            IsInformative = true
+                        };
                     }
                     bool useLogScale = false;
                     // person-time data: the conditional distribution of a given a + b is binomial with the person-times as its odds
-                    new ExactBB().Exact22K(host, 1, k, Exact22KDataType.Type3, tbl, cco, out eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
+                    new ExactBB().Exact22K(host, 1, pooled, Exact22KDataType.Type3, tbl, cco, out eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
                 }
                 else
                 {
@@ -2041,6 +2042,9 @@ namespace StatsDirect.Builtins
             }
 
             ParameterBag outputParameters = new();
+            // the exact method and the continuity correction, which the replay applies as the report did
+            outputParameters.AddInput("metaExact", host.Preferences.MetaExact);
+            outputParameters.AddInput("metaCC", host.Preferences.MetaCC);
             outputParameters.AddOutput("pc", cco * 100);
 
             IList<ParameterBag> inputsList = new List<ParameterBag>();
@@ -2059,7 +2063,7 @@ namespace StatsDirect.Builtins
                 if (rkr[i] == Constant.MISSING)
                     label = "* (excluded)";
                 else if (cced[i])
-                    label += " [CC = " + cc.ToString() + "]";
+                    label += " [CC = " + cc.ToString(CultureInfo.InvariantCulture) + "]";
                 inputsParameters.AddOutput("lb", label);
             }
 
@@ -3430,7 +3434,6 @@ namespace StatsDirect.Builtins
             double tausq;
             double cit;
             int i;
-            bool stratlab;
             double[] odx = null;
 
             double cco = parameters["gamma"].AsDouble;
@@ -3446,15 +3449,24 @@ namespace StatsDirect.Builtins
             }
 
             DataFrame rFrame = parameters["r"].AsDataFrame;
-            DoubleVariable rVariable = (DoubleVariable) rFrame.Variables[0]; //  Ends up in y
-            int k = rVariable.Length;
-            double[] y = new double[k + 2];
-            // double[] n = new double[k + 2 ]; - unused
-            string[] title = new string[k + 2];
+            DoubleVariable rVariable = (DoubleVariable)rFrame.Variables[0];
+            DataFrame nFrame = parameters["n"].AsDataFrame;
+            DoubleVariable nVariable = (DoubleVariable)nFrame.Variables[0];
+            int rawRows = rVariable.Length;
+            var complete = Numerics.Utilities.RemoveMissingRows(new[] { rVariable.Data, nVariable.Data }, 0, rawRows, 1, 1);
+            double[] y = complete.ArraysWithMissingRowsRemoved[0];
+            double[] ss = complete.ArraysWithMissingRowsRemoved[1];
+            int k = y.Length - 2; /* 1-based, 1 extra for pooling */
+            if (k == 0)
+                throw new InvalidDataException("At least one study must have a correlation and sample size");
+
+            string[] title = MakeTitles(parameters, "studies", "study {0}", rawRows, out bool stratlab, keptRows: complete.ValidRowsInOriginal);
+            title = Numerics.Utilities.CopyValidRows(title, complete.ValidRowsInOriginal, 0, rawRows, 1, k, 1);
+            title[k + 1] = Charting.Renderer.AbstractForestishChartRenderer.ComboTi(string.Empty);
+
             CorrelationRowType[] pg = new CorrelationRowType[k + 2];
             for (i = 1; i <= k; i++)
             {
-                y[i] = rVariable.Data[i - 1];
                 pg[i] = CorrelationRowType.Study;
                 if (y[i] <= -1.0 || y[i] >= 1.0)
                     throw new Exception($"r({i}) must be between -1 and 1 exclusive: a correlation of exactly 1 or -1 has no finite Fisher z");
@@ -3462,51 +3474,19 @@ namespace StatsDirect.Builtins
             // pooled indicator for last element - needed by plot_cp
             pg[k + 1] = CorrelationRowType.Pooled;
 
-            DataFrame nFrame = parameters["n"].AsDataFrame;
-            DoubleVariable nVariable = (DoubleVariable)nFrame.Variables[0];
             double[] seY = new double[k + 2];
             double[] llY = new double[k + 2];
             double[] ulY = new double[k + 2];
-            double[] ss = new double[k + 2];
             for (i = 1; i <= k; i++)
             {
-                double sampleSize = nVariable.Data[i - 1];
+                double sampleSize = ss[i];
                 if (sampleSize <= 3)
                     throw new Exception($"All values of n must be greater than 3 (the variance of Fisher's z is 1/(n - 3)). n({i}) is not");
 
-                ss[i] = sampleSize;
                 seY[i] = Math.Sqrt(1 / (sampleSize - 3));
                 llY[i] = MathDbl.ztor(MathDbl.rtoz(y[i]) - cit * seY[i]);
                 ulY[i] = MathDbl.ztor(MathDbl.rtoz(y[i]) + cit * seY[i]);
             }
-
-            if (parameters.ContainsKey("studies") && parameters["studies"].HasData)
-            {
-                stratlab = true;
-                DataFrame strataFrame = parameters["studies"].AsDataFrame;
-                StringVariable strataVariable = (StringVariable)strataFrame.Variables[0];
-                for (i = 1; i <= k; i++)
-                {
-                    string buf = strataVariable.Data[i - 1].Trim();
-                    if (buf.Length > 0)
-                    {
-                        if (buf.Length > 50)
-                            buf = buf.Substring(0, 50);
-                        title[i] = buf;
-                    }
-                    else
-                    {
-                        title[i] = "study " + i;
-                    }
-                }
-            }
-            else
-            {
-                stratlab = false;
-                for (i = 1; i <= k; i++)
-                    title[i] = "study " + i;
-            }
-            title[k + 1] = Charting.Renderer.AbstractForestishChartRenderer.ComboTi(string.Empty);
 
             // Pool
             double sumwt = 0.0;
@@ -3815,44 +3795,6 @@ namespace StatsDirect.Builtins
         }
 
         /// <summary>
-        /// I-squared with its test-based limits, as IsquareNcc gives them when the exact method is off.  No report calls it at present.
-        /// </summary>
-        /// <param name="q">Cochran's Q.</param>
-        /// <param name="k">The number of studies.</param>
-        /// <param name="cit">The normal deviate of the confidence level.</param>
-        /// <param name="isq">On return, I-squared as a percentage.</param>
-        /// <param name="ll">On return, the lower limit; missing with fewer than three studies.</param>
-        /// <param name="ul">On return, the upper limit.</param>
-        /// <remarks>Higgins P, Thompson S. Quantifying heterogeneity in meta-analysis. Stats in Medicine 2002; 21: 1539-1558</remarks>
-        public static void Isquare(double q, int k, double cit, out double isq, out double ll, out double ul)
-        {
-            double df = Convert.ToDouble(k - 1);
-            double hsq = q / df;
-            isq = 100.0 * Math.Max(0, (hsq - 1.0) / hsq);
-            if (k < 3)
-            {
-                ll = Constant.MISSING;
-                ul = Constant.MISSING;
-            }
-            else
-            {
-                double selh;
-                if (q > Convert.ToDouble(k))
-                {
-                    selh = 0.5 * (Math.Log(q) - Math.Log(df)) / (Math.Sqrt(2.0 * q) - Math.Sqrt(2.0 * Convert.ToDouble(k) - 3.0));
-                }
-                else
-                {
-                    selh = Math.Sqrt(1.0 / (2.0 * Convert.ToDouble(k - 2)) * (1.0 - 1.0 / (3.0 * Math.Pow(Convert.ToDouble(k - 2), 2.0))));
-                }
-                double llh = Math.Exp(Math.Log(Math.Sqrt(hsq)) - cit * selh);
-                double ulh = Math.Exp(Math.Log(Math.Sqrt(hsq)) + cit * selh);
-                ll = 100.0 * Math.Max(0, (Math.Pow(llh, 2.0) - 1.0) / Math.Pow(llh, 2.0));
-                ul = 100.0 * Math.Max(0, (Math.Pow(ulh, 2.0) - 1.0) / Math.Pow(ulh, 2.0));
-            }
-        }
-
-        /// <summary>
         /// The continuity correction of a table with a cell of nothing, by the preference MetaCC.  A number between 0 and 1 (0.5 if
         /// the preference is 0) is added to every cell.  For the treatment arm correction (-9) what is added to the cells of a group
         /// is in proportion to the size of the group: n1 / (n1 + n2) to a and c, the cells of the first group, and n2 / (n1 + n2) to
@@ -3937,6 +3879,8 @@ namespace StatsDirect.Builtins
             string[] title = MakeTitles(parameters, "strata", "stratum {0}", rawRows, out bool hasUserSuppliedLabels, keptRows: copiesRemovingMissingRows.ValidRowsInOriginal);
 
             int k = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0].Length - 2; /* 1-based, 1 extra for pooling */
+            if (k == 0)
+                throw new InvalidDataException("At least one study must have a total and a number of outcomes");
             title = Numerics.Utilities.CopyValidRows(title, copiesRemovingMissingRows.ValidRowsInOriginal, 0, rawRows, 1, k, 1);
             title[k + 1] = Charting.Renderer.AbstractForestishChartRenderer.ComboTi(string.Empty);
 
@@ -4248,7 +4192,7 @@ namespace StatsDirect.Builtins
             if (included)
                 return (stratlab ? title[i] : string.Empty)
                     + (cced[i]
-                        ? " [CC = " + (host.Preferences.MetaCC == -9.0 ? "treatment arm" : host.Preferences.MetaCC.ToString()) + "]"
+                        ? " [CC = " + (host.Preferences.MetaCC == -9.0 ? "treatment arm" : host.Preferences.MetaCC.ToString(CultureInfo.InvariantCulture)) + "]"
                         : string.Empty);
             else
                 return "* (excluded)";
@@ -4526,7 +4470,9 @@ namespace StatsDirect.Builtins
         private static double IsquareBrentRoot(double xl, double xu, double qobs, double df, double clev, ref int ierr)
         {
             double d = 0;
-            const double tolerance = 0.000001;
+            // the parameter is found to 5e-15, or to its last figures when it is large, so that a limit of I-squared near 0 is as
+            // good as one further up: found to 5e-7, as it used to be, a limit of 0.4% was right only to 2 in 100,000
+            const double tolerance = 1e-14;
             const int maxIter = 300;
 
             double e = 0.0;

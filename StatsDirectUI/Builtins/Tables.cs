@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using StatsDirect.Charting;
 using StatsDirect.Data;
 using StatsDirect.Numerics;
@@ -637,8 +638,8 @@ namespace StatsDirect.Builtins
                     quantity[i, j] = (i == j ? 1.0 : 0.0) - 2.0 * (1.0 - gama) * (1.0 - ((pdotj[i] + pidot[i]) / 2.0 + (pdotj[j] + pidot[j]) / 2.0) / 2.0) / (g - 1.0);
             double vgama = (1.0 - f) / (gt * Math.Pow(1.0 - pegama, 2.0)) * CentredVariance(quantity, share, g);
             segama = Math.Sqrt(vgama);
-            gamacil = gama - cit * segama;
-            gamaciu = gama + cit * segama;
+            gamacil = Math.Max(-1.0, gama - cit * segama);
+            gamaciu = Math.Min(1.0, gama + cit * segama);
             // vgamma is the variance of Gwett's AC1 statistic and epgamma its standard error
             double[] wibar = new double[g];
             double[] wjbar = new double[g];
@@ -983,7 +984,7 @@ namespace StatsDirect.Builtins
         {
             double cco = parameters["ci"].AsDouble;
             double cit; double p;
-            if (cco > 0)
+            if (cco > 0 && cco < 1)
             {
                 p = (1.0 - cco) / 2.0;
                 cit = PDF.gauinv(1.0 - p);
@@ -1094,6 +1095,12 @@ namespace StatsDirect.Builtins
                 ParameterBag outputParameters = new();
                 outputParameters.AddOutput("ylab", ylab);
                 outputParameters.AddOutput("xlab", xlab);
+                string[] grades = Array.ConvertAll(ycat, grade => grade.Title);
+                outputParameters.AddInput("kappaGrades", grades);
+                bool textGrades = Array.Exists(grades, label => !double.TryParse(label, out double value) || !double.IsFinite(value));
+                outputParameters.AddInput("kappaTextGrades", textGrades);
+                if (textGrades)
+                    outputParameters.AddOutput("*kappaGradeOrder", new List<ParameterBag> { new() });
                 ICollection<ParameterBag> xList = new List<ParameterBag>();
                 for (int i = 0; i < xcats; i++)
                 {
@@ -1145,6 +1152,7 @@ namespace StatsDirect.Builtins
                     outputParameters.AddOutput("pe", pe * 100);
                     outputParameters.AddOutput("kappa", k);
                     outputParameters.AddInput("kDouble", k);
+                    outputParameters.AddInput("kappaConfidence", cco);
                     outputParameters.AddOutput("se", sek);
                     outputParameters.AddOutput("seci", sekci);
                     outputParameters.AddOutput("pc", cco * 100);
@@ -1285,9 +1293,14 @@ namespace StatsDirect.Builtins
                 string[] catz = new string[cats];
                 for (int i = 0; i < cats; i++)
                     catz[i] = categoryList[i];
+                // Keep the original order of the calculations so that reordering the printed grades does not
+                // change the estimate or its standard error by rounding the sum in a different order.
                 Array.Sort(catz, 0, cats);
+                int[] reportOrder = Enumerable.Range(0, cats).ToArray();
+                Array.Sort(reportOrder, (i, j) => Formatting.CompareLabels(catz[i], catz[j]));
                 ParameterBag outputParameters = new();
                 outputParameters.AddOutput("categories", cats); //  To ensure that any test on the result can find the number of categories
+                outputParameters.AddInput("kappaGrades", Array.ConvertAll(reportOrder, i => catz[i]));
                 if (cats == 2)
                 {
                     // ----> Fleiss Cuzick for > 2 raters and 2 responses
@@ -1310,8 +1323,13 @@ namespace StatsDirect.Builtins
                     outputParameters.AddOutput("z", z);
                     outputParameters.AddOutput("p", 1.0 - PDF.alnorm(z));
 
-                    double ll = k - cit * sek;
+                    // With m ratings per subject the least kappa is -1/(m - 1).
+                    // Use -1 when the number of ratings varies.
+                    double ll = Math.Max(minm == maxm ? -1.0 / (minm - 1.0) : -1.0, k - cit * sek);
                     double ul = k + cit * sek;
+                    // kappa cannot be more than 1, so the upper limit stops there, as it does for two raters
+                    if (ul > 1.0)
+                        ul = 1.0;
                     outputParameters.AddOutput("pc", 100.0 * cco);
                     outputParameters.AddOutput("ll", ll);
                     outputParameters.AddOutput("ul", ul);
@@ -1364,7 +1382,7 @@ namespace StatsDirect.Builtins
                     if (minm == maxm)
                     {
                         ICollection<ParameterBag> catList = new List<ParameterBag>();
-                        for (int i = 0; i < cats; i++)
+                        foreach (int i in reportOrder)
                         {
                             ParameterBag catValues = new();
                             catValues.AddOutput("resp", catz[i]);
@@ -1388,8 +1406,11 @@ namespace StatsDirect.Builtins
                                                        ? 1.0 - PDF.alnorm(z)
                                                        : Constant.MISSING);
 
-                        double ll = kbar - cit * sek;
+                        double ll = Math.Max(-1.0 / (minm - 1.0), kbar - cit * sek);
                         double ul = kbar + cit * sek;
+                        // kappa cannot be more than 1, so the upper limit stops there, as it does for two raters
+                        if (ul > 1.0)
+                            ul = 1.0;
                         outputParameters.AddOutput("pc", 100.0 * cco);
                         outputParameters.AddOutput("ll", ll);
                         outputParameters.AddOutput("ul", ul);
@@ -1397,7 +1418,7 @@ namespace StatsDirect.Builtins
                     else
                     {
                         ICollection<ParameterBag> catList = new List<ParameterBag>();
-                        for (int i = 0; i < cats; i++)
+                        foreach (int i in reportOrder)
                         {
                             ParameterBag catValues = new();
                             catValues.AddOutput("resp", catz[i]);

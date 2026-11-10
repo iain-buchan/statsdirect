@@ -1181,6 +1181,10 @@ namespace StatsDirect.UI
 
         internal void NoteRecentFile(string path, bool openedOk)
         {
+            // A file that could not be opened stays listed when its volume is not there, such as a USB stick not plugged in or a drive
+            // mapped later: the failure says nothing of the file, as its absence says nothing at start-up (Settings.SettleRecentFiles)
+            if (!openedOk && !Properties.Settings.VolumeIsThere(path))
+                return;
             // Ensure the path is the most recently used and appears no more than once; ensure no more than MAX_RECENT_FILES files are kept
             List<string> recentFiles = new(Properties.Settings.Default.RecentFileList ?? Array.Empty<string>());
             if (recentFiles.Contains(path))

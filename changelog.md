@@ -2,6 +2,54 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
+##[v5.3.10] 2026-11-11
+
+### Changed
+- Windows installers and application binaries use Microsoft Artifact Signing.
+
+### Fixed
+- R replay uses the selected confidence level for printed exact tests, summary t-test power and Kruskal–Wallis comparisons. Frequency replay includes every selected column in the chosen sort order, and 2-by-2 cohort replay includes risk difference and power.
+
+- Continue in R handles single-study meta-analyses and prints no Cochran Q P value with zero degrees of freedom. The effect size replay shows the individual estimate and leaves out pooled results, as the report does.
+- Correlation and proportion meta-analysis omit incomplete studies while keeping the labels on the corresponding rows in the report and the replay.
+- Exact incidence rate ratio meta-analysis uses the same eligible strata as the rest of the analysis when a group has no person-time.
+- Rate standardization replays show the report's fallback label for a blank stratum name. Meta-analysis replay labels show confidence intervals with consistent spacing and use the selected level in the effect size plot annotation.
+- Report imports and pastes remove external SVG presentation references written with CSS escapes or image functions, while keeping references to the chart's own definitions.
+- Continue in R and Jupyter notebook export write exact hexadecimal literals for numbers with more than 15 significant decimal figures. A comment shows the original decimal values.
+- Royston's adjusted K-squared uses a more accurate normal tail approximation for large deviates.
+- Weighted kappa uses the report's grade order in R, including for saved analyses from the Mac, and explains the order beside the weighted result when grades are text.
+- R replay shows the Donner-Eliasziw confidence interval for Scott's pi when two grades have usable counts.
+- Kappa uses a 95% interval when the recorded level is 0% or 100%.
+- The lower confidence limit of multi-rater kappa stops at -1/(m - 1) with m ratings for every subject and at -1 when the number varies.
+- Gwet's AC1 confidence limits stop at -1 and 1 in the report and in R.
+- Continuing in R from a simulated kappa P value uses the confidence level from the original agreement analysis for the kappa intervals.
+- Logistic and Poisson regression leave out later predictors that are determined by earlier ones, name them in the report and count only the fitted rank in the Akaike and Schwarz criteria. Logistic regression can fit a single or a few distinct covariate patterns when the remaining model is estimable.
+- Poisson regression accepts an exact fit when the number of complete observations with positive weight equals the number of parameters. The fits report leaves both incidence columns unavailable throughout when there is no exposure column.
+- Multiple regression keeps an exact fit after dropping redundant predictors and warns about both the dropped predictors and the lack of residual degrees of freedom. Its ANOVA labels the total uncorrected when the model has no intercept.
+- Cox predictor coding ignores categories found only on rows without a time or event. R replay gives the fitted rank and marks aliased coefficients as unavailable.
+- Logistic and Poisson regression use the default precision for a zero or negative entry and keep the effective precision when continuing an analysis in R.
+- Poisson incidence-rate ratio replay uses the selected sub-population even when an earlier predictor is aliased. An older selection from a different list asks for a new choice.
+- Polynomial regression reports an area of zero when all predictor values are identical, and its R replay finishes with the intercept-only fit.
+- Offline report HTML sanitization uses DOMPurify 3.4.17 again: the report editor, import and export bundles of 5.3.9 had been built with 3.4.16, although the licence notice and this changelog said 3.4.17, and the build now refuses to bundle a library at a version other than the stated one.
+- A recently used file on a drive that is not there, such as a USB stick not plugged in or a network drive that is mapped later, stays in the recent files list, both when StatsDirect starts and when the file is chosen from the list and cannot be opened: a file is taken off the list only when its drive is there and the file is not, or cannot be read.
+- The default workbook font and the chart title and label fonts keep their sizes between regional settings: a size is saved with a point as its decimal separator and is read with a point or a comma, so that the 10.5 points saved as "10,5" where the decimal separator is a comma are no longer 105 points where it is a point.
+- The "Precision of estimates" box of logistic regression and of Poisson regression takes a value of any length: it stopped at 12 characters, so that a precision typed as 0.00000000001 was cut at 0.0000000000 and was taken as zero.
+- Time Series Summary and Contract show the missing-data message when a selected identifier or category is blank or marked missing, including at the end of the selection.
+- Kappa replay of two raters, from their columns or from a typed table, gives the report's Maxwell test when a grade is never taken for another, grouping the grades that disagreements join as the report does, instead of stopping at a matrix with no inverse; when the raters never disagree it says that the Maxwell and generalised McNemar tests were not calculated.
+- Kappa of more than two raters replays its own analysis in R (the Fleiss-Cuzick kappa of two categories, or the kappa of each category and of all together with the Fleiss-Nee-Landis test) instead of the two-rater analysis of its first two columns; the simulated P of kappa that follows a typed table replays that table instead of a script with no data.
+- Kappa of more than two raters stops the upper limit of its confidence interval at 1, the most that kappa can be, as the two-rater report already did; the two-rater R replay stops the limits of kappa and weighted kappa at -1 and 1 as its report does, instead of printing limits beyond them.
+- Multiple comparisons saved before 5.2.3, whose record does not name the analysis of variance they followed, ask in Continue in R for that analysis to be rerun instead of replaying a one-way analysis of variance that may not be theirs (the behaviour since 5.3.9, which its notes did not mention).
+- The incidence rate ratios that follow a Poisson regression, and the bootstrap odds ratios that follow a logistic regression, mark the row of an aliased predictor "* error: drop this variable *" as the main reports do, instead of showing a ratio of 1 with limits of 1 to 1; an aliased predictor is no longer offered as a sub-population for the incidence rate ratios, and R replay marks the same rows.
+- Polynomial regression through as many points as it has coefficients (a quadratic through three points) keeps its exact fit and reports t, P and the partial correlations as unavailable, with a warning that the model is saturated, instead of fitting again by singular value decomposition with "QR solution failed and SVD used" and t = 0; its R replay, which had stopped with an error, prints * for t, P, F, root MSE and adjusted R squared.
+- Polynomial regression with fewer complete pairs of observations than coefficients (a cubic through three points) is refused with a message, from the analysis and from a change of degree alike, instead of stopping with an internal error; and R replay of a polynomial that drops powers it cannot estimate (fewer distinct values of x than coefficients) names the dropped powers and prints the equation, degrees of freedom and areas under the curve of the polynomial that is left, where it had repeated a coefficient for a dropped power, given the degrees of freedom of the degree that was asked for, and stopped with an error.
+- The Hosmer–Lemeshow test groups whole frequencies as it did before 5.3.9 however large the total: above a total of about a hundred million the tolerance of its cut points, 1e-9 of the total, could merge two groups and lose a degree of freedom, and it now stays below a tenth of a count, natively and in R replay.
+- Incidence rate ratio and incidence rate difference meta-analysis replay completes when a stratum has no events in one group, adding the recorded continuity correction (0.5 or 0.01) to the events of both groups of such a stratum as the report does, instead of stopping at a missing value or pooling uncorrected variances; it gives the exact conditional block only when the exact methods were on, and now has the report's I-squared interval and bias indicators (with more than three strata, Egger's interval at 1 - 2(1 - confidence)). A record saved by an earlier version replays with the exact methods on and the default correction.
+- The meta-analysis continuity correction chosen in the calculation options is the one applied and shown where the decimal separator is a comma: there a choice of 0.01 or 0.5 was read as 1 or 5, so 0.5 was added whichever was chosen, study labels read [CC = 1] or [CC = 5], and the dialog did not open on the stored choice. Labels give the constant with a decimal point in every language setting.
+- Peto odds ratio meta-analysis refuses a study with no subjects, as the relative risk, risk difference and Mantel-Haenszel analyses do, instead of reporting it with a weight of minus infinity.
+- The exact confidence limits of I-squared are found to full precision: a limit near 0 agreed with R's to about five significant figures only (0.4052802% against 0.4052719%). Limits already printed are unchanged at the precision shown.
+- Meta-analysis replay labels a study whose cell in the labels column is blank as the report and its plots do, stratum (or study) and its place among the studies kept, instead of leaving the label blank.
+- Meta-analysis replay gives the forest plot axis the confidence level of the analysis, instead of always 95%, in the relative risk, risk difference, Peto and correlation analyses, and so does the line above each effect size forest plot that gives the pooled estimate with its interval; notes low power beside the Begg-Mazumdar test only with fewer than eleven studies, as the report does; and, when studies tie, gives the report's Kendall tau b with its tie-corrected and continuity-corrected normal P.
+
 ##[v5.3.9] 2026-11-09
 
 ### Fixed

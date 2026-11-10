@@ -1,5 +1,6 @@
 // The Meta-analysis menu at its limits: what R gives no figure for.  Studies that cannot be pooled, the labels of the studies that are
 // left out, and the lower limit of Sato when the pooled odds ratio is infinite, which is worked out here from its definition.
+using System.Globalization;
 using StatsDirect.Builtins;
 using StatsDirect.Templates;
 
@@ -141,7 +142,69 @@ internal static partial class Program
             }
             Set(settings[0]);
         }
-        if (failures == before) Console.WriteLine("ok    studies that cannot be pooled, the labels of the studies left out, Sato's limit, the standard errors of the bias plots, rates without events");
+        // A study of nobody (0 of 0 against 0 of 0) is refused by Peto's analysis as it is by the other three: it used to be listed
+        // with a weight of minus infinity
+        {
+            Set(settings[0]);
+            double[] e1 = { 20, 0, 15 }, g1 = { 64, 0, 42 }, e2 = { 38, 0, 16 }, g2 = { 75, 0, 34 };
+            foreach (string analysis in new[] { "or", "peto", "rr", "rd" })
+            {
+                var figures = Report("x", h => Binary(analysis, h, 0.95, e1, g1, e2, g2));
+                string error = figures.TryGetValue("x|error", out object e) ? (string)e : "no error";
+                Say(error.StartsWith("InvalidDataException"), $"a study of nobody (0 of 0 against 0 of 0), {analysis}: refused as data that cannot be used ({error})");
+            }
+        }
+        // The exact limits of I-squared against R (benchmarks/isquared-limits.R): uniroot, to a tolerance of 1e-15, of pchisq(Q, df, ncp)
+        // less each tail probability, which the same search of the Poisson mixture written out agrees with to 1 in 10^10.  The search
+        // of the program used to stop within 5e-7 of the non-centrality parameter, so that a limit near 0 was good to 2 in 100,000
+        // only: the first set is Q of a risk difference analysis of three studies, whose lower limit was given as 0.4052802%
+        {
+            (double q, int k, double level, double z, double lower, double upper)[] sets =
+            {
+                (7.4077290540652, 3, 0.95, 1.959963984540054, 0.405271922625896, 91.1509344015437),
+                (7.38, 3, 0.95, 1.959963984540054, 0.030370991330383, 91.1319994943623),
+                (12.5, 6, 0.95, 1.959963984540054, 0, 83.4327975663746),
+                (3.9, 2, 0.95, 1.959963984540054, 0, 93.9330313667946),
+                (40, 10, 0.99, 2.5758293035489, 47.0535739642794, 88.5664903338971),
+                (5.2, 2, 0.9, 1.6448536269514722, 27.5704959203675, 93.9051260338261),
+            };
+            foreach (var c in sets)
+            {
+                Meta.IsquareNcc(null, c.q, c.k, c.level, c.z, out _, out double lower, out double upper, true);
+                string set = $"Q of {c.q.ToString(CultureInfo.InvariantCulture)} in {c.k} studies, {100 * c.level}%";
+                Say(Math.Abs(lower - c.lower) <= 1e-9 * c.lower, $"{set}: the lower exact limit of I-squared to 1 in 10^9 ({lower.ToString("R", CultureInfo.InvariantCulture)}; R {c.lower.ToString("R", CultureInfo.InvariantCulture)})");
+                Say(Math.Abs(upper - c.upper) <= 1e-9 * c.upper, $"{set}: the upper exact limit of I-squared to 1 in 10^9 ({upper.ToString("R", CultureInfo.InvariantCulture)}; R {c.upper.ToString("R", CultureInfo.InvariantCulture)})");
+            }
+        }
+        // The constant of the continuity correction is shown with a dot in every culture, as the options of the dialog have it: in
+        // a culture with a decimal comma the label of a corrected study read "[CC = 0,01]"
+        {
+            CultureInfo culture = CultureInfo.CurrentCulture;
+            try
+            {
+                CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("de-DE");
+                Set(("x0.cc01.d0", false, 0.01, false));
+                double[] e1 = { 0, 5, 9 }, g1 = { 30, 40, 50 }, e2 = { 4, 3, 7 }, g2 = { 32, 41, 48 };
+                foreach (var (analysis, block) in new[] { ("or", "or"), ("rr", "risks"), ("rd", "inputs") })
+                {
+                    var figures = Report("x", h => Binary(analysis, h, 0.95, e1, g1, e2, g2));
+                    string label = figures.TryGetValue($"x|{block}.1|lb", out object l) ? (string)l : "no label";
+                    Say(label.EndsWith("[CC = 0.01]"), $"a correction of 0.01 in de-DE, {analysis}: the label of the study without an event has the constant with a dot (\"{label}\")");
+                }
+                foreach (bool ratio in new[] { true, false })
+                {
+                    var figures = Report("x", h => Rates(ratio, h, 0.95, e1, new double[] { 300, 410, 520 }, e2, new double[] { 310, 400, 505 }));
+                    string label = figures.TryGetValue("x|inputs.1|lb", out object l) ? (string)l : "no label";
+                    Say(label == " [CC = 0.01]", $"a correction of 0.01 in de-DE, rate {(ratio ? "ratio" : "difference")}: the label of the study without an event has the constant with a dot (\"{label}\")");
+                }
+            }
+            finally
+            {
+                CultureInfo.CurrentCulture = culture;
+                Set(settings[0]);
+            }
+        }
+        if (failures == before) Console.WriteLine("ok    studies that cannot be pooled, the labels of the studies left out, Sato's limit, the standard errors of the bias plots, rates without events, a study of nobody, the exact limits of I-squared, the label of the correction in de-DE");
     }
 
     internal static StepOutput Rates(bool ratio, Host h, double level, double[] a, double[] t1, double[] b, double[] t2)

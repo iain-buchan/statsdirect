@@ -57,7 +57,10 @@ internal static partial class Program
                 if (op == "BoxWhiskerPlot")
                     Check(Directory.GetFiles(runFolder, "selected-box-*.svg").Length == 1,
                           "the Cuzick worked-example recipe draws exactly one chart from the selected columns and recorded settings");
-                string ours = Figures(output);
+                // The correlation tables now print a separate study label. Its default number is not another statistic.
+                string ours = Figures(op == "MetaCorrelation"
+                    ? Regex.Replace(output, @"(?m)[ \t]+study [0-9]+[ \t]*(?=\r?$)", "")
+                    : output);
                 if (example.TryGetProperty("nocompare", out JsonElement nc) && nc.ValueKind == JsonValueKind.True)
                 {
                     // a recipe the help's script cannot be compared with figure for figure (random numbers; a calculator whose help

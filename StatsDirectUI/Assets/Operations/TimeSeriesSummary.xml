@@ -32,6 +32,7 @@
           <name>subjectIds</name>
           <prompt>Select Subject/Participant Identifier</prompt>
           <mode>CategoryReplaceMissing</mode>
+          <preserve-row-alignment>true</preserve-row-alignment>
           <validators>
             <validator><name>NoMissingData</name></validator>
           </validators>
@@ -47,6 +48,10 @@
           <cancel-skips-parameter>Skip</cancel-skips-parameter>
           <same-length-as>times</same-length-as>
           <mode>CategoryReplaceMissing</mode>
+          <preserve-row-alignment>true</preserve-row-alignment>
+          <validators>
+            <validator><name>NoMissingData</name></validator>
+          </validators>
           <min-columns>1</min-columns>
           <max-columns>1</max-columns>
           <ask-for-group-id>false</ask-for-group-id>

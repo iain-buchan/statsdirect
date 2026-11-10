@@ -19,6 +19,39 @@ internal static partial class Program
         double Number(ParameterBag bag, string key) => Convert.ToDouble(bag[key].AsObject, inv);
         string Vector(IEnumerable<double> values) => "c(" + string.Join(", ", values.Select(v => v.ToString("R", inv))) + ")";
 
+        await WithGrid(main, "Mac padded record", async grid =>
+        {
+            byte[] bytes = File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, "Fixtures", "MacRecords", "Q3a-padded-record.json"));
+            Check(Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(bytes)).Equals(
+                "2a2977183b7338a45495410fc7e36f91208d6c1525b29c2142a1b868031313ee", StringComparison.OrdinalIgnoreCase),
+                "the Mac paired fixture retains its exact bytes");
+            JsonElement record = JsonDocument.Parse(bytes).RootElement.Clone();
+            RScript held = RScriptWriter.Write(record, null, _ => throw new InvalidOperationException("The record holds its own values."));
+            Check(held.HasRecipe && !held.DataUnavailable && held.Text.Contains("after <- c(135, 136.4, 141.3, 139, 152.6, NA, NA, NA)"),
+                "the Mac record's original eight rows are written before the paired recipe drops incomplete pairs");
+            string assertion = "stopifnot(n == 5, length(after) == 5L, isTRUE(all.equal(as.numeric(r$statistic), 4.952164557433743, tolerance=1e-12)))\ncat('MAC_PADDED_OK\\n')";
+            await RunConversationR(held.Text, "mac-padded-held", assertion, "MAC_PADDED_OK");
+            Notebook(record, "Mac paired t test", "the original Mac record's notebook");
+
+            var view = (SpreadsheetGear.Windows.Forms.WorkbookView)Field(grid, "workbookView");
+            view.GetLock();
+            try { view.ActiveWorksheet.Name = "Data"; }
+            finally { view.ReleaseLock(); }
+            Fill(grid, 0, "Before", new object[] { 142.5, 138.0, 150.2, 145.0, 160.75, 155.0, 149.1, 151.0 });
+            Fill(grid, 1, "After", new object[] { 135.0, 136.4, 141.3, 139.0, 152.6 });
+            JsonObject pointerOnly = JsonNode.Parse(bytes).AsObject();
+            pointerOnly.Remove("data");
+            pointerOnly["inputs"][0]["path"] = grid.Text;
+            JsonElement localRecord = JsonSerializer.SerializeToElement(pointerOnly);
+            FrameValues reread = FrameReader.Read(FramePointer.From(SavedInput(localRecord, "data")));
+            Check(reread.Unavailable == null && reread.Columns.All(c => !c.Changed && c.Values.Length == 8) &&
+                reread.Columns[1].Values.Skip(5).All(v => v == null), "Windows rereads the Mac padded record with both recorded hashes (" + Read(reread) + ")");
+            await RunConversationR(RScriptWriter.Write(localRecord, null, FrameReader.Read).Text, "mac-padded-reread", assertion, "MAC_PADDED_OK");
+            ((IGrid)grid).SetValues(2, 1, new object[,] { { 999.0 } });
+            Check(RScriptWriter.Write(localRecord, null, FrameReader.Read).Text.Contains("\"After\" has changed in the workbook"),
+                "editing a cell is detected when rereading the Mac record");
+        });
+
         // A multi-column category frame whose first column's range is the longer: the reread sized its buffer from the last column.
         await WithGrid(main, "Saved frequency, longer range first", async grid =>
         {
@@ -34,13 +67,31 @@ internal static partial class Program
             Check(reread.Unavailable == null && reread.Columns.Count == 2 && reread.Columns.All(c => !c.Changed)
                 && reread.Columns[0].Values.Length == 3000 && reread.Columns[1].Values.Length == 2600,
                 "the actual reread of a category frame with its longer range first gives every value with its recorded hash (" + Read(reread) + ")");
-            var first = ((IList<ParameterBag>)output.ParameterBag["*variable"].AsObject)[0];
-            var bins = ((IList<ParameterBag>)first["*bin"].AsObject).ToList();
             RScript script = RScriptWriter.Write(record, "Frequency", FrameReader.Read);
             Check(script.HasRecipe && !script.DataUnavailable && !script.Text.Contains("has changed in the workbook"), "the frequency replay reads its pointer-only data without a change note");
-            string expected = "stopifnot(n == " + Number(first, "n").ToString("R", inv) + ", identical(names(counts), c(" + string.Join(", ", bins.Select(b => "\"" + b["x"].AsObject + "\"")) + ")), " +
-                "identical(as.vector(counts), " + Vector(bins.Select(b => Number(b, "fx"))).Replace("c(", "as.integer(c(") + ")))\ncat('SAVED_FREQUENCY_OK\\n')";
-            await RunConversationR(script.Text, "saved-frequency-longer-first", expected, "SAVED_FREQUENCY_OK");
+            const string checkColumn = """
+                check_column <- function(title, total, labels, frequencies) {
+                  first <- match(title, output)
+                  header <- first + match("Value  Frequency  Relative %  Cumulative  Cumulative Relative %",
+                                          output[seq.int(first + 1L, length(output))])
+                  stopifnot(identical(output[header - 1L], paste("Total =", total)))
+                  rows <- strsplit(trimws(output[header + seq_along(labels)]), "[[:space:]]+")
+                  stopifnot(identical(vapply(rows, `[`, "", 1L), labels),
+                            identical(as.numeric(vapply(rows, `[`, "", 2L)), frequencies))
+                }
+                """;
+            var columns = (IList<ParameterBag>)output.ParameterBag["*variable"].AsObject;
+            var expected = columns.Select(column =>
+            {
+                var bins = (IList<ParameterBag>)column["*bin"].AsObject;
+                string title = RScriptWriter.Quote((string)column["ti"].AsObject);
+                string total = Number(column, "n").ToString("R", inv);
+                string labels = "c(" + string.Join(", ", bins.Select(b => RScriptWriter.Quote((string)b["x"].AsObject))) + ")";
+                string frequencies = Vector(bins.Select(b => Number(b, "fx")));
+                return $"check_column({title}, {total}, {labels}, {frequencies})";
+            });
+            await RunConversationR("output <- capture.output({\n" + script.Text + "\n})", "saved-frequency-longer-first",
+                checkColumn + "\n" + string.Join("\n", expected) + "\ncat('SAVED_FREQUENCY_OK\\n')", "SAVED_FREQUENCY_OK");
             Notebook(record, "Frequency", "the frequency notebook export");
 
             // the longer range last, which was always read right, reads as before
@@ -143,6 +194,109 @@ internal static partial class Program
             try { view.ActiveWorksheet.Cells[12, 0].EntireRow.Hidden = false; }
             finally { view.ReleaseLock(); }
             Check(FrameReader.Read(FramePointer.From(input)).Columns.All(c => c.Changed), "showing a hidden row after the run is still reported as a change of both columns");
+        });
+
+        // Two columns padded to a third in one record of 5.3.5 or 5.3.6. The padding is taken for every shorter column or for none: when
+        // both recover their recorded hashes the record replays as it was saved, and when one of them has been edited the other's padding
+        // alone would still recover its hash, but the frame is then not the one the analysis used, so neither column is padded.
+        await WithGrid(main, "Saved Friedman, two columns padded by 5.3.6", async grid =>
+        {
+            double[] second = { 24.5, 22.5, 26.5, 25.5, 21.5, 28.5, 23.5, 27.5, 24.25, 26.25, 22.25, 25.25 }, third = { 26.75, 25.75, 21.75, 27.75, 29.75, 20.75, 24.75, 23.75, 28.75 };
+            Fill(grid, 0, "Diet A", Enumerable.Range(0, 6000).Select(k => (object)(20.0 + k * 7 % 11 + k * 0.001)));
+            Fill(grid, 1, "Diet B", second.Select(v => (object)v));
+            Fill(grid, 2, "Diet C", third.Select(v => (object)v));
+            var (run, output) = RunOnGrid(grid, "Friedman", new() { ["data"] = new Padded("A1:A6001,B1:B13,C1:C10") });
+            JsonElement record = JsonDocument.Parse(run.Record).RootElement.Clone();
+            JsonElement input = SavedInput(record, "data");
+            JsonElement columns = input.GetProperty("columns");
+            Check(input.GetProperty("kind").GetString() == "frame" && !record.TryGetProperty("data", out _)
+                && new[] { 6001, 13, 10 }.Select((last, c) => columns[c].GetProperty("rows")[1].GetInt32() == last).All(same => same),
+                "three columns, two of them padded, are saved as the 5.3.6 pointer record: rows 1 to 6001, 1 to 13 and 1 to 10");
+            ParameterBag native = output.ParameterBag;
+            Check(Number(native, "nb") == 9 && Number(native, "df") == 2, "native Friedman uses the 9 complete blocks of the three treatments");
+            FrameValues reread = FrameReader.Read(FramePointer.From(input));
+            Check(reread.Unavailable == null && reread.Columns.All(c => !c.Changed && c.Values.Length == 6000)
+                && reread.Columns[1].Values.Skip(12).All(v => v == null) && reread.Columns[2].Values.Skip(9).All(v => v == null),
+                "the actual reread pads both shorter columns back to their recorded hashes, without a false change (" + Read(reread) + ")");
+            RScript script = RScriptWriter.Write(record, "Friedman test", FrameReader.Read);
+            Check(script.HasRecipe && !script.DataUnavailable && !script.Text.Contains("has changed in the workbook"), "the record with two padded columns replays without a change note");
+            await RunConversationR(script.Text, "saved-two-padded",
+                "stopifnot(isTRUE(all.equal(unname(friedman_result[c('n', 'k', 'a2', 't1', 't2', 'p')]), " + Vector(new[] { Number(native, "nb"), Number(native, "df") + 1 }.Concat(new[] { "a2", "t1", "t2", "p" }.Select(key => Number(native, key)))) +
+                ", tolerance = 1e-10, check.attributes = FALSE)))\ncat('SAVED_TWO_PADDED_OK\n')",
+                "SAVED_TWO_PADDED_OK");
+
+            // An edit to either shorter column leaves the other's padding able to recover its hash: neither is padded, the edited column
+            // keeps its change note and the notebook refuses the values, whichever of the two comes first in the selection.
+            foreach (var (column, row, title, entered) in new[] { (2, 4, "Diet C", third[3]), (1, 7, "Diet B", second[6]) })
+            {
+                ((IGrid)grid).SetValues(row, column, new object[,] { { 1000.0 } });
+                FrameValues edited = FrameReader.Read(FramePointer.From(input));
+                Check(edited.Unavailable == null && !edited.Columns[0].Changed && edited.Columns.Skip(1).All(c => c.Changed) && edited.Columns.Select(c => c.Values.Length).SequenceEqual(new[] { 6000, 12, 9 }),
+                    "with an edited cell in " + title + ", one of two padded columns, neither column is padded and both are reported as changed (" + Read(edited) + ")");
+                Check(RScriptWriter.Write(record, "Friedman test", FrameReader.Read).Text.Contains("NOTE: \"" + title + "\" has changed in the workbook"), "the edited " + title + " keeps its change note beside the other padded column");
+                Check(!NotebookAccepted(record, "Friedman test"), "the notebook export refuses the record with " + title + " edited");
+                ((IGrid)grid).SetValues(row, column, new object[,] { { entered } });
+                Check(FrameReader.Read(FramePointer.From(input)).Columns.All(c => !c.Changed && c.Values.Length == 6000), "restoring the edited cell of " + title + " restores both paddings of the record");
+            }
+        });
+
+        await WithGrid(main, "Saved one way, two columns padded by 5.3.6", async grid =>
+        {
+            Fill(grid, 0, "Group one", Enumerable.Range(0, 3000).Select(k => (object)(10.0 + k % 17 * 0.5)));
+            Fill(grid, 1, "Group two", Enumerable.Range(0, 2400).Select(k => (object)(11.0 + k % 13 * 0.25)));
+            Fill(grid, 2, "Group three", Enumerable.Range(0, 40).Select(k => (object)(12.0 + k % 7 * 0.75)));
+            var (run, output) = RunOnGrid(grid, "OneWay", new() { ["data"] = new Padded("A1:A3001,B1:B2401,C1:C41") });
+            JsonElement record = JsonDocument.Parse(run.Record).RootElement.Clone();
+            JsonElement input = SavedInput(record, "data");
+            FramePointer Pointer() => FramePointer.From(input);
+            var pointer = Pointer();
+            Check(!record.TryGetProperty("data", out _) && pointer.Mode == "NumericReplaceMissing"
+                && pointer.Columns.Select(c => c.LastRow).SequenceEqual(new[] { 3001, 2401, 41 })
+                && pointer.Columns.Select(c => c.Hash).SequenceEqual(new[] { "e69e1717ffb9ae6c", "a51ae29acc5c03fe", "cc605a61a19f8ced" }),
+                "the one-way padded record has the three expected original ranges and hashes");
+
+            void CheckRead(FramePointer p, int[] lengths, bool[] changed, string label)
+            {
+                FrameValues values = FrameReader.Read(p);
+                Check(values.Unavailable == null && values.Columns.Select(c => c.Values.Length).SequenceEqual(lengths)
+                    && values.Columns.Select(c => c.Changed).SequenceEqual(changed), label + " (" + Read(values) + ")");
+            }
+
+            CheckRead(pointer, new[] { 3000, 3000, 3000 }, new[] { false, false, false }, "both shorter one-way columns recover their recorded padding");
+            ParameterBag native = output.ParameterBag;
+            string expected = Vector(new[] { "f", "b_sum", "w_sum", "w_df" }.Select(key => Number(native, key)));
+            RScript script = RScriptWriter.Write(record, null, FrameReader.Read);
+            Check(!script.DataUnavailable && !script.Text.Contains("has changed in the workbook"), "the padded one-way record replays without a change note");
+            await RunConversationR(script.Text, "saved-one-way-padded",
+                "stopifnot(isTRUE(all.equal(c(a$\"F value\"[1], a$\"Sum Sq\"[1], a$\"Sum Sq\"[2], a$Df[2]), " + expected
+                + ", tolerance=1e-10)), isTRUE(all.equal(" + expected
+                + ", c(405.5196746169783, 3011.5213463541654, 20188.46752083341, 5437), tolerance=1e-10)))\ncat('ONE_WAY_PADDED_OK\\n')",
+                "ONE_WAY_PADDED_OK");
+
+            foreach (var (row, column, original) in new[] { (6, 2, 15.75), (8, 1, 12.75) })
+            {
+                ((IGrid)grid).SetValues(row, column, new object[,] { { 777.0 } });
+                CheckRead(pointer, new[] { 3000, 2400, 40 }, new[] { false, true, true }, "editing either shorter column prevents both paddings");
+                string edited = RScriptWriter.Write(record, null, FrameReader.Read).Text;
+                Check(edited.Contains("\"Group two\" has changed") && edited.Contains("\"Group three\" has changed") && !edited.Contains("\"Group one\" has changed"),
+                    "the one-way replay flags both shortened columns");
+                ((IGrid)grid).SetValues(row, column, new object[,] { { original } });
+            }
+            ((IGrid)grid).SetValues(101, 0, new object[,] { { -1.0 } });
+            CheckRead(pointer, new[] { 3000, 3000, 3000 }, new[] { true, false, false }, "editing the longest column keeps the two recorded paddings");
+            ((IGrid)grid).SetValues(101, 0, new object[,] { { 17.5 } });
+
+            var legacy = Pointer();
+            legacy.Columns[2].Hash = null;
+            CheckRead(legacy, new[] { 3000, 3000, 40 }, new[] { false, false, false }, "a hashless short column keeps its read length");
+            legacy = Pointer();
+            legacy.Columns[0].Hash = null;
+            CheckRead(legacy, new[] { 3000, 3000, 3000 }, new[] { false, false, false }, "a hashless longest column still provides the padding length");
+            legacy = Pointer();
+            legacy.Columns[1].Hash = "3deb850a40bd344a";
+            CheckRead(legacy, new[] { 3000, 2400, 3000 }, new[] { false, false, false }, "a hash of unpadded values leaves only the other short column padded");
+            legacy.Columns[2].Hash = "777f199ffe4c27da";
+            CheckRead(legacy, new[] { 3000, 2400, 40 }, new[] { false, false, false }, "hashes of both unpadded values preserve both shorter lengths");
         });
 
         // Raters whose columns are unequal, padded when the user accepts the warning that "the jagged ends of columns will be padded with
