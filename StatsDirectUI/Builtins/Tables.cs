@@ -1317,7 +1317,9 @@ namespace StatsDirect.Builtins
                     outputParameters.AddOutput("z", z);
                     outputParameters.AddOutput("p", 1.0 - PDF.alnorm(z));
 
-                    double ll = k - cit * sek;
+                    // With m ratings per subject the least kappa is -1/(m - 1).
+                    // Use -1 when the number of ratings varies.
+                    double ll = Math.Max(minm == maxm ? -1.0 / (minm - 1.0) : -1.0, k - cit * sek);
                     double ul = k + cit * sek;
                     // kappa cannot be more than 1, so the upper limit stops there, as it does for two raters
                     if (ul > 1.0)
@@ -1398,7 +1400,7 @@ namespace StatsDirect.Builtins
                                                        ? 1.0 - PDF.alnorm(z)
                                                        : Constant.MISSING);
 
-                        double ll = kbar - cit * sek;
+                        double ll = Math.Max(-1.0 / (minm - 1.0), kbar - cit * sek);
                         double ul = kbar + cit * sek;
                         // kappa cannot be more than 1, so the upper limit stops there, as it does for two raters
                         if (ul > 1.0)
