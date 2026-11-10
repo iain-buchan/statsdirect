@@ -296,6 +296,19 @@ namespace StatsDirect.UI.Properties
         private static bool IsThereOrItsVolumeIsNot(string path) => File.Exists(path) || !Directory.Exists(Path.GetPathRoot(path));
 
         /// <summary>
+        /// True if the volume of a fully qualified path says it is there within the time the start-up's checks are given; a path that is
+        /// not fully qualified has no volume to miss. A file that could not be opened leaves the recent files only when this is true: a
+        /// volume that is not there, or has not answered, says nothing of the file.
+        /// </summary>
+        internal static bool VolumeIsThere(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path) || !Path.IsPathFullyQualified(path))
+                return true;
+            Task<bool> there = Task.Run(() => Directory.Exists(Path.GetPathRoot(path)));
+            return there.Wait(RECENT_FILE_CHECK_MILLISECONDS) && there.Result;
+        }
+
+        /// <summary>
         /// True if a worksheet can take the font: family;style;size as frmSpreadsheetGear reads it (Utilities.FontFromSaveString), with a
         /// style of the four FontStyle flags and a size from 1 to 409 points, the sizes Excel allows in the workbooks StatsDirect saves.
         /// </summary>

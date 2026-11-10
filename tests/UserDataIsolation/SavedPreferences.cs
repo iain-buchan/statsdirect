@@ -352,8 +352,6 @@ internal static partial class Program
             "recent files keep the latest mention of each fully qualified file still there, the most recent last");
         Check(LoadText("{\"recentFileList\": [" + string.Join(", ", files.Select(Json)) + "]}").RecentFileList.SequenceEqual(files.Skip(2)),
             $"no more than the {Settings.MAX_RECENT_FILES} most recent files are kept");
-        // A file whose volume is not there (a USB stick not plugged in, a drive that a login script maps later) is kept: only a file that
-        // its own volume says has gone is taken off, or the next save would forget it. The path is only named here; nothing is made there.
         // A file that 5.3.9 saved where the decimal separator is a comma, read where it is a point, and the other way about. Read in the
         // culture of the day, 50,5 points were 505 and so not a size a workbook font can have, and a title of 10,5 points was one of 105.
         List<string> fontsLost = new();
@@ -377,6 +375,8 @@ internal static partial class Program
         finally { CultureInfo.CurrentCulture = culture; }
         Check(fontsLost.Count == 0, "workbook and title fonts of 10.5 and 50.5 points, saved with a comma or with a point, load at those sizes in either culture" +
             (fontsLost.Count == 0 ? "" : ": " + string.Join("; ", fontsLost)));
+        // A file whose volume is not there (a USB stick not plugged in, a drive that a login script maps later) is kept: only a file that
+        // its own volume says has gone is taken off, or the next save would forget it. The path is only named here; nothing is made there.
         string absent = OnAbsentVolume("recent file on a drive not plugged in.xlsx");
         IReadOnlyList<string> away = LoadText("{\"recentFileList\": [" + Json(absent) + ", " + Json(deleted) + ", " + Json(files[0]) + "]}").RecentFileList;
         Check(away.SequenceEqual(new[] { absent, files[0] }),

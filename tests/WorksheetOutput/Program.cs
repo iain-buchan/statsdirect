@@ -162,6 +162,36 @@ internal static class Program
         string[] taken = new[] { "LogisticRegression", "PoissonRegression" }.Select(operation => operation + " " + Typed(main, app, operation, "accuracy", precision)).ToArray();
         Check(taken.All(answer => answer.EndsWith(" " + precision + " = 1E-11")),
             "the precision prompts of logistic and of Poisson regression take a typed " + precision + " in full: " + string.Join(", ", taken));
+
+        // A recent file that could not be opened leaves the list, but not one whose volume is not there, such as a USB stick not plugged
+        // in: the failure says nothing of that file, as its absence says nothing at start-up. Up to 5.3.9 choosing such a file from the
+        // list took it off the list. The path on the absent volume is only named here; nothing is made there.
+        PropertyInfo recentFiles = settings.GetType().GetProperty("RecentFileList", Members)!;
+        MethodInfo noteRecentFile = app.GetType().GetMethod("NoteRecentFile", Members)!;
+        object? recentBefore = recentFiles.GetValue(settings);
+        string gone = Path.Combine(Path.GetTempPath(), "recent file that has gone " + Guid.NewGuid().ToString("N") + ".xlsx");
+        string absent = OnAbsentVolume("recent file on a drive not plugged in.xlsx");
+        string[] listed;
+        try
+        {
+            recentFiles.SetValue(settings, new List<string> { gone, absent });
+            noteRecentFile.Invoke(app, new object[] { gone, false });
+            noteRecentFile.Invoke(app, new object[] { absent, false });
+            listed = ((IReadOnlyList<string>)recentFiles.GetValue(settings)!).ToArray();
+        }
+        finally { recentFiles.SetValue(settings, recentBefore); main.UpdateFileList(); }
+        Check(listed.SequenceEqual(new[] { absent }),
+            $"a recent file that could not be opened stays listed when its volume is absent ({absent[..2]}) and leaves the list when its volume is there: " +
+            (listed.Length == 0 ? "none listed" : string.Join(" | ", listed.Select(Path.GetFileName))));
+    }
+
+    static string OnAbsentVolume(string name)
+    {
+        HashSet<char> present = DriveInfo.GetDrives().Select(drive => char.ToUpperInvariant(drive.Name[0])).ToHashSet();
+        for (char letter = 'Z'; letter >= 'D'; letter--)
+            if (!present.Contains(letter) && !Directory.Exists(letter + ":" + Path.DirectorySeparatorChar))
+                return letter + ":" + Path.DirectorySeparatorChar + name;
+        throw new InvalidOperationException("Every drive letter has a volume, so a file on an absent one cannot be named.");
     }
 
     [DllImport("user32.dll")]
