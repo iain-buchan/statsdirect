@@ -2,6 +2,11 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
+##[Unreleased]
+
+### Fixed
+- Time series summary refuses a blank or missing group with the missing-data message when the groups are selected, as it refuses a blank subject identifier, instead of failing with an index error; a summary whose groups are complete or skipped is unchanged.
+
 ##[v5.3.9] 2026-11-09
 
 ### Fixed
