@@ -16,6 +16,9 @@ cs <- cs[keep]
 gin <- gin[keep]
 trial <- trial[keep]
 if (is.null(trial)) trial <- paste("Trial", seq_along(en))
+# A study whose label is blank has its place among the studies kept, as in the report.
+blank <- is.na(trial) | !nzchar(trimws(trial))
+trial[blank] <- paste("stratum", which(blank))
 # Effect size meta-analysis: the StatsDirect help example (Freemantle, personal
 # communication, test outcomes of seven comparisons from six trials of an educational
 # intervention; the test workbook's meta worksheet columns J to P) in R
@@ -140,8 +143,9 @@ print(data.frame(trial, fixed = six(100 * w / sum(w)),
 # Bias indicators. Begg and Mazumdar's test is Kendall's rank correlation between
 # each study's standardised deviation from the pooled effect and its variance,
 # with the exact P value; cor.test computes it by default only for fewer than 50
-# studies, so exact = TRUE asks for it whatever their number (with tied ranks the
-# program uses tau-b with a normal approximation and a continuity correction instead).
+# studies, so exact = TRUE asks for it whatever their number (with ties the program
+# uses tau-b with a normal approximation and a continuity correction instead, which
+# is cor.test(..., exact = FALSE, continuity = TRUE)).
 # The report notes the test's low power with fewer than eleven studies. Egger's test
 # regresses the standard normal deviate d / se on the precision 1 / se: the
 # intercept estimates the bias, judged on k - 2 degrees of freedom. The report gives
@@ -155,8 +159,10 @@ bias_level <- 1 - 2 * (1 - confidence)
 if (!(bias_level > 0 && bias_level < 1)) bias_level <- 0.9
 if (k > 3) {
   ts <- (d - dplus) / sqrt(vard - 1 / sum(w))
-  begg <- cor.test(ts, vard, method = "kendall", exact = TRUE, conf.level = confidence)
-  power_note <- if (k < 11) "(low power)" else ""
+  tied <- anyDuplicated(ts) > 0 || anyDuplicated(vard) > 0
+  begg <- cor.test(ts, vard, method = "kendall", exact = !tied, continuity = TRUE,
+                   conf.level = confidence)
+  power_note <- if (k < 11 && !is.na(begg$estimate)) "(low power)" else ""
   cat("Begg-Mazumdar: Kendall's tau =", six(begg$estimate), " ", pv(begg$p.value),
       power_note, "\n")
   egger <- lm(I(d / se) ~ I(1 / se))

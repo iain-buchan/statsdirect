@@ -12,6 +12,9 @@ lower <- lower[keep]
 upper <- upper[keep]
 study <- study[keep]
 if (is.null(study)) study <- paste("Study", seq_along(or))
+# A study whose label is blank has its place among the studies kept, as in the report.
+blank <- is.na(study) | !nzchar(trimws(study))
+study[blank] <- paste("study", which(blank))
 # Summary data meta-analysis: the StatsDirect help example (the odds ratio of each of
 # seven trials of aspirin after heart attack, Fleiss 1993, with its 95% confidence
 # limits; the test workbook's Meta-analysis worksheet columns Odds Ratio, LCI, UCI and
@@ -138,9 +141,9 @@ cat("Z (test ", stat, ") = ", six(z_dl), "  ", pv(2 * pnorm(-abs(z_dl))), "\n", 
 # and Mazumdar's test is Kendall's tau between each study's
 # deviation from the pooled log odds ratio, standardised by its variance less the
 # pooled variance, and that variance; with no ties among seven studies cor.test
-# gives the exact two sided P (with tied standard errors it would give tau-b and a
-# normal approximation, which the report corrects for continuity); the report marks
-# the test as low in power when there are fewer than eleven studies
+# gives the exact two sided P (with ties the report gives tau-b and a continuity
+# corrected normal approximation, cor.test(..., exact = FALSE, continuity = TRUE));
+# the report marks the test as low in power when there are fewer than eleven studies
 cat("Bias indicators\n")
 # Egger's interval is at the level of the bias tests, twice the analysis's alpha
 # (90% for a 95% analysis); as the report has it, there is no figure when every
@@ -149,9 +152,11 @@ bias_level <- 1 - 2 * (1 - confidence)
 if (!(bias_level > 0 && bias_level < 1)) bias_level <- 0.9
 if (k > 3) {
   dev <- (y - pooled) / sqrt(se^2 - se_pooled^2)
-  kt <- cor.test(dev, se^2, method = "kendall", conf.level = confidence)
+  tied <- anyDuplicated(dev) > 0 || anyDuplicated(se^2) > 0
+  kt <- cor.test(dev, se^2, method = "kendall", exact = if (tied) FALSE else NULL,
+                 continuity = TRUE, conf.level = confidence)
   cat("Begg-Mazumdar: Kendall's tau =", six(kt$estimate), " ", pv(kt$p.value),
-      "(low power)\n")
+      if (k < 11 && !is.na(kt$estimate)) "(low power)\n" else "\n")
 
   # Egger's test regresses each study's standardised effect (log odds ratio over its
   # standard error) on its precision (one over that standard error); the bias is the

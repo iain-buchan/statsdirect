@@ -105,8 +105,9 @@ cat("Z (test correlation differs from 0) =", six(z_random / se_random), " ",
 # Begg-Mazumdar: Kendall's rank correlation between each study's standardised
 # deviation from the fixed effects pooled z and its variance. With no tied variances
 # cor.test gives the exact two sided P, as the report does; with tied sample sizes the
-# report instead uses a continuity corrected normal approximation, which cor.test
-# does not. The test has low power with fewer than 11 studies, as the report notes.
+# report instead gives tau-b and a continuity corrected normal approximation, which is
+# cor.test(..., exact = FALSE, continuity = TRUE). The test has low power with fewer
+# than 11 studies, as the report notes.
 # The report gives the bias indicators only with more than three studies.
 cat("Bias indicators\n")
 # Egger's interval is at the level of the bias tests, twice the analysis's alpha
@@ -116,9 +117,11 @@ bias_level <- 1 - 2 * (1 - confidence)
 if (!(bias_level > 0 && bias_level < 1)) bias_level <- 0.9
 if (k > 3) {
   deviation <- (z - z_fixed) / sqrt(v - 1 / sum(w))
-  bm <- cor.test(deviation, v, method = "kendall", conf.level = confidence)
+  tied <- anyDuplicated(deviation) > 0 || anyDuplicated(v) > 0
+  bm <- cor.test(deviation, v, method = "kendall", exact = if (tied) FALSE else NULL,
+                 continuity = TRUE, conf.level = confidence)
   cat("Begg-Mazumdar: Kendall's tau =", six(bm$estimate), " ", pv(bm$p.value),
-      if (k < 11) "(low power)\n" else "\n")
+      if (k < 11 && !is.na(bm$estimate)) "(low power)\n" else "\n")
 
   # Egger: each standardised effect (z / se) regressed on its precision (1 / se); the
   # bias is the intercept, with a t test on k - 2 degrees of freedom
@@ -183,7 +186,7 @@ forest <- function(pooled, title) {
   left <- if (min(lower, pooled[2]) < 0) -1 else 0
   right <- if (max(upper, pooled[3]) <= 0) 0 else 1
   plot(c(r, pooled[1]), y, xlim = c(left, right), yaxt = "n", ylab = "",
-       xlab = "Correlation (95% confidence interval)", main = title,
+       xlab = paste0("Correlation (", pct, " confidence interval)"), main = title,
        pch = c(rep(15, k), 18), cex = c(2 * sqrt(w / max(w)), 3))
   segments(c(lower, pooled[2]), y, c(upper, pooled[3]), y)
   abline(v = pooled[1], lty = 2)
