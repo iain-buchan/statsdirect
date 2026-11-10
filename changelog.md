@@ -2,7 +2,7 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
-##[Unreleased]
+##[v5.3.10] 2026-11-11
 
 ### Changed
 - Windows installers and application binaries use Microsoft Artifact Signing.
