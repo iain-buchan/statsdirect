@@ -41,7 +41,8 @@ cat("Cohen's kappa (unweighted)\n")
 cat("Observed agreement =", pc2(po), "\n")
 cat("Expected agreement =", pc2(pe), "\n")
 cat("Kappa = ", six(kappa), " (se_0 = ", six(se0), ", se = ", six(se), ")\n", sep = "")
-cat(pct, "confidence interval =", six(kappa - z * se), "to", six(kappa + z * se), "\n")
+# kappa lies between -1 and 1, and so do the limits of its interval
+cat(pct, "confidence interval =", six(max(-1, kappa - z * se)), "to", six(min(1, kappa + z * se)), "\n")
 cat("z (for k = 0) =", six(kappa / se0), " ",
     pv(pnorm(kappa / se0, lower.tail = FALSE)), "\n")
 
@@ -66,8 +67,8 @@ cat("Observed agreement =", pc2(pow), "\n")
 cat("Expected agreement =", pc2(pew), "\n")
 cat("Kappa = ", six(kappaw), " (se_0 = ", six(se0w), ", se = ", six(sew), ")\n",
     sep = "")
-cat(pct, "confidence interval for kappa =", six(kappaw - z * sew), "to",
-    six(kappaw + z * sew), "\n")
+cat(pct, "confidence interval for kappa =", six(max(-1, kappaw - z * sew)), "to",
+    six(min(1, kappaw + z * sew)), "\n")
 cat("z (for kw = 0) =", six(kappaw / se0w), " ",
     pv(pnorm(kappaw / se0w, lower.tail = FALSE)), "\n")
 

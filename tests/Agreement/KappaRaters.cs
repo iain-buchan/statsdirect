@@ -249,5 +249,97 @@ internal static partial class Program
                 Check(title + ": standard error of the kappa of all together", Math.Abs(Spread(kappas[cats]) / se - 1), 0.03, true);
             }
         }
+        UpperLimitOfManyRaters();
+    }
+
+    // Kappa cannot be more than 1, so the upper limit of its interval stops there, as it always has for two raters.  The lower limit, and
+    // both limits of an interval that ends below 1, are to the last bit what 5.3.9 gave (upper539 is null where 5.3.9 gave more than 1).
+    private static void UpperLimitOfManyRaters()
+    {
+        Console.WriteLine();
+        Console.WriteLine("The upper limit of kappa for three or more raters");
+        const string y = "yes", n = "no";
+        (string title, double gamma, long lower539, long? upper539, string[][] columns)[] sets =
+        {
+            ("two categories, 3 raters who all but agree on 8 subjects", 0.95, 0x3FDB6C78340259E3L, null, new[]
+            {
+                new[] { "1", "1", "2", "2", "1", "2", "1", "1" },
+                new[] { "1", "1", "2", "2", "1", "2", "1", "2" },
+                new[] { "1", "1", "2", "2", "1", "2", "1", "1" },
+            }),
+            ("three categories, 4 raters who all but agree on 8 subjects", 0.99, 0x3FE18C9F4373C088L, null, new[]
+            {
+                new[] { "1", "2", "3", "1", "2", "3", "1", "3" },
+                new[] { "1", "2", "3", "1", "2", "3", "2", "3" },
+                new[] { "1", "2", "3", "1", "2", "3", "1", "3" },
+                new[] { "1", "2", "3", "2", "2", "3", "1", "3" },
+            }),
+            ("two categories, 3 or 4 ratings that all but agree on 10 subjects", 0.95, 0x3FE398ACC5786CE0L, null, new[]
+            {
+                new[] { y, y, n, n, y, n, y, n, y, n },
+                new[] { y, y, n, n, y, n, y, n, y, n },
+                new[] { y, y, n, n, null, n, y, n, y, y },
+                new[] { y, null, n, n, y, n, y, n, null, n },
+            }),
+            ("two categories, 3 raters in fair agreement on 14 subjects", 0.95, 0x3F9E183206FA57A0L, 0x3FE44BC0C3905281L, new[]
+            {
+                new[] { "1", "1", "2", "2", "1", "2", "1", "1", "2", "1", "2", "2", "1", "2" },
+                new[] { "1", "2", "2", "2", "1", "1", "1", "2", "2", "1", "2", "1", "1", "2" },
+                new[] { "1", "1", "2", "1", "1", "2", "2", "1", "2", "1", "2", "2", "2", "2" },
+            }),
+            ("three categories, 4 raters in fair agreement on 16 subjects", 0.99, 0x3FD60AA8C641B192L, 0x3FE6ED85DC5AED5DL, new[]
+            {
+                new[] { "2", "10", "30", "2", "10", "30", "2", "30", "10", "2", "30", "10", "2", "30", "10", "2" },
+                new[] { "2", "10", "30", "2", "10", "30", "10", "30", "10", "2", "2", "10", "2", "30", "30", "2" },
+                new[] { "2", "10", "30", "10", "10", "30", "2", "30", "2", "2", "30", "10", "30", "30", "10", "2" },
+                new[] { "2", "2", "30", "2", "10", "10", "2", "30", "10", "2", "30", "30", "2", "30", "10", "10" },
+            }),
+            ("two categories, 3 or 4 ratings in fair agreement on 15 subjects and a subject whom nobody rated", 0.9, 0x3FD5C83A43102060L, 0x3FE76851CC3E30D6L, new[]
+            {
+                new[] { y, n, y, y, null, n, y, null, n, y, y, n, n, y, n, y },
+                new[] { y, n, n, y, null, n, y, n, n, null, y, n, y, y, n, y },
+                new[] { y, y, y, null, null, n, y, n, n, y, n, n, n, y, null, y },
+                new[] { n, n, y, y, null, null, y, n, y, y, y, n, n, null, n, y },
+            }),
+        };
+        foreach ((string title, double gamma, long lower539, long? upper539, string[][] columns) in sets)
+        {
+            int before = failures;
+            try
+            {
+                int subjects = columns[0].Length;
+                ParameterBag bag = new();
+                DataFrame frame = new(Classifier("R1", columns[0]));
+                for (int r = 1; r < columns.Length; r++) frame.Variables.Add(Classifier("R" + (r + 1), columns[r]));
+                bag.AddInput("responses", frame);
+                bag.AddInput("ci", gamma);
+                ParameterBag report = Tables.RptKappa(new Plain(), bag).ParameterBag;
+                string[] order = columns.SelectMany(c => c).Where(l => l != null).Distinct().OrderBy(l => l, StringComparer.CurrentCulture).ToArray();
+                double[] m = Enumerable.Range(0, subjects).Select(i => (double)columns.Count(c => c[i] != null)).ToArray();
+                double rated = m.Count(v => v > 0), mean = m.Sum() / rated, harmonic = rated / m.Where(v => v > 0).Sum(v => 1 / v);
+                double z = NormalQuantile(1 - (1 - gamma) / 2), numerator = 0, denominator = 0, skew = 0, first = 0;
+                foreach (string label in order)
+                {
+                    double[] x = Enumerable.Range(0, subjects).Select(i => (double)columns.Count(c => c[i] == label)).ToArray();
+                    double each = KappaOfCategory(m, x, out double p), q = 1 - p;
+                    if (label == order[0]) first = p;
+                    numerator += p * q * each; denominator += p * q; skew += p * q * (q - p);
+                }
+                // of two categories either has the kappa of both; the standard errors are those of Fleiss and Cuzick, and of Fleiss, Nee and Landis
+                double kappa = numerator / denominator;
+                double se = order.Length == 2
+                    ? Math.Sqrt(2 * (harmonic - 1) + (mean - harmonic) * (1 - 4 * first * (1 - first)) / (mean * first * (1 - first))) / ((mean - 1) * Math.Sqrt(rated * harmonic))
+                    : Math.Sqrt(2) / (denominator * Math.Sqrt(rated * mean * (mean - 1))) * Math.Sqrt(denominator * denominator - skew);
+                double lower = report["ll"].AsDouble, upper = report["ul"].AsDouble;
+                Check(title + ": kappa", Math.Abs(report[order.Length == 2 ? "k" : "kc"].AsDouble - kappa), 1e-12);
+                Say(kappa + z * se > 1 == (upper539 == null), title + ": by the formula the upper limit is " + (upper539 == null ? "more" : "less") + " than 1");
+                Check(title + ": the limits, the upper one no more than 1", Math.Abs(lower - (kappa - z * se)) + Math.Abs(upper - Math.Min(1, kappa + z * se)), 1e-7);
+                if (upper539 == null) Say(upper == 1.0, title + $": the upper limit is 1 ({upper:R})");
+                else Say(BitConverter.DoubleToInt64Bits(upper) == upper539, title + $": the upper limit is to the last bit what 5.3.9 gave (0x{BitConverter.DoubleToInt64Bits(upper):X16})");
+                Say(BitConverter.DoubleToInt64Bits(lower) == lower539, title + $": the lower limit is to the last bit what 5.3.9 gave (0x{BitConverter.DoubleToInt64Bits(lower):X16})");
+            }
+            catch (Exception ex) { checks++; failures++; Console.WriteLine("FAIL  " + title + ": " + Message(ex)); }
+            if (failures == before) Console.WriteLine("ok    " + title);
+        }
     }
 }

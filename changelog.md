@@ -6,6 +6,8 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
 ### Fixed
 - Kappa replay of two raters, from their columns or from a typed table, gives the report's Maxwell test when a grade is never taken for another, grouping the grades that disagreements join as the report does, instead of stopping at a matrix with no inverse; when the raters never disagree it says that the Maxwell and generalised McNemar tests were not calculated.
+- Kappa of more than two raters replays its own analysis in R (the Fleiss-Cuzick kappa of two categories, or the kappa of each category and of all together with the Fleiss-Nee-Landis test) instead of the two-rater analysis of its first two columns; the simulated P of kappa that follows a typed table replays that table instead of a script with no data.
+- Kappa of more than two raters stops the upper limit of its confidence interval at 1, the most that kappa can be, as the two-rater report already did; the two-rater R replay stops the limits of kappa and weighted kappa at -1 and 1 as its report does, instead of printing limits beyond them.
 
 ##[v5.3.9] 2026-11-09
 

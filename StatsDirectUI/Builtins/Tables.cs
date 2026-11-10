@@ -1312,6 +1312,9 @@ namespace StatsDirect.Builtins
 
                     double ll = k - cit * sek;
                     double ul = k + cit * sek;
+                    // kappa cannot be more than 1, so the upper limit stops there, as it does for two raters
+                    if (ul > 1.0)
+                        ul = 1.0;
                     outputParameters.AddOutput("pc", 100.0 * cco);
                     outputParameters.AddOutput("ll", ll);
                     outputParameters.AddOutput("ul", ul);
@@ -1390,6 +1393,9 @@ namespace StatsDirect.Builtins
 
                         double ll = kbar - cit * sek;
                         double ul = kbar + cit * sek;
+                        // kappa cannot be more than 1, so the upper limit stops there, as it does for two raters
+                        if (ul > 1.0)
+                            ul = 1.0;
                         outputParameters.AddOutput("pc", 100.0 * cco);
                         outputParameters.AddOutput("ll", ll);
                         outputParameters.AddOutput("ul", ul);

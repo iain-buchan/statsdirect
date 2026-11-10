@@ -10,13 +10,16 @@ internal static partial class Program
     // The Continue in R recipes of 5.3.10. Each case is acquired from worksheet cells and run as the 5.3.9 cases are:
     // through GridSelectionProcessor.FillFrameParameter and the template processor, then the script of the record in R
     // within a time limit, with R's figures compared with the native output bag.
-    private static readonly string[] Recipes5310Parts = { "maxwell" };
+    private static readonly string[] Recipes5310Parts = { "maxwell", "raters", "limits", "exact" };
     private static void CheckRecipes5310(string folder, string only = null)
     {
         if (only != null && !Recipes5310Parts.Contains(only)) throw new ArgumentException("Unknown 5.3.10 recipe check: " + only);
         RRecipes.Folder = Metadata("Recipes");
         Directory.CreateDirectory(folder);
         if (only is null or "maxwell") CheckKappaMaxwell5310(Path.Combine(folder, "maxwell"));
+        if (only is null or "raters") CheckKappaRaters5310(Path.Combine(folder, "raters"));
+        if (only is null or "limits") CheckKappaLimits5310(Path.Combine(folder, "limits"));
+        if (only is null or "exact") CheckKappaExact5310(Path.Combine(folder, "exact"));
         if (Failed539.Count > 0) throw new Exception("FAIL " + Failed539.Count + " of the 5.3.10 recipe cases: " + string.Join(" | ", Failed539));
     }
 
