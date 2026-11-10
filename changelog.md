@@ -2,6 +2,16 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
+##[Unreleased]
+
+### Fixed
+- Incidence rate ratio and incidence rate difference meta-analysis replay completes when a stratum has no events in one group, adding the recorded continuity correction (0.5 or 0.01) to the events of both groups of such a stratum as the report does, instead of stopping at a missing value or pooling uncorrected variances; it gives the exact conditional block only when the exact methods were on, and now has the report's I-squared interval and bias indicators (with more than three strata, Egger's interval at 1 - 2(1 - confidence)). A record saved by an earlier version replays with the exact methods on and the default correction.
+- The meta-analysis continuity correction chosen in the calculation options is the one applied and shown where the decimal separator is a comma: there a choice of 0.01 or 0.5 was read as 1 or 5, so 0.5 was added whichever was chosen, study labels read [CC = 1] or [CC = 5], and the dialog did not open on the stored choice. Labels give the constant with a decimal point in every language setting.
+- Peto odds ratio meta-analysis refuses a study with no subjects, as the relative risk, risk difference and Mantel-Haenszel analyses do, instead of reporting it with a weight of minus infinity.
+- The exact confidence limits of I-squared are found to full precision: a limit near 0 agreed with R's to about five significant figures only (0.4052802% against 0.4052719%). Limits already printed are unchanged at the precision shown.
+- Meta-analysis replay labels a study whose cell in the labels column is blank as the report and its plots do, stratum (or study) and its place among the studies kept, instead of leaving the label blank.
+- Meta-analysis replay gives the forest plot axis the confidence level of the analysis, instead of always 95%, in the relative risk, risk difference, Peto and correlation analyses; notes low power beside the Begg-Mazumdar test only with fewer than eleven studies, as the report does; and, when studies tie, gives the report's Kendall tau b with its tie-corrected and continuity-corrected normal P.
+
 ##[v5.3.9] 2026-11-09
 
 ### Fixed
