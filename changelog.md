@@ -2,6 +2,11 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
+##[Unreleased]
+
+### Fixed
+- Offline report HTML sanitization uses DOMPurify 3.4.17 again: the report editor, import and export bundles of 5.3.9 had been built with 3.4.16, although the licence notice and this changelog said 3.4.17, and the build now refuses to bundle a library at a version other than the stated one.
+
 ##[v5.3.9] 2026-11-09
 
 ### Fixed

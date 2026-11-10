@@ -6,12 +6,18 @@
     <Nullable>disable</Nullable>
     <!-- The folder of the operation definitions, unless another is given with -p:Operations=... -->
     <Operations Condition="'$(Operations)' == ''">../../StatsDirectUI/Assets/Operations</Operations>
+    <!-- The repository whose shipped bundles are checked, unless another is given with -p:Repository=... -->
+    <Repository Condition="'$(Repository)' == ''">../..</Repository>
     <DefineConstants>$(DefineConstants)</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
       <_Parameter1>Operations</_Parameter1>
       <_Parameter2>$([System.IO.Path]::GetFullPath('$(Operations)', '$(MSBuildProjectDirectory)'))</_Parameter2>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>Repository</_Parameter1>
+      <_Parameter2>$([System.IO.Path]::GetFullPath('$(Repository)', '$(MSBuildProjectDirectory)'))</_Parameter2>
     </AssemblyAttribute>
   </ItemGroup>
 </Project>

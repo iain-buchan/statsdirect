@@ -9,6 +9,15 @@ import {fileURLToPath} from 'node:url';
 import {windowsExportStyle} from './export-style.mjs';
 const upstream=name=>fileURLToPath(new URL('./upstream/Report/'+name,import.meta.url));
 const vendor=name=>fileURLToPath(new URL('../StatsDirectUI/Assets/ReportEditor/vendor/'+name,import.meta.url));
+// Bundle only what the manifest states. A failed or skipped "pnpm install" leaves older packages in place,
+// and esbuild bundles whatever is there: 5.3.9 shipped DOMPurify 3.4.16 that way, with package.json, the lock
+// file and the third-party notice all at 3.4.17.
+const manifest=JSON.parse(await readFile(upstream('package.json'),'utf8'));
+for(const [name,stated] of Object.entries({...manifest.dependencies,...manifest.devDependencies})){
+  const installed=await readFile(upstream('node_modules/'+name+'/package.json'),'utf8').then(text=>JSON.parse(text).version,()=>'nothing');
+  if(installed!==stated)throw new Error('Refusing to bundle: package.json states '+name+' '+stated+', but '+installed+' is installed in upstream/Report/node_modules. Run "pnpm --dir ReportEditor/upstream/Report install --frozen-lockfile" and see that it succeeds.');
+}
+
 const bundle=(entry,globalName,plugins)=>build({entryPoints:[upstream(entry+'.mjs')],bundle:true,format:'iife',globalName,target:'chrome120',minify:true,legalComments:'eof',outfile:vendor(entry+'.js'),plugins});
 
 // Windows copies a drag with Ctrl where macOS uses Option, and a Ctrl+click is an
