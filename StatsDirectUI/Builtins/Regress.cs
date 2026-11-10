@@ -3106,7 +3106,7 @@ namespace StatsDirect.Builtins
             if (dropped.Length > 0)
                 warnList.Add(new ParameterBag("warn", new FilledStringParameter(FilledParameterDirection.Output, dropped)));
             outputParameters.AddOutput("dev", deviance);
-            outputParameters.AddOutput("accuracy", accuracy);
+            outputParameters.AddInput("accuracy", accuracy);  // Keep the effective precision in continued reports.
             outputParameters.AddOutput("df", df);
             double prob = df > 0 ? PDF.chivalp(deviance, df) : Constant.MISSING;
             outputParameters.AddOutput("p", prob);
@@ -5426,7 +5426,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("pc", 100 * (1.0 - P0));
 
             outputParameters.AddOutput("dev", deviance);
-            outputParameters.AddOutput("accuracy", tol);
+            outputParameters.AddInput("accuracy", tol);
             outputParameters.AddOutput("df_dev", df);
             double prob = df > 0 ? PDF.chivalp(deviance, df) : Constant.MISSING;
             outputParameters.AddOutput("p_dev", prob);

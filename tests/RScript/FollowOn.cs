@@ -45,7 +45,7 @@ internal static partial class Program
         // a follow-on of the logistic regression, whose Continue in R gave the data alone (11 Oct 2026): its script is the regression's,
         // bound to the frames it inherited; every follow-on of an operation with a recipe takes that recipe
         JsonElement logistic = JsonDocument.Parse(File.ReadAllText(Path.Combine(Metadata("Examples"), "LogisticRegression.json"))).RootElement;
-        Dictionary<string, object> answers = new() { ["grouping"] = "grouped", ["accuracy"] = "0.0000001", ["intercept"] = true, ["weights"] = false, ["gamma"] = 0.95 };
+        Dictionary<string, object> answers = new() { ["grouping"] = "grouped", ["accuracy"] = "0.000000013", ["intercept"] = true, ["weights"] = false, ["gamma"] = 0.95 };
         foreach (JsonElement input in logistic.GetProperty("inputs").EnumerateArray())
         {
             DataFrame f = new();
@@ -55,7 +55,11 @@ internal static partial class Program
         }
         var (regression, regressionOutput) = Run("LogisticRegression", answers);
         var (diagnostics, _) = Run("LogisticRegressionDiagnostics", new(), regressionOutput.ParameterBag);
-        RScript regressionScript = RScriptWriter.Write(Record(regression), null, null), diagnosticsScript = RScriptWriter.Write(Record(diagnostics), null, null);
+        JsonElement regressionRecord = Record(regression), diagnosticsRecord = Record(diagnostics);
+        Check(regressionRecord.GetProperty("parameters").GetProperty("accuracy").GetDouble() == 1.3e-8
+            && diagnosticsRecord.GetProperty("parameters").GetProperty("accuracy").GetDouble() == 1.3e-8,
+            "logistic diagnostics record the original fit's selected precision");
+        RScript regressionScript = RScriptWriter.Write(regressionRecord, null, null), diagnosticsScript = RScriptWriter.Write(diagnosticsRecord, null, null);
         // the header's detail line names the follow-on's plots, and the follow-on's script goes on to its plots section (22 October 2026)
         string[] ra = Body(regressionScript).Where(line => line != "# " + regressionScript.Detail).ToArray(), da = Body(diagnosticsScript).Where(line => line != "# " + diagnosticsScript.Detail).ToArray();
         int differsAt = Enumerable.Range(0, ra.Length).FirstOrDefault(i => i >= da.Length || ra[i] != da[i], -1);

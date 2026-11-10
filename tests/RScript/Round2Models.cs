@@ -311,11 +311,12 @@ internal static partial class Program
     {
         double[] fixedValue = Enumerable.Repeat(1d,12).ToArray(), veteran = { 0,1,0,1,1,0,0,1,1,0,1,0 };
         var (_, main, _) = Round2Glm(false, Models539Counts, new[] { ("Fixed", fixedValue), ("Veteran", veteran), ("Dose", Models539Dose) },
-            exposure: Models539Exposures);
+            precision: "0.000000013", exposure: Models539Exposures);
         var (follow, output) = Run("PoissonRegressionIRR", new() { ["gamma"] = .95, ["cov"] = new[] { true } }, main);
         var tables = Models539Block(output.ParameterBag, "pop");
         var dose = Models539Block(tables[1], "par").First(row => row["par"].AsString == "Dose");
-        string oracle = "group_coef <- sum(coef(fit)[c('Veteran','Dose')])\n" +
+        string oracle = "stopifnot(precision == 1.3e-8)\n" +
+            "group_coef <- sum(coef(fit)[c('Veteran','Dose')])\n" +
             "group_half <- qnorm(.975)*sqrt(sum(vcov(fit)[c('Veteran','Dose'),c('Veteran','Dose')]))\n" +
             Models539Equal("exp(group_coef+c(0,-group_half,group_half))", new[] { "irr", "lci", "uci" }.Select(key => Models539Number(dose,key)));
         string replay = Models539Verify(folder, "irr-aliased-first", follow, oracle);

@@ -24,7 +24,7 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 - Poisson regression accepts an exact fit when the number of complete observations with positive weight equals the number of parameters. The fits report leaves both incidence columns unavailable throughout when there is no exposure column.
 - Multiple regression keeps an exact fit after dropping redundant predictors and warns about both the dropped predictors and the lack of residual degrees of freedom. Its ANOVA labels the total uncorrected when the model has no intercept.
 - Cox predictor coding ignores categories found only on rows without a time or event. R replay gives the fitted rank and marks aliased coefficients as unavailable.
-- Logistic and Poisson regression use the default precision for a zero or negative entry and record the precision used.
+- Logistic and Poisson regression use the default precision for a zero or negative entry and keep the effective precision when continuing an analysis in R.
 - Poisson incidence-rate ratio replay uses the selected sub-population even when an earlier predictor is aliased. An older selection from a different list asks for a new choice.
 - Polynomial regression reports an area of zero when all predictor values are identical, and its R replay finishes with the intercept-only fit.
 - Offline report HTML sanitization uses DOMPurify 3.4.17 again: the report editor, import and export bundles of 5.3.9 had been built with 3.4.16, although the licence notice and this changelog said 3.4.17, and the build now refuses to bundle a library at a version other than the stated one.
