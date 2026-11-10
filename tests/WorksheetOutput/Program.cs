@@ -1,8 +1,10 @@
 using StatsDirect.Data;
+using StatsDirect.TemplateProcessing;
 using StatsDirect.Templates;
 using StatsDirect.UI;
 using System.Globalization;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 
 // Checks of the writing of an operation's output frames to a worksheet by the real document host: the sheet the user picks is written
@@ -152,7 +154,60 @@ internal static class Program
         Check(string.Join(" ", sizes) == "10.5 10.5 10.5 10.5",
             "a new grid takes the saved workbook font at its 10.5 points, whether the size was saved with a comma or with a point: " + string.Join(" ", sizes));
         Check(written == "Arial;0;10.5", "a workbook font chosen where the decimal separator is a comma is saved with its size in the invariant culture: " + written);
+
+        // The "Precision of estimates:" prompt of logistic and of Poisson regression, with a precision typed into its box and Run pressed.
+        // Up to 5.3.9 the definitions of the two limited the box to 12 characters: a typed 0.00000000001 was cut at "0.0000000000", which
+        // is read as a precision of 0.
+        const string precision = "0.00000000001";
+        string[] taken = new[] { "LogisticRegression", "PoissonRegression" }.Select(operation => operation + " " + Typed(main, app, operation, "accuracy", precision)).ToArray();
+        Check(taken.All(answer => answer.EndsWith(" " + precision + " = 1E-11")),
+            "the precision prompts of logistic and of Poisson regression take a typed " + precision + " in full: " + string.Join(", ", taken));
     }
+
+    [DllImport("user32.dll")]
+    static extern IntPtr SendMessage(IntPtr window, int message, IntPtr wParam, IntPtr lParam);
+
+    // What the program takes from a text prompt of an operation when a text is typed into its box and Run is pressed, with the number
+    // the regressions read from it. The prompt is prepared from the operation's definition and is read by the real main window, and the
+    // characters reach the box as key presses do: the limit of a text box applies to what is typed, not to a text that is set.
+    static string Typed(frmMain main, object app, string operation, string name, string text)
+    {
+        Parameter parameter = TemplateFactory.Operations[operation].Steps.OfType<ParametersStep>().SelectMany(step => step.Parameters).Single(asked => asked.Name == name);
+        ITemplateHost host = (ITemplateHost)app;
+        bool typed = false;
+        DateTime patience = DateTime.UtcNow.AddSeconds(20);
+        using System.Windows.Forms.Timer typist = new() { Interval = 50 };
+        typist.Tick += (_, _) =>
+        {
+            TextBox? box = Descendants(main).OfType<TextBox>().FirstOrDefault(control => ReferenceEquals(control.Tag, parameter) && control.Visible && control.IsHandleCreated);
+            if (box != null && !typed)
+            {
+                typed = true;
+                box.SelectAll(); // over the default, as a user who tabs to the box types
+                foreach (char character in text) SendMessage(box.Handle, 0x0102 /* WM_CHAR */, (IntPtr)character, IntPtr.Zero);
+                ((Button)Get(main, "cmdCalculate")!).PerformClick();
+            }
+            else if (DateTime.UtcNow > patience)
+            {
+                // Return, so that a prompt that was not answered cannot hold the checks
+                typist.Stop();
+                typeof(frmMain).GetMethod("cmdClose_Click", Members)!.Invoke(main, new object?[] { null, EventArgs.Empty });
+            }
+        };
+        typist.Start();
+        ParameterBag? filled;
+        try
+        {
+            filled = (ParameterBag?)typeof(frmMain).GetMethod("FillAndValidateCombinedParameters", Members)!
+                .Invoke(main, new object[] { host, new TemplateProcessor(host), new ParameterBag(), new List<Parameter> { parameter } });
+        }
+        finally { typist.Stop(); }
+        if (filled == null || !filled.ContainsKey(name)) return typed ? "(typed, but Run gave no answer)" : "(the prompt's box was not shown)";
+        string answer = filled[name].AsString;
+        return answer + " = " + StatsDirect.Utilities.Parsing.Cdbl_Txt(answer).ToString("R", CultureInfo.InvariantCulture);
+    }
+
+    static IEnumerable<Control> Descendants(Control control) => control.Controls.Cast<Control>().SelectMany(child => Descendants(child).Prepend(child));
 
     // The default font size of the grid's workbook set, read under the workbook set's lock as the program reads it
     static double DefaultFontSize(IGrid grid)
