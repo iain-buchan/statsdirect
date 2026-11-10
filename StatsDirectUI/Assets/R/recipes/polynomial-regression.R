@@ -32,6 +32,14 @@ pv <- function(p) {
 s <- summary(fit)$coefficients
 df <- fit$df.residual
 lab <- c("Intercept", "x", paste0("x^", seq_len(degree)[-1]))
+# With fewer distinct sizes than coefficients some powers cannot be estimated: R gives
+# them NA and leaves their rows out of the summary, and the report drops them with
+# this warning. What follows is then the polynomial of the powers that are left
+kept <- which(!is.na(coef(fit)))
+terms <- length(kept) - 1
+if (terms < degree) cat(paste(lab[-kept], collapse = ", "),
+    "dropped from the model due to very high correlation with other variable(s) included.\n")
+lab <- lab[kept]
 for (i in seq_len(nrow(s))) {
   cat(lab[i], " b", i - 1, "= ", six(s[i, 1]),
       if (i > 1) paste("  r =", six(s[i, 3] / sqrt(s[i, 3]^2 + df))) else "",
@@ -41,9 +49,9 @@ cat("y =", six(s[1, 1]), paste(paste0(ifelse(s[-1, 1] >= 0, "+", ""), six(s[-1, 
 a <- anova(fit)
 ssreg <- a$"Sum Sq"[1]
 ssres <- a$"Sum Sq"[2]
-cat("Regression", six(ssreg), degree, six(ssreg / degree), "\n")
+cat("Regression", six(ssreg), terms, six(ssreg / terms), "\n")
 cat("Residual", six(ssres), df, six(ssres / df), "\n")
-cat("Total (corrected)", six(ssreg + ssres), df + degree, "\n")
+cat("Total (corrected)", six(ssreg + ssres), df + terms, "\n")
 cat("Root MSE =", six(sqrt(ssres / df)), "\n")
 f <- summary(fit)$fstatistic
 cat("F =", six(f[1]), " ", pv(pf(f[1], f[2], f[3], lower.tail = FALSE)), "\n")
@@ -54,8 +62,10 @@ e <- residuals(fit)
 cat("Durbin-Watson test statistic =", six(sum(diff(e)^2) / sum(e^2)), "\n")
 
 # Area under the fitted curve between the smallest and largest home size, by
-# integrating the polynomial, and the area under the data by the trapezoidal rule
+# integrating the polynomial (a power that was dropped has no part in it), and the
+# area under the data by the trapezoidal rule
 b <- coef(fit)
+b[is.na(b)] <- 0
 curve_area <- integrate(function(x) sapply(x, function(v) sum(b * v^(0:degree))), min(size), max(size))
 cat("AUC (polynomial function) =", six(curve_area$value), "\n")
 trapezia <- sum(diff(size) * (head(kwh, -1) + tail(kwh, -1)) / 2)

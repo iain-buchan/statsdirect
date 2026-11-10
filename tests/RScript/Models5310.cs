@@ -19,6 +19,10 @@ internal static partial class Program
             CheckModels5310AliasedRatios(folder);
         if (only is null or "polynomial")
             CheckModels5310SaturatedPolynomial(folder);
+        if (only is null or "pairs")
+            CheckModels5310PolynomialFewerPairs();
+        if (only is null or "dropped")
+            CheckModels5310PolynomialDroppedPowers(folder);
         if (only is null or "hl")
             CheckModels5310HosmerLemeshowWholeTotals(folder);
     }
@@ -192,6 +196,94 @@ internal static partial class Program
                 Models539Equal("oracle_hl, sum(residuals(fit, type = 'pearson')^2), hl, hldf", new[] { hl, hl, hl, 4 });
             string rendered = Models539Verify(folder, label, run, oracle);
             Check(rendered.Contains("Hosmer-Lemeshow test = " + Models539R(model, "hl") + "  df = 4 "), label + ": the replay prints the native Hosmer-Lemeshow test");
+        }
+    }
+
+    /// <summary>What an operation was refused with, or null when it ran to its report.</summary>
+    private static string Models5310Refused(Action operation)
+    {
+        try
+        {
+            operation();
+            return null;
+        }
+        catch (Exception ex)
+        {
+            return ex.GetBaseException().Message;
+        }
+    }
+
+    // Review of item 2: fewer complete pairs than coefficients. Now that as many pairs as coefficients is an exact fit that is reported,
+    // one pair fewer has to be refused in words, as multiple regression refuses fewer observations than parameters. It was an internal
+    // error instead ("Index was outside the bounds of the array": the titles of the powers ran off the end of their array), from the
+    // analysis and from a change of degree alike.
+    private static void CheckModels5310PolynomialFewerPairs()
+    {
+        const string refusal = "the operation refused: There are fewer complete pairs of observations than coefficients in a polynomial of this degree.";
+        double[] y = { 3, 1, 7, 4 }, x = { 1, 2, 4, 5 }, gappyY = { 3, 1, Constant.MISSING, Constant.MISSING };
+        foreach (var (label, sheet, degree) in new[]
+        {
+            ("a cubic through three points", Models539Sheet(("Y", y.Take(3).ToArray()), ("X", x.Take(3).ToArray())), 3),
+            ("a quadratic through two points", Models539Sheet(("Y", y.Take(2).ToArray()), ("X", x.Take(2).ToArray())), 2),
+            ("a quartic through four points", Models539Sheet(("Y", y), ("X", x)), 4),
+            ("a quadratic with two of its four outcomes missing", Models539Sheet(("Y", gappyY), ("X", x)), 2)
+        })
+        {
+            string said = Models5310Refused(() => Models5310Polynomial(sheet, degree));
+            Check(said == refusal, "polynomial regression refuses " + label + ", which has fewer complete pairs than coefficients" + (said == refusal ? "" : " (" + (said ?? "it ran") + ")"));
+        }
+        // a change of degree is the same analysis of the pairs that were fitted; refusing it leaves the quadratic as it was
+        var three = Models539Sheet(("Y", y.Take(3).ToArray()), ("X", x.Take(3).ToArray()));
+        ParameterBag quadratic = Models5310Polynomial(three, 2).model;
+        string change = Models5310Refused(() => Run("PolynomialRegressionChangeDegree", new() { ["degree"] = "3" }, quadratic));
+        Check(change == refusal, "a change to a cubic after a quadratic through three points is refused in the same words" + (change == refusal ? "" : " (" + (change ?? "it ran") + ")"));
+        ParameterBag area = Run("PolynomialAreaUnderCurve", new() { ["x"] = Models539Select(three, 1), ["y"] = Models539Select(three, 0) }, quadratic).output.ParameterBag;
+        Check(Close(Models539Number(area, "poly_auc"), 7.5, 1e-12), "the quadratic still answers what follows it after the refused change of degree");
+    }
+
+    // Review of item 2: fewer distinct values of x than coefficients. The native fit drops the powers that it cannot estimate, with a
+    // warning, and reports the polynomial that is left. The replay printed that polynomial with the last coefficient repeated for a
+    // dropped power, gave the regression and the total the degrees of freedom of the degree that was asked for, and stopped with an
+    // error at the area under the curve.
+    private static void CheckModels5310PolynomialDroppedPowers(string folder)
+    {
+        foreach (var (label, y, x, degree, left) in new[]
+        {
+            ("two-x", new double[] { 3, 1, 7 }, new double[] { 1, 1, 4 }, 2, 1),
+            ("three-x", new double[] { 3, 1, 7, 4, 6 }, new double[] { 1, 2, 2, 5, 5 }, 3, 2),
+            ("three-x-quartic", new double[] { 3, 1, 7, 4, 6, 2 }, new double[] { 1, 2, 2, 5, 5, 1 }, 4, 2)
+        })
+        {
+            var sheet = Models539Sheet(("Y", y), ("X", x));
+            var (run, model) = Models5310Polynomial(sheet, degree);
+            string[] powers = Enumerable.Range(left + 1, degree - left).Select(power => "^" + power.ToString(inv)).ToArray();
+            Check(Models539Warnings(model).Any(w => w.StartsWith(string.Join(", ", powers.Select(power => "X" + power)) + " dropped from the model", StringComparison.Ordinal)),
+                "polynomial " + label + ": the powers that cannot be estimated are dropped, with a warning");
+            var coefficients = Models539Block(Models539Block(model, "row")[0], "col");
+            ParameterBag anova = Models539Anova(model);
+            Check(coefficients.Count == left + 1 && Models539Number(anova, "reg_df") == left && Models539Number(anova, "res_df") == y.Length - left - 1 && Models539Number(anova, "tot_df") == y.Length - 1,
+                "polynomial " + label + ": the report is that of the polynomial of degree " + left.ToString(inv) + " that is left");
+            ParameterBag area = Run("PolynomialAreaUnderCurve", new() { ["x"] = Models539Select(sheet, 1), ["y"] = Models539Select(sheet, 0) }, model).output.ParameterBag;
+            // the polynomial of the lower degree in R, on the pairs in the report's order: ascending x, ties as they were entered
+            string oracle = "Y <- " + Models539Vector(y) + "\nX <- " + Models539Vector(x) + "\no <- order(X)\nY <- Y[o]\nX <- X[o]\n" +
+                "m <- lm(Y ~ poly(X, " + left.ToString(inv) + ", raw = TRUE))\nms <- summary(m)\nme <- residuals(m)\n" +
+                Models539Equal("coef(m)", coefficients.Select(c => Models539Number(c, "val_b"))) +
+                Models539Equal("ms$coefficients[, 3], ms$coefficients[, 4]", coefficients.Select(c => Models539Number(c, "t")).Concat(coefficients.Select(c => Models539Number(c, "p")))) +
+                Models539Equal("sum((fitted(m) - mean(Y))^2), sum(me^2), ms$sigma, ms$fstatistic[1], 100 * ms$r.squared, 100 * ms$adj.r.squared, sum(diff(me)^2) / sum(me^2)",
+                    new[] { "reg_sum", "res_sum", "mse", "f", "r2", "ra2", "dw" }.Select(key => Models539Number(anova, key))) +
+                Models539Equal("integrate(function(v) predict(m, data.frame(X = v)), min(X), max(X))$value, sum(diff(X) * (head(Y, -1) + tail(Y, -1)) / 2)",
+                    new[] { Models539Number(area, "poly_auc"), Models539Number(area, "trap_auc") }) +
+                "stopifnot(sum(is.na(coef(fit))) == " + (degree - left).ToString(inv) + "L, terms == " + left.ToString(inv) + "L)\n";
+            string rendered = Models539Verify(folder, "polynomial-dropped-" + label, run, oracle);
+            string equation = Regex.Match(rendered, "^y = .*$", RegexOptions.Multiline).Value;
+            Check(Regex.IsMatch(rendered, "^" + Regex.Escape(string.Join(", ", powers.Select(power => "x" + power))) + " dropped from the model", RegexOptions.Multiline) &&
+                Regex.Matches(equation, " x").Count == left && equation.Contains(Models539R(coefficients[left], "val_b") + " x"),
+                "polynomial " + label + ": the replay names the dropped powers and prints the equation of the powers that are left");
+            Check(rendered.Contains("Regression " + Models539R(anova, "reg_sum") + " " + left.ToString(inv) + " " + Models539R(anova, "reg_mean") + " ") &&
+                rendered.Contains("Total (corrected) " + Models539R(anova, "tot_sum") + " " + (y.Length - 1).ToString(inv) + " "),
+                "polynomial " + label + ": the replay prints the native degrees of freedom and mean square of the regression");
+            Check(rendered.Contains("AUC (polynomial function) = " + Models539R(area, "poly_auc") + " ") && rendered.Contains("AUC (by trapezoidal rule) = " + Models539R(area, "trap_auc") + " "),
+                "polynomial " + label + ": the replay reaches the areas under the curve and prints the native ones");
         }
     }
 }

@@ -2412,6 +2412,12 @@ namespace StatsDirect.Builtins
                 if (vX.Data[i] != Constant.MISSING && vY.Data[i] != Constant.MISSING)
                     complete++;
             int leftOut = records - complete;
+            //  A polynomial has one more coefficient than its degree.  With fewer complete pairs than coefficients there is nothing to fit, and
+            //  the analysis is refused, as multiple linear regression refuses fewer observations than parameters (the titles of the powers had
+            //  run off the end of their array instead, an internal error).  As many pairs as coefficients is the exact fit, which is reported.
+            //  Refused before the frames are changed, so that a change of degree that is refused leaves the fitted records as they were.
+            if (complete < context.P)
+                throw new TemplateOperationCancelledException("There are fewer complete pairs of observations than coefficients in a polynomial of this degree.", "Polynomial regression");
             if (leftOut > 0 || vX.Length != records || vY.Length != records)
             {
                 double[] completeX = new double[complete];
