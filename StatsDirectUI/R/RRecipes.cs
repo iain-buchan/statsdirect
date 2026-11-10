@@ -62,6 +62,9 @@ namespace StatsDirect.R
                 boxParameters.TryGetProperty("boxWhisker", out JsonElement box) && box.ValueKind == JsonValueKind.Object &&
                 box.TryGetProperty("method", out JsonElement method) && method.ValueKind == JsonValueKind.Number && method.TryGetInt32(out int selected) && selected == 7)
                 return new RRecipe { File = "box-whisker-tukey-plot.R", Detail = "Tukey hinges box plot using R's standard boxplot()." };
+            // Kappa with more than two raters is another analysis (Fleiss-Cuzick, or Landis-Koch with the Fleiss-Nee-Landis test): its own recipe.
+            if (recipe != null && operation == "Kappa" && InputColumns(record, "responses") > 2)
+                return new RRecipe { File = "kappa-raters.R", Detail = "Kappa agreement of more than two raters from their responses." };
             if (recipe?.ParentFiles == null || recipe.ParentFiles.Count == 0) return recipe;
             string parent = RScriptWriter.Text(record, "rootOperation");
             if (string.IsNullOrEmpty(parent) && record.TryGetProperty("parameters", out JsonElement parameters))
@@ -71,6 +74,9 @@ namespace StatsDirect.R
                 // The regression analysis of variance names the frames of the fit it continues: a polynomial regression's y and x.
                 else if (operation == "MultipleLinearRegressionAnova")
                     parent = HasInput(record, "y") && HasInput(record, "x") ? "PolynomialRegression" : HasInput(record, "outcome") ? "MultipleLinearRegression" : null;
+                // The simulated exact P of kappa names the frame of the analysis it continues: the raters' columns or the typed table.
+                else if (operation == "KappaSimulateExactP")
+                    parent = HasInput(record, "responsesCrosstab") ? "KappaScreen" : HasInput(record, "responses") ? "Kappa" : null;
                 else if (parameters.TryGetProperty("doseResponseModel", out JsonElement model) && model.ValueKind == JsonValueKind.String)
                     parent = model.GetString() == "probit" ? "Probit" : model.GetString() == "logit" ? "Logit" : null;
             }
@@ -84,6 +90,15 @@ namespace StatsDirect.R
             foreach (JsonElement input in inputs.EnumerateArray())
                 if (RScriptWriter.Text(input, "name") == name) return true;
             return false;
+        }
+
+        private static int InputColumns(JsonElement record, string name)
+        {
+            if (!record.TryGetProperty("inputs", out JsonElement inputs) || inputs.ValueKind != JsonValueKind.Array) return 0;
+            foreach (JsonElement input in inputs.EnumerateArray())
+                if (RScriptWriter.Text(input, "name") == name)
+                    return input.TryGetProperty("columns", out JsonElement columns) && columns.ValueKind == JsonValueKind.Array ? columns.GetArrayLength() : 0;
+            return 0;
         }
 
         /// <summary>A recipe file: a header naming the variables it takes, then the analysis as the help shows it in R.</summary>
