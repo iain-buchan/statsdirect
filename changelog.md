@@ -5,6 +5,11 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 ##[Unreleased]
 
 ### Fixed
+
+- Continue in R handles single-study meta-analyses and prints no Cochran Q P value with zero degrees of freedom. The effect size replay shows the individual estimate and leaves out pooled results, as the report does.
+- Correlation and proportion meta-analysis omit incomplete studies while keeping the labels on the corresponding rows in the report and the replay.
+- Exact incidence rate ratio meta-analysis uses the same eligible strata as the rest of the analysis when a group has no person-time.
+- Rate standardization replays show the report's fallback label for a blank stratum name. Meta-analysis replay labels show confidence intervals with consistent spacing and use the selected level in the effect size plot annotation.
 - Offline report HTML sanitization uses DOMPurify 3.4.17 again: the report editor, import and export bundles of 5.3.9 had been built with 3.4.16, although the licence notice and this changelog said 3.4.17, and the build now refuses to bundle a library at a version other than the stated one.
 - A recently used file on a drive that is not there, such as a USB stick not plugged in or a network drive that is mapped later, stays in the recent files list, both when StatsDirect starts and when the file is chosen from the list and cannot be opened: a file is taken off the list only when its drive is there and the file is not, or cannot be read.
 - The default workbook font and the chart title and label fonts keep their sizes between regional settings: a size is saved with a point as its decimal separator and is read with a point or a comma, so that the 10.5 points saved as "10,5" where the decimal separator is a comma are no longer 105 points where it is a point.

@@ -61,8 +61,9 @@ z_fixed <- pooled / se_pooled
 # Cochran's Q about the pooled log odds ratio, then the DerSimonian-Laird moment
 # estimate of the between studies variance, which inflates each study's variance
 # for the random effects weights
-q <- sum(w * (y - pooled)^2)
-tau2 <- max(0, (q - (k - 1)) / (sum(w) - sum(w^2) / sum(w)))
+q <- if (k > 1) sum(w * (y - pooled)^2) else 0
+spread <- sum(w) - sum(w^2) / sum(w)
+tau2 <- if (k < 2 || spread == 0) 0 else max(0, (q - (k - 1)) / spread)
 w_dl <- 1 / (tau2 + se^2)
 pooled_dl <- sum(w_dl * y) / sum(w_dl)
 se_dl <- 1 / sqrt(sum(w_dl))
@@ -78,7 +79,7 @@ for (i in 1:k) {
 }
 
 cat("Fixed effects (inverse variance)\n")
-cat("Pooled ", tolower(stat), " = ", six(back(pooled)), " (", pct, "CI = ",
+cat("Pooled ", tolower(stat), " = ", six(back(pooled)), " (", pct, " CI = ",
     six(back(pooled - z * se_pooled)), " to ", six(back(pooled + z * se_pooled)), ")\n",
     sep = "")
 cat("Z (test ", stat, " differs from ", null_value, ") = ", six(z_fixed), "  ",
@@ -94,7 +95,7 @@ cat("Z (test ", stat, " differs from ", null_value, ") = ", six(z_fixed), "  ",
 cat("Non-combinability of studies\n")
 dfree <- k - 1
 cat("Cochran Q = ", six(q), "  (df = ", dfree, ")  ",
-    pv(pchisq(q, dfree, lower.tail = FALSE)), "\n", sep = "")
+    pv(if (k > 1) pchisq(q, dfree, lower.tail = FALSE) else NA_real_), "\n", sep = "")
 cat("Moment-based estimate of between studies variance =", six(tau2), "\n")
 # I-squared interval: recorded exact/test-based choice.
 # Older records have no preference: retain the non-central interval they used.
@@ -127,12 +128,12 @@ if (k >= 2 && confidence > 0 && confidence < 1) {
 }
 if (k < 2) cat("I2 not calculated: at least two studies are required.\n") else if (anyNA(i2_ci))
   cat("I2 (inconsistency) =", one(i2), "% (interval unavailable for this number of studies and confidence level)\n") else
-  cat("I2 (inconsistency) = ", one(i2), "% (", pct, "CI = ",
+  cat("I2 (inconsistency) = ", one(i2), "% (", pct, " CI = ",
       one(i2_ci[1]), "% to ", one(i2_ci[2]), "%)\n", sep = "")
 # End of I-squared interval.
 
 cat("Random effects (DerSimonian-Laird)\n")
-cat("Pooled ", tolower(stat), " = ", six(back(pooled_dl)), " (", pct, "CI = ",
+cat("Pooled ", tolower(stat), " = ", six(back(pooled_dl)), " (", pct, " CI = ",
     six(back(pooled_dl - z * se_dl)), " to ", six(back(pooled_dl + z * se_dl)), ")\n",
     sep = "")
 cat("Z (test ", stat, ") = ", six(z_dl), "  ", pv(2 * pnorm(-abs(z_dl))), "\n", sep = "")

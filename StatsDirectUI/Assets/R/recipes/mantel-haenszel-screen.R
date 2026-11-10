@@ -242,7 +242,7 @@ for (i in seq_along(a)) {
 }
 
 cat("Fixed effects (Mantel-Haenszel, ", if (is.na(or_mh)) "Sato" else "Robins-Breslow-Greenland", ")\n", sep = "")
-cat("Pooled odds ratio = ", if (is.na(or_mh)) "undefined" else six(or_mh), " (", pct, "CI = ",
+cat("Pooled odds ratio = ", if (is.na(or_mh)) "undefined" else six(or_mh), " (", pct, " CI = ",
     six(mh_ci[1]), " to ", six(mh_ci[2]), ")\n", sep = "")
 cat("Chi2 (test odds ratio differs from 1) =", six(x2), " ", pv(pchisq(x2, 1, lower.tail = FALSE)), "\n")
 
@@ -280,7 +280,7 @@ cat("Non-combinability of studies\n")
 cat("Breslow-Day = ", six(bd), "  (df = ", df, ")  ",
     pv(pchisq(bd, df, lower.tail = FALSE)), "\n", sep = "")
 cat("Cochran Q = ", six(q), "  (df = ", df, ")  ",
-    pv(pchisq(q, df, lower.tail = FALSE)), "\n", sep = "")
+    pv(if (k > 1) pchisq(q, df, lower.tail = FALSE) else NA_real_), "\n", sep = "")
 cat("Moment-based estimate of between studies variance =", six(tau2), "\n")
 # I-squared interval: recorded exact/test-based choice. Without a pooled odds ratio
 # (Sato's interval) Q, and so I-squared, are undefined, as in the report.
@@ -312,13 +312,13 @@ if (k >= 2 && !is.na(q) && confidence > 0 && confidence < 1) {
 }
 if (k < 2) cat("I2 not calculated: at least two studies are required.\n") else if (anyNA(i2_ci))
   cat("I2 (inconsistency) =", one(i2), "% (interval unavailable for this number of studies and confidence level)\n") else
-  cat("I2 (inconsistency) = ", one(i2), "% (", pct, "CI = ",
+  cat("I2 (inconsistency) = ", one(i2), "% (", pct, " CI = ",
       one(i2_ci[1]), "% to ", one(i2_ci[2]), "%)\n", sep = "")
 # End of I-squared interval.
 
 re_ci <- exp(log(or_re) + c(-1, 1) * z / sqrt(sum(w_re)))
 cat("Random effects (DerSimonian-Laird)\n")
-cat("Pooled odds ratio = ", six(or_re), " (", pct, "CI = ", six(re_ci[1]), " to ",
+cat("Pooled odds ratio = ", six(or_re), " (", pct, " CI = ", six(re_ci[1]), " to ",
     six(re_ci[2]), ")\n", sep = "")
 cat("Chi2 (test odds ratio differs from 1) =", six(x2_re), " (df = 1) ",
     pv(pchisq(x2_re, 1, lower.tail = FALSE)), "\n")

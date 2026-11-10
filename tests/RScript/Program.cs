@@ -102,7 +102,7 @@ internal static partial class Program
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") is string meta5310 && (meta5310 == "meta-5310" || meta5310.StartsWith("meta-5310-", StringComparison.Ordinal)))
             {
                 string part = meta5310 == "meta-5310" ? null : meta5310["meta-5310-".Length..];
-                if (part is not (null or "rates" or "correction" or "labels" or "axis" or "bias"))
+                if (part is not (null or "rates" or "correction" or "labels" or "axis" or "bias" or "round-two"))
                     throw new ArgumentException("Unknown 5.3.10 meta-analysis test group: " + meta5310);
                 CheckMetaReview5310(Path.Combine(TemporaryRoot, "meta-5310"), part);
                 Console.WriteLine($"PASS {checks} 5.3.10 meta-analysis checks");

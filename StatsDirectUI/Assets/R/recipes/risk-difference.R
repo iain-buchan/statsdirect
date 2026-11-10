@@ -150,7 +150,7 @@ cat(pct, "study confidence intervals (",
 print(tab, row.names = FALSE)
 
 cat("Fixed effects (Mantel-Haenszel, Greenland-Robins)\n")
-cat("Pooled risk difference = ", six(rd_mh), " (", pct, "CI = ", six(rd_mh - z * se_mh),
+cat("Pooled risk difference = ", six(rd_mh), " (", pct, " CI = ", six(rd_mh - z * se_mh),
     " to ", six(rd_mh + z * se_mh), ")\n", sep = "")
 # without an event, or without a subject free of it, in any study the cells as they
 # are give the pooled difference no variance, and so no test
@@ -167,7 +167,7 @@ cat("Chi-square (test risk difference differs from 0) =", six(x2), " (df = 1) ",
 cat("Non-combinability of studies\n")
 dfree <- k - 1
 cat("Cochran Q =", six(q), paste0(" (df = ", dfree, ") "),
-    pv(pchisq(q, dfree, lower.tail = FALSE)), "\n")
+    pv(if (k > 1) pchisq(q, dfree, lower.tail = FALSE) else NA_real_), "\n")
 cat("Moment-based estimate of between studies variance =", six(tau2), "\n")
 # I-squared interval: recorded exact/test-based choice.
 # Older records have no preference: retain the non-central interval they used.
@@ -200,12 +200,12 @@ if (k >= 2 && confidence > 0 && confidence < 1) {
 }
 if (k < 2) cat("I-squared not calculated: at least two studies are required.\n") else if (anyNA(i2_ci))
   cat("I-squared (inconsistency) =", one(i2), "% (interval unavailable for this number of studies and confidence level)\n") else
-  cat("I-squared (inconsistency) = ", one(i2), "% (", pct, "CI = ",
+  cat("I-squared (inconsistency) = ", one(i2), "% (", pct, " CI = ",
       one(i2_ci[1]), "% to ", one(i2_ci[2]), "%)\n", sep = "")
 # End of I-squared interval.
 
 cat("Random effects (DerSimonian-Laird)\n")
-cat("Pooled risk difference = ", six(rd_dl), " (", pct, "CI = ", six(rd_dl - z * se_dl),
+cat("Pooled risk difference = ", six(rd_dl), " (", pct, " CI = ", six(rd_dl - z * se_dl),
     " to ", six(rd_dl + z * se_dl), ")\n", sep = "")
 x2_dl <- (rd_dl / se_dl)^2
 cat("Chi-square (test risk difference differs from 0) =", six(x2_dl), " (df = 1) ",

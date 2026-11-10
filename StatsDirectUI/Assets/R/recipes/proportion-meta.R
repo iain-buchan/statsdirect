@@ -28,6 +28,7 @@ pv <- function(p) {
     paste("P =", formatC(p, digits = 4, format = "f", drop0trailing = TRUE))
 }
 k <- length(total)
+if (k == 0) stop("At least one study must have a total and a number of outcomes")
 z <- qnorm((1 + confidence) / 2)
 p <- adherent / total
 
@@ -48,8 +49,9 @@ v <- 1 / (total + 0.5)
 w <- 1 / v
 xf <- sum(w * x) / sum(w)
 se_f <- 1 / sqrt(sum(w))
-q <- sum(w * (x - xf)^2)
-tau2 <- max(0, (q - (k - 1)) / (sum(w) - sum(w^2) / sum(w)))
+q <- if (k > 1) sum(w * (x - xf)^2) else 0
+spread <- sum(w) - sum(w^2) / sum(w)
+tau2 <- if (k < 2 || spread == 0) 0 else max(0, (q - (k - 1)) / spread)
 wr <- 1 / (tau2 + v)
 xr <- sum(wr * x) / sum(wr)
 se_r <- 1 / sqrt(sum(wr))
@@ -71,12 +73,12 @@ inv <- function(t) {
 fixed <- c(inv(xf), inv(xf - z * se_f), inv(xf + z * se_f))
 if (all(adherent == 0)) fixed[1:2] <- 0 else if (all(adherent == total)) fixed[c(1, 3)] <- 1
 cat("Fixed effects (inverse variance)\n")
-cat("Pooled proportion = ", six(fixed[1]), " (", pct, "CI = ", six(fixed[2]),
+cat("Pooled proportion = ", six(fixed[1]), " (", pct, " CI = ", six(fixed[2]),
     " to ", six(fixed[3]), ")\n", sep = "")
 
 cat("Non-combinability of studies\n")
 cat("Cochran Q = ", six(q), "  (df = ", k - 1, ")  ",
-    pv(pchisq(q, k - 1, lower.tail = FALSE)), "\n", sep = "")
+    pv(if (k > 1) pchisq(q, k - 1, lower.tail = FALSE) else NA_real_), "\n", sep = "")
 cat("Moment-based estimate of between studies variance =", six(tau2), "\n")
 one <- function(x) formatC(x, digits = 1, format = "f")
 # I-squared interval: recorded exact/test-based choice.
@@ -110,12 +112,12 @@ if (k >= 2 && confidence > 0 && confidence < 1) {
 }
 if (k < 2) cat("I2 not calculated: at least two studies are required.\n") else if (anyNA(i2_ci))
   cat("I2 (inconsistency) =", one(i2), "% (interval unavailable for this number of studies and confidence level)\n") else
-  cat("I2 (inconsistency) = ", one(i2), "% (", pct, "CI = ",
+  cat("I2 (inconsistency) = ", one(i2), "% (", pct, " CI = ",
       one(i2_ci[1]), "% to ", one(i2_ci[2]), "%)\n", sep = "")
 # End of I-squared interval.
 
 cat("Random effects (DerSimonian-Laird)\n")
-cat("Pooled proportion = ", six(inv(xr)), " (", pct, "CI = ", six(inv(xr - z * se_r)),
+cat("Pooled proportion = ", six(inv(xr)), " (", pct, " CI = ", six(inv(xr - z * se_r)),
     " to ", six(inv(xr + z * se_r)), ")\n", sep = "")
 
 # Bias indicators, all on the proportion scale with each study's standard error taken

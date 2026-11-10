@@ -2003,19 +2003,25 @@ namespace StatsDirect.Builtins
                 // Try exact IRR
                 if (host.Preferences.MetaExact)
                 {
-                    Rec2X2[] tbl = new Rec2X2[k + 1];
+                    Rec2X2[] tbl = new Rec2X2[(int)realk + 1];
+                    int pooled = 0;
                     for (int i = 1; i <= k; i++)
                     {
-                        tbl[i].Freq = 1;
-                        tbl[i].A = a[i];
-                        tbl[i].M1 = b[i] + a[i];
-                        tbl[i].N1 = pt1[i];
-                        tbl[i].N0 = pt2[i];
-                        tbl[i].IsInformative = (a[i] * pt1[i] != 0.0) | (b[i] * pt2[i] != 0.0);
+                        if (rkr[i] == Constant.MISSING)
+                            continue;
+                        tbl[++pooled] = new Rec2X2
+                        {
+                            Freq = 1,
+                            A = a[i],
+                            M1 = b[i] + a[i],
+                            N1 = pt1[i],
+                            N0 = pt2[i],
+                            IsInformative = true
+                        };
                     }
                     bool useLogScale = false;
                     // person-time data: the conditional distribution of a given a + b is binomial with the person-times as its odds
-                    new ExactBB().Exact22K(host, 1, k, Exact22KDataType.Type3, tbl, cco, out eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
+                    new ExactBB().Exact22K(host, 1, pooled, Exact22KDataType.Type3, tbl, cco, out eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
                 }
                 else
                 {
@@ -3428,7 +3434,6 @@ namespace StatsDirect.Builtins
             double tausq;
             double cit;
             int i;
-            bool stratlab;
             double[] odx = null;
 
             double cco = parameters["gamma"].AsDouble;
@@ -3444,15 +3449,24 @@ namespace StatsDirect.Builtins
             }
 
             DataFrame rFrame = parameters["r"].AsDataFrame;
-            DoubleVariable rVariable = (DoubleVariable) rFrame.Variables[0]; //  Ends up in y
-            int k = rVariable.Length;
-            double[] y = new double[k + 2];
-            // double[] n = new double[k + 2 ]; - unused
-            string[] title = new string[k + 2];
+            DoubleVariable rVariable = (DoubleVariable)rFrame.Variables[0];
+            DataFrame nFrame = parameters["n"].AsDataFrame;
+            DoubleVariable nVariable = (DoubleVariable)nFrame.Variables[0];
+            int rawRows = rVariable.Length;
+            var complete = Numerics.Utilities.RemoveMissingRows(new[] { rVariable.Data, nVariable.Data }, 0, rawRows, 1, 1);
+            double[] y = complete.ArraysWithMissingRowsRemoved[0];
+            double[] ss = complete.ArraysWithMissingRowsRemoved[1];
+            int k = y.Length - 2; /* 1-based, 1 extra for pooling */
+            if (k == 0)
+                throw new InvalidDataException("At least one study must have a correlation and sample size");
+
+            string[] title = MakeTitles(parameters, "studies", "study {0}", rawRows, out bool stratlab, keptRows: complete.ValidRowsInOriginal);
+            title = Numerics.Utilities.CopyValidRows(title, complete.ValidRowsInOriginal, 0, rawRows, 1, k, 1);
+            title[k + 1] = Charting.Renderer.AbstractForestishChartRenderer.ComboTi(string.Empty);
+
             CorrelationRowType[] pg = new CorrelationRowType[k + 2];
             for (i = 1; i <= k; i++)
             {
-                y[i] = rVariable.Data[i - 1];
                 pg[i] = CorrelationRowType.Study;
                 if (y[i] <= -1.0 || y[i] >= 1.0)
                     throw new Exception($"r({i}) must be between -1 and 1 exclusive: a correlation of exactly 1 or -1 has no finite Fisher z");
@@ -3460,51 +3474,19 @@ namespace StatsDirect.Builtins
             // pooled indicator for last element - needed by plot_cp
             pg[k + 1] = CorrelationRowType.Pooled;
 
-            DataFrame nFrame = parameters["n"].AsDataFrame;
-            DoubleVariable nVariable = (DoubleVariable)nFrame.Variables[0];
             double[] seY = new double[k + 2];
             double[] llY = new double[k + 2];
             double[] ulY = new double[k + 2];
-            double[] ss = new double[k + 2];
             for (i = 1; i <= k; i++)
             {
-                double sampleSize = nVariable.Data[i - 1];
+                double sampleSize = ss[i];
                 if (sampleSize <= 3)
                     throw new Exception($"All values of n must be greater than 3 (the variance of Fisher's z is 1/(n - 3)). n({i}) is not");
 
-                ss[i] = sampleSize;
                 seY[i] = Math.Sqrt(1 / (sampleSize - 3));
                 llY[i] = MathDbl.ztor(MathDbl.rtoz(y[i]) - cit * seY[i]);
                 ulY[i] = MathDbl.ztor(MathDbl.rtoz(y[i]) + cit * seY[i]);
             }
-
-            if (parameters.ContainsKey("studies") && parameters["studies"].HasData)
-            {
-                stratlab = true;
-                DataFrame strataFrame = parameters["studies"].AsDataFrame;
-                StringVariable strataVariable = (StringVariable)strataFrame.Variables[0];
-                for (i = 1; i <= k; i++)
-                {
-                    string buf = strataVariable.Data[i - 1].Trim();
-                    if (buf.Length > 0)
-                    {
-                        if (buf.Length > 50)
-                            buf = buf.Substring(0, 50);
-                        title[i] = buf;
-                    }
-                    else
-                    {
-                        title[i] = "study " + i;
-                    }
-                }
-            }
-            else
-            {
-                stratlab = false;
-                for (i = 1; i <= k; i++)
-                    title[i] = "study " + i;
-            }
-            title[k + 1] = Charting.Renderer.AbstractForestishChartRenderer.ComboTi(string.Empty);
 
             // Pool
             double sumwt = 0.0;
@@ -3897,6 +3879,8 @@ namespace StatsDirect.Builtins
             string[] title = MakeTitles(parameters, "strata", "stratum {0}", rawRows, out bool hasUserSuppliedLabels, keptRows: copiesRemovingMissingRows.ValidRowsInOriginal);
 
             int k = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0].Length - 2; /* 1-based, 1 extra for pooling */
+            if (k == 0)
+                throw new InvalidDataException("At least one study must have a total and a number of outcomes");
             title = Numerics.Utilities.CopyValidRows(title, copiesRemovingMissingRows.ValidRowsInOriginal, 0, rawRows, 1, k, 1);
             title[k + 1] = Charting.Renderer.AbstractForestishChartRenderer.ComboTi(string.Empty);
 

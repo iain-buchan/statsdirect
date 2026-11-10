@@ -30,6 +30,7 @@ internal static partial class Program
             if (part is null or "labels") CheckMeta5310BlankLabels(Path.Combine(folder, "labels"));
             if (part is null or "axis") CheckMeta5310AxisLabels(Path.Combine(folder, "axis"));
             if (part is null or "bias") CheckMeta5310RankCorrelation(Path.Combine(folder, "bias"));
+            if (part is null or "round-two") CheckRound2Meta(Path.Combine(folder, "round-two"));
         }
         finally { MetaExact = exact; MetaCC = correction; DelayContinuityCorrection = delay; }
     }
@@ -293,7 +294,8 @@ internal static partial class Program
                         return new ParameterBag(parameter.Name, FilledParameterFactory.Input(choice));
                     })
                 });
-                Expect(values.Contains(offered), "de-DE: with " + stored.ToString(inv) + " stored, the dialog's default (" + offered + ") is one of its options (" + string.Join(", ", values) + ")");
+                Expect(values.Contains(offered) && offered == stored.ToString(inv),
+                    "de-DE: with " + stored.ToString(inv) + " stored, the dialog offers that exact default (" + offered + ")");
                 Expect(MetaCC == double.Parse(choice, inv), "de-DE: choosing " + choice + " stores " + choice + " (stored: " + MetaCC.ToString(inv) + ")");
             }
             Choose(.01, "0.5");

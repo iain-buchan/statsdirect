@@ -147,7 +147,7 @@ for (i in seq_along(a)) {
 }
 
 cat("Fixed effects (Mantel-Haenszel, Rothman-Boice)\n")
-cat("Pooled relative risk = ", six(rr_mh), " (", pct, "CI = ",
+cat("Pooled relative risk = ", six(rr_mh), " (", pct, " CI = ",
     six(exp(log(rr_mh) - z * sqrt(v_mh))), " to ",
     six(exp(log(rr_mh) + z * sqrt(v_mh))), ")\n", sep = "")
 cat("Chi2 (test relative risk differs from 1) =", six(x2), " (df = 1) ",
@@ -161,7 +161,7 @@ cat("Chi2 (test relative risk differs from 1) =", six(x2), " (df = 1) ",
 # I-squared as lambda / (df + lambda)
 cat("Non-combinability of studies\n")
 cat("Cochran Q = ", six(q), "  (df = ", k - 1, ")  ",
-    pv(pchisq(q, k - 1, lower.tail = FALSE)), "\n", sep = "")
+    pv(if (k > 1) pchisq(q, k - 1, lower.tail = FALSE) else NA_real_), "\n", sep = "")
 cat("Moment-based estimate of between studies variance =", six(tau2), "\n")
 # I-squared interval: recorded exact/test-based choice.
 # Older records have no preference: retain the non-central interval they used.
@@ -194,12 +194,12 @@ if (k >= 2 && confidence > 0 && confidence < 1) {
 }
 if (k < 2) cat("I2 not calculated: at least two studies are required.\n") else if (anyNA(i2_ci))
   cat("I2 (inconsistency) =", one(i2), "% (interval unavailable for this number of studies and confidence level)\n") else
-  cat("I2 (inconsistency) = ", one(i2), "% (", pct, "CI = ",
+  cat("I2 (inconsistency) = ", one(i2), "% (", pct, " CI = ",
       one(i2_ci[1]), "% to ", one(i2_ci[2]), "%)\n", sep = "")
 # End of I-squared interval.
 
 cat("Random effects (DerSimonian-Laird)\n")
-cat("Pooled relative risk = ", six(rr_dl), " (", pct, "CI = ", six(dl_ci[1]), " to ",
+cat("Pooled relative risk = ", six(rr_dl), " (", pct, " CI = ", six(dl_ci[1]), " to ",
     six(dl_ci[2]), ")\n", sep = "")
 cat("Chi2 (test relative risk differs from 1) =", six(x2_dl), " (df = 1) ",
     pv(pchisq(x2_dl, 1, lower.tail = FALSE)), "\n")
