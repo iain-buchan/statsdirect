@@ -240,6 +240,7 @@ internal static partial class Program
         Case("untied-101-2000", Values(101, 0, false), Values(2000, .9, false), .9, normal: true, approximateK: true);
         // with ties, a small first sample beside a large one is still inside the report's exact count
         Case("ties-exact-20-1000", Enumerable.Range(0, 20).Select(i => Math.Round(20 + 8 * Math.Sin(i * 3.1) + i * 7 % 5)).ToArray(), Values(1000, 1.7, true), .95, normal: false, approximateK: false);
+        Case("ties-exact-20-200", Enumerable.Range(0, 20).Select(i => Math.Round(20 + 8 * Math.Sin(i * 3.1) + i * 7 % 5)).ToArray(), Values(200, 1.7, true), .95, normal: false, approximateK: false);
         // and a small one, which the table of 5.3.8 also finished at once: here nothing but the size of the table can tell the versions apart
         Case("ties-exact-8-40", Enumerable.Range(0, 8).Select(i => Math.Round(20 + 8 * Math.Sin(i * 3.1) + i * 7 % 5)).ToArray(), Values(40, 1.7, true), .95, normal: false, approximateK: false);
         double[] farm = { 14.8, 7.3, 5.6, 6.3, 9, 4.2, 10.6, 12.5, 12.9, 16.1, 11.4, 2.7 }, town = { 12.7, 14.2, 12.6, 2.1, 17.7, 11.8, 16.9, 7.9, 16, 10.6, 5.6, 5.6, 7.6, 11.3, 8.3, 6.7, 3.6, 1, 2.4, 6.4, 9.1, 6.7, 18.6, 3.2, 6.2, 6.1, 15.3, 10.6, 1.8, 5.9, 9.9, 10.6, 14.8, 5, 2.6, 4 };
@@ -584,7 +585,7 @@ internal static partial class Program
     //    leading term of the tail's expansion only, so its adjusted K2 differed from R's in the 7th figure.
     private static void CheckRoystonK2539(string folder)
     {
-        foreach (int n in new[] { 400, 2001, 4000, 5200 }) Case539("k2 skewed " + n, () =>
+        foreach (int n in new[] { 400, 752, 753, 800, 1000, 2001, 4000, 5200 }) Case539("k2 skewed " + n, () =>
         {
             // a long right tail: a few very large values among small ones
             double[] values = Enumerable.Range(1, n).Select(i => i % 97 == 0 ? 400 + i % 13 : 10 + Math.Sin(i * .37) + (i % 7) * .1).ToArray();
@@ -592,15 +593,9 @@ internal static partial class Program
             var (run, output) = Run("Normality", new() { ["data"] = Select539(cells, n + 1, 0) });
             ParameterBag b = Rows539(output.ParameterBag, "*variable")[0];
             double k2 = Num539(b, "k2");
-            // When the adjusted deviate z is 30 or more the report takes ln P from the expansion of the tail and stops it at 3 / z^4
-            // (Parametric.cs), while pnorm carries the whole tail: the report's K2 is below R's by the first term left out, 2 * 15 / z^6
-            // (2.27e-9 for n = 2001, which is 9.6e-13 of that K2, so a flat 1e-12 against R held by 4% and could go either way on
-            // another machine). So the report's K2 is compared at 1e-12 with the same series taken in R from R's own z, which it meets
-            // within 1e-15, and with R's whole tail within twice the term left out; an alternating series errs by less than that term.
-            string native = k2.ToString("R", inv);
-            string assertion = "stopifnot(n == " + n + ", (z1^2 + z2^2 >= 1400) == " + (n > 400 ? "TRUE" : "FALSE") + ", (zr >= 30) == " + (n > 400 ? "TRUE" : "FALSE") + ")\n" +
-                "series <- if (zr < 30) -2 * log_pk else -2 * (-0.5 * zr^2 - log(zr) - 0.5 * log(2 * pi) + log(1 - 1 / zr^2 + 3 / zr^4))\n" + Equal539("series", new[] { k2 }, 1e-12) +
-                "stopifnot(abs(-2 * log_pk - " + native + ") <= if (zr < 30) 1e-12 * " + native + " else 60 / zr^6 + 1e-13 * " + native + ")\n" +
+            // The cases on either side of adjusted z = 30 exercise the tail switch independently of the raw K2 cutoff.
+            string assertion = "stopifnot(n == " + n + ", (z1^2 + z2^2 >= 1400) == " + (n >= 1000 ? "TRUE" : "FALSE") + ", (zr >= 30) == " + (n >= 753 ? "TRUE" : "FALSE") + ")\n" +
+                Equal539("-2 * log_pk", new[] { k2 }, 1e-12) +
                 Equal539("skew, kurt", new[] { Num539(b, "skewness"), Num539(b, "kurtosis") }, 1e-12);
             string text = Replay539(run, assertion, Path.Combine(folder, "skewed-" + n), cells.Read, setup: "pdf(NULL)\n", timeout: 180);
             double[] printed = Printed539(text, @"^Royston chi-sq " + Figure539 + ",");
