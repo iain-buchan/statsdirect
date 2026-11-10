@@ -24,6 +24,15 @@ static class Program
         {
             XDocument doc = XDocument.Load(file);
             XNamespace ns = doc.Root.Name.Namespace;
+            if (Path.GetFileNameWithoutExtension(file) is "LogisticRegression" or "PoissonRegression")
+            {
+                XElement precision = doc.Descendants(ns + "string").SingleOrDefault(e => e.Element(ns + "name")?.Value == "accuracy");
+                if (precision == null || precision.Element(ns + "maximum-length") != null)
+                {
+                    failures++;
+                    Console.WriteLine($"FAIL  {Path.GetFileName(file)} must accept precision values longer than 12 characters");
+                }
+            }
             var parameters = doc.Descendants(ns + "parameters").Elements()
                 .Where(e => e.Element(ns + "name") != null)
                 .Select(e => (name: e.Element(ns + "name").Value, condition: e.Element(ns + "acquire-if-true")?.Value))

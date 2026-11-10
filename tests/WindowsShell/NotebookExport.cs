@@ -29,7 +29,7 @@ internal static partial class Program
                     {"title":"Before","values":[312,242,340,388,296,254,391,402,290]},
                     {"title":"After","values":[300,201,232,312,220,256,328,330,231]}]}]}
                 """;
-            await (Task)Call(view, "AppendAsync", "<p>Original result and notes</p><table><tr><td>Estimate</td><td>56</td></tr></table>", "Paired review", "TPaired", 1150, record, null!);
+            await (Task)Call(view, "AppendAsync", "<p>Original result and notes</p><table><tr><td>Estimate</td><td>56</td></tr></table>", "Paired review", "TPaired", 1150, record, null!, false);
             string html = Path.Combine(folder, "source.html"), notebook = Path.Combine(folder, "review.ipynb");
             Check(await (Task<bool>)Call(report, "SaveReportFileAsync", html, 1), "source report saves as editable HTML before notebook export");
             byte[] savedHtml = File.ReadAllBytes(html);
@@ -58,7 +58,7 @@ internal static partial class Program
                   {"name":"data","kind":"frame2d","value":{"omitted":true}}]}
                 """;
             byte[] savedNotebook = File.ReadAllBytes(notebook);
-            await (Task)Call(view, "AppendAsync", "<p>Missing original data</p>", "Missing data", "TPaired", 1150, missing, null!);
+            await (Task)Call(view, "AppendAsync", "<p>Missing original data</p>", "Missing data", "TPaired", 1150, missing, null!, false);
             bool refusedData = false;
             try { await (Task)Call(report, "ExportNotebookFileAsync", notebook); } catch (InvalidOperationException) { refusedData = true; }
             Check(refusedData && File.ReadAllBytes(notebook).SequenceEqual(savedNotebook),
