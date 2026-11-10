@@ -946,10 +946,10 @@ namespace StatsDirect.Builtins
                 }
                 Regress1.glsqr(0, incep, 0, context.N, indep + iwt + 1, xx, -indep, idum, -1, idum, 0, iwtcol, context.B, r, D, ref irank, ref rdf, ref rss, ref nrmiss, xMin, xMax, wk, ref ifault);
             }
-            // glsqr reports 12 when the fit leaves no degrees of freedom for error: as many rows as parameters.  In multiple regression
-            // the fit is complete and exact, and is kept; only what needs the residual mean square is undefined.  (It used to be made
-            // again by singular value decomposition, whose sums of squares are wrong with weights.)
-            bool saturated = ifault == 12 && !polynomial;
+            // glsqr reports 12 when the fit leaves no degrees of freedom for error: as many rows as parameters.  The fit is complete
+            // and exact, and is kept, for a polynomial as for multiple regression; only what needs the residual mean square is
+            // undefined.  (It used to be made again by singular value decomposition, whose sums of squares are wrong with weights.)
+            bool saturated = ifault == 12;
             if (saturated)
             {
                 ifault = 0;
@@ -2412,6 +2412,12 @@ namespace StatsDirect.Builtins
                 if (vX.Data[i] != Constant.MISSING && vY.Data[i] != Constant.MISSING)
                     complete++;
             int leftOut = records - complete;
+            //  A polynomial has one more coefficient than its degree.  With fewer complete pairs than coefficients there is nothing to fit, and
+            //  the analysis is refused, as multiple linear regression refuses fewer observations than parameters (the titles of the powers had
+            //  run off the end of their array instead, an internal error).  As many pairs as coefficients is the exact fit, which is reported.
+            //  Refused before the frames are changed, so that a change of degree that is refused leaves the fitted records as they were.
+            if (complete < context.P)
+                throw new TemplateOperationCancelledException("There are fewer complete pairs of observations than coefficients in a polynomial of this degree.", "Polynomial regression");
             if (leftOut > 0 || vX.Length != records || vY.Length != records)
             {
                 double[] completeX = new double[complete];
@@ -3749,8 +3755,10 @@ namespace StatsDirect.Builtins
             double totalFrequency = ordered.Sum(pattern => pattern.Total);
             double tenth = totalFrequency / 10.0;
             // Cuts are decided with a tolerance of 1e-9 of the total: decimal weights whose exact sum lands on a cut could otherwise
-            // fall either side of it with rounding, or with the order in which the rows were added.
-            double tolerance = 1e-9 * totalFrequency;
+            // fall either side of it with rounding, or with the order in which the rows were added.  The tolerance stays under 0.1,
+            // however large the total: a tenth of a whole total ends in .0 to .9, so neither it nor a whole cumulative count is moved
+            // across a whole number, and whole frequencies are grouped as they always were.
+            double tolerance = Math.Min(1e-9 * totalFrequency, 0.05);
             double nextCut = Math.Floor(tenth + tolerance), cumulative = 0.0;
             double[] observed = new double[10], total = new double[10], expected = new double[10];
             int group = 0;
@@ -4134,6 +4142,14 @@ namespace StatsDirect.Builtins
                     parList.Add(parParameters);
                     parParameters.AddOutput("par", labels[i - iq]);
                     parParameters.AddOutput("est", b[i]);
+                    if (se[i] == 0.0)
+                    {
+                        //  an aliased column has no ratio: its row is marked as in the main report, not shown as 1 (1 to 1)
+                        parParameters.AddOutput("irr", "* error: drop this variable *");
+                        parParameters.AddOutput("lci", Constant.MISSING);
+                        parParameters.AddOutput("uci", Constant.MISSING);
+                        continue;
+                    }
                     double rr = Formatting.SafeExp(b[i]);
                     double lci;
                     double uci;
@@ -4192,6 +4208,13 @@ namespace StatsDirect.Builtins
                                 parList.Add(parParameters);
                                 parParameters.AddOutput("par", labels[i - iq]);
                                 parParameters.AddOutput("est", b[i]);
+                                if (se[i] == 0.0)
+                                {
+                                    parParameters.AddOutput("irr", "* error: drop this variable *");
+                                    parParameters.AddOutput("lci", Constant.MISSING);
+                                    parParameters.AddOutput("uci", Constant.MISSING);
+                                    continue;
+                                }
                                 double rr = Formatting.SafeExp(b[i]) * bx;
                                 double lci;
                                 double uci;
@@ -4253,7 +4276,8 @@ namespace StatsDirect.Builtins
                             break;
                         }
                     }
-                    if (ok)
+                    //  an aliased column (standard error 0) was dropped from the fit, so it defines no sub-population
+                    if (ok && context.Se[l] != 0.0)
                     {
                         okLabels.Add(context.Labels[l - iq]);
                         nsel.Add(l);
@@ -4759,6 +4783,18 @@ namespace StatsDirect.Builtins
                     ? "Constant"
                     : labels[i - iq];
                 parametersParameters.AddOutput("par", q);
+                if (context.Se[i] == 0.0)
+                {
+                    //  an aliased column has no odds ratio: its row is marked as in the main report, not shown as 1 (1 to 1)
+                    parametersParameters.AddOutput("obs", "* error: drop this variable *");
+                    if (i > 1 || !mean)
+                    {
+                        parametersParameters.AddOutput("bias", Constant.MISSING);
+                        parametersParameters.AddOutput("lci", Constant.MISSING);
+                        parametersParameters.AddOutput("uci", Constant.MISSING);
+                    }
+                    continue;
+                }
                 parametersParameters.AddOutput("obs", ob[i]);
                 if (i > 1 || !mean)
                 {

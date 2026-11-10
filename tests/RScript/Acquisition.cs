@@ -36,6 +36,7 @@ internal static partial class Program
         CheckPosthocWeighted537(Path.Combine(folder, "weighted-refit"));
         CheckDuplicatePredictorReplay(Path.Combine(folder, "duplicate-predictors"));
         CheckModels539(Path.Combine(folder, "models-539"));
+        CheckModels5310(Path.Combine(folder, "models-5310"));
         CheckDeferredIndependent538(folder);
         CheckDeferredMeta538(folder);
         CheckPosthocMeta537(Path.Combine(folder, "posthoc-meta"));

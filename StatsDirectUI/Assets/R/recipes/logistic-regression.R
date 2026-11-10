@@ -119,10 +119,12 @@ sd_hl_predictors <- lapply(sd_hl_predictors, function(v) v[positive])
 sd_hl$p <- sd_hl$expected / sd_hl$total
 sd_hl <- sd_hl[do.call(order, unname(c(list(sd_hl$p), sd_hl_predictors))), , drop = FALSE]
 # Cuts are decided within 1e-9 of the total, so that decimal weights whose exact
-# sum lands on a cut do not move with rounding or with the order of the rows
+# sum lands on a cut do not move with rounding or with the order of the rows. The
+# tolerance stays under 0.1 however large the total, so whole frequencies (a tenth
+# of whose total ends in .0 to .9) are never moved to another group
 ntot <- sum(sd_hl$total)
 ndiv <- ntot / 10
-eps <- 1e-9 * ntot
+eps <- min(1e-9 * ntot, 0.05)
 ncut <- floor(ndiv + eps)
 ncum <- 0
 g <- 1L
