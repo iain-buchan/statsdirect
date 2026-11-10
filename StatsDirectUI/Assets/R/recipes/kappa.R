@@ -67,7 +67,8 @@ for (i in 1:g) for (j in 1:g) {
 }
 sew <- sqrt((s - (pow * pew - 2 * pew + pow)^2) / (n * (1 - pew)^4))
 cat("Cohen's kappa (weighted by ", c("1" = "1-abs(i-j)/(k-1)", "2" = "1-[(i-j)/(k-1)]^2", "3" = "the table of weights")[as.character(method)], ")\n", sep = "")
-if (is.null(text_grades)) text_grades <- any(!is.finite(kappa_numeric_labels(grades)))
+if (is.null(text_grades) || !setequal(grades, unlist(saved_grades, use.names = FALSE)))
+  text_grades <- any(!is.finite(kappa_numeric_labels(grades)))
 if (text_grades)
   cat("Weighted kappa uses the grade order shown in the crosstab. Code grades as numbers to set their order.\n")
 cat("Observed agreement =", pc2(pow), "\n")

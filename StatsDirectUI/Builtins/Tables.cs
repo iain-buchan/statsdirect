@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using StatsDirect.Charting;
 using StatsDirect.Data;
 using StatsDirect.Numerics;
@@ -1292,10 +1293,14 @@ namespace StatsDirect.Builtins
                 string[] catz = new string[cats];
                 for (int i = 0; i < cats; i++)
                     catz[i] = categoryList[i];
-                Array.Sort(catz, Formatting.CompareLabels);
+                // Keep the original order of the calculations so that reordering the printed grades does not
+                // change the estimate or its standard error by rounding the sum in a different order.
+                Array.Sort(catz, 0, cats);
+                int[] reportOrder = Enumerable.Range(0, cats).ToArray();
+                Array.Sort(reportOrder, (i, j) => Formatting.CompareLabels(catz[i], catz[j]));
                 ParameterBag outputParameters = new();
                 outputParameters.AddOutput("categories", cats); //  To ensure that any test on the result can find the number of categories
-                outputParameters.AddInput("kappaGrades", catz);
+                outputParameters.AddInput("kappaGrades", Array.ConvertAll(reportOrder, i => catz[i]));
                 if (cats == 2)
                 {
                     // ----> Fleiss Cuzick for > 2 raters and 2 responses
@@ -1377,7 +1382,7 @@ namespace StatsDirect.Builtins
                     if (minm == maxm)
                     {
                         ICollection<ParameterBag> catList = new List<ParameterBag>();
-                        for (int i = 0; i < cats; i++)
+                        foreach (int i in reportOrder)
                         {
                             ParameterBag catValues = new();
                             catValues.AddOutput("resp", catz[i]);
@@ -1413,7 +1418,7 @@ namespace StatsDirect.Builtins
                     else
                     {
                         ICollection<ParameterBag> catList = new List<ParameterBag>();
-                        for (int i = 0; i < cats; i++)
+                        foreach (int i in reportOrder)
                         {
                             ParameterBag catValues = new();
                             catValues.AddOutput("resp", catz[i]);
