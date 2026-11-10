@@ -15,6 +15,7 @@
     <Content Include="$(StatsDirectBin)/**" Exclude="$(StatsDirectBin)/TutorRuntime/**" Link="%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="mock-server.mjs" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="ai-pefr.R" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Fixtures/MacRecords/*.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="../../ReportEditor/upstream/Tests/Fixtures/Reports/*.rtf" Link="Fixtures/Reports/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>
