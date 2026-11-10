@@ -44,11 +44,17 @@ internal static partial class Program
             if (xml.Contains("<grouped-covariance>")) parameters.Add("ci");   // its confidence level is asked through the grid and recorded as the setting ci
             // A shared base/continuation recipe defaults its optional level until
             // the confidence-bearing continuation has actually asked for it.
-            string confidenceOwner = recipe.File is "pca.R" or "pca-covariance.R" ? "Cronbach" : recipe.File == "cox-regression.R" ? "CoxHazardRatios" : null;
-            if (confidenceOwner != null)
+            string settingOwner = recipe.File switch
             {
-                string owner = File.ReadAllText(Path.Combine(Metadata("Operations"), confidenceOwner + ".xml"));
-                foreach (Match input in Regex.Matches(owner, "<confidence-interval>.*?<name>([^<]+)</name>.*?</confidence-interval>", RegexOptions.Singleline))
+                "pca.R" or "pca-covariance.R" => "Cronbach",
+                "cox-regression.R" => "CoxHazardRatios",
+                "kruskal-wallis.R" => "KruskalWallisMulti",
+                _ => null
+            };
+            if (settingOwner != null)
+            {
+                string owner = File.ReadAllText(Path.Combine(Metadata("Operations"), settingOwner + ".xml"));
+                foreach (Match input in Regex.Matches(owner, "<(?:confidence-interval|option)>\\s*<name>([^<]+)</name>"))
                     parameters.Add(input.Groups[1].Value.Trim());
             }
             // The chart dialog records its final settings as a neutral parameter bag after it closes; those settings are not XML inputs.
