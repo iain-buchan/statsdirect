@@ -33,6 +33,7 @@ internal static partial class Program
         {
             if (args.Contains("--office-svg-only")) { await CheckOfficeSvgClipboard(); }
             else if (args.Contains("--notebook-only")) { await CheckNotebook(); await CheckNotebookImport(); }
+            else if (args.Contains("--context-menu-only")) { await CheckRealContextMenu(); }
             else
             {
                 if (!args.Contains("--svg-import-only")) { await CheckLegacyReports(); await Run(); await InteroperabilityChecks(); await CheckToolbar(); await CheckChartAlignment(); await CheckNotebook(); await CheckNotebookImport(); }
@@ -186,6 +187,7 @@ internal static partial class Program
         await CheckPanesHidden();
         await CheckRecordRoundTrip();
         await CheckContinueInRLabel();
+        await CheckRealContextMenu();
         await CheckChartFiles();
         await CheckFindReplace();
     }
