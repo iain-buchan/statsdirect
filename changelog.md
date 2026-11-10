@@ -6,6 +6,7 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
 ### Fixed
 - Offline report HTML sanitization uses DOMPurify 3.4.17 again: the report editor, import and export bundles of 5.3.9 had been built with 3.4.16, although the licence notice and this changelog said 3.4.17, and the build now refuses to bundle a library at a version other than the stated one.
+- A recently used file on a drive that is not there when StatsDirect starts, such as a USB stick not plugged in or a network drive that is mapped later, stays in the recent files list: a file is taken off the list at start-up only when its drive is there and the file is not.
 
 ##[v5.3.9] 2026-11-09
 

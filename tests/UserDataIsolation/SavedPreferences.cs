@@ -53,6 +53,16 @@ internal static partial class Program
     static readonly Rectangle[] Laptop = { new(0, 0, 1920, 1040) }; // the working area of a 1920 by 1080 screen above its taskbar
     static string Json(string text) => JsonSerializer.Serialize(text);
 
+    // A file on a drive letter that has no volume now. It is a name only: nothing is read or made there.
+    static string OnAbsentVolume(string name)
+    {
+        HashSet<char> present = DriveInfo.GetDrives().Select(drive => char.ToUpperInvariant(drive.Name[0])).ToHashSet();
+        for (char letter = 'Z'; letter >= 'D'; letter--)
+            if (!present.Contains(letter) && !Directory.Exists(letter + ":" + Path.DirectorySeparatorChar))
+                return letter + ":" + Path.DirectorySeparatorChar + name;
+        throw new InvalidOperationException("Every drive letter has a volume, so a file on an absent one cannot be named.");
+    }
+
     // The chart defaults take saved markers and fonts as saved; a damaged one gives way to the default instead of stopping a chart
     static void CheckSavedChartPreferences()
     {
@@ -306,6 +316,12 @@ internal static partial class Program
             "recent files keep the latest mention of each fully qualified file still there, the most recent last");
         Check(LoadText("{\"recentFileList\": [" + string.Join(", ", files.Select(Json)) + "]}").RecentFileList.SequenceEqual(files.Skip(2)),
             $"no more than the {Settings.MAX_RECENT_FILES} most recent files are kept");
+        // A file whose volume is not there (a USB stick not plugged in, a drive that a login script maps later) is kept: only a file that
+        // its own volume says has gone is taken off, or the next save would forget it. The path is only named here; nothing is made there.
+        string absent = OnAbsentVolume("recent file on a drive not plugged in.xlsx");
+        IReadOnlyList<string> away = LoadText("{\"recentFileList\": [" + Json(absent) + ", " + Json(deleted) + ", " + Json(files[0]) + "]}").RecentFileList;
+        Check(away.SequenceEqual(new[] { absent, files[0] }),
+            $"a recent file whose volume is absent ({absent[..2]}) is kept, while one that its volume says has gone is taken off: " + string.Join(" | ", away.Select(Path.GetFileName)));
         Check(loads > 100 && writes == 0, $"none of the {loads} loads of good, damaged and partial files wrote to the profile");
 
         // The start-up's own load: the profile's preferences replace the defaults only when it runs, on this computer's screens, without a write

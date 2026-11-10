@@ -178,7 +178,7 @@ namespace StatsDirect.UI.Properties
             {
                 // Whether each is still there is asked of its disk now, all together; SettleRecentFiles applies the answers
                 RecentFileList = recentFiles;
-                recentFileChecks = recentFiles.ToDictionary(path => path, path => Task.Run(() => File.Exists(path)), StringComparer.Ordinal);
+                recentFileChecks = recentFiles.ToDictionary(path => path, path => Task.Run(() => IsThereOrItsVolumeIsNot(path)), StringComparer.Ordinal);
                 recentFileChecksBegan = Environment.TickCount64;
             }
             SelectGroupsByIdentifier = ReadBoolean(saved, nameof(SelectGroupsByIdentifier), SelectGroupsByIdentifier);
@@ -266,8 +266,9 @@ namespace StatsDirect.UI.Properties
         /// <summary>
         /// Takes off the recent files those the load found are no longer there, waiting for the answers no longer than a second from the
         /// load. A file whose disk has not answered by then, such as one on a server that cannot be reached, is kept, so the start is not
-        /// held up; opening it then, if it has gone, takes it off the list. Load applies the answers itself unless it is told not to, as
-        /// the start-up's own load is; the start-up applies them just before the main window lists the files.
+        /// held up; opening it then, if it has gone, takes it off the list. A file whose volume is not there is kept as well. Load applies
+        /// the answers itself unless it is told not to, as the start-up's own load is; the start-up applies them just before the main
+        /// window lists the files.
         /// </summary>
         internal void SettleRecentFiles()
         {
@@ -286,6 +287,13 @@ namespace StatsDirect.UI.Properties
             }
             RecentFileList = RecentFileList?.Where(path => !(checks.TryGetValue(path, out Task<bool> exists) && exists.IsCompletedSuccessfully && !exists.Result)).ToList();
         }
+
+        /// <summary>
+        /// False only for a file that its own volume says has gone. File.Exists is false at once for a drive letter that has no volume,
+        /// such as a USB stick not plugged in or a drive that a login script maps later: that says nothing of the file, and the next
+        /// save would forget it.
+        /// </summary>
+        private static bool IsThereOrItsVolumeIsNot(string path) => File.Exists(path) || !Directory.Exists(Path.GetPathRoot(path));
 
         /// <summary>
         /// True if a worksheet can take the font: family;style;size as frmSpreadsheetGear reads it (Utilities.FontFromSaveString), with a
