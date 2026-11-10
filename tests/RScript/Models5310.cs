@@ -25,6 +25,8 @@ internal static partial class Program
             CheckModels5310PolynomialDroppedPowers(folder);
         if (only is null or "hl")
             CheckModels5310HosmerLemeshowWholeTotals(folder);
+        if (only is null)
+            CheckRound2Models(Path.Combine(folder, "round-two"));
     }
 
     private const string Models5310Dropped = "* error: drop this variable *";

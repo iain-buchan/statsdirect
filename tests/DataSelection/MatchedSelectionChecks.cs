@@ -95,7 +95,7 @@ internal static class MatchedSelectionChecks
         object instance = Activator.CreateInstance(selectionProcessor, new object[] { grid });
         var parameters = getEqual.GetParameters();
         object[] arguments = { 0, mode, Enum.Parse(parameters[2].ParameterType, "GroupIdentifier"), 1, ranges.Length,
-            "matched fixture", null, false, Enum.Parse(parameters[8].ParameterType, "Wide"), false, false, false, 7, null };
+            "matched fixture", null, false, Enum.Parse(parameters[8].ParameterType, "Wide"), false, false, false, 7, null, null };
         using var guard = new UnexpectedDialogGuard();
         DataFrame result = (DataFrame)getEqual.Invoke(instance, arguments);
         if (guard.Blocked) throw new InvalidOperationException("The valid matched-column fixture unexpectedly attempted to display a selection warning.");

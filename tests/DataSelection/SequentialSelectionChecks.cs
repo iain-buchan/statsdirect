@@ -59,7 +59,7 @@ internal static class SequentialSelectionChecks
         var methodParameters = equal.GetParameters();
         object[] args = { reference.MaxRows, parameter.SelectionMode,
             Enum.Parse(methodParameters[2].ParameterType, "GroupIdentifier"), 1, 1, "sequential fixture", null, false,
-            Enum.Parse(methodParameters[8].ParameterType, "Wide"), false, false, false, 13, reference.Variables[0].Origin as WorksheetOrigin };
+            Enum.Parse(methodParameters[8].ParameterType, "Wide"), false, false, false, 13, reference.Variables[0].Origin as WorksheetOrigin, null };
         using var guard = new MatchedSelectionChecks.UnexpectedDialogGuard();
         var result = (DataFrame)equal.Invoke(Activator.CreateInstance(selector, new object[] { grid }), args);
         if (guard.Blocked || (bool)args[10] || (bool)args[11] || proxy.ReadCount != 1)

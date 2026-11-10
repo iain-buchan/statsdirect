@@ -70,6 +70,8 @@ internal static partial class Program
                 if (recipe.File == "kappa.R")
                     parameters.UnionWith(new[] { "kappaGrades", "kappaTextGrades" }); // the native report's grade order and whether it contains text
             }
+            if (recipe.File == "poisson-regression.R")
+                parameters.Add("cov"); // optional sub-population chosen by PoissonRegressionIRR
             Match settings = Regex.Match(text, "^# settings:\\s*(.*)$", RegexOptions.Multiline);
             if (settings.Success)
                 foreach (string item in settings.Groups[1].Value.Split(',').Select(x => x.Trim()).Where(x => x.Contains('=')))

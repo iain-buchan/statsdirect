@@ -26,7 +26,7 @@ namespace StatsDirect.UI
         public static DataFrame ProcessCellArray(CellSelection cellSelection, DataAcquisitionMode mode, int rowLengthHint, bool isRefill, bool titleWasInData, int originGroup, string frameName)
             => ProcessCellArrayWithReference(cellSelection, mode, rowLengthHint, isRefill, titleWasInData, originGroup, frameName, null);
 
-        internal static DataFrame ProcessCellArrayWithReference(CellSelection cellSelection, DataAcquisitionMode mode, int rowLengthHint, bool isRefill, bool titleWasInData, int originGroup, string frameName, WorksheetOrigin rowReference)
+        internal static DataFrame ProcessCellArrayWithReference(CellSelection cellSelection, DataAcquisitionMode mode, int rowLengthHint, bool isRefill, bool titleWasInData, int originGroup, string frameName, WorksheetOrigin rowReference, IReadOnlyList<bool> codingRows = null)
         {
             // If we get here, the user selected some data.
             try
@@ -44,7 +44,7 @@ namespace StatsDirect.UI
                         frame = ProcessCellArrayNumericPreserveRows(cellSelection, rowLengthHint, isRefill, titleWasInData, originGroup);
                         break;
                     case DataAcquisitionMode.NumericCodingTextToDummiesPreserveRows:
-                        frame = ProcessCellArrayNumericCodingPreserveRows(cellSelection, rowLengthHint, isRefill, titleWasInData, originGroup, null, rowReference);
+                        frame = ProcessCellArrayNumericCodingPreserveRows(cellSelection, rowLengthHint, isRefill, titleWasInData, originGroup, null, rowReference, codingRows);
                         break;
                     case DataAcquisitionMode.GroupIdentifiers:
                     case DataAcquisitionMode.CategoryReplaceMissing:
@@ -713,9 +713,10 @@ namespace StatsDirect.UI
         }
 
         /// <summary>Read aligned predictors before asking how any categorical values should be coded.</summary>
-        internal static DataFrame ProcessCellArrayNumericCodingPreserveRows(CellSelection cellSelection, int rowLengthHint, bool isRefill, bool titleWasInData, int originGroup, ITemplateHost host = null, WorksheetOrigin rowReference = null)
+        internal static DataFrame ProcessCellArrayNumericCodingPreserveRows(CellSelection cellSelection, int rowLengthHint, bool isRefill, bool titleWasInData, int originGroup, ITemplateHost host = null, WorksheetOrigin rowReference = null, IReadOnlyList<bool> codingRows = null)
         {
             DataFrame frame = new();
+            bool CanCode(int row) => codingRows == null || row < codingRows.Count && codingRows[row];
             foreach (CellColumnSelection column in cellSelection.ColumnSelections)
             {
                 DoubleVariable numeric = ReadSelectedNumericColumn(column, rowLengthHint, isRefill, titleWasInData, originGroup, out string[] texts);
@@ -732,7 +733,7 @@ namespace StatsDirect.UI
                 }
                 bool textual = false;
                 for (int row = 0; row < numeric.Length; row++)
-                    if (numeric.Data[row] == Constant.MISSING && !string.IsNullOrWhiteSpace(texts[row]) && !IsMissingRowText(texts[row].Trim()))
+                    if (CanCode(row) && numeric.Data[row] == Constant.MISSING && !string.IsNullOrWhiteSpace(texts[row]) && !IsMissingRowText(texts[row].Trim()))
                         textual = true;
 
                 ClassifierVariable classifier = new() { Title = numeric.Title };
@@ -742,6 +743,7 @@ namespace StatsDirect.UI
                 int observed = 0;
                 for (int row = 0; row < numeric.Length; row++)
                 {
+                    if (!CanCode(row)) continue;
                     double value = numeric.Data[row];
                     string pattern;
                     if (textual)
