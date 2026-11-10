@@ -125,16 +125,26 @@ internal static partial class Program
         double[] followExpected = AcquisitionCoefficients(followOutput.ParameterBag);
         int[] completePairs = Enumerable.Range(0, count)
             .Where(i => !RunRecord.Missing(originalX[i]) && !RunRecord.Missing(originalY[i])).OrderBy(i => originalX[i]).ToArray();
+        string followFolder = Path.Combine(folder, label + "-degree3");
+        Directory.CreateDirectory(followFolder);
+        // Compare the original double values without routing the expected data through R's decimal parser.
+        using (var pairs = new BinaryWriter(File.Create(Path.Combine(followFolder, "expected-pairs.bin"))))
+        {
+            foreach (int i in completePairs) pairs.Write(originalX[i]);
+            foreach (int i in completePairs) pairs.Write(originalY[i]);
+        }
         string followR = RunR(followScript.Text + $$"""
 
             expected <- c({{string.Join(",", followExpected.Select(value => value.ToString("R", inv)))}})
-            expected_x <- c({{string.Join(",", completePairs.Select(i => originalX[i].ToString("R", inv)))}})
-            expected_y <- c({{string.Join(",", completePairs.Select(i => originalY[i].ToString("R", inv)))}})
+            pair_count <- {{completePairs.Length}}L
+            pairs <- readBin("expected-pairs.bin", "double", n = 2L * pair_count, size = 8L, endian = "little")
+            expected_x <- pairs[seq_len(pair_count)]
+            expected_y <- pairs[pair_count + seq_len(pair_count)]
             stopifnot(degree == 3L, is.numeric(size), is.numeric(kwh),
                       identical(as.numeric(size), expected_x), identical(as.numeric(kwh), expected_y),
                       length(coef(fit)) == length(expected), all(abs(coef(fit) - expected) < 1e-7 * pmax(1, abs(expected))))
             cat("POLYNOMIAL DEGREE CHANGE VERIFIED\n")
-            """, Path.Combine(folder, label + "-degree3"));
+            """, followFolder);
         Check(followScript.HasRecipe && !followScript.DataUnavailable && followR.Contains("POLYNOMIAL DEGREE CHANGE VERIFIED"),
             "polynomial " + label + " reopened degree-change R replay binds original X/Y pairs rather than predictor labels and matches native degree-three coefficients");
         if (!embedded)
