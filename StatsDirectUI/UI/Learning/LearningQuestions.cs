@@ -39,12 +39,23 @@ internal sealed partial class LearningService
         string userMessageId = body.S("userMessageID");
         try
         {
-            if (ChatGPTTutor.Disabled) throw new InvalidOperationException(ChatGPTTutor.PolicyMessage);
+            Tutor.CheckPolicy();
             if (State?["quiz"].S("mode") == "test" && State["quiz"]?["completedAt"] == null) throw new InvalidOperationException("Finish or end the independent practice before asking the tutor.");
             if (Tutor.Email == null) throw new InvalidOperationException("Choose Use my ChatGPT to connect, then send your question.");
             var lesson = Lesson(body.S("lesson")) ?? throw new InvalidDataException("Choose a current lesson.");
+            bool guidanceOnly = Tutor.DataSharingDisabled;
+            var messages = body.A("messages");
+            if (guidanceOnly)
+            {
+                // The web view's history can include imported lesson titles and past data.
+                // Use only the text of the current question saved by the composer.
+                var current = State.A("conversation").LastOrDefault();
+                if (userMessageId.Length == 0 || current.S("id") != userMessageId || current.S("role") != "user")
+                    throw new InvalidOperationException("The question could not be read from your learning record. Please send it again.");
+                messages = new JsonArray(new JsonObject { ["role"] = "user", ["text"] = current.S("text").Limit(4000) });
+            }
             string choice = view.SourceId;
-            var approved = choice == "__none__" ? Array.Empty<StatsDirectForm>() : Documents.Where(d => choice.Length == 0 || d.Id() == choice).ToArray();
+            var approved = guidanceOnly || choice == "__none__" ? Array.Empty<StatsDirectForm>() : Documents.Where(d => choice.Length == 0 || d.Id() == choice).ToArray();
             // Capture revisions before displaying consent; no snapshot is sent or read until it is granted.
             var revisions = approved.OfType<frmSpreadsheetGear>().ToDictionary(d => d.Id(), d => d.LearningVersion);
             if (approved.Length > 0)
@@ -53,6 +64,7 @@ internal sealed partial class LearningService
                 bool reused = Sharing.Accepts(dataIds);
                 var decision = reused ? SharingDecision.Share : ConfirmSharing?.Invoke(approved) ?? AskSharing(main, approved);
                 pending.Token.ThrowIfCancellationRequested();
+                Tutor.CheckPolicy(mayShareData: !guidanceOnly);
                 if (decision == SharingDecision.Cancel) throw new OperationCanceledException("Document sharing cancelled. No question or document context was sent.");
                 if (decision == SharingDecision.LessonsOnly) { approved = []; view.SourceId = "__none__"; }
                 else
@@ -65,27 +77,33 @@ internal sealed partial class LearningService
                     Sharing.Approve(dataIds);
                 }
             }
-            workspace = new QuestionContext(approved, false, pending.Token, Sharing);
+            workspace = new QuestionContext(approved, false, pending.Token, Sharing, Tutor, guidanceOnly);
             await workspace.CaptureReportsAsync();
-            string context = TeachingContext(lesson, body);
-            string metadata = workspace.InitialContext(14000).ToJsonString();
-            if (metadata.Length > 14000) throw new InvalidOperationException("The selected document context is too large. Choose fewer documents for this question.");
-            context += "\nCURRENT APPROVED WORKSPACE (separate from teaching examples):\n" + metadata;
+            string context = TeachingContext(lesson, body, guidanceOnly);
+            if (!guidanceOnly)
+            {
+                string metadata = workspace.InitialContext(14000).ToJsonString();
+                if (metadata.Length > 14000) throw new InvalidOperationException("The selected document context is too large. Choose fewer documents for this question.");
+                context += "\nCURRENT APPROVED WORKSPACE (separate from teaching examples):\n" + metadata;
+            }
             RememberRContext(id, userMessageId, workspace);
-            var reply = await Tutor.ConverseAsync(context, body.A("messages"), workspace.Tools, false,
+            var reply = await Tutor.ConverseAsync(context, messages, workspace.Tools, false,
                 text => { if (question == pending && !view.IsDisposed) _ = view.CallAsync("partial", new JsonObject { ["id"] = id, ["text"] = text }); },
                 async (name, arguments) =>
                 {
                     if (question == pending && !view.IsDisposed) _ = view.CallAsync("toolActivity", new JsonObject { ["id"] = id, ["text"] = "The tutor is reading " + name.Replace('_', ' ') + "…" });
                     var result = await workspace.CallAsync(name, arguments); if (!view.IsDisposed) RememberRContext(id, userMessageId, workspace); return result;
-                }, pending.Token);
+                }, pending.Token, guidanceOnly: guidanceOnly);
             workspace.Check();
             if (view.IsDisposed) return;
             RememberRContext(id, userMessageId, workspace);
             // Rendering the reply re-enables Send in the shared web UI. Release this request
             // first, so an immediate next question cannot hit a stale busy flag.
             if (question == pending) { question = null; requestId = null; }
-            await view.CallAsync("reply", new JsonObject { ["id"] = id, ["text"] = reply.Text, ["model"] = reply.Model, ["responseID"] = reply.ResponseID, ["promptVersion"] = "statsdirect-chatgpt-tutor-v4", ["workspaceSources"] = new JsonArray(approved.Select(d => (JsonNode)JsonValue.Create(d.Text)).ToArray()), ["courseSources"] = new JsonArray(new JsonObject { ["id"] = "library:" + lesson.S("id"), ["title"] = lesson.S("title") + " · " + lesson.S("contentVersion") }) });
+            var courseSources = new JsonArray();
+            if (!guidanceOnly || !lesson.B("providerCourse"))
+                courseSources.Add(new JsonObject { ["id"] = "library:" + lesson.S("id"), ["title"] = lesson.S("title") + " · " + lesson.S("contentVersion") });
+            await view.CallAsync("reply", new JsonObject { ["id"] = id, ["text"] = reply.Text, ["model"] = reply.Model, ["responseID"] = reply.ResponseID, ["promptVersion"] = "statsdirect-chatgpt-tutor-v4", ["workspaceSources"] = new JsonArray(approved.Select(d => (JsonNode)JsonValue.Create(d.Text)).ToArray()), ["courseSources"] = courseSources });
         }
         catch (Exception ex)
         {
@@ -94,8 +112,16 @@ internal sealed partial class LearningService
         }
         finally { if (question == pending) { question = null; requestId = null; } if (question == null) RefreshWorkspace(); }
     }
-    internal string TeachingContext(JsonNode lesson, JsonObject body)
+    internal string TeachingContext(JsonNode lesson, JsonObject body, bool guidanceOnly = false)
     {
+        if (guidanceOnly && lesson.B("providerCourse")) return "";
+        var curated = new JsonObject();
+        foreach (string field in new[] { "id", "title", "objective", "summary", "steps", "challenge", "r", "contentVersion", "review", "prerequisites", "learningObjectives", "keyConcepts", "misconceptions", "workedExample", "teachingPrompts", "rProgression", "sources", "assessmentIds", "practiceQuestions" })
+            if (lesson[field] != null) curated[field] = lesson[field].DeepClone();
+        string material = curated.ToJsonString();
+        if (material.Length > 10000) { curated.Remove("r"); material = curated.ToJsonString(); }
+        if (material.Length > 10000) throw new InvalidOperationException("This lesson is too large for tutor context. Use its guide and ask a shorter question.");
+        if (guidanceOnly) return "BUNDLED STATSDIRECT LESSON:\n" + material;
         var goals = new JsonObject();
         foreach (string key in new[] { "statisticalSkills", "needs", "qualifications", "priorKnowledge", "targetDate", "style" }) goals[key] = body["learningGoals"].S(key).Limit(1000);
         var training = new JsonObject();
@@ -103,12 +129,6 @@ internal sealed partial class LearningService
         foreach (string key in new[] { "providerName", "courseTitle", "courseVersion", "requirements", "cpdStatement", "assessmentType" }) training[key] = State?["training"].S(key).Limit(500);
         var intro = new JsonObject { ["profile"] = body.S("profile").Limit(100), ["stage"] = body.S("stage").Limit(100), ["learningGoals"] = goals, ["training"] = training, ["practiceContext"] = body.S("practiceContext").Limit(6000) };
         string prefix = intro.ToJsonString().Limit(8000);
-        var curated = new JsonObject();
-        foreach (string field in new[] { "id", "title", "objective", "summary", "steps", "challenge", "r", "contentVersion", "review", "prerequisites", "learningObjectives", "keyConcepts", "misconceptions", "workedExample", "teachingPrompts", "rProgression", "sources", "assessmentIds", "practiceQuestions" })
-            if (lesson[field] != null) curated[field] = lesson[field].DeepClone();
-        string material = curated.ToJsonString();
-        if (material.Length > 10000) { curated.Remove("r"); material = curated.ToJsonString(); }
-        if (material.Length > 10000) throw new InvalidOperationException("This lesson is too large for tutor context. Use its guide and ask a shorter question.");
         var excerpts = CoursePack.Excerpts(pack, body.A("messages").LastOrDefault().S("text") + " " + lesson.S("topic"));
         string sources = excerpts.ToJsonString();
         while (prefix.Length + material.Length + sources.Length > 17000 && excerpts.Count > 0) { excerpts.RemoveAt(excerpts.Count - 1); sources = excerpts.ToJsonString(); }

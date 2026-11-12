@@ -32,6 +32,7 @@ body.study-mode{height:100vh;height:100dvh;display:flex;flex-direction:column;ov
 .workspace-context[hidden]{display:none}
 .workspace-context label{margin:0;font-size:11px;white-space:nowrap}
 .workspace-controls{display:flex;align-items:center;gap:10px;flex:none}
+body[data-guidance-only] :is(.workspace-controls,#connectionPrivacy){display:none}
 .workspace-controls select{width:210px;margin:0;padding:4px 7px;font-size:11px}
 .workspace-controls button{font-size:11px;padding:2px 0}
 .workspace-context small{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#476974;font-size:10px}

@@ -117,6 +117,9 @@ internal sealed class LearningView : StatsDirectForm
         var browser = Browser;
         if (NeedsRecovery || browser.CoreWebView2 == null) return null;
         string expression = "window.statsDirectLearn?.[" + JsonSerializer.Serialize(action) + "](" + (value?.ToJsonString() ?? "null") + ")";
+        // Keep the shared Learning contract intact. Its document list also serves local evidence capture.
+        if (action == "workspace")
+            expression = "(document.body.toggleAttribute('data-guidance-only'," + (value.B("guidanceOnly") ? "true" : "false") + ")," + expression + ")";
         string result;
         try
         {
