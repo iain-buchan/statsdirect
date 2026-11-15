@@ -2,6 +2,11 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
+##[Unreleased]
+
+### Added
+- Administrators can restrict online AI in Learning, Script AI and Report AI with the Windows policy value AISecurityLevel. Level 2 sends only the typed question, keeping workbooks, scripts, reports and earlier conversation on the computer, and can require an organisation's ChatGPT Enterprise workspace. Level 3 blocks online AI. Restrictions are off unless an administrator sets them.
+
 ##[v5.3.10] 2026-11-11
 
 ### Changed

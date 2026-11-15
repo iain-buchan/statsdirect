@@ -248,9 +248,12 @@ For example, to set level 2 from an administrator terminal:
 reg.exe add "HKLM\Software\Policies\StatsDirect" /v AISecurityLevel /t REG_DWORD /d 2 /reg:64 /f
 ```
 
-An invalid level falls back to level 3. Existing nonzero `DisableAIDataSharing`
-in HKLM and `DisableOnlineTutor` in HKLM or HKCU can only make the effective
-policy stricter.
+Restrictions are off by default. Only administrators set them, through this
+policy key; StatsDirect has no setting of its own for them.
+
+An invalid level falls back to level 3. A nonzero `DisableAIDataSharing` in
+HKLM, introduced with these levels, and the earlier `DisableOnlineTutor` in
+HKLM or HKCU can only make the effective policy stricter.
 
 To require the Trust's ChatGPT Enterprise workspace at level 2, set the
 `ChatGPTWorkspaceId` string (`REG_SZ`) under the same HKLM policy key to the
