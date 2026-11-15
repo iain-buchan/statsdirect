@@ -2,10 +2,14 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
-##[Unreleased]
+##[v5.3.11] 2026-11-15
 
 ### Added
 - Administrators can restrict online AI in Learning, Script AI and Report AI with the Windows policy value AISecurityLevel. Level 2 sends only the typed question, keeping workbooks, scripts, reports and earlier conversation on the computer, and can require an organisation's ChatGPT Enterprise workspace. Level 3 blocks online AI. Restrictions are off unless an administrator sets them.
+- Learning has an expanded biostatistics and epidemiology course of 37 lessons and 108 practice questions, up from 12 lessons and 35 questions. New topics include study design, trial appraisal and power, diagnostic evidence, screening, survival with competing risks, regression models, measurement agreement, audit and control charts, causal adjustment, evidence synthesis, comparisons of three or more groups, complex surveys, interrupted time series, small-area rates and health economic evaluation.
+
+### Changed
+- The study context and R stage are set in Learning Options, and learners can practise every built-in question without changing their study context.
 
 ##[v5.3.10] 2026-11-11
 
