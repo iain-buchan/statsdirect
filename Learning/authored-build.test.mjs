@@ -186,11 +186,16 @@ test('compiled browser UI preserves authored pathways, counts, key, feedback and
       await page.goto(origin + '/Learn/index.html');
       await page.locator('#lessons button').first().click(); await page.locator('.lesson-guide').first().evaluate(node => node.open = true);
       assert.equal(await page.locator('#main h1').innerText(), content['lessons.json'][0].title);
-      assert.ok((await page.locator('.lesson-guide').innerText()).includes('Reviewer: Isolated QA author'));
+      assert.ok((await page.locator('.lesson-guide').innerText()).includes(content['lessons.json'][0].summary));
       if (evidence && choice === 'A') await page.screenshot({ path: path.join(evidence, 'compiled-authored-lesson.png'), fullPage: true });
       assert.equal(await page.locator('#lessons button').count(), 12);
-      for (const track of Object.keys(content['tracks.json'])) { await page.locator('#profile').selectOption(track); const expected = content['questions.json'].filter(q => q.track === track || q.track === 'core').length; assert.equal(await page.locator('#practiceNav span').innerText(), String(expected), track); }
-      await page.locator('#profile').selectOption('qaHealth'); await page.locator('#practiceNav').click(); await page.locator('#supported').click();
+      assert.equal(await page.locator('aside select').count(), 0);
+      await page.locator('#options').click();
+      const optionFields = page.locator('#main select');
+      assert.equal(await optionFields.nth(0).getAttribute('id'), 'optionProfile');
+      assert.equal(await optionFields.nth(1).getAttribute('id'), 'optionStage');
+      for (const track of Object.keys(content['tracks.json'])) { await page.locator('#optionProfile').selectOption(track); const expected = content['questions.json'].filter(q => q.track === track || q.track === 'core').length; assert.equal(await page.locator('#practiceNav span').innerText(), String(expected), track); }
+      await page.locator('#optionProfile').selectOption('qaHealth'); await page.locator('#practiceNav').click(); await page.locator('#supported').click();
       assert.equal(await page.locator('.question').innerText(), content['questions.json'][0].stem);
       await page.locator(`input[name=answer][value=${choice}]`).check(); await page.locator('#confidence').selectOption('fairly'); await page.getByRole('button', { name: 'Submit first answer', exact: true }).click();
       const feedback = await page.locator('#feedback').innerText(); assert.ok(feedback.includes(content['questions.json'][0].options.find(o => o.id === choice).feedback)); assert.ok(feedback.includes(content['questions.json'][0].explanation));
@@ -199,6 +204,20 @@ test('compiled browser UI preserves authored pathways, counts, key, feedback and
       const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('statsdirect-learning-preview'))); assert.equal(saved.quiz.questionIds.filter(id => id === 'QA-NEW-01').length, 1); assert.equal(saved.quiz.answers[0].correct, choice === 'A'); assert.equal(new Set(saved.quiz.questionIds).size, saved.quiz.questionIds.length);
       await page.reload(); assert.equal(await page.locator('#loadError').count(), 0); assert.ok((await page.locator('.question').innerText()).length > 0); assert.ok(!await page.locator('.question').innerText().then(text => text.includes('12 / 60')));
       if (evidence && choice === 'A') { await fs.mkdir(evidence, { recursive: true }); await page.screenshot({ path: path.join(evidence, 'compiled-practice.png'), fullPage: true }); }
+      if (choice === 'A') {
+        await page.locator('#endPractice').click();
+        await page.getByLabel('Question set').selectOption({ label: 'All questions' });
+        assert.equal(await page.locator('#practiceNav span').innerText(), String(content['questions.json'].length));
+        await page.locator('#independent').click();
+        await page.reload();
+        await page.locator('.question').waitFor();
+        const all = await page.evaluate(() => JSON.parse(localStorage.getItem('statsdirect-learning-preview')));
+        assert.equal(all.profile, 'qaHealth');
+        assert.equal(all.quiz.track, 'qaHealth');
+        assert.equal(all.quiz.questionSet, 'all');
+        assert.deepEqual(all.quiz.questionIds, content['questions.json'].map(q => q.id));
+        assert.match(await page.locator('#questionSetSummary').innerText(), /All questions/);
+      }
       await context.close();
     }
     assert.deepEqual(errors, []); assert.deepEqual(external, []);
