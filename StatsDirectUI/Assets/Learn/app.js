@@ -29,9 +29,9 @@
     mod
   ));
 
-  // node_modules/highlight.js/lib/core.js
+  // node_modules/.pnpm/highlight.js@11.12.0/node_modules/highlight.js/lib/core.js
   var require_core = __commonJS({
-    "node_modules/highlight.js/lib/core.js"(exports, module) {
+    "node_modules/.pnpm/highlight.js@11.12.0/node_modules/highlight.js/lib/core.js"(exports, module) {
       function deepFreeze(obj) {
         if (obj instanceof Map) {
           obj.clear = obj.delete = obj.set = function() {
@@ -1583,7 +1583,7 @@
     }
   });
 
-  // node_modules/marked/lib/marked.esm.js
+  // node_modules/.pnpm/marked@4.3.0/node_modules/marked/lib/marked.esm.js
   function getDefaults() {
     return {
       async: false,
@@ -3745,7 +3745,7 @@ ${content}</tr>
   var parser = Parser.parse;
   var lexer = Lexer.lex;
 
-  // node_modules/dompurify/dist/purify.es.mjs
+  // node_modules/.pnpm/dompurify@3.4.17/node_modules/dompurify/dist/purify.es.mjs
   function _OverloadYield(e2, d) {
     this.v = e2, this.k = d;
   }
@@ -5802,7 +5802,7 @@ ${content}</tr>
   }
   var purify_default = createDOMPurify();
 
-  // node_modules/katex/dist/katex.mjs
+  // node_modules/.pnpm/katex@0.19.0/node_modules/katex/dist/katex.mjs
   var ParseError = class _ParseError extends Error {
     // The underlying error message without any context added.
     constructor(message, token) {
@@ -20010,11 +20010,11 @@ ${content}</tr>
     __domTree
   };
 
-  // node_modules/highlight.js/es/core.js
+  // node_modules/.pnpm/highlight.js@11.12.0/node_modules/highlight.js/es/core.js
   var import_core = __toESM(require_core(), 1);
   var core_default = import_core.default;
 
-  // node_modules/highlight.js/es/languages/r.js
+  // node_modules/.pnpm/highlight.js@11.12.0/node_modules/highlight.js/es/languages/r.js
   function r(hljs) {
     const regex = hljs.regex;
     const IDENT_RE = /(?:(?:[a-zA-Z]|\.[._a-zA-Z])[._a-zA-Z0-9]*)|\.(?!\d)/;
