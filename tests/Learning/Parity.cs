@@ -8,6 +8,30 @@ internal static partial class Program
     {
         foreach (var lesson in JsonNode.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory,"Learn","lessons.json"))).AsArray())
             Check(service.TeachingContext(lesson,new JsonObject()).Length<32000,"updated lesson fits native tutor context: "+lesson.S("id"));
+        const string header = "BUNDLED STATSDIRECT LESSON:\n";
+        JsonObject PromptLesson(JsonObject lesson) => JsonNode.Parse(service.TeachingContext(lesson, new JsonObject(), true)[header.Length..]).AsObject();
+        var small = JsonNode.Parse("""{"id":"budget-test","r":"print(1)","review":{"notes":"Lesson reviewed"},"practiceQuestions":[{"id":"budget-question","stem":"What is one?","correct":"A","review":{"notes":"Question reviewed"}}]}""").AsObject();
+        Check(JsonNode.DeepEquals(PromptLesson(small), small), "a lesson inside the budget retains R and review metadata in the tutor prompt");
+
+        var longR = small.DeepClone().AsObject();
+        longR["r"] = new string('r', 10000);
+        var withoutR = PromptLesson(longR);
+        Check(withoutR["r"] == null && withoutR["review"] != null && withoutR["practiceQuestions"][0]["review"] != null,
+            "long R is dropped first and review metadata is retained when it fits");
+
+        var longReview = small.DeepClone().AsObject();
+        longReview["review"]["notes"] = new string('l', 6000);
+        longReview["practiceQuestions"][0]["review"]["notes"] = new string('q', 6000);
+        string authored = longReview.ToJsonString();
+        var withoutReviews = PromptLesson(longReview);
+        Check(withoutReviews["r"] == null && withoutReviews["review"] == null && withoutReviews["practiceQuestions"][0]["review"] == null &&
+            withoutReviews["practiceQuestions"][0].S("correct") == "A" && withoutReviews["practiceQuestions"][0].S("stem") == "What is one?" &&
+            longReview.ToJsonString() == authored, "a large review is omitted only from the outgoing prompt, preserving the authored lesson and question");
+
+        var oversized = small.DeepClone().AsObject();
+        oversized["summary"] = new string('s', 10000);
+        await Reject(() => { PromptLesson(oversized); return Task.CompletedTask; }, "irreducibly large lesson content is still rejected");
+
         var consent = new AISharingConsent();
         Check(!consent.Accepted && !consent.Accepts([]), "new application session has no acceptance");
         consent.SelectDataDocument("A"); consent.Approve(["A", "B"]); int revision = consent.Revision;

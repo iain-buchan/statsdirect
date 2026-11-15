@@ -120,6 +120,14 @@ internal sealed partial class LearningService
             if (lesson[field] != null) curated[field] = lesson[field].DeepClone();
         string material = curated.ToJsonString();
         if (material.Length > 10000) { curated.Remove("r"); material = curated.ToJsonString(); }
+        if (material.Length > 10000)
+        {
+            // Review metadata belongs in the authored records. It can be left out of a size-limited prompt.
+            curated.Remove("review");
+            if (curated["practiceQuestions"] is JsonArray questions)
+                foreach (var question in questions.OfType<JsonObject>()) question.Remove("review");
+            material = curated.ToJsonString();
+        }
         if (material.Length > 10000) throw new InvalidOperationException("This lesson is too large for tutor context. Use its guide and ask a shorter question.");
         if (guidanceOnly) return "BUNDLED STATSDIRECT LESSON:\n" + material;
         var goals = new JsonObject();

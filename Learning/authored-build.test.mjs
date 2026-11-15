@@ -82,14 +82,15 @@ after(async () => {
 });
 
 test('real authored build compiles changed lessons, a new question and its pathway without double counting', async () => {
-  const result = await run(); assert.equal(result.code, 0, result.stderr); assert.match(result.stdout, /12 lessons, 36 questions/);
+  const result = await run(); assert.equal(result.code, 0, result.stderr);
+  assert.ok(result.stdout.includes(`${baseline['lessons.json'].length} lessons, ${baseline['questions.json'].length + 1} questions`), result.stdout);
   const nativeLessons = JSON.parse(await fs.readFile(path.join(root, authoredOutputs[2]), 'utf8'));
-  assert.equal(nativeLessons[0].title, content['lessons.json'][0].title); assert.equal(nativeLessons.length, 12);
+  assert.equal(nativeLessons[0].title, content['lessons.json'][0].title); assert.equal(nativeLessons.length, baseline['lessons.json'].length);
   const code = await fs.readFile(path.join(root, authoredOutputs[0]), 'utf8');
   assert.ok(code.includes('QA-NEW-01')); assert.ok(code.includes('qaHealth')); assert.ok(code.includes('Changed main tutor content'));
   const bank = await resolveAuthoredTutor(root);
   assert.equal(bank.manifest.questionCount, baseline['questions.json'].length + 1);
-  assert.equal(new Set(content['questions.json'].map(q => q.id)).size, 36);
+  assert.equal(new Set(content['questions.json'].map(q => q.id)).size, baseline['questions.json'].length + 1);
   for (const question of baseline['questions.json']) assert.equal(content['questions.json'].filter(q => q.id === question.id).length, 1);
   assert.notDeepEqual(await outputs(), initialOutputs);
 });
@@ -188,7 +189,7 @@ test('compiled browser UI preserves authored pathways, counts, key, feedback and
       assert.equal(await page.locator('#main h1').innerText(), content['lessons.json'][0].title);
       assert.ok((await page.locator('.lesson-guide').innerText()).includes(content['lessons.json'][0].summary));
       if (evidence && choice === 'A') await page.screenshot({ path: path.join(evidence, 'compiled-authored-lesson.png'), fullPage: true });
-      assert.equal(await page.locator('#lessons button').count(), 12);
+      assert.equal(await page.locator('#lessons button').count(), content['lessons.json'].length);
       assert.equal(await page.locator('aside select').count(), 0);
       await page.locator('#options').click();
       const optionFields = page.locator('#main select');
