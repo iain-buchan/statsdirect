@@ -71,9 +71,16 @@ internal sealed partial class LearningService : IDisposable
     {
         ai?.RefreshWorkbooks();
         if (View == null || View.IsDisposed || !View.Ready.Task.IsCompletedSuccessfully || question != null) return;
+        var securityLevel = Tutor.SecurityLevel;
+        bool sharingRestricted = securityLevel != AISecurityLevel.Unrestricted;
+        if (sharingRestricted) View.SourceId = "__none__";
         var choices = new JsonArray(Documents.Select(d => (JsonNode)new JsonObject { ["id"] = d.Id(), ["title"] = d.Text, ["kind"] = Kind(d) }).ToArray());
-        string label = View.SourceId == "__none__" ? "Lessons only · open documents are not shared" : View.SourceId == "" ? "All open documents · session acceptance required" : "Selected context: " + Documents.FirstOrDefault(d => d.Id() == View.SourceId)?.Text;
-        _ = View.CallAsync("workspace", new JsonObject { ["choice"] = View.SourceId, ["choices"] = choices, ["label"] = label });
+        string label = securityLevel == AISecurityLevel.AIRestricted ? ChatGPTTutor.PolicyMessage
+            : sharingRestricted ? ChatGPTTutor.DataSharingPolicyMessage
+            : View.SourceId == "__none__" ? "Lessons only · open documents are not shared"
+            : View.SourceId == "" ? "All open documents · session acceptance required"
+            : "Selected context: " + Documents.FirstOrDefault(d => d.Id() == View.SourceId)?.Text;
+        _ = View.CallAsync("workspace", new JsonObject { ["choice"] = View.SourceId, ["choices"] = choices, ["label"] = label, ["guidanceOnly"] = sharingRestricted });
     }
     private void UpdateConnection()
     {
@@ -81,7 +88,11 @@ internal sealed partial class LearningService : IDisposable
         if (View?.IsDisposed == false) _ = View.CallAsync("settings", Settings());
         ai?.UpdateConnection();
     }
-    internal JsonObject Settings() => new() { ["configured"] = !ChatGPTTutor.Disabled && Tutor.Email != null, ["disabled"] = ChatGPTTutor.Disabled, ["service"] = "ChatGPT", ["label"] = ChatGPTTutor.Disabled ? "Online tutor disabled" : Tutor.Status, ["signingIn"] = !ChatGPTTutor.Disabled && Tutor.LoginUrl != null };
+    internal JsonObject Settings()
+    {
+        bool disabled = Tutor.Disabled;
+        return new() { ["configured"] = !disabled && Tutor.Email != null, ["disabled"] = disabled, ["service"] = "ChatGPT", ["label"] = disabled ? ChatGPTTutor.RestrictedLabel : Tutor.Status, ["signingIn"] = !disabled && Tutor.LoginUrl != null };
+    }
     internal async Task HandleAsync(LearningView view, JsonObject body)
     {
         if (view != View || view.IsDisposed || view.NeedsRecovery || disposed) return;
@@ -119,7 +130,7 @@ internal sealed partial class LearningService : IDisposable
                     if (view.NeedsRecovery || view.IsDisposed) return;
                     view.Loaded(); RefreshWorkspace();
                     if (view.OptionsOnReady) { view.OptionsOnReady = false; await view.CallAsync("showOptions"); }
-                    if (!ChatGPTTutor.Disabled) _ = RefreshAccountAsync();
+                    if (!Tutor.Disabled) _ = RefreshAccountAsync();
                 }
                 catch (Exception ex)
                 {
@@ -135,7 +146,8 @@ internal sealed partial class LearningService : IDisposable
             case "workspace":
                 if (question != null) break;
                 string choice = body.S("choice", view.SourceId);
-                if (choice is "" or "__none__" || Documents.Any(d => d.Id() == choice)) view.SourceId = ChatGPTTutor.Disabled ? "__none__" : choice;
+                if (Tutor.DataSharingDisabled) view.SourceId = "__none__";
+                else if (choice is "" or "__none__" || Documents.Any(d => d.Id() == choice)) view.SourceId = choice;
                 if (Documents.OfType<frmSpreadsheetGear>().Any(d => d.Id() == view.SourceId)) SelectAIDataDocument(view.SourceId);
                 RefreshWorkspace(); break;
             case "ask": await AskAsync(view, body); break;
@@ -151,8 +163,8 @@ internal sealed partial class LearningService : IDisposable
             case "exampleCourse": ImportPack(Path.Combine(SDConfiguration.InstallationDirectory, "Learn", "provider-course-example.json")); await view.CallAsync("coursePack", PackInfo()); break;
             case "importCoursePack":
                 if (question != null) throw new InvalidOperationException("Wait for the reply or stop it before changing course packs.");
-                using (var dialog = new OpenFileDialog { Title = "Import course materials — relevant extracts accompany questions sent to OpenAI", Filter = "Course materials|*.json;*.pdf;*.txt;*.md", Multiselect = true })
-                    if (dialog.ShowDialog(main) == DialogResult.OK) { ImportPack(dialog.FileNames); await view.CallAsync("coursePack", PackInfo()); await view.CallAsync("notice", JsonValue.Create("Course pack imported locally. Excerpts accompany your next tutor question; nothing was sent during import.")); }
+                using (var dialog = new OpenFileDialog { Title = Tutor.DataSharingDisabled ? "Import course materials for local use" : "Import course materials — relevant extracts accompany questions sent to OpenAI", Filter = "Course materials|*.json;*.pdf;*.txt;*.md", Multiselect = true })
+                    if (dialog.ShowDialog(main) == DialogResult.OK) { ImportPack(dialog.FileNames); await view.CallAsync("coursePack", PackInfo()); await view.CallAsync("notice", JsonValue.Create(Tutor.DataSharingDisabled ? "Course pack imported for local use." : "Course pack imported locally. Excerpts accompany your next tutor question; nothing was sent during import.")); }
                 break;
             case "importProviderReview":
                 using (var dialog = new OpenFileDialog { Title = "Import provider assessment response", Filter = "JSON response|*.json" })
@@ -223,19 +235,22 @@ internal sealed partial class LearningService : IDisposable
     }
     private async Task ConfigureTutorCoreAsync(IWin32Window owner)
     {
-        if (ChatGPTTutor.Disabled) throw new InvalidOperationException(ChatGPTTutor.PolicyMessage);
+        Tutor.CheckPolicy();
         if (Tutor.Runtime != null && !await Task.Run(() => Tutor.Runtime.IsValidAsync(CancellationToken.None)))
         {
             if (disposed || owner is Control { IsDisposed: true }) return;
+            Tutor.CheckPolicy();
             using var setup = new frmInstallTutor(Tutor.Runtime);
             if (setup.ShowDialog(owner) != DialogResult.OK) return;
         }
         if (disposed) return;
-        if (ChatGPTTutor.Disabled) throw new InvalidOperationException(ChatGPTTutor.PolicyMessage);
+        Tutor.CheckPolicy();
         await Tutor.RefreshAccountAsync();
+        string sharingNotice = Tutor.DataSharingDisabled ? ChatGPTTutor.DataSharingPolicyMessage
+            : "Questions and recent conversation go to OpenAI when you send. Document sharing starts off. Acceptance is remembered for this session until you select different data; only the documents selected for each question can be read.";
         if (Tutor.Email != null)
         {
-            if (MessageBox.Show(owner, "Connected as " + Tutor.Email + ". StatsDirect uses this account's Codex access and allowance. Questions and recent conversation go to OpenAI when you send. Document sharing starts off. Acceptance is remembered for this session until you select different data; only the documents selected for each question can be read.\n\nSign out of StatsDirect's ChatGPT connection?", "Tutor connection", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes) await Tutor.SignOutAsync();
+            if (MessageBox.Show(owner, "Connected as " + Tutor.Email + ". StatsDirect uses this account's Codex access and allowance. " + sharingNotice + "\n\nSign out of StatsDirect's ChatGPT connection?", "Tutor connection", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes) await Tutor.SignOutAsync();
         }
         else if (Tutor.LoginUrl != null)
         {
@@ -243,7 +258,7 @@ internal sealed partial class LearningService : IDisposable
             if (result == DialogResult.Yes) Process.Start(new ProcessStartInfo(Tutor.LoginUrl.AbsoluteUri) { UseShellExecute = true });
             if (result == DialogResult.No) await Tutor.CancelSignInAsync();
         }
-        else if (MessageBox.Show(owner, "Sign in with your own ChatGPT account; no API key is needed. Your plan's Codex access and allowance apply.\n\nEach Send shares your question and recent conversation with OpenAI. Learning also includes your learning preferences and relevant lesson/course extracts. Document sharing starts off. Acceptance is remembered for this session until you select different data; only the documents selected for each question can be read. Do not include person identifiers. Existing ChatGPT chats are not imported.\n\nOpen the sign-in page?", "Use my ChatGPT", MessageBoxButtons.OKCancel, MessageBoxIcon.Information) == DialogResult.OK)
+        else if (MessageBox.Show(owner, "Sign in with your own ChatGPT account; no API key is needed. Your plan's Codex access and allowance apply.\n\n" + sharingNotice + (Tutor.DataSharingDisabled ? "" : " Learning also includes your learning preferences and relevant lesson/course extracts. Do not include person identifiers.") + "\n\nOpen the sign-in page?", "Use my ChatGPT", MessageBoxButtons.OKCancel, MessageBoxIcon.Information) == DialogResult.OK)
             Process.Start(new ProcessStartInfo((await Tutor.SignInAsync()).AbsoluteUri) { UseShellExecute = true });
     }
     internal void CancelQuestion() { question?.Cancel(); }

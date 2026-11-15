@@ -43,7 +43,7 @@ internal sealed class ScriptAIPane : IDisposable
     internal bool IsOpen => session.IsVisible;
     private sealed class Conversation
     { internal JsonArray Messages = new(); internal string Draft = ""; internal bool ShareScript, ShareWorkbook; }
-    internal frmSpreadsheetGear[] SharedWorkbooks => ShareWorkbook.Checked ? service.Documents.OfType<frmSpreadsheetGear>().Where(g => !g.IsDisposed && !g.Disposing && g.MdiParent != null).ToArray() : Array.Empty<frmSpreadsheetGear>();
+    internal frmSpreadsheetGear[] SharedWorkbooks => ShareWorkbook.Checked && !service.Tutor.DataSharingDisabled ? service.Documents.OfType<frmSpreadsheetGear>().Where(g => !g.IsDisposed && !g.Disposing && g.MdiParent != null).ToArray() : Array.Empty<frmSpreadsheetGear>();
     private IEnumerable<string> SharedDataIds => SharedWorkbooks.Select(g => g.Id());
     private bool ReportMode => script is frmReportWebView;
     internal ScriptAIPane(frmMain main, LearningService service)
@@ -76,7 +76,7 @@ internal sealed class ScriptAIPane : IDisposable
         connection.Click += async (_, _) => { try { await service.ConfigureTutorAsync(view); } catch (Exception ex) { status.Text = ex.Message; } };
         ShareScript.CheckedChanged += (_, _) => ScopeChanged(); ShareWorkbook.CheckedChanged += (_, _) => ScopeChanged();
         Acknowledge.CheckedChanged += (_, _) => {
-            if (refreshing) return;
+            if (refreshing || service.Tutor.DataSharingDisabled) return;
             if (Acknowledge.Checked) {
                 service.Sharing.Approve(SharedDataIds); sharing.Visible = false;
                 if (status.Text == "Review the selected content and confirm sharing for this session." || status.Text == "The open workbooks changed. Review their data and confirm sharing again.") status.Text = "";
@@ -92,7 +92,7 @@ internal sealed class ScriptAIPane : IDisposable
         void FitContent()
         {
             int width = Math.Max(120, viewport.ClientSize.Width - SystemInformation.VerticalScrollBarWidth - layout.Padding.Horizontal - 12);
-            warning.MaximumSize = status.MaximumSize = new Size(width, 0);
+            warning.MaximumSize = status.MaximumSize = SharingOptions.MaximumSize = new Size(width, 0);
             // AutoSize checkboxes can clip wrapped text at high DPI. Measure the full label
             // and keep a scrollable minimum height for the conversation in small panes.
             foreach (var box in new[] { ShareScript, ShareWorkbook, Acknowledge })
@@ -129,14 +129,14 @@ internal sealed class ScriptAIPane : IDisposable
         _ = Transcript.ReopenAsync();
         _ = RefreshAccountAsync();
     }
-    private async Task RefreshAccountAsync() { try { if (!ChatGPTTutor.Disabled) await service.Tutor.RefreshAccountAsync(); } catch (Exception ex) { if (!disposed) status.Text = ex.Message; } }
+    private async Task RefreshAccountAsync() { try { if (!service.Tutor.Disabled) await service.Tutor.RefreshAccountAsync(); } catch (Exception ex) { if (!disposed) status.Text = ex.Message; } }
     internal void RefreshWorkbooks()
     {
         if (disposed || chat == null) return;
         var ids = service.Documents.OfType<frmSpreadsheetGear>().Where(g => !g.IsDisposed && !g.Disposing && g.MdiParent != null).Select(g => g.Id()).ToHashSet();
         bool changed = !openWorkbookIds.SetEquals(ids);
         openWorkbookIds = ids;
-        if (changed && ShareWorkbook.Checked)
+        if (changed && ShareWorkbook.Checked && !service.Tutor.DataSharingDisabled)
         {
             service.RevokeAISharing();
             status.Text = "The open workbooks changed. Review their data and confirm sharing again.";
@@ -145,10 +145,10 @@ internal sealed class ScriptAIPane : IDisposable
         SyncAcceptance(); UpdateControls();
     }
     internal void SessionSharingChanged() { Stop(); SyncAcceptance(); sharing.Visible = true; UpdateControls(); }
-    private void SyncAcceptance() { refreshing = true; Acknowledge.Checked = service.Sharing.Accepts(SharedDataIds); refreshing = false; }
+    private void SyncAcceptance() { refreshing = true; Acknowledge.Checked = !service.Tutor.DataSharingDisabled && service.Sharing.Accepts(SharedDataIds); refreshing = false; }
     private void ScopeChanged()
     {
-        if (refreshing) return;
+        if (refreshing || service.Tutor.DataSharingDisabled) return;
         service.ShareAIDocument = ShareScript.Checked; service.ShareAIWorkbook = ShareWorkbook.Checked;
         SyncAcceptance(); sharing.Visible = !Acknowledge.Checked;
         if (chat != null) { chat.ShareScript = ShareScript.Checked; chat.ShareWorkbook = ShareWorkbook.Checked; }
@@ -157,18 +157,21 @@ internal sealed class ScriptAIPane : IDisposable
     internal void UpdateConnection()
     {
         if (disposed) return;
-        connection.Text = ChatGPTTutor.Disabled ? "AI disabled by policy" : service.Tutor.Email != null ? "ChatGPT connection…" : service.Tutor.LoginUrl != null ? "Finish ChatGPT sign-in…" : "Use my ChatGPT";
         UpdateControls();
     }
     private void UpdateControls()
     {
-        bool busy = pending != null, share = ShareScript.Checked || ShareWorkbook.Checked;
-        Send.Enabled = !busy && !ChatGPTTutor.Disabled && (!share || Acknowledge.Checked);
-        Send.Text = service.Tutor.Email == null ? "Use my ChatGPT" : "Send"; stop.Enabled = busy;
-        connection.Enabled = !busy && !ChatGPTTutor.Disabled;
-        ShareScript.Enabled = ShareWorkbook.Enabled = Acknowledge.Enabled = !busy;
-        SharingOptions.Enabled = !busy;
-        SharingOptions.Text = sharing.Visible ? "Sharing for this session ▾" : share ? (Acknowledge.Checked ? "Confirmed: " + (ShareScript.Checked ? (ReportMode ? "report " : "script/output ") : "") + (ShareWorkbook.Checked ? "+ all open workbooks " : "") + "· Review sharing ▸" : "Review sharing ▸") : "Question only · Sharing options ▸";
+        var securityLevel = service.Tutor.SecurityLevel;
+        bool busy = pending != null, disabled = securityLevel == AISecurityLevel.AIRestricted, sharingRestricted = securityLevel != AISecurityLevel.Unrestricted;
+        bool share = !sharingRestricted && (ShareScript.Checked || ShareWorkbook.Checked);
+        Send.Enabled = !busy && !disabled && (!share || Acknowledge.Checked);
+        Send.Text = !disabled && service.Tutor.Email == null ? "Use my ChatGPT" : "Send"; stop.Enabled = busy;
+        connection.Text = disabled ? ChatGPTTutor.RestrictedLabel : service.Tutor.Email != null ? "ChatGPT connection…" : service.Tutor.LoginUrl != null ? "Finish ChatGPT sign-in…" : "Use my ChatGPT";
+        connection.Enabled = !busy && !disabled;
+        ShareScript.Enabled = ShareWorkbook.Enabled = Acknowledge.Enabled = !busy && !sharingRestricted;
+        SharingOptions.Enabled = !busy && !sharingRestricted;
+        if (sharingRestricted) sharing.Visible = false;
+        SharingOptions.Text = disabled ? ChatGPTTutor.PolicyMessage : sharingRestricted ? ChatGPTTutor.DataSharingPolicyMessage : sharing.Visible ? "Sharing for this session ▾" : share ? (Acknowledge.Checked ? "Confirmed: " + (ShareScript.Checked ? (ReportMode ? "report " : "script/output ") : "") + (ShareWorkbook.Checked ? "+ all open workbooks " : "") + "· Review sharing ▸" : "Review sharing ▸") : "Question only · Sharing options ▸";
     }
     private void SaveDraft() { if (chat != null) chat.Draft = Composer.Text; }
     private void Render()
@@ -187,6 +190,7 @@ internal sealed class ScriptAIPane : IDisposable
     internal async Task SendAsync()
     {
         if (pending != null || chat == null || script?.IsDisposed != false) return;
+        if (service.Tutor.Disabled) { status.Text = ChatGPTTutor.PolicyMessage; UpdateControls(); return; }
         if (service.Tutor.Email == null)
         {
             // a dropped connection comes back by itself while the sign-in is held; the set-up and sign-in only when it is not
@@ -196,33 +200,38 @@ internal sealed class ScriptAIPane : IDisposable
         }
         string question = Composer.Text.Trim(); if (question.Length == 0) { status.Text = "Enter a question."; return; }
         RefreshWorkbooks(); SyncAcceptance();
-        if ((ShareScript.Checked || ShareWorkbook.Checked) && !Acknowledge.Checked)
+        bool guidanceOnly = service.Tutor.DataSharingDisabled;
+        if (!guidanceOnly && (ShareScript.Checked || ShareWorkbook.Checked) && !Acknowledge.Checked)
         {
             // the reason the confirmation lapsed, when the open workbooks changed, stands; the general reminder otherwise
             if (status.Text != "The open workbooks changed. Review their data and confirm sharing again.") status.Text = "Review the selected content and confirm sharing for this session.";
             return;
         }
         var approved = new List<StatsDirectForm>();
-        if (ShareScript.Checked) approved.Add(script);
-        approved.AddRange(SharedWorkbooks);
+        if (!guidanceOnly)
+        {
+            if (ShareScript.Checked) approved.Add(script);
+            approved.AddRange(SharedWorkbooks);
+        }
         using var request = new CancellationTokenSource(); pending = request; var current = chat; bool reportMode = ReportMode;
-        var context = new QuestionContext(approved, true, request.Token, service.Sharing);
+        QuestionContext context = null;
         sharing.Visible = false; UpdateControls();
         try
         {
+            context = new QuestionContext(approved, true, request.Token, service.Sharing, service.Tutor, guidanceOnly);
             await context.CaptureReportsAsync(focusedResultId);
-            string reference = context.InitialContext().ToJsonString();
+            string reference = guidanceOnly ? "" : context.InitialContext().ToJsonString();
             if (reference.Length > 28000) throw new InvalidOperationException("The shared context is too large. Close some workbooks or turn off workbook sharing for this question.");
             current.Messages.Add(new JsonObject { ["role"] = "user", ["text"] = question, ["rSource"] = context.RSource }); Composer.Clear(); current.Draft = ""; partial = ""; Render();
-            status.Text = approved.Count == 0 ? "Sending the question and conversation only…" : "Sending the confirmed context…";
-            var reply = await service.Tutor.ConverseAsync(reference, current.Messages, context.Tools, true, text => { if (!disposed && pending == request && chat == current) { partial = text; Render(); } }, context.CallAsync, request.Token, report: reportMode);
+            status.Text = guidanceOnly ? "Sending your question…" : approved.Count == 0 ? "Sending the question and conversation only…" : "Sending the confirmed context…";
+            var reply = await service.Tutor.ConverseAsync(reference, current.Messages, context.Tools, true, text => { if (!disposed && pending == request && chat == current) { partial = text; Render(); } }, context.CallAsync, request.Token, report: reportMode, guidanceOnly: guidanceOnly);
             context.Check(); current.Messages.Add(new JsonObject { ["role"] = "assistant", ["text"] = reply.Text, ["rData"] = context.RData }); partial = "";
-            if (chat == current) { Render(); status.Text = "Reply received. Review suggested code before running. Earlier shared content remains in this conversation."; }
+            if (chat == current) { Render(); status.Text = guidanceOnly ? "Reply received. Review suggested code before running." : "Reply received. Review suggested code before running. Earlier shared content remains in this conversation."; }
         }
         catch (Exception ex)
         {
             if (chat == current && pending == request)
-            { if (partial.Length > 0) current.Messages.Add(new JsonObject { ["role"] = "assistant", ["text"] = partial + "\n[Reply stopped before completion.]", ["rData"] = context.RData }); partial = ""; if (Composer.Text.Length == 0) Composer.Text = question; Render(); status.Text = ex is OperationCanceledException ? "Reply stopped. Your question is kept here." : ex.Message; }
+            { if (partial.Length > 0) current.Messages.Add(new JsonObject { ["role"] = "assistant", ["text"] = partial + "\n[Reply stopped before completion.]", ["rData"] = context?.RData }); partial = ""; if (Composer.Text.Length == 0) Composer.Text = question; Render(); status.Text = ex is OperationCanceledException ? "Reply stopped. Your question is kept here." : ex.Message; }
         }
         finally { if (pending == request) { pending = null; if (!disposed) { SyncAcceptance(); UpdateControls(); } } }
     }

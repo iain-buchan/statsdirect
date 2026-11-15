@@ -43,7 +43,10 @@ internal static partial class Program
         main.EnsureStartupDocument();Check(main.MdiChildren.Length==1,"startup preserves an already-open document");
         var grid=(frmSpreadsheetGear)main.ActiveMdiChild;
         var node=Environment.GetEnvironmentVariable("STATSDIRECT_TEST_NODE")??throw new Exception("Set STATSDIRECT_TEST_NODE to an absolute Node executable path.");
-        using var tutor=new ChatGPTTutor(node,Path.Combine(root,"mock-account"),Path.Combine(AppContext.BaseDirectory,"Tutor"),Path.Combine(AppContext.BaseDirectory,"mock-server.mjs"));
+        TestSecurityLevelResolution();
+        var securityLevel = AISecurityLevel.Unrestricted;
+        using var tutor=new ChatGPTTutor(node,Path.Combine(root,"mock-account"),Path.Combine(AppContext.BaseDirectory,"Tutor"),Path.Combine(AppContext.BaseDirectory,"mock-server.mjs"))
+        { ReadSecurityLevel = () => securityLevel };
         using var service=new LearningService(main,Path.Combine(root,"Learning"),tutor);
         typeof(frmMain).GetField("learning",Members)!.SetValue(main,service);
         var menu=(MenuStrip)Field(main,"mnuMain");var help=menu.Items.OfType<ToolStripMenuItem>().Single(i=>i.Text.Replace("&","")=="Help");
@@ -87,6 +90,7 @@ internal static partial class Program
         using(var shot=File.Create(Path.Combine(artifacts,"learning-options.png")))await view.Browser.CoreWebView2.CapturePreviewAsync(CoreWebView2CapturePreviewImageFormat.Png,shot);
         await TestCourses(service,view);
         await TestTutor(tutor);
+        await TestTutorWorkspacePolicy(node);
         await TestLearningSelection(service,view);
         await TestConsent(main,service,view,grid);
         await TestParity(main,service,grid);
@@ -101,6 +105,7 @@ internal static partial class Program
         await TestFilteredReplay(main);
         await TestSavedRunRereads(main);
         await TestComposerKeys(service);
+        await TestAISecurityLevels(main, service, view, level => securityLevel = level);
         await TestHelpTopics(main,service);
         view.Close();await Task.Delay(80);service.Show(true);await service.View.Ready.Task.WaitAsync(TimeSpan.FromSeconds(40));await Task.Delay(100);
         Check((await JS(service.View,"document.getElementById('statisticalSkills').value")).GetValue<string>()=="advanced","reopening Learning restores learner settings from disk");

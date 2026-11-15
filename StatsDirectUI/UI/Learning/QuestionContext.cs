@@ -21,6 +21,8 @@ internal sealed class QuestionContext
     private readonly Dictionary<string, JsonObject> reports = new();
     private readonly AISharingConsent sharing;
     private readonly int sharingRevision;
+    private readonly ChatGPTTutor tutor;
+    private readonly bool guidanceOnly;
     private readonly CancellationToken token;
     private readonly bool scriptOnly;
     private readonly Dictionary<string, (frmSpreadsheetGear Grid, JsonObject Data)> datasets = new();
@@ -28,10 +30,12 @@ internal sealed class QuestionContext
     // Full local source is kept for Open R code, independently of the bounded AI excerpt.
     internal string RSource { get; }
     internal string RData => string.Join("\n", datasets.Values.Select(d => ConversationRScript.Dataset(d.Data)));
-    internal QuestionContext(IEnumerable<StatsDirectForm> documents, bool scriptOnly, CancellationToken token, AISharingConsent sharing = null)
+    internal QuestionContext(IEnumerable<StatsDirectForm> documents, bool scriptOnly, CancellationToken token, AISharingConsent sharing = null, ChatGPTTutor tutor = null, bool guidanceOnly = false)
     {
-        this.documents = documents.ToArray(); this.token = token; this.scriptOnly = scriptOnly;
-        this.sharing = sharing; sharingRevision = sharing?.Revision ?? 0;
+        tutor?.CheckPolicy(mayShareData: !guidanceOnly);
+        this.tutor = tutor; this.guidanceOnly = guidanceOnly;
+        this.documents = guidanceOnly ? [] : documents.ToArray(); this.token = token; this.scriptOnly = scriptOnly;
+        this.sharing = guidanceOnly ? null : sharing; sharingRevision = this.sharing?.Revision ?? 0;
         RSource = string.Join("\n\n", this.documents.OfType<frmScript>().Where(s => s.LearningLanguage == "R").Select(s => s.LearningScript));
         versions = this.documents.OfType<frmSpreadsheetGear>().ToDictionary(g => g.Id(), g => g.LearningVersion);
         foreach (var script in this.documents.OfType<frmScript>()) scripts[script.Id()] = new JsonObject { ["documentId"] = script.Id(), ["title"] = script.Text, ["kind"] = LearningService.Kind(script), ["language"] = script.LearningLanguage, ["script"] = script.LearningScript.Limit(12000), ["output"] = script.LearningOutput.Length > 8000 ? script.LearningOutput[^8000..] : script.LearningOutput, ["truncated"] = script.LearningScript.Length > 12000 || script.LearningOutput.Length > 8000, ["running"] = script.LearningRunning, ["snapshot"] = true };
@@ -39,8 +43,8 @@ internal sealed class QuestionContext
     internal void Check()
     {
         token.ThrowIfCancellationRequested();
+        tutor?.CheckPolicy(mayShareData: !guidanceOnly);
         if (sharing != null && sharing.Revision != sharingRevision) throw new OperationCanceledException("The shared data scope changed. Confirm sharing again before sending.");
-        if (ChatGPTTutor.Disabled) throw new InvalidOperationException(ChatGPTTutor.PolicyMessage);
         foreach (var doc in documents)
         {
             if (doc.IsDisposed || doc.MdiParent == null) throw new InvalidOperationException("A shared document closed. Send again to choose the current context.");
@@ -75,7 +79,9 @@ internal sealed class QuestionContext
     {
         get
         {
-            var tools = new JsonArray(Tool("statsdirect_workspace", "List only documents approved for this question.", new()), Tool("statsdirect_method_help", "Read bundled method help using a StatsDirect operation ID, never a path or URL.", new() { ["operation"] = StringType }, "operation"));
+            var tools = new JsonArray(Tool("statsdirect_method_help", "Read bundled method help using a StatsDirect operation ID, never a path or URL.", new() { ["operation"] = StringType }, "operation"));
+            if (guidanceOnly) return tools;
+            tools.Insert(0, Tool("statsdirect_workspace", "List only documents approved for this question.", new()));
             if (documents.OfType<frmSpreadsheetGear>().Any()) tools.Add(Tool("statsdirect_read_data", "Read literal worksheet rows from one approved workbook, preserving blanks and text. Use its documentId from statsdirect_workspace; titles can repeat. The result identifies the workbook and worksheet. Row numbers are 1-based; columns/sheetIndex 0-based. At most 32 columns and 4,000 cells. Never silently sampled. Exclude heading rows explicitly when calculating.", new() { ["documentId"] = StringType, ["sheetIndex"] = IntegerType, ["firstRow"] = new JsonObject { ["type"] = "integer", ["minimum"] = 1 }, ["lastRow"] = new JsonObject { ["type"] = "integer", ["minimum"] = 1 }, ["columns"] = new JsonObject { ["type"] = "array", ["items"] = IntegerType, ["minItems"] = 1, ["maxItems"] = 32 } }, "documentId"));
             if (documents.Any(d => d is frmScript or frmReportWebView)) tools.Add(Tool("statsdirect_read_document", "Read approved script/output snapshot or report. Does not run or edit code.", new() { ["documentId"] = StringType }, "documentId"));
             if (!scriptOnly && documents.OfType<frmSpreadsheetGear>().Any()) tools.Add(Tool("statsdirect_open_analysis", "Open a documented analysis in StatsDirect for the learner to select options and run. This does not itself calculate results.", new() { ["operation"] = StringType, ["documentId"] = StringType }, "operation", "documentId"));

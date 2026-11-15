@@ -229,10 +229,47 @@ The tutor uses the user's ChatGPT account and its Codex entitlement/allowance.
 The runtime has a separate CODEX_HOME and working directory, with Windows
 credential storage. Personal Codex configuration, API keys, plugins, filesystem
 tools, shell commands, web search and arbitrary code execution are disabled.
-Setting DWORD `DisableOnlineTutor=1` in HKLM or HKCU
-`Software\Policies\StatsDirect` disables the online tutor; local learning remains.
 
-Every Send includes the question and bounded conversation history. Learning also
+### Windows administrator AI policy
+
+Set the `AISecurityLevel` DWORD in `HKLM\Software\Policies\StatsDirect`
+(64-bit registry view) before starting StatsDirect. It applies to Learning,
+Script AI and Report AI.
+
+| Value | Level | Behaviour |
+| --- | --- | --- |
+| `1` or absent | Unrestricted (default) | Online AI and the existing consent-based sharing controls are available. |
+| `2` | Data sharing restricted | The tutor accepts the current question, with a bundled lesson where applicable and access to bundled method help. Workbooks, R source and console output, reports, imported course materials, learning preferences and earlier conversation stay local. Text typed or pasted into the question goes to OpenAI. |
+| `3` | AI restricted | StatsDirect blocks its online AI connection, sign-in and requests. Local analysis, R, lessons, practice and help remain available. |
+
+For example, to set level 2 from an administrator terminal:
+
+```powershell
+reg.exe add "HKLM\Software\Policies\StatsDirect" /v AISecurityLevel /t REG_DWORD /d 2 /reg:64 /f
+```
+
+An invalid level falls back to level 3. Existing nonzero `DisableAIDataSharing`
+in HKLM and `DisableOnlineTutor` in HKLM or HKCU can only make the effective
+policy stricter.
+
+To require the Trust's ChatGPT Enterprise workspace at level 2, set the
+`ChatGPTWorkspaceId` string (`REG_SZ`) under the same HKLM policy key to the
+workspace's UUID. Deploy both values and restart StatsDirect.
+
+```powershell
+reg.exe add "HKLM\Software\Policies\StatsDirect" /v ChatGPTWorkspaceId /t REG_SZ /d "<ChatGPT workspace UUID>" /reg:64 /f
+```
+
+StatsDirect passes the restriction to its own ChatGPT process. That process
+rejects new sign-ins and previously saved credentials for other workspaces,
+including personal workspaces. The Trust controls membership and SSO in its
+approved workspace. Machine-wide Codex requirements also apply to this process.
+With the string absent, level 2 permits guidance using the normal ChatGPT sign-in.
+A malformed value blocks the connection. Changing the effective workspace while
+StatsDirect is open stops the existing connection from sending further requests
+until StatsDirect restarts.
+
+With standard sharing settings, every Send includes the question and bounded conversation history. Learning also
 includes current learning preferences and bounded, cited course/lesson extracts.
 Local identity and reviewer email are excluded from tutor context. Document
 sharing starts off. Learning requires a fresh confirmation for each question,
