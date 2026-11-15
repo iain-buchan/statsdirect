@@ -21,8 +21,9 @@ internal static partial class Program
     static JsonArray Message(string text)=>new(new JsonObject{["role"]="user",["text"]=text});
     static async Task TestCourses(LearningService service,LearningView view)
     {
+        int bundledCount = (await JS(view,"document.querySelectorAll('[data-lesson]').length")).GetValue<int>();
         await service.HandleAsync(view,new JsonObject{["action"]="exampleCourse"});await Task.Delay(100);
-        Check((await JS(view,"document.querySelectorAll('[data-lesson]').length")).GetValue<int>()==15,"provider pack adds its three lessons to the shared library");
+        Check((await JS(view,"document.querySelectorAll('[data-lesson]').length")).GetValue<int>()==bundledCount+3,"provider pack adds its three lessons to the shared library");
         var saved=LearningJson.Read(Path.Combine(service.Storage,"course-pack.json"),2_000_000);
         Check(saved.I("schemaVersion")==2,"provider course schema is preserved");
         string bad=Path.Combine(root,"bad-course.json");var invalid=saved.DeepClone();invalid["provider"]["reviewEmail"]="x@example.invalid\r\nBcc: injected@example.invalid";File.WriteAllText(bad,invalid.ToJsonString());

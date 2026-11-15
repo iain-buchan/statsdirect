@@ -25,7 +25,7 @@ try{
   for(const f of ['lessons.json','provider-course-example.json'])fs.copyFileSync(path.join(repo,'StatsDirectUI/Assets/Learn',f),path.join(scratch,'Content/Learn',f));
   const {questions}=await import(pathToFileURL(path.join(scratch,'Learn/bank.mjs')));
   const lessons=JSON.parse(fs.readFileSync(path.join(scratch,'Content/Learn/lessons.json'),'utf8'));
-  for(const topic of new Set([...questions,...lessons].map(x=>x.help))){
+  for(const topic of new Set([...questions,...lessons].map(x=>x.help).filter(Boolean))){
     const source=path.resolve(repo,'StatsDirectUI/Assets/Help',topic);
     if(!source.startsWith(path.join(repo,'StatsDirectUI/Assets/Help')+path.sep))throw Error('Unexpected help path.');
     const target=path.join(scratch,'Content/Help',topic);fs.mkdirSync(path.dirname(target),{recursive:true});fs.copyFileSync(source,target);

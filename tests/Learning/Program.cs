@@ -77,7 +77,10 @@ internal static partial class Program
         help.DropDownItems["learningMenuItem"]!.PerformClick();
         await Wait(()=>service.View!=null,"Help > Learning dispatch opens the learning document");var view=service.View;
         await view.Ready.Task.WaitAsync(TimeSpan.FromSeconds(40));await Task.Delay(250);
-        Check((await JS(view,"document.querySelectorAll('[data-lesson]').length")).GetValue<int>()==12,"all twelve shared lessons render in Windows WebView2");
+        var bundledLessons = LearningJson.Read(Path.Combine(AppContext.BaseDirectory, "Learn", "lessons.json"), 2_000_000).AsArray();
+        var renderedLessonIds = (await JS(view, "Array.from(document.querySelectorAll('[data-lesson]'), lesson => lesson.dataset.lesson)")).AsArray();
+        Check(bundledLessons.Select(lesson => lesson.S("id")).SequenceEqual(renderedLessonIds.Select(id => id.GetValue<string>())),
+            "all bundled lesson IDs render in order in Windows WebView2");
         Check(File.Exists(Path.Combine(service.Storage,"portfolio.json")),"initial learning record is saved locally");
         help.DropDownItems["learningOptionsMenuItem"]!.PerformClick();await Task.Delay(150);
         Check((await JS(view,"Boolean(document.getElementById('statisticalSkills'))")).GetValue<bool>(),"Help > Learning Options selects the settings view");
