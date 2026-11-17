@@ -2,6 +2,12 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
+##[v5.3.13] 2026-11-17
+
+### Fixed
+- A large learning record can be exported again. A practice question is given in full the first time it appears in the exported record and referred to on later attempts, with every answer, confidence rating and line of reasoning kept, so a record of many repeated attempts stays within the export size limit. In such a record the attempts are numbered and each question in the PDF carries its identifier. A record in which no question repeats is exported as before.
+
+
 ##[v5.3.12] 2026-11-17
 
 ### Changed
