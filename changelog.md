@@ -2,6 +2,12 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
+##[v5.3.12] 2026-11-17
+
+### Changed
+- Learning makes better use of the window: the tutor and the lesson materials fit wide, narrow and short windows. The study-context and assessment options are clearer, and StatsDirect's own lessons are told apart from an imported course pack.
+- Notices in Learning can be dismissed.
+
 ##[v5.3.11] 2026-11-15
 
 ### Added
