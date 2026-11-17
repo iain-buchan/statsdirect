@@ -1,7 +1,7 @@
 {
   "repository": "https://github.com/iain-buchan/statisticalhelp.git",
   "commit": "6594ff4b35a321a03fd7468cb4ff1bf1f11d25af",
-  "tag": null,
+  "tag": "learning-v1.1.3",
   "hostContract": 1,
   "files": {
     "Learning/.gitattributes": "a79691a93b46e49ce460c26ef22afcc03d6eca1e63bf2edbc20e96159510f6c9",
