@@ -247,18 +247,20 @@ internal sealed partial class LearningService : IDisposable
         Tutor.CheckPolicy();
         await Tutor.RefreshAccountAsync();
         string sharingNotice = Tutor.DataSharingDisabled ? ChatGPTTutor.DataSharingPolicyMessage
-            : "Questions and recent conversation go to OpenAI when you send. Document sharing starts off. Acceptance is remembered for this session until you select different data; only the documents selected for each question can be read.";
+            : "Send shares your question and recent conversation with OpenAI. Learning also includes relevant learning options and course excerpts. Share documents only by selecting their context and confirming. This confirmation applies across Report, Script and Learning until you restart StatsDirect or select another data document. Keep person-identifiable data out of questions, documents and course packs.";
+        // The same sentences as the Mac sign-in dialog (Sources/LearnHost.swift), so both apps describe the account in one way.
+        const string accountUse = "StatsDirect AI uses the Codex allowance on your ChatGPT plan, including Free. Usage limits and workspace settings still apply. Lessons and practice are available without signing in.";
         if (Tutor.Email != null)
         {
-            if (MessageBox.Show(owner, "Connected as " + Tutor.Email + ". StatsDirect uses this account's Codex access and allowance. " + sharingNotice + "\n\nSign out of StatsDirect's ChatGPT connection?", "Tutor connection", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes) await Tutor.SignOutAsync();
+            if (MessageBox.Show(owner, "Connected as " + Tutor.Email + ".\n\n" + accountUse + "\n\n" + sharingNotice + (Tutor.DataSharingDisabled ? "" : " The Learning tutor can request StatsDirect calculations. Report and Script assistance can read selected context.") + "\n\nYour learning record stays on this PC when you sign out.\n\nSign out of StatsDirect's ChatGPT connection?", "Connected to ChatGPT", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes) await Tutor.SignOutAsync();
         }
         else if (Tutor.LoginUrl != null)
         {
-            var result = MessageBox.Show(owner, "Finish sign-in in your browser. Your question is kept here.\n\nYes: reopen the sign-in page. No: cancel sign-in.", "Finish ChatGPT sign-in", MessageBoxButtons.YesNoCancel);
+            var result = MessageBox.Show(owner, "Complete sign-in in your browser, then return to StatsDirect. Your draft question is kept here. The connection will update automatically.\n\nYes: reopen the sign-in page. No: cancel sign-in.", "Finish signing in to ChatGPT", MessageBoxButtons.YesNoCancel);
             if (result == DialogResult.Yes) Process.Start(new ProcessStartInfo(Tutor.LoginUrl.AbsoluteUri) { UseShellExecute = true });
             if (result == DialogResult.No) await Tutor.CancelSignInAsync();
         }
-        else if (MessageBox.Show(owner, "Sign in with your own ChatGPT account; no API key is needed. Your plan's Codex access and allowance apply.\n\n" + sharingNotice + (Tutor.DataSharingDisabled ? "" : " Learning also includes your learning preferences and relevant lesson/course extracts. Do not include person identifiers.") + "\n\nOpen the sign-in page?", "Use my ChatGPT", MessageBoxButtons.OKCancel, MessageBoxIcon.Information) == DialogResult.OK)
+        else if (MessageBox.Show(owner, "Sign in with your ChatGPT account in your browser. No API key is needed.\n\n" + accountUse + "\n\n" + sharingNotice + "\n\nOpen the sign-in page?", "Use my ChatGPT", MessageBoxButtons.OKCancel, MessageBoxIcon.Information) == DialogResult.OK)
             Process.Start(new ProcessStartInfo((await Tutor.SignInAsync()).AbsoluteUri) { UseShellExecute = true });
     }
     internal void CancelQuestion() { question?.Cancel(); }

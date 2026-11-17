@@ -200,7 +200,7 @@ namespace StatsDirect.UI
                 toolStrip.Visible = toolbarShown;
                 FitWindowTabsToText();   // the panel above the windows gives up the toolbar's height while it is hidden
             };
-            tipBatch.SetToolTip(chkBatchMode, "Run this function again automatically");
+            tipBatch.SetToolTip(chkBatchMode, "Start another run after this one. StatsDirect will ask for new data.");
             panelTypeStack = new Stack<PanelType>();
             ShowPanel(PanelType.Default, false);
             UpdateFileList();

@@ -41,7 +41,7 @@ internal sealed partial class LearningService
         {
             Tutor.CheckPolicy();
             if (State?["quiz"].S("mode") == "test" && State["quiz"]?["completedAt"] == null) throw new InvalidOperationException("Finish or end the independent practice before asking the tutor.");
-            if (Tutor.Email == null) throw new InvalidOperationException("Choose Use my ChatGPT to connect, then send your question.");
+            if (Tutor.Email == null) throw new InvalidOperationException("Choose Use my ChatGPT to connect your account, then send your question.");
             var lesson = Lesson(body.S("lesson")) ?? throw new InvalidDataException("Choose a current lesson.");
             bool guidanceOnly = Tutor.DataSharingDisabled;
             var messages = body.A("messages");

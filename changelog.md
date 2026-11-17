@@ -2,6 +2,19 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
+##[v5.3.12] 2026-11-17
+
+### Changed
+- Learning makes better use of the window: the tutor and the lesson materials fit wide, narrow and short windows. The study-context and assessment options are clearer, and StatsDirect's own lessons are told apart from an imported course pack.
+- Notices in Learning can be dismissed.
+- The ChatGPT sign-in messages use the same wording as StatsDirect for Mac and say that the Codex allowance of any ChatGPT plan, including Free, applies. The tip on the Batch option explains that StatsDirect will ask for new data for the next run.
+- The Script AI help page inside StatsDirect describes the administrator AI policy, and the kappa help page carries its current worked example.
+- StatsDirect's program files no longer record the folder they were built in.
+
+### Fixed
+- The learning record stays small: each practice question is saved once instead of once with every attempt, so repeated practice no longer reaches the size limit at which the record could not be saved. Records from earlier versions open as before; an earlier version refuses a record saved by this one and leaves it unchanged.
+- An exported learning record lists only the answered questions of a practice attempt that was ended early.
+
 ##[v5.3.11] 2026-11-15
 
 ### Added

@@ -16,7 +16,7 @@
          -test-operations 2.4 s off, 1.4 s on); a few calculation-heavy analyses take slightly longer the first time they run, and the longest calculations
          change by a few per cent either way (hot loops are re-optimised while they run). Results are the same either way. Measure before changing it. -->
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
-    <Version>5.3.11</Version>
+    <Version>5.3.12</Version>
     <AssemblyTitle>StatsDirect</AssemblyTitle>
     <AssemblyDescription>StatsDirect statistical analysis workbench</AssemblyDescription>
     <Company>StatsDirect Limited</Company>
@@ -29,7 +29,8 @@
     <!-- Keep the line numbers in the stack traces that error messages show, without installing a separate .pdb: the symbols are embedded in StatsDirect.dll,
          and source paths are recorded relative to the repository rather than to the folders of whoever built it. -->
     <DebugType>embedded</DebugType>
-    <PathMap>$(MSBuildProjectDirectory)=StatsDirectUI</PathMap>
+    <PathMap>$(MSBuildProjectDirectory)=StatsDirectUI,$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)/../StatsDirectRetire'))=StatsDirectRetire</PathMap>
+    <EnableSourceLink>false</EnableSourceLink>
   </PropertyGroup>
   <PropertyGroup>
 	<!-- Pull the SSG license string from the environment - make sure you set this in your environment variables on your build machine! -->

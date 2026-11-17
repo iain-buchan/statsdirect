@@ -397,7 +397,7 @@ internal sealed class ChatGPTTutor : IDisposable
         try
         {
             await RefreshAccountAsync(); token.ThrowIfCancellationRequested();
-            if (Email == null) throw new InvalidOperationException("Choose Use my ChatGPT and finish signing in before sending your question.");
+            if (Email == null) throw new InvalidOperationException("Choose Use my ChatGPT to connect your account first.");
             var selected = new List<JsonNode>(); int remaining = 60_000;
             // Earlier replies can quote previously shared data. Do not resend those conversations.
             foreach (var row in messages.TakeLast(guidanceOnly ? 1 : 40).Reverse())
