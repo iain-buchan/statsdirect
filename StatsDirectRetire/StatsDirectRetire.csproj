@@ -21,5 +21,6 @@
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
     <DebugType>embedded</DebugType>
     <PathMap>$(MSBuildProjectDirectory)=StatsDirectRetire</PathMap>
+    <EnableSourceLink>false</EnableSourceLink>
   </PropertyGroup>
 </Project>
