@@ -2,6 +2,13 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
+##[v5.3.15] 2026-11-20
+
+### Changed
+- When StatsDirect updates itself, it checks the downloaded installer before starting it: the file must be signed by StatsDirect Limited and be a newer version of StatsDirect than the one running. A download that fails the check is removed and StatsDirect stays open.
+- The check for a new version uses a secure (https) connection to www.statsdirect.com from the start.
+
+
 ##[v5.3.14] 2026-11-20
 
 ### Fixed
