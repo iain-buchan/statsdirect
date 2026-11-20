@@ -3,6 +3,7 @@ using Microsoft.Web.WebView2.WinForms;
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
@@ -147,11 +148,19 @@ internal sealed class ConversationView : UserControl
             int blockIndex = m.TryGetProperty("blockIndex", out var bi) && bi.TryGetInt32(out int block) ? block : -1;
             var messages = last?["messages"] as JsonArray;
             if (messages == null || messageIndex < 0 || messageIndex >= messages.Count) return;
-            var original = MessageText(messages[messageIndex], "text");
-            var blocks = CompletedCodeBlocks.Read(original, rOnly: what == "open");
-            if (what == "copy" && Array.IndexOf(blocks, code) < 0) return;
-            if (what == "open" && (blockIndex < 0 || blockIndex >= blocks.Length || blocks[blockIndex] != code)) return;
-            if (what is "copy" or "open" && code.Length > 0 && code.Length <= 200_000) CodeRequested?.Invoke(what, code, messageIndex, blockIndex);
+            int request = m.TryGetProperty("request", out var rq) && rq.TryGetInt32(out int number) ? number : -1;
+            if (what is not ("copy" or "open") || code.Length == 0 || code.Length > 200_000) return;
+            // The program reads the saved reply itself and uses its own text of the block the click means: the block at the
+            // page's position when its text as shown is the text clicked, otherwise the first block shown with that text.  When
+            // there is none it says so, and neither copies nor opens another block.
+            bool open = what == "open";
+            var blocks = CompletedCodeBlocks.ReadBlocks(MessageText(messages[messageIndex], "text"));
+            int found = CompletedCodeBlocks.Find(blocks, open ? blockIndex : -1, code, rOnly: open);
+            if (found < 0) { Notice?.Invoke(CompletedCodeBlocks.Unmatched); return; }
+            var chosen = open ? blocks.Where(b => b.R).ElementAt(found) : blocks[found];
+            CodeRequested?.Invoke(what, chosen.Text, messageIndex, found);
+            // The page's Copy button says "Copied" only once the program has copied.
+            if (!open && request >= 0) Post(new JsonObject { ["action"] = "copied", ["request"] = request });
         }
         catch (Exception ex) { Notice?.Invoke(ex.Message); }
     }

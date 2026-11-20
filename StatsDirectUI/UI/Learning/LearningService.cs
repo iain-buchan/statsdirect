@@ -158,7 +158,7 @@ internal sealed partial class LearningService : IDisposable
             case "copyCode": if (body.S("code").Length is > 0 and <= 100_000) Clipboard.SetText(body.S("code")); break;
             case "openRCode":
                 if (body.S("generation") == view.Generation && body.S("lessonID") == State.S("lesson") && body.I("blockIndex", -1) >= 0)
-                    OpenScript(LearningRScript(body.S("messageID"), body.S("lessonID"), body.I("blockIndex")), "Tutor example — review before running", false);
+                    OpenScript(LearningRScript(body.S("messageID"), body.S("lessonID"), body.I("blockIndex"), body.S("code")), "Tutor example — review before running", false);
                 break;
             case "exampleCourse": ImportPack(Path.Combine(SDConfiguration.InstallationDirectory, "Learn", "provider-course-example.json")); await view.CallAsync("coursePack", PackInfo()); break;
             case "importCoursePack":

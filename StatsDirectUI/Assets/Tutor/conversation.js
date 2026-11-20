@@ -20226,8 +20226,9 @@ ${content}</tr>
   var math2 = (text3, displayMode) => katex.renderToString(text3, { displayMode, throwOnError: false, trust: false, strict: "ignore", maxExpand: 500, maxSize: 20 });
   var renderer = new marked.Renderer();
   renderer.html = esc;
-  renderer.code = (code, language = "") => {
-    const isR = /^(r|rscript)$/i.test(language.trim());
+  renderer.code = (code, info = "") => {
+    const language = info.trim().split(/[ \t]+/, 1)[0].toLowerCase();
+    const isR = language === "r" || language === "rscript";
     return `<div class="code-block"><div class="code-actions"><span>${isR ? "R" : "Code"}</span><button type="button" data-code="copy">Copy</button>${isR ? '<button type="button" data-code="r">Open in R</button>' : ""}</div><pre><code>${isR ? core_default.highlight(code, { language: "r" }).value : esc(code)}</code></pre></div>`;
   };
   marked.use({ renderer, breaks: true, mangle: false, headerIds: false, extensions: [
@@ -20255,7 +20256,7 @@ ${content}</tr>
     };
     const render3 = (text3) => richText(text3).replaceAll('data-code="r"', 'data-code="open"');
     const rendered = [];
-    let partialElement = null, partialText = "", renders = 0, applied = 0, context = 0;
+    let partialElement = null, partialText = "", renders = 0, applied = 0, context = 0, requests = 0, copying = null;
     function bind(element) {
       element.querySelectorAll("a").forEach((a) => {
         if (!/^https?:\/\//i.test(a.getAttribute("href") ?? "")) a.removeAttribute("href");
@@ -20266,20 +20267,17 @@ ${content}</tr>
       });
       element.querySelectorAll("button[data-code]").forEach((button) => button.onclick = () => {
         const code = button.closest(".code-block").querySelector("code").textContent;
+        const request = ++requests;
+        if (button.dataset.code === "copy") copying = { request, button };
         post({
           action: "code",
           what: button.dataset.code,
           code,
           context,
+          request,
           messageIndex: [...container.children].indexOf(element),
           blockIndex: [...element.querySelectorAll("button[data-code=open]")].indexOf(button)
         });
-        if (button.dataset.code === "copy") {
-          button.textContent = "Copied";
-          setTimeout(() => {
-            button.textContent = "Copy";
-          }, 1500);
-        }
       });
       element.querySelectorAll("a").forEach((a) => {
         if (!/^https?:\/\//i.test(a.getAttribute("href") || "")) a.removeAttribute("href");
@@ -20436,8 +20434,18 @@ ${content}</tr>
       },
       update
     };
+    function copied(m) {
+      if (!copying || copying.request !== m.request) return;
+      const button = copying.button;
+      copying = null;
+      button.textContent = "Copied";
+      setTimeout(() => {
+        button.textContent = "Copy";
+      }, 1500);
+    }
     window.chrome?.webview?.addEventListener("message", (e) => {
       if (e.data && e.data.action === "update") update(e.data);
+      else if (e.data && e.data.action === "copied") copied(e.data);
     });
     post({ action: "ready" });
   })();

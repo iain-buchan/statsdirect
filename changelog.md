@@ -2,6 +2,14 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
+##[v5.3.14] 2026-11-20
+
+### Fixed
+- The Copy and Open in R buttons on a code block in an AI conversation now work wherever the block appears. In Script AI they did nothing when the R code was indented with tabs, or sat inside a numbered step or a quotation, and Copy still said "Copied". In Learning, Open in R could open a different block of the same reply. StatsDirect now finds the block that was clicked; where it cannot, it says so, and "Copied" appears only when the code has been copied.
+- Copy R code and Open R code in Script AI include R code that a reply placed inside a numbered step or a quotation.
+- A code block labelled with options, such as "r echo=FALSE", is shown as R in the conversation, as Copy R code and Open R code already treated it.
+
+
 ##[v5.3.13] 2026-11-17
 
 ### Fixed

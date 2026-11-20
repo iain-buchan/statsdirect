@@ -20,6 +20,7 @@ internal static partial class Program
         string opened = null; page.OpenLink = url => opened = url;
         var code = new List<(string what, string code)>(); var positions = new List<(int message, int block)>();
         page.CodeRequested += (what, text, message, block) => { code.Add((what, text)); positions.Add((message, block)); };
+        var notices = new List<string>(); page.Notice += notice => notices.Add(notice);
         await page.Ready.WaitAsync(TimeSpan.FromSeconds(45));
         async Task<JsonElement> Page(string script) => JsonDocument.Parse(await page.Browser.CoreWebView2.ExecuteScriptAsync(script)).RootElement.Clone();
         async Task<bool> PageTrue(string script) => (await Page(script)).ValueKind == JsonValueKind.True;
@@ -156,6 +157,29 @@ internal static partial class Program
         Check(code.Count == beforeRecoveryAction + 1 && code.Last() == ("open", "mean(c(1,2,3))"), "code actions work once after recovery without duplicate handlers");
         page.Update(Messages(("user", "Question retained across renderer crash")), "A later reply after recovery", false); await page.SettledAsync();
         Check((await page.TextAsync()).Contains("A later reply after recovery"), "streaming continues in the recovered conversation");
+        // Code the page and the program must agree on: a label with options, a block inside a numbered step, a line that begins
+        // with a tab.  The program finds the block the click means and gives its own text of it, with the tab kept.
+        string blocksReply = "```r echo=FALSE\nfirst <- 1\n```\n\n```python\nmiddle = 2\n```\n\n1. Then:\n\n    ```r\n    inStep <- 2\n    ```\n\n```r\ng <- function(x) {\n\tx + 1\n}\n```";
+        page.Update(Messages(("user", "Show me the blocks"), ("assistant", blocksReply)), "", true); await page.SettledAsync();
+        Check(await PageTrue("document.querySelectorAll('button[data-code=open]').length===3 && document.querySelectorAll('button[data-code=copy]').length===4 && [...document.querySelectorAll('.code-actions span')].map(s=>s.textContent).join()==='R,Code,R,R'"), "a label with options, a block in a numbered step and a tab-indented block are R blocks on the page");
+        Check(await PageTrue("document.querySelectorAll('.code-block pre code')[3].textContent==='g <- function(x) {\\n    x + 1\\n}'"), "the page shows a leading tab as four spaces");
+        int beforeBlocks = code.Count;
+        await Page("document.querySelectorAll('button[data-code=open]')[1].click()"); await Task.Delay(150);
+        Check(code.Count == beforeBlocks + 1 && code.Last() == ("open", "inStep <- 2") && positions.Last() == (1, 1), "Open in R on a block inside a numbered step opens that block");
+        await Page("document.querySelectorAll('button[data-code=open]')[2].click()"); await Task.Delay(150);
+        Check(code.Count == beforeBlocks + 2 && code.Last() == ("open", "g <- function(x) {\n\tx + 1\n}") && positions.Last() == (1, 2), "Open in R on a tab-indented block gives the reply's own text, with the tab");
+        await Page("document.querySelectorAll('button[data-code=copy]')[3].click()"); await Task.Delay(150);
+        Check(code.Count == beforeBlocks + 3 && code.Last() == ("copy", "g <- function(x) {\n\tx + 1\n}") && await PageTrue("document.querySelectorAll('button[data-code=copy]')[3].textContent==='Copied'"), "Copy on a tab-indented block copies the reply's own text and says so");
+        await Page("document.querySelectorAll('button[data-code=copy]')[1].click()"); await Task.Delay(150);
+        Check(code.Count == beforeBlocks + 4 && code.Last() == ("copy", "middle = 2"), "Copy works on a block that is not R");
+        // A block the program does not offer (here an unfinished one): the click is answered with a notice, nothing is opened or
+        // copied, and Copy does not say "Copied".
+        page.Update(Messages(("user", "Show me the blocks"), ("assistant", "Unfinished:\n\n```r\nx <- 1")), "", true); await page.SettledAsync();
+        int beforeUnmatched = code.Count; notices.Clear();
+        await Page("document.querySelector('button[data-code=open]').click()"); await Task.Delay(150);
+        Check(code.Count == beforeUnmatched && notices.Count == 1 && notices[0] == CompletedCodeBlocks.Unmatched, "Open in R on a block the program cannot match opens nothing and says so");
+        await Page("document.querySelector('button[data-code=copy]').click()"); await Task.Delay(150);
+        Check(code.Count == beforeUnmatched && notices.Count == 2 && await PageTrue("document.querySelector('button[data-code=copy]').textContent==='Copy'"), "Copy on a block the program cannot match copies nothing, says so, and does not say Copied");
         // a new conversation clears the page
         page.Update(new JsonArray(), "", true); await page.SettledAsync();
         Check((await page.TextAsync()).Trim().Length == 0 && (await page.StateAsync()).GetProperty("count").GetInt32() == 0, "a new conversation clears the page");
