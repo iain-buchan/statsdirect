@@ -26,8 +26,10 @@ namespace StatsDirect.UI
 
         internal string FilePath { get; }
 
+        /// <param name="verify">The check made on the completed file before it is offered for starting; the updater's own
+        /// check (<see cref="UpdateInstallerCheck.VerifyForRunningProgram"/>) when null.  Only tests of the transfer pass another.</param>
         internal static async Task<UpdateInstaller> DownloadAsync(HttpClient client,
-            IProgress<UpdateDownloadProgress> progress, CancellationToken cancellationToken)
+            IProgress<UpdateDownloadProgress> progress, CancellationToken cancellationToken, Action<string> verify = null)
         {
             var installer = new UpdateInstaller(Directory.CreateTempSubdirectory("StatsDirect-update-").FullName);
             try
@@ -72,6 +74,9 @@ namespace StatsDirect.UI
                         throw new IOException("The download was not a Windows installer. Please try again.");
 
                 File.Move(installer.FilePath + ".partial", installer.FilePath);
+                // Nothing is offered for starting unless it is ours: signed by StatsDirect Limited, and a newer StatsDirect than
+                // the one running.  A file that fails is removed with its folder, as any failed download is.
+                await Task.Run(() => (verify ?? UpdateInstallerCheck.VerifyForRunningProgram)(installer.FilePath), cancellationToken).ConfigureAwait(false);
                 // Preserve the Internet origin, as a browser download would, so the normal Windows
                 // downloaded-file security checks still apply when ShellExecute opens the EXE. A temp folder that cannot
                 // hold the mark (not NTFS) does not stop the update.
