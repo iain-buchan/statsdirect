@@ -9,7 +9,7 @@ namespace StatsDirect.UI
     {
         public void StartCheck(StatusChangedEventHandler handler)
         {
-            base.StartCheck(new Uri("http://www.statsdirect.com/download.aspx"), handler);
+            base.StartCheck(new Uri("https://www.statsdirect.com/download.aspx"), handler);
         }
 
         protected override void PageDownloaded(string downloadedPage, Exception error, bool cancelled)

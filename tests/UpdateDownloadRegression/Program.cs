@@ -5,6 +5,8 @@ using StatsDirect.UI;
 internal static class Program
 {
     private static int passed;
+    // The transfer checks use made-up bytes, which no publisher signed; they pass this in place of the updater's own check.
+    private static readonly Action<string> NoCheck = _ => { };
 
     [STAThread]
     private static int Main(string[] args)
@@ -16,7 +18,18 @@ internal static class Program
                 using var client = new HttpClient();
                 using var timeout = new CancellationTokenSource(TimeSpan.FromMinutes(5));
                 using UpdateInstaller installer = UpdateInstaller.DownloadAsync(client, null, timeout.Token).GetAwaiter().GetResult();
-                Console.WriteLine($"Downloaded {new FileInfo(installer.FilePath).Length:N0} bytes from {UpdateInstaller.DownloadUri}. File has Internet-zone metadata. No installer launched; test download removed on exit.");
+                Console.WriteLine($"Downloaded {new FileInfo(installer.FilePath).Length:N0} bytes from {UpdateInstaller.DownloadUri}. It is signed by {UpdateInstallerCheck.Signer(installer.FilePath)} and passed the updater's own check. File has Internet-zone metadata. No installer launched; test download removed on exit.");
+                return 0;
+            }
+            int verify = Array.IndexOf(args, "--verify");
+            if (verify >= 0)
+            {
+                // The release check: would the updater of the version given start this installer?
+                string path = Path.GetFullPath(args[verify + 1]);
+                int runningAt = Array.IndexOf(args, "--running");
+                Version running = runningAt >= 0 ? Version.Parse(args[runningAt + 1]) : new Version(0, 0, 0);
+                UpdateInstallerCheck.Verify(path, running);
+                Console.WriteLine($"PASS: {path} is signed by {UpdateInstallerCheck.Signer(path)} and is a newer StatsDirect than {running}: the updater would start it. Nothing was launched.");
                 return 0;
             }
             if (args.Contains("--preview"))
@@ -35,6 +48,7 @@ internal static class Program
             }
 
             RunDownloads().GetAwaiter().GetResult();
+            RunInstallerChecks();
             ApplicationConfiguration.Initialize();
             RunDialogs();
             Console.WriteLine($"PASS: {passed} update download and dialog checks. No installer was launched.");
@@ -55,7 +69,7 @@ internal static class Program
         string savedPath;
         var progress = new RecordedProgress();
         using (var client = Client(new ByteArrayContent(bytes)))
-        using (UpdateInstaller installer = await UpdateInstaller.DownloadAsync(client, progress, CancellationToken.None))
+        using (UpdateInstaller installer = await UpdateInstaller.DownloadAsync(client, progress, CancellationToken.None, NoCheck))
         {
             savedPath = installer.FilePath;
             Check(File.ReadAllBytes(savedPath).SequenceEqual(bytes), "Complete binary preserved byte for byte");
@@ -69,9 +83,11 @@ internal static class Program
         Check(!Directory.Exists(Path.GetDirectoryName(savedPath)), "Unlaunched download removed when a save/close is cancelled");
 
         using (var client = Client(new TestContent(new NonSeekableStream(bytes))))
-        using (UpdateInstaller installer = await UpdateInstaller.DownloadAsync(client, null, CancellationToken.None))
+        using (UpdateInstaller installer = await UpdateInstaller.DownloadAsync(client, null, CancellationToken.None, NoCheck))
             Check(File.ReadAllBytes(installer.FilePath).SequenceEqual(bytes), "Download works without Content-Length");
 
+        // With the updater's own check, a complete download that StatsDirect Limited did not sign is not kept.
+        await Reject("Complete download not signed by StatsDirect Limited", Client(new ByteArrayContent(bytes)));
         await Reject("HTTP failure", Client(new StringContent("Not found"), HttpStatusCode.NotFound));
         await Reject("HTML returned with status 200", Client(new StringContent("<html>Temporarily unavailable</html>")));
         await Reject("Empty response", Client(new ByteArrayContent([])));
@@ -101,7 +117,7 @@ internal static class Program
         using (var dialog = new frmDownloadUpdate(async (progress, token) =>
         {
             using var client = Client(new ByteArrayContent([(byte)'M', (byte)'Z', 0, 0]));
-            return await UpdateInstaller.DownloadAsync(client, progress, token);
+            return await UpdateInstaller.DownloadAsync(client, progress, token, NoCheck);
         }))
         {
             dialog.Shown += (_, _) =>
@@ -128,6 +144,35 @@ internal static class Program
             Check(dialog.ShowDialog() == DialogResult.Cancel && dialog.Installer == null && cancelled,
                 "Closing the dialog cancels and waits for the transfer");
         }
+    }
+
+    // The updater's check itself, on real files: one with no signature, one validly signed by another publisher and, where
+    // this machine has an installed StatsDirect signed by StatsDirect Limited, one of ours.
+    private static void RunInstallerChecks()
+    {
+        string own = Environment.ProcessPath;
+        Check(UpdateInstallerCheck.Signer(own) == null && Refused(own, new Version(0, 0, 0), "not signed by StatsDirect Limited"), "A file with no signature is refused");
+        string dotnet = Path.GetFullPath(Path.Combine(System.Runtime.InteropServices.RuntimeEnvironment.GetRuntimeDirectory(), "..", "..", "..", "dotnet.exe"));
+        if (File.Exists(dotnet) && UpdateInstallerCheck.Signer(dotnet) is string other)
+            Check(other != UpdateInstallerCheck.Publisher && Refused(dotnet, new Version(0, 0, 0), "not signed by StatsDirect Limited"), $"A file validly signed by another publisher ({other}) is refused");
+        else
+            Console.WriteLine("SKIP: no validly signed dotnet.exe beside the runtime to stand for another publisher");
+        string installed = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "StatsDirect", "StatsDirect.exe");
+        if (File.Exists(installed) && UpdateInstallerCheck.Signer(installed) == UpdateInstallerCheck.Publisher)
+        {
+            UpdateInstallerCheck.Verify(installed, new Version(0, 0, 0));
+            passed++;
+            Console.WriteLine("PASS: A StatsDirect file signed by StatsDirect Limited and newer than the version running is accepted");
+            Check(Refused(installed, new Version(999, 0, 0), "not a newer version of StatsDirect"), "A signed StatsDirect file that is not newer than the version running is refused");
+        }
+        else
+            Console.WriteLine("SKIP: no installed StatsDirect signed by StatsDirect Limited on this machine; a release is checked with --verify");
+    }
+
+    private static bool Refused(string path, Version running, string reason)
+    {
+        try { UpdateInstallerCheck.Verify(path, running); return false; }
+        catch (IOException ex) { return ex.Message.Contains(reason); }
     }
 
     private static async Task Reject(string name, HttpClient client, CancellationToken token = default)
