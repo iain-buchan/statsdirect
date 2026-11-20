@@ -30,7 +30,7 @@ internal sealed partial class LearningService
         SaveCurrent();
     }
 
-    internal string LearningRScript(string messageId, string lessonId, int blockIndex)
+    internal string LearningRScript(string messageId, string lessonId, int blockIndex, string shown = "")
     {
         var messages = new JsonArray();
         foreach (var row in State.A("conversation").Where(c => c.S("lessonId") == lessonId || c["lessonId"] == null && lessonId == "epidemiology"))
@@ -40,6 +40,13 @@ internal sealed partial class LearningService
             messages.Add(new JsonObject { ["id"] = id, ["role"] = row.S("role"), ["text"] = row.S("text"), ["rSource"] = source.S("rSource"), ["rData"] = rContexts[id].S("rData") });
         }
         int index = Enumerable.Range(0, messages.Count).FirstOrDefault(i => messages[i].S("id") == messageId, -1);
+        // The page sends the clicked block's text as it shows it.  The program opens its own block with that text, by the rule
+        // it shares with the Script AI conversation, and says so when there is none instead of opening another block.
+        if (!string.IsNullOrEmpty(shown) && index >= 0)
+        {
+            blockIndex = WebReports.CompletedCodeBlocks.Find(WebReports.CompletedCodeBlocks.ReadBlocks(messages[index].S("text")), blockIndex, shown);
+            if (blockIndex < 0) throw new InvalidOperationException(WebReports.CompletedCodeBlocks.Unmatched);
+        }
         return ConversationRScript.Build(messages, index, blockIndex);
     }
 

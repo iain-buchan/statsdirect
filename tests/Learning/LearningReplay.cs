@@ -54,6 +54,11 @@ internal static partial class Program
         string oldGeneration=view.Generation;
         view.Close();await Task.Delay(100);service.Show(false);view=service.View;await view.Ready.Task.WaitAsync(TimeSpan.FromSeconds(30));await Task.Delay(100);
         Check(service.LearningRScript(replyId,"precision",0).Contains(fullSource),"Learning R source survives closing and reopening the portfolio");
+        // The clicked block's text, as the page shows it, decides which block opens; text the reply does not hold opens nothing.
+        var replyBlocks=StatsDirect.UI.WebReports.CompletedCodeBlocks.ReadBlocks(service.State.A("conversation").First(c=>c.S("id")==replyId).S("text")).Where(b=>b.R).ToList();
+        Check(replyBlocks.Count>0&&service.LearningRScript(replyId,"precision",7,replyBlocks[0].Shown)==service.LearningRScript(replyId,"precision",0),"a Learning click with a wrong position opens the block whose text was clicked");
+        bool unmatched=false;try{service.LearningRScript(replyId,"precision",0,"not_in_the_reply <- 1");}catch(InvalidOperationException ex){unmatched=ex.Message==StatsDirect.UI.WebReports.CompletedCodeBlocks.Unmatched;}
+        Check(unmatched,"a Learning click whose text the reply does not hold opens no other block and says so");
         int scripts=service.Documents.OfType<frmScript>().Count();
         await service.HandleAsync(view,new JsonObject{["action"]="openRCode",["generation"]=oldGeneration,["lessonID"]="precision",["messageID"]=replyId,["blockIndex"]=0});
         Check(service.Documents.OfType<frmScript>().Count()==scripts,"R clicks from a replaced Learning browser are rejected");

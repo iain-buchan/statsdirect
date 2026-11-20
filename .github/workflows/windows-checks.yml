@@ -93,7 +93,7 @@ jobs:
           BIN_WIN=$(cygpath -w "$BIN")
           unset STATSDIRECT_RSCRIPT_ONLY
           failed=()
-          for p in Definitions DistributionRegression GlmFitRegression DataSelection AnalysisOfVariance Nonparametric Descriptive Parametric ClinicalEpidemiology SampleSize Randomization Rates Proportions ChiSquare ExactTests Frequencies NoncentralTRegression MetaAnalysis Survival Agreement CoxRegression CorrelationRegression ExcelAddInRetirement UserDataIsolation RScript; do
+          for p in Definitions DistributionRegression GlmFitRegression DataSelection AnalysisOfVariance Nonparametric Descriptive Parametric ClinicalEpidemiology SampleSize Randomization Rates Proportions ChiSquare ExactTests Frequencies NoncentralTRegression MetaAnalysis Survival Agreement CoxRegression CorrelationRegression ExcelAddInRetirement UserDataIsolation CodeBlocks RScript; do
             start=$(date +%s)
             if out=$(dotnet run --project "tests/$p" -c Release -p:StatsDirectBin="$BIN_WIN" 2>&1); then
               echo "tests/$p: ok, $(( $(date +%s) - start )) s: $(echo "$out" | grep -E 'CHECKS|checks|PASS|FAIL' | tail -1)"

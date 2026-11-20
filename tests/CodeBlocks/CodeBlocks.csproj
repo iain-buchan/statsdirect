@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- The program's reader of fenced code in a reply, compiled as it is, and the shared examples it must agree with. -->
+    <Compile Include="../../StatsDirectUI/UI/WebReports/CompletedCodeBlocks.cs" Link="Production/CompletedCodeBlocks.cs" />
+    <None Include="../../Learning/Shared/Learning/code-block-examples.json" Link="code-block-examples.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

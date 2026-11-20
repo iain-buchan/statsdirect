@@ -11,15 +11,17 @@ import {richText} from './Shared/Learning/rich-text.mjs';
 
   // The page's state: the messages rendered, in order, and the streamed reply.
   const rendered = [];
-  let partialElement = null, partialText = '', renders = 0, applied = 0, context = 0;
+  let partialElement = null, partialText = '', renders = 0, applied = 0, context = 0, requests = 0, copying = null;
   function bind(element) {
     element.querySelectorAll('a').forEach(a=>{if(!/^https?:\/\//i.test(a.getAttribute('href')??''))a.removeAttribute('href');else {a.target='_blank';a.rel='noopener noreferrer';}});
     element.querySelectorAll('button[data-code]').forEach(button => button.onclick = () => {
       const code = button.closest('.code-block').querySelector('code').textContent;
-      post({ action: 'code', what: button.dataset.code, code, context,
+      // Copy is confirmed by the program: the button says "Copied" only when the program answers that it has copied the block.
+      const request = ++requests;
+      if (button.dataset.code === 'copy') copying = { request, button };
+      post({ action: 'code', what: button.dataset.code, code, context, request,
         messageIndex: [...container.children].indexOf(element),
         blockIndex: [...element.querySelectorAll('button[data-code=open]')].indexOf(button) });
-      if (button.dataset.code === 'copy') { button.textContent = 'Copied'; setTimeout(() => { button.textContent = 'Copy'; }, 1500); }
     });
     element.querySelectorAll('a').forEach(a => { if (!/^https?:\/\//i.test(a.getAttribute('href') || '')) a.removeAttribute('href'); });
   }
@@ -121,6 +123,11 @@ import {richText} from './Shared/Learning/rich-text.mjs';
     scrollTo: top => { scroller().scrollTop = top; return scroller().scrollTop; },
     update
   };
-  window.chrome?.webview?.addEventListener('message', e => { if (e.data && e.data.action === 'update') update(e.data); });
+  function copied(m) {
+    if (!copying || copying.request !== m.request) return;
+    const button = copying.button; copying = null;
+    button.textContent = 'Copied'; setTimeout(() => { button.textContent = 'Copy'; }, 1500);
+  }
+  window.chrome?.webview?.addEventListener('message', e => { if (e.data && e.data.action === 'update') update(e.data); else if (e.data && e.data.action === 'copied') copied(e.data); });
   post({ action: 'ready' });
 })();
