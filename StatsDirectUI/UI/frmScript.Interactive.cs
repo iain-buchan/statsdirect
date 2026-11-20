@@ -10,6 +10,8 @@ namespace StatsDirect.UI;
 public partial class frmScript
 {
     internal RConsoleView InteractiveConsole { get; private set; }
+    [System.ComponentModel.DesignerSerializationVisibility(System.ComponentModel.DesignerSerializationVisibility.Hidden)]
+    internal string WorksheetImportFolder { private get; set; }
     private bool mirroringRSource, savingInteractive, allowInteractiveClose;
     internal Task<bool> PendingInteractiveClose { get; private set; }
     private bool IsInteractiveR => cboLanguage.SelectedIndex == 1 && InteractiveConsole != null;
@@ -30,6 +32,7 @@ public partial class frmScript
             view.SaveRequested += () => _ = GuardInteractiveAsync(async () => await SaveInteractiveAsync(false));
             view.HelpRequested += ShowHelp;
             view.AIRequested += () => (MdiParent as frmMain)?.Learning.ShowScriptAI(this);
+            view.OpenInRRequested += OpenInR;
             view.MoreRequested += ShowRMoreMenu;
             // Before the page is up nothing else can show a notice: a page that failed to load is reported here
             view.Notice += message => { if (!IsDisposed && !view.Ready.IsCompletedSuccessfully) MessageBox.Show(this, message, "R"); };
@@ -65,7 +68,6 @@ public partial class frmScript
     {
         var menu = new ContextMenuStrip();
         void Item(string text, Action action) => menu.Items.Add(text, null, (_, _) => BeginInvoke(new Action(action)));
-        Item("Open in R / RStudio", OpenInR);
         Item("Output folder", OpenRFolder);
         Item("Set up R...", () => R.RController.UserMightHaveInstalledR());
         Item("Clear output", () => _ = GuardInteractiveAsync(() => InteractiveConsole.ClearOutputAsync()));
@@ -103,7 +105,8 @@ public partial class frmScript
     {
         EnsureInteractiveConsole();
         string source = await InteractiveConsole.GetScriptAsync();
-        await InteractiveConsole.SubmitAsync(source, "script");
+        if (string.IsNullOrWhiteSpace(source)) await InteractiveConsole.StartAsync();
+        else await InteractiveConsole.SubmitAsync(source, "script");
         await InteractiveConsole.SetModeAsync("console");
     });
 
@@ -125,20 +128,52 @@ public partial class frmScript
                 if (dialog.ShowDialog(this) != DialogResult.OK) return false;
                 destination = dialog.FileName;
             }
-            // Saving an R script never serialises the live workspace or executes it.
-            string temporary = destination + "." + Guid.NewGuid().ToString("N") + ".tmp";
-            try
-            {
-                await File.WriteAllTextAsync(temporary, source, new UTF8Encoding(false));
-                File.Move(temporary, destination, true);
-            }
-            finally { if (File.Exists(temporary)) File.Delete(temporary); }
+            WriteRScript(destination, source);
             currentFile = destination; Path = destination;
             if (InteractiveConsole.Script == source) { rtbDoc.Modified = false; Dirty = false; }
             SdApplication.SoleInstance.NoteRecentFile(destination, true);
             return !Dirty;
         }
         finally { savingInteractive = false; }
+    }
+
+    private void WriteRScript(string destination, string source)
+    {
+        string temporary = destination + "." + Guid.NewGuid().ToString("N") + ".tmp";
+        string temporaryCsv = temporary + ".csv";
+        string newCompanion = null;
+        try
+        {
+            // Only the approved worksheet snapshot accompanies a saved script.
+            // The running session keeps its temporary import until the window closes.
+            if (WorksheetImportFolder is string importFolder)
+            {
+                string original = System.IO.Path.Combine(importFolder, WorksheetRData.CsvFileName);
+                string originalInR = WorksheetRData.QuotePath(original);
+                if (source.Contains(originalInR, StringComparison.Ordinal))
+                {
+                    string directory = System.IO.Path.GetDirectoryName(System.IO.Path.GetFullPath(destination));
+                    string companion = System.IO.Path.Combine(directory, System.IO.Path.GetFileName(importFolder) + ".csv");
+                    if (!File.Exists(companion))
+                    {
+                        File.Copy(original, temporaryCsv);
+                        File.Move(temporaryCsv, companion);
+                        newCompanion = companion;
+                    }
+                    source = source.Replace(originalInR, WorksheetRData.QuotePath(companion), StringComparison.Ordinal);
+                }
+            }
+
+            File.WriteAllText(temporary, source, new UTF8Encoding(false));
+            File.Move(temporary, destination, true);
+            newCompanion = null;
+        }
+        finally
+        {
+            if (File.Exists(temporary)) File.Delete(temporary);
+            if (File.Exists(temporaryCsv)) File.Delete(temporaryCsv);
+            if (newCompanion != null) File.Delete(newCompanion);
+        }
     }
 
     private async void ClosingInteractiveR(FormClosingEventArgs e)

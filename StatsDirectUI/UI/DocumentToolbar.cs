@@ -9,17 +9,35 @@ internal static class DocumentToolbar
 {
     private static readonly Bitmap placeholder = new(20, 20);
 
-    internal static ToolStripButton Button(string text, string icon, EventHandler click, string shortcut = null, bool labelled = false) =>
-        new(text, placeholder, click)
+    internal static ToolStripButton Button(string text, string icon, EventHandler click, string shortcut = null, bool labelled = false)
+    {
+        var button = new ToolStripButton(text, placeholder, click);
+        SetButtonAppearance(button, text, icon, shortcut, labelled);
+        return button;
+    }
+
+    internal static ToolStripDropDownButton DropDownButton(string text, string icon, ToolStripDropDown dropDown)
+    {
+        var button = new ToolStripDropDownButton(text, placeholder)
         {
-            Name = icon + "ToolStripButton",
-            AccessibleName = text,
-            DisplayStyle = labelled ? ToolStripItemDisplayStyle.ImageAndText : ToolStripItemDisplayStyle.Image,
-            ToolTipText = shortcut == null ? text : text + " (" + shortcut + ")",
-            AutoSize = true,
-            Padding = new Padding(4),
-            Overflow = ToolStripItemOverflow.AsNeeded
+            DropDown = dropDown,
+            DropDownDirection = ToolStripDropDownDirection.BelowRight,
+            ShowDropDownArrow = false
         };
+        SetButtonAppearance(button, text, icon, null, true);
+        return button;
+    }
+
+    private static void SetButtonAppearance(ToolStripItem button, string text, string icon, string shortcut, bool labelled)
+    {
+        button.Name = icon + "ToolStripButton";
+        button.AccessibleName = text;
+        button.DisplayStyle = labelled ? ToolStripItemDisplayStyle.ImageAndText : ToolStripItemDisplayStyle.Image;
+        button.ToolTipText = shortcut == null ? text : text + " (" + shortcut + ")";
+        button.AutoSize = true;
+        button.Padding = new Padding(4);
+        button.Overflow = ToolStripItemOverflow.AsNeeded;
+    }
 
     internal static void Configure(ToolStrip bar, Action update)
     {

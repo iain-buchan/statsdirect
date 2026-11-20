@@ -63,6 +63,17 @@ internal static partial class Program
         Check(Get(app, "CalculatorView") is Control startupView && startupView.ContainsFocus && main.ActiveMdiChild == null && !(bool)Get(main, "ShowOpeningDialog"),
             "legacy -calculator startup opens the integrated pane without a document");
         string selectedCheck = Environment.GetEnvironmentVariable("STATSDIRECT_SHELL_CHECK");
+        if (selectedCheck == "worksheet-picker")
+        {
+            Call(main, "AddTemplates");
+            await CheckWorksheetCommandPicker(main);
+            return;
+        }
+        if (selectedCheck == "worksheet-r-sessions")
+        {
+            await CheckWorksheetRSessions(main);
+            return;
+        }
         if (selectedCheck is "interactive-charts" or "interactive-chart-toolbar")
         {
             using var selectedGrid = (Form)Call(main, "CreateGrid");
@@ -105,6 +116,8 @@ internal static partial class Program
             "Analysis > Calculator preserves the worksheet selection and entered data");
         await CheckWorkbookTabs(main, grid, workbook);
         await CheckDocumentToolbars(main, grid, workbook);
+        await CheckWorksheetCommandPicker(main);
+        await CheckWorksheetRSessions(main);
         await CheckScriptCharts(main, grid);
         await CheckScriptChartRuns(main, grid);
         await CheckScriptSvgIsolation(main, grid, Environment.GetEnvironmentVariable("STATSDIRECT_SVG_ARTIFACTS"));
@@ -215,7 +228,7 @@ internal static partial class Program
     static async Task CheckDocumentToolbars(frmMain main, Form grid, SpreadsheetGear.Windows.Forms.WorkbookView workbook)
     {
         var toolbar = (ToolStrip)Field(main, "toolStrip");
-        Check(toolbar.Visible && string.Join("|", toolbar.Items.OfType<ToolStripButton>().Select(b => b.Text)) == "Save|Undo|Redo|Cut|Copy|Paste|Find|Help",
+        Check(toolbar.Visible && string.Join("|", toolbar.Items.Cast<ToolStripItem>().Where(b => b is ToolStripButton or ToolStripDropDownButton).Select(b => b.Text)) == "Save|Undo|Redo|Cut|Copy|Paste|Find|Analyse|Open R session|Open external R session|Help",
             "worksheet has one native toolbar in the shared document order");
         CaptureToolbar(toolbar, "grid-toolbar.png");
         Check(((Control)Field(grid,"formulaBar")).Visible && toolbar.Items.ContainsKey("cboActiveReport"), "formula entry and Results to selection remain available");

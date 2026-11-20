@@ -21,6 +21,7 @@ using StatsDirect.Utilities;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.IO;
+using System.Linq;
 using SpreadsheetGear.Windows.Forms;
 using SpreadsheetGear;
 using Color = System.Drawing.Color;
@@ -175,6 +176,40 @@ namespace StatsDirect.UI
             // its Results to selector stays available without putting a second bar above a report.
             var undoButton = DocumentToolbar.Button("Undo", "undo", (_, _) => EditHistory(false), "Ctrl+Z");
             var redoButton = DocumentToolbar.Button("Redo", "redo", (_, _) => EditHistory(true), "Ctrl+Y");
+            var picker = new WorksheetCommandPicker();
+            var analyseButton = DocumentToolbar.DropDownButton("Analyse", "analyse", picker);
+            Form methodWorksheet = null;
+            bool CanChooseMethod() => methodWorksheet is IGrid && methodWorksheet == ActiveMdiChild
+                && mnuMain.Enabled && !InOperation;
+
+            analyseButton.DropDownOpening += (_, _) =>
+            {
+                methodWorksheet = ActiveMdiChild;
+                if (CanChooseMethod()) picker.Prepare(WorksheetCommands(), this, analyseButton);
+            };
+            picker.Opening += (_, e) => e.Cancel = !CanChooseMethod();
+            picker.CommandChosen += command =>
+            {
+                var worksheet = methodWorksheet;
+                BeginInvoke(() =>
+                {
+                    if (ActiveMdiChild == worksheet && command.CanRun && mnuMain.Enabled && !InOperation)
+                        command.Item.PerformClick();
+                });
+            };
+            picker.HelpSearchRequested += query => BeginInvoke(() => SdApplication.SoleInstance.SearchHelp(this, query));
+            picker.Closed += (_, e) =>
+            {
+                if (e.CloseReason != ToolStripDropDownCloseReason.Keyboard || !CanChooseMethod()) return;
+                var parent = analyseButton.GetCurrentParent();
+                if (parent == toolStrip) { toolStrip.Focus(); analyseButton.Select(); }
+                else if (toolStrip.Visible) { toolStrip.Focus(); toolStrip.OverflowButton.Select(); }
+            };
+            Disposed += (_, _) =>
+            {
+                if (picker.Visible) picker.Close();
+                picker.Dispose();
+            };
             toolStrip.Items.Clear();
             toolStrip.Items.AddRange(new ToolStripItem[] {
                 DocumentToolbar.Button("Save", "save", saveToolStripButton_Click, "Ctrl+S"), new ToolStripSeparator(),
@@ -183,7 +218,11 @@ namespace StatsDirect.UI
                 DocumentToolbar.Button("Copy", "copy", copyToolStripButton_Click, "Ctrl+C"),
                 DocumentToolbar.Button("Paste", "paste", pasteToolStripButton_Click, "Ctrl+V"),
                 DocumentToolbar.Button("Find", "find", (_, _) => SdApplication.SoleInstance.ActiveWindow?.EditFind(), "Ctrl+F"),
-                new ToolStripSeparator(), lblActiveReport, cboActiveReport, new ToolStripSeparator(),
+                new ToolStripSeparator(),
+                analyseButton,
+                DocumentToolbar.Button("Open R session", "r", (_, _) => OpenWorksheetR(false)),
+                DocumentToolbar.Button("Open external R session", "rPlus", (_, _) => OpenWorksheetR(true)),
+                lblActiveReport, cboActiveReport, new ToolStripSeparator(),
                 DocumentToolbar.Button("Help", "help", helpToolStripButton_Click, "F1")
             });
             DocumentToolbar.Configure(toolStrip, () => {
@@ -196,6 +235,7 @@ namespace StatsDirect.UI
             toolStrip.Visible = toolbarShown;
             MdiChildActivate += (_, _) =>
             {
+                if (picker.Visible && methodWorksheet != ActiveMdiChild) picker.Close(ToolStripDropDownCloseReason.AppFocusChange);
                 toolbarShown = ToolbarShownFor(ActiveMdiChild);
                 toolStrip.Visible = toolbarShown;
                 FitWindowTabsToText();   // the panel above the windows gives up the toolbar's height while it is hidden
@@ -207,6 +247,44 @@ namespace StatsDirect.UI
             cboActiveReport.Items.Add(new ComboFormAdapter(null));
             cboActiveReport.SelectedIndex = 0;
         }
+
+        private WorksheetCommand[] WorksheetCommands()
+        {
+            var commands = new List<WorksheetCommand>();
+            foreach (string name in new[] { "Analysis", "Data", "Graphics" })
+            {
+                foreach (var menu in mnuMain.Items.OfType<ToolStripMenuItem>())
+                {
+                    if (menu.Available && MenuLabel(menu) == name)
+                        AddCommands(menu.DropDownItems, [name]);
+                }
+            }
+            return commands.ToArray();
+
+            void AddCommands(ToolStripItemCollection items, string[] groups)
+            {
+                foreach (var item in items.OfType<ToolStripMenuItem>())
+                {
+                    if (!item.Available) continue;
+                    string label = MenuLabel(item);
+                    if (item.HasDropDownItems)
+                    {
+                        AddCommands(item.DropDownItems, [.. groups, label]);
+                    }
+                    else if (ToTagObject(item) is Dictionary<string, string> tags && tags.TryGetValue("operation", out string operation))
+                    {
+                        commands.Add(new WorksheetCommand(item, label, groups, operation));
+                    }
+                    else if (item.Name == "calculatorMenuItem")
+                    {
+                        commands.Add(new WorksheetCommand(item, label, groups, ""));
+                    }
+                }
+            }
+        }
+
+        private static string MenuLabel(ToolStripItem item) =>
+            item.Text.Replace("&&", "\0").Replace("&", "").Replace("\0", "&");
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
         {

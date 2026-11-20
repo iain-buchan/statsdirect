@@ -534,11 +534,13 @@ namespace StatsDirect.UI
         private async void OpenInR()
         {
             string path = System.IO.Path.Combine(SDConfiguration.MyStatsDirectRFolder, ScriptFileName(Text));
+            bool saved = false;
             try
             {
                 if (IsInteractiveR) await InteractiveConsole.GetScriptAsync();
                 Directory.CreateDirectory(SDConfiguration.MyStatsDirectRFolder);
-                File.WriteAllText(path, rtbDoc.Text.Replace("\r", "").Replace("\n", "\r\n"), new System.Text.UTF8Encoding(false));
+                WriteRScript(path, rtbDoc.Text.Replace("\r", "").Replace("\n", "\r\n"));
+                saved = true;
                 string rstudio = RController.FindRStudio();
                 if (rstudio != null)
                 {
@@ -559,7 +561,8 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                AppendScriptNotice("Could not open the script in R: " + ex.Message + "\n(the script is saved as " + path + "; open it from there)\n");
+                AppendScriptNotice("Could not open the script in R: " + ex.Message + "\n"
+                    + (saved ? "(the script is saved as " + path + "; open it from there)\n" : ""));
             }
         }
 

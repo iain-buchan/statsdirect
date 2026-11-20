@@ -457,6 +457,12 @@ namespace StatsDirect.UI
             catch (Exception ex) { MessageBox.Show(Parent, ex.Message, "StatsDirect Help", MessageBoxButtons.OK, MessageBoxIcon.Information); }
         }
 
+        internal void SearchHelp(Form owner, string query)
+        {
+            try { htmlHelp.Search(owner ?? MainWindow, query, SDConfiguration.HelpDirectory); }
+            catch (Exception ex) { MessageBox.Show(owner, ex.Message, "StatsDirect Help", MessageBoxButtons.OK, MessageBoxIcon.Information); }
+        }
+
         internal void ShowHelp(Form Parent)
         {
             if (null != ActiveHelpUrl)
