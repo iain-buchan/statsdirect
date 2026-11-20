@@ -1,6 +1,8 @@
 using System.Diagnostics;
 using System.Reflection;
 using System.Text.Json;
+using System.Text.RegularExpressions;
+using SpreadsheetGear;
 using StatsDirect.R;
 using StatsDirect.UI;
 
@@ -38,7 +40,10 @@ internal static partial class Program
             sheet.Cells["A2"].Value = 15;
             sheet.Cells["B2"].Value = "café, \"quoted\"%";
             sheet.Cells["B3"].Value = "%NA";
+            sheet.Cells["C2"].Value = 30;
             sheet.Cells["C4"].Value = 999;
+            sheet.Cells["H20"].NumberFormat = "0.000";
+            Check(sheet.UsedRange.Address.Replace("$", "") == "A1:H20", "formatting alone extends the fixture worksheet's used range");
         }
         finally { workbook.ReleaseLock(); }
         Select("A1:B3");
@@ -50,15 +55,16 @@ internal static partial class Program
             && embedded.AccessibleName == "Open R session" && external.AccessibleName == "Open external R session",
             "the worksheet toolbar has distinct and accessible R and R+ buttons");
 
-        async Task<Form> Activate(ToolStripButton button, string title, string address, DialogResult action, bool headers = false)
+        async Task<Form> Activate(ToolStripButton button, string title, string selectedAddress, string choice,
+            bool vectorList = false, bool emptySelection = false, bool friendlyNames = false)
         {
             string selected = Selection();
             var before = main.MdiChildren.ToHashSet();
-            var pending = DriveWorksheetRPrompt(main, title, address, action, headers);
+            var pending = DriveWorksheetRPrompt(main, title, selectedAddress, choice, vectorList, emptySelection, friendlyNames);
             button.PerformClick();
             await pending;
             var added = main.MdiChildren.Where(child => !before.Contains(child)).ToArray();
-            if (action == DialogResult.Cancel)
+            if (choice == null)
             {
                 Check(added.Length == 0 && main.ActiveMdiChild == grid && Selection() == selected,
                     "cancelling " + title + " opens no session and keeps the selection");
@@ -69,11 +75,15 @@ internal static partial class Program
             return added[0];
         }
 
-        await Activate(embedded, "Open R session", "A1:B3", DialogResult.Cancel);
-        await Activate(external, "Open external R session", "A1:B3", DialogResult.Cancel);
-        Select("B2");
-        await Activate(embedded, "Open R session", "A1:C4", DialogResult.Cancel);
-        Select("A1:B3");
+        await Activate(embedded, "Open R session", "A1:B3", null);
+        await Activate(external, "Open external R session", "A1:B3", null);
+        Select("A1,B2");
+        await Activate(embedded, "Open R session", null, null);
+        Select("H:H");
+        await Activate(embedded, "Open R session", null, null, emptySelection: true);
+        CheckWorksheetRBounds(grid, workbook);
+        Select("A:B");
+        await Activate(embedded, "Open R session", "A1:B3", null);
         if (rscript == null)
         {
             Console.WriteLine("SKIP worksheet R execution checks because no R installation is available");
@@ -87,43 +97,214 @@ internal static partial class Program
                       identical(worksheet_data[[1]], c(15, NA_real_)),
                       identical(worksheet_data[[2]], c('café, "quoted"%', "%NA")))
             """;
-        using var imported = await Activate(embedded, "Open R session", "A1:B3", DialogResult.Yes, headers: true);
+        const string verifyVectors = """
+            stopifnot(is.list(worksheet_data), !is.data.frame(worksheet_data),
+                      identical(names(worksheet_data), c("Before visit", "Group / label", "Outside selection")),
+                      identical(worksheet_data[[1]], 15),
+                      identical(worksheet_data[[2]], c('café, "quoted"%', "%NA")),
+                      identical(worksheet_data[[3]], c(30, 999)))
+            """;
+        using var imported = await Activate(embedded, "Open R session", "A1:B3", "Selected");
         var importedConsole = RConsole(imported);
         await ((Task)Get(importedConsole, "Ready")).WaitAsync(TimeSpan.FromSeconds(45));
         await CompleteRCommand(imported, 0);
         Check(((string)Get(importedConsole, "Script")).Contains("worksheet_data", StringComparison.Ordinal) && !toolbar.Visible,
             "R copies the data into the active console and retains its import script");
-        int beforeDataCheck = RFinished(imported);
-        await ((Task)Call(importedConsole, "SubmitAsync", verifyData + "\ncat('SHELL_WORKSHEET_DATA_OK\\n')", "console"))
-            .WaitAsync(TimeSpan.FromSeconds(45));
-        await CompleteRCommand(imported, beforeDataCheck);
-        Check(((string)Get(importedConsole, "Transcript")).Split('\n').Any(line => line.Trim() == "SHELL_WORKSHEET_DATA_OK"),
-            "the persistent console contains only the selected cells, with original headings, blanks and quoted Unicode text");
+        await VerifyWorksheetRValues(imported, verifyData,
+            "selecting whole columns A:B imports only A1:B3, preserving the shorter column's missing value and literal text");
         await CheckSavedWorksheetR(imported, rscript, verifyData);
 
         grid.Activate();
         await Task.Delay(100);
         Select("B2");
-        using var empty = await Activate(embedded, "Open R session", "A1:C4", DialogResult.No);
+        using var whole = await Activate(embedded, "Open R session", "B2", "All");
+        await ((Task)Get(RConsole(whole), "Ready")).WaitAsync(TimeSpan.FromSeconds(45));
+        await CompleteRCommand(whole, 0);
+        await VerifyWorksheetRValues(whole, """
+            stopifnot(is.data.frame(worksheet_data),
+                      identical(names(worksheet_data), c("Before visit", "Group / label", "Outside selection")),
+                      identical(worksheet_data[[1]], c(15, NA_real_, NA_real_)),
+                      identical(worksheet_data[[2]], c('café, "quoted"%', "%NA", NA_character_)),
+                      identical(worksheet_data[[3]], c(30, NA_real_, 999)))
+            """, "Whole active worksheet imports the used range including cells outside the selection");
+
+        grid.Activate();
+        await Task.Delay(100);
+        Select("B2");
+        using var vectors = await Activate(embedded, "Open R session", "B2", "All", vectorList: true);
+        await ((Task)Get(RConsole(vectors), "Ready")).WaitAsync(TimeSpan.FromSeconds(45));
+        await CompleteRCommand(vectors, 0);
+        await VerifyWorksheetRValues(vectors, verifyVectors,
+            "List of vectors keeps the named column order and types, drops internal and trailing blanks per column, and preserves literal %NA text");
+        await CheckSavedWorksheetR(vectors, rscript, verifyVectors);
+
+        grid.Activate();
+        await Task.Delay(100);
+        Select("B2");
+        using var oneCell = await Activate(embedded, "Open R session", "B2", "Selected");
+        await ((Task)Get(RConsole(oneCell), "Ready")).WaitAsync(TimeSpan.FromSeconds(45));
+        await CompleteRCommand(oneCell, 0);
+        await VerifyWorksheetRValues(oneCell, """
+            stopifnot(is.data.frame(worksheet_data),
+                      identical(names(worksheet_data), "V1"),
+                      identical(worksheet_data[[1]], 'café, "quoted"%'))
+            """, "Selected cells uses the exact single cell as one value");
+
+        grid.Activate();
+        await Task.Delay(100);
+        Select("B2");
+        using var empty = await Activate(embedded, "Open R session", "B2", "None");
         var emptyConsole = RConsole(empty);
         await ((Task)Get(emptyConsole, "Ready")).WaitAsync(TimeSpan.FromSeconds(45));
         for (int attempt = 0; attempt < 240 && (string)Get(emptyConsole, "NativeState") != "ready"; attempt++)
             await Task.Delay(50);
         Check((string)Get(emptyConsole, "NativeState") == "ready" && RFinished(empty) == 0 && (string)Get(emptyConsole, "Script") == "",
             "Open without data starts a blank R prompt without running a worksheet import");
-        await ((Task)Call(emptyConsole, "SubmitAsync",
-            """stopifnot(!exists("worksheet_data", .GlobalEnv, inherits = FALSE)); cat("SHELL_WORKSHEET_EMPTY_OK\n")""", "console"))
-            .WaitAsync(TimeSpan.FromSeconds(45));
-        await CompleteRCommand(empty, 0);
-        Check(((string)Get(emptyConsole, "Transcript")).Split('\n').Any(line => line.Trim() == "SHELL_WORKSHEET_EMPTY_OK"),
+        await VerifyWorksheetRValues(empty, """stopifnot(!exists("worksheet_data", .GlobalEnv, inherits = FALSE))""",
             "the blank R session has no worksheet_data from the existing R session");
 
         grid.Activate();
         await Task.Delay(100);
         Select("A1:B3");
-        if (hasRGui) await CheckWorksheetRGuiImport(grid, verifyData);
+        if (hasRGui)
+        {
+            await CheckWorksheetRGuiImport(grid, "SelectedCells", "DataFrame", verifyData);
+            await CheckWorksheetRGuiImport(grid, "EntireSheet", "VectorList", verifyVectors);
+        }
         else Console.WriteLine("SKIP external worksheet R launch check because RGui is unavailable");
+
+        workbook.GetLock();
+        try
+        {
+            var sheet = workbook.ActiveWorksheet;
+            sheet.Cells["A1"].Value = " PEFR   Before ";
+            sheet.Cells["B1"].Value = "PEFR_Before";
+            sheet.Cells["C1"].Value = "PEFR_Before_1";
+        }
+        finally { workbook.ReleaseLock(); }
+        const string verifyFriendlyNames = """
+            stopifnot(identical(names(worksheet_data), c("PEFR_Before", "PEFR_Before_2", "PEFR_Before_1")),
+                      identical(worksheet_data$PEFR_Before[[1]], 15),
+                      identical(worksheet_data$PEFR_Before_2[[1]], 'café, "quoted"%'),
+                      identical(worksheet_data$PEFR_Before_1[[1]], 30))
+            """;
+        const string verifyFriendlyVectors = "stopifnot(is.list(worksheet_data), !is.data.frame(worksheet_data))\n" + verifyFriendlyNames;
+        foreach (bool vectorList in new[] { false, true })
+        {
+            using var friendly = await Activate(embedded, "Open R session", "A1:B3", "All", vectorList: vectorList, friendlyNames: true);
+            await ((Task)Get(RConsole(friendly), "Ready")).WaitAsync(TimeSpan.FromSeconds(45));
+            await CompleteRCommand(friendly, 0);
+            await VerifyWorksheetRValues(friendly,
+                vectorList ? verifyFriendlyVectors : "stopifnot(is.data.frame(worksheet_data))\n" + verifyFriendlyNames,
+                "R-friendly names preserve the existing suffix and give unique names to the " + (vectorList ? "vectors" : "data-frame columns"));
+            await Task.Yield();
+            grid.Activate();
+            await Task.Delay(100);
+        }
+        if (hasRGui) await CheckWorksheetRGuiImport(grid, "EntireSheet", "VectorList", verifyFriendlyVectors, friendlyNames: true);
         originalDocument?.Activate();
+    }
+
+    static void CheckWorksheetRBounds(Form grid, SpreadsheetGear.Windows.Forms.WorkbookView workbook)
+    {
+        void Update(Action action)
+        {
+            workbook.GetLock();
+            try { action(); }
+            finally { workbook.ReleaseLock(); }
+        }
+        IWorksheet original = null;
+        IWorksheet sheet = null;
+        try
+        {
+            Update(() =>
+            {
+                original = workbook.ActiveWorksheet;
+                sheet = workbook.ActiveWorkbook.Worksheets.Add();
+                workbook.ActiveWorksheet = sheet;
+                sheet.Cells["A1"].NumberFormat = "0.0";
+                sheet.Cells["H20"].NumberFormat = "0.00";
+            });
+            object Options() => Call(grid, "DescribeWorksheetRData");
+            string Address(object options, string property) => ((string)Get(Get(options, property), "Address")).Replace("$", "");
+            var formattedOnly = Options();
+            Check(Get(formattedOnly, "EntireSheet") == null && Get(formattedOnly, "SelectedCells") == null,
+                "a worksheet with formatting only offers no R data import");
+
+            Update(() =>
+            {
+                sheet.Cells["D5"].Value = "Group";
+                sheet.Cells["E5"].Value = "Amount";
+                sheet.Cells["D6"].Value = "keep";
+                sheet.Cells["E6"].Value = 12;
+                sheet.Cells["D7"].Value = "hide";
+                sheet.Cells["E7"].Value = 14;
+                workbook.RangeSelection = sheet.Cells["D:D"];
+            });
+            var wholeColumn = Options();
+            Check(Address(wholeColumn, "EntireSheet") == "D5:E7" && Address(wholeColumn, "SelectedCells") == "D5:D7",
+                "R import bounds ignore surrounding formatting and trim a full-column selection on the row axis");
+
+            Update(() =>
+            {
+                workbook.RangeSelection = sheet.Cells["D5:H20"];
+                sheet.Cells["D5:E7"].AutoFilter(0, "keep", AutoFilterOperator.Custom, null, true);
+                Check(sheet.Cells["D7"].EntireRow.Hidden && !sheet.Cells["D6"].EntireRow.Hidden,
+                    "the fixture's outermost data row is hidden by an active filter");
+            });
+            var filtered = Options();
+            Check(Address(filtered, "EntireSheet") == "D5:E7" && Address(filtered, "SelectedCells") == "D5:H20",
+                "filtered-out worksheet values still define the bounds and explicitly selected cells keep their full range");
+
+            Update(() =>
+            {
+                sheet.Cells["F3"].Value = 101;
+                sheet.Cells["F12"].Value = 102;
+                workbook.RangeSelection = sheet.Cells["E:E"];
+            });
+            var filteredColumn = Options();
+            Check(Address(filteredColumn, "EntireSheet") == "D3:F12" && Address(filteredColumn, "SelectedCells") == "E5:E7",
+                "a selected whole column ignores earlier and later rows in other columns and keeps its filter-hidden last row");
+
+            Update(() =>
+            {
+                sheet.AutoFilterMode = false;
+                sheet.Cells["D10"].Value = 15;
+                sheet.Cells["E10"].Value = 22;
+                workbook.RangeSelection = sheet.Cells["D9:E10"];
+            });
+            void VerifyHeaders(object left, object right, bool expected, string label)
+            {
+                Update(() =>
+                {
+                    sheet.Cells["D9"].Value = left;
+                    var rightCell = sheet.Cells["E9"];
+                    rightCell.NumberFormat = right is string ? "@" : "General";
+                    rightCell.Value = right;
+                    if (right is string) Check(rightCell.Value is string, "the heading fixture retains the value as text");
+                });
+                var selection = Get(Options(), "SelectedCells");
+                Check((bool)Get(selection, "SuggestHeaders") == expected, label);
+            }
+            VerifyHeaders("Group name", null, true, "a selected range below the first used row can have text headings with a blank heading cell");
+            VerifyHeaders(102d, 103d, false, "typed numeric first rows remain data");
+            VerifyHeaders("Group name", 103d, false, "a first row with text and a typed number remains data");
+            VerifyHeaders("Group name", "0103", false, "a number entered as text prevents a heading suggestion");
+            VerifyHeaders("Group name", "1.03e+02", false, "scientific notation entered as text prevents a heading suggestion");
+            VerifyHeaders("Group name", false, false, "a Boolean in the first row prevents a heading suggestion");
+            VerifyHeaders(null, null, false, "a completely blank first row remains data");
+        }
+        finally { if (original != null) Update(() => workbook.ActiveWorksheet = original); }
+    }
+
+    static async Task VerifyWorksheetRValues(Form session, string check, string label)
+    {
+        var console = RConsole(session);
+        int before = RFinished(session);
+        await ((Task)Call(console, "SubmitAsync", check + "\ncat('SHELL_WORKSHEET_R_OK\\n')", "console"))
+            .WaitAsync(TimeSpan.FromSeconds(45));
+        await CompleteRCommand(session, before);
+        Check(((string)Get(console, "Transcript")).Split('\n').Any(line => line.Trim() == "SHELL_WORKSHEET_R_OK"), label);
     }
 
     static async Task CheckSavedWorksheetR(Form imported, string rscript, string verifyData)
@@ -183,7 +364,8 @@ internal static partial class Program
         finally { await DeleteRFixtureDirectory(scratch, "StatsDirect-worksheet-save-"); }
     }
 
-    static async Task DriveWorksheetRPrompt(frmMain main, string title, string address, DialogResult action, bool useHeaders)
+    static async Task DriveWorksheetRPrompt(frmMain main, string title, string selectedAddress, string choice,
+        bool vectorList, bool emptySelection, bool friendlyNames)
     {
         Form prompt = null;
         for (int attempt = 0; attempt < 80 && prompt == null; attempt++)
@@ -196,20 +378,65 @@ internal static partial class Program
         {
             var scope = (Label)Field(prompt, "scope");
             var headers = (CheckBox)prompt.Controls.Find("worksheetRHeaders", true).Single();
-            Check(prompt.Owner == main && prompt.Text == title && scope.Text.Replace("$", "").Contains(address, StringComparison.Ordinal)
-                && scope.Text.Contains("worksheet_data", StringComparison.Ordinal) && headers.Enabled,
-                title + " identifies the exact workbook range and offers a heading choice");
+            var names = (CheckBox)prompt.Controls.Find("worksheetRFriendlyNames", true).Single();
+            var format = (ComboBox)prompt.Controls.Find("worksheetRFormat", true).Single();
+            RadioButton Find(string suffix) => (RadioButton)prompt.Controls.Find("worksheetR" + suffix, true).Single();
+            var all = Find("All");
+            var selected = Find("Selected");
+            var none = Find("None");
+            Check(prompt.Owner == main && prompt.Text == title && scope.Text.Contains("worksheet_data", StringComparison.Ordinal)
+                && all.Enabled && all.Text.Replace("$", "").Contains("A1:C4", StringComparison.Ordinal)
+                && Regex.IsMatch(all.Text, @"\b4\D+3\b"),
+                title + " identifies the full used worksheet range and its dimensions");
+            Check(selectedAddress == null ? !selected.Enabled : selected.Enabled && selected.Text.Replace("$", "").Contains(selectedAddress, StringComparison.Ordinal)
+                && Regex.IsMatch(selected.Text, selectedAddress == "B2" ? @"\b1\D+1\b" : @"\b3\D+2\b"),
+                selectedAddress == null ? "the Selected cells choice is disabled for an unavailable range"
+                    : "Selected cells identifies the exact selection and its dimensions");
+            if (emptySelection)
+                Check(selected.Text.Contains("no data", StringComparison.OrdinalIgnoreCase),
+                    "Selected cells explains that the formatting-only selected column has no data");
+            Check(none.Enabled && none.Checked && !all.Checked && !selected.Checked && !headers.Enabled && !headers.Checked,
+                "No data is selected on opening and disables the headings checkbox");
+            Check(names.Text == "Use R-friendly names" && !names.Checked && !names.Enabled,
+                title + " preserves worksheet names by default");
+            Check(!format.Enabled && format.SelectedIndex == 0 && format.AccessibleName == "Import as"
+                && format.Items.Cast<object>().Select(format.GetItemText)
+                    .SequenceEqual(new[] { "Data frame (keep rows aligned)", "List of vectors (independent samples)" }),
+                "No data disables the format selector, which defaults to Data frame and offers List of vectors");
             var buttons = WorksheetRButtons(prompt).ToDictionary(button => button.DialogResult);
-            Check(buttons.Keys.ToHashSet().SetEquals([DialogResult.Yes, DialogResult.No, DialogResult.Cancel])
-                && ReferenceEquals(prompt.AcceptButton, buttons[DialogResult.No]),
+            Check(buttons.Keys.ToHashSet().SetEquals([DialogResult.OK, DialogResult.Cancel])
+                && ReferenceEquals(prompt.AcceptButton, buttons[DialogResult.OK]),
                 "copying worksheet data requires an explicit choice");
             var client = prompt.RectangleToScreen(prompt.ClientRectangle);
-            Check(buttons.Values.All(button => client.Contains(button.RectangleToScreen(button.ClientRectangle)))
-                && client.Contains(headers.RectangleToScreen(headers.ClientRectangle))
-                && client.Contains(scope.RectangleToScreen(scope.ClientRectangle)),
+            Check(buttons.Values.Cast<Control>().Concat(new Control[] { all, selected, none, headers, names, format, scope })
+                .All(control => client.Contains(control.RectangleToScreen(control.ClientRectangle))),
                 "all R prompt controls fit inside the dialog at this Windows display scale");
-            headers.Checked = useHeaders;
-            buttons[action].PerformClick();
+            if (choice is "All" or "Selected")
+            {
+                Find(choice).Checked = true;
+                Check(headers.Enabled == (choice == "All" || selectedAddress != "B2"),
+                    "the headings checkbox is enabled only for a data choice with more than one row");
+                Check(headers.Checked == (choice == "All" || selectedAddress == "A1:B3"),
+                    "the headings checkbox automatically follows the chosen range and stays off for one cell");
+                Check(names.Enabled == headers.Checked && !names.Checked,
+                    "R-friendly names is an optional choice available only when importing column headings");
+                Check(format.Enabled && format.SelectedIndex == 0, "a data choice enables the format selector with Data frame selected");
+                if (vectorList)
+                {
+                    format.SelectedIndex = 1;
+                    var hint = (Label)Field(prompt, "formatHint");
+                    Check(hint.Visible && hint.Text.Contains("Missing values", StringComparison.Ordinal)
+                        && client.Contains(hint.RectangleToScreen(hint.ClientRectangle)),
+                        "the list of vectors choice explains per-column missing-value removal inside the dialog");
+                }
+                if (friendlyNames)
+                {
+                    Check(names.Enabled, "R-friendly names can be enabled for a worksheet data import");
+                    names.Checked = true;
+                    Check((bool)Get(prompt, "UseFriendlyNames"), "the checkbox sets the actual import option");
+                }
+            }
+            buttons[choice == null ? DialogResult.Cancel : DialogResult.OK].PerformClick();
         }
         finally
         {
@@ -220,7 +447,7 @@ internal static partial class Program
     static IEnumerable<Button> WorksheetRButtons(Control parent) => parent.Controls.Cast<Control>()
         .SelectMany(control => control is Button button ? new[] { button } : WorksheetRButtons(control));
 
-    static async Task CheckWorksheetRGuiImport(Form grid, string verifyData)
+    static async Task CheckWorksheetRGuiImport(Form grid, string scope, string formatName, string verifyData, bool friendlyNames = false)
     {
         var launcher = typeof(frmMain).Assembly.GetType("StatsDirect.R.WorksheetRLauncher", throwOnError: true)!;
         object LaunchCall(string method, params object[] arguments) =>
@@ -232,8 +459,10 @@ internal static partial class Program
         string receipt = Path.Combine(scratch, "workspace.txt");
         try
         {
-            var data = Call(grid, "DescribeWorksheetRData", new object[] { null });
-            string source = (string)((Delegate)Get(data, "WriteImportScript")).DynamicInvoke(true, folder)!;
+            var data = Get(Call(grid, "DescribeWorksheetRData"), scope);
+            var writeImportScript = (Delegate)Get(data, "WriteImportScript");
+            var format = Enum.Parse(writeImportScript.GetType().GetMethod("Invoke")!.GetParameters()[1].ParameterType, formatName);
+            string source = (string)writeImportScript.DynamicInvoke(true, format, friendlyNames, folder)!;
             string probe = $$"""
                 .First <- function() {
                     result <- tryCatch({
@@ -249,7 +478,9 @@ internal static partial class Program
             while ((!File.Exists(receipt) || Directory.Exists(folder)) && DateTime.UtcNow < until)
                 await Task.Delay(50);
             Check(File.Exists(receipt) && File.ReadAllText(receipt).Trim() == "verified" && !Directory.Exists(folder),
-                "real external RGui receives the same selected cells in its startup workspace and removes the temporary import on exit");
+                "real external RGui receives the " + (formatName == "DataFrame" ? "selected-cell data frame" : "entire worksheet as a list of vectors")
+                + (friendlyNames ? " with unique R-friendly names" : " with original names")
+                + " in its startup workspace and removes the temporary import on exit");
         }
         finally
         {

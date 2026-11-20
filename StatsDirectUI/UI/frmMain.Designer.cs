@@ -109,9 +109,6 @@ namespace StatsDirect.UI
             this.pasteToolStripButton = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.helpToolStripButton = new System.Windows.Forms.ToolStripButton();
-            this.toolStripSeparator7 = new System.Windows.Forms.ToolStripSeparator();
-            this.lblActiveReport = new System.Windows.Forms.ToolStripLabel();
-            this.cboActiveReport = new System.Windows.Forms.ToolStripComboBox();
             this.pnlTop = new System.Windows.Forms.Panel();
             this.pnlModalMessage = new System.Windows.Forms.Panel();
             this.picModalMessageIcon = new System.Windows.Forms.PictureBox();
@@ -821,10 +818,7 @@ namespace StatsDirect.UI
             this.copyToolStripButton,
             this.pasteToolStripButton,
             this.toolStripSeparator2,
-            this.helpToolStripButton,
-            this.toolStripSeparator7,
-            this.lblActiveReport,
-            this.cboActiveReport});
+            this.helpToolStripButton});
             this.toolStrip.Location = new System.Drawing.Point(0, 31);
             this.toolStrip.MinimumSize = new System.Drawing.Size(0, 27);
             this.toolStrip.Name = "toolStrip";
@@ -921,25 +915,6 @@ namespace StatsDirect.UI
             this.helpToolStripButton.Size = new System.Drawing.Size(23, 24);
             this.helpToolStripButton.Text = "He&lp";
             this.helpToolStripButton.Click += new System.EventHandler(this.helpToolStripButton_Click);
-            // 
-            // toolStripSeparator7
-            // 
-            this.toolStripSeparator7.Name = "toolStripSeparator7";
-            this.toolStripSeparator7.Size = new System.Drawing.Size(6, 27);
-            // 
-            // lblActiveReport
-            // 
-            this.lblActiveReport.Name = "lblActiveReport";
-            this.lblActiveReport.Size = new System.Drawing.Size(57, 24);
-            this.lblActiveReport.Text = "Results to:";
-            // 
-            // cboActiveReport
-            // 
-            this.cboActiveReport.AutoSize = false;
-            this.cboActiveReport.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cboActiveReport.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cboActiveReport.Name = "cboActiveReport";
-            this.cboActiveReport.Size = new System.Drawing.Size(121, 21);
             // 
             // pnlTop
             // 
@@ -1554,10 +1529,7 @@ namespace StatsDirect.UI
         private System.Windows.Forms.ProgressBar progressBar;
         private System.Windows.Forms.Label lblProgress;
         private System.Windows.Forms.Button cmdCancelProgress;
-        private System.Windows.Forms.ToolStripComboBox cboActiveReport;
         private System.Windows.Forms.ToolStripButton newToolStripButton;
-        private System.Windows.Forms.ToolStripSeparator toolStripSeparator7;
-        private System.Windows.Forms.ToolStripLabel lblActiveReport;
         private System.Windows.Forms.ToolStripMenuItem renameContextMenutoolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem saveContextMenuToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem saveAsContextToolStripMenuItem;

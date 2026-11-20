@@ -60,6 +60,7 @@ namespace StatsDirect.UI
         /// A holder where we are activating a window via a tab.
         /// </summary>
         private Form mostRecentlySelectedWindow;
+        private StatsDirectForm lastSelectedReport;
 
         /// <summary>
         /// If true, a grid selection is in progress
@@ -172,8 +173,7 @@ namespace StatsDirect.UI
                 if (IsHandleCreated && !IsDisposed)
                     BeginInvoke(new Action(() => calculatorMenuTarget = null));
             };
-            // Reports and scripts own their single document toolbar. This bar serves the worksheet;
-            // its Results to selector stays available without putting a second bar above a report.
+            // Reports and scripts own their document toolbars. This bar serves the worksheet.
             var undoButton = DocumentToolbar.Button("Undo", "undo", (_, _) => EditHistory(false), "Ctrl+Z");
             var redoButton = DocumentToolbar.Button("Redo", "redo", (_, _) => EditHistory(true), "Ctrl+Y");
             var picker = new WorksheetCommandPicker();
@@ -222,7 +222,7 @@ namespace StatsDirect.UI
                 analyseButton,
                 DocumentToolbar.Button("Open R session", "r", (_, _) => OpenWorksheetR(false)),
                 DocumentToolbar.Button("Open external R session", "rPlus", (_, _) => OpenWorksheetR(true)),
-                lblActiveReport, cboActiveReport, new ToolStripSeparator(),
+                new ToolStripSeparator(),
                 DocumentToolbar.Button("Help", "help", helpToolStripButton_Click, "F1")
             });
             DocumentToolbar.Configure(toolStrip, () => {
@@ -244,8 +244,6 @@ namespace StatsDirect.UI
             panelTypeStack = new Stack<PanelType>();
             ShowPanel(PanelType.Default, false);
             UpdateFileList();
-            cboActiveReport.Items.Add(new ComboFormAdapter(null));
-            cboActiveReport.SelectedIndex = 0;
         }
 
         private WorksheetCommand[] WorksheetCommands()
@@ -783,19 +781,12 @@ namespace StatsDirect.UI
                 tabWindows.TabPages.Add(tabPage);
                 tabWindows.SelectedTab = tabPage;
 
-                // Add the report to the drop-down reports list
-                if (child is IReport)
-                {
-                    ComboFormAdapter cfa = new(child);
-                    cboActiveReport.Items.Add(cfa);
-                    cboActiveReport.SelectedItem = cfa;
-                }
-
                 // Store the information about the window
                 WindowInformation info = new() { TabPage = tabPage, Window = child };
                 child.Tag = info;
                 tabPage.Tag = info;
                 SdApplication.SoleInstance.AddWindow(info);
+                if (child is IReport) lastSelectedReport = child;
 
                 // Update the display
                 closeToolStripMenuItem.Enabled = tabWindows.TabPages.Count > 0;
@@ -899,17 +890,8 @@ namespace StatsDirect.UI
 
         internal void RemoveWindow(StatsDirectForm window)
         {
+            if (lastSelectedReport == window) lastSelectedReport = null;
             RemoveTab(window.WindowInformation.TabPage);
-            if (window is IReport)
-                RemoveReportFromCombo(window);
-        }
-
-        private void RemoveReportFromCombo(StatsDirectForm window)
-        {
-            cboActiveReport.Items.Remove(new ComboFormAdapter(window));
-            // Ensure there's always a selection unless we have no items at all
-            if (null == cboActiveReport.SelectedItem && cboActiveReport.Items.Count > 0)
-                cboActiveReport.SelectedIndex = cboActiveReport.Items.Count - 1;
         }
 
         private void RemoveTab(TabPage tabPage)
@@ -954,18 +936,8 @@ namespace StatsDirect.UI
                 tabWindows.SelectedTab = tabPage;
                 activatingViaWindow = false;
             }
-            if (null == cboActiveReport.SelectedItem)
-            {
-                WindowInformation wi = (WindowInformation)tabPage.Tag;
-                if (null != wi)
-                {
-                    if (wi.HasWindow)
-                    {
-                        StatsDirectForm f = wi.Window;
-                        cboActiveReport.SelectedItem = new ComboFormAdapter(f);
-                    }
-                }
-            }
+            var window = (tabPage?.Tag as WindowInformation)?.Window;
+            if (window is IReport) lastSelectedReport = window;
         }
 
         private void newReportToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1003,6 +975,15 @@ namespace StatsDirect.UI
         }
 
         private bool awaitingWebReportsClose;
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            base.OnFormClosing(e);
+            // Once the user has accepted the close and placement has been saved, hide
+            // the full-size frame before WinForms tears down its MDI children.
+            if (!e.Cancel && e.CloseReason == CloseReason.UserClosing)
+                Hide();
+        }
+
         private async void frmMain_FormClosing(object sender, FormClosingEventArgs e)
         {
             // WebView2 must return pending edits/export replies on the UI thread.
@@ -1073,78 +1054,28 @@ namespace StatsDirect.UI
             }
         }
 
-        /// <summary>
-        /// Load any window state we need from persistent storage.
-        /// </summary>
-        private void LoadWindowState()
+        // Apply the placement before the native window exists, including when a launch file opens an MDI child.
+        internal void RestoreWindowPlacement()
         {
-            const double FRACTION_OF_PRIMARY = 0.75;
-
-            // If our settings have previously been saved, load them now.  Otherwise, default to 75% width and height, centred, on the primary screen.
-            if (Settings.Default.MainWidth <= 0)
+            var settings = Settings.Default;
+            Rectangle bounds = new(settings.MainLeft, settings.MainTop, settings.MainWidth, settings.MainHeight);
+            if (Screen.PrimaryScreen is Screen primary)
             {
-                foreach (Screen screen in Screen.AllScreens)
+                if (bounds.Width <= 0 || bounds.Height <= 0)
                 {
-                    if (screen.Primary)
-                    {
-                        const double inflation = 0.0 - (1.0 - FRACTION_OF_PRIMARY) / 2.0;
-                        Rectangle windowBounds = new(screen.Bounds.Location, screen.Bounds.Size);
-                        windowBounds.Inflate((int)(screen.Bounds.Width * inflation), (int)(screen.Bounds.Height * inflation));
-                        Bounds = windowBounds;
-                    }
+                    // First launch: centre a window occupying three quarters of the primary screen.
+                    bounds = primary.Bounds;
+                    bounds.Inflate(-bounds.Width / 8, -bounds.Height / 8);
                 }
+                else if (!Settings.IsUsableWindowRectangle(bounds, Screen.AllScreens.Select(screen => screen.WorkingArea).ToArray()))
+                    bounds = primary.WorkingArea;
             }
-            else
+            if (bounds.Width > 0 && bounds.Height > 0)
             {
-                try
-                {
-                    Top = Settings.Default.MainTop;
-                    Left = Settings.Default.MainLeft;
-                    Width = Settings.Default.MainWidth;
-                    Height = Settings.Default.MainHeight;
-
-                    // Check against current screen settings - on remote desktops, for example, a user may now have a smaller screen.
-                    // If the window's title bar is completely invisible, force it onto the main screen.
-                    Screen primaryScreen = null;
-                    bool titleBarIsVisible = false;
-                    Rectangle titleBarRect = new(Left, Top, Width, 20); // Assume a 20 pixel high title bar - TODO: get from system structures
-                    foreach (Screen screen in Screen.AllScreens)
-                    {
-                        // Fast test, save the primary screen in case we need it later
-                        if (screen.Primary)
-                            primaryScreen = screen;
-
-                        // Can we see enough of the title bar on this screen to be useful?
-                        // Clone the rect as intersect is destructive
-                        Rectangle visibleTitleBar = new(titleBarRect.X, titleBarRect.Y, titleBarRect.Width, titleBarRect.Height);
-                        visibleTitleBar.Intersect(screen.Bounds);
-                        // For the sake of argument, a 40x10 pixel rectangle of the title bar is "good enough" to drag it on.
-                        if (visibleTitleBar.Height > 10 && visibleTitleBar.Width > 40)
-                        {
-                            titleBarIsVisible = true;
-                            break;
-                        }
-                    }
-                    if (null != primaryScreen && !titleBarIsVisible)
-                    {
-                        // Move the window onto the primary display
-                        Rectangle bounds = primaryScreen.WorkingArea;
-                        Top = bounds.Top;
-                        Left = bounds.Left;
-                        Width = bounds.Width;
-                        Height = bounds.Height;
-                    }
-                }
-                catch (NullReferenceException)
-                {
-                    // The window was saved maximised, so we don't have sizes
-                }
+                StartPosition = FormStartPosition.Manual;
+                Bounds = bounds;
             }
-            // A window closed maximised opens maximised, also when no normal bounds were saved with it
-            WindowState = Settings.Default.MainWindowState;
-            // Prevent starting in a minimised state
-            if (FormWindowState.Minimized == WindowState)
-                WindowState = FormWindowState.Normal;
+            WindowState = settings.MainWindowState == FormWindowState.Maximized ? FormWindowState.Maximized : FormWindowState.Normal;
             windowStateBeforeMinimising = WindowState;
         }
 
@@ -1178,7 +1109,6 @@ namespace StatsDirect.UI
         private void frmMain_Load(object sender, EventArgs e)
         {
             FitWindowTabsToText();
-            LoadWindowState();
             AddTemplates();
         }
 
@@ -3603,17 +3533,18 @@ namespace StatsDirect.UI
         {
             get
             {
-                ComboFormAdapter selectedReport = (ComboFormAdapter)cboActiveReport.SelectedItem;
-                if (null == selectedReport)
-                    return (IReport)CreateReport();
-                IReport rpt = (IReport)selectedReport.StatsDirectForm;
-                if (null == rpt)
+                if (!IsOpenReport(lastSelectedReport))
                 {
-                    return (IReport)CreateReport();
+                    lastSelectedReport = tabWindows.TabPages.Cast<TabPage>()
+                        .Select(tab => (tab.Tag as WindowInformation)?.Window)
+                        .LastOrDefault(IsOpenReport);
                 }
-                return rpt;
+                return (IReport)(lastSelectedReport ?? CreateReport());
             }
         }
+
+        private static bool IsOpenReport(StatsDirectForm window) =>
+            window is IReport && !window.IsDisposed && !window.Disposing;
 
         private void saveContextMenuToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -3667,15 +3598,6 @@ namespace StatsDirect.UI
                         if (null != lastClickedTab)
                         {
                             lastClickedTab.FriendlyName = newName;
-
-                            // If it's a report, we might need to add it with its new name
-                            if (lastClickedTab.HasWindow && lastClickedTab.Window is IReport)
-                            {
-                                // Force the update - the list only notices a name change when we remove and re-add.
-                                StatsDirectForm f = lastClickedTab.Window;
-                                int index = cboActiveReport.Items.IndexOf(new ComboFormAdapter(f));
-                                cboActiveReport.Items[index] = new ComboFormAdapter(f);
-                            }
                         }
                     }
 

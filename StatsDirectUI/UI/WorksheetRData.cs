@@ -12,47 +12,137 @@ namespace StatsDirect.UI;
 
 internal partial class frmSpreadsheetGear
 {
-    internal WorksheetRData DescribeWorksheetRData(out string unavailableReason)
+    internal WorksheetRImportOptions DescribeWorksheetRData() => workbookView.WithLock(() =>
     {
-        var (data, reason) = workbookView.WithLock<(WorksheetRData, string)>(() =>
+        var sheet = workbookView.ActiveWorksheet;
+        var cells = sheet.Cells;
+        var used = WorksheetDataRange(sheet.UsedRange);
+        if (used == null)
+            return new WorksheetRImportOptions(sheet.Name, null, null);
+
+        var entireSheet = Describe(used);
+        var selected = workbookView.RangeSelection;
+        if (selected.AreaCount != 1)
+            return new WorksheetRImportOptions(sheet.Name, entireSheet, null, "select one rectangular range");
+
+        bool wholeColumns = selected.RowCount == cells.RowCount;
+        bool wholeRows = selected.ColumnCount == cells.ColumnCount;
+        if (wholeColumns && wholeRows)
+            return new WorksheetRImportOptions(sheet.Name, entireSheet, entireSheet);
+
+        int top = selected.Row;
+        int bottom = selected.Row + selected.RowCount - 1;
+        int left = wholeRows ? used.Column : selected.Column;
+        int right = wholeRows ? used.Column + used.ColumnCount - 1 : selected.Column + selected.ColumnCount - 1;
+        if (wholeColumns)
         {
-            var sheet = workbookView.ActiveWorksheet;
-            var selected = workbookView.RangeSelection;
-            if (selected.AreaCount != 1)
-                return (null, "Select a single rectangular range to copy worksheet data into R.");
+            // Search the chosen columns within the data bounds, then keep the chosen columns in the import.
+            int firstColumn = Math.Max(left, used.Column);
+            int lastColumn = Math.Min(right, used.Column + used.ColumnCount - 1);
+            var data = firstColumn <= lastColumn
+                ? WorksheetDataRange(cells[used.Row, firstColumn, used.Row + used.RowCount - 1, lastColumn])
+                : null;
+            if (data == null)
+                return new WorksheetRImportOptions(sheet.Name, entireSheet, null, "no data in these columns");
+            top = data.Row;
+            bottom = data.Row + data.RowCount - 1;
+        }
 
-            var used = sheet.UsedRange;
-            if (used.RowCount == 1 && used.ColumnCount == 1 && used.Value == null)
-                return (null, "The active worksheet has no data to copy into R.");
+        return new WorksheetRImportOptions(sheet.Name, entireSheet, Describe(cells[top, left, bottom, right]));
 
-            if (selected.RowCount == 1 && selected.ColumnCount == 1)
-                selected = used;
+        WorksheetRData Describe(IRange range)
+        {
+            return new WorksheetRData(range.Address, range.RowCount, range.ColumnCount, HasColumnNames(range),
+                (useHeaders, format, useFriendlyNames, folder) =>
+                    workbookView.WithLock(() => WorksheetRData.WriteScript(range, useHeaders, format, useFriendlyNames, folder)));
+        }
+    });
 
-            // Whole-column and whole-row selections are bounded by the sheet's used range on that axis.
-            int top = selected.RowCount == 1_048_576 ? used.Row : selected.Row;
-            int bottom = selected.RowCount == 1_048_576 ? used.Row + used.RowCount - 1 : selected.Row + selected.RowCount - 1;
-            int left = selected.ColumnCount == 16_384 ? used.Column : selected.Column;
-            int right = selected.ColumnCount == 16_384 ? used.Column + used.ColumnCount - 1 : selected.Column + selected.ColumnCount - 1;
-            var range = sheet.Cells[top, left, bottom, right];
-            bool suggestHeaders = top == used.Row && bottom > top && Enumerable.Range(left, right - left + 1)
-                .All(column => sheet.Cells[top, column].Value is string text && !string.IsNullOrWhiteSpace(text));
-            return (new WorksheetRData(sheet.Name, range.Address, range.RowCount, range.ColumnCount, suggestHeaders,
-                (headers, folder) => workbookView.WithLock(() => WorksheetRData.WriteScript(range, headers, folder))), null);
-        });
-        unavailableReason = reason;
-        return data;
+    private static bool HasColumnNames(IRange range)
+    {
+        if (range.RowCount < 2) return false;
+
+        bool hasName = false;
+        for (int column = 0; column < range.ColumnCount; column++)
+        {
+            object value = range[0, column].Value;
+            if (value == null || value is string blank && string.IsNullOrWhiteSpace(blank)) continue;
+
+            // Numeric-looking text values can be data copied from another application.
+            if (value is not string text || !text.Any(char.IsLetter) || bool.TryParse(text, out _) ||
+                double.TryParse(text, out _) || double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out _))
+                return false;
+            hasName = true;
+        }
+        return hasName;
+    }
+
+    private static IRange WorksheetDataRange(IRange used)
+    {
+        var sheet = used.Worksheet;
+        if (sheet.AutoFilterMode) return FilteredWorksheetDataRange(used);
+
+        // UsedRange can extend past the data because of formatting.
+        var topLeft = used[0, 0];
+        var bottomRight = used[used.RowCount - 1, used.ColumnCount - 1];
+        IRange Find(IRange after, SearchOrder order, SearchDirection direction) =>
+            used.Find("*", after, FindLookIn.Formulas, LookAt.Part, order, direction, false);
+
+        var first = Find(bottomRight, SearchOrder.ByRows, SearchDirection.Next);
+        if (first == null) return null;
+        int lastRow = Find(topLeft, SearchOrder.ByRows, SearchDirection.Previous).Row;
+        int firstColumn = Find(bottomRight, SearchOrder.ByColumns, SearchDirection.Next).Column;
+        int lastColumn = Find(topLeft, SearchOrder.ByColumns, SearchDirection.Previous).Column;
+        return sheet.Cells[first.Row, firstColumn, lastRow, lastColumn];
+    }
+
+    private static IRange FilteredWorksheetDataRange(IRange used)
+    {
+        // Find skips filtered-out rows. Read bounded blocks so the import includes those rows.
+        int firstRow = int.MaxValue, firstColumn = int.MaxValue, lastRow = -1, lastColumn = -1;
+        var cells = used.Worksheet.Cells;
+        int columns = used.ColumnCount;
+        int batchRows = Math.Max(1, 16_384 / columns);
+        for (int start = 0; start < used.RowCount; start += batchRows)
+        {
+            int rows = Math.Min(batchRows, used.RowCount - start);
+            int rowOffset = used.Row + start;
+            var values = cells[rowOffset, used.Column, rowOffset + rows - 1, used.Column + columns - 1].Value;
+            if (values is object[,] block)
+            {
+                for (int row = 0; row < rows; row++)
+                    for (int column = 0; column < columns; column++)
+                        if (block[row, column] != null) Include(rowOffset + row, used.Column + column);
+            }
+            else if (values != null) Include(rowOffset, used.Column);
+        }
+
+        return lastRow < 0 ? null : cells[firstRow, firstColumn, lastRow, lastColumn];
+
+        void Include(int row, int column)
+        {
+            firstRow = Math.Min(firstRow, row);
+            firstColumn = Math.Min(firstColumn, column);
+            lastRow = Math.Max(lastRow, row);
+            lastColumn = Math.Max(lastColumn, column);
+        }
     }
 }
 
-internal sealed record WorksheetRData(string SheetName, string Address, int RowCount, int ColumnCount,
-    bool SuggestHeaders, Func<bool, string, string> WriteImportScript)
+internal sealed record WorksheetRImportOptions(string SheetName, WorksheetRData EntireSheet,
+    WorksheetRData SelectedCells, string SelectionUnavailableReason = null);
+
+internal enum WorksheetRDataFormat { DataFrame, VectorList }
+
+internal sealed record WorksheetRData(string Address, int RowCount, int ColumnCount,
+    bool SuggestHeaders, Func<bool, WorksheetRDataFormat, bool, string, string> WriteImportScript)
 {
     internal const string CsvFileName = "worksheet-data.csv";
     private const string MissingValue = "%NA";
 
     private enum ColumnType { Unknown, Numeric, Logical, Text }
 
-    internal static string WriteScript(IRange range, bool headers, string folder)
+    internal static string WriteScript(IRange range, bool headers, WorksheetRDataFormat format, bool useFriendlyNames, string folder)
     {
         var sheet = range.Worksheet;
         int rows = range.RowCount - (headers ? 1 : 0);
@@ -66,9 +156,19 @@ internal sealed record WorksheetRData(string SheetName, string Address, int RowC
         }).ToArray();
 
         string namesArgument = RStrings(names);
+        string nameConversion = headers && useFriendlyNames
+            ? "# Turn headings into unique R names that can be used without backticks.\n"
+                + "names(worksheet_data) <- make.unique(\n"
+                + "  make.names(gsub(\"[[:space:]]+\", \"_\", trimws(names(worksheet_data)))), sep = \"_\")\n"
+            : "";
+        string vectorConversion = format == WorksheetRDataFormat.VectorList
+            ? "# Remove missing values separately for each independent sample.\n"
+                + "worksheet_data <- lapply(worksheet_data, function(column) column[!is.na(column)])\n"
+            : "";
         if (rows == 0)
             return "# The selected range contains column headings only.\n" +
-                $"worksheet_data <- stats::setNames(as.data.frame(matrix(nrow = 0, ncol = {columns})), {namesArgument})\n";
+                $"worksheet_data <- stats::setNames(as.data.frame(matrix(nrow = 0, ncol = {columns})), {namesArgument})\n" +
+                nameConversion + vectorConversion;
 
         string path = Path.GetFullPath(Path.Combine(folder, CsvFileName));
         Directory.CreateDirectory(folder);
@@ -144,7 +244,7 @@ internal sealed record WorksheetRData(string SheetName, string Address, int RowC
                 .AppendLine("  gsub(\"%25\", \"%\", gsub(\"%0D\", \"\\r\", column, fixed = TRUE), fixed = TRUE)")
                 .AppendLine("})");
         }
-        return script.ToString();
+        return script.Append(nameConversion).Append(vectorConversion).ToString();
     }
 
     private static string CellText(object value)

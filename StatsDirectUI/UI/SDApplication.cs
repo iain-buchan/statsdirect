@@ -168,6 +168,7 @@ namespace StatsDirect.UI
         internal frmMain CreateMainWindow()
         {
             MainWindow = new frmMain();
+            MainWindow.RestoreWindowPlacement();
             return MainWindow;
         }
 
@@ -561,9 +562,9 @@ namespace StatsDirect.UI
         }
 
         /// <summary>
-        /// Allows the user to select from existing report windows, plus potentially a new one.
+        /// Gets the destination report, creating one when there are no reports open.
         /// </summary>
-        /// <param name="AllowNew">If true, the user may select a new report as well as any existing ones.  If false, only existing reports may be picked.</param>
+        /// <param name="AllowNew">Retained for compatibility with existing report consumers.</param>
         /// <returns></returns>
         public IReport PickReportWindow(bool AllowNew)
         {
@@ -572,7 +573,6 @@ namespace StatsDirect.UI
 
         internal IReport SelectReportWindow(Pane selectedPane)
         {
-            // As we now don't remember reports for output, this is equivalent to a PickReportWindow.
             return PickReportWindow(false);
         }
 
