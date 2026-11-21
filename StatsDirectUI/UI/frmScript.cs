@@ -38,7 +38,7 @@ namespace StatsDirect.UI
         public frmScript()
         {
             InitializeComponent();
-            cboLanguage.SelectedIndexChanged += (_, _) => RefreshScriptPresentation();
+            cboLanguage.SelectedIndexChanged += (_, _) => { if (!KeepRForWorksheetData()) RefreshScriptPresentation(); };
             editTarget = rtbDoc;
             rtbDoc.Enter += (_, _) => editTarget = rtbDoc;
             outputPane.Enter += (_, _) => editTarget = outputPane;

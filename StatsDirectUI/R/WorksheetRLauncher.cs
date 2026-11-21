@@ -166,12 +166,12 @@ internal static class WorksheetRLauncher
     /// RULES.md 6.2: copies of worksheet data left over (an R window open when StatsDirect closed, or a crash) are removed when
     /// StatsDirect closes and when it next starts.  A folder another running StatsDirect or an RGui still needs is not left over.
     /// </summary>
-    internal static void DeleteLeftoverImports()
+    internal static void DeleteLeftoverImports(bool atStart = false)
     {
         try
         {
             foreach (string folder in Directory.GetDirectories(Path.GetTempPath(), ImportFolderPrefix + "*"))
-                if (!InUse(folder))
+                if (!InUse(folder) && !(atStart && OwnedByThisProcess(folder)))
                     DeleteImportFolder(folder);
         }
         catch (IOException) { }
@@ -199,6 +199,21 @@ internal static class WorksheetRLauncher
     /// that R+ started on it.  This StatsDirect's own folders are left over when it closes.  A folder with no owner is being made by
     /// another StatsDirect at this moment, or was left by a build that wrote none, which only its age tells apart.
     /// </summary>
+    // Whether this very process made the folder: at start-up none is left over, though a script opened from the command line has one
+    // already (the independent review of 0b9c2282).
+    private static bool OwnedByThisProcess(string folder)
+    {
+        try
+        {
+            string[] parts = File.ReadAllText(Path.Combine(folder, OwnerName)).Split(' ');
+            using var self = Process.GetCurrentProcess();
+            return parts.Length == 2 && int.TryParse(parts[0], NumberStyles.None, CultureInfo.InvariantCulture, out int id) && id == Environment.ProcessId
+                && long.TryParse(parts[1], NumberStyles.None, CultureInfo.InvariantCulture, out long started)
+                && Math.Abs(self.StartTime.ToUniversalTime().Ticks - started) < TimeSpan.TicksPerSecond;
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException or InvalidOperationException or Win32Exception) { return false; }
+    }
+
     internal static bool InUse(string folder)
     {
         string text;

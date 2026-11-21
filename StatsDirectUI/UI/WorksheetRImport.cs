@@ -109,11 +109,13 @@ internal static class WorksheetRImport
     private static (int Top, int Bottom, int Left, int Right)? Bounds(IRange range)
     {
         if (!range.Worksheet.AutoFilterMode) return FoundBounds(range);
-        // While an AutoFilter is on, Find passes over every hidden row (whether the filter or the user hid it): it finds the visible
-        // rows' bounds, and the hidden rows are added.  Few hidden cells are read one by one.  Otherwise each hidden row's first and last
-        // cell with contents come from the row's ends, as Ctrl+arrow finds them, which pass over hidden columns, so those columns' cells
-        // are read one by one, or, when they are many, a copy of the sheet is searched with the filter off.  A far-off formatted cell,
-        // which widens the used range, so costs little however many rows and columns are hidden.
+        // While an AutoFilter is on, Find passes over every hidden row (whether the filter or the user hid it), and the columns it gives
+        // can leave out a column whose cells are all in shown rows that are not one block (the independent review of 0b9c2282).  So the
+        // bounds come from the import's own copy of the sheet (TryCopyBounds).  Should no copy serve, the visible rows' bounds from Find
+        // are taken, with the hidden rows added: few hidden cells are read one by one; otherwise each hidden row's first and last cell
+        // with contents come from the row's ends, as Ctrl+arrow finds them, which pass over hidden columns, so those columns' cells are
+        // read one by one.
+        if (TryCopyBounds(range, out var copied)) return copied;
         var bounds = FoundBounds(range);
         var cells = range.Worksheet.Cells;
         int last = range.Row + range.RowCount - 1, first = range.Column, right = range.Column + range.ColumnCount - 1;
@@ -138,10 +140,6 @@ internal static class WorksheetRImport
             return bounds;
         }
         int[] hiddenColumns = Enumerable.Range(first, range.ColumnCount).Where(column => cells[0, column].EntireColumn.Hidden).ToArray();
-        // Where hidden rows meet many hidden columns, a copy of the sheet is searched instead, with the filter off there (Codex's
-        // third review), or, when a password keeps the copy's filter on, the cells the sheet lists when saved (the fourth review).
-        if (hiddenRows * hiddenColumns.Length > 1_000_000
-            && (TryUnfilteredBounds(range, out var unfiltered) || TrySavedBounds(range, out unfiltered))) return unfiltered;
         var values = (SpreadsheetGear.Advanced.Cells.IValues)range.Worksheet;   // a cell's value without a range for each cell
         foreach (var (from, to) in runs)
             for (int row = from; row <= to; row++)
@@ -168,40 +166,68 @@ internal static class WorksheetRImport
         return next.Value != null && next.Column >= first && next.Column <= last ? next.Column : null;
     }
 
-    // The bounds Find gives in a copy of the sheet, in a workbook of the import's own that calculates nothing, with the filter off there,
-    // so that Find passes over no row.  The copy takes milliseconds, however large the sheet; the sheet itself is left as it is,
-    // protection included.  A copy of a sheet protected without a password allows the program's own changes (ProtectionMode).  False
-    // when the copy cannot be made or its filter turned off, as when a password protects the sheet.
-    private static bool TryUnfilteredBounds(IRange range, out (int Top, int Bottom, int Left, int Right)? bounds)
+    // The bounds within the range from the import's own copy of the sheet, in a workbook of its own that calculates nothing; the copy
+    // takes milliseconds, however large the sheet, and the sheet itself is left as it is, protection included.  The copy's filter is
+    // turned off, a copy of a sheet protected without a password allowing the program's own changes (ProtectionMode), and Find searches
+    // it.  A password keeps the copy's filter on: then its cells are read one by one where they are no more than 50 million, and
+    // otherwise the copy alone is saved and the cells it lists are read (TrySavedBounds).  False when none of these serves.
+    private static bool TryCopyBounds(IRange range, out (int Top, int Bottom, int Left, int Right)? bounds)
     {
         bounds = null;
+        int top = range.Row, bottom = range.Row + range.RowCount - 1, left = range.Column, right = range.Column + range.ColumnCount - 1;
         var book = Factory.GetWorkbook(CultureInfo.InvariantCulture);
         try
         {
             book.WorkbookSet.Calculation = Calculation.Manual;
             var copy = (IWorksheet)range.Worksheet.CopyAfter(book.Worksheets[0]);
-            if (copy.ProtectContents) copy.ProtectionMode = true;   // refused, with InvalidOperationException, for a password
-            copy.AutoFilterMode = false;
-            if (copy.AutoFilterMode) return false;
-            bounds = FoundBounds(copy.Cells[range.Row, range.Column, range.Row + range.RowCount - 1, range.Column + range.ColumnCount - 1]);
-            return true;
+            try
+            {
+                if (copy.ProtectContents) copy.ProtectionMode = true;   // refused, with InvalidOperationException, for a password
+                copy.AutoFilterMode = false;
+            }
+            catch (InvalidOperationException) { }
+            if (!copy.AutoFilterMode)
+            {
+                bounds = FoundBounds(copy.Cells[top, left, bottom, right]);
+                return true;
+            }
+            if ((long)range.RowCount * range.ColumnCount <= 50_000_000)
+            {
+                bounds = ValueBounds((SpreadsheetGear.Advanced.Cells.IValues)copy, top, bottom, left, right);
+                return true;
+            }
+            book.Worksheets[0].Delete();   // the copy alone, so that the saved workbook lists its cells and no others
+            return TrySavedBounds(book, top, bottom, left, right, out bounds);
         }
         catch (Exception e) when (e is not OutOfMemoryException) { return false; }
         finally { book.Close(); }
     }
 
-    // The bounds of the cells the sheet lists when saved as a workbook of its own, within the range: each cell with a value, a formula
-    // or inline text.  Saving reads the sheet as it is, protected or not, and lists only the cells it holds, so this costs as much as
-    // the sheet's contents, however many rows and columns are hidden.  SpreadsheetGear leaves out a row's or a cell's reference where it
-    // follows the one before, as the file format allows.  False when the sheet cannot be saved or read so.
-    private static bool TrySavedBounds(IRange range, out (int Top, int Bottom, int Left, int Right)? bounds)
+    // The bounds of the cells with a value or a formula, read one by one.
+    private static (int, int, int, int)? ValueBounds(SpreadsheetGear.Advanced.Cells.IValues values, int top, int bottom, int left, int right)
+    {
+        int first = int.MaxValue, last = -1, leftmost = int.MaxValue, rightmost = -1;
+        for (int row = top; row <= bottom; row++)
+            for (int column = left; column <= right; column++)
+                if (values[row, column] != null)
+                {
+                    first = Math.Min(first, row); last = Math.Max(last, row);
+                    leftmost = Math.Min(leftmost, column); rightmost = Math.Max(rightmost, column);
+                }
+        return last < 0 ? null : (first, last, leftmost, rightmost);
+    }
+
+    // The bounds, within rows firstRow to lastRow and columns firstColumn to lastColumn, of the cells a workbook of one sheet lists when
+    // saved: each cell with a value, a formula or inline text.  Saving lists only the cells the sheet holds, protected or not, so this
+    // costs as much as the sheet's contents, however many rows and columns are hidden.  SpreadsheetGear leaves out a row's or a cell's
+    // reference where it follows the one before, as the file format allows.  False when the workbook cannot be saved or read so.
+    private static bool TrySavedBounds(IWorkbook book, int firstRow, int lastRow, int firstColumn, int lastColumn, out (int Top, int Bottom, int Left, int Right)? bounds)
     {
         bounds = null;
-        int firstRow = range.Row, lastRow = range.Row + range.RowCount - 1, firstColumn = range.Column, lastColumn = range.Column + range.ColumnCount - 1;
         int top = int.MaxValue, bottom = -1, left = int.MaxValue, right = -1;
         try
         {
-            byte[] saved = range.Worksheet.SaveToMemory(FileFormat.OpenXMLWorkbook);
+            byte[] saved = book.SaveToMemory(FileFormat.OpenXMLWorkbook);
             using var zip = new System.IO.Compression.ZipArchive(new MemoryStream(saved), System.IO.Compression.ZipArchiveMode.Read);
             var parts = zip.Entries.Where(entry => entry.FullName.StartsWith("xl/worksheets/", StringComparison.Ordinal)
                 && entry.FullName.EndsWith(".xml", StringComparison.Ordinal) && !entry.FullName.Contains("/_rels/", StringComparison.Ordinal)).ToArray();
@@ -865,11 +891,16 @@ internal static class WorksheetRImport
     /// script's data file is moved by changing this code alone, so that comments and the user's own code stay as they are.</summary>
     internal static string ReaderOperand(string path) => "utils::read.csv(file(" + QuotePath(path) + ", encoding = \"native.enc\")";
 
-    /// <summary>Each place a text starts in R code itself: outside comments, string literals (raw strings among them) and backquoted
-    /// names, and not within a longer name.  A commented-out import line is a comment (Codex's retest of 0b9c2282).</summary>
-    internal static List<int> InCode(string source, string text)
+    /// <summary>
+    /// Each string literal in R code whose text, quotes included, is the given literal, ignoring case: the places a script names a file
+    /// by its path as StatsDirect writes it (<see cref="QuotePath"/>), the import's reader among them.  Only R code counts: not
+    /// comments, backquoted names, or special operators such as %in% and the user's own, whose names may hold quotes, # or the path
+    /// itself (Codex's fifth review).  So a commented-out import names nothing, while the window's data file named in code the user has
+    /// changed, as in read.csv("...") or a variable, is still the window's.
+    /// </summary>
+    internal static List<(int Start, int Length)> LiteralsInCode(string source, string literal)
     {
-        var found = new List<int>();
+        var found = new List<(int, int)>();
         int n = source.Length;
         bool NamePart(int k) => k >= 0 && (char.IsLetterOrDigit(source[k]) || source[k] is '.' or '_');
         for (int i = 0; i < n;)
@@ -880,18 +911,22 @@ internal static class WorksheetRImport
                 int end = source.IndexOf('\n', i);
                 i = end < 0 ? n : end + 1;
             }
+            else if (c == '%')
+            {
+                // A special operator is one token up to the next % on the line, whatever it holds.
+                int close = source.IndexOf('%', i + 1), end = source.IndexOf('\n', i + 1);
+                i = close > 0 && (end < 0 || close < end) ? close + 1 : i + 1;
+            }
             else if (c is 'r' or 'R' && i + 1 < n && source[i + 1] is '"' or '\'' && !NamePart(i - 1) && RawStringEnd(source, i) is int after)
                 i = after;
             else if (c is '"' or '\'' or '`')
             {
                 int j = i + 1;
                 while (j < n && source[j] != c) j += source[j] == '\\' ? 2 : 1;
-                i = Math.Min(n, j + 1);
-            }
-            else if (text.Length > 0 && string.CompareOrdinal(source, i, text, 0, text.Length) == 0 && !NamePart(i - 1))
-            {
-                found.Add(i);
-                i += text.Length;
+                int length = Math.Min(n, j + 1) - i;
+                if (c != '`' && length == literal.Length && string.Compare(source, i, literal, 0, length, StringComparison.OrdinalIgnoreCase) == 0)
+                    found.Add((i, length));
+                i += length;
             }
             else i++;
         }
@@ -911,17 +946,21 @@ internal static class WorksheetRImport
         return end < 0 ? source.Length : end + closing.Length;
     }
 
-    /// <summary>The R code with each place <paramref name="text"/> appears in code itself (<see cref="InCode"/>) replaced.</summary>
-    internal static string ReplaceInCode(string source, string text, string replacement)
+    /// <summary>Whether R code names a file by the given path (<see cref="LiteralsInCode"/>).</summary>
+    internal static bool NamesInCode(string source, string path) => LiteralsInCode(source, QuotePath(path)).Count > 0;
+
+    /// <summary>R code with each string literal that names a file by one path (<see cref="LiteralsInCode"/>) naming another.</summary>
+    internal static string RenameInCode(string source, string path, string replacement)
     {
-        var at = InCode(source, text);
+        var at = LiteralsInCode(source, QuotePath(path));
         if (at.Count == 0) return source;
-        var result = new StringBuilder(source.Length + at.Count * (replacement.Length - text.Length));
+        string quoted = QuotePath(replacement);
+        var result = new StringBuilder(source.Length + at.Count * quoted.Length);
         int last = 0;
-        foreach (int i in at)
+        foreach (var (start, length) in at)
         {
-            result.Append(source, last, i - last).Append(replacement);
-            last = i + text.Length;
+            result.Append(source, last, start - last).Append(quoted);
+            last = start + length;
         }
         return result.Append(source, last, source.Length - last).ToString();
     }

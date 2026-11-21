@@ -1443,10 +1443,7 @@ namespace StatsDirect.UI
                     return true;
                 }
                 if (extension is ".cs" or ".vb" or ".r")
-                {
-                    CreateScriptWindow(path, isTempFile);
-                    return true;
-                }
+                    return CreateScriptWindow(path, isTempFile) != null;
                 if (".sdw".Equals(extension))
                 {
                     return OpenSdwOrPrompt(path);

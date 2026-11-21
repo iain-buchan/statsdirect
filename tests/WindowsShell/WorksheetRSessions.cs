@@ -549,31 +549,68 @@ internal static partial class Program
                 "with Yes, Save As over the ordinary script writes the window's script and its data together");
             await Replay(unrelated, verifyData, "the script saved over the ordinary one, run afresh in R, reads the window's data");
 
-            // A saved script whose data file another program holds open, so that no copy can be made, does not open working on that file
-            // (Codex's retest of 0b9c2282): the user is asked to close it and retry, and with Cancel the script stays closed.
-            string locked = Path.Combine(elsewhere, "locked.R");
-            File.WriteAllText(locked, File.ReadAllText(twin).Replace(ImportReader(DataBeside(twin)), ImportReader(DataBeside(locked)), StringComparison.Ordinal));
-            File.WriteAllBytes(DataBeside(locked), data);
-            (Form Window, Exception Error, int Asked) OpenHeld(Func<FileStream, bool> retry)
+            // A saved script whose data file cannot be copied as it opens, because another program holds it open or it is not there, does
+            // not open working on that file, which others can change (Codex's retest of 0b9c2282 and fifth review): the user is asked to
+            // close the file or put it back and retry, and with Cancel nothing opens and File Open says so.  Opened as File Open opens it.
+            var retrierProperty = typeof(frmMain).Assembly.GetType("StatsDirect.UI.frmScript")!
+                .GetProperty("DataFileRetrier", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public)!;
+            (bool Opened, Form Window, int Asked) OpenAsFileOpen(string script, Func<bool> retry)
             {
-                var window = (Form)Call(main, "CreateScriptWindow");
-                windows.Add(window);
-                var held = new FileStream(DataBeside(locked), FileMode.Open, FileAccess.ReadWrite, FileShare.None);
-                int retries = 0;
-                window.GetType().GetProperty("DataFileRetrier", Internal)!.SetValue(window, new Func<string, bool>(_ => { retries++; return retry(held); }));
-                try { Call(window, "OpenFile", locked, false, null); return (window, null, retries); }
-                catch (TargetInvocationException e) { return (window, e.InnerException, retries); }
-                finally { held.Dispose(); }
+                var before = main.MdiChildren.ToHashSet();
+                int count = 0;
+                retrierProperty.SetValue(null, new Func<string, bool>(_ => { count++; return retry(); }));
+                try
+                {
+                    bool opened = (bool)Call(main, "OpenFile", script, false);
+                    var added = main.MdiChildren.Where(child => !before.Contains(child)).ToArray();
+                    foreach (var window in added) { windows.Add(window); Prepare(window, () => chosenFile); }
+                    return (opened, added.SingleOrDefault(), count);
+                }
+                finally { retrierProperty.SetValue(null, null); }
             }
-            var (refused, refusal, refusedAsked) = OpenHeld(_ => false);
-            Check(refusal?.GetType().Name == "WorksheetDataUnavailableException" && refusedAsked == 1 && Get(refused, "WorksheetImportFolder") == null
-                    && ((RichTextBox)Field(refused, "rtbDoc")).Text.Length == 0,
-                "a saved script whose data file is held open elsewhere asks to retry, and with Cancel does not open" + (refusal == null ? "" : ": " + refusal.Message));
-            var (retried, failure, retriedAsked) = OpenHeld(held => { held.Dispose(); return true; });
-            Check(failure == null && retriedAsked == 1 && OwnCopy(retried, data), "with the file closed and Retry, the script opens with a copy of its own data");
-            await ((Task)Get(RConsole(retried), "Ready")).WaitAsync(TimeSpan.FromSeconds(45));
-            File.WriteAllText(DataBeside(locked), otherData);
-            await Run(retried, verifyData, "the script opened after Retry runs with its own copy, whatever is written to the data file since");
+            string ScriptReading(string script) =>
+                File.ReadAllText(twin).Replace(ImportReader(DataBeside(twin)), ImportReader(DataBeside(script)), StringComparison.Ordinal);
+
+            string locked = Path.Combine(elsewhere, "locked.R");
+            File.WriteAllText(locked, ScriptReading(locked));
+            File.WriteAllBytes(DataBeside(locked), data);
+            var held = new FileStream(DataBeside(locked), FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+            try
+            {
+                var (opened, window, timesAsked) = OpenAsFileOpen(locked, () => false);
+                Check(!opened && window == null && timesAsked == 1,
+                    "File Open of a saved script whose data file is held open elsewhere asks to retry, and with Cancel opens nothing and reports it");
+                (opened, window, timesAsked) = OpenAsFileOpen(locked, () => { held.Dispose(); return true; });
+                Check(opened && window != null && timesAsked == 1 && OwnCopy(window, data) && Saved(window),
+                    "with the file closed and Retry, File Open opens the script with a copy of its own data");
+                await ((Task)Get(RConsole(window), "Ready")).WaitAsync(TimeSpan.FromSeconds(45));
+                File.WriteAllText(DataBeside(locked), otherData);
+                await Run(window, verifyData, "the script opened after Retry runs with its own copy, whatever is written to the data file since");
+            }
+            finally { held.Dispose(); }
+
+            string missing = Path.Combine(elsewhere, "missing.R");
+            File.WriteAllText(missing, ScriptReading(missing));
+            {
+                var (opened, window, timesAsked) = OpenAsFileOpen(missing, () => false);
+                Check(!opened && window == null && timesAsked == 1 && !File.Exists(DataBeside(missing)),
+                    "File Open of a saved script whose data file is not there asks to retry, and with Cancel opens nothing and reports it");
+                (opened, window, timesAsked) = OpenAsFileOpen(missing, () => { File.WriteAllBytes(DataBeside(missing), data); return true; });
+                Check(opened && window != null && timesAsked == 1 && OwnCopy(window, data) && Saved(window),
+                    "with the data file put back and Retry, File Open opens the script with a copy of its own data");
+                await ((Task)Get(RConsole(window), "Ready")).WaitAsync(TimeSpan.FromSeconds(45));
+                File.WriteAllText(DataBeside(missing), otherData);   // replaced after the recovery
+                await Run(window, verifyData, "after recovery, with other data written to the data file, Run stays with the data the window took");
+                int askedBefore2 = asked.Count;
+                answer = true;
+                Check(await Save(window) && asked.Count == askedBefore2 + 1 && Holds(missing, data),
+                    "after recovery, Save asks before replacing the other data, and with Yes saves the data the window took");
+                await Replay(missing, verifyData, "the recovered script, saved and run afresh in R, reads the data the window took");
+                string missingElsewhere = Path.Combine(elsewhere, "missing elsewhere.R");
+                Check(await SaveAs(window, missingElsewhere) && Holds(missingElsewhere, data), "after recovery, Save As carries the data the window took");
+                await Replay(missingElsewhere, verifyData, "the recovered script saved elsewhere, run afresh in R, reads the data the window took");
+                await OpenInR(window, Path.Combine(elsewhere, "missing R+.R"), data, verifyData, "after recovery, R+ carries the data the window took");
+            }
 
             // A reader the user has changed is the user's own code (Codex's fourth review): a comment that mentions the window's data file
             // is left as it is, and no data file is written for the script.  The window holds the other workbook's data, and the user's
@@ -617,6 +654,59 @@ internal static partial class Program
             Check(!File.Exists(DataBeside(ninth)) && File.ReadAllText(ninth).Replace("\r\n", "\n").Contains(commentedOut, StringComparison.Ordinal),
                 "R+ leaves a commented-out import as it is and writes no data file for it");
             await Replay(ninth, verifyData, "R+'s copy of the script with the import commented out reads the user's file");
+
+            // R's special operators are single tokens (Codex's fifth review): an operator of the user's own whose name holds the import's
+            // reader, and one named %#% before the reader on its line, are left as they are, while the reader itself is copied and rebound.
+            var operatorWindow = await Reopen(twin);   // the other workbook's data
+            string operatorReader = ImportReader(OwnData(operatorWindow)), named = "%" + operatorReader + "%";
+            string definitions = "`" + named + "` <- function(a, b) a + b\n`%#%` <- function(a, b) a * b\nq <- 1 " + named + " 2\n";
+            string readerLine = "worksheet_data <- " + operatorReader;
+            Check(Script(operatorWindow).Contains(readerLine, StringComparison.Ordinal), "the window's script starts its read statement as the import writes it");
+            ((RichTextBox)Field(operatorWindow, "rtbDoc")).Text = definitions + Script(operatorWindow).Replace(readerLine, "z <- 2 %#% 3; " + readerLine, StringComparison.Ordinal);
+            string operatorVerify = otherVerify + "\nstopifnot(q == 3, z == 6)";
+            string tenth = Path.Combine(elsewhere, "tenth results.R"), eleventh = Path.Combine(elsewhere, "eleventh results.R");
+            bool OperatorsKept(string script) => File.ReadAllText(script).Replace("\r\n", "\n").StartsWith(definitions, StringComparison.Ordinal)
+                && File.ReadAllText(script).Contains("z <- 2 %#% 3; worksheet_data <- " + ImportReader(DataBeside(script)), StringComparison.Ordinal);
+            Check(await SaveAs(operatorWindow, tenth) && Holds(tenth, other) && OperatorsKept(tenth),
+                "Save As leaves the user's operators as they are and copies and rebinds the reader on the line after %#%");
+            await Replay(tenth, operatorVerify, "the script with the user's operators, run afresh in R, finds them and reads its own data");
+            await ((Task<string>)Call(operatorWindow, "WriteOpenInRCopyAsync", eleventh)).WaitAsync(TimeSpan.FromSeconds(15));
+            Check(Holds(eleventh, other) && OperatorsKept(eleventh), "R+ leaves the user's operators as they are and copies and rebinds the reader");
+            await Replay(eleventh, operatorVerify, "R+'s copy of the script with the user's operators, run afresh in R, finds them and reads its own data");
+
+            // A reader the user has changed that still names the window's data file reads the window's data (the independent review of
+            // 0b9c2282): Save As copies the data beside the script and names that file, so the saved script never names the window's copy,
+            // which goes when the window closes.
+            var editedWindow = await Reopen(twin);
+            ((RichTextBox)Field(editedWindow, "rtbDoc")).Text = Script(editedWindow).Replace("utils::read.csv(file(", "read.csv(file(", StringComparison.Ordinal);
+            string twelfth = Path.Combine(elsewhere, "twelfth results.R");
+            Check(await SaveAs(editedWindow, twelfth) && Holds(twelfth, other) && !File.ReadAllText(twelfth).Contains("StatsDirect-worksheet-r-", StringComparison.Ordinal),
+                "a reader the user changed that still names the window's data is saved naming the data file beside the script");
+            editedWindow.Dispose();
+            await Replay(twelfth, otherVerify, "that script, run afresh in R once its window has closed, reads its own data");
+
+            // The window's own copy gone, as when temporary files are cleaned away: Save As takes the data from the data file the window
+            // last wrote while that holds them; with that changed too, the script is saved without data, and says so, rather than with others.
+            // And a window that holds worksheet data stays an R script, so that its script is never saved in another language.
+            var goneWindow = await Reopen(twin);
+            var notices = new List<string>();
+            var goneConsole = RConsole(goneWindow);
+            goneConsole.GetType().GetEvent("Notice", Internal)!.GetAddMethod(true)!.Invoke(goneConsole, new object[] { new Action<string>(notices.Add) });
+            string thirteenth = Path.Combine(elsewhere, "thirteenth results.R"), fourteenth = Path.Combine(elsewhere, "fourteenth results.R"),
+                fifteenth = Path.Combine(elsewhere, "fifteenth results.R");
+            Check(await SaveAs(goneWindow, thirteenth) && Holds(thirteenth, other), "Save As from a fresh window puts its data beside the script");
+            File.Delete(OwnData(goneWindow));
+            Check(await SaveAs(goneWindow, fourteenth) && Holds(fourteenth, other)
+                    && notices.Contains("(the worksheet data is saved beside the script, as fourteenth results.worksheet-data.csv)\n"),
+                "with the window's own copy gone, Save As takes the data from the data file it last wrote, which still holds them");
+            File.WriteAllBytes(DataBeside(fourteenth), data);
+            Check(await SaveAs(goneWindow, fifteenth) && !File.Exists(DataBeside(fifteenth))
+                    && notices.Contains("(the script is saved without its worksheet data: the data it reads are no longer there)\n"),
+                "with the window's copy gone and other data in the file it last wrote, Save As saves the script without data, and says so");
+            var language = (ComboBox)Field(goneWindow, "cboLanguage");
+            language.SelectedIndex = 0;
+            Check(language.SelectedIndex == 1 && notices.Contains("(this script holds worksheet data, so it stays an R script)\n"),
+                "a window that holds worksheet data stays an R script, and says so");
         }
         finally
         {

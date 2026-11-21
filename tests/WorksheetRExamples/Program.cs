@@ -655,16 +655,41 @@ internal static class Program
             workbook.Close();
         }
 
+        // Shown rows that are not one block (the independent review of 0b9c2282): the filter on the group shows rows 2, 4, 6, 8 and 10, and
+        // column D's comments are only in shown rows.  Column D is in the bounds, of the whole sheet and of a selection of its rows.
+        workbook = Factory.GetWorkbook(CultureInfo.InvariantCulture);
+        try
+        {
+            var sheet = workbook.Worksheets[0];
+            sheet.Name = "Sheet1";
+            var values = new object[11, 4];
+            values[0, 0] = "id"; values[0, 1] = "group"; values[0, 2] = "score"; values[0, 3] = "comment";
+            for (int r = 1; r <= 10; r++) { values[r, 0] = (double)r; values[r, 1] = r % 2 == 1 ? "A" : "B"; values[r, 2] = r * 10.0; }
+            values[1, 3] = "late start"; values[3, 3] = "retested";
+            sheet.Cells[0, 0, 10, 3].Value = values;
+            sheet.Cells[0, 0, 10, 3].AutoFilter(1, "=A", AutoFilterOperator.And, null, true);
+            var entire = WorksheetRImport.Describe(sheet, sheet.Range["A1"], write => write());
+            var rows = WorksheetRImport.Describe(sheet, sheet.Range["1:11"], write => write());
+            Check(sheet.Range["A3"].EntireRow.Hidden && !sheet.Range["A4"].EntireRow.Hidden && entire.EntireSheet?.Address == "A1:D11" && rows.SelectedCells?.Address == "A1:D11",
+                $"under an AutoFilter whose shown rows are not one block, a column with data only in shown rows is in the bounds (entire {entire.EntireSheet?.Address}, rows {rows.SelectedCells?.Address})");
+        }
+        finally
+        {
+            workbook.Close();
+        }
+
         // Protected sheets (Codex's fourth review), each left protected and filtered as it was.  Without a password, the copy allows the
-        // program's own changes and is searched with its filter off; with one, the sheet's saved cell list is read.  Each finds data in
-        // a hidden column of a hidden row: with D:J hidden, and with D:XFD hidden, where reading each hidden cell would take minutes.
-        foreach (var (password, hidden, label) in new[] { ("review", "D1:J1", "D:J hidden, a password"), ("review", "D1:XFD1", "D:XFD hidden, a password"),
-                     ((string)null, "D1:XFD1", "D:XFD hidden, no password") })
+        // program's own changes and is searched with its filter off; with one, the copy's saved cell list is read, the copy saved alone
+        // so that a workbook of several sheets costs no more (the independent review of 0b9c2282).  Each finds data in a hidden column of
+        // a hidden row: with D:J hidden, and with D:XFD hidden, where reading each hidden cell would take minutes.
+        foreach (var (password, hidden, sheets, label) in new[] { ("review", "D1:J1", 1, "D:J hidden, a password"), ("review", "D1:XFD1", 1, "D:XFD hidden, a password"),
+                     ("review", "D1:XFD1", 3, "D:XFD hidden, a password, three sheets"), ((string)null, "D1:XFD1", 1, "D:XFD hidden, no password") })
         {
             workbook = Factory.GetWorkbook(CultureInfo.InvariantCulture);
             try
             {
                 var sheet = FilteredColumn(workbook, 300_000);
+                while (workbook.Worksheets.Count < sheets) workbook.Worksheets.Add().Cells["A1"].Value = "another sheet";
                 sheet.Range["J2"].Value = 9.0;
                 sheet.Range["B5"].Formula = "=\"\"";   // a formula that shows empty text is data
                 sheet.Range["XFD1048576"].NumberFormat = "0.00";   // formatting alone is not
@@ -676,7 +701,7 @@ internal static class Program
                 Console.WriteLine($"Filtered bounds, 150,000 hidden rows, protected, {label}: " + (finished ? $"{watch.ElapsedMilliseconds:N0} ms" : "not finished in 20 s"));
                 var options = finished ? describe.Result : null;
                 Check(finished && sheet.ProtectContents && sheet.AutoFilterMode && sheet.Range["A2"].EntireRow.Hidden && sheet.Range["J1"].EntireColumn.Hidden
-                        && workbook.Worksheets.Count == 1 && options!.EntireSheet?.Address == "A1:J300001",
+                        && workbook.Worksheets.Count == sheets && options!.EntireSheet?.Address == "A1:J300001",
                     $"on a protected sheet under an AutoFilter that hides 150,000 rows, with {label}, the prompt finds the data in a hidden column of a "
                     + "hidden row within 20 s, and leaves the sheet as it was" + (finished ? $" (entire {options!.EntireSheet?.Address})" : " (it did not finish)"));
             }
