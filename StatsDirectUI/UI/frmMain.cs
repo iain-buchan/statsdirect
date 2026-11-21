@@ -745,6 +745,10 @@ namespace StatsDirect.UI
                 if (!isTempFile)
                     SdApplication.SoleInstance.NoteRecentFile(filename, opened);
             }
+            catch (WorksheetDataUnavailableException)
+            {
+                // The user was told the script's worksheet data file could not be read, and chose to leave the script closed.
+            }
             catch (IOException ex)
             {
                 SdApplication.SoleInstance.FriendlyError("Couldn't open script", ex, true);

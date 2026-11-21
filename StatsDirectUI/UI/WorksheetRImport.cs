@@ -865,6 +865,67 @@ internal static class WorksheetRImport
     /// script's data file is moved by changing this code alone, so that comments and the user's own code stay as they are.</summary>
     internal static string ReaderOperand(string path) => "utils::read.csv(file(" + QuotePath(path) + ", encoding = \"native.enc\")";
 
+    /// <summary>Each place a text starts in R code itself: outside comments, string literals (raw strings among them) and backquoted
+    /// names, and not within a longer name.  A commented-out import line is a comment (Codex's retest of 0b9c2282).</summary>
+    internal static List<int> InCode(string source, string text)
+    {
+        var found = new List<int>();
+        int n = source.Length;
+        bool NamePart(int k) => k >= 0 && (char.IsLetterOrDigit(source[k]) || source[k] is '.' or '_');
+        for (int i = 0; i < n;)
+        {
+            char c = source[i];
+            if (c == '#')
+            {
+                int end = source.IndexOf('\n', i);
+                i = end < 0 ? n : end + 1;
+            }
+            else if (c is 'r' or 'R' && i + 1 < n && source[i + 1] is '"' or '\'' && !NamePart(i - 1) && RawStringEnd(source, i) is int after)
+                i = after;
+            else if (c is '"' or '\'' or '`')
+            {
+                int j = i + 1;
+                while (j < n && source[j] != c) j += source[j] == '\\' ? 2 : 1;
+                i = Math.Min(n, j + 1);
+            }
+            else if (text.Length > 0 && string.CompareOrdinal(source, i, text, 0, text.Length) == 0 && !NamePart(i - 1))
+            {
+                found.Add(i);
+                i += text.Length;
+            }
+            else i++;
+        }
+        return found;
+    }
+
+    // The end of an R raw string that starts at i, r"(...)" with brackets ( [ or { and any number of dashes, or null when it is not one.
+    private static int? RawStringEnd(string source, int i)
+    {
+        char quote = source[i + 1];
+        int j = i + 2, dashes = 0;
+        while (j < source.Length && source[j] == '-') { j++; dashes++; }
+        if (j >= source.Length || source[j] is not ('(' or '[' or '{')) return null;
+        char close = source[j] switch { '(' => ')', '[' => ']', _ => '}' };
+        string closing = close + new string('-', dashes) + quote;
+        int end = source.IndexOf(closing, j + 1, StringComparison.Ordinal);
+        return end < 0 ? source.Length : end + closing.Length;
+    }
+
+    /// <summary>The R code with each place <paramref name="text"/> appears in code itself (<see cref="InCode"/>) replaced.</summary>
+    internal static string ReplaceInCode(string source, string text, string replacement)
+    {
+        var at = InCode(source, text);
+        if (at.Count == 0) return source;
+        var result = new StringBuilder(source.Length + at.Count * (replacement.Length - text.Length));
+        int last = 0;
+        foreach (int i in at)
+        {
+            result.Append(source, last, i - last).Append(replacement);
+            last = i + text.Length;
+        }
+        return result.Append(source, last, source.Length - last).ToString();
+    }
+
     /// <summary>An R string literal, ASCII only: every other character as a \U escape, bidi controls included (rule 3.10).</summary>
     internal static string QuoteR(string value)
     {

@@ -184,34 +184,55 @@ public partial class frmScript
 
     /// <summary>
     /// Opened again, a script saved with its worksheet data works on a copy of its own, made now, as a session works on its import:
-    /// the script in the editor reads the copy.  Only the reader the import wrote (<see cref="WorksheetRData.ReaderOperand"/>) names
-    /// the data file, so a comment or the user's own code that mentions the file is left as it is.  Returns the script for the editor.
+    /// the script in the editor reads the copy.  Only the import's reader in the code itself names the data file
+    /// (<see cref="WorksheetRData.ReaderOperand"/>, <see cref="WorksheetRImport.InCode"/>), so a comment, a commented-out import or the
+    /// user's own code that mentions the file is left as it is.  When no copy can be made, as when another program holds the file open,
+    /// the user is asked to retry, and otherwise the script is not opened (<see cref="WorksheetDataUnavailableException"/>): a window
+    /// never works on the data file itself, which others can change (Codex's retest of 0b9c2282).  Returns the script for the editor.
     /// </summary>
     private string AdoptSavedWorksheetData(string scriptPath, string text)
     {
         if (WorksheetImportFolder != null) return text;
         string dataFile = DataFileBeside(scriptPath), reader = WorksheetRData.ReaderOperand(dataFile);
-        if (!text.Contains(reader, StringComparison.Ordinal)) return text;
+        if (WorksheetRImport.InCode(text, reader).Count == 0) return text;
         if (!File.Exists(dataFile)) { missingDataReader = reader; return text; }
-        string folder = null;
-        try
+        while (true)
         {
-            folder = StatsDirect.R.WorksheetRLauncher.CreateImportFolder();
-            string own = System.IO.Path.Combine(folder, WorksheetRData.CsvFileName);
-            CopyData(dataFile, own);
-            ownDataHash = DataHash(own);
-            knownDataFile = HoldsData(dataFile, ownDataHash) ? (dataFile, ownDataHash) : null;
-            WorksheetImportFolder = folder;
-            string kept = folder;
-            Disposed += (_, _) => StatsDirect.R.WorksheetRLauncher.DeleteImportFolder(kept);
-            return text.Replace(reader, WorksheetRData.ReaderOperand(own), StringComparison.Ordinal);
+            string folder = null;
+            try
+            {
+                folder = StatsDirect.R.WorksheetRLauncher.CreateImportFolder();
+                string own = System.IO.Path.Combine(folder, WorksheetRData.CsvFileName);
+                CopyData(dataFile, own);
+                ownDataHash = DataHash(own);
+                knownDataFile = HoldsData(dataFile, ownDataHash) ? (dataFile, ownDataHash) : null;
+                WorksheetImportFolder = folder;
+                string kept = folder;
+                Disposed += (_, _) => StatsDirect.R.WorksheetRLauncher.DeleteImportFolder(kept);
+                return WorksheetRImport.ReplaceInCode(text, reader, WorksheetRData.ReaderOperand(own));
+            }
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+            {
+                StatsDirect.R.WorksheetRLauncher.DeleteImportFolder(folder);
+                WorksheetImportFolder = null;
+                if (!RetryDataFile(dataFile, e))
+                    throw new WorksheetDataUnavailableException("The script was not opened: StatsDirect could not copy its worksheet data file " + dataFile
+                        + " (" + e.Message + ").  Close the file in the program that has it open, then open the script again.", e);
+            }
         }
-        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
-        {
-            StatsDirect.R.WorksheetRLauncher.DeleteImportFolder(folder);
-            WorksheetImportFolder = null;
-            return text;   // the script reads the data file where it is, as it would in R
-        }
+    }
+
+    // Whether to try again to copy a saved script's data file; the shell checks answer in the user's place.
+    [System.ComponentModel.DesignerSerializationVisibility(System.ComponentModel.DesignerSerializationVisibility.Hidden)]
+    internal Func<string, bool> DataFileRetrier { private get; set; }
+    private bool RetryDataFile(string dataFile, Exception error)
+    {
+        if (DataFileRetrier != null) return DataFileRetrier(dataFile);
+        return MessageBox.Show(SdApplication.SoleInstance.DialogOwner,
+            "StatsDirect cannot copy “" + System.IO.Path.GetFileName(dataFile) + "”, the worksheet data file this script reads, so that the script's "
+            + "window works on data of its own: " + error.Message + "\n\nIf another program has the file open, close it there and choose Retry. "
+            + "Cancel leaves the script closed.",
+            "Open R script", MessageBoxButtons.RetryCancel, MessageBoxIcon.Warning) == DialogResult.Retry;
     }
 
     /// <summary>
@@ -236,7 +257,7 @@ public partial class frmScript
         try
         {
             string own = OwnData, ownReader = own == null ? null : WorksheetRData.ReaderOperand(own);
-            if (ownReader != null && source.Contains(ownReader, StringComparison.Ordinal))
+            if (ownReader != null && WorksheetRImport.InCode(source, ownReader).Count > 0)
             {
                 // The data come from the window's own copy, or, should that have gone, from the data file the window last wrote while
                 // it still holds the same data.
@@ -254,7 +275,10 @@ public partial class frmScript
                         if (File.GetAttributes(companion).HasFlag(FileAttributes.ReadOnly))
                             throw new UnauthorizedAccessException("The worksheet data file " + companion + " is read-only, so the script is not saved over it.");
                         bool written = knownDataFile is { } mine && SameFile(mine.Path, companion) && HoldsData(companion, mine.Hash);
-                        if (!written && !replacing && !ConfirmReplaceData(companion))
+                        // A script being replaced takes its own data file with it; the dialog asked about the script, so a data file
+                        // that the script there does not read is asked about now (Codex's retest of 0b9c2282).
+                        bool goesWithScript = replacing && ReadsDataFile(full, companion);
+                        if (!written && !goesWithScript && !ConfirmReplaceData(companion))
                             return new WrittenRScript("(the script is not saved, and " + System.IO.Path.GetFileName(companion) + " is left as it is)\n", null, null, true);
                     }
                     if (copyData)
@@ -270,13 +294,13 @@ public partial class frmScript
                 }
                 if (companion != null)
                 {
-                    source = source.Replace(ownReader, WorksheetRData.ReaderOperand(companion), StringComparison.Ordinal);
+                    source = WorksheetRImport.ReplaceInCode(source, ownReader, WorksheetRData.ReaderOperand(companion));
                     notice = "(the worksheet data is saved beside the script, as " + System.IO.Path.GetFileName(companion) + ")\n";
                 }
                 else
                     notice = "(the script is saved without its worksheet data: the data it reads are no longer there)\n";
             }
-            else if (missingDataReader != null && source.Contains(missingDataReader, StringComparison.Ordinal))
+            else if (missingDataReader != null && WorksheetRImport.InCode(source, missingDataReader).Count > 0)
                 notice = "(the script is saved without its worksheet data: the data it reads are no longer there)\n";
 
             File.WriteAllText(temporary, source, new UTF8Encoding(false));
@@ -332,6 +356,20 @@ public partial class frmScript
             ? System.IO.Path.GetFileNameWithoutExtension(name) + ".worksheet-data.csv"
             : name + "-worksheet-data.csv";
         return System.IO.Path.Combine(System.IO.Path.GetDirectoryName(full), file);
+    }
+
+    // Whether the script at a path reads a data file through the import's reader in its code: a script saved with its data, whose data
+    // file goes with it when the script is replaced.  An ordinary script there owns no data file of that name.
+    private static bool ReadsDataFile(string script, string dataFile)
+    {
+        try
+        {
+            using var stream = new FileStream(script, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+            if (stream.Length > 64 << 20) return false;   // no script StatsDirect writes is so large
+            using var reader = new StreamReader(stream);
+            return WorksheetRImport.InCode(reader.ReadToEnd(), WorksheetRData.ReaderOperand(dataFile)).Count > 0;
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException) { return false; }
     }
 
     private static bool SameFile(string a, string b) =>
@@ -417,4 +455,11 @@ public partial class frmScript
         }
         catch (Exception ex) { InteractiveConsole.ReportNotice(ex.Message); }
     }
+}
+
+/// <summary>A saved R script that was not opened because no copy of its worksheet data file could be made, the user having chosen not to
+/// retry: a window never works on the data file itself (frmScript.AdoptSavedWorksheetData).</summary>
+internal sealed class WorksheetDataUnavailableException : IOException
+{
+    internal WorksheetDataUnavailableException(string message, Exception inner) : base(message, inner) { }
 }

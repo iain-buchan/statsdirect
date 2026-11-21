@@ -532,6 +532,49 @@ internal static partial class Program
             await Replay(fourth, verifyData, "the script saved elsewhere reads its data once the first script and its data file are gone");
             await Run(first, verifyData, "Run reads the window's own data once the first script and its data file are gone");
 
+            // Save As over an ordinary script that reads no worksheet data, beside which a data file of that name holds other data
+            // (Codex's retest of 0b9c2282): the dialog asked about the script, not the data file, so the data file is asked about too.
+            // No leaves both files as they were; Yes writes the window's script and data together.
+            string unrelated = Path.Combine(elsewhere, "unrelated.R");
+            File.WriteAllText(unrelated, "x <- 404\n");
+            File.WriteAllText(DataBeside(unrelated), otherData);
+            byte[] unrelatedScript = File.ReadAllBytes(unrelated);
+            int askedBefore = asked.Count;
+            answer = false;
+            Check(!await SaveAs(first, unrelated) && asked.Count == askedBefore + 1 && File.ReadAllBytes(unrelated).SequenceEqual(unrelatedScript)
+                    && File.ReadAllBytes(DataBeside(unrelated)).SequenceEqual(other),
+                "Save As over an ordinary script asks about the data file beside it, and with No leaves both files as they were");
+            answer = true;
+            Check(await SaveAs(first, unrelated) && asked.Count == askedBefore + 2 && Holds(unrelated, data),
+                "with Yes, Save As over the ordinary script writes the window's script and its data together");
+            await Replay(unrelated, verifyData, "the script saved over the ordinary one, run afresh in R, reads the window's data");
+
+            // A saved script whose data file another program holds open, so that no copy can be made, does not open working on that file
+            // (Codex's retest of 0b9c2282): the user is asked to close it and retry, and with Cancel the script stays closed.
+            string locked = Path.Combine(elsewhere, "locked.R");
+            File.WriteAllText(locked, File.ReadAllText(twin).Replace(ImportReader(DataBeside(twin)), ImportReader(DataBeside(locked)), StringComparison.Ordinal));
+            File.WriteAllBytes(DataBeside(locked), data);
+            (Form Window, Exception Error, int Asked) OpenHeld(Func<FileStream, bool> retry)
+            {
+                var window = (Form)Call(main, "CreateScriptWindow");
+                windows.Add(window);
+                var held = new FileStream(DataBeside(locked), FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+                int retries = 0;
+                window.GetType().GetProperty("DataFileRetrier", Internal)!.SetValue(window, new Func<string, bool>(_ => { retries++; return retry(held); }));
+                try { Call(window, "OpenFile", locked, false, null); return (window, null, retries); }
+                catch (TargetInvocationException e) { return (window, e.InnerException, retries); }
+                finally { held.Dispose(); }
+            }
+            var (refused, refusal, refusedAsked) = OpenHeld(_ => false);
+            Check(refusal?.GetType().Name == "WorksheetDataUnavailableException" && refusedAsked == 1 && Get(refused, "WorksheetImportFolder") == null
+                    && ((RichTextBox)Field(refused, "rtbDoc")).Text.Length == 0,
+                "a saved script whose data file is held open elsewhere asks to retry, and with Cancel does not open" + (refusal == null ? "" : ": " + refusal.Message));
+            var (retried, failure, retriedAsked) = OpenHeld(held => { held.Dispose(); return true; });
+            Check(failure == null && retriedAsked == 1 && OwnCopy(retried, data), "with the file closed and Retry, the script opens with a copy of its own data");
+            await ((Task)Get(RConsole(retried), "Ready")).WaitAsync(TimeSpan.FromSeconds(45));
+            File.WriteAllText(DataBeside(locked), otherData);
+            await Run(retried, verifyData, "the script opened after Retry runs with its own copy, whatever is written to the data file since");
+
             // A reader the user has changed is the user's own code (Codex's fourth review): a comment that mentions the window's data file
             // is left as it is, and no data file is written for the script.  The window holds the other workbook's data, and the user's
             // file holds the script's own, so R shows which it read.
@@ -548,6 +591,32 @@ internal static partial class Program
                     && File.ReadAllText(seventh).Contains(ImportReader(userData), StringComparison.Ordinal),
                 "a script whose reader the user changed is saved as it is, comment included, without a data file");
             await Replay(seventh, verifyData, "the script with the user's own reader reads the user's file");
+
+            // A commented-out import is a comment (Codex's retest of 0b9c2282).  The import's whole read statement commented out, with a
+            // reader of the user's own file after it: Save As and R+ leave the comment as it is, write no data file, and R reads the
+            // user's file.  The window holds the other workbook's data and the user's file the script's own, so R shows which it read.
+            var commentedWindow = await Reopen(twin);
+            string commentedOwn = ImportReader(OwnData(commentedWindow)), commentedScript = Script(commentedWindow);
+            int statementStart = commentedScript.IndexOf("worksheet_data <- " + commentedOwn, StringComparison.Ordinal);
+            const string statementEnd = "blank.lines.skip = FALSE)\n";
+            int statementStop = statementStart < 0 ? -1 : commentedScript.IndexOf(statementEnd, statementStart, StringComparison.Ordinal);
+            Check(statementStart >= 0 && statementStop > statementStart, "the window's script holds the import's read statement");
+            statementStop += statementEnd.Length;
+            string statement = commentedScript[statementStart..statementStop];
+            string commentedOut = string.Concat(statement.Split('\n').Where(line => line.Length > 0).Select(line => "# " + line + "\n"));
+            string usersReading = statement.Replace(commentedOwn, ImportReader(userData), StringComparison.Ordinal);
+            ((RichTextBox)Field(commentedWindow, "rtbDoc")).Text = commentedScript[..statementStart] + commentedOut + usersReading + commentedScript[statementStop..];
+            string eighth = Path.Combine(elsewhere, "eighth results.R");
+            Check(await SaveAs(commentedWindow, eighth) && !File.Exists(DataBeside(eighth))
+                    && File.ReadAllText(eighth).Replace("\r\n", "\n").Contains(commentedOut, StringComparison.Ordinal)
+                    && File.ReadAllText(eighth).Contains(ImportReader(userData), StringComparison.Ordinal),
+                "Save As leaves a commented-out import as it is and writes no data file for it");
+            await Replay(eighth, verifyData, "the script with the import commented out, run afresh in R, reads the user's file");
+            string ninth = Path.Combine(elsewhere, "ninth results.R");
+            await ((Task<string>)Call(commentedWindow, "WriteOpenInRCopyAsync", ninth)).WaitAsync(TimeSpan.FromSeconds(15));
+            Check(!File.Exists(DataBeside(ninth)) && File.ReadAllText(ninth).Replace("\r\n", "\n").Contains(commentedOut, StringComparison.Ordinal),
+                "R+ leaves a commented-out import as it is and writes no data file for it");
+            await Replay(ninth, verifyData, "R+'s copy of the script with the import commented out reads the user's file");
         }
         finally
         {
