@@ -52,7 +52,7 @@ internal static partial class Program
         var embedded = (ToolStripButton)toolbar.Items["rToolStripButton"]!;
         var external = (ToolStripButton)toolbar.Items["rPlusToolStripButton"]!;
         Check(toolbar.Visible && embedded.Available && embedded.Enabled && external.Available && external.Enabled
-            && embedded.AccessibleName == "Open R session" && external.AccessibleName == "Open external R session",
+            && embedded.AccessibleName == "Open in StatsDirect R" && external.AccessibleName == "Open in external R",
             "the worksheet toolbar has distinct and accessible R and R+ buttons");
 
         async Task<Form> Activate(ToolStripButton button, string title, string selectedAddress, string choice,
@@ -75,15 +75,15 @@ internal static partial class Program
             return added[0];
         }
 
-        await Activate(embedded, "Open R session", "A1:B3", null);
-        await Activate(external, "Open external R session", "A1:B3", null);
+        await Activate(embedded, "Open in StatsDirect R", "A1:B3", null);
+        await Activate(external, "Open in external R", "A1:B3", null);
         Select("A1,B2");
-        await Activate(embedded, "Open R session", null, null);
+        await Activate(embedded, "Open in StatsDirect R", null, null);
         Select("H:H");
-        await Activate(embedded, "Open R session", null, null, emptySelection: true);
+        await Activate(embedded, "Open in StatsDirect R", null, null, emptySelection: true);
         CheckWorksheetRBounds(grid, workbook);
         Select("A:B");
-        await Activate(embedded, "Open R session", "A1:B3", null);
+        await Activate(embedded, "Open in StatsDirect R", "A1:B3", null);
         if (rscript == null)
         {
             Console.WriteLine("SKIP worksheet R execution checks because no R installation is available");
@@ -104,7 +104,7 @@ internal static partial class Program
                       identical(worksheet_data[[2]], c('café, "quoted"%', "%NA")),
                       identical(worksheet_data[[3]], c(30, 999)))
             """;
-        using var imported = await Activate(embedded, "Open R session", "A1:B3", "Selected");
+        using var imported = await Activate(embedded, "Open in StatsDirect R", "A1:B3", "Selected");
         var importedConsole = RConsole(imported);
         await ((Task)Get(importedConsole, "Ready")).WaitAsync(TimeSpan.FromSeconds(45));
         await CompleteRCommand(imported, 0);
@@ -117,7 +117,7 @@ internal static partial class Program
         grid.Activate();
         await Task.Delay(100);
         Select("B2");
-        using var whole = await Activate(embedded, "Open R session", "B2", "All");
+        using var whole = await Activate(embedded, "Open in StatsDirect R", "B2", "All");
         await ((Task)Get(RConsole(whole), "Ready")).WaitAsync(TimeSpan.FromSeconds(45));
         await CompleteRCommand(whole, 0);
         await VerifyWorksheetRValues(whole, """
@@ -131,7 +131,7 @@ internal static partial class Program
         grid.Activate();
         await Task.Delay(100);
         Select("B2");
-        using var vectors = await Activate(embedded, "Open R session", "B2", "All", vectorList: true);
+        using var vectors = await Activate(embedded, "Open in StatsDirect R", "B2", "All", vectorList: true);
         await ((Task)Get(RConsole(vectors), "Ready")).WaitAsync(TimeSpan.FromSeconds(45));
         await CompleteRCommand(vectors, 0);
         await VerifyWorksheetRValues(vectors, verifyVectors,
@@ -141,19 +141,19 @@ internal static partial class Program
         grid.Activate();
         await Task.Delay(100);
         Select("B2");
-        using var oneCell = await Activate(embedded, "Open R session", "B2", "Selected");
+        using var oneCell = await Activate(embedded, "Open in StatsDirect R", "B2", "Selected");
         await ((Task)Get(RConsole(oneCell), "Ready")).WaitAsync(TimeSpan.FromSeconds(45));
         await CompleteRCommand(oneCell, 0);
         await VerifyWorksheetRValues(oneCell, """
             stopifnot(is.data.frame(worksheet_data),
-                      identical(names(worksheet_data), "V1"),
+                      identical(names(worksheet_data), "B"),
                       identical(worksheet_data[[1]], 'café, "quoted"%'))
-            """, "Selected cells uses the exact single cell as one value");
+            """, "Selected cells uses the exact single cell as one value, named by its worksheet column (RULES.md C5)");
 
         grid.Activate();
         await Task.Delay(100);
         Select("B2");
-        using var empty = await Activate(embedded, "Open R session", "B2", "None");
+        using var empty = await Activate(embedded, "Open in StatsDirect R", "B2", "None");
         var emptyConsole = RConsole(empty);
         await ((Task)Get(emptyConsole, "Ready")).WaitAsync(TimeSpan.FromSeconds(45));
         for (int attempt = 0; attempt < 240 && (string)Get(emptyConsole, "NativeState") != "ready"; attempt++)
@@ -191,7 +191,7 @@ internal static partial class Program
         const string verifyFriendlyVectors = "stopifnot(is.list(worksheet_data), !is.data.frame(worksheet_data))\n" + verifyFriendlyNames;
         foreach (bool vectorList in new[] { false, true })
         {
-            using var friendly = await Activate(embedded, "Open R session", "A1:B3", "All", vectorList: vectorList, friendlyNames: true);
+            using var friendly = await Activate(embedded, "Open in StatsDirect R", "A1:B3", "All", vectorList: vectorList, friendlyNames: true);
             await ((Task)Get(RConsole(friendly), "Ready")).WaitAsync(TimeSpan.FromSeconds(45));
             await CompleteRCommand(friendly, 0);
             await VerifyWorksheetRValues(friendly,
@@ -201,7 +201,11 @@ internal static partial class Program
             grid.Activate();
             await Task.Delay(100);
         }
-        if (hasRGui) await CheckWorksheetRGuiImport(grid, "EntireSheet", "VectorList", verifyFriendlyVectors, friendlyNames: true);
+        if (hasRGui)
+        {
+            await CheckWorksheetRGuiImport(grid, "EntireSheet", "VectorList", verifyFriendlyVectors, friendlyNames: true);
+            await CheckWorksheetRGuiImport(grid, "EntireSheet", "DataFrame", "stopifnot(is.data.frame(worksheet_data))", ownProfile: true);
+        }
         originalDocument?.Activate();
     }
 
@@ -447,8 +451,22 @@ internal static partial class Program
     static IEnumerable<Button> WorksheetRButtons(Control parent) => parent.Controls.Cast<Control>()
         .SelectMany(control => control is Button button ? new[] { button } : WorksheetRButtons(control));
 
-    static async Task CheckWorksheetRGuiImport(Form grid, string scope, string formatName, string verifyData, bool friendlyNames = false)
+    static async Task CheckWorksheetRGuiImport(Form grid, string scope, string formatName, string verifyData, bool friendlyNames = false,
+        bool ownProfile = false)
     {
+        // RULES.md 6.1: the user's own start-up file still runs in R+, and R processes started from the session start normally.
+        // The fixture's R working folder is the test's isolated user-data folder, so its .Rprofile is the test's own.
+        string userProfile = Path.Combine(StatsDirect.Configuration.SDConfiguration.MyStatsDirectRFolder, ".Rprofile");
+        if (ownProfile)
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(userProfile)!);
+            File.WriteAllText(userProfile, "options(statsdirect.own.profile = TRUE)\n");
+            verifyData += """
+
+                stopifnot(isTRUE(getOption("statsdirect.own.profile")), Sys.getenv("R_PROFILE_USER") == "",
+                          identical(system2(file.path(R.home("bin"), "Rscript.exe"), c("-e", shQuote("cat(6 * 7)")), stdout = TRUE), "42"))
+                """;
+        }
         var launcher = typeof(frmMain).Assembly.GetType("StatsDirect.R.WorksheetRLauncher", throwOnError: true)!;
         object LaunchCall(string method, params object[] arguments) =>
             launcher.GetMethod(method, BindingFlags.Static | BindingFlags.NonPublic)!.Invoke(null, arguments)!;
@@ -480,12 +498,14 @@ internal static partial class Program
             Check(File.Exists(receipt) && File.ReadAllText(receipt).Trim() == "verified" && !Directory.Exists(folder),
                 "real external RGui receives the " + (formatName == "DataFrame" ? "selected-cell data frame" : "entire worksheet as a list of vectors")
                 + (friendlyNames ? " with unique R-friendly names" : " with original names")
+                + (ownProfile ? ", runs the user's own R start-up file, and leaves R processes started from it unaffected" : "")
                 + " in its startup workspace and removes the temporary import on exit");
         }
         finally
         {
             LaunchCall("DeleteImportFolder", folder);
             await DeleteRFixtureDirectory(scratch, "StatsDirect-rgui-check-");
+            if (ownProfile && File.Exists(userProfile)) File.Delete(userProfile);
         }
     }
 }

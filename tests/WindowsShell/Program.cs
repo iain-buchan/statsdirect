@@ -244,7 +244,7 @@ internal static partial class Program
     static async Task CheckDocumentToolbars(frmMain main, Form grid, SpreadsheetGear.Windows.Forms.WorkbookView workbook)
     {
         var toolbar = (ToolStrip)Field(main, "toolStrip");
-        Check(toolbar.Visible && string.Join("|", toolbar.Items.Cast<ToolStripItem>().Where(b => b is ToolStripButton or ToolStripDropDownButton).Select(b => b.Text)) == "Save|Undo|Redo|Cut|Copy|Paste|Find|Analyse|Open R session|Open external R session|Help",
+        Check(toolbar.Visible && string.Join("|", toolbar.Items.Cast<ToolStripItem>().Where(b => b is ToolStripButton or ToolStripDropDownButton).Select(b => b.Text)) == "Save|Undo|Redo|Cut|Copy|Paste|Find|Analyse|Open in StatsDirect R|Open in external R|Help",
             "worksheet has one native toolbar in the shared document order");
         CaptureToolbar(toolbar, "grid-toolbar.png");
         Check(((Control)Field(grid,"formulaBar")).Visible, "formula entry remains available below the worksheet toolbar");
