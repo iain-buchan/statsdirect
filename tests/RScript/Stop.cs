@@ -42,10 +42,14 @@ internal static partial class Program
         Directory.CreateDirectory(folder);
         string statsScript = Path.Combine(folder, "stats.R");
         File.WriteAllText(statsScript, "r <- t.test(c(1, 2, 3), mu = 0)\ncat(\"p\", format(r$p.value, digits = 4), \"\n\")\n");
+        // RULES.md 6.1, as for the worksheet's R+: the user's own start-up file (here ./.Rprofile) runs first, and R processes started
+        // from this R do not inherit the profile, so they do not run the script again.
+        File.WriteAllText(Path.Combine(folder, ".Rprofile"), "options(statsdirect.own.profile = TRUE)\n");
         string statsProfile = RController.OpenInRProfile(statsScript);
         System.Diagnostics.ProcessStartInfo start = new()
         {
-            FileName = Path.Combine(version.BinPath, "Rscript.exe"), Arguments = "-e \"cat('end\n')\"", WorkingDirectory = folder,
+            FileName = Path.Combine(version.BinPath, "Rscript.exe"), WorkingDirectory = folder,
+            Arguments = "-e \"cat('end', nzchar(Sys.getenv('R_PROFILE_USER')), isTRUE(getOption('statsdirect.own.profile')), '\\n')\"",
             UseShellExecute = false, RedirectStandardOutput = true, RedirectStandardError = true, CreateNoWindow = true
         };
         start.Environment["R_PROFILE_USER"] = statsProfile;
@@ -55,5 +59,7 @@ internal static partial class Program
         viaProfile = viaProfile.Replace("\r", "");
         Check(viaProfile.Contains("> r <- t.test(c(1, 2, 3), mu = 0)") && viaProfile.Contains("p 0.07418") && viaProfile.Contains("end") && !viaProfile.Contains("could not find function"),
               "R started on the profile has its default packages attached before the script runs, shows the script as a session, and gives its result");
+        Check(viaProfile.Contains("end FALSE TRUE"),
+              "R started on the profile has run the user's own start-up file, and R processes started from it do not inherit the profile");
     }
 }

@@ -52,6 +52,12 @@ internal static partial class Program
         {
             CheckTemporaryCleanupIsolation();
             _ = typeof(StatsDirect.R.RScriptWriter).Assembly.GetType("StatsDirect.UI.SdApplication").GetProperty("SoleInstance", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null);   // the application object, whose making registers the engine's functions, as the program does at its start
+            if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "stop")
+            {
+                CheckStop();
+                Console.WriteLine($"PASS {checks} stop and Open in R checks");
+                return 0;
+            }
             if (Environment.GetEnvironmentVariable("STATSDIRECT_RSCRIPT_ONLY") == "posthoc-weighted")
             {
                 StatsDirect.R.RRecipes.Folder = Metadata("Recipes");
