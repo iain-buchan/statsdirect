@@ -535,8 +535,10 @@ namespace StatsDirect.UI
         /// </summary>
         internal static string OpenInRPath(string folder, string title, DateTime now)
         {
-            string stem = System.IO.Path.GetFileNameWithoutExtension(ScriptFileName(title)) + " "
-                + now.ToString("yyyy-MM-dd HHmmss", System.Globalization.CultureInfo.InvariantCulture);
+            // A window's title can be long: the name keeps its first 100 characters, well within Windows' limit with its data file's name.
+            string name = System.IO.Path.GetFileNameWithoutExtension(ScriptFileName(title));
+            if (name.Length > 100) name = name[..(char.IsHighSurrogate(name[99]) ? 99 : 100)].TrimEnd();
+            string stem = name + " " + now.ToString("yyyy-MM-dd HHmmss", System.Globalization.CultureInfo.InvariantCulture);
             string path = System.IO.Path.Combine(folder, stem + ".R");
             for (int n = 2; File.Exists(path) || File.Exists(System.IO.Path.ChangeExtension(path, null) + ".worksheet-data.csv"); n++)
                 path = System.IO.Path.Combine(folder, stem + " (" + n.ToString(System.Globalization.CultureInfo.InvariantCulture) + ").R");

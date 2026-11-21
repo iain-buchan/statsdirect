@@ -233,12 +233,14 @@ internal static class WorksheetRImport
         long lastDay = date1904 ? 2_957_003 : 2_958_465;
         if (!(Math.Abs(serial) <= lastDay + 1)) return new Cell(Kind.Number, serial);
         long ms = (long)Math.Round(serial * DayMilliseconds, MidpointRounding.AwayFromZero);
-        if (IsElapsed(format)) return new Cell(Kind.Duration, Text: DurationText(ms));
+        if (IsElapsed(format)) return Math.Abs(serial) > lastDay ? new Cell(Kind.Number, serial) : new Cell(Kind.Duration, Text: DurationText(ms));
         if (type == NumberFormatType.Time && serial >= 0 && serial < 1) return new Cell(Kind.TimeOfDay, Text: ClockText(ms));
         long day = Math.DivRem(ms, DayMilliseconds, out long ofDay);
         if (ofDay < 0) { day--; ofDay += DayMilliseconds; }
         if (!date1904 && day == 60) return new Cell(Kind.Missing);   // 1900-02-29, which never was
-        if (day < 0 || day > lastDay) return new Cell(Kind.Number, serial);   // before the date system, or after 9999-12-31
+        // Before the date system's first day (1900-01-01 is serial 1; 1904-01-01 is serial 0), or after 9999-12-31.  Serial 0 of the
+        // 1900 system, which Excel shows as 1900-01-00, is a number.
+        if (day < (date1904 ? 0 : 1) || day > lastDay) return new Cell(Kind.Number, serial);
         DateTime date = date1904 ? new DateTime(1904, 1, 1).AddDays(day)
             : day < 60 ? new DateTime(1899, 12, 31).AddDays(day) : new DateTime(1899, 12, 30).AddDays(day);
         string iso = date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);

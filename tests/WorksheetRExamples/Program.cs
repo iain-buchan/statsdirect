@@ -72,7 +72,8 @@ internal static class Program
                     Check(false, $"{name}: {ex.GetType().Name}: {ex.Message}");
                 }
             }
-            Check(index >= 50, "the shared examples hold at least the 50 cases of the approved rules");
+            int sharedCases = document.RootElement.GetProperty("cases").GetArrayLength();
+            Check(sharedCases >= 50, $"the shared examples hold at least the 50 cases of the approved rules ({sharedCases})");
             RunR(runs, work);
             RunRPlus(runs.Where(run => RPlusCases.ContainsKey(run.Name)).ToList(), work);
             Check(runs.Count(run => RPlusCases.ContainsKey(run.Name)) == RPlusCases.Count,
@@ -123,7 +124,7 @@ internal static class Program
     {
         static object Text(string s) => new { text = s };
         static object Date(string serial, string format) => new { date = serial, format };
-        string longLatin = new string('x', 9_998) + "\u00e9", longChinese = new string('\u4e2d', 12_000);
+        string longLatin = new string('x', 9_998) + "\u00e9", longChinese = new string('\u4e2d', 12_000), emoji = char.ConvertFromUtf32(0x1F600);
         var cases = new object[]
         {
             new
@@ -152,13 +153,21 @@ internal static class Program
                 name = "Windows: null characters are found in sheet order, through the import",
                 cells = new Dictionary<string, object> { ["A1"] = Text("a"), ["A2"] = Text("x\0"), ["B1"] = Text("y\0z") },
                 select = new { entire = true },
-                options = new { format = "data frame", headings = (bool?)null, friendly = false },
+                options = new { format = "data frame", headings = false, friendly = false },
                 expect = new
                 {
                     refusedNaming = "B1",
                     refusedMessage = "Cell B1 contains a null character, which R cannot hold. Remove it, then open the R import again.",
                     r = (string)null,
                 },
+            },
+            new
+            {
+                name = "Windows: null characters below the headings are found in sheet order",
+                cells = new Dictionary<string, object> { ["A1"] = Text("a"), ["B1"] = Text("b"), ["A3"] = Text("x\0"), ["B2"] = Text("y\0") },
+                select = new { entire = true },
+                options = new { format = "data frame", headings = true, friendly = false },
+                expect = new { refusedNaming = "B2", r = (string)null },
             },
             new
             {
@@ -221,6 +230,23 @@ internal static class Program
                     headingsSuggested = true,
                     r = "structure(list(c(1, 2), c(3, 4)), names = c(paste0(strrep(\"x\", 9998), \"\\u00e9\"), strrep(\"\\u4e2d\", 12000)), "
                         + "row.names = c(NA_integer_, -2L), class = \"data.frame\")",
+                },
+            },
+            new
+            {
+                name = "Windows: long headings split between the pieces of a surrogate pair",
+                cells = new Dictionary<string, object>
+                {
+                    ["A1"] = Text(new string('x', 1_999) + emoji), ["A2"] = new { number = "1" },
+                    ["B1"] = Text(new string('x', 3_999) + emoji), ["B2"] = new { number = "2" },
+                },
+                select = new { entire = true },
+                options = new { format = "data frame", headings = (bool?)null, friendly = false },
+                expect = new
+                {
+                    headingsSuggested = true,
+                    r = "structure(list(1, 2), names = c(paste0(strrep(\"x\", 1999), \"\\U0001f600\"), paste0(strrep(\"x\", 3999), \"\\U0001f600\")), "
+                        + "row.names = c(NA_integer_, -1L), class = \"data.frame\")",
                 },
             },
         };
@@ -489,7 +515,8 @@ internal static class Program
             };
             var (exit, output, errors) = RunRscript($"\"{check}\"", current, environment);
             bool summary = output.Contains("'data.frame':", StringComparison.Ordinal) || output.Contains("List of ", StringComparison.Ordinal);
-            Check(exit == 0 && output.Contains("RPLUS TRUE FALSE TRUE", StringComparison.Ordinal) && summary && !(output + errors).Contains("Error", StringComparison.Ordinal),
+            Check(exit == 0 && output.Contains("RPLUS TRUE FALSE TRUE", StringComparison.Ordinal) && summary
+                    && !(output + errors).Contains("Error", StringComparison.Ordinal) && !(output + errors).Contains("Warning", StringComparison.Ordinal),
                 $"{run.Name}: as R+ starts R, with the user's own start-up file{(latin1 ? " setting options(encoding = \"latin1\")" : "")}, "
                 + $"the import arrives whole with its summary and R_PROFILE_USER is not passed on (exit {exit}): {output.Trim()} {errors.Trim()}");
         }

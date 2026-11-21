@@ -2,10 +2,12 @@
 using StatsDirect.Configuration;
 using StatsDirect.UI;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace StatsDirect.R;
@@ -96,8 +98,10 @@ internal static class WorksheetRLauncher
             {{UserProfileCode()}}
                 script <- file.path(folder, "{{ImportScriptName}}")
                 if (file.exists(script)) tryCatch({
-                    # Keep worksheet headings in UTF-8 even with a non-Unicode R locale.
-                    lines <- readLines(file(script, encoding = "native.enc"), encoding = "UTF-8", warn = FALSE)
+                    # Keep worksheet headings in UTF-8 even with a non-Unicode R locale.  The connection is closed here, so that no R
+                    # warns later about a connection left unused.
+                    connection <- file(script, encoding = "native.enc")
+                    lines <- tryCatch(readLines(connection, encoding = "UTF-8", warn = FALSE), finally = close(connection))
                     eval(parse(text = lines, encoding = "UTF-8"), envir = .GlobalEnv)
                 }, finally = unlink(c(script, file.path(folder, "{{WorksheetRData.CsvFileName}}"))))
             })
@@ -114,6 +118,9 @@ internal static class WorksheetRLauncher
     internal static string UserProfileCode()
     {
         string own = Environment.GetEnvironmentVariable("R_PROFILE_USER") ?? "";
+        // A StatsDirect start-up file is never the user's own: an R that an earlier StatsDirect started can pass one on to a StatsDirect
+        // started from it, and the file would then run itself.
+        if (IsStatsDirectStartupFile(own)) own = "";
         return $$"""
             local({
                 own <- {{WorksheetRImport.QuotePath(own)}}
@@ -124,6 +131,22 @@ internal static class WorksheetRLauncher
                         error = function(e) message("Error in ", own, ": ", conditionMessage(e)))
             })
             """;
+    }
+
+    // The R window's start-up file for RGui (RController.OpenInRProfile), or an R+ start-up file in an import folder.
+    private static bool IsStatsDirectStartupFile(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path)) return false;
+        try
+        {
+            string full = Path.GetFullPath(path);
+            if (string.Equals(full, Path.GetFullPath(Path.Combine(SDConfiguration.MyStatsDirectRFolder, RController.OpenInRProfileName)), StringComparison.OrdinalIgnoreCase))
+                return true;
+            string? folder = Path.GetDirectoryName(full);
+            return folder != null && Path.GetFileName(folder).StartsWith(ImportFolderPrefix, StringComparison.OrdinalIgnoreCase)
+                && string.Equals(Path.GetFileName(full), ProfileName, StringComparison.OrdinalIgnoreCase);
+        }
+        catch (Exception e) when (e is ArgumentException or NotSupportedException or PathTooLongException) { return false; }
     }
 
     private static async Task DeleteImportAfterExitAsync(Process process, string importFolder)
@@ -149,9 +172,21 @@ internal static class WorksheetRLauncher
         catch (UnauthorizedAccessException) { }
     }
 
-    private static void WriteOwner(string folder, Process process) =>
-        File.WriteAllText(Path.Combine(folder, OwnerName), process.Id.ToString(CultureInfo.InvariantCulture) + " "
-            + process.StartTime.ToUniversalTime().Ticks.ToString(CultureInfo.InvariantCulture));
+    // The owner record is written whole and then moved into place, so that a reader never sees part of it; a reader of the old one
+    // shares deletion, so the move can replace it, and a few retries cover another process opening it at that moment.
+    private static void WriteOwner(string folder, Process process)
+    {
+        string text = process.Id.ToString(CultureInfo.InvariantCulture) + " "
+            + process.StartTime.ToUniversalTime().Ticks.ToString(CultureInfo.InvariantCulture);
+        string owner = Path.Combine(folder, OwnerName), written = owner + "." + Guid.NewGuid().ToString("N") + ".tmp";
+        File.WriteAllText(written, text);
+        for (int attempt = 1; ; attempt++)
+        {
+            try { File.Move(written, owner, true); return; }
+            catch (Exception e) when (attempt < 20 && e is IOException or UnauthorizedAccessException) { System.Threading.Thread.Sleep(25); }
+            catch { try { File.Delete(written); } catch (Exception e) when (e is IOException or UnauthorizedAccessException) { } throw; }
+        }
+    }
 
     /// <summary>
     /// Whether another running process may still need the folder's files: the StatsDirect whose R window holds its data, or the RGui
@@ -161,7 +196,12 @@ internal static class WorksheetRLauncher
     internal static bool InUse(string folder)
     {
         string text;
-        try { text = File.ReadAllText(Path.Combine(folder, OwnerName)); }
+        try
+        {
+            using var stream = new FileStream(Path.Combine(folder, OwnerName), FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+            using var reader = new StreamReader(stream);
+            text = reader.ReadToEnd();
+        }
         catch (FileNotFoundException)
         {
             try { return Directory.GetCreationTimeUtc(folder) > DateTime.UtcNow.AddMinutes(-10); }
@@ -178,9 +218,14 @@ internal static class WorksheetRLauncher
         try
         {
             using var process = Process.GetProcessById(id);
-            // The same process, not a later one given the same id.
+            // The same process, not a later one given the same id.  A process this user cannot ask its start time is another user's or
+            // the system's, so it holds the id of a finished owner, unless it is itself a StatsDirect or an RGui (one run as administrator).
             try { return Math.Abs(process.StartTime.ToUniversalTime().Ticks - started) < TimeSpan.TicksPerSecond; }
-            catch (Exception e) when (e is InvalidOperationException or Win32Exception or NotSupportedException) { return true; }
+            catch (Exception e) when (e is InvalidOperationException or Win32Exception or NotSupportedException)
+            {
+                try { return process.ProcessName.Equals("StatsDirect", StringComparison.OrdinalIgnoreCase) || process.ProcessName.Equals("Rgui", StringComparison.OrdinalIgnoreCase); }
+                catch (Exception f) when (f is InvalidOperationException or Win32Exception or NotSupportedException) { return true; }
+            }
         }
         catch (ArgumentException) { return false; }   // no such process is running
         catch (InvalidOperationException) { return false; }
@@ -195,7 +240,10 @@ internal static class WorksheetRLauncher
             !Path.GetFileName(path).StartsWith(ImportFolderPrefix, StringComparison.Ordinal))
             return;
 
-        foreach (string file in new[] { WorksheetRData.CsvFileName, ImportScriptName, ProfileName, OwnerName })
+        var files = new List<string> { WorksheetRData.CsvFileName, ImportScriptName, ProfileName, OwnerName };
+        try { files.AddRange(Directory.GetFiles(path, OwnerName + ".*.tmp").Select(file => Path.GetFileName(file))); }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException) { }
+        foreach (string file in files)
         {
             try { File.Delete(Path.Combine(path, file)); }
             catch (IOException) { }

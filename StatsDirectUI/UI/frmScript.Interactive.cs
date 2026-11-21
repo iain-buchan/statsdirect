@@ -138,22 +138,27 @@ public partial class frmScript
         finally { savingInteractive = false; }
     }
 
-    // The data files this window has put beside its saved scripts, by the script's full path, so that a later save of the same script
-    // can still point at its data when the session's own copy has gone.
-    private readonly System.Collections.Generic.Dictionary<string, string> savedWorksheetData = new(StringComparer.OrdinalIgnoreCase);
+    // The data files this window has put beside its saved scripts, by the script's full path, with a hash of the data written, so that a
+    // later save of the same script can still point at its data when the session's own copy has gone, while that file still holds them.
+    private readonly System.Collections.Generic.Dictionary<string, (string Path, byte[] Hash)> savedWorksheetData = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
     /// Saves the script.  A script that reads its session's worksheet data carries that data in a file beside it, named after the
     /// script so that saving again replaces it (RULES.md 6.3).  Returns a notice for the user about the data file, or null.
-    /// The script and its data file change together: a data file replaced for a script that then could not be saved is put back.
+    /// The script and its data file change together: a data file this save replaced is put back when the save fails.  A data file the
+    /// user has made read-only is not replaced.
     /// </summary>
     private string WriteRScript(string destination, string source)
     {
         string full = System.IO.Path.GetFullPath(destination);
-        string temporary = destination + "." + Guid.NewGuid().ToString("N") + ".tmp";
-        string temporaryCsv = temporary + ".csv";
+        string folder = System.IO.Path.GetDirectoryName(full);
+        // Working files have short names of their own, so that a long script name does not make theirs too long for Windows.
+        string token = "statsdirect-" + Guid.NewGuid().ToString("N");
+        string temporary = System.IO.Path.Combine(folder, token + ".tmp");
+        string temporaryCsv = System.IO.Path.Combine(folder, token + ".worksheet-data.tmp");
         string notice = null, companion = null, previous = null;
-        bool copyData = false;
+        byte[] hash = null;
+        bool copyData = false, placed = false;
         try
         {
             // Only the approved worksheet snapshot accompanies a saved script.
@@ -164,17 +169,22 @@ public partial class frmScript
                 string originalInR = WorksheetRData.QuotePath(original);
                 if (source.Contains(originalInR, StringComparison.Ordinal))
                 {
-                    string beside = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(full),
-                        System.IO.Path.GetFileNameWithoutExtension(full) + ".worksheet-data.csv");
+                    string beside = System.IO.Path.Combine(folder, System.IO.Path.GetFileNameWithoutExtension(full) + ".worksheet-data.csv");
                     if (File.Exists(original))
                     {
                         companion = beside;
+                        hash = DataHash(original);
                         // An unchanged data file is left alone, so that one open in Excel does not stop the save.
-                        copyData = !SameContents(original, companion);
-                        if (copyData) File.Copy(original, temporaryCsv);
+                        copyData = !HoldsData(companion, hash);
+                        if (copyData)
+                        {
+                            if (File.Exists(companion) && File.GetAttributes(companion).HasFlag(FileAttributes.ReadOnly))
+                                throw new UnauthorizedAccessException("The worksheet data file " + companion + " is read-only, so the script is not saved over it.");
+                            File.Copy(original, temporaryCsv);
+                        }
                     }
-                    else if (savedWorksheetData.TryGetValue(full, out string saved) && File.Exists(saved))
-                        companion = saved;   // the session's copy has gone, but this window already put the data beside this script
+                    else if (savedWorksheetData.TryGetValue(full, out var saved) && HoldsData(saved.Path, saved.Hash))
+                        (companion, hash) = saved;   // the session's copy has gone, but this window's data are still beside this script
                     if (companion != null)
                     {
                         source = source.Replace(originalInR, WorksheetRData.QuotePath(companion), StringComparison.Ordinal);
@@ -186,30 +196,34 @@ public partial class frmScript
             }
 
             File.WriteAllText(temporary, source, new UTF8Encoding(false));
-            if (copyData)
+            try
             {
-                if (File.Exists(companion))
+                if (copyData)
                 {
-                    previous = companion + "." + Guid.NewGuid().ToString("N") + ".previous";
-                    File.Move(companion, previous);
+                    if (File.Exists(companion))
+                    {
+                        previous = System.IO.Path.Combine(folder, token + ".previous.worksheet-data.csv");
+                        File.Move(companion, previous);
+                    }
+                    File.Move(temporaryCsv, companion);
+                    placed = true;
                 }
-                File.Move(temporaryCsv, companion);
+                File.Move(temporary, destination, true);
             }
-            try { File.Move(temporary, destination, true); }
             catch
             {
                 if (copyData)
                     try
                     {
-                        File.Delete(companion);
+                        if (placed) File.Delete(companion);
                         if (previous != null) File.Move(previous, companion);
                     }
                     catch (IOException) { }
                     catch (UnauthorizedAccessException) { }
-                    finally { previous = null; }   // put back, or left beside it when it could not be
+                    finally { previous = null; }   // put back, or left beside it, under its working name, when it could not be
                 throw;
             }
-            if (companion != null) savedWorksheetData[full] = companion;
+            if (companion != null) savedWorksheetData[full] = (companion, hash);
             return notice;
         }
         finally
@@ -223,24 +237,17 @@ public partial class frmScript
         }
     }
 
-    // Whether two files hold the same bytes; a file being written elsewhere may still be read.
-    private static bool SameContents(string first, string second)
+    private static byte[] DataHash(string path)
     {
-        if (!File.Exists(second)) return false;
-        try
-        {
-            using var a = new FileStream(first, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
-            using var b = new FileStream(second, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
-            if (a.Length != b.Length) return false;
-            var x = new byte[81_920];
-            var y = new byte[81_920];
-            for (int read; (read = a.Read(x, 0, x.Length)) > 0;)
-            {
-                b.ReadExactly(y, 0, read);
-                if (!x.AsSpan(0, read).SequenceEqual(y.AsSpan(0, read))) return false;
-            }
-            return true;
-        }
+        using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+        return System.Security.Cryptography.SHA256.HashData(stream);
+    }
+
+    // Whether a file holds the data with this hash; a file another program has open, as Excel opens a CSV file, may still be read.
+    private static bool HoldsData(string path, byte[] hash)
+    {
+        if (hash == null || !File.Exists(path)) return false;
+        try { return DataHash(path).AsSpan().SequenceEqual(hash); }
         catch (IOException) { return false; }
         catch (UnauthorizedAccessException) { return false; }
     }

@@ -284,21 +284,28 @@ namespace StatsDirect.R
 
         /// <summary>The profile R's own window runs at its start for Open in R: the program's library on the path as the runs here have it, the
         /// script run in the console as a session shows it, and the script opened in R's editor.  The path of the profile written.</summary>
+        internal const string OpenInRProfileName = "open-in-r.r";
+
         public static string OpenInRProfile(string scriptPath)
         {
             string rFolder = SDConfiguration.MyStatsDirectRFolder;
             if (!Directory.Exists(rFolder))
                 Directory.CreateDirectory(rFolder);
-            string profile = Path.Combine(rFolder, "open-in-r.r");
+            string profile = Path.Combine(rFolder, OpenInRProfileName);
             using (TextWriter tw = new StreamWriter(profile, false, new UTF8Encoding(false)))
             {
                 // RULES.md 6.1, as for the worksheet's R+: R processes started from this R get the user's own R_PROFILE_USER back, or none,
                 // so that they do not run this profile again, and the user's own start-up file runs first, as R would run it.
                 tw.WriteLine(WorksheetRLauncher.UserProfileCode());
+                // the program's library and working folder, set up in a local scope so that the user's own objects are left alone
+                tw.WriteLine("local({");
                 tw.Write(SCRIPT_HEAD, rFolder.Replace(@"\", @"\\"));
                 tw.WriteLine();
-                // the profile runs before R attaches its default packages (stats, utils and the rest), so it attaches them itself first
-                tw.WriteLine("for (p in getOption(\"defaultPackages\")) suppressPackageStartupMessages(library(p, character.only = TRUE))");
+                tw.WriteLine("})");
+                // the profile runs before R attaches its default packages (stats, utils and the rest), so it attaches them itself first;
+                // a package the user's start-up file added that R cannot load is reported, as R reports it, and the script still runs
+                tw.WriteLine("local(for (p in getOption(\"defaultPackages\")) if (!suppressWarnings(suppressPackageStartupMessages(require(p, character.only = TRUE, quietly = TRUE))))"
+                    + " warning(\"package '\", p, \"' in options(\\\"defaultPackages\\\") was not found\", call. = FALSE))");
                 tw.WriteLine("local({ f <- \"" + scriptPath.Replace('\\', '/') + "\"; try(source(f, echo = TRUE, max.deparse.length = Inf, spaced = FALSE, encoding = \"UTF-8\")); if (interactive()) file.edit(f) })");
             }
             return profile;
