@@ -975,6 +975,10 @@ namespace StatsDirect.UI
         }
 
         private bool awaitingWebReportsClose;
+        /// <summary>A close is waiting for a report's or an R window's question.  It ends in a further close, or in <see cref="CloseCancelled"/>.</summary>
+        internal bool CloseIsPending => awaitingWebReportsClose;
+        /// <summary>Raised when a close that had to wait for a report's or an R window's question has left the main window open.</summary>
+        internal event Action CloseCancelled;
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
             base.OnFormClosing(e);
@@ -1011,13 +1015,16 @@ namespace StatsDirect.UI
                     foreach (Form child in MdiChildren)
                         if (child is frmReportWebView web) web.CompleteParentClosePreparation();
                         else if (child is frmScript script) script.CompleteInteractiveParentClosePreparation();
-                    BeginInvoke(new Action(Close));
+                    BeginInvoke(new Action(RetryClose));
                 }
                 else
+                {
                     foreach (Form child in MdiChildren)
                         if (child is frmReportWebView web) web.CancelParentClose();
                         else if (child is frmScript script) script.CancelInteractiveParentClose();
                         else (child as StatsDirectForm)?.NoteNonClosure();
+                    CloseCancelled?.Invoke();
+                }
                 return;
             }
             if (awaitingWebReportsClose) { e.Cancel = true; return; }
@@ -3102,6 +3109,14 @@ namespace StatsDirect.UI
             {
                 InputParameters = inputParameters;
             }
+        }
+
+        // The second asking of a close that waited for questions.  A main window still open after it, and not waiting again, was refused.
+        private void RetryClose()
+        {
+            Close();
+            if (!IsDisposed && !awaitingWebReportsClose)
+                CloseCancelled?.Invoke();
         }
 
         private void frmMain_FormClosed(object sender, FormClosedEventArgs e)

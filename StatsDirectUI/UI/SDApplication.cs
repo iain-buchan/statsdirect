@@ -1284,26 +1284,49 @@ namespace StatsDirect.UI
             using var download = new frmDownloadUpdate();
             if (download.ShowDialog(owner) != DialogResult.OK)
                 return;
+            CloseForUpgrade(download.Installer);
+        }
 
-            using UpdateInstaller installer = download.Installer;
+        /// <summary>
+        /// Closes StatsDirect so that the downloaded installer starts once it has closed (<see cref="Shutdown"/> starts it).  The close
+        /// can finish later than this call: a report or an interactive R window cancels the first asking to put its question, and the main
+        /// window asks again when the questions are answered.  So the update stays arranged, with its installer, until the main window has
+        /// closed or the close has been refused.
+        /// </summary>
+        internal void CloseForUpgrade(UpdateInstaller installer)
+        {
+            if (null == MainWindow)
+            {
+                using (installer)
+                    installer.Start();
+                Application.Exit();
+                return;
+            }
             pendingUpgrade = installer;
             ClosingForUpgrade = true;
+            MainWindow.CloseCancelled += UpgradeCloseCancelled;
             try
             {
-                if (null == MainWindow)
-                {
-                    installer.Start();
-                    Application.Exit();
-                }
-                else
-                    MainWindow.Close();
+                MainWindow.Close();
             }
-            finally
+            catch
             {
-                // A cancelled save prompt must not arrange an update on a later, ordinary exit.
-                pendingUpgrade = null;
-                ClosingForUpgrade = false;
+                UpgradeCloseCancelled();
+                throw;
             }
+            // Still open: the close was refused now, or it waits for a question and ends in a further close or in CloseCancelled.
+            if (!MainWindow.IsDisposed && !MainWindow.CloseIsPending)
+                UpgradeCloseCancelled();
+        }
+
+        // A refused close must not leave an update arranged for a later, ordinary exit, nor its installer in the temporary folder.
+        private void UpgradeCloseCancelled()
+        {
+            if (null != MainWindow)
+                MainWindow.CloseCancelled -= UpgradeCloseCancelled;
+            pendingUpgrade?.Dispose();
+            pendingUpgrade = null;
+            ClosingForUpgrade = false;
         }
 
         /// <summary>

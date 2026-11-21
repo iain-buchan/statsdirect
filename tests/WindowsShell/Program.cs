@@ -82,6 +82,11 @@ internal static partial class Program
             await CheckWorksheetRSessions(main);
             return;
         }
+        if (selectedCheck == "close-for-update")
+        {
+            await CheckCloseForUpdate(main, app);
+            return;
+        }
         if (selectedCheck is "interactive-charts" or "interactive-chart-toolbar")
         {
             using var selectedGrid = (Form)Call(main, "CreateGrid");
@@ -183,6 +188,7 @@ internal static partial class Program
         var calculatorEdit = (ToolStripDropDownButton)Get(view, "EditMenu");
         calculatorEdit.DropDownItems.OfType<ToolStripMenuItem>().Single(i => i.Text == "Undo").PerformClick();
         Check(input.Text == "2" && main.ActiveMdiChild == null, "calculator Edit menu still works after the last MDI document closes");
+        await CheckCloseForUpdate(main, app);   // last: its second asking runs the main window's own closing steps
     }
 
     // The ChatGPT component speaks JSON-RPC over its standard streams in UTF-8: what it writes must be read as UTF-8, else a minus
