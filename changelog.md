@@ -2,6 +2,12 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
+##[v5.3.16] 2026-11-21
+
+### Fixed
+- Close and update starts the installer when a report or an R window is open. StatsDirect closed after the report's question, but the update did not start, so StatsDirect stayed on the earlier version.
+
+
 ##[v5.3.15] 2026-11-20
 
 ### Changed
