@@ -184,6 +184,30 @@ internal static class Program
             },
             new
             {
+                name = "Windows: every column, selected in two pieces, is select all",
+                cells = new Dictionary<string, object> { ["A1"] = Text("x"), ["A2"] = new { number = "1" }, ["B1"] = Text("y"), ["B2"] = new { number = "2" } },
+                select = new { areas = new[] { "A:M", "N:XFD" } },
+                options = new { format = "data frame", headings = true, friendly = false },
+                expect = new
+                {
+                    selected = "Selected cells \u2014 A1:B2 (2 rows \u00d7 2 columns)",
+                    r = "structure(list(x = 1, y = 2), row.names = c(NA_integer_, -1L), class = \"data.frame\")",
+                },
+            },
+            new
+            {
+                name = "Windows: every row, selected in two pieces, is select all",
+                cells = new Dictionary<string, object> { ["A1"] = Text("x"), ["A2"] = new { number = "1" }, ["B1"] = Text("y"), ["B2"] = new { number = "2" } },
+                select = new { areas = new[] { "1:500000", "500001:1048576" } },
+                options = new { format = "data frame", headings = true, friendly = false },
+                expect = new
+                {
+                    selected = "Selected cells \u2014 A1:B2 (2 rows \u00d7 2 columns)",
+                    r = "structure(list(x = 1, y = 2), row.names = c(NA_integer_, -1L), class = \"data.frame\")",
+                },
+            },
+            new
+            {
                 name = "Windows: very long headings with escapes",
                 cells = new Dictionary<string, object>
                 {

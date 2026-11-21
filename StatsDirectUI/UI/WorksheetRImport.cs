@@ -60,6 +60,8 @@ internal static class WorksheetRImport
         if (areas.All(WholeColumns))   // 2.3 and C7: the selected columns, from the first to the last non-blank row of those columns
         {
             int[] columns = areas.SelectMany(area => Enumerable.Range(area.Column, area.ColumnCount)).Distinct().Order().ToArray();
+            if (columns.Length == cells.ColumnCount)   // 2.6: every column is every cell, however it was selected
+                return entire == null ? (null, NoDataInSelection) : (entire, null);
             int first = int.MaxValue, last = -1;
             foreach (var (from, to) in WorksheetRSource.Runs(columns))
                 if (Bounds(cells[used.Row, from, used.Row + used.RowCount - 1, to]) is var (top, bottom, _, _))
@@ -73,6 +75,8 @@ internal static class WorksheetRImport
         if (areas.All(WholeRows))   // C6: from the first to the last selected row holding data, across that data's columns
         {
             int[] rows = areas.SelectMany(area => Enumerable.Range(area.Row, area.RowCount)).Distinct().Order().ToArray();
+            if (rows.Length == cells.RowCount)   // 2.6: every row is every cell, however it was selected
+                return entire == null ? (null, NoDataInSelection) : (entire, null);
             int top = int.MaxValue, bottom = -1, left = int.MaxValue, right = -1;
             foreach (var (from, to) in WorksheetRSource.Runs(rows))
                 if (Bounds(cells[from, used.Column, to, used.Column + used.ColumnCount - 1]) is var (t, b, l, r))
