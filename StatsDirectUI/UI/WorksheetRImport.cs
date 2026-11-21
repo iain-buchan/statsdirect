@@ -912,8 +912,8 @@ internal static class WorksheetRImport
             else if (c == '%')
             {
                 // A special operator is one token up to the next % on the line, whatever it holds.
-                int close = source.IndexOf('%', i + 1), end = source.IndexOf('\n', i + 1);
-                i = close > 0 && (end < 0 || close < end) ? close + 1 : i + 1;
+                int close = source.IndexOf('%', i + 1);
+                i = close > 0 && source.IndexOf('\n', i + 1, close - i - 1) < 0 ? close + 1 : i + 1;
             }
             else if (c is 'r' or 'R' && i + 1 < n && source[i + 1] is '"' or '\'' && !NamePart(i - 1) && RawStringEnd(source, i) is int after)
                 i = after;
@@ -992,14 +992,14 @@ internal static class WorksheetRImport
         return unicode && bytes ? null : value.ToString();
     }
 
-    // The end of an R raw string that starts at i, r"(...)" with brackets ( [ or { and any number of dashes, or null when it is not one.
+    // The end of an R raw string that starts at i, r"(...)" with ( [ { or | and any number of dashes, or null when it is not one.
     private static int? RawStringEnd(string source, int i)
     {
         char quote = source[i + 1];
         int j = i + 2, dashes = 0;
         while (j < source.Length && source[j] == '-') { j++; dashes++; }
-        if (j >= source.Length || source[j] is not ('(' or '[' or '{')) return null;
-        char close = source[j] switch { '(' => ')', '[' => ']', _ => '}' };
+        if (j >= source.Length || source[j] is not ('(' or '[' or '{' or '|')) return null;
+        char close = source[j] switch { '(' => ')', '[' => ']', '{' => '}', _ => '|' };
         string closing = close + new string('-', dashes) + quote;
         int end = source.IndexOf(closing, j + 1, StringComparison.Ordinal);
         return end < 0 ? source.Length : end + closing.Length;
@@ -1032,12 +1032,28 @@ internal static class WorksheetRImport
     /// so that the script still holds its data file when the user has changed the import's reader (Codex's seventh review).</summary>
     internal const string DataFileMarker = "# StatsDirect worksheet data: ";
 
+    // The marker's line, where Marked writes it: the first line, or the second after a #! line.  No string can hold either, so a line of
+    // the user's own elsewhere that starts with the same words, in a string or a comment, is left as it is (the review of a031b80e).
+    private static (int Start, int End) MarkerLine(string source)
+    {
+        int start = 0;
+        if (source.StartsWith("#!", StringComparison.Ordinal))
+        {
+            int first = source.IndexOf('\n');
+            start = first < 0 ? source.Length : first + 1;
+        }
+        int end = source.IndexOf('\n', start);
+        return (start, end < 0 ? source.Length : end + 1);
+    }
+
+    private static bool HasMarker(string source, (int Start, int End) line) =>
+        source.AsSpan(line.Start, line.End - line.Start).StartsWith(DataFileMarker, StringComparison.Ordinal);
+
     // The data file a script's marker names, or null when it has none.
     private static string MarkedDataFile(string source)
     {
-        foreach (string line in source.Split('\n'))
-            if (line.StartsWith(DataFileMarker, StringComparison.Ordinal)) return line[DataFileMarker.Length..].TrimEnd('\r');
-        return null;
+        var line = MarkerLine(source);
+        return HasMarker(source, line) ? source[(line.Start + DataFileMarker.Length)..line.End].TrimEnd('\n').TrimEnd('\r') : null;
     }
 
     /// <summary>
@@ -1049,12 +1065,11 @@ internal static class WorksheetRImport
     internal static bool HoldsDataFile(string source, string dataFile) => ReadsAsImport(source, dataFile)
         || string.Equals(MarkedDataFile(source), Path.GetFileName(dataFile), StringComparison.OrdinalIgnoreCase) && NamesInCode(source, dataFile);
 
-    /// <summary>The script without its marker lines: what the editor shows, since StatsDirect writes the marker with each save.</summary>
+    /// <summary>The script without its marker line: what the editor shows, since StatsDirect writes the marker with each save.</summary>
     internal static string Unmarked(string source)
     {
-        if (!source.Contains(DataFileMarker, StringComparison.Ordinal)) return source;
-        var lines = source.Split('\n');
-        return string.Join("\n", lines.Where(line => !line.StartsWith(DataFileMarker, StringComparison.Ordinal)));
+        var line = MarkerLine(source);
+        return HasMarker(source, line) ? source.Remove(line.Start, line.End - line.Start) : source;
     }
 
     /// <summary>The script with one marker, naming its data file, as its first line, or after a #! line: written with the pair.</summary>

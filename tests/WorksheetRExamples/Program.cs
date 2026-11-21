@@ -795,6 +795,30 @@ internal static class Program
                 && WorksheetRImport.Marked("#!/usr/bin/env Rscript\r\nx <- 1\r\n", "x.worksheet-data.csv")
                     == "#!/usr/bin/env Rscript\r\n" + WorksheetRImport.DataFileMarker + "x.worksheet-data.csv\r\nx <- 1\r\n",
             "a saved script has one marker, the latest, after a #! line where there is one, in the script's own line endings");
+
+        // The marker is only where StatsDirect writes it, the first line or the second after #!: the same words elsewhere, in a string,
+        // a raw string or the user's own comment, are the user's, kept on saving and on opening, and hold nothing (the review of a031b80e).
+        string inString = "notes <- \"Data source:\n" + WorksheetRImport.DataFileMarker + "trial A\"\n" + edited;
+        string inComment = "x <- 1\n" + WorksheetRImport.DataFileMarker + "blood pressure trial, cleaned 3 Nov\n" + edited;
+        string inRaw = "tmpl <- r\"(\n" + WorksheetRImport.DataFileMarker + "x.worksheet-data.csv\n)\"\n" + edited;
+        Check(WorksheetRImport.Marked(inString, "x.worksheet-data.csv") == marker + inString
+                && WorksheetRImport.Marked(inComment, "x.worksheet-data.csv") == marker + inComment
+                && WorksheetRImport.Unmarked(inString) == inString && WorksheetRImport.Unmarked(inRaw) == inRaw
+                && !WorksheetRImport.HoldsDataFile(inRaw, plain) && !WorksheetRImport.HoldsDataFile(inComment, plain)
+                && WorksheetRImport.HoldsDataFile(WorksheetRImport.Marked(inString, "x.worksheet-data.csv"), plain),
+            "the marker words in a string, a raw string or the user's comment are kept, and hold nothing; only the first line is the marker");
+
+        // Raw strings may also be delimited by |, so a quote within one starts nothing (the review of a031b80e).
+        Check(WorksheetRImport.NamesInCode("a <- r\"|say \"hi\"|\"\nb <- \"C:/data/x.worksheet-data.csv\"\n", plain)
+                && !WorksheetRImport.NamesInCode("a <- r\"|C:/data/x.worksheet-data.csv|\"\n", plain),
+            "a raw string delimited by | is read whole: the path after it is found, and the one within it names nothing");
+
+        // A long line of special operators is scanned in time that grows with its length (the review of a031b80e).
+        string operators = "y <- " + string.Concat(Enumerable.Repeat("x %% 2 + ", 400_000)) + "1\nz <- \"C:/data/x.worksheet-data.csv\"\n";
+        var watch = System.Diagnostics.Stopwatch.StartNew();
+        bool foundAfter = WorksheetRImport.HoldsDataFile(WorksheetRImport.DataFileMarker + "x.worksheet-data.csv\n" + operators, plain);
+        Check(foundAfter && watch.Elapsed < TimeSpan.FromSeconds(3),
+            $"a line of 400,000 special operators is scanned in {watch.ElapsedMilliseconds:N0} ms, and the path after it is found");
     }
 
 
