@@ -216,7 +216,9 @@ namespace StatsDirect.UI
             {
                 using (StreamReader txtReader = new(filename))
                 {
-                    rtbDoc.Text = txtReader.ReadToEnd();
+                    string text = txtReader.ReadToEnd();
+                    // An R script saved with its worksheet data works on a copy of its own (frmScript.Interactive.cs).
+                    rtbDoc.Text = !isTempFile && ".r".Equals(strExt) ? AdoptSavedWorksheetData(filename, text) : text;
                 }
                 rtbDoc.SelectionStart = 0;
                 rtbDoc.SelectionLength = 0;
@@ -549,7 +551,7 @@ namespace StatsDirect.UI
             for (int n = 1; ; n++)
             {
                 string path = System.IO.Path.Combine(folder, stem + (n == 1 ? "" : " (" + n.ToString(System.Globalization.CultureInfo.InvariantCulture) + ")") + ".R");
-                if (File.Exists(System.IO.Path.ChangeExtension(path, null) + ".worksheet-data.csv")) continue;
+                if (File.Exists(DataFileBeside(path))) continue;
                 try
                 {
                     using (new FileStream(path, FileMode.CreateNew, FileAccess.Write)) { }
@@ -606,7 +608,7 @@ namespace StatsDirect.UI
         private async Task<string> WriteOpenInRCopyAsync(string path)
         {
             if (IsInteractiveR) await InteractiveConsole.GetScriptAsync();
-            return WriteRScript(path, rtbDoc.Text.Replace("\r", "").Replace("\n", "\r\n")).Notice;
+            return WriteRScript(path, rtbDoc.Text.Replace("\r", "").Replace("\n", "\r\n"), replacing: false).Notice;
         }
 
         private static void OpenRFolder()

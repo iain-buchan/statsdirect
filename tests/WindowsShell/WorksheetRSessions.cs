@@ -312,6 +312,11 @@ internal static partial class Program
         Check(((string)Get(console, "Transcript")).Split('\n').Any(line => line.Trim() == "SHELL_WORKSHEET_R_OK"), label);
     }
 
+    // A saved worksheet script carries its data beside it, and every R window works on a copy of its own: the session's import, or, for
+    // a script opened again, a copy made as it opened.  So Run, Save, Save As and R+ use the window's own data whatever is written to a
+    // data file beside a script meanwhile, and a save that would replace data the window did not write asks first (Codex's third and
+    // fourth reviews).  Save and Save As are the window's own, with the file the Save As dialog would give, and the answer to its
+    // question, put in the user's place; Run and R+ are as the window runs them.
     static async Task CheckSavedWorksheetR(Form imported, string rscript, string verifyData)
     {
         var main = (frmMain)imported.MdiParent!;
@@ -321,36 +326,43 @@ internal static partial class Program
         string originalData = Path.Combine(transientFolder, "worksheet-data.csv");
         string scratch = Directory.CreateTempSubdirectory("StatsDirect-worksheet-save-").FullName;
         const string scriptName = "worksheet results.R";
-        string destination = Path.Combine(scratch, scriptName);
+        string destination = Path.Combine(scratch, scriptName), elsewhere = Path.Combine(scratch, "elsewhere");
+        Directory.CreateDirectory(elsewhere);
+        byte[] data = File.ReadAllBytes(originalData);
+        // Another workbook's data, in the same layout: the measurement 15 is 999.
+        string otherData = File.ReadAllText(originalData).Replace("15", "999", StringComparison.Ordinal);
+        string otherVerify = verifyData.Replace("15", "999", StringComparison.Ordinal);
+        Check(otherData != File.ReadAllText(originalData) && otherVerify != verifyData, "the other workbook's data differ from the script's");
+        byte[] other = System.Text.Encoding.UTF8.GetBytes(otherData);
+        var windows = new List<Form>();
         try
         {
-            imported.GetType().GetField("currentFile", Internal)!.SetValue(imported, destination);
-            async Task<bool> Save() => await ((Task<bool>)Call(imported, "SaveInteractiveAsync", false)).WaitAsync(TimeSpan.FromSeconds(15));
-            Check(await Save() && File.Exists(destination), "saving the worksheet R document writes its script");
-            // The session's script now reads the copy saved beside it, as a script opened again does.
-            string savedData = Path.ChangeExtension(destination, null) + ".worksheet-data.csv";
-            string sessionScript = (string)Get(RConsole(imported), "Script");
-            Check(sessionScript.Contains(savedData.Replace('\\', '/'), StringComparison.Ordinal) && !sessionScript.Contains(Path.GetFileName(transientFolder), StringComparison.Ordinal)
-                    && !(bool)Get(imported, "Dirty"),
-                "after Save, the session's script reads the data saved beside it and is saved");
-            string[] companions = Directory.GetFiles(scratch, "*.csv", SearchOption.AllDirectories);
-            Check(companions.Length == 1 && File.ReadAllBytes(companions[0]).SequenceEqual(File.ReadAllBytes(originalData)),
-                "the saved worksheet R script has a durable, byte-identical copy of its selected data");
-            Check(await Save() && Directory.GetFiles(scratch, "*.csv", SearchOption.AllDirectories).SequenceEqual(companions),
-                "saving the worksheet R document again reuses the same companion file");
-
-            var closed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-            imported.Disposed += (_, _) => closed.TrySetResult();
-            imported.Close();
-            await closed.Task.WaitAsync(TimeSpan.FromSeconds(20));
-            Check(!Directory.Exists(transientFolder) && File.Exists(companions[0]),
-                "closing the source R window removes its transient import and retains the saved companion file");
-
-            async Task<(int Exit, string Output)> RunSaved(string folder, string script)
+            static string DataBeside(string script) => string.Equals(Path.GetExtension(script), ".R", StringComparison.OrdinalIgnoreCase)
+                ? Path.ChangeExtension(script, null) + ".worksheet-data.csv" : script + "-worksheet-data.csv";
+            static bool Refers(string text, string dataFile) => text.Contains(dataFile.Replace('\\', '/'), StringComparison.Ordinal);
+            static string Script(Form window) => (string)Get(RConsole(window), "Script");
+            static string OwnData(Form window) => Path.Combine((string)Get(window, "WorksheetImportFolder"), "worksheet-data.csv");
+            // The import's reader of a data file, and a path as an R string, as StatsDirect writes them.
+            static string ImportReader(string path) => (string)WorksheetRDataMethod("ReaderOperand").Invoke(null, new object[] { path })!;
+            static string QuotedPath(string path) => (string)WorksheetRDataMethod("QuotePath").Invoke(null, new object[] { path })!;
+            static MethodInfo WorksheetRDataMethod(string name) => typeof(frmMain).Assembly.GetType("StatsDirect.UI.WorksheetRData")!
+                .GetMethod(name, BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public)!;
+            // The answer to the question before replacing someone else's data file, and the files it was asked about.
+            var asked = new List<string>();
+            bool answer = false;
+            void Prepare(Form window, Func<string> chosen)
+            {
+                window.GetType().GetProperty("RScriptFileChooser", Internal)!.SetValue(window, new Func<string, string>(_ => chosen()));
+                window.GetType().GetProperty("ReplaceDataConfirmer", Internal)!.SetValue(window, new Func<string, bool>(file => { asked.Add(file); return answer; }));
+            }
+            string chosenFile = null;
+            async Task<bool> Save(Form window) => await ((Task<bool>)Call(window, "SaveInteractiveAsync", false)).WaitAsync(TimeSpan.FromSeconds(15));
+            async Task<bool> SaveAs(Form window, string file) { chosenFile = file; return await ((Task<bool>)Call(window, "SaveInteractiveAsync", true)).WaitAsync(TimeSpan.FromSeconds(15)); }
+            async Task<(int Exit, string Output)> RunSaved(string folder, string script, string verify)
             {
                 string probe = Path.Combine(folder, "verify.R");
                 await File.WriteAllTextAsync(probe,
-                    $"source({JsonSerializer.Serialize(script)}, encoding = 'UTF-8')\n{verifyData}\ncat('SHELL_SAVED_WORKSHEET_OK\\n')\n");
+                    $"source({JsonSerializer.Serialize(script)}, encoding = 'UTF-8')\n{verify}\ncat('SHELL_SAVED_WORKSHEET_OK\\n')\n");
                 var start = new ProcessStartInfo(rscript)
                 {
                     WorkingDirectory = folder, UseShellExecute = false, CreateNoWindow = true,
@@ -371,102 +383,179 @@ internal static partial class Program
                 }
                 finally { if (!process.HasExited) process.Kill(); }
             }
-            var (exit, receipt) = await RunSaved(scratch, scriptName);
-            Check(exit == 0 && receipt.Split('\n').Any(line => line.Trim() == "SHELL_SAVED_WORKSHEET_OK"),
-                "a fresh Rscript session reads the saved worksheet data after the source window closes" + $"\nR exit code {exit}\n{receipt}");
-
-            // The saved script opened again, as the user opens it, and saved with the window's own Save and Save As, the file the Save As
-            // dialog would give put in the user's place; Run and R+ as the window runs them.  Each must use the script's own data: after a
-            // Save As, the copy beside the new script, whatever is written meanwhile where the first script's data were (Codex's third review).
-            var reopened = (Form)Call(main, "CreateScriptWindow", destination, false);
-            try
+            // A saved script, run afresh in R, reads the data given.
+            async Task Replay(string script, string verify, string label)
             {
-                var console = RConsole(reopened);
-                await ((Task)Get(console, "Ready")).WaitAsync(TimeSpan.FromSeconds(45));
-                string firstData = companions[0], elsewhere = Path.Combine(scratch, "elsewhere");
-                byte[] data = File.ReadAllBytes(firstData);
-                string otherData = File.ReadAllText(firstData).Replace("15", "999", StringComparison.Ordinal);
-                Check(otherData != File.ReadAllText(firstData), "the other workbook's data differ from the script's");
-                Directory.CreateDirectory(elsewhere);
-                string chosen = null;
-                reopened.GetType().GetProperty("RScriptFileChooser", Internal)!.SetValue(reopened, new Func<string, string>(_ => chosen));
-                async Task<bool> SaveReopenedAs(string file) { chosen = file; return await ((Task<bool>)Call(reopened, "SaveInteractiveAsync", true)).WaitAsync(TimeSpan.FromSeconds(15)); }
-                async Task<bool> SaveReopened() => await ((Task<bool>)Call(reopened, "SaveInteractiveAsync", false)).WaitAsync(TimeSpan.FromSeconds(15));
-                async Task RunReopened(string label)
-                {
-                    int before = RFinished(reopened);
-                    Call(reopened, "RunR");
-                    await CompleteRCommand(reopened, before);
-                    await VerifyWorksheetRValues(reopened, verifyData, label);
-                }
-                async Task Replay(string folder, string script, string label)
-                {
-                    var (code, output) = await RunSaved(folder, script);
-                    Check(code == 0 && output.Split('\n').Any(line => line.Trim() == "SHELL_SAVED_WORKSHEET_OK"), label + $"\nR exit code {code}\n{output}");
-                }
-                async Task OpenReopenedInR(string file, string label)
-                {
-                    string before = Script();
-                    await ((Task<string>)Call(reopened, "WriteOpenInRCopyAsync", file)).WaitAsync(TimeSpan.FromSeconds(15));
-                    string copy = DataBeside(file);
-                    Check(File.ReadAllBytes(copy).SequenceEqual(data) && Refers(File.ReadAllText(file), copy) && Script() == before, label);
-                    await Replay(Path.GetDirectoryName(file)!, Path.GetFileName(file), label + ", and R reads them");
-                }
-                string Script() => (string)Get(console, "Script");
-                static string DataBeside(string script) => Path.ChangeExtension(script, null) + ".worksheet-data.csv";
-                static bool Refers(string text, string dataFile) => text.Contains(dataFile.Replace('\\', '/'), StringComparison.Ordinal);
-                bool Holds(string script) => File.ReadAllBytes(DataBeside(script)).SequenceEqual(data) && Refers(File.ReadAllText(script), DataBeside(script));
-                // The window's script refers to the data beside its file and, as the editor holds it, is the script in the file.
-                bool Reads(string script) => Refers(Script(), DataBeside(script)) && Lf(Script()) == Lf(File.ReadAllText(script));
-                static string Lf(string text) => text.Replace("\r\n", "\n");
-
-                string second = Path.Combine(elsewhere, "second results.R");
-                Check(await SaveReopenedAs(second) && Holds(second) && Reads(second) && !Refers(Script(), firstData) && !(bool)Get(reopened, "Dirty"),
-                    "Save As of a saved worksheet script opened again puts a copy of its data beside the new script, which the window's script now reads");
-                File.WriteAllText(firstData, otherData);   // another workbook's script saved under the first name
-                await RunReopened("after Save As, with another workbook's data where the first script's data were, Run reads the script's own data");
-                Check(await SaveReopened() && Holds(second) && Reads(second),
-                    "Save again keeps the script's own data beside it, with another workbook's data where the first script's data were");
-                await Replay(elsewhere, "second results.R", "the script saved again, run afresh in R, reads its own data");
-                await OpenReopenedInR(Path.Combine(elsewhere, "third results.R"), "R+ after Save As carries the script's own data and leaves the window's script as it is");
-
-                // Save As back to the first name: the other workbook's data there give way to the script's own.
-                Check(await SaveReopenedAs(destination) && Holds(destination) && Reads(destination) && !Refers(Script(), DataBeside(second)),
-                    "Save As back to the first script's name puts the script's own data beside it, in place of the other workbook's data");
-                await RunReopened("after Save As back to the first name, Run reads the script's own data");
-                await Replay(scratch, scriptName, "the script saved back under its first name, run afresh in R, reads its own data");
-
-                // Save As once more, then the first script and its data file go (Codex's second review): the script goes on with its copy.
-                string fourth = Path.Combine(elsewhere, "fourth results.R");
-                Check(await SaveReopenedAs(fourth) && Holds(fourth) && Reads(fourth), "Save As again puts the data beside the next script too");
-                File.Delete(destination);
-                File.Delete(firstData);
-                Check(await SaveReopened() && Holds(fourth) && Reads(fourth),
-                    "saving again after Save As, with the first script and its data gone, keeps the script reading its own copy of the data");
-                await Replay(elsewhere, "fourth results.R", "the script saved elsewhere reads its own copy of the data once the first script and its data file are gone");
-                await RunReopened("Run reads the script's own copy of the data once the first script and its data file are gone");
-                await OpenReopenedInR(Path.Combine(elsewhere, "fifth results.R"), "R+ after Save As, with the first pair gone, carries the data beside its new file");
-
-                // The script's own data file gone too: a copy that still holds the data, the one it was saved from, gives them back; a copy
-                // that holds other data does not, and the script is saved without them rather than with the other data.
-                string sixth = Path.Combine(elsewhere, "sixth results.R");
-                Check(await SaveReopenedAs(sixth) && Holds(sixth), "Save As from the fourth script puts the data beside the sixth");
-                File.Delete(DataBeside(sixth));
-                Check(await SaveReopened() && Holds(sixth) && Reads(sixth),
-                    "Save with the script's own data file gone takes the data from the copy it was saved from, which still holds them");
-                File.WriteAllText(DataBeside(fourth), otherData);
-                File.Delete(DataBeside(sixth));
-                Check(await SaveReopened() && !File.Exists(DataBeside(sixth)) && Refers(File.ReadAllText(sixth), DataBeside(sixth)),
-                    "Save with the script's own data file gone, and other data in the copy it was saved from, saves the script without the other data");
+                var (code, output) = await RunSaved(Path.GetDirectoryName(script)!, Path.GetFileName(script), verify);
+                Check(code == 0 && output.Split('\n').Any(line => line.Trim() == "SHELL_SAVED_WORKSHEET_OK"), label + $"\nR exit code {code}\n{output}");
             }
-            finally
+            async Task Run(Form window, string verify, string label)
             {
-                reopened.Close();
-                for (int i = 0; i < 100 && !reopened.IsDisposed; i++)
-                    await Task.Delay(50);
+                int before = RFinished(window);
+                Call(window, "RunR");
+                await CompleteRCommand(window, before);
+                await VerifyWorksheetRValues(window, verify, label);
             }
+            // R+ writes a file of its own, with the window's data beside it, and leaves the window's script as it is.
+            async Task OpenInR(Form window, string file, byte[] expected, string verify, string label)
+            {
+                string before = await ((Task<string>)Call(RConsole(window), "GetScriptAsync")).WaitAsync(TimeSpan.FromSeconds(15));
+                await ((Task<string>)Call(window, "WriteOpenInRCopyAsync", file)).WaitAsync(TimeSpan.FromSeconds(15));
+                Check(File.ReadAllBytes(DataBeside(file)).SequenceEqual(expected) && Refers(File.ReadAllText(file), DataBeside(file)) && Script(window) == before, label);
+                await Replay(file, verify, label + ", and R reads them");
+            }
+            // The script and its data file agree: the script reads the data file beside it, which holds the data given.
+            static bool Holds(string script, byte[] expected) =>
+                File.ReadAllBytes(DataBeside(script)).SequenceEqual(expected) && Refers(File.ReadAllText(script), DataBeside(script));
+            // The window's script reads the window's own copy, which holds the data given.  (Each check run in the console is added to the
+            // window's script, so a window that has run one has something unsaved.)
+            static bool OwnCopy(Form window, byte[] expected) => Refers(Script(window), OwnData(window))
+                && File.ReadAllBytes(OwnData(window)).SequenceEqual(expected);
+            static bool Saved(Form window) => !(bool)Get(window, "Dirty");
+            async Task<Form> Reopen(string script)
+            {
+                var window = (Form)Call(main, "CreateScriptWindow", script, false);
+                windows.Add(window);
+                await ((Task)Get(RConsole(window), "Ready")).WaitAsync(TimeSpan.FromSeconds(45));
+                Prepare(window, () => chosenFile);
+                return window;
+            }
+
+            // The session: Save writes the script and a copy of the import beside it, and the session goes on reading its import.
+            Prepare(imported, () => chosenFile);
+            imported.GetType().GetField("currentFile", Internal)!.SetValue(imported, destination);
+            Check(await Save(imported) && File.Exists(destination), "saving the worksheet R document writes its script");
+            string firstData = DataBeside(destination);
+            Check(Holds(destination, data) && Directory.GetFiles(scratch, "*.csv", SearchOption.AllDirectories).Single() == firstData,
+                "the saved worksheet R script has a durable, byte-identical copy of its selected data, which it reads");
+            string sessionScript = Script(imported);
+            Check(Refers(sessionScript, originalData) && !Refers(sessionScript, firstData) && !(bool)Get(imported, "Dirty"),
+                "after Save, the session's script still reads the session's own import, and is saved");
+            Check(await Save(imported) && Directory.GetFiles(scratch, "*.csv", SearchOption.AllDirectories).Single() == firstData && asked.Count == 0,
+                "saving the worksheet R document again reuses the same companion file, without a question");
+            File.WriteAllText(firstData, otherData);   // another workbook's script saved under the same name
+            await Run(imported, verifyData, "with other data written beside the saved script, the session's Run still reads its own data");
+            answer = false;
+            Check(!await Save(imported) && asked.Count == 1 && File.ReadAllText(firstData) == otherData,
+                "Save asks before replacing a data file the window did not write, and with No saves nothing");
+            answer = true;
+            Check(await Save(imported) && asked.Count == 2 && Holds(destination, data), "with Yes, Save puts the session's own data back beside the script");
+
+            var closed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            imported.Disposed += (_, _) => closed.TrySetResult();
+            imported.Close();
+            await closed.Task.WaitAsync(TimeSpan.FromSeconds(20));
+            Check(!Directory.Exists(transientFolder) && File.Exists(firstData),
+                "closing the source R window removes its transient import and retains the saved companion file");
+            await Replay(destination, verifyData, "a fresh Rscript session reads the saved worksheet data after the source window closes");
+
+            // The saved script opened again works on a copy of its own data, made as it opens.
+            var first = await Reopen(destination);
+            string firstFolder = (string)Get(first, "WorksheetImportFolder");
+            Check(OwnCopy(first, data) && Saved(first) && !Refers(Script(first), firstData)
+                    && Path.GetFileName(firstFolder).StartsWith("StatsDirect-worksheet-r-", StringComparison.Ordinal),
+                "a saved worksheet script opened again reads a copy of its data of its own, and has nothing unsaved");
+
+            // Save As elsewhere, then another workbook's data where the first script's data were (Codex's third review).
+            string second = Path.Combine(elsewhere, "second results.R");
+            Check(await SaveAs(first, second) && Holds(second, data) && OwnCopy(first, data) && Saved(first),
+                "Save As puts a copy of the data beside the new script, and the window goes on reading its own copy");
+            File.WriteAllText(firstData, otherData);
+            await Run(first, verifyData, "after Save As, with another workbook's data where the first script's data were, Run reads the script's own data");
+            Check(await Save(first) && Holds(second, data) && asked.Count == 2, "Save again keeps the script's own data beside it, without a question");
+            await Replay(second, verifyData, "the script saved again, run afresh in R, reads its own data");
+            await OpenInR(first, Path.Combine(elsewhere, "third results.R"), data, verifyData, "R+ after Save As carries the script's own data");
+            // Save As back to the first name: the dialog asked before replacing the script there, and its data file goes with it.
+            Check(await SaveAs(first, destination) && Holds(destination, data) && asked.Count == 2,
+                "Save As back to the first script's name puts the script's own data beside it, in place of the other workbook's data");
+            await Run(first, verifyData, "after Save As back to the first name, Run reads the script's own data");
+            await Replay(destination, verifyData, "the script saved back under its first name, run afresh in R, reads its own data");
+            // The script's data file gone: Save puts it back from the window's own copy.
+            File.Delete(firstData);
+            Check(await Save(first) && Holds(destination, data) && asked.Count == 2, "Save with the script's data file gone puts the data back beside it");
+
+            // Two windows, one script name (Codex's fourth review).  The second window opens a script that reads the other workbook's
+            // data: the import part of the saved script (each check run in the console is added to a window's script, and the first
+            // window's checks are for its own data), with its own data file.
+            const string importEnd = "utils::str(worksheet_data)\n";
+            string saved = File.ReadAllText(destination);
+            int end = saved.IndexOf(importEnd, StringComparison.Ordinal);
+            Check(end > 0 && saved.Contains(ImportReader(firstData), StringComparison.Ordinal), "the saved script reads its data file through the import's reader");
+            string twin = Path.Combine(elsewhere, "twin.R");
+            File.WriteAllText(twin, saved[..(end + importEnd.Length)]
+                .Replace(ImportReader(firstData), ImportReader(DataBeside(twin)), StringComparison.Ordinal));
+            File.WriteAllText(DataBeside(twin), otherData);
+            var secondWindow = await Reopen(twin);
+            Check(OwnCopy(secondWindow, other) && Saved(secondWindow) && OwnCopy(first, data), "two windows each hold a copy of their own data");
+            string same = Path.Combine(elsewhere, "same.R");
+            Check(await SaveAs(first, same) && Holds(same, data), "the first window saves its script as same.R");
+            Check(await SaveAs(secondWindow, same) && Holds(same, other) && asked.Count == 2,
+                "the second window saves over same.R, which the dialog asked about, with its own data");
+            await Run(first, verifyData, "with same.R replaced from the other window, the first window's Run reads its own data");
+            await OpenInR(first, Path.Combine(elsewhere, "same R+ first.R"), data, verifyData, "the first window's R+ carries its own data");
+            answer = false;
+            Check(!await Save(first) && asked.Count == 3 && Holds(same, other),
+                "the first window's Save asks before replacing the other window's data, and with No leaves same.R and its data as the other window saved them");
+            await Replay(same, otherVerify, "same.R, as the other window saved it, reads the other window's data");
+            answer = true;
+            Check(await Save(first) && asked.Count == 4 && Holds(same, data), "with Yes, the first window saves same.R and its own data together");
+            await Replay(same, verifyData, "same.R, saved again from the first window, reads the first window's data");
+            await Run(secondWindow, otherVerify, "the second window's Run still reads its own data");
+            await OpenInR(secondWindow, Path.Combine(elsewhere, "same R+ second.R"), other, otherVerify, "the second window's R+ carries its own data");
+
+            // Two script names with one stem, in one folder: each has a data file of its own.
+            string siblingR = Path.Combine(elsewhere, "sibling.R"), siblingText = Path.Combine(elsewhere, "sibling.txt");
+            Check(await SaveAs(first, siblingR) && await SaveAs(secondWindow, siblingText) && DataBeside(siblingR) != DataBeside(siblingText)
+                    && Holds(siblingR, data) && Holds(siblingText, other) && asked.Count == 4,
+                "sibling.R and sibling.txt each have a data file of their own: " + Path.GetFileName(DataBeside(siblingR)) + " and " + Path.GetFileName(DataBeside(siblingText)));
+            await Replay(siblingR, verifyData, "sibling.R, run afresh in R, reads its own data");
+            await Replay(siblingText, otherVerify, "sibling.txt, run afresh in R, reads its own data");
+            await Run(first, verifyData, "the window that saved sibling.R runs with its own data");
+            await Run(secondWindow, otherVerify, "the window that saved sibling.txt runs with its own data");
+            Check(await Save(first) && await Save(secondWindow) && Holds(siblingR, data) && Holds(siblingText, other) && asked.Count == 4,
+                "saving sibling.R and sibling.txt again keeps each one's data, without a question");
+            await Replay(siblingR, verifyData, "sibling.R, saved again and run afresh in R, reads its own data");
+            await Replay(siblingText, otherVerify, "sibling.txt, saved again and run afresh in R, reads its own data");
+            await OpenInR(first, Path.Combine(elsewhere, "sibling R+ first.R"), data, verifyData, "R+ from sibling.R's window carries its data");
+            await OpenInR(secondWindow, Path.Combine(elsewhere, "sibling R+ second.R"), other, otherVerify, "R+ from sibling.txt's window carries its data");
+            var siblingAgain = await Reopen(siblingR);
+            Check(OwnCopy(siblingAgain, data) && Saved(siblingAgain), "sibling.R opened again reads a copy of its own data");
+            await Run(siblingAgain, verifyData, "sibling.R opened again runs with its own data");
+            await Replay(siblingText, otherVerify, "sibling.txt, run afresh in R again, still reads its own data");
+
+            // Save As once more, then the first script and its data file go (Codex's second review): the script goes on with its data.
+            string fourth = Path.Combine(elsewhere, "fourth results.R");
+            Check(await SaveAs(first, fourth) && Holds(fourth, data), "Save As again puts the data beside the next script too");
+            File.Delete(destination);
+            File.Delete(firstData);
+            Check(await Save(first) && Holds(fourth, data), "saving again after Save As, with the first script and its data gone, keeps the script's data");
+            await Replay(fourth, verifyData, "the script saved elsewhere reads its data once the first script and its data file are gone");
+            await Run(first, verifyData, "Run reads the window's own data once the first script and its data file are gone");
+
+            // A reader the user has changed is the user's own code (Codex's fourth review): a comment that mentions the window's data file
+            // is left as it is, and no data file is written for the script.  The window holds the other workbook's data, and the user's
+            // file holds the script's own, so R shows which it read.
+            var third = await Reopen(twin);
+            string userData = Path.Combine(elsewhere, "user.csv");
+            File.WriteAllBytes(userData, data);
+            string own = OwnData(third), ownReader = ImportReader(own);
+            string comment = "# first read from " + QuotedPath(own) + "\n";
+            Check(OwnCopy(third, other) && Script(third).Contains(ownReader, StringComparison.Ordinal), "the window's script reads its own copy through the import's reader");
+            string edited = comment + Script(third).Replace(ownReader, ImportReader(userData), StringComparison.Ordinal);
+            RConsole(third).GetType().GetProperty("Script", Internal)!.SetValue(RConsole(third), edited);
+            string seventh = Path.Combine(elsewhere, "seventh results.R");
+            Check(await SaveAs(third, seventh) && !File.Exists(DataBeside(seventh)) && File.ReadAllText(seventh).StartsWith(comment, StringComparison.Ordinal)
+                    && File.ReadAllText(seventh).Contains(ImportReader(userData), StringComparison.Ordinal),
+                "a script whose reader the user changed is saved as it is, comment included, without a data file");
+            await Replay(seventh, verifyData, "the script with the user's own reader reads the user's file");
         }
-        finally { await DeleteRFixtureDirectory(scratch, "StatsDirect-worksheet-save-"); }
+        finally
+        {
+            // Windows with checks added to their scripts have something unsaved: they are disposed without the question about saving.
+            foreach (var window in windows)
+                if (!window.IsDisposed) window.Dispose();
+            await DeleteRFixtureDirectory(scratch, "StatsDirect-worksheet-save-");
+        }
     }
 
     static async Task DriveWorksheetRPrompt(frmMain main, string title, string selectedAddress, string choice,

@@ -655,26 +655,35 @@ internal static class Program
             workbook.Close();
         }
 
-        // A protected sheet's filter cannot be turned off in the copy, so its hidden columns' cells are read, as before.
-        workbook = Factory.GetWorkbook(CultureInfo.InvariantCulture);
-        try
+        // Protected sheets (Codex's fourth review), each left protected and filtered as it was.  Without a password, the copy allows the
+        // program's own changes and is searched with its filter off; with one, the sheet's saved cell list is read.  Each finds data in
+        // a hidden column of a hidden row: with D:J hidden, and with D:XFD hidden, where reading each hidden cell would take minutes.
+        foreach (var (password, hidden, label) in new[] { ("review", "D1:J1", "D:J hidden, a password"), ("review", "D1:XFD1", "D:XFD hidden, a password"),
+                     ((string)null, "D1:XFD1", "D:XFD hidden, no password") })
         {
-            var sheet = FilteredColumn(workbook, 300_000);
-            sheet.Range["J2"].Value = 9.0;
-            sheet.Range["D1:J1"].EntireColumn.Hidden = true;
-            sheet.Protect("review");
-            var watch = System.Diagnostics.Stopwatch.StartNew();
-            var describe = Task.Run(() => WorksheetRImport.Describe(sheet, sheet.Range["A1"], write => write()));
-            bool finished = describe.Wait(TimeSpan.FromSeconds(20));
-            Console.WriteLine($"Filtered bounds, 150,000 hidden rows, D:J hidden, protected: " + (finished ? $"{watch.ElapsedMilliseconds:N0} ms" : "not finished in 20 s"));
-            var options = finished ? describe.Result : null;
-            Check(finished && sheet.ProtectContents && sheet.Range["A2"].EntireRow.Hidden && options!.EntireSheet?.Address == "A1:J300001",
-                "on a protected sheet under an AutoFilter that hides 150,000 rows, with D:J hidden, the prompt finds the data in a hidden column of a hidden row"
-                + (finished ? $" (entire {options!.EntireSheet?.Address})" : " (it did not finish)"));
-        }
-        finally
-        {
-            workbook.Close();
+            workbook = Factory.GetWorkbook(CultureInfo.InvariantCulture);
+            try
+            {
+                var sheet = FilteredColumn(workbook, 300_000);
+                sheet.Range["J2"].Value = 9.0;
+                sheet.Range["B5"].Formula = "=\"\"";   // a formula that shows empty text is data
+                sheet.Range["XFD1048576"].NumberFormat = "0.00";   // formatting alone is not
+                sheet.Range[hidden].EntireColumn.Hidden = true;
+                sheet.Protect(password);
+                var watch = System.Diagnostics.Stopwatch.StartNew();
+                var describe = Task.Run(() => WorksheetRImport.Describe(sheet, sheet.Range["A1"], write => write()));
+                bool finished = describe.Wait(TimeSpan.FromSeconds(20));
+                Console.WriteLine($"Filtered bounds, 150,000 hidden rows, protected, {label}: " + (finished ? $"{watch.ElapsedMilliseconds:N0} ms" : "not finished in 20 s"));
+                var options = finished ? describe.Result : null;
+                Check(finished && sheet.ProtectContents && sheet.AutoFilterMode && sheet.Range["A2"].EntireRow.Hidden && sheet.Range["J1"].EntireColumn.Hidden
+                        && workbook.Worksheets.Count == 1 && options!.EntireSheet?.Address == "A1:J300001",
+                    $"on a protected sheet under an AutoFilter that hides 150,000 rows, with {label}, the prompt finds the data in a hidden column of a "
+                    + "hidden row within 20 s, and leaves the sheet as it was" + (finished ? $" (entire {options!.EntireSheet?.Address})" : " (it did not finish)"));
+            }
+            finally
+            {
+                workbook.Close();
+            }
         }
     }
 

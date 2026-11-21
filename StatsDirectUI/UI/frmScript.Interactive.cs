@@ -118,31 +118,25 @@ public partial class frmScript
         {
             string source = await InteractiveConsole.GetScriptAsync();
             string destination = currentFile;
+            bool replacing = false;
             if (choose || destination == null)
             {
                 destination = ChooseRScriptFile(destination);
                 if (destination == null) return false;
+                // The dialog asked before replacing a file there, so the script's data file goes with it.
+                replacing = File.Exists(destination);
             }
-            var written = WriteRScript(destination, source);
+            var written = WriteRScript(destination, source, replacing);
             if (written.Notice != null) AppendScriptNotice(written.Notice);
+            if (written.Cancelled) return false;
             currentFile = destination; Path = destination;
-            if (written.Companion != null)
-            {
-                savedWorksheetData = written.Fallback;
-                // The script now reads the data saved beside it, so that Run, Save, Save As and R+ all take them from there, and
-                // the file the data came from, which may now be another script's, is no longer this one's (Codex's third review).
-                if (written.DataInR != written.CompanionInR)
-                    await ReplaceInScriptAsync(written.DataInR, written.CompanionInR);
-            }
-            if (EditorLines(InteractiveConsole.Script) == EditorLines(written.Text)) { rtbDoc.Modified = false; Dirty = false; }
+            knownDataFile = written.DataFile == null ? null : (written.DataFile, written.Hash);
+            if (InteractiveConsole.Script == source) { rtbDoc.Modified = false; Dirty = false; }
             SdApplication.SoleInstance.NoteRecentFile(destination, true);
             return !Dirty;
         }
         finally { savingInteractive = false; }
     }
-
-    // A script as the editor holds it, each line ending in LF alone: the script written, with CR LF where the console added it, is the same.
-    private static string EditorLines(string text) => text.Replace("\r\n", "\n").Replace('\r', '\n');
 
     // The file Save As saves the R script to, from the user, or null when they cancel.  The shell checks answer in the user's place.
     [System.ComponentModel.DesignerSerializationVisibility(System.ComponentModel.DesignerSerializationVisibility.Hidden)]
@@ -158,38 +152,77 @@ public partial class frmScript
         return dialog.ShowDialog(this) == DialogResult.OK ? dialog.FileName : null;
     }
 
-    // The program's own change to the script, made in the editor as it is now, so that what the user types meanwhile stays.
-    private async Task ReplaceInScriptAsync(string text, string replacement)
+    // Whether to replace a data file beside the script that does not hold this window's data and that this window did not write; the
+    // shell checks answer in the user's place.
+    [System.ComponentModel.DesignerSerializationVisibility(System.ComponentModel.DesignerSerializationVisibility.Hidden)]
+    internal Func<string, bool> ReplaceDataConfirmer { private get; set; }
+    private bool ConfirmReplaceData(string dataFile)
     {
-        string script = await InteractiveConsole.ReplaceInScriptAsync(text, replacement);
-        mirroringRSource = true;
-        try { rtbDoc.Text = script; }
-        finally { mirroringRSource = false; }
+        if (ReplaceDataConfirmer != null) return ReplaceDataConfirmer(dataFile);
+        return MessageBox.Show(this,
+            "The worksheet data file “" + System.IO.Path.GetFileName(dataFile) + "” beside this script does not hold this script's data. "
+            + "Another script may have been saved under the same name, or another program may have changed the file.\n\n"
+            + "Replace it with this script's own data?",
+            "Save R script", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) == DialogResult.Yes;
     }
 
-    // A copy that still holds a saved script's data, for the R text the script refers to its data file by: when that file has gone, a
-    // later save takes the data from the copy while it still holds them.  A reference the user has changed has no copy.
-    private (string ForInR, string Path, byte[] Hash)? savedWorksheetData;
+    // The window's own copy of its worksheet data, in a folder of its own (WorksheetImportFolder): the session's import, or, for a
+    // script saved with its data and opened again, a copy of the data file beside it made as it opened.  The script in the editor reads
+    // it, so nothing written later to a data file beside a script (another script saved under the same name, another program) changes
+    // what the window runs, saves or hands to R (Codex's fourth review).  Save, Save As and R+ write a copy of it beside the script
+    // they write, and that script reads the copy.
+    private string OwnData => WorksheetImportFolder is string folder ? System.IO.Path.Combine(folder, WorksheetRData.CsvFileName) : null;
+    private byte[] ownDataHash;
+    // The data file beside the window's script as the window last wrote it or opened the script, with a hash of what it held.
+    private (string Path, byte[] Hash)? knownDataFile;
+    // How a script opened again reads its data file when that had gone, for the notice when it is saved.
+    private string missingDataReader;
 
-    /// <summary>What writing the script did.</summary>
-    /// <param name="Text">The script as written.</param>
-    /// <param name="Notice">A notice for the user about the data file, or null.</param>
-    /// <param name="DataInR">The R text by which the script referred to its worksheet data, or null when it reads none.</param>
-    /// <param name="Companion">The data file beside the script, or null when it has none.</param>
-    /// <param name="CompanionInR">The R text by which the written script refers to that file.</param>
-    /// <param name="Fallback">A copy that still holds the data, for that text.</param>
-    private sealed record WrittenRScript(string Text, string Notice, string DataInR, string Companion, string CompanionInR,
-        (string ForInR, string Path, byte[] Hash)? Fallback);
+    /// <summary>What writing the script did: a notice for the user about the data file, or null; the data file beside the written
+    /// script and a hash of its data, or null when it has none; and whether the user chose not to replace a data file.</summary>
+    private sealed record WrittenRScript(string Notice, string DataFile, byte[] Hash, bool Cancelled);
 
     /// <summary>
-    /// Writes the script, for Save, Save As or R+.  A script that reads worksheet data carries the data in a file beside it, named after
-    /// the script so that saving again replaces it (RULES.md 6.3).  The data are those of the window's script: the session's import,
-    /// which the running session keeps until the window closes, or the data file beside the file the window holds, which a save moves
-    /// beside the new file.  A data file the script refers to in any other way is an ordinary file of the user's, and stays as it is.
-    /// The script and its data file change together: a data file this write replaced is put back when the write fails.  A data file
-    /// the user has made read-only is not replaced.  Nothing about the window changes here: Save and Save As take the result.
+    /// Opened again, a script saved with its worksheet data works on a copy of its own, made now, as a session works on its import:
+    /// the script in the editor reads the copy.  Only the reader the import wrote (<see cref="WorksheetRData.ReaderOperand"/>) names
+    /// the data file, so a comment or the user's own code that mentions the file is left as it is.  Returns the script for the editor.
     /// </summary>
-    private WrittenRScript WriteRScript(string destination, string source)
+    private string AdoptSavedWorksheetData(string scriptPath, string text)
+    {
+        if (WorksheetImportFolder != null) return text;
+        string dataFile = DataFileBeside(scriptPath), reader = WorksheetRData.ReaderOperand(dataFile);
+        if (!text.Contains(reader, StringComparison.Ordinal)) return text;
+        if (!File.Exists(dataFile)) { missingDataReader = reader; return text; }
+        string folder = null;
+        try
+        {
+            folder = StatsDirect.R.WorksheetRLauncher.CreateImportFolder();
+            string own = System.IO.Path.Combine(folder, WorksheetRData.CsvFileName);
+            CopyData(dataFile, own);
+            ownDataHash = DataHash(own);
+            knownDataFile = HoldsData(dataFile, ownDataHash) ? (dataFile, ownDataHash) : null;
+            WorksheetImportFolder = folder;
+            string kept = folder;
+            Disposed += (_, _) => StatsDirect.R.WorksheetRLauncher.DeleteImportFolder(kept);
+            return text.Replace(reader, WorksheetRData.ReaderOperand(own), StringComparison.Ordinal);
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            StatsDirect.R.WorksheetRLauncher.DeleteImportFolder(folder);
+            WorksheetImportFolder = null;
+            return text;   // the script reads the data file where it is, as it would in R
+        }
+    }
+
+    /// <summary>
+    /// Writes the script, for Save, Save As or R+.  A script that reads the window's own worksheet data carries a copy of them in a file
+    /// beside it, named after the script so that saving again replaces it (RULES.md 6.3), and the written script reads that file.  The
+    /// editor's script is left as it is.  A data file the script refers to in any other way is an ordinary file of the user's.  A data
+    /// file already beside the script that holds other data, and that this window did not write, is replaced only when the user agreed
+    /// to replace the script there, or agrees now.  The script and its data file change together: a data file this write replaced is put
+    /// back when the write fails.  A data file the user has made read-only is not replaced.  Nothing about the window changes here.
+    /// </summary>
+    private WrittenRScript WriteRScript(string destination, string source, bool replacing)
     {
         string full = System.IO.Path.GetFullPath(destination);
         string folder = System.IO.Path.GetDirectoryName(full);
@@ -197,51 +230,54 @@ public partial class frmScript
         string token = "statsdirect-" + Guid.NewGuid().ToString("N");
         string temporary = System.IO.Path.Combine(folder, token + ".tmp");
         string temporaryCsv = System.IO.Path.Combine(folder, token + ".worksheet-data.tmp");
-        string notice = null, companion = null, companionInR = null, previous = null, dataFile = null;
+        string notice = null, companion = null, previous = null, dataFile = null;
         byte[] hash = null;
         bool copyData = false, placed = false;
         try
         {
-            string original = null;
-            if (WorksheetImportFolder is string importFolder && source.Contains(WorksheetRData.QuotePath(System.IO.Path.Combine(importFolder, WorksheetRData.CsvFileName)), StringComparison.Ordinal))
-                original = System.IO.Path.Combine(importFolder, WorksheetRData.CsvFileName);
-            else if (!string.IsNullOrEmpty(currentFile) && source.Contains(WorksheetRData.QuotePath(DataFileBeside(currentFile)), StringComparison.Ordinal))
-                original = DataFileBeside(currentFile);
-            string originalInR = original == null ? null : WorksheetRData.QuotePath(original);
-
-            if (original != null)
+            string own = OwnData, ownReader = own == null ? null : WorksheetRData.ReaderOperand(own);
+            if (ownReader != null && source.Contains(ownReader, StringComparison.Ordinal))
             {
-                // The data come from the file the script refers to, or, when that has gone, from a copy that still holds them.
-                byte[] required = null;
-                if (File.Exists(original))
-                    (dataFile, hash) = (original, DataHash(original));
-                else if (savedWorksheetData is { } saved && saved.ForInR == originalInR && HoldsData(saved.Path, saved.Hash))
-                    (dataFile, hash, required) = (saved.Path, saved.Hash, saved.Hash);
+                // The data come from the window's own copy, or, should that have gone, from the data file the window last wrote while
+                // it still holds the same data.
+                if (File.Exists(own))
+                    (dataFile, hash) = (own, ownDataHash ??= DataHash(own));
+                else if (ownDataHash != null && knownDataFile is { } last && HoldsData(last.Path, ownDataHash))
+                    (dataFile, hash) = (last.Path, ownDataHash);
                 if (dataFile != null)
                 {
                     companion = DataFileBeside(full);
                     // An unchanged data file is left alone, so that one open in Excel does not stop the save.
                     copyData = !SameFile(dataFile, companion) && !HoldsData(companion, hash);
+                    if (copyData && File.Exists(companion))
+                    {
+                        if (File.GetAttributes(companion).HasFlag(FileAttributes.ReadOnly))
+                            throw new UnauthorizedAccessException("The worksheet data file " + companion + " is read-only, so the script is not saved over it.");
+                        bool written = knownDataFile is { } mine && SameFile(mine.Path, companion) && HoldsData(companion, mine.Hash);
+                        if (!written && !replacing && !ConfirmReplaceData(companion))
+                            return new WrittenRScript("(the script is not saved, and " + System.IO.Path.GetFileName(companion) + " is left as it is)\n", null, null, true);
+                    }
                     if (copyData)
                     {
-                        if (File.Exists(companion) && File.GetAttributes(companion).HasFlag(FileAttributes.ReadOnly))
-                            throw new UnauthorizedAccessException("The worksheet data file " + companion + " is read-only, so the script is not saved over it.");
-                        File.Copy(dataFile, temporaryCsv);
-                        // The data are those copied, whatever wrote to the file meanwhile; a copy kept for its data must still hold them.
+                        CopyData(dataFile, temporaryCsv);
+                        // The data are those copied: the window's own copy as it now is, or the data file the window last wrote, which
+                        // must still hold the same data.
                         byte[] copied = DataHash(temporaryCsv);
-                        if (required != null && !copied.AsSpan().SequenceEqual(required)) (companion, copyData) = (null, false);
-                        else hash = copied;
+                        if (copied.AsSpan().SequenceEqual(hash)) { }
+                        else if (SameFile(dataFile, own)) hash = ownDataHash = copied;
+                        else (companion, copyData) = (null, false);
                     }
                 }
                 if (companion != null)
                 {
-                    companionInR = WorksheetRData.QuotePath(companion);
-                    source = source.Replace(originalInR, companionInR, StringComparison.Ordinal);
+                    source = source.Replace(ownReader, WorksheetRData.ReaderOperand(companion), StringComparison.Ordinal);
                     notice = "(the worksheet data is saved beside the script, as " + System.IO.Path.GetFileName(companion) + ")\n";
                 }
                 else
                     notice = "(the script is saved without its worksheet data: the data it reads are no longer there)\n";
             }
+            else if (missingDataReader != null && source.Contains(missingDataReader, StringComparison.Ordinal))
+                notice = "(the script is saved without its worksheet data: the data it reads are no longer there)\n";
 
             File.WriteAllText(temporary, source, new UTF8Encoding(false));
             try
@@ -271,13 +307,7 @@ public partial class frmScript
                     finally { previous = null; }   // put back, or left beside it, under its working name, when it could not be
                 throw;
             }
-            // The copy for a later save: the file the data came from, while it holds them, unless that is the data file itself, when the
-            // copy kept before stays if it holds the same data.
-            (string ForInR, string Path, byte[] Hash)? fallback = null;
-            if (companion != null)
-                fallback = !SameFile(dataFile, companion) ? (companionInR, dataFile, hash)
-                    : savedWorksheetData is { } kept && kept.ForInR == companionInR && kept.Hash.AsSpan().SequenceEqual(hash) ? kept : null;
-            return new WrittenRScript(source, notice, originalInR, companion, companionInR, fallback);
+            return new WrittenRScript(notice, companion, companion == null ? null : hash, false);
         }
         finally
         {
@@ -290,15 +320,30 @@ public partial class frmScript
         }
     }
 
-    // A script's data file: beside it, named after it.
-    private static string DataFileBeside(string script)
+    /// <summary>
+    /// A script's data file, beside it and named after it, so that no two scripts' names give one data file (Codex's fourth review):
+    /// analysis.R has analysis.worksheet-data.csv, as the help says, and a script of any other name has its whole name followed by
+    /// -worksheet-data.csv (notes.txt has notes.txt-worksheet-data.csv), which is never the name of a .R script's data file.
+    /// </summary>
+    internal static string DataFileBeside(string script)
     {
-        string full = System.IO.Path.GetFullPath(script);
-        return System.IO.Path.Combine(System.IO.Path.GetDirectoryName(full), System.IO.Path.GetFileNameWithoutExtension(full) + ".worksheet-data.csv");
+        string full = System.IO.Path.GetFullPath(script), name = System.IO.Path.GetFileName(full);
+        string file = string.Equals(System.IO.Path.GetExtension(name), ".R", StringComparison.OrdinalIgnoreCase)
+            ? System.IO.Path.GetFileNameWithoutExtension(name) + ".worksheet-data.csv"
+            : name + "-worksheet-data.csv";
+        return System.IO.Path.Combine(System.IO.Path.GetDirectoryName(full), file);
     }
 
     private static bool SameFile(string a, string b) =>
         string.Equals(System.IO.Path.GetFullPath(a), System.IO.Path.GetFullPath(b), StringComparison.OrdinalIgnoreCase);
+
+    // A copy of a data file, which another program may have open, as Excel opens a CSV file.
+    private static void CopyData(string from, string to)
+    {
+        using var input = new FileStream(from, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+        using var output = new FileStream(to, FileMode.CreateNew, FileAccess.Write);
+        input.CopyTo(output);
+    }
 
     private static byte[] DataHash(string path)
     {

@@ -238,29 +238,6 @@ internal sealed partial class RConsoleView : UserControl
         UpdateScript(source ?? script);
         return script;
     }
-
-    /// <summary>
-    /// The program's own change to the script, as when a saved script's data file moves with it: each occurrence of a text is replaced.
-    /// It is made on the page, in the script as it is there, so that what the user types meanwhile stays.  It is not the user's edit:
-    /// it raises no <see cref="ScriptChanged"/> of its own.  Returns the script.
-    /// </summary>
-    internal async Task<string> ReplaceInScriptAsync(string text, string replacement)
-    {
-        string before = script;
-        string? result = null;
-        if (pageReady && !closing)
-            try
-            {
-                result = JsonSerializer.Deserialize<string>(await ExecuteAsync("window.StatsDirectRHost.replaceInScript("
-                    + JsonSerializer.Serialize(text) + "," + JsonSerializer.Serialize(replacement) + ")").WaitAsync(TimeSpan.FromSeconds(10)));
-            }
-            catch (Exception ex) when (ex is not OutOfMemoryException) { /* a failed page: the change is made here, below */ }
-        if (result == null)
-            Script = script.Replace(text, replacement, StringComparison.Ordinal);   // the page, when it is up again, is given this script
-        else if (script == before)
-            script = result;   // an edit the page reported meanwhile is newer than the result, and stays
-        return script;
-    }
     internal async Task<string> ExecuteAsync(string code)
     {
         await Ready;

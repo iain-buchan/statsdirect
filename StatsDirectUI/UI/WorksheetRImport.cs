@@ -139,14 +139,16 @@ internal static class WorksheetRImport
         }
         int[] hiddenColumns = Enumerable.Range(first, range.ColumnCount).Where(column => cells[0, column].EntireColumn.Hidden).ToArray();
         // Where hidden rows meet many hidden columns, a copy of the sheet is searched instead, with the filter off there (Codex's
-        // third review).  A protected sheet's filter cannot be turned off, so its cells are still read.
-        if (hiddenRows * hiddenColumns.Length > 1_000_000 && TryUnfilteredBounds(range, out var unfiltered)) return unfiltered;
+        // third review), or, when a password keeps the copy's filter on, the cells the sheet lists when saved (the fourth review).
+        if (hiddenRows * hiddenColumns.Length > 1_000_000
+            && (TryUnfilteredBounds(range, out var unfiltered) || TrySavedBounds(range, out unfiltered))) return unfiltered;
+        var values = (SpreadsheetGear.Advanced.Cells.IValues)range.Worksheet;   // a cell's value without a range for each cell
         foreach (var (from, to) in runs)
             for (int row = from; row <= to; row++)
             {
                 int? lo = RowEnd(cells, row, first, right, fromRight: false), hi = lo == null ? null : RowEnd(cells, row, first, right, fromRight: true);
                 foreach (int column in hiddenColumns)
-                    if (cells[row, column].Value != null)
+                    if (values[row, column] != null)
                     {
                         lo = Math.Min(lo ?? column, column);
                         hi = Math.Max(hi ?? column, column);
@@ -167,8 +169,9 @@ internal static class WorksheetRImport
     }
 
     // The bounds Find gives in a copy of the sheet, in a workbook of the import's own that calculates nothing, with the filter off there,
-    // so that Find passes over no row.  The copy takes milliseconds, however large the sheet; the sheet itself is left as it is.  False
-    // when the copy cannot be made or its filter turned off, as on a protected sheet: the caller then reads the cells.
+    // so that Find passes over no row.  The copy takes milliseconds, however large the sheet; the sheet itself is left as it is,
+    // protection included.  A copy of a sheet protected without a password allows the program's own changes (ProtectionMode).  False
+    // when the copy cannot be made or its filter turned off, as when a password protects the sheet.
     private static bool TryUnfilteredBounds(IRange range, out (int Top, int Bottom, int Left, int Right)? bounds)
     {
         bounds = null;
@@ -177,6 +180,7 @@ internal static class WorksheetRImport
         {
             book.WorkbookSet.Calculation = Calculation.Manual;
             var copy = (IWorksheet)range.Worksheet.CopyAfter(book.Worksheets[0]);
+            if (copy.ProtectContents) copy.ProtectionMode = true;   // refused, with InvalidOperationException, for a password
             copy.AutoFilterMode = false;
             if (copy.AutoFilterMode) return false;
             bounds = FoundBounds(copy.Cells[range.Row, range.Column, range.Row + range.RowCount - 1, range.Column + range.ColumnCount - 1]);
@@ -184,6 +188,74 @@ internal static class WorksheetRImport
         }
         catch (Exception e) when (e is not OutOfMemoryException) { return false; }
         finally { book.Close(); }
+    }
+
+    // The bounds of the cells the sheet lists when saved as a workbook of its own, within the range: each cell with a value, a formula
+    // or inline text.  Saving reads the sheet as it is, protected or not, and lists only the cells it holds, so this costs as much as
+    // the sheet's contents, however many rows and columns are hidden.  SpreadsheetGear leaves out a row's or a cell's reference where it
+    // follows the one before, as the file format allows.  False when the sheet cannot be saved or read so.
+    private static bool TrySavedBounds(IRange range, out (int Top, int Bottom, int Left, int Right)? bounds)
+    {
+        bounds = null;
+        int firstRow = range.Row, lastRow = range.Row + range.RowCount - 1, firstColumn = range.Column, lastColumn = range.Column + range.ColumnCount - 1;
+        int top = int.MaxValue, bottom = -1, left = int.MaxValue, right = -1;
+        try
+        {
+            byte[] saved = range.Worksheet.SaveToMemory(FileFormat.OpenXMLWorkbook);
+            using var zip = new System.IO.Compression.ZipArchive(new MemoryStream(saved), System.IO.Compression.ZipArchiveMode.Read);
+            var parts = zip.Entries.Where(entry => entry.FullName.StartsWith("xl/worksheets/", StringComparison.Ordinal)
+                && entry.FullName.EndsWith(".xml", StringComparison.Ordinal) && !entry.FullName.Contains("/_rels/", StringComparison.Ordinal)).ToArray();
+            if (parts.Length != 1) return false;
+            using var reader = System.Xml.XmlReader.Create(parts[0].Open(), new System.Xml.XmlReaderSettings { IgnoreWhitespace = true, DtdProcessing = System.Xml.DtdProcessing.Prohibit });
+            int row = -1, column = -1;
+            bool inCell = false, content = false, inData = false;
+            while (reader.Read())
+            {
+                if (reader.NodeType == System.Xml.XmlNodeType.Element)
+                {
+                    switch (reader.LocalName)
+                    {
+                        case "sheetData": inData = true; break;
+                        case "row" when inData:
+                            row = reader.GetAttribute("r") is string r ? int.Parse(r, NumberStyles.None, CultureInfo.InvariantCulture) - 1 : row + 1;
+                            column = -1;
+                            break;
+                        case "c" when inData:
+                            column = reader.GetAttribute("r") is string reference ? CellColumn(reference) : column + 1;
+                            if (column < 0) return false;
+                            inCell = !reader.IsEmptyElement;
+                            content = false;
+                            break;
+                        case "v" or "f" or "is" when inCell: content = true; break;
+                    }
+                }
+                else if (reader.NodeType == System.Xml.XmlNodeType.EndElement)
+                {
+                    if (reader.LocalName == "sheetData") break;
+                    if (reader.LocalName == "c" && inCell)
+                    {
+                        inCell = false;
+                        if (content && row >= firstRow && row <= lastRow && column >= firstColumn && column <= lastColumn)
+                        {
+                            top = Math.Min(top, row); bottom = Math.Max(bottom, row);
+                            left = Math.Min(left, column); right = Math.Max(right, column);
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception e) when (e is not OutOfMemoryException) { return false; }
+        bounds = bottom < 0 ? null : (top, bottom, left, right);
+        return true;
+    }
+
+    // The column of a cell reference such as AB5, from 0; -1 when it is not one.
+    private static int CellColumn(string reference)
+    {
+        int column = 0, i = 0;
+        while (i < reference.Length && reference[i] is >= 'A' and <= 'Z')
+            column = column * 26 + (reference[i++] - 'A' + 1);
+        return i == 0 || i == reference.Length || column > 16_384 ? -1 : column - 1;
     }
 
     // The bounds Find gives: every non-blank cell, except in rows hidden while an AutoFilter is on.
@@ -702,7 +774,7 @@ internal static class WorksheetRImport
                     if (++written == columns.Length) { writer.WriteLine(); written = 0; }
                 });
             }
-            script.Append("worksheet_data <- utils::read.csv(file(").Append(QuotePath(path)).Append(", encoding = \"native.enc\"),\n")
+            script.Append("worksheet_data <- ").Append(ReaderOperand(path)).Append(",\n")
                 .Append("  header = FALSE, colClasses = ").Append(classes).Append(", na.strings = \"").Append(MissingValue).Append("\",\n")
                 .Append("  encoding = \"UTF-8\", check.names = FALSE, blank.lines.skip = FALSE)\n");
             if (escaped)
@@ -788,6 +860,10 @@ internal static class WorksheetRImport
         string.Concat(text.Select(c => c < ' ' || c >= '\u007F' && c <= '\u009F' ? ' ' : c));
 
     internal static string QuotePath(string path) => QuoteR(path.Replace('\\', '/'));
+
+    /// <summary>The R code by which an import script reads its CSV file: the one place the script names its data file.  A saved
+    /// script's data file is moved by changing this code alone, so that comments and the user's own code stay as they are.</summary>
+    internal static string ReaderOperand(string path) => "utils::read.csv(file(" + QuotePath(path) + ", encoding = \"native.enc\")";
 
     /// <summary>An R string literal, ASCII only: every other character as a \U escape, bidi controls included (rule 3.10).</summary>
     internal static string QuoteR(string value)

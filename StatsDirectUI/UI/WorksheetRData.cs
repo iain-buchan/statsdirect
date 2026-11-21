@@ -24,4 +24,6 @@ internal sealed record WorksheetRData(string Address, int RowCount, int ColumnCo
     internal const string CsvFileName = "worksheet-data.csv";
 
     internal static string QuotePath(string path) => WorksheetRImport.QuotePath(path);
+
+    internal static string ReaderOperand(string path) => WorksheetRImport.ReaderOperand(path);
 }
