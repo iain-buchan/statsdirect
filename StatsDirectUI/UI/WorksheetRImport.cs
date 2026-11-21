@@ -930,10 +930,13 @@ internal static class WorksheetRImport
         return found;
     }
 
-    // An R string literal's value from its text between the quotes, its escapes read as R reads them; null for an escape R refuses.
+    // An R string literal's value from its text between the quotes, its escapes read as R reads them.  Null for a literal R refuses: an
+    // unknown escape, a code point beyond Unicode or a surrogate, or Unicode escapes mixed with byte escapes (\x or octal).  A byte
+    // escape beyond ASCII has no value here either, since its character depends on the encoding (Codex's seventh review).
     private static string DecodeR(string source, int from, int to)
     {
         var value = new StringBuilder(to - from);
+        bool unicode = false, bytes = false;
         for (int i = from; i < to; i++)
         {
             char c = source[i];
@@ -955,6 +958,8 @@ internal static class WorksheetRImport
                     int code = 0, digits = 0;
                     while (digits < 3 && i < to && source[i] is >= '0' and <= '7') { code = code * 8 + (source[i] - '0'); i++; digits++; }
                     i--;
+                    if (code >= 0x80) return null;
+                    bytes = true;
                     value.Append((char)code);
                     break;
                 }
@@ -963,17 +968,28 @@ internal static class WorksheetRImport
                     int most = e == 'x' ? 2 : e == 'u' ? 4 : 8;
                     bool braced = e != 'x' && i + 1 < to && source[i + 1] == '{';
                     if (braced) i++;
-                    int code = 0, digits = 0;
-                    while (digits < most && i + 1 < to && Uri.IsHexDigit(source[i + 1])) { code = code * 16 + Convert.ToInt32(source[i + 1].ToString(), 16); i++; digits++; }
+                    long code = 0;
+                    int digits = 0;
+                    while (digits < most && i + 1 < to && Uri.IsHexDigit(source[i + 1])) { code = code * 16 + Uri.FromHex(source[i + 1]); i++; digits++; }
                     if (digits == 0 || braced && !(i + 1 < to && source[++i] == '}')) return null;
-                    if (code > 0x10FFFF || code is >= 0xD800 and <= 0xDFFF) return null;
-                    value.Append(char.ConvertFromUtf32(code));
+                    if (e == 'x')
+                    {
+                        if (code >= 0x80) return null;
+                        bytes = true;
+                        value.Append((char)code);
+                    }
+                    else
+                    {
+                        if (code > 0x10FFFF || code is >= 0xD800 and <= 0xDFFF) return null;
+                        unicode = true;
+                        value.Append(char.ConvertFromUtf32((int)code));
+                    }
                     break;
                 }
                 default: return null;
             }
         }
-        return value.ToString();
+        return unicode && bytes ? null : value.ToString();
     }
 
     // The end of an R raw string that starts at i, r"(...)" with brackets ( [ or { and any number of dashes, or null when it is not one.
@@ -1002,12 +1018,54 @@ internal static class WorksheetRImport
 
     /// <summary>
     /// Whether R code reads a file through the import's own reader, utils::read.csv(file(&lt;path&gt;, encoding = "native.enc"), the path in
-    /// either quote: the binding a saved script has to its data file.  A script that names a file of that name in any other way, as
-    /// an output written with write.csv for one, does not hold it (Codex's sixth review).
+    /// either quote and the reader's name a whole token (not notutils::read.csv, Codex's seventh review).  A script that names a file of
+    /// that name in any other way, as an output written with write.csv for one, does not hold it by this (Codex's sixth review).
     /// </summary>
     internal static bool ReadsAsImport(string source, string path) => StringsInCode(source).Any(s => IsPath(s.Value, path)
         && s.Start >= ReaderStart.Length && string.CompareOrdinal(source, s.Start - ReaderStart.Length, ReaderStart, 0, ReaderStart.Length) == 0
+        && !IsNamePart(source, s.Start - ReaderStart.Length - 1)
         && ReaderEnds.Any(end => s.Start + s.Length + end.Length <= source.Length && string.CompareOrdinal(source, s.Start + s.Length, end, 0, end.Length) == 0));
+
+    private static bool IsNamePart(string source, int k) => k >= 0 && (char.IsLetterOrDigit(source[k]) || source[k] is '.' or '_');
+
+    /// <summary>The first line of a script StatsDirect saved with its data file, which names that file beside it: the pair's own record,
+    /// so that the script still holds its data file when the user has changed the import's reader (Codex's seventh review).</summary>
+    internal const string DataFileMarker = "# StatsDirect worksheet data: ";
+
+    // The data file a script's marker names, or null when it has none.
+    private static string MarkedDataFile(string source)
+    {
+        foreach (string line in source.Split('\n'))
+            if (line.StartsWith(DataFileMarker, StringComparison.Ordinal)) return line[DataFileMarker.Length..].TrimEnd('\r');
+        return null;
+    }
+
+    /// <summary>
+    /// Whether a script holds the data file beside it, which it then reads from a copy of its own: it reads the file through the import's
+    /// own reader (<see cref="ReadsAsImport"/>, the record of scripts saved before the marker), or its marker, written when StatsDirect
+    /// saved the pair, names the file and a string literal in its code still names it (<see cref="NamesInCode"/>).  An ordinary
+    /// script that names a file of that name holds nothing.
+    /// </summary>
+    internal static bool HoldsDataFile(string source, string dataFile) => ReadsAsImport(source, dataFile)
+        || string.Equals(MarkedDataFile(source), Path.GetFileName(dataFile), StringComparison.OrdinalIgnoreCase) && NamesInCode(source, dataFile);
+
+    /// <summary>The script without its marker lines: what the editor shows, since StatsDirect writes the marker with each save.</summary>
+    internal static string Unmarked(string source)
+    {
+        if (!source.Contains(DataFileMarker, StringComparison.Ordinal)) return source;
+        var lines = source.Split('\n');
+        return string.Join("\n", lines.Where(line => !line.StartsWith(DataFileMarker, StringComparison.Ordinal)));
+    }
+
+    /// <summary>The script with one marker, naming its data file, as its first line, or after a #! line: written with the pair.</summary>
+    internal static string Marked(string source, string dataFileName)
+    {
+        string unmarked = Unmarked(source), newline = unmarked.Contains("\r\n", StringComparison.Ordinal) ? "\r\n" : "\n";
+        string marker = DataFileMarker + dataFileName + newline;
+        if (!unmarked.StartsWith("#!", StringComparison.Ordinal)) return marker + unmarked;
+        int end = unmarked.IndexOf('\n');
+        return end < 0 ? unmarked + newline + marker : unmarked[..(end + 1)] + marker + unmarked[(end + 1)..];
+    }
 
     /// <summary>R code with each string literal that names one path (<see cref="StringsInCode"/>) naming another, in the literal's own
     /// quote.</summary>

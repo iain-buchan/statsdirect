@@ -754,6 +754,47 @@ internal static class Program
         string renamed = WorksheetRImport.RenameInCode("a <- " + doubled + "; b <- " + single + " # " + doubled + "\n", path, @"D:\new\copy.csv");
         Check(renamed == "a <- \"D:/new/copy.csv\"; b <- 'D:/new/copy.csv' # " + doubled + "\n",
             "renaming a file in R code keeps each literal's quote and leaves comments as they are: " + renamed);
+
+        // Escapes as R reads them, and literals R refuses, which name nothing and never stop a scan (Codex's seventh review).
+        const string plain = @"C:\data\x.worksheet-data.csv";
+        var escapes = new (string Code, bool Names, string What)[]
+        {
+            ("a <- \"C:\\057data\\057x.worksheet-data.csv\"\n", true, "octal escapes"),
+            ("a <- \"C:\\x2fdata\\x2fx.worksheet-data.csv\"\n", true, "hex escapes"),
+            ("a <- \"\\u0043:/data/x.worksheet-data.csv\"\n", true, "a Unicode escape"),
+            ("a <- \"\\U{43}:/data/x.worksheet-data.csv\"\n", true, "a braced Unicode escape"),
+            ("a <- \"\\u0043:\\x2fdata/x.worksheet-data.csv\"\n", false, "Unicode and byte escapes mixed, which R refuses"),
+            ("a <- \"\\UFFFFFFFF\"\nb <- \"C:/data/x.worksheet-data.csv\"\n", true, "an escape beyond Unicode, then the path"),
+            ("a <- \"\\U{110000}\"\n", false, "a code point beyond Unicode"),
+            ("a <- \"\\uD800\"\n", false, "a surrogate"),
+            ("a <- \"C:\\xe9/x.worksheet-data.csv\"\n", false, "a byte escape beyond ASCII"),
+        };
+        foreach (var (code, names, what) in escapes)
+        {
+            bool found;
+            try { found = WorksheetRImport.NamesInCode(code, plain); }
+            catch (Exception e) { found = !names; Console.WriteLine("  " + what + " threw " + e.GetType().Name); }
+            Check(found == names, $"R string escapes: {what} {(names ? "names" : "does not name")} the file, and the scan does not fail");
+        }
+        string readerOf = "utils::read.csv(file(" + WorksheetRImport.QuotePath(plain) + ", encoding = \"native.enc\")";
+        Check(!WorksheetRImport.ReadsAsImport("x <- not" + readerOf + "\n", plain) && WorksheetRImport.ReadsAsImport("x <- (" + readerOf + ")\n", plain),
+            "the import's reader counts only as a whole name: notutils::read.csv does not hold the file, (utils::read.csv does");
+
+        // The marker a saved pair's script starts with names its data file, so that a script whose reader the user changed still holds
+        // it; an ordinary script, or a marker naming another file, does not (Codex's seventh review).
+        string marker = WorksheetRImport.DataFileMarker + "x.worksheet-data.csv\n";
+        string edited = "x <- read.csv(file(" + WorksheetRImport.QuotePath(plain) + "))\n";
+        Check(WorksheetRImport.HoldsDataFile(marker + edited, plain) && !WorksheetRImport.HoldsDataFile(edited, plain)
+                && !WorksheetRImport.HoldsDataFile(WorksheetRImport.DataFileMarker + "y.worksheet-data.csv\n" + edited, plain)
+                && !WorksheetRImport.HoldsDataFile(marker + "x <- 1\n", plain)
+                && !WorksheetRImport.HoldsDataFile("utils::write.csv(x, " + WorksheetRImport.QuotePath(plain) + ")\n", plain)
+                && WorksheetRImport.HoldsDataFile("y <- " + readerOf + "\n", plain),
+            "a script holds its data file through the import's reader, or through the marker while its code still names the file");
+        string twice = WorksheetRImport.Marked(WorksheetRImport.Marked(edited, "x.worksheet-data.csv"), "z.worksheet-data.csv");
+        Check(twice == WorksheetRImport.DataFileMarker + "z.worksheet-data.csv\n" + edited && WorksheetRImport.Unmarked(twice) == edited
+                && WorksheetRImport.Marked("#!/usr/bin/env Rscript\r\nx <- 1\r\n", "x.worksheet-data.csv")
+                    == "#!/usr/bin/env Rscript\r\n" + WorksheetRImport.DataFileMarker + "x.worksheet-data.csv\r\nx <- 1\r\n",
+            "a saved script has one marker, the latest, after a #! line where there is one, in the script's own line endings");
     }
 
 

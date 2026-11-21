@@ -665,7 +665,9 @@ internal static partial class Program
             ((RichTextBox)Field(operatorWindow, "rtbDoc")).Text = definitions + Script(operatorWindow).Replace(readerLine, "z <- 2 %#% 3; " + readerLine, StringComparison.Ordinal);
             string operatorVerify = otherVerify + "\nstopifnot(q == 3, z == 6)";
             string tenth = Path.Combine(elsewhere, "tenth results.R"), eleventh = Path.Combine(elsewhere, "eleventh results.R");
-            bool OperatorsKept(string script) => File.ReadAllText(script).Replace("\r\n", "\n").StartsWith(definitions, StringComparison.Ordinal)
+            // The saved file's first line is the marker StatsDirect writes with a pair; the user's text follows it as it was.
+            static string AfterMarker(string text) => text.StartsWith("# StatsDirect worksheet data: ", StringComparison.Ordinal) ? text[(text.IndexOf('\n') + 1)..] : text;
+            bool OperatorsKept(string script) => AfterMarker(File.ReadAllText(script).Replace("\r\n", "\n")).StartsWith(definitions, StringComparison.Ordinal)
                 && File.ReadAllText(script).Contains("z <- 2 %#% 3; worksheet_data <- " + ImportReader(DataBeside(script)), StringComparison.Ordinal);
             Check(await SaveAs(operatorWindow, tenth) && Holds(tenth, other) && OperatorsKept(tenth),
                 "Save As leaves the user's operators as they are and copies and rebinds the reader on the line after %#%");
@@ -684,6 +686,32 @@ internal static partial class Program
                 "a reader the user changed that still names the window's data is saved naming the data file beside the script");
             editedWindow.Dispose();
             await Replay(twelfth, otherVerify, "that script, run afresh in R once its window has closed, reads its own data");
+            // Opened again, the pair is the script's (Codex's seventh review): the marker the save wrote names its data file, so the window
+            // works on a copy of its own although the reader is no longer the import's.  Replaced from outside, the file changes nothing that
+            // the window runs, saves or hands to R.
+            Check(File.ReadAllText(twelfth).StartsWith("# StatsDirect worksheet data: twelfth results.worksheet-data.csv", StringComparison.Ordinal),
+                "a saved pair's script starts with the marker that names its data file");
+            var editedAgain = await Reopen(twelfth);
+            Check(OwnCopy(editedAgain, other) && !Script(editedAgain).Contains("# StatsDirect worksheet data:", StringComparison.Ordinal)
+                    && Script(editedAgain).Contains("read.csv(file(" + QuotedPath(OwnData(editedAgain)), StringComparison.Ordinal),
+                "the pair saved with a changed reader, opened again, works on a copy of its own, and the editor shows no marker");
+            File.WriteAllBytes(DataBeside(twelfth), data);
+            await Run(editedAgain, otherVerify, "with its data file replaced, the reopened window runs with its own copy");
+            int askedForTwelfth = asked.Count;
+            answer = true;
+            Check(await Save(editedAgain) && asked.Count == askedForTwelfth + 1 && Holds(twelfth, other),
+                "Save asks before replacing the data written from outside, and with Yes saves the window's own data");
+            await Replay(twelfth, otherVerify, "the pair saved again, run afresh in R, reads the window's data");
+            await OpenInR(editedAgain, Path.Combine(elsewhere, "twelfth R+.R"), other, otherVerify, "R+ from the reopened pair carries the window's data");
+
+            // An unfinished script with an escape R refuses opens for editing (Codex's seventh review).
+            string unfinished = Path.Combine(elsewhere, "unfinished.R");
+            File.WriteAllText(unfinished, "x <- \"\\UFFFFFFFF\"\ny <- \"\\u0043:\\x2f\"\n");
+            {
+                var (opened, window, timesAsked) = OpenAsFileOpen(unfinished, () => false);
+                Check(opened && window != null && timesAsked == 0, "File Open of a script with escapes R refuses opens it for editing, and asks nothing");
+                window?.Dispose();
+            }
 
             // The window's own copy gone, as when temporary files are cleaned away: Save As takes the data from the data file the window
             // last wrote while that holds them; with that changed too, the script is saved without data, and says so, rather than with others.
