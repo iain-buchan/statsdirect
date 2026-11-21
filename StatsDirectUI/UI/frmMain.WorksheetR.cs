@@ -11,7 +11,7 @@ public partial class frmMain
     {
         if (ActiveMdiChild is not frmSpreadsheetGear worksheet || !mnuMain.Enabled || InOperation) return;
 
-        string title = external ? "Open external R session" : "Open R session";
+        string title = external ? WorksheetRPrompt.ExternalTitle : WorksheetRPrompt.InternalTitle;
         string importFolder = null;
         try
         {
@@ -58,8 +58,11 @@ public partial class frmMain
     }
 }
 
+/// <summary>The R import prompt, worded and laid out as on the Mac (statisticalhelp WorksheetR/RULES.md, section 1).</summary>
 internal sealed class WorksheetRPrompt : Form
 {
+    /// <summary>The R and R+ buttons' tooltips, and the prompt's title (rule 1.1).</summary>
+    internal const string InternalTitle = "Open in StatsDirect R", ExternalTitle = "Open in external R";
     private static readonly Size PromptSize = new(455, 244);
     private readonly WorksheetRImportOptions options;
     private readonly RadioButton entireSheet = new() { Name = "worksheetRAll", AutoSize = true };
@@ -100,22 +103,21 @@ internal sealed class WorksheetRPrompt : Form
         AutoScaleMode = AutoScaleMode.Dpi;
         ClientSize = PromptSize;
 
+        // 1.2 to 1.5
         scope.Text = options.EntireSheet == null ? $"The worksheet “{options.SheetName}” has no data to copy."
-            : $"Copy data from “{options.SheetName}” into the new R session as worksheet_data?";
+            : $"Choose the data from “{options.SheetName}” to copy into the new R session as worksheet_data.";
         scope.Margin = new Padding(3, 3, 3, 6);
         entireSheet.Enabled = options.EntireSheet != null;
-        entireSheet.Text = options.EntireSheet == null ? "Entire worksheet" : Describe("Entire worksheet", options.EntireSheet);
+        entireSheet.Text = EntireLabel(options);
         selectedCells.Enabled = options.SelectedCells != null;
-        selectedCells.Text = options.SelectedCells is WorksheetRData selection
-            ? Describe("Selected cells", selection)
-            : options.SelectionUnavailableReason is string reason ? $"Selected cells ({reason})" : "Selected cells";
+        selectedCells.Text = SelectedLabel(options);
 
         format.Items.AddRange(["Data frame (keep rows aligned)", "List of vectors (independent samples)"]);
         format.SelectedIndex = 0;
         var formatRow = new TableLayoutPanel { ColumnCount = 2, RowCount = 1, AutoSize = true, Dock = DockStyle.Fill };
         formatRow.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
         formatRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-        formatRow.Controls.Add(new Label { Text = "Import as", AutoSize = true, Anchor = AnchorStyles.Left }, 0, 0);
+        formatRow.Controls.Add(new Label { Text = "Import as:", AutoSize = true, Anchor = AnchorStyles.Left }, 0, 0);
         formatRow.Controls.Add(format, 1, 0);
 
         var open = new Button { Text = "Open", AutoSize = true, DialogResult = DialogResult.OK };
@@ -131,10 +133,11 @@ internal sealed class WorksheetRPrompt : Form
         layout.Controls.Add(entireSheet, 0, 1);
         layout.Controls.Add(selectedCells, 0, 2);
         layout.Controls.Add(noData, 0, 3);
-        layout.Controls.Add(headers, 0, 4);
-        layout.Controls.Add(friendlyNames, 0, 5);
-        layout.Controls.Add(formatRow, 0, 6);
-        layout.Controls.Add(formatHint, 0, 7);
+        // 1.6 and 1.7: how the data is shaped, then how it is named.
+        layout.Controls.Add(formatRow, 0, 4);
+        layout.Controls.Add(formatHint, 0, 5);
+        layout.Controls.Add(headers, 0, 6);
+        layout.Controls.Add(friendlyNames, 0, 7);
         layout.Controls.Add(buttons, 0, 8);
         Controls.Add(layout);
 
@@ -163,8 +166,20 @@ internal sealed class WorksheetRPrompt : Form
 
     private void UpdateFormatHint() => formatHint.Visible = format.Enabled && ImportFormat == WorksheetRDataFormat.VectorList;
 
+    /// <summary>The two data choices' labels, as tests/WorksheetRExamples checks them against the shared examples.</summary>
+    internal static string EntireLabel(WorksheetRImportOptions options) =>
+        options.EntireSheet == null ? "Entire worksheet (no data)" : Describe("Entire worksheet", options.EntireSheet);
+
+    internal static string SelectedLabel(WorksheetRImportOptions options) => options.SelectedCells is WorksheetRData selection
+        ? Describe("Selected cells", selection)
+        : $"Selected cells ({options.SelectionUnavailableReason ?? WorksheetRImport.NoSelection})";
+
+    // 1.3 and 1.4: "Entire worksheet — A1:C4 (4 rows × 3 columns)", counts in digits with commas whatever the locale.
     private static string Describe(string label, WorksheetRData data) =>
-        $"{label} ({data.Address.Replace("$", "")}, {data.RowCount:N0} × {data.ColumnCount:N0})";
+        $"{label} — {data.Address} ({Count(data.RowCount, "row")} × {Count(data.ColumnCount, "column")})";
+
+    private static string Count(int n, string noun) =>
+        n.ToString("N0", System.Globalization.CultureInfo.InvariantCulture) + " " + noun + (n == 1 ? "" : "s");
 
     protected override void OnLoad(EventArgs e)
     {

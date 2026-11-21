@@ -128,7 +128,8 @@ public partial class frmScript
                 if (dialog.ShowDialog(this) != DialogResult.OK) return false;
                 destination = dialog.FileName;
             }
-            WriteRScript(destination, source);
+            string data = WriteRScript(destination, source);
+            if (data != null) AppendScriptNotice(data);
             currentFile = destination; Path = destination;
             if (InteractiveConsole.Script == source) { rtbDoc.Modified = false; Dirty = false; }
             SdApplication.SoleInstance.NoteRecentFile(destination, true);
@@ -137,11 +138,15 @@ public partial class frmScript
         finally { savingInteractive = false; }
     }
 
-    private void WriteRScript(string destination, string source)
+    /// <summary>
+    /// Saves the script.  A script that reads its session's worksheet data carries that data in a file beside it, named after the
+    /// script so that saving again replaces it (RULES.md 6.3).  Returns a notice for the user about the data file, or null.
+    /// </summary>
+    private string WriteRScript(string destination, string source)
     {
         string temporary = destination + "." + Guid.NewGuid().ToString("N") + ".tmp";
         string temporaryCsv = temporary + ".csv";
-        string newCompanion = null;
+        string notice = null, companion = null;
         try
         {
             // Only the approved worksheet snapshot accompanies a saved script.
@@ -152,27 +157,32 @@ public partial class frmScript
                 string originalInR = WorksheetRData.QuotePath(original);
                 if (source.Contains(originalInR, StringComparison.Ordinal))
                 {
-                    string directory = System.IO.Path.GetDirectoryName(System.IO.Path.GetFullPath(destination));
-                    string companion = System.IO.Path.Combine(directory, System.IO.Path.GetFileName(importFolder) + ".csv");
-                    if (!File.Exists(companion))
+                    string full = System.IO.Path.GetFullPath(destination);
+                    companion = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(full),
+                        System.IO.Path.GetFileNameWithoutExtension(full) + ".worksheet-data.csv");
+                    if (File.Exists(original))
                     {
                         File.Copy(original, temporaryCsv);
-                        File.Move(temporaryCsv, companion);
-                        newCompanion = companion;
+                        source = source.Replace(originalInR, WorksheetRData.QuotePath(companion), StringComparison.Ordinal);
+                        notice = "(the worksheet data is saved beside the script, as " + System.IO.Path.GetFileName(companion) + ")\n";
                     }
-                    source = source.Replace(originalInR, WorksheetRData.QuotePath(companion), StringComparison.Ordinal);
+                    else
+                    {
+                        companion = null;
+                        notice = "(the script is saved without its worksheet data: the session's copy of the data is no longer there)\n";
+                    }
                 }
             }
 
             File.WriteAllText(temporary, source, new UTF8Encoding(false));
+            if (companion != null) File.Move(temporaryCsv, companion, true);
             File.Move(temporary, destination, true);
-            newCompanion = null;
+            return notice;
         }
         finally
         {
             if (File.Exists(temporary)) File.Delete(temporary);
             if (File.Exists(temporaryCsv)) File.Delete(temporaryCsv);
-            if (newCompanion != null) File.Delete(newCompanion);
         }
     }
 

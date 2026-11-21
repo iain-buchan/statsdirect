@@ -54,15 +54,23 @@ internal static class WorksheetRLauncher
             {
                 File.WriteAllText(Path.Combine(importFolder, ImportScriptName), script);
                 string profile = Path.Combine(importFolder, ProfileName);
+                // RULES.md 6.1: StatsDirect's start-up file takes the place of the user's, so it unsets R_PROFILE_USER (R processes
+                // started from this session then find their own) and runs the user's profile as R would, before the import.
+                // unlink() without expand = keeps R before 4.0 working.
                 File.WriteAllText(profile, $$"""
                     local({
                         folder <- dirname(Sys.getenv("R_PROFILE_USER"))
+                        Sys.unsetenv("R_PROFILE_USER")
+                        own <- if (file.exists(".Rprofile")) ".Rprofile" else path.expand("~/.Rprofile")
+                        if (file.exists(own))
+                            tryCatch(source(own, local = FALSE),
+                                error = function(e) message("Error in ", own, ": ", conditionMessage(e)))
                         script <- file.path(folder, "{{ImportScriptName}}")
-                        tryCatch({
+                        if (file.exists(script)) tryCatch({
                             # Keep worksheet headings in UTF-8 even with a non-Unicode R locale.
                             lines <- readLines(script, encoding = "UTF-8", warn = FALSE)
                             eval(parse(text = lines, encoding = "UTF-8"), envir = .GlobalEnv)
-                        }, finally = unlink(c(script, file.path(folder, "{{WorksheetRData.CsvFileName}}")), expand = FALSE))
+                        }, finally = unlink(c(script, file.path(folder, "{{WorksheetRData.CsvFileName}}"))))
                     })
                     """);
                 start.Environment["R_PROFILE_USER"] = profile;
@@ -86,6 +94,21 @@ internal static class WorksheetRLauncher
         using (process)
             await process.WaitForExitAsync().ConfigureAwait(false);
         DeleteImportFolder(importFolder);
+    }
+
+    /// <summary>
+    /// RULES.md 6.2: copies of worksheet data left over (an R window open when StatsDirect closed, or a crash) are removed when
+    /// StatsDirect closes and when it next starts.  An external R has read its copy at its start, so only its start-up file goes.
+    /// </summary>
+    internal static void DeleteLeftoverImports()
+    {
+        try
+        {
+            foreach (string folder in Directory.GetDirectories(Path.GetTempPath(), ImportFolderPrefix + "*"))
+                DeleteImportFolder(folder);
+        }
+        catch (IOException) { }
+        catch (UnauthorizedAccessException) { }
     }
 
     internal static void DeleteImportFolder(string? folder)

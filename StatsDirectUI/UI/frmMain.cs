@@ -220,8 +220,8 @@ namespace StatsDirect.UI
                 DocumentToolbar.Button("Find", "find", (_, _) => SdApplication.SoleInstance.ActiveWindow?.EditFind(), "Ctrl+F"),
                 new ToolStripSeparator(),
                 analyseButton,
-                DocumentToolbar.Button("Open R session", "r", (_, _) => OpenWorksheetR(false)),
-                DocumentToolbar.Button("Open external R session", "rPlus", (_, _) => OpenWorksheetR(true)),
+                DocumentToolbar.Button(WorksheetRPrompt.InternalTitle, "r", (_, _) => OpenWorksheetR(false)),
+                DocumentToolbar.Button(WorksheetRPrompt.ExternalTitle, "rPlus", (_, _) => OpenWorksheetR(true)),
                 new ToolStripSeparator(),
                 DocumentToolbar.Button("Help", "help", helpToolStripButton_Click, "F1")
             });

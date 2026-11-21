@@ -185,6 +185,7 @@ namespace StatsDirect.UI
         internal void Run()
         {
             UpdateInstaller.DeleteOldDownloads();
+            R.WorksheetRLauncher.DeleteLeftoverImports();
             Application.Run(MainWindow);
         }
 
@@ -246,6 +247,7 @@ namespace StatsDirect.UI
         /// </summary>
         internal void Shutdown()
         {
+            R.WorksheetRLauncher.DeleteLeftoverImports();
             if (pendingUpgrade == null)
                 return;
             try

@@ -539,8 +539,9 @@ namespace StatsDirect.UI
             {
                 if (IsInteractiveR) await InteractiveConsole.GetScriptAsync();
                 Directory.CreateDirectory(SDConfiguration.MyStatsDirectRFolder);
-                WriteRScript(path, rtbDoc.Text.Replace("\r", "").Replace("\n", "\r\n"));
+                string data = WriteRScript(path, rtbDoc.Text.Replace("\r", "").Replace("\n", "\r\n"));
                 saved = true;
+                if (data != null) AppendScriptNotice(data);
                 string rstudio = RController.FindRStudio();
                 if (rstudio != null)
                 {
