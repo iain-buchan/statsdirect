@@ -83,9 +83,12 @@ internal sealed class WorksheetRPrompt : Form
         Name = "worksheetRFormat", AccessibleName = "Import as", DropDownStyle = ComboBoxStyle.DropDownList, Dock = DockStyle.Fill
     };
     private readonly Label formatHint = new() { Text = "Missing values are removed separately from each vector.", AutoSize = true };
-    // Each choice has a row of its own, sized to it; the row before the buttons takes the space left, so no choice is squeezed, and
-    // the dialog is as large as its contents need (OnLoad).  Beyond the working area the contents scroll.
-    private readonly TableLayoutPanel layout = new() { ColumnCount = 1, RowCount = 10, Dock = DockStyle.Fill, AutoScroll = true };
+    // The choices, each in a row of its own sized to it, in a table as large as they need; it sits in a view that scrolls when the
+    // dialog is smaller (a small working area, or a large display scale), above the buttons, which keep their own row at the foot.
+    // The dialog is as large as its contents need within the working area (OnLoad).
+    private readonly TableLayoutPanel layout = new() { ColumnCount = 1, RowCount = 8, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink };
+    private readonly Panel choices = new() { Name = "worksheetRChoices", Dock = DockStyle.Fill, AutoScroll = true };
+    private readonly TableLayoutPanel frame = new() { ColumnCount = 1, RowCount = 2, Dock = DockStyle.Fill };
     private readonly TableLayoutPanel formatRow = new() { ColumnCount = 2, RowCount = 1, AutoSize = true, Dock = DockStyle.Fill };
     private readonly FlowLayoutPanel buttons = new() { FlowDirection = FlowDirection.RightToLeft, WrapContents = false, AutoSize = true, Dock = DockStyle.Fill };
 
@@ -128,10 +131,8 @@ internal sealed class WorksheetRPrompt : Form
         var open = new Button { Text = "Open", AutoSize = true, DialogResult = DialogResult.OK };
         var cancel = new Button { Text = "Cancel", AutoSize = true, DialogResult = DialogResult.Cancel };
         buttons.Controls.AddRange(new Control[] { cancel, open });
-        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        layout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
         for (int row = 0; row < 8; row++) layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-        layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
-        layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         layout.Controls.Add(scope, 0, 0);
         layout.Controls.Add(entireSheet, 0, 1);
         layout.Controls.Add(selectedCells, 0, 2);
@@ -141,8 +142,13 @@ internal sealed class WorksheetRPrompt : Form
         layout.Controls.Add(formatHint, 0, 5);
         layout.Controls.Add(headers, 0, 6);
         layout.Controls.Add(friendlyNames, 0, 7);
-        layout.Controls.Add(buttons, 0, 9);
-        Controls.Add(layout);
+        choices.Controls.Add(layout);
+        frame.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        frame.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+        frame.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        frame.Controls.Add(choices, 0, 0);
+        frame.Controls.Add(buttons, 0, 1);
+        Controls.Add(frame);
 
         entireSheet.CheckedChanged += (_, _) => UpdateImportOptions();
         selectedCells.CheckedChanged += (_, _) => UpdateImportOptions();
@@ -190,18 +196,20 @@ internal sealed class WorksheetRPrompt : Form
         var owner = Owner ?? this;
         var area = Screen.FromControl(owner).WorkingArea;
         Padding = new Padding(owner.LogicalToDeviceUnits(12));
-        // As wide as the widest choice needs (a range of several areas can be long), and as tall as all the rows need with the hint
-        // shown, but no smaller than the usual size, and within the working area.  The sentence at the top wraps to that width.
-        Size minimum = owner.LogicalToDeviceUnits(PromptSize), frame = SizeFromClientSize(Size.Empty);
-        int widest = new Control[] { entireSheet, selectedCells, noData, formatRow, formatHint, headers, friendlyNames, buttons }
-            .Max(control => control.GetPreferredSize(Size.Empty).Width + control.Margin.Horizontal);
-        int width = Math.Min(Math.Max(minimum.Width, widest + Padding.Horizontal + layout.Padding.Horizontal), area.Width - frame.Width);
-        scope.MaximumSize = new Size(Math.Max(1, width - Padding.Horizontal - layout.Padding.Horizontal - scope.Margin.Horizontal), 0);
+        // As wide as the widest choice needs (a range of several areas can be long), and as tall as the choices need with the hint
+        // shown, with the buttons, but no smaller than the usual size, and within the working area: beyond that the choices scroll.
+        // The sentence at the top wraps to the width the choices need, or that the dialog has.
+        Size minimum = owner.LogicalToDeviceUnits(PromptSize), border = SizeFromClientSize(Size.Empty);
+        int widest = new Control[] { entireSheet, selectedCells, noData, formatRow, formatHint, headers, friendlyNames }
+            .Max(control => control.GetPreferredSize(Size.Empty).Width + control.Margin.Horizontal) + layout.Padding.Horizontal;
+        int width = Math.Min(Math.Max(minimum.Width, Math.Max(widest, buttons.GetPreferredSize(Size.Empty).Width) + Padding.Horizontal),
+            area.Width - border.Width);
+        scope.MaximumSize = new Size(Math.Max(1, Math.Min(widest, width - Padding.Horizontal) - layout.Padding.Horizontal - scope.Margin.Horizontal), 0);
         bool hintShown = formatHint.Visible;
         formatHint.Visible = true;
-        int height = layout.GetPreferredSize(new Size(width - Padding.Horizontal, 0)).Height + Padding.Vertical;
+        int height = layout.GetPreferredSize(Size.Empty).Height + buttons.GetPreferredSize(Size.Empty).Height + buttons.Margin.Vertical + Padding.Vertical;
         formatHint.Visible = hintShown;
-        ClientSize = new Size(width, Math.Min(Math.Max(minimum.Height, height), area.Height - frame.Height));
+        ClientSize = new Size(width, Math.Min(Math.Max(minimum.Height, height), area.Height - border.Height));
         Location = new Point(
             Math.Clamp(owner.Left + (owner.Width - Width) / 2, area.Left, area.Right - Width),
             Math.Clamp(owner.Top + (owner.Height - Height) / 2, area.Top, area.Bottom - Height));

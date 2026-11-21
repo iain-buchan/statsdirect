@@ -138,9 +138,12 @@ public partial class frmScript
         finally { savingInteractive = false; }
     }
 
-    // The data files this window has put beside its saved scripts, by the script's full path, with a hash of the data written, so that a
-    // later save of the same script can still point at its data when the session's own copy has gone, while that file still holds them.
-    private readonly System.Collections.Generic.Dictionary<string, (string Path, byte[] Hash)> savedWorksheetData = new(StringComparer.OrdinalIgnoreCase);
+    // The data a saved worksheet script opened again reads: the data file beside the file it came from, and the R text the script refers
+    // to it by.  The editor keeps that text after Save As, so the data stay this script's until it no longer refers to them.
+    private (string Path, string InR)? openedWorksheetData;
+    // The last data file this window wrote or kept beside a saved script, with a hash of the data, so that a later save (Save, Save As
+    // or R+) can still carry the data when the file the script refers to has gone, while that copy still holds them.
+    private (string Path, byte[] Hash)? lastSavedWorksheetData;
 
     /// <summary>
     /// Saves the script.  A script that reads its session's worksheet data carries that data in a file beside it, named after the
@@ -164,45 +167,52 @@ public partial class frmScript
             // Only the approved worksheet snapshot accompanies a saved script: the session's import, which the running session keeps
             // until the window closes, or, for a script saved with its data and opened again, the data file beside the file it came from.
             string original = null, originalInR = null;
-            bool fromSession = false;
             if (WorksheetImportFolder is string importFolder)
             {
                 string session = System.IO.Path.Combine(importFolder, WorksheetRData.CsvFileName);
                 if (source.Contains(WorksheetRData.QuotePath(session), StringComparison.Ordinal))
-                    (original, originalInR, fromSession) = (session, WorksheetRData.QuotePath(session), true);
+                    (original, originalInR) = (session, WorksheetRData.QuotePath(session));
             }
+            if (original == null && openedWorksheetData is var (openedPath, openedInR) && source.Contains(openedInR, StringComparison.Ordinal))
+                (original, originalInR) = (openedPath, openedInR);
             if (original == null && !string.IsNullOrEmpty(currentFile))
             {
                 string opened = System.IO.Path.GetFullPath(currentFile);
                 string ownData = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(opened), System.IO.Path.GetFileNameWithoutExtension(opened) + ".worksheet-data.csv");
                 if (File.Exists(ownData) && source.Contains(WorksheetRData.QuotePath(ownData), StringComparison.Ordinal))
+                {
                     (original, originalInR) = (ownData, WorksheetRData.QuotePath(ownData));
+                    openedWorksheetData = (original, originalInR);
+                }
             }
             if (original != null)
             {
                 string beside = System.IO.Path.Combine(folder, System.IO.Path.GetFileNameWithoutExtension(full) + ".worksheet-data.csv");
+                // The data come from the file the script refers to, or, when that has gone, from the last copy this window saved.
+                string data = null;
                 if (File.Exists(original))
+                    (data, hash) = (original, DataHash(original));
+                else if (lastSavedWorksheetData is var (savedPath, savedHash) && HoldsData(savedPath, savedHash))
+                    (data, hash) = (savedPath, savedHash);
+                if (data != null)
                 {
                     companion = beside;
-                    hash = DataHash(original);
                     // An unchanged data file is left alone, so that one open in Excel does not stop the save.
                     copyData = !HoldsData(companion, hash);
                     if (copyData)
                     {
                         if (File.Exists(companion) && File.GetAttributes(companion).HasFlag(FileAttributes.ReadOnly))
                             throw new UnauthorizedAccessException("The worksheet data file " + companion + " is read-only, so the script is not saved over it.");
-                        File.Copy(original, temporaryCsv);
+                        File.Copy(data, temporaryCsv);
                     }
                 }
-                else if (fromSession && savedWorksheetData.TryGetValue(full, out var saved) && HoldsData(saved.Path, saved.Hash))
-                    (companion, hash) = saved;   // the session's copy has gone, but this window's data are still beside this script
                 if (companion != null)
                 {
                     source = source.Replace(originalInR, WorksheetRData.QuotePath(companion), StringComparison.Ordinal);
                     notice = "(the worksheet data is saved beside the script, as " + System.IO.Path.GetFileName(companion) + ")\n";
                 }
                 else
-                    notice = "(the script is saved without its worksheet data: the session's copy of the data is no longer there)\n";
+                    notice = "(the script is saved without its worksheet data: the data it reads are no longer there)\n";
             }
 
             File.WriteAllText(temporary, source, new UTF8Encoding(false));
@@ -233,7 +243,7 @@ public partial class frmScript
                     finally { previous = null; }   // put back, or left beside it, under its working name, when it could not be
                 throw;
             }
-            if (companion != null) savedWorksheetData[full] = (companion, hash);
+            if (companion != null) lastSavedWorksheetData = (companion, hash);
             return notice;
         }
         finally

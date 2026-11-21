@@ -377,15 +377,29 @@ internal static partial class Program
                 string elsewhere = Path.Combine(scratch, "elsewhere");
                 Directory.CreateDirectory(elsewhere);
                 string second = Path.Combine(elsewhere, "second results.R"), secondData = Path.Combine(elsewhere, "second results.worksheet-data.csv");
-                Call(reopened, "WriteRScript", second, File.ReadAllText(destination));
+                // The editor's text, which still refers to the first data file after Save As, as the window's editor does.
+                string editorText = File.ReadAllText(destination);
+                Call(reopened, "WriteRScript", second, editorText);
+                reopened.GetType().GetField("currentFile", Internal)!.SetValue(reopened, second);   // Save As: the window's file is the new one
                 Check(File.Exists(secondData) && File.ReadAllBytes(secondData).SequenceEqual(File.ReadAllBytes(companions[0]))
                         && File.ReadAllText(second).Contains(secondData.Replace('\\', '/'), StringComparison.Ordinal),
                     "a saved worksheet script opened again and saved elsewhere carries a copy of its data beside the new script");
                 File.Delete(destination);
                 File.Delete(companions[0]);
+                // Save again, the first pair gone: the script keeps reading its own copy (Codex's second review).
+                Call(reopened, "WriteRScript", second, editorText);
+                Check(File.ReadAllText(second).Contains(secondData.Replace('\\', '/'), StringComparison.Ordinal) && File.Exists(secondData),
+                    "saving again after Save As, with the first script and its data gone, keeps the script reading its own copy of the data");
                 var (secondExit, secondReceipt) = await RunSaved(elsewhere, "second results.R");
                 Check(secondExit == 0 && secondReceipt.Split('\n').Any(line => line.Trim() == "SHELL_SAVED_WORKSHEET_OK"),
                     "the script saved elsewhere reads its own copy of the data once the first script and its data file are gone" + $"\nR exit code {secondExit}\n{secondReceipt}");
+                // R+ after Save As writes through the same code: a new file beside which the data are copied too.
+                string third = Path.Combine(elsewhere, "third results.R"), thirdData = Path.Combine(elsewhere, "third results.worksheet-data.csv");
+                Call(reopened, "WriteRScript", third, editorText);
+                var (thirdExit, thirdReceipt) = await RunSaved(elsewhere, "third results.R");
+                Check(File.Exists(thirdData) && File.ReadAllText(third).Contains(thirdData.Replace('\\', '/'), StringComparison.Ordinal)
+                        && thirdExit == 0 && thirdReceipt.Split('\n').Any(line => line.Trim() == "SHELL_SAVED_WORKSHEET_OK"),
+                    "R+ after Save As, with the first pair gone, carries the data beside its new file, and R reads them" + $"\nR exit code {thirdExit}\n{thirdReceipt}");
             }
             finally
             {
@@ -508,6 +522,19 @@ internal static partial class Program
             ((ComboBox)prompt.Controls.Find("worksheetRFormat", true).Single()).SelectedIndex = 1;
             Check(selected.Text.Contains("XFB1000000:XFB1048576,\u2026 (48,577 rows \u00d7 5 columns)", StringComparison.Ordinal) && PromptChoicesWhole(prompt),
                 "a long range of several areas, with the list's hint shown, leaves every choice of the import prompt whole inside it");
+            // Where the dialog cannot be as large as its choices (a small working area, or a large display scale), the choices scroll:
+            // the range label stays whole, and Open and Cancel stay in view (Codex's second review).
+            prompt.ClientSize = new Size(prompt.LogicalToDeviceUnits(260), prompt.LogicalToDeviceUnits(150));
+            Application.DoEvents();
+            var view = (Panel)prompt.Controls.Find("worksheetRChoices", true).Single();
+            var content = (Control)Field(prompt, "layout");
+            var visible = prompt.RectangleToScreen(prompt.ClientRectangle);
+            bool actionsInView = WorksheetRButtons(prompt).Count() == 2
+                && WorksheetRButtons(prompt).All(button => visible.Contains(button.RectangleToScreen(button.ClientRectangle)));
+            bool scrolls = (content.Width <= view.ClientSize.Width || view.HorizontalScroll.Visible)
+                && (content.Height <= view.ClientSize.Height || view.VerticalScroll.Visible);
+            Check(actionsInView && scrolls && selected.Width >= selected.GetPreferredSize(Size.Empty).Width - 1,
+                $"in a dialog smaller than its choices, the choices scroll, the range label stays whole, and Open and Cancel stay in view (actions {actionsInView}, scrolls {scrolls})");
         }
         finally { prompt.Close(); prompt.Dispose(); }
     }

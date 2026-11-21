@@ -110,22 +110,56 @@ internal static class WorksheetRImport
     {
         if (!range.Worksheet.AutoFilterMode) return FoundBounds(range);
         // While an AutoFilter is on, Find passes over every hidden row (whether the filter or the user hid it): it finds the visible
-        // rows' bounds, and only the hidden rows are read cell by cell, a run of them at a time.  A far-off formatted cell, which widens
-        // the used range, then costs only the hidden rows' width, not a scan of the whole used range.
+        // rows' bounds, and the hidden rows are added.  Few hidden cells are read one by one.  Otherwise each hidden row's first and last
+        // cell with contents come from the row's ends, as Ctrl+arrow finds them, which pass over hidden columns, so those columns' cells
+        // are read one by one.  A far-off formatted cell, which widens the used range, so costs little however many rows are hidden.
         var bounds = FoundBounds(range);
         var cells = range.Worksheet.Cells;
-        int last = range.Row + range.RowCount - 1;
+        int last = range.Row + range.RowCount - 1, first = range.Column, right = range.Column + range.ColumnCount - 1;
+        var runs = new List<(int From, int To)>();
+        long hiddenRows = 0;
         for (int row = range.Row; row <= last; row++)
         {
             if (!cells[row, 0].EntireRow.Hidden) continue;
             int end = row;
             while (end < last && cells[end + 1, 0].EntireRow.Hidden) end++;
-            if (ScannedBounds(cells[row, range.Column, end, range.Column + range.ColumnCount - 1]) is var (top, bottom, left, right))
-                bounds = bounds is var (t, b, l, r)
-                    ? (Math.Min(t, top), Math.Max(b, bottom), Math.Min(l, left), Math.Max(r, right)) : (top, bottom, left, right);
+            runs.Add((row, end));
+            hiddenRows += end - row + 1;
             row = end;
         }
+        void Add(int top, int bottom, int left, int rightmost) => bounds = bounds is var (t, b, l, r)
+            ? (Math.Min(t, top), Math.Max(b, bottom), Math.Min(l, left), Math.Max(r, rightmost)) : (top, bottom, left, rightmost);
+        if (hiddenRows * range.ColumnCount <= 1_000_000)
+        {
+            foreach (var (from, to) in runs)
+                if (ScannedBounds(cells[from, first, to, right]) is var (top, bottom, left, rightmost))
+                    Add(top, bottom, left, rightmost);
+            return bounds;
+        }
+        int[] hiddenColumns = Enumerable.Range(first, range.ColumnCount).Where(column => cells[0, column].EntireColumn.Hidden).ToArray();
+        foreach (var (from, to) in runs)
+            for (int row = from; row <= to; row++)
+            {
+                int? lo = RowEnd(cells, row, first, right, fromRight: false), hi = lo == null ? null : RowEnd(cells, row, first, right, fromRight: true);
+                foreach (int column in hiddenColumns)
+                    if (cells[row, column].Value != null)
+                    {
+                        lo = Math.Min(lo ?? column, column);
+                        hi = Math.Max(hi ?? column, column);
+                    }
+                if (lo is int l && hi is int h) Add(row, row, l, h);
+            }
         return bounds;
+    }
+
+    // The first (or last) cell with contents of a row within columns first to last, as Ctrl+Left and Ctrl+Right find it from that end:
+    // one step from an empty end cell, which passes over hidden columns.  Null when there is none in those columns.
+    private static int? RowEnd(IRange cells, int row, int first, int last, bool fromRight)
+    {
+        var end = cells[row, fromRight ? last : first];
+        if (end.Value != null) return end.Column;
+        var next = fromRight ? end.EndLeft : end.EndRight;
+        return next.Value != null && next.Column >= first && next.Column <= last ? next.Column : null;
     }
 
     // The bounds Find gives: every non-blank cell, except in rows hidden while an AutoFilter is on.
@@ -202,8 +236,13 @@ internal static class WorksheetRImport
                 return ClassifyText(text, address);
             case double number:
                 if (!double.IsFinite(number)) return new Cell(Kind.Missing);
-                return formatType() is NumberFormatType.Date or NumberFormatType.Time or NumberFormatType.DateTime
-                    ? ClassifyDate(number, formatType(), format(), date1904)
+                // Rule 3.9: the section of the number format that applies to the value decides how it is read, by that section's own
+                // type: the spreadsheet's type of a format of several sections is its first section's.
+                string pattern = format();
+                string section = ActiveSection(pattern, number);
+                NumberFormatType type = ReferenceEquals(section, pattern) ? formatType() : SectionType(section);
+                return type is NumberFormatType.Date or NumberFormatType.Time or NumberFormatType.DateTime
+                    ? ClassifyDate(number, type, section, date1904)
                     : new Cell(Kind.Number, number);
             default:
                 double converted = Convert.ToDouble(value, CultureInfo.InvariantCulture);
@@ -303,55 +342,103 @@ internal static class WorksheetRImport
         return false;
     }
 
-    private static readonly Regex SectionCondition = new(@"\[(<=|>=|<>|<|>|=)\s*([+-]?[0-9]+(?:\.[0-9]+)?)\]", RegexOptions.CultureInvariant);
+    private static readonly Regex Condition = new(@"^(<=|>=|<>|<|>|=)\s*([+-]?[0-9]+(?:\.[0-9]+)?)$", RegexOptions.CultureInvariant);
+
+    // A format's sections, and each section's condition ([<1], [>=100]) where it has one: both found outside quotes and escapes, so
+    // "[>10]" in quotes is text.  Parsed once for each format.
+    private sealed record Sections(string[] Parts, (string Comparison, double Limit)?[] Conditions);
+    private static readonly Dictionary<string, Sections> parsedFormats = new(StringComparer.Ordinal);
+
+    private static Sections Parse(string format)
+    {
+        lock (parsedFormats)
+        {
+            if (parsedFormats.TryGetValue(format, out var known)) return known;
+            var parts = new List<string>();
+            var conditions = new List<(string, double)?>();
+            (string, double)? condition = null;
+            bool quoted = false;
+            int start = 0;
+            for (int i = 0; i < format.Length; i++)
+            {
+                char c = format[i];
+                if (c == '"') quoted = !quoted;
+                else if (quoted) continue;
+                else if (c == '\\') i++;
+                else if (c == '[')
+                {
+                    int close = format.IndexOf(']', i + 1);
+                    if (close < 0) break;
+                    var match = Condition.Match(format[(i + 1)..close].Trim());
+                    if (match.Success && condition == null)
+                        condition = (match.Groups[1].Value, double.Parse(match.Groups[2].Value, NumberStyles.Float, CultureInfo.InvariantCulture));
+                    i = close;
+                }
+                else if (c == ';')
+                {
+                    parts.Add(format[start..i]);
+                    conditions.Add(condition);
+                    condition = null;
+                    start = i + 1;
+                }
+            }
+            parts.Add(format[start..]);
+            conditions.Add(condition);
+            var sections = new Sections(parts.ToArray(), conditions.ToArray());
+            if (parsedFormats.Count < 10_000) parsedFormats[format] = sections;
+            return sections;
+        }
+    }
 
     /// <summary>
-    /// Rule 3.9: the section of a number format that applies to the value, which alone decides how the value is read.  Sections are
-    /// separated by ; outside quotes, escapes and brackets.  With conditions ([&lt;0], [&gt;=100]) in the first two sections, the first
-    /// whose condition holds, else the first section without one; without conditions, the first for a positive value, the second for a
-    /// negative one and the third for zero, where they exist.  "[Magenta]yyyy-mm-dd;[h]:mm" is a date format for a positive value.
+    /// Rule 3.9: the section of a number format that applies to the value, as the spreadsheet chooses it.  Sections are separated by ;
+    /// outside quotes, escapes and brackets.  Without a condition in the first two sections: one section is for every value; of two,
+    /// the first is for zero and positive values and the second for negative ones; of three or more, the first is for positive, the
+    /// second for negative and the third for zero values.  With a condition ([&lt;1], [&gt;=100]) in the first or second section, each of
+    /// those two sections is for the values its condition holds for, or, without one, the first for positive values and the second for
+    /// negative ones: the first applies where it can, then the second, then the third; of only two sections, the second applies
+    /// wherever the first does not.  A format of one section is returned as it is.
     /// </summary>
     internal static string ActiveSection(string format, double value)
     {
-        if (string.IsNullOrEmpty(format)) return format;
-        var sections = new List<string>();
-        bool quoted = false;
-        int start = 0;
-        for (int i = 0; i < format.Length; i++)
-        {
-            char c = format[i];
-            if (c == '"') quoted = !quoted;
-            else if (quoted) continue;
-            else if (c == '\\') i++;
-            else if (c == '[')
-            {
-                int close = format.IndexOf(']', i + 1);
-                if (close < 0) break;
-                i = close;
-            }
-            else if (c == ';') { sections.Add(format[start..i]); start = i + 1; }
-        }
-        sections.Add(format[start..]);
-        if (sections.Count == 1) return sections[0];
-        var conditions = sections.Select(section => SectionCondition.Match(section)).ToList();
-        if (conditions.Take(2).Any(match => match.Success))
-        {
-            for (int i = 0; i < Math.Min(2, sections.Count); i++)
-                if (conditions[i].Success && Holds(conditions[i].Groups[1].Value, value,
-                        double.Parse(conditions[i].Groups[2].Value, NumberStyles.Float, CultureInfo.InvariantCulture)))
-                    return sections[i];
-            int otherwise = conditions.Take(3).ToList().FindIndex(match => !match.Success);
-            return sections[otherwise >= 0 ? otherwise : sections.Count - 1];
-        }
-        if (value < 0) return sections[1];
-        if (value == 0 && sections.Count >= 3) return sections[2];
-        return sections[0];
+        if (string.IsNullOrEmpty(format) || format.IndexOf(';') < 0) return format;
+        var sections = Parse(format);
+        var parts = sections.Parts;
+        if (parts.Length == 1) return format;
+        var (first, second) = (sections.Conditions[0], sections.Conditions[1]);
+        if (first == null && second == null)
+            return parts.Length == 2 ? (value >= 0 ? parts[0] : parts[1]) : value > 0 ? parts[0] : value < 0 ? parts[1] : parts[2];
+        if (first is var (c1, l1) ? Holds(c1, value, l1) : value > 0) return parts[0];
+        if (parts.Length == 2) return parts[1];
+        return (second is var (c2, l2) ? Holds(c2, value, l2) : value < 0) ? parts[1] : parts[2];
     }
 
     private static bool Holds(string comparison, double value, double limit) => comparison switch
     {
         "<" => value < limit, "<=" => value <= limit, ">" => value > limit, ">=" => value >= limit, "=" => value == limit, _ => value != limit,
     };
+
+    // The spreadsheet's own type of one section, from a cell of a workbook of the import's own that holds nothing else.
+    private static readonly Dictionary<string, NumberFormatType> sectionTypes = new(StringComparer.Ordinal);
+    private static IRange typeCell;
+
+    internal static NumberFormatType SectionType(string section)
+    {
+        lock (sectionTypes)
+        {
+            if (sectionTypes.TryGetValue(section, out var known)) return known;
+            typeCell ??= Factory.GetWorkbook(CultureInfo.InvariantCulture).Worksheets[0].Cells[0, 0];
+            NumberFormatType type;
+            try
+            {
+                typeCell.NumberFormat = section;
+                type = typeCell.NumberFormatType;
+            }
+            catch (Exception e) when (e is ArgumentException or InvalidOperationException) { type = NumberFormatType.General; }
+            if (sectionTypes.Count < 10_000) sectionTypes[section] = type;
+            return type;
+        }
+    }
 
     // HH:MM:SS, hours not wrapped, with a point and one to three digits only when there is a fraction.
     private static string ClockText(long ms) =>

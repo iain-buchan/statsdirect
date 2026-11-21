@@ -81,5 +81,26 @@ internal static partial class Program
                   "R started on the profile in the C locale still runs a script whose comment holds characters that locale lacks: " + inLocaleC.Trim());
         }
         Directory.Delete(Path.GetDirectoryName(statsProfile)!, true);
+        // ...and with an R folder whose name the C locale lacks (Codex's second review): the start-up file writes the folder with escapes,
+        // so R still reads it, makes the program's library there and works in it.
+        string unicodeFolder = Path.Combine(TemporaryRoot, "statsdirect-rscript-checks", "profile-\u017D\u75C5", "R");
+        Directory.CreateDirectory(unicodeFolder);
+        string unicodeProfile = RController.OpenInRProfile(statsScript, unicodeFolder);
+        System.Diagnostics.ProcessStartInfo unicodeStart = new()
+        {
+            FileName = Path.Combine(version.BinPath, "Rscript.exe"), WorkingDirectory = folder,
+            Arguments = "-e \"cat('wd', dir.exists(file.path(getwd(), 'Lib')), '\\n')\"",
+            UseShellExecute = false, RedirectStandardOutput = true, RedirectStandardError = true, CreateNoWindow = true
+        };
+        unicodeStart.Environment["R_PROFILE_USER"] = unicodeProfile;
+        unicodeStart.Environment["LC_ALL"] = "C";
+        using (System.Diagnostics.Process inUnicode = System.Diagnostics.Process.Start(unicodeStart))
+        {
+            string unicodeOutput = (inUnicode.StandardOutput.ReadToEnd() + inUnicode.StandardError.ReadToEnd()).Replace("\r", "");
+            inUnicode.WaitForExit();
+            Check(inUnicode.ExitCode == 0 && unicodeOutput.Contains("p 0.07418") && unicodeOutput.Contains("wd TRUE") && Directory.Exists(Path.Combine(unicodeFolder, "Lib")),
+                  "R started on the profile in the C locale, with an R folder whose name that locale lacks, works in that folder and runs the script: " + unicodeOutput.Trim());
+        }
+        Directory.Delete(Path.GetDirectoryName(unicodeProfile)!, true);
     }
 }

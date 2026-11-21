@@ -528,7 +528,7 @@ internal static class Program
     // formatted cell at the far corner of the grid (which widens the used range to every cell) does not make the prompt read every cell.
     private static void CheckFilteredBounds()
     {
-        var workbook = Factory.GetWorkbook(CultureInfo.InvariantCulture);
+        IWorkbook workbook = Factory.GetWorkbook(CultureInfo.InvariantCulture);
         try
         {
             var sheet = workbook.Worksheets[0];
@@ -544,6 +544,34 @@ internal static class Program
             Check(finished && sheet.Range["A3"].EntireRow.Hidden && options!.EntireSheet?.Address == "A1:A3" && options.SelectedCells?.Address == "A1:C5",
                 $"under an AutoFilter with a formatted far corner, the prompt finds the data, a hidden row's included, within 20 s"
                 + (finished ? $" (entire {options!.EntireSheet?.Address}, selected {options.SelectedCells?.Address})" : " (it did not finish)"));
+        }
+        finally
+        {
+            workbook.Close();
+        }
+
+        // A long run of hidden rows (every other row of 300,000, which the filter hides) under the same far-off formatting, with data in
+        // a hidden column of a hidden row: the bounds take it in, without reading each hidden row's 16,384 cells (Codex's second review).
+        workbook = Factory.GetWorkbook(CultureInfo.InvariantCulture);
+        try
+        {
+            var sheet = workbook.Worksheets[0];
+            sheet.Name = "Sheet1";
+            const int rows = 300_000;
+            var column = new object[rows + 1, 1];
+            column[0, 0] = "h";
+            for (int r = 1; r <= rows; r++) column[r, 0] = (double)(r % 2);
+            sheet.Cells[0, 0, rows, 0].Value = column;
+            sheet.Range["C2"].Value = 9.0;
+            sheet.Cells[0, 0, rows, 0].AutoFilter(0, "=0", AutoFilterOperator.And, null, true);
+            sheet.Range["C1"].EntireColumn.Hidden = true;
+            sheet.Range["XFD1048576"].NumberFormat = "0.00";
+            var describe = Task.Run(() => WorksheetRImport.Describe(sheet, sheet.Range["A1"], write => write()));
+            bool finished = describe.Wait(TimeSpan.FromSeconds(20));
+            var options = finished ? describe.Result : null;
+            Check(finished && sheet.Range["A2"].EntireRow.Hidden && options!.EntireSheet?.Address == "A1:C300001",
+                "under an AutoFilter that hides 150,000 rows, with a formatted far corner, the prompt finds the data, a hidden column's in a hidden row "
+                + "included, within 20 s" + (finished ? $" (entire {options!.EntireSheet?.Address})" : " (it did not finish)"));
         }
         finally
         {

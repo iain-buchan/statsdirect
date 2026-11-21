@@ -194,6 +194,9 @@ internal static partial class Program
         finally
         {
             if (picker.Visible) picker.Close();
+            // Let the WebView script callback return before closing its report, as the report-destination checks do: closing the report
+            // inside the callback can stall the suite (Codex's second review).
+            await Task.Yield();
             Call(main, "CloseCurrentOperation");
             if (!report.IsDisposed) Call(report, "DiscardNotebookImport");
             grid.Dispose();

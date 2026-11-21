@@ -286,9 +286,11 @@ namespace StatsDirect.R
         /// script run in the console as a session shows it, and the script opened in R's editor.  The path of the profile written.</summary>
         internal const string OpenInRProfileName = "open-in-r.r";
 
-        public static string OpenInRProfile(string scriptPath)
+        public static string OpenInRProfile(string scriptPath) => OpenInRProfile(scriptPath, SDConfiguration.MyStatsDirectRFolder);
+
+        /// <summary>As <see cref="OpenInRProfile(string)"/>, with the R folder given (tests use a folder whose name R's locale lacks).</summary>
+        public static string OpenInRProfile(string scriptPath, string rFolder)
         {
-            string rFolder = SDConfiguration.MyStatsDirectRFolder;
             if (!Directory.Exists(rFolder))
                 Directory.CreateDirectory(rFolder);
             // Each R gets a start-up file of its own, in a folder of its own that goes when that R ends, so that R+ used twice in quick
@@ -314,10 +316,15 @@ namespace StatsDirect.R
                 // RULES.md 6.1, as for the worksheet's R+: R processes started from this R get the user's own R_PROFILE_USER back, or none,
                 // so that they do not run this profile again, and the user's own start-up file runs first, as R would run it.
                 tw.WriteLine(WorksheetRLauncher.UserProfileCode());
-                // the program's library and working folder, set up in a local scope so that the user's own objects are left alone
+                // the program's library and working folder, as SCRIPT_HEAD sets them for the runs here, in a local scope so that the user's
+                // own objects are left alone; the folder is written with escapes, so that a name R's locale lacks still reads
                 tw.WriteLine("local({");
-                tw.Write(SCRIPT_HEAD, rFolder.Replace(@"\", @"\\"));
-                tw.WriteLine();
+                tw.WriteLine("userdir<-" + WorksheetRImport.QuotePath(rFolder));
+                tw.WriteLine("libdir<-\"Lib\"");
+                tw.WriteLine("rlib=file.path(userdir, libdir)");
+                tw.WriteLine("dir.create(rlib,recursive=T,showWarnings=F)");
+                tw.WriteLine("setwd(file.path(userdir))");
+                tw.WriteLine(".libPaths(c(rlib, .libPaths()))");
                 tw.WriteLine("})");
                 // the profile runs before R attaches its default packages (stats, utils and the rest), so it attaches them itself first;
                 // a package the user's start-up file added that R cannot load is reported, as R reports it, and the script still runs
