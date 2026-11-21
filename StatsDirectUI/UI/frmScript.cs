@@ -529,11 +529,25 @@ namespace StatsDirect.UI
             return (name.Length == 0 ? "script" : name) + ".R";
         }
 
+        /// <summary>
+        /// The file R+ hands to RStudio or R: a new one each time, named after the window and the time (RULES.md 6.2), so that a script
+        /// handed over earlier, and the worksheet data beside it, are never replaced by a later one.
+        /// </summary>
+        internal static string OpenInRPath(string folder, string title, DateTime now)
+        {
+            string stem = System.IO.Path.GetFileNameWithoutExtension(ScriptFileName(title)) + " "
+                + now.ToString("yyyy-MM-dd HHmmss", System.Globalization.CultureInfo.InvariantCulture);
+            string path = System.IO.Path.Combine(folder, stem + ".R");
+            for (int n = 2; File.Exists(path) || File.Exists(System.IO.Path.ChangeExtension(path, null) + ".worksheet-data.csv"); n++)
+                path = System.IO.Path.Combine(folder, stem + " (" + n.ToString(System.Globalization.CultureInfo.InvariantCulture) + ").R");
+            return path;
+        }
+
         /// <summary>Saves the script as an R file in the R folder and opens it in RStudio when that is installed, else in whatever opens R
         /// files here: a user at home in R goes on from there, with the data in the script.</summary>
         private async void OpenInR()
         {
-            string path = System.IO.Path.Combine(SDConfiguration.MyStatsDirectRFolder, ScriptFileName(Text));
+            string path = OpenInRPath(SDConfiguration.MyStatsDirectRFolder, Text, DateTime.Now);
             bool saved = false;
             try
             {

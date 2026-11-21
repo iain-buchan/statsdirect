@@ -7,12 +7,14 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 ### Added
 - The worksheet toolbar has Analyse, R and R+. Analyse searches the Analysis, Data and Graphics commands; their results go to the report last selected, or to a new report when none is open. R opens StatsDirect's own R session and R+ opens R's own window. Both can copy the entire worksheet or the selected cells into R as worksheet_data, as a data frame or a list of vectors, with the first row as column names and optional R-friendly names.
 - Worksheet data arrives in R as in StatsDirect's own analyses: blank cells, StatsDirect's missing-value marker * and the other markers, and spreadsheet errors are NA; numbers arrive exactly; dates without a time of day are R dates. StatsDirect for Mac follows the same rules.
-- The R script window's toolbar has R+, to continue the script in R or RStudio.
+- The R script window's toolbar has R+, to continue the script in R or RStudio. Each use saves a new file in StatsDirect's R folder, named after the window and the time, so a script handed to R earlier, and the worksheet data beside it, are never replaced. A script holding worksheet data keeps the data in a file beside it when it is saved.
 
 ### Changed
 - StatsDirect reopens at its saved position and size, and hides its window as soon as a close is accepted.
+- R's own window, when opened from the R script window, runs your own R start-up file first, as R does.
 
 ### Fixed
+- R processes started from R's own window, opened from the R script window, no longer run the script again.
 - Close and update starts the installer when a report or an R window is open. StatsDirect closed after the report's question, but the update did not start, so StatsDirect stayed on the earlier version.
 
 

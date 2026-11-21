@@ -138,15 +138,22 @@ public partial class frmScript
         finally { savingInteractive = false; }
     }
 
+    // The data files this window has put beside its saved scripts, by the script's full path, so that a later save of the same script
+    // can still point at its data when the session's own copy has gone.
+    private readonly System.Collections.Generic.Dictionary<string, string> savedWorksheetData = new(StringComparer.OrdinalIgnoreCase);
+
     /// <summary>
     /// Saves the script.  A script that reads its session's worksheet data carries that data in a file beside it, named after the
     /// script so that saving again replaces it (RULES.md 6.3).  Returns a notice for the user about the data file, or null.
+    /// The script and its data file change together: a data file replaced for a script that then could not be saved is put back.
     /// </summary>
     private string WriteRScript(string destination, string source)
     {
+        string full = System.IO.Path.GetFullPath(destination);
         string temporary = destination + "." + Guid.NewGuid().ToString("N") + ".tmp";
         string temporaryCsv = temporary + ".csv";
-        string notice = null, companion = null;
+        string notice = null, companion = null, previous = null;
+        bool copyData = false;
         try
         {
             // Only the approved worksheet snapshot accompanies a saved script.
@@ -157,33 +164,85 @@ public partial class frmScript
                 string originalInR = WorksheetRData.QuotePath(original);
                 if (source.Contains(originalInR, StringComparison.Ordinal))
                 {
-                    string full = System.IO.Path.GetFullPath(destination);
-                    companion = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(full),
+                    string beside = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(full),
                         System.IO.Path.GetFileNameWithoutExtension(full) + ".worksheet-data.csv");
                     if (File.Exists(original))
                     {
-                        File.Copy(original, temporaryCsv);
+                        companion = beside;
+                        // An unchanged data file is left alone, so that one open in Excel does not stop the save.
+                        copyData = !SameContents(original, companion);
+                        if (copyData) File.Copy(original, temporaryCsv);
+                    }
+                    else if (savedWorksheetData.TryGetValue(full, out string saved) && File.Exists(saved))
+                        companion = saved;   // the session's copy has gone, but this window already put the data beside this script
+                    if (companion != null)
+                    {
                         source = source.Replace(originalInR, WorksheetRData.QuotePath(companion), StringComparison.Ordinal);
                         notice = "(the worksheet data is saved beside the script, as " + System.IO.Path.GetFileName(companion) + ")\n";
                     }
                     else
-                    {
-                        companion = null;
                         notice = "(the script is saved without its worksheet data: the session's copy of the data is no longer there)\n";
-                    }
                 }
             }
 
             File.WriteAllText(temporary, source, new UTF8Encoding(false));
-            if (companion != null) File.Move(temporaryCsv, companion, true);
-            File.Move(temporary, destination, true);
+            if (copyData)
+            {
+                if (File.Exists(companion))
+                {
+                    previous = companion + "." + Guid.NewGuid().ToString("N") + ".previous";
+                    File.Move(companion, previous);
+                }
+                File.Move(temporaryCsv, companion);
+            }
+            try { File.Move(temporary, destination, true); }
+            catch
+            {
+                if (copyData)
+                    try
+                    {
+                        File.Delete(companion);
+                        if (previous != null) File.Move(previous, companion);
+                    }
+                    catch (IOException) { }
+                    catch (UnauthorizedAccessException) { }
+                    finally { previous = null; }   // put back, or left beside it when it could not be
+                throw;
+            }
+            if (companion != null) savedWorksheetData[full] = companion;
             return notice;
         }
         finally
         {
             if (File.Exists(temporary)) File.Delete(temporary);
             if (File.Exists(temporaryCsv)) File.Delete(temporaryCsv);
+            if (previous != null)
+                try { File.Delete(previous); }
+                catch (IOException) { }
+                catch (UnauthorizedAccessException) { }
         }
+    }
+
+    // Whether two files hold the same bytes; a file being written elsewhere may still be read.
+    private static bool SameContents(string first, string second)
+    {
+        if (!File.Exists(second)) return false;
+        try
+        {
+            using var a = new FileStream(first, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+            using var b = new FileStream(second, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+            if (a.Length != b.Length) return false;
+            var x = new byte[81_920];
+            var y = new byte[81_920];
+            for (int read; (read = a.Read(x, 0, x.Length)) > 0;)
+            {
+                b.ReadExactly(y, 0, read);
+                if (!x.AsSpan(0, read).SequenceEqual(y.AsSpan(0, read))) return false;
+            }
+            return true;
+        }
+        catch (IOException) { return false; }
+        catch (UnauthorizedAccessException) { return false; }
     }
 
     private async void ClosingInteractiveR(FormClosingEventArgs e)

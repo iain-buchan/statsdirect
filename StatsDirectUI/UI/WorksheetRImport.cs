@@ -225,13 +225,16 @@ internal static class WorksheetRImport
     /// <summary>Rule 3.9: dates and date-times by value, times of day and durations by format, all rounded to the millisecond.</summary>
     private static Cell ClassifyDate(double serial, NumberFormatType type, string format, bool date1904)
     {
+        // 9999-12-31 is the last day of either date system.  A value beyond it, a duration as long included, is a plain number.
+        long lastDay = date1904 ? 2_957_003 : 2_958_465;
+        if (!(Math.Abs(serial) <= lastDay + 1)) return new Cell(Kind.Number, serial);
         long ms = (long)Math.Round(serial * DayMilliseconds, MidpointRounding.AwayFromZero);
         if (IsElapsed(format)) return new Cell(Kind.Duration, Text: DurationText(ms));
         if (type == NumberFormatType.Time && serial >= 0 && serial < 1) return new Cell(Kind.TimeOfDay, Text: ClockText(ms));
         long day = Math.DivRem(ms, DayMilliseconds, out long ofDay);
         if (ofDay < 0) { day--; ofDay += DayMilliseconds; }
         if (!date1904 && day == 60) return new Cell(Kind.Missing);   // 1900-02-29, which never was
-        if (day < 0 || day > 2_958_465) return new Cell(Kind.Number, serial);   // before the date system, or after 9999-12-31
+        if (day < 0 || day > lastDay) return new Cell(Kind.Number, serial);   // before the date system, or after 9999-12-31
         DateTime date = date1904 ? new DateTime(1904, 1, 1).AddDays(day)
             : day < 60 ? new DateTime(1899, 12, 31).AddDays(day) : new DateTime(1899, 12, 30).AddDays(day);
         string iso = date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
@@ -240,8 +243,9 @@ internal static class WorksheetRImport
             : new Cell(Kind.DateTime, Text: iso + " " + ClockText(ofDay));
     }
 
-    // An elapsed-time format holds [h], [m] or [s] outside quotes and escapes.
-    private static bool IsElapsed(string format)
+    // An elapsed-time format holds [h], [mm], [ss] and the like outside quotes and escapes: a bracket of one of the letters h, m
+    // or s alone, repeated.  Other brackets ([Red], [Magenta], [$-409], [>=100]) are colours, locales and conditions.
+    internal static bool IsElapsed(string format)
     {
         if (string.IsNullOrEmpty(format)) return false;
         bool quoted = false;
@@ -250,7 +254,14 @@ internal static class WorksheetRImport
             char c = format[i];
             if (c == '"') quoted = !quoted;
             else if (!quoted && c == '\\') i++;
-            else if (!quoted && c == '[' && i + 1 < format.Length && char.ToLowerInvariant(format[i + 1]) is 'h' or 'm' or 's') return true;
+            else if (!quoted && c == '[')
+            {
+                int close = format.IndexOf(']', i + 1);
+                if (close < 0) return false;
+                string code = format[(i + 1)..close].ToLowerInvariant();
+                if (code.Length > 0 && code[0] is 'h' or 'm' or 's' && code.All(letter => letter == code[0])) return true;
+                i = close;
+            }
         }
         return false;
     }
@@ -445,7 +456,7 @@ internal static class WorksheetRImport
         ColumnType[] types = counts.Select(TypeOf).ToArray();
 
         var script = new StringBuilder()
-            .Append("# Data copied from the worksheet \u201C").Append(sheet.Name.Replace("\r\n", " ").Replace('\r', ' ').Replace('\n', ' '))
+            .Append("# Data copied from the worksheet \u201C").Append(CommentText(sheet.Name))
             .Append("\u201D, ").Append(source.AllAreas).Append(".\n")
             .Append("# Blank cells, missing-value markers and spreadsheet errors are NA.\n");
         if (anyDates) script.Append("# Dates without a time of day are R Date values; other dates and times are text.\n");
@@ -491,7 +502,7 @@ internal static class WorksheetRImport
                     if (++written == columns.Length) { writer.WriteLine(); written = 0; }
                 });
             }
-            script.Append("worksheet_data <- utils::read.csv(").Append(QuotePath(path)).Append(",\n")
+            script.Append("worksheet_data <- utils::read.csv(file(").Append(QuotePath(path)).Append(", encoding = \"native.enc\"),\n")
                 .Append("  header = FALSE, colClasses = ").Append(classes).Append(", na.strings = \"").Append(MissingValue).Append("\",\n")
                 .Append("  encoding = \"UTF-8\", check.names = FALSE, blank.lines.skip = FALSE)\n");
             if (escaped)
@@ -509,7 +520,7 @@ internal static class WorksheetRImport
         if (format == WorksheetRDataFormat.VectorList)
             script.Append("# Missing values are removed separately from each vector.\n")
                 .Append("worksheet_data <- lapply(worksheet_data, function(column) column[!is.na(column)])\n");
-        return script.Append("str(worksheet_data)\n").ToString();
+        return script.Append("utils::str(worksheet_data)\n").ToString();
     }
 
     private static bool IsDateKind(Kind kind) => kind is Kind.Date or Kind.DateTime or Kind.TimeOfDay or Kind.Duration;
@@ -552,7 +563,29 @@ internal static class WorksheetRImport
             }
     }
 
-    private static string RStrings(IEnumerable<string> values) => "c(" + string.Join(", ", values.Select(QuoteR)) + ")";
+    private static string RStrings(IEnumerable<string> values) => "c(" + string.Join(", ", values.Select(RString)) + ")";
+
+    // R refuses a string literal holding escapes once its text reaches 10,000 characters, so a longer value is written as
+    // paste0() of pieces of at most 2,000 characters each (rule 4.4: very long headings are kept exactly).
+    private const int LiteralPiece = 2_000;
+
+    internal static string RString(string value)
+    {
+        if (value.Length <= LiteralPiece) return QuoteR(value);
+        var pieces = new List<string>();
+        for (int start = 0; start < value.Length;)
+        {
+            int length = Math.Min(LiteralPiece, value.Length - start);
+            if (start + length < value.Length && char.IsHighSurrogate(value[start + length - 1])) length--;   // keep pairs together
+            pieces.Add(QuoteR(value.Substring(start, length)));
+            start += length;
+        }
+        return "paste0(" + string.Join(", ", pieces) + ")";
+    }
+
+    // A comment line: each control character (C0, DEL and C1, CR and LF among them) as a space.
+    internal static string CommentText(string text) =>
+        string.Concat(text.Select(c => c < ' ' || c >= '\u007F' && c <= '\u009F' ? ' ' : c));
 
     internal static string QuotePath(string path) => QuoteR(path.Replace('\\', '/'));
 

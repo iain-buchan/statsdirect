@@ -292,6 +292,9 @@ namespace StatsDirect.R
             string profile = Path.Combine(rFolder, "open-in-r.r");
             using (TextWriter tw = new StreamWriter(profile, false, new UTF8Encoding(false)))
             {
+                // RULES.md 6.1, as for the worksheet's R+: R processes started from this R get the user's own R_PROFILE_USER back, or none,
+                // so that they do not run this profile again, and the user's own start-up file runs first, as R would run it.
+                tw.WriteLine(WorksheetRLauncher.UserProfileCode());
                 tw.Write(SCRIPT_HEAD, rFolder.Replace(@"\", @"\\"));
                 tw.WriteLine();
                 // the profile runs before R attaches its default packages (stats, utils and the rest), so it attaches them itself first
