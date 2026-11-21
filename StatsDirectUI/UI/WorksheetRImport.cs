@@ -892,15 +892,13 @@ internal static class WorksheetRImport
     internal static string ReaderOperand(string path) => "utils::read.csv(file(" + QuotePath(path) + ", encoding = \"native.enc\")";
 
     /// <summary>
-    /// Each string literal in R code whose text, quotes included, is the given literal, ignoring case: the places a script names a file
-    /// by its path as StatsDirect writes it (<see cref="QuotePath"/>), the import's reader among them.  Only R code counts: not
-    /// comments, backquoted names, or special operators such as %in% and the user's own, whose names may hold quotes, # or the path
-    /// itself (Codex's fifth review).  So a commented-out import names nothing, while the window's data file named in code the user has
-    /// changed, as in read.csv("...") or a variable, is still the window's.
+    /// The string literals of R code, quoted in " or ', with their values as R reads them: not those in comments, backquoted names, raw
+    /// strings, or special operators such as %in% and the user's own, whose names may hold quotes, # or a path (Codex's fifth review).
+    /// A literal with an escape R does not read has no value.
     /// </summary>
-    internal static List<(int Start, int Length)> LiteralsInCode(string source, string literal)
+    internal static List<(int Start, int Length, char Quote, string Value)> StringsInCode(string source)
     {
-        var found = new List<(int, int)>();
+        var found = new List<(int, int, char, string)>();
         int n = source.Length;
         bool NamePart(int k) => k >= 0 && (char.IsLetterOrDigit(source[k]) || source[k] is '.' or '_');
         for (int i = 0; i < n;)
@@ -923,14 +921,59 @@ internal static class WorksheetRImport
             {
                 int j = i + 1;
                 while (j < n && source[j] != c) j += source[j] == '\\' ? 2 : 1;
-                int length = Math.Min(n, j + 1) - i;
-                if (c != '`' && length == literal.Length && string.Compare(source, i, literal, 0, length, StringComparison.OrdinalIgnoreCase) == 0)
-                    found.Add((i, length));
-                i += length;
+                int close = Math.Min(n, j);
+                if (c != '`' && close < n) found.Add((i, close + 1 - i, c, DecodeR(source, i + 1, close)));
+                i = close + 1;
             }
             else i++;
         }
         return found;
+    }
+
+    // An R string literal's value from its text between the quotes, its escapes read as R reads them; null for an escape R refuses.
+    private static string DecodeR(string source, int from, int to)
+    {
+        var value = new StringBuilder(to - from);
+        for (int i = from; i < to; i++)
+        {
+            char c = source[i];
+            if (c != '\\') { value.Append(c); continue; }
+            if (++i >= to) return null;
+            char e = source[i];
+            switch (e)
+            {
+                case 'n': value.Append('\n'); break;
+                case 'r': value.Append('\r'); break;
+                case 't': value.Append('\t'); break;
+                case 'a': value.Append('\a'); break;
+                case 'b': value.Append('\b'); break;
+                case 'f': value.Append('\f'); break;
+                case 'v': value.Append('\v'); break;
+                case '\\' or '"' or '\'' or '`': value.Append(e); break;
+                case >= '0' and <= '7':
+                {
+                    int code = 0, digits = 0;
+                    while (digits < 3 && i < to && source[i] is >= '0' and <= '7') { code = code * 8 + (source[i] - '0'); i++; digits++; }
+                    i--;
+                    value.Append((char)code);
+                    break;
+                }
+                case 'x' or 'u' or 'U':
+                {
+                    int most = e == 'x' ? 2 : e == 'u' ? 4 : 8;
+                    bool braced = e != 'x' && i + 1 < to && source[i + 1] == '{';
+                    if (braced) i++;
+                    int code = 0, digits = 0;
+                    while (digits < most && i + 1 < to && Uri.IsHexDigit(source[i + 1])) { code = code * 16 + Convert.ToInt32(source[i + 1].ToString(), 16); i++; digits++; }
+                    if (digits == 0 || braced && !(i + 1 < to && source[++i] == '}')) return null;
+                    if (code > 0x10FFFF || code is >= 0xD800 and <= 0xDFFF) return null;
+                    value.Append(char.ConvertFromUtf32(code));
+                    break;
+                }
+                default: return null;
+            }
+        }
+        return value.ToString();
     }
 
     // The end of an R raw string that starts at i, r"(...)" with brackets ( [ or { and any number of dashes, or null when it is not one.
@@ -946,20 +989,38 @@ internal static class WorksheetRImport
         return end < 0 ? source.Length : end + closing.Length;
     }
 
-    /// <summary>Whether R code names a file by the given path (<see cref="LiteralsInCode"/>).</summary>
-    internal static bool NamesInCode(string source, string path) => LiteralsInCode(source, QuotePath(path)).Count > 0;
+    // Whether a string's value is a path: the same file, case and the direction of its separators aside.
+    private static bool IsPath(string value, string path) =>
+        value != null && string.Equals(value.Replace('\\', '/'), path.Replace('\\', '/'), StringComparison.OrdinalIgnoreCase);
 
-    /// <summary>R code with each string literal that names a file by one path (<see cref="LiteralsInCode"/>) naming another.</summary>
+    /// <summary>Whether R code names a file by its path in a string literal (<see cref="StringsInCode"/>), however the user's code reads
+    /// or writes it: what the window's own copy of its data is named by.</summary>
+    internal static bool NamesInCode(string source, string path) => StringsInCode(source).Any(s => IsPath(s.Value, path));
+
+    private const string ReaderStart = "utils::read.csv(file(";
+    private static readonly string[] ReaderEnds = { ", encoding = \"native.enc\")", ", encoding = 'native.enc')" };
+
+    /// <summary>
+    /// Whether R code reads a file through the import's own reader, utils::read.csv(file(&lt;path&gt;, encoding = "native.enc"), the path in
+    /// either quote: the binding a saved script has to its data file.  A script that names a file of that name in any other way, as
+    /// an output written with write.csv for one, does not hold it (Codex's sixth review).
+    /// </summary>
+    internal static bool ReadsAsImport(string source, string path) => StringsInCode(source).Any(s => IsPath(s.Value, path)
+        && s.Start >= ReaderStart.Length && string.CompareOrdinal(source, s.Start - ReaderStart.Length, ReaderStart, 0, ReaderStart.Length) == 0
+        && ReaderEnds.Any(end => s.Start + s.Length + end.Length <= source.Length && string.CompareOrdinal(source, s.Start + s.Length, end, 0, end.Length) == 0));
+
+    /// <summary>R code with each string literal that names one path (<see cref="StringsInCode"/>) naming another, in the literal's own
+    /// quote.</summary>
     internal static string RenameInCode(string source, string path, string replacement)
     {
-        var at = LiteralsInCode(source, QuotePath(path));
+        var at = StringsInCode(source).Where(s => IsPath(s.Value, path)).ToList();
         if (at.Count == 0) return source;
-        string quoted = QuotePath(replacement);
-        var result = new StringBuilder(source.Length + at.Count * quoted.Length);
+        string doubled = QuotePath(replacement), single = "'" + doubled[1..^1].Replace("'", "\\'") + "'";
+        var result = new StringBuilder(source.Length + at.Count * doubled.Length);
         int last = 0;
-        foreach (var (start, length) in at)
+        foreach (var (start, length, quote, _) in at)
         {
-            result.Append(source, last, start - last).Append(quoted);
+            result.Append(source, last, start - last).Append(quote == '\'' ? single : doubled);
             last = start + length;
         }
         return result.Append(source, last, source.Length - last).ToString();

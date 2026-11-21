@@ -217,8 +217,9 @@ namespace StatsDirect.UI
                 using (StreamReader txtReader = new(filename))
                 {
                     string text = txtReader.ReadToEnd();
-                    // An R script saved with its worksheet data works on a copy of its own (frmScript.Interactive.cs).
-                    rtbDoc.Text = !isTempFile && ".r".Equals(strExt) ? AdoptSavedWorksheetData(filename, text) : text;
+                    // An R script saved with its worksheet data works on a copy of its own (frmScript.Interactive.cs), however it is
+                    // opened: File Open takes a name beginning ~ for a temporary file, and such a script still reads its data file.
+                    rtbDoc.Text = ".r".Equals(strExt) ? AdoptSavedWorksheetData(filename, text) : text;
                 }
                 rtbDoc.SelectionStart = 0;
                 rtbDoc.SelectionLength = 0;

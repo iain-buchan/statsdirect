@@ -81,6 +81,7 @@ internal static class Program
             CheckNumberForm(work);
             CheckManualCalculation(work);
             CheckFilteredBounds();
+            CheckPathLiterals();
             if (failures.Count == 0)
             {
                 try { Directory.Delete(work, true); } catch (IOException) { }
@@ -725,6 +726,36 @@ internal static class Program
         sheet.Cells[0, 0, rows, 0].AutoFilter(0, "=0", AutoFilterOperator.And, null, true);
         return sheet;
     }
+    // How R code names a file (Codex's fifth and sixth reviews): a string literal whose value, as R reads it, is the file's path names
+    // it; only the import's own reader holds a saved script's data file; and comments, raw strings, backquoted names and special
+    // operators name nothing.  Renaming keeps each literal's quote.
+    private static void CheckPathLiterals()
+    {
+        const string path = @"C:\Users\Ann O'Neil\Žan\data.worksheet-data.csv";
+        string doubled = WorksheetRImport.QuotePath(path), single = "'" + doubled[1..^1].Replace("'", "\\'") + "'";
+        string reader = WorksheetRImport.ReaderOperand(path);
+        var cases = new (string Code, bool Names, bool Reads, string What)[]
+        {
+            ("worksheet_data <- " + reader + ",\n  header = FALSE)\n", true, true, "the import's reader"),
+            ("worksheet_data <- utils::read.csv(file(" + single + ", encoding = \"native.enc\"),\n  header = FALSE)\n", true, true, "the import's reader with the path in single quotes"),
+            ("x <- utils::read.csv(file(\"C:/Users/Ann O'Neil/\u017dan/data.worksheet-data.csv\", encoding = 'native.enc'))\n", true, true, "the import's reader with the path's letters as they are and native.enc in single quotes"),
+            ("x <- read.csv(\"C:\\\\Users\\\\Ann O'Neil\\\\\u017dan\\\\DATA.worksheet-data.csv\")\n", true, false, "another reader, with backslashes and another case"),
+            ("utils::write.csv(x, " + doubled + ")\n", true, false, "an output written with write.csv"),
+            ("# worksheet_data <- " + reader + ",\n", false, false, "a commented-out import"),
+            ("x <- r\"(C:/Users/Ann O'Neil/\u017dan/data.worksheet-data.csv)\"\n", false, false, "a raw string"),
+            ("`%" + reader + "%` <- function(a, b) a\nq <- 1 %" + reader + "% 2\n", false, false, "an operator named with the import's reader"),
+            ("z <- 1 %#% 2; worksheet_data <- " + reader + ",\n", true, true, "the reader after %#% on its line"),
+            ("x <- \"C:/Users/Ann O'Neil/\u017dan/data.worksheet-data.csv.bak\"\n", false, false, "another file"),
+            ("x <- \"C:/Users/Ann O'Neil/\\q/data.worksheet-data.csv\"\n", false, false, "an escape R refuses"),
+        };
+        foreach (var (code, names, reads, what) in cases)
+            Check(WorksheetRImport.NamesInCode(code, path) == names && WorksheetRImport.ReadsAsImport(code, path) == reads,
+                $"R code names a file as R reads it: {what} {(names ? "names" : "does not name")} the file{(reads ? ", and holds it as the import does" : "")}");
+        string renamed = WorksheetRImport.RenameInCode("a <- " + doubled + "; b <- " + single + " # " + doubled + "\n", path, @"D:\new\copy.csv");
+        Check(renamed == "a <- \"D:/new/copy.csv\"; b <- 'D:/new/copy.csv' # " + doubled + "\n",
+            "renaming a file in R code keeps each literal's quote and leaves comments as they are: " + renamed);
+    }
+
 
     // RULES.md 3.11 and section 7: Windows sends formulas' current values.  In a workbook that calculates manually, a formula's
     // stored result can be older than its cells; the import calculates first, so B1 = A1 + 1 arrives as 9 after A1 becomes 8.

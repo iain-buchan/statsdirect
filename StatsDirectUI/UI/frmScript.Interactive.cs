@@ -182,9 +182,10 @@ public partial class frmScript
 
     /// <summary>
     /// Opened again, a script saved with its worksheet data works on a copy of its own, made now, as a session works on its import:
-    /// the script in the editor reads the copy.  A string literal in the script's code that holds the data file's path names it
-    /// (<see cref="WorksheetRImport.LiteralsInCode"/>), so a comment, a commented-out import or an operator of the user's own that
-    /// mentions the file is left as it is.  When no copy can be made, because the file is not there or another program holds it open,
+    /// the script in the editor reads the copy.  The script holds its data file only through the import's own reader in its code
+    /// (<see cref="WorksheetRImport.ReadsAsImport"/>), the path in either quote, so a script that writes a file of that name, a
+    /// comment, a commented-out import or an operator of the user's own is left as it is (Codex's sixth review); where it holds it,
+    /// each literal in its code that names the file names the copy instead.  When no copy can be made, because the file is not there or another program holds it open,
     /// the user is asked to put it back or close it and retry, and otherwise the script is not opened
     /// (<see cref="WorksheetDataUnavailableException"/>): a window never works on the data file itself, which others can change (Codex's
     /// retest of 0b9c2282 and fifth review).  Returns the script for the editor.
@@ -193,7 +194,7 @@ public partial class frmScript
     {
         if (WorksheetImportFolder != null) return text;
         string dataFile = DataFileBeside(scriptPath);
-        if (!WorksheetRImport.NamesInCode(text, dataFile)) return text;
+        if (!WorksheetRImport.ReadsAsImport(text, dataFile)) return text;
         while (true)
         {
             string folder = null;
@@ -366,8 +367,9 @@ public partial class frmScript
         return System.IO.Path.Combine(System.IO.Path.GetDirectoryName(full), file);
     }
 
-    // Whether the script at a path names a data file in its code (WorksheetRImport.LiteralsInCode): a script saved with its data, whose
-    // data file goes with it when the script is replaced.  An ordinary script there owns no data file of that name.
+    // Whether the script at a path reads a data file through the import's own reader (WorksheetRImport.ReadsAsImport): a script saved
+    // with its data, whose data file goes with it when the script is replaced.  An ordinary script there, one that writes a file of that
+    // name among them, owns no data file (Codex's sixth review).
     private static bool ReadsDataFile(string script, string dataFile)
     {
         try
@@ -375,7 +377,7 @@ public partial class frmScript
             using var stream = new FileStream(script, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
             if (stream.Length > 64 << 20) return false;   // no script StatsDirect writes is so large
             using var reader = new StreamReader(stream);
-            return WorksheetRImport.NamesInCode(reader.ReadToEnd(), dataFile);
+            return WorksheetRImport.ReadsAsImport(reader.ReadToEnd(), dataFile);
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException) { return false; }
     }

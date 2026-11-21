@@ -707,6 +707,65 @@ internal static partial class Program
             language.SelectedIndex = 0;
             Check(language.SelectedIndex == 1 && notices.Contains("(this script holds worksheet data, so it stays an R script)\n"),
                 "a window that holds worksheet data stays an R script, and says so");
+
+            // An ordinary script that writes a file named as a data file would be (Codex's sixth review): it holds no data file, since only
+            // the import's own reader does.  File Open asks nothing before the file exists, and Save As over the script asks about the file.
+            string writer = Path.Combine(elsewhere, "writer.R");
+            File.WriteAllText(writer, "out <- data.frame(measurement = 404)\nutils::write.csv(out, " + QuotedPath(DataBeside(writer)) + ")\n");
+            {
+                var (opened, window, timesAsked) = OpenAsFileOpen(writer, () => false);
+                Check(opened && window != null && timesAsked == 0 && Get(window, "WorksheetImportFolder") == null,
+                    "File Open of an ordinary script that writes a file named as a data file asks nothing, and makes no copy, before the file exists");
+                window?.Dispose();
+            }
+            File.WriteAllBytes(DataBeside(writer), data);   // the ordinary script's own output
+            byte[] writerScript = File.ReadAllBytes(writer);
+            var writerWindow = await Reopen(twin);   // the other workbook's data
+            int askedForWriter = asked.Count;
+            answer = false;
+            Check(!await SaveAs(writerWindow, writer) && asked.Count == askedForWriter + 1 && File.ReadAllBytes(writer).SequenceEqual(writerScript)
+                    && File.ReadAllBytes(DataBeside(writer)).SequenceEqual(data),
+                "Save As over an ordinary script that writes such a file asks about the file, and with No leaves both files as they were");
+            answer = true;
+            Check(await SaveAs(writerWindow, writer) && asked.Count == askedForWriter + 2 && Holds(writer, other),
+                "with Yes, Save As over that script writes the window's script and its data together");
+            await Replay(writer, otherVerify, "the script saved over the ordinary one, run afresh in R, reads the window's data");
+
+            // A script saved with its data under a name beginning ~, which File Open takes for a temporary file, still works on a copy of
+            // its own (Codex's sixth review): Cancel with its data file away opens nothing; with the file back and Retry, Run keeps the data
+            // the window took after the file is replaced.
+            string draft = Path.Combine(elsewhere, "~draft.R"), away = DataBeside(draft) + ".away";
+            Check(await SaveAs(writerWindow, draft) && Holds(draft, other), "a worksheet script saves under a name beginning ~ with its data");
+            await Replay(draft, otherVerify, "that script, run afresh in R, reads its data");
+            File.Move(DataBeside(draft), away);
+            {
+                var (opened, window, timesAsked) = OpenAsFileOpen(draft, () => false);
+                Check(!opened && window == null && timesAsked == 1, "File Open of ~draft.R with its data file away asks to retry, and with Cancel opens nothing");
+                (opened, window, timesAsked) = OpenAsFileOpen(draft, () => { File.Move(away, DataBeside(draft)); return true; });
+                Check(opened && window != null && timesAsked == 1 && OwnCopy(window, other),
+                    "with the data file back and Retry, File Open opens ~draft.R with a copy of its own data");
+                await ((Task)Get(RConsole(window), "Ready")).WaitAsync(TimeSpan.FromSeconds(45));
+                File.WriteAllBytes(DataBeside(draft), data);
+                await Run(window, otherVerify, "~draft.R's window runs with its own copy after the data file is replaced");
+            }
+
+            // The import's reader with its path in single quotes, as R also reads it (Codex's sixth review): opened again, the script works
+            // on a copy of its own, and Save As keeps the quote.
+            string quoted = Path.Combine(elsewhere, "quoted.R");
+            string singleQuoted = "'" + QuotedPath(DataBeside(quoted))[1..^1].Replace("'", "\\'") + "'";
+            File.WriteAllText(quoted, ScriptReading(quoted).Replace(QuotedPath(DataBeside(quoted)), singleQuoted, StringComparison.Ordinal));
+            Check(File.ReadAllText(quoted).Contains("utils::read.csv(file(" + singleQuoted, StringComparison.Ordinal), "the script's reader has its path in single quotes");
+            File.WriteAllText(DataBeside(quoted), otherData);
+            var quotedWindow = await Reopen(quoted);
+            Check(OwnCopy(quotedWindow, other), "a script whose reader has its path in single quotes opens with a copy of its own data");
+            File.WriteAllBytes(DataBeside(quoted), data);
+            await Run(quotedWindow, otherVerify, "that window runs with its own copy after the data file is replaced");
+            string requoted = Path.Combine(elsewhere, "requoted.R");
+            string requotedLiteral = "'" + QuotedPath(DataBeside(requoted))[1..^1].Replace("'", "\\'") + "'";
+            Check(await SaveAs(quotedWindow, requoted) && File.ReadAllBytes(DataBeside(requoted)).SequenceEqual(other)
+                    && File.ReadAllText(requoted).Contains("utils::read.csv(file(" + requotedLiteral, StringComparison.Ordinal),
+                "Save As carries the window's data and keeps the reader's single quotes");
+            await Replay(requoted, otherVerify, "the script with single quotes, saved and run afresh in R, reads its own data");
         }
         finally
         {
