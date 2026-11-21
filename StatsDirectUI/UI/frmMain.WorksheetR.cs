@@ -1,5 +1,6 @@
 using System;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 using StatsDirect.R;
 
@@ -82,6 +83,11 @@ internal sealed class WorksheetRPrompt : Form
         Name = "worksheetRFormat", AccessibleName = "Import as", DropDownStyle = ComboBoxStyle.DropDownList, Dock = DockStyle.Fill
     };
     private readonly Label formatHint = new() { Text = "Missing values are removed separately from each vector.", AutoSize = true };
+    // Each choice has a row of its own, sized to it; the row before the buttons takes the space left, so no choice is squeezed, and
+    // the dialog is as large as its contents need (OnLoad).  Beyond the working area the contents scroll.
+    private readonly TableLayoutPanel layout = new() { ColumnCount = 1, RowCount = 10, Dock = DockStyle.Fill, AutoScroll = true };
+    private readonly TableLayoutPanel formatRow = new() { ColumnCount = 2, RowCount = 1, AutoSize = true, Dock = DockStyle.Fill };
+    private readonly FlowLayoutPanel buttons = new() { FlowDirection = FlowDirection.RightToLeft, WrapContents = false, AutoSize = true, Dock = DockStyle.Fill };
 
     internal bool UseHeaders => headers.Checked;
     internal bool UseFriendlyNames => friendlyNames.Enabled && friendlyNames.Checked;
@@ -114,7 +120,6 @@ internal sealed class WorksheetRPrompt : Form
 
         format.Items.AddRange(["Data frame (keep rows aligned)", "List of vectors (independent samples)"]);
         format.SelectedIndex = 0;
-        var formatRow = new TableLayoutPanel { ColumnCount = 2, RowCount = 1, AutoSize = true, Dock = DockStyle.Fill };
         formatRow.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
         formatRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
         formatRow.Controls.Add(new Label { Text = "Import as:", AutoSize = true, Anchor = AnchorStyles.Left }, 0, 0);
@@ -122,11 +127,9 @@ internal sealed class WorksheetRPrompt : Form
 
         var open = new Button { Text = "Open", AutoSize = true, DialogResult = DialogResult.OK };
         var cancel = new Button { Text = "Cancel", AutoSize = true, DialogResult = DialogResult.Cancel };
-        var buttons = new FlowLayoutPanel { FlowDirection = FlowDirection.RightToLeft, WrapContents = false, AutoSize = true, Dock = DockStyle.Fill };
         buttons.Controls.AddRange(new Control[] { cancel, open });
-        var layout = new TableLayoutPanel { ColumnCount = 1, RowCount = 9, Dock = DockStyle.Fill };
         layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-        for (int row = 0; row < 7; row++) layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        for (int row = 0; row < 8; row++) layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
         layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         layout.Controls.Add(scope, 0, 0);
@@ -138,7 +141,7 @@ internal sealed class WorksheetRPrompt : Form
         layout.Controls.Add(formatHint, 0, 5);
         layout.Controls.Add(headers, 0, 6);
         layout.Controls.Add(friendlyNames, 0, 7);
-        layout.Controls.Add(buttons, 0, 8);
+        layout.Controls.Add(buttons, 0, 9);
         Controls.Add(layout);
 
         entireSheet.CheckedChanged += (_, _) => UpdateImportOptions();
@@ -187,9 +190,18 @@ internal sealed class WorksheetRPrompt : Form
         var owner = Owner ?? this;
         var area = Screen.FromControl(owner).WorkingArea;
         Padding = new Padding(owner.LogicalToDeviceUnits(12));
-        Size desired = SizeFromClientSize(owner.LogicalToDeviceUnits(PromptSize));
-        Size = new Size(Math.Min(desired.Width, area.Width), Math.Min(desired.Height, area.Height));
-        scope.MaximumSize = new Size(Math.Max(1, ClientSize.Width - Padding.Horizontal - scope.Margin.Horizontal), 0);
+        // As wide as the widest choice needs (a range of several areas can be long), and as tall as all the rows need with the hint
+        // shown, but no smaller than the usual size, and within the working area.  The sentence at the top wraps to that width.
+        Size minimum = owner.LogicalToDeviceUnits(PromptSize), frame = SizeFromClientSize(Size.Empty);
+        int widest = new Control[] { entireSheet, selectedCells, noData, formatRow, formatHint, headers, friendlyNames, buttons }
+            .Max(control => control.GetPreferredSize(Size.Empty).Width + control.Margin.Horizontal);
+        int width = Math.Min(Math.Max(minimum.Width, widest + Padding.Horizontal + layout.Padding.Horizontal), area.Width - frame.Width);
+        scope.MaximumSize = new Size(Math.Max(1, width - Padding.Horizontal - layout.Padding.Horizontal - scope.Margin.Horizontal), 0);
+        bool hintShown = formatHint.Visible;
+        formatHint.Visible = true;
+        int height = layout.GetPreferredSize(new Size(width - Padding.Horizontal, 0)).Height + Padding.Vertical;
+        formatHint.Visible = hintShown;
+        ClientSize = new Size(width, Math.Min(Math.Max(minimum.Height, height), area.Height - frame.Height));
         Location = new Point(
             Math.Clamp(owner.Left + (owner.Width - Width) / 2, area.Left, area.Right - Width),
             Math.Clamp(owner.Top + (owner.Height - Height) / 2, area.Top, area.Bottom - Height));

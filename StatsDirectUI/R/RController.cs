@@ -291,7 +291,24 @@ namespace StatsDirect.R
             string rFolder = SDConfiguration.MyStatsDirectRFolder;
             if (!Directory.Exists(rFolder))
                 Directory.CreateDirectory(rFolder);
-            string profile = Path.Combine(rFolder, OpenInRProfileName);
+            // Each R gets a start-up file of its own, in a folder of its own that goes when that R ends, so that R+ used twice in quick
+            // succession cannot give the first R the second script.  (Releases before 5.3.16 wrote one open-in-r.r in the R folder.)
+            string folder = WorksheetRLauncher.CreateImportFolder();
+            string profile = Path.Combine(folder, WorksheetRLauncher.StartupFileName);
+            try
+            {
+                WriteOpenInRProfile(profile, rFolder, scriptPath);
+            }
+            catch
+            {
+                WorksheetRLauncher.DeleteImportFolder(folder);
+                throw;
+            }
+            return profile;
+        }
+
+        private static void WriteOpenInRProfile(string profile, string rFolder, string scriptPath)
+        {
             using (TextWriter tw = new StreamWriter(profile, false, new UTF8Encoding(false)))
             {
                 // RULES.md 6.1, as for the worksheet's R+: R processes started from this R get the user's own R_PROFILE_USER back, or none,
@@ -306,24 +323,39 @@ namespace StatsDirect.R
                 // a package the user's start-up file added that R cannot load is reported, as R reports it, and the script still runs
                 tw.WriteLine("local(for (p in getOption(\"defaultPackages\")) if (!suppressWarnings(suppressPackageStartupMessages(require(p, character.only = TRUE, quietly = TRUE))))"
                     + " warning(\"package '\", p, \"' in options(\\\"defaultPackages\\\") was not found\", call. = FALSE))");
-                tw.WriteLine("local({ f <- \"" + scriptPath.Replace('\\', '/') + "\"; try(source(f, echo = TRUE, max.deparse.length = Inf, spaced = FALSE, encoding = \"UTF-8\")); if (interactive()) file.edit(f) })");
+                // the script, read as UTF-8 without re-encoding and run as a session shows it: source(file, encoding = "UTF-8") would
+                // convert it to R's locale first, and stop on a character that locale lacks, such as the quotes in a worksheet comment
+                tw.WriteLine("local({ f <- " + WorksheetRImport.QuotePath(scriptPath) + "; connection <- file(f, encoding = \"native.enc\");"
+                    + " lines <- tryCatch(readLines(connection, encoding = \"UTF-8\", warn = FALSE), finally = close(connection));"
+                    + " try(source(exprs = parse(text = lines, keep.source = TRUE, encoding = \"UTF-8\"), echo = TRUE, max.deparse.length = Inf, spaced = FALSE));"
+                    + " if (interactive()) file.edit(f) })");
             }
-            return profile;
         }
 
-        /// <summary>Opens R's own window on the script: R reads the profile above at its start, through the environment.</summary>
+        /// <summary>Opens R's own window on the script: R reads the profile above at its start, through the environment.  The profile's
+        /// folder is then RGui's, and goes when RGui ends.</summary>
         public static void OpenInRGui(RVersion version, string scriptPath)
         {
             string profile = OpenInRProfile(scriptPath);
-            ProcessStartInfo start = new()
+            string folder = Path.GetDirectoryName(profile);
+            try
             {
-                FileName = Path.Combine(version.BinPath, "Rgui.exe"),
-                WorkingDirectory = SDConfiguration.MyStatsDirectRFolder,
-                Arguments = "--no-save --no-restore",
-                UseShellExecute = false
-            };
-            start.Environment["R_PROFILE_USER"] = profile;
-            Process.Start(start);
+                ProcessStartInfo start = new()
+                {
+                    FileName = Path.Combine(version.BinPath, "Rgui.exe"),
+                    WorkingDirectory = SDConfiguration.MyStatsDirectRFolder,
+                    Arguments = "--no-save --no-restore",
+                    UseShellExecute = false
+                };
+                start.Environment["R_PROFILE_USER"] = profile;
+                var process = Process.Start(start) ?? throw new InvalidOperationException("R could not be started.");
+                WorksheetRLauncher.HandOver(folder, process);
+            }
+            catch
+            {
+                WorksheetRLauncher.DeleteImportFolder(folder);
+                throw;
+            }
         }
 
         /// <summary>RStudio's program when it is installed in one of its usual places, else null: a user at home in R may take a script there.</summary>

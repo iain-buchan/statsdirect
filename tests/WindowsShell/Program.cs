@@ -84,6 +84,7 @@ internal static partial class Program
         }
         if (selectedCheck == "close-for-update")
         {
+            await CheckRefusedCloseKeepsWindows(main, app);
             await CheckCloseForUpdate(main, app);
             return;
         }
@@ -188,6 +189,7 @@ internal static partial class Program
         var calculatorEdit = (ToolStripDropDownButton)Get(view, "EditMenu");
         calculatorEdit.DropDownItems.OfType<ToolStripMenuItem>().Single(i => i.Text == "Undo").PerformClick();
         Check(input.Text == "2" && main.ActiveMdiChild == null, "calculator Edit menu still works after the last MDI document closes");
+        await CheckRefusedCloseKeepsWindows(main, app);
         await CheckCloseForUpdate(main, app);   // last: its second asking runs the main window's own closing steps
     }
 

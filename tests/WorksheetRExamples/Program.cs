@@ -79,6 +79,8 @@ internal static class Program
             Check(runs.Count(run => RPlusCases.ContainsKey(run.Name)) == RPlusCases.Count,
                 "every R+ case is among the cases compared in R: " + string.Join(", ", RPlusCases.Keys.Where(name => !runs.Any(run => run.Name == name))));
             CheckNumberForm(work);
+            CheckManualCalculation(work);
+            CheckFilteredBounds();
             if (failures.Count == 0)
             {
                 try { Directory.Delete(work, true); } catch (IOException) { }
@@ -519,6 +521,61 @@ internal static class Program
                     && !(output + errors).Contains("Error", StringComparison.Ordinal) && !(output + errors).Contains("Warning", StringComparison.Ordinal),
                 $"{run.Name}: as R+ starts R, with the user's own start-up file{(latin1 ? " setting options(encoding = \"latin1\")" : "")}, "
                 + $"the import arrives whole with its summary and R_PROFILE_USER is not passed on (exit {exit}): {output.Trim()} {errors.Trim()}");
+        }
+    }
+
+    // Rule 2.1 under an AutoFilter, which makes Find pass over hidden rows: the bounds still take in a hidden row's data, and a
+    // formatted cell at the far corner of the grid (which widens the used range to every cell) does not make the prompt read every cell.
+    private static void CheckFilteredBounds()
+    {
+        var workbook = Factory.GetWorkbook(CultureInfo.InvariantCulture);
+        try
+        {
+            var sheet = workbook.Worksheets[0];
+            sheet.Name = "Sheet1";
+            sheet.Range["A1"].Value = "h";
+            sheet.Range["A2"].Value = 1.0;
+            sheet.Range["A3"].Value = 2.0;
+            sheet.Range["A1:A3"].AutoFilter(0, "<>2", AutoFilterOperator.And, null, true);
+            sheet.Range["XFD1048576"].NumberFormat = "0.00";
+            var describe = Task.Run(() => WorksheetRImport.Describe(sheet, sheet.Range["A1:C5"], write => write()));
+            bool finished = describe.Wait(TimeSpan.FromSeconds(20));
+            var options = finished ? describe.Result : null;
+            Check(finished && sheet.Range["A3"].EntireRow.Hidden && options!.EntireSheet?.Address == "A1:A3" && options.SelectedCells?.Address == "A1:C5",
+                $"under an AutoFilter with a formatted far corner, the prompt finds the data, a hidden row's included, within 20 s"
+                + (finished ? $" (entire {options!.EntireSheet?.Address}, selected {options.SelectedCells?.Address})" : " (it did not finish)"));
+        }
+        finally
+        {
+            workbook.Close();
+        }
+    }
+
+    // RULES.md 3.11 and section 7: Windows sends formulas' current values.  In a workbook that calculates manually, a formula's
+    // stored result can be older than its cells; the import calculates first, so B1 = A1 + 1 arrives as 9 after A1 becomes 8.
+    private static void CheckManualCalculation(string work)
+    {
+        var workbook = Factory.GetWorkbook(CultureInfo.InvariantCulture);
+        try
+        {
+            var sheet = workbook.Worksheets[0];
+            sheet.Name = "Sheet1";
+            workbook.WorkbookSet.Calculation = Calculation.Manual;
+            sheet.Range["A1"].Value = 1.0;
+            sheet.Range["B1"].Formula = "=A1+1";
+            workbook.WorkbookSet.Calculate();
+            sheet.Range["A1"].Value = 8.0;
+            bool stale = sheet.Range["B1"].Value is double before && before == 2;
+            var options = WorksheetRImport.Describe(sheet, sheet.Range["A1:B1"], write => write());
+            string folder = Path.Combine(work, "manual-calculation");
+            options.SelectedCells!.WriteImportScript(false, WorksheetRDataFormat.DataFrame, false, folder);
+            string csv = File.ReadAllText(Path.Combine(folder, WorksheetRData.CsvFileName)).Trim();
+            Check(stale && csv == "8,9" && workbook.WorkbookSet.Calculation == Calculation.Manual,
+                $"a workbook that calculates manually is calculated before its formulas are sent (stale before: {stale}; sent: {csv})");
+        }
+        finally
+        {
+            workbook.Close();
         }
     }
 

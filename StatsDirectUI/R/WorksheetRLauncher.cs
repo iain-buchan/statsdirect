@@ -17,6 +17,8 @@ internal static class WorksheetRLauncher
     private const string ImportFolderPrefix = "StatsDirect-worksheet-r-";
     private const string ImportScriptName = "load-worksheet.r";
     private const string ProfileName = "profile.r";
+    // The start-up file R is given through R_PROFILE_USER, in a folder of its own (also the R script window's RGui start-up file).
+    internal const string StartupFileName = ProfileName;
     // The process that still needs a folder's files: the StatsDirect whose R window holds the data, or the RGui that R+ started.
     private const string OwnerName = "owner";
 
@@ -66,12 +68,7 @@ internal static class WorksheetRLauncher
 
             var process = Process.Start(start) ?? throw new InvalidOperationException("R could not be started.");
             if (importFolder != null)
-            {
-                // From now on RGui needs the files, whether or not this StatsDirect is still running.
-                try { WriteOwner(importFolder, process); }
-                catch (Exception e) when (e is IOException or UnauthorizedAccessException or InvalidOperationException or Win32Exception) { }
-                _ = DeleteImportAfterExitAsync(process, importFolder);
-            }
+                HandOver(importFolder, process);
             else
                 process.Dispose();
         }
@@ -147,6 +144,15 @@ internal static class WorksheetRLauncher
                 && string.Equals(Path.GetFileName(full), ProfileName, StringComparison.OrdinalIgnoreCase);
         }
         catch (Exception e) when (e is ArgumentException or NotSupportedException or PathTooLongException) { return false; }
+    }
+
+    /// <summary>The folder's files now belong to the R that was started on them: they stay while it runs, whether or not this StatsDirect
+    /// is still running, and go when it ends.</summary>
+    internal static void HandOver(string folder, Process process)
+    {
+        try { WriteOwner(folder, process); }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException or InvalidOperationException or Win32Exception) { }
+        _ = DeleteImportAfterExitAsync(process, folder);
     }
 
     private static async Task DeleteImportAfterExitAsync(Process process, string importFolder)

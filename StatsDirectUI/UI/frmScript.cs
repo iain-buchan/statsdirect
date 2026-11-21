@@ -152,8 +152,13 @@ namespace StatsDirect.UI
                     return;
                 }
                 SdApplication.SoleInstance.NoteFormClosing(this, e);
-                Visible = false;
-                MdiParent = null;
+                // A window closed by itself goes at once (#806).  When the main window closes, a later window can still refuse, so
+                // this one stays in place until the close is certain.
+                if (e.CloseReason != CloseReason.MdiFormClosing)
+                {
+                    Visible = false;
+                    MdiParent = null;
+                }
             }, "Couldn't close form");
 
         }
@@ -531,7 +536,8 @@ namespace StatsDirect.UI
 
         /// <summary>
         /// The file R+ hands to RStudio or R: a new one each time, named after the window and the time (RULES.md 6.2), so that a script
-        /// handed over earlier, and the worksheet data beside it, are never replaced by a later one.
+        /// handed over earlier, and the worksheet data beside it, are never replaced by a later one.  The name is taken by creating the
+        /// file, empty, so that two R+ at the same moment cannot both have it.
         /// </summary>
         internal static string OpenInRPath(string folder, string title, DateTime now)
         {
@@ -539,22 +545,30 @@ namespace StatsDirect.UI
             string name = System.IO.Path.GetFileNameWithoutExtension(ScriptFileName(title));
             if (name.Length > 100) name = name[..(char.IsHighSurrogate(name[99]) ? 99 : 100)].TrimEnd();
             string stem = name + " " + now.ToString("yyyy-MM-dd HHmmss", System.Globalization.CultureInfo.InvariantCulture);
-            string path = System.IO.Path.Combine(folder, stem + ".R");
-            for (int n = 2; File.Exists(path) || File.Exists(System.IO.Path.ChangeExtension(path, null) + ".worksheet-data.csv"); n++)
-                path = System.IO.Path.Combine(folder, stem + " (" + n.ToString(System.Globalization.CultureInfo.InvariantCulture) + ").R");
-            return path;
+            Directory.CreateDirectory(folder);
+            for (int n = 1; ; n++)
+            {
+                string path = System.IO.Path.Combine(folder, stem + (n == 1 ? "" : " (" + n.ToString(System.Globalization.CultureInfo.InvariantCulture) + ")") + ".R");
+                if (File.Exists(System.IO.Path.ChangeExtension(path, null) + ".worksheet-data.csv")) continue;
+                try
+                {
+                    using (new FileStream(path, FileMode.CreateNew, FileAccess.Write)) { }
+                    return path;
+                }
+                catch (IOException) when (File.Exists(path)) { }   // taken: the next name
+            }
         }
 
         /// <summary>Saves the script as an R file in the R folder and opens it in RStudio when that is installed, else in whatever opens R
         /// files here: a user at home in R goes on from there, with the data in the script.</summary>
         private async void OpenInR()
         {
-            string path = OpenInRPath(SDConfiguration.MyStatsDirectRFolder, Text, DateTime.Now);
+            string path = null;
             bool saved = false;
             try
             {
+                path = OpenInRPath(SDConfiguration.MyStatsDirectRFolder, Text, DateTime.Now);
                 if (IsInteractiveR) await InteractiveConsole.GetScriptAsync();
-                Directory.CreateDirectory(SDConfiguration.MyStatsDirectRFolder);
                 string data = WriteRScript(path, rtbDoc.Text.Replace("\r", "").Replace("\n", "\r\n"));
                 saved = true;
                 if (data != null) AppendScriptNotice(data);
@@ -578,6 +592,11 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
+                // The name taken for a script that was not saved is given back.
+                if (!saved && path != null)
+                    try { if (File.Exists(path) && new FileInfo(path).Length == 0) File.Delete(path); }
+                    catch (IOException) { }
+                    catch (UnauthorizedAccessException) { }
                 AppendScriptNotice("Could not open the script in R: " + ex.Message + "\n"
                     + (saved ? "(the script is saved as " + path + "; open it from there)\n" : ""));
             }

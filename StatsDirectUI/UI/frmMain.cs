@@ -975,8 +975,11 @@ namespace StatsDirect.UI
         }
 
         private bool awaitingWebReportsClose;
+        // A further close is queued: the questions were answered (or needed no answer, as a clean R window that is still starting) and
+        // the main window asks its children again.  Until then the close is still pending.
+        private bool closeRetryQueued;
         /// <summary>A close is waiting for a report's or an R window's question.  It ends in a further close, or in <see cref="CloseCancelled"/>.</summary>
-        internal bool CloseIsPending => awaitingWebReportsClose;
+        internal bool CloseIsPending => awaitingWebReportsClose || closeRetryQueued;
         /// <summary>Raised when a close that had to wait for a report's or an R window's question has left the main window open.</summary>
         internal event Action CloseCancelled;
         protected override void OnFormClosing(FormClosingEventArgs e)
@@ -1015,6 +1018,7 @@ namespace StatsDirect.UI
                     foreach (Form child in MdiChildren)
                         if (child is frmReportWebView web) web.CompleteParentClosePreparation();
                         else if (child is frmScript script) script.CompleteInteractiveParentClosePreparation();
+                    closeRetryQueued = true;
                     BeginInvoke(new Action(RetryClose));
                 }
                 else
@@ -3114,8 +3118,9 @@ namespace StatsDirect.UI
         // The second asking of a close that waited for questions.  A main window still open after it, and not waiting again, was refused.
         private void RetryClose()
         {
+            closeRetryQueued = false;
             Close();
-            if (!IsDisposed && !awaitingWebReportsClose)
+            if (!IsDisposed && !CloseIsPending)
                 CloseCancelled?.Invoke();
         }
 

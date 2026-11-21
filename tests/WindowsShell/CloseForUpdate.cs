@@ -16,7 +16,7 @@ internal static partial class Program
         FormClosingEventHandler refuse = (_, e) => { asked.Add(((bool)Get(app, "ClosingForUpgrade"), path != null && File.Exists(path))); e.Cancel = true; };
         main.FormClosing += closing;
         main.FormClosing += refuse;
-        Form report = null;
+        Form report = null, rWindow = null;
         try
         {
             // No report or R window: the close is refused at once, and the update is released with its installer.
@@ -41,17 +41,78 @@ internal static partial class Program
                 "the main window's second asking, after the report's question, still has the update and its installer: " + string.Join(", ", asked));
             Check(!(bool)Get(app, "ClosingForUpgrade") && !File.Exists(path) && !main.IsDisposed && !(bool)Get(main, "CloseIsPending"),
                 "when that second asking is refused, the update is released and its installer removed");
+            report.Close();
+            for (int i = 0; i < 100 && !report.IsDisposed; i++)
+                await Task.Delay(50);
+
+            // An R window opened just before Close and update, whose console is still starting: being clean, it answers at once, so the
+            // main window's first asking ends with its second asking queued.  The update and its installer wait for that second asking.
+            asked.Clear();
+            installer = await FakeInstaller();
+            path = (string)Get(installer, "FilePath");
+            rWindow = (Form)Call(main, "CreateScriptWindow");
+            Call(rWindow, "ShowR", string.Empty, "R session", null, false);
+            Call(app, "CloseForUpgrade", installer);
+            bool keptForRetry = (bool)Get(app, "ClosingForUpgrade") && File.Exists(path) && (bool)Get(main, "CloseIsPending");
+            for (int i = 0; i < 300 && (asked.Count < 2 || (bool)Get(app, "ClosingForUpgrade")); i++)
+                await Task.Delay(50);
+            Check(keptForRetry, "an R window that answers at once keeps the update and its installer for the main window's queued second asking");
+            Check(asked.Count == 2 && asked[0] == (true, true) && asked[1] == (true, true),
+                "the queued second asking, after an R window that answered at once, still has the update and its installer: " + string.Join(", ", asked));
+            Check(!(bool)Get(app, "ClosingForUpgrade") && !File.Exists(path) && !main.IsDisposed && !(bool)Get(main, "CloseIsPending"),
+                "when that second asking is refused, the update is released and its installer removed");
         }
         finally
         {
             main.FormClosing -= refuse;
             main.FormClosing -= closing;
-            if (report != null && !report.IsDisposed)
-            {
-                report.Close();
-                for (int i = 0; i < 100 && !report.IsDisposed; i++)
-                    await Task.Delay(50);
-            }
+            foreach (var window in new[] { report, rWindow })
+                if (window != null && !window.IsDisposed)
+                {
+                    window.Close();
+                    for (int i = 0; i < 100 && !window.IsDisposed; i++)
+                        await Task.Delay(50);
+                }
+        }
+    }
+
+    // A close of the main window that a later window refuses leaves an earlier, clean workbook where it was: visible, in the main
+    // window, with its tab and its record.  (Before 5.3.16 the workbook took itself away when asked, and the refusal could not bring
+    // it back.)
+    static async Task CheckRefusedCloseKeepsWindows(frmMain main, object app)
+    {
+        FormClosingEventHandler refuse = (_, e) => e.Cancel = true;   // the fixture's main window never really closes
+        main.FormClosing += refuse;
+        var workbook = (Form)Call(main, "CreateGrid");
+        bool workbookAsked = false;
+        FormClosingEventHandler noteAsked = (_, e) => workbookAsked |= e.CloseReason == CloseReason.MdiFormClosing;
+        workbook.FormClosing += noteAsked;
+        var refusing = new Form { MdiParent = main, Text = "Refuses to close" };
+        FormClosingEventHandler refuseChild = (_, e) => { if (e.CloseReason == CloseReason.MdiFormClosing) e.Cancel = true; };
+        refusing.FormClosing += refuseChild;
+        refusing.Show();
+        try
+        {
+            await Task.Delay(200);
+            main.Close();
+            await Task.Delay(500);
+            var tabs = (TabControl)Field(main, "tabWindows");
+            object information = workbook.Tag;
+            bool inPlace = !workbook.IsDisposed && workbook.Visible && workbook.MdiParent == main && information != null
+                && Get(information, "TabPage") is TabPage tab && tabs.TabPages.Contains(tab)
+                && ((System.Collections.IEnumerable)Get(app, "Windows")).Cast<object>().Contains(information);
+            Check(workbookAsked && inPlace,
+                $"a close of the main window refused by a later window leaves an earlier clean workbook visible, in place, with its tab (asked: {workbookAsked}, in place: {inPlace})");
+        }
+        finally
+        {
+            main.FormClosing -= refuse;
+            workbook.FormClosing -= noteAsked;
+            refusing.FormClosing -= refuseChild;
+            refusing.Close();
+            workbook.Close();
+            for (int i = 0; i < 100 && !(workbook.IsDisposed && refusing.IsDisposed); i++)
+                await Task.Delay(50);
         }
     }
 

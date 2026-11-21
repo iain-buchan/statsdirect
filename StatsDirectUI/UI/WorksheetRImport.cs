@@ -26,6 +26,10 @@ internal static class WorksheetRImport
     /// <summary>The prompt's data choices for the sheet in view and its selection (rules 1.3 to 1.5 and section 2).</summary>
     internal static WorksheetRImportOptions Describe(IWorksheet sheet, IRange selection, Func<Func<string>, string> withLock)
     {
+        // Rule 3.11: formula cells send their current values.  A workbook that calculates manually can hold results older than the
+        // cells they come from, so it is calculated first, as F9 does.
+        var calculation = sheet.Workbook.WorkbookSet;
+        if (calculation.Calculation != Calculation.Automatic) calculation.Calculate();
         WorksheetRSource entire = Entire(sheet);
         var (selected, reason) = Selected(sheet, selection, entire);
         return new WorksheetRImportOptions(sheet.Name, entire == null ? null : Data(entire, withLock),
@@ -90,7 +94,11 @@ internal static class WorksheetRImport
 
         if (areas.Count != 1) return (null, OneRectangle);   // C7
         var rectangle = areas[0];
-        return Bounds(rectangle) == null ? (null, NoDataInSelection)   // 2.2
+        // Only the rectangle's part within the used range can hold data; the rectangle itself is what is sent.
+        int firstRow = Math.Max(rectangle.Row, used.Row), lastRow = Math.Min(rectangle.Row + rectangle.RowCount, used.Row + used.RowCount) - 1;
+        int firstColumn = Math.Max(rectangle.Column, used.Column), lastColumn = Math.Min(rectangle.Column + rectangle.ColumnCount, used.Column + used.ColumnCount) - 1;
+        bool holdsData = firstRow <= lastRow && firstColumn <= lastColumn && Bounds(cells[firstRow, firstColumn, lastRow, lastColumn]) != null;
+        return !holdsData ? (null, NoDataInSelection)   // 2.2
             : (new WorksheetRSource(sheet, Span(rectangle.Row, rectangle.Row + rectangle.RowCount - 1),
                 Span(rectangle.Column, rectangle.Column + rectangle.ColumnCount - 1)), null);
     }
@@ -100,7 +108,29 @@ internal static class WorksheetRImport
     /// <summary>The rows and columns of the non-blank cells within a range: a constant or a formula, text of white space included.</summary>
     private static (int Top, int Bottom, int Left, int Right)? Bounds(IRange range)
     {
-        if (range.Worksheet.AutoFilterMode) return ScannedBounds(range);   // Find passes over rows an AutoFilter hides
+        if (!range.Worksheet.AutoFilterMode) return FoundBounds(range);
+        // While an AutoFilter is on, Find passes over every hidden row (whether the filter or the user hid it): it finds the visible
+        // rows' bounds, and only the hidden rows are read cell by cell, a run of them at a time.  A far-off formatted cell, which widens
+        // the used range, then costs only the hidden rows' width, not a scan of the whole used range.
+        var bounds = FoundBounds(range);
+        var cells = range.Worksheet.Cells;
+        int last = range.Row + range.RowCount - 1;
+        for (int row = range.Row; row <= last; row++)
+        {
+            if (!cells[row, 0].EntireRow.Hidden) continue;
+            int end = row;
+            while (end < last && cells[end + 1, 0].EntireRow.Hidden) end++;
+            if (ScannedBounds(cells[row, range.Column, end, range.Column + range.ColumnCount - 1]) is var (top, bottom, left, right))
+                bounds = bounds is var (t, b, l, r)
+                    ? (Math.Min(t, top), Math.Max(b, bottom), Math.Min(l, left), Math.Max(r, right)) : (top, bottom, left, right);
+            row = end;
+        }
+        return bounds;
+    }
+
+    // The bounds Find gives: every non-blank cell, except in rows hidden while an AutoFilter is on.
+    private static (int Top, int Bottom, int Left, int Right)? FoundBounds(IRange range)
+    {
         var topLeft = range[0, 0];
         var bottomRight = range[range.RowCount - 1, range.ColumnCount - 1];
         IRange Find(IRange after, SearchOrder order, SearchDirection direction) =>
@@ -233,7 +263,8 @@ internal static class WorksheetRImport
         long lastDay = date1904 ? 2_957_003 : 2_958_465;
         if (!(Math.Abs(serial) <= lastDay + 1)) return new Cell(Kind.Number, serial);
         long ms = (long)Math.Round(serial * DayMilliseconds, MidpointRounding.AwayFromZero);
-        if (IsElapsed(format)) return Math.Abs(serial) > lastDay ? new Cell(Kind.Number, serial) : new Cell(Kind.Duration, Text: DurationText(ms));
+        if (IsElapsed(ActiveSection(format, serial)))
+            return Math.Abs(serial) > lastDay ? new Cell(Kind.Number, serial) : new Cell(Kind.Duration, Text: DurationText(ms));
         if (type == NumberFormatType.Time && serial >= 0 && serial < 1) return new Cell(Kind.TimeOfDay, Text: ClockText(ms));
         long day = Math.DivRem(ms, DayMilliseconds, out long ofDay);
         if (ofDay < 0) { day--; ofDay += DayMilliseconds; }
@@ -271,6 +302,56 @@ internal static class WorksheetRImport
         }
         return false;
     }
+
+    private static readonly Regex SectionCondition = new(@"\[(<=|>=|<>|<|>|=)\s*([+-]?[0-9]+(?:\.[0-9]+)?)\]", RegexOptions.CultureInvariant);
+
+    /// <summary>
+    /// Rule 3.9: the section of a number format that applies to the value, which alone decides how the value is read.  Sections are
+    /// separated by ; outside quotes, escapes and brackets.  With conditions ([&lt;0], [&gt;=100]) in the first two sections, the first
+    /// whose condition holds, else the first section without one; without conditions, the first for a positive value, the second for a
+    /// negative one and the third for zero, where they exist.  "[Magenta]yyyy-mm-dd;[h]:mm" is a date format for a positive value.
+    /// </summary>
+    internal static string ActiveSection(string format, double value)
+    {
+        if (string.IsNullOrEmpty(format)) return format;
+        var sections = new List<string>();
+        bool quoted = false;
+        int start = 0;
+        for (int i = 0; i < format.Length; i++)
+        {
+            char c = format[i];
+            if (c == '"') quoted = !quoted;
+            else if (quoted) continue;
+            else if (c == '\\') i++;
+            else if (c == '[')
+            {
+                int close = format.IndexOf(']', i + 1);
+                if (close < 0) break;
+                i = close;
+            }
+            else if (c == ';') { sections.Add(format[start..i]); start = i + 1; }
+        }
+        sections.Add(format[start..]);
+        if (sections.Count == 1) return sections[0];
+        var conditions = sections.Select(section => SectionCondition.Match(section)).ToList();
+        if (conditions.Take(2).Any(match => match.Success))
+        {
+            for (int i = 0; i < Math.Min(2, sections.Count); i++)
+                if (conditions[i].Success && Holds(conditions[i].Groups[1].Value, value,
+                        double.Parse(conditions[i].Groups[2].Value, NumberStyles.Float, CultureInfo.InvariantCulture)))
+                    return sections[i];
+            int otherwise = conditions.Take(3).ToList().FindIndex(match => !match.Success);
+            return sections[otherwise >= 0 ? otherwise : sections.Count - 1];
+        }
+        if (value < 0) return sections[1];
+        if (value == 0 && sections.Count >= 3) return sections[2];
+        return sections[0];
+    }
+
+    private static bool Holds(string comparison, double value, double limit) => comparison switch
+    {
+        "<" => value < limit, "<=" => value <= limit, ">" => value > limit, ">=" => value >= limit, "=" => value == limit, _ => value != limit,
+    };
 
     // HH:MM:SS, hours not wrapped, with a point and one to three digits only when there is a fraction.
     private static string ClockText(long ms) =>

@@ -34,14 +34,24 @@ internal static partial class Program
         string profile = RController.OpenInRProfile(@"C:\Users\someone\Documents\StatsDirect\R\Script 1_ Paired t test.R");
         string profileText = File.ReadAllText(profile);
         Check(File.Exists(Path.Combine(version.BinPath, "Rgui.exe")) && profileText.Contains(".libPaths(c(rlib, .libPaths()))")
-              && profileText.Contains("f <- \"C:/Users/someone/Documents/StatsDirect/R/Script 1_ Paired t test.R\"") && profileText.Contains("try(source(f, echo = TRUE") && profileText.Contains("if (interactive()) file.edit(f)"),
+              && profileText.Contains("f <- \"C:/Users/someone/Documents/StatsDirect/R/Script 1_ Paired t test.R\"") && profileText.Contains("try(source(exprs = parse(text = lines")
+              && profileText.Contains("echo = TRUE") && profileText.Contains("if (interactive()) file.edit(f)"),
               "the installed R has its own window program, and the profile Open in R starts it on runs the script as a session and opens it in R's editor, with the program's library on the path");
+        // Each R gets a start-up file of its own (R+ used twice in quick succession must not give the first R the second script).
+        string otherProfile = RController.OpenInRProfile(@"C:\Users\someone\Documents\StatsDirect\R\Script 2_ Paired t test.R");
+        Check(!string.Equals(profile, otherProfile, StringComparison.OrdinalIgnoreCase) && Path.GetDirectoryName(profile) != Path.GetDirectoryName(otherProfile)
+              && File.ReadAllText(profile).Contains("Script 1_ Paired t test.R") && File.ReadAllText(otherProfile).Contains("Script 2_ Paired t test.R"),
+              "each R started for Open in R has a start-up file of its own, in a folder of its own, and a second does not change the first");
+        foreach (string written in new[] { profile, otherProfile })
+            Directory.Delete(Path.GetDirectoryName(written)!, true);
         // the profile runs before R attaches its default packages: a script using the stats package must still run from it (Iain's R
         // window said it could not find t.test); R run headlessly on the profile shows the script as a session and its result
         string folder = Path.Combine(TemporaryRoot, "statsdirect-rscript-checks", "open-in-r");
         Directory.CreateDirectory(folder);
         string statsScript = Path.Combine(folder, "stats.R");
-        File.WriteAllText(statsScript, "r <- t.test(c(1, 2, 3), mu = 0)\ncat(\"p\", format(r$p.value, digits = 4), \"\n\")\n");
+        // a comment with quotes that a C locale lacks, as a worksheet script's first line has
+        File.WriteAllText(statsScript, "# Data copied from the worksheet \u201CSheet1\u201D, A1:A3.\nr <- t.test(c(1, 2, 3), mu = 0)\ncat(\"p\", format(r$p.value, digits = 4), \"\n\")\n",
+            new System.Text.UTF8Encoding(false));
         // RULES.md 6.1, as for the worksheet's R+: the user's own start-up file (here ./.Rprofile) runs first, and R processes started
         // from this R do not inherit the profile, so they do not run the script again.
         File.WriteAllText(Path.Combine(folder, ".Rprofile"), "options(statsdirect.own.profile = TRUE)\n");
@@ -61,5 +71,15 @@ internal static partial class Program
               "R started on the profile has its default packages attached before the script runs, shows the script as a session, and gives its result");
         Check(viaProfile.Contains("end FALSE TRUE"),
               "R started on the profile has run the user's own start-up file, and R processes started from it do not inherit the profile");
+        // In a locale without the comment's quotes the script still runs: it is read as UTF-8, not converted to the locale first.
+        start.Environment["LC_ALL"] = "C";
+        using (System.Diagnostics.Process inC = System.Diagnostics.Process.Start(start))
+        {
+            string inLocaleC = (inC.StandardOutput.ReadToEnd() + inC.StandardError.ReadToEnd()).Replace("\r", "");
+            inC.WaitForExit();
+            Check(inLocaleC.Contains("p 0.07418") && !inLocaleC.Contains("invalid input"),
+                  "R started on the profile in the C locale still runs a script whose comment holds characters that locale lacks: " + inLocaleC.Trim());
+        }
+        Directory.Delete(Path.GetDirectoryName(statsProfile)!, true);
     }
 }

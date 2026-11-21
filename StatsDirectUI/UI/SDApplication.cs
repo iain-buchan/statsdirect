@@ -418,11 +418,31 @@ namespace StatsDirect.UI
         /// <param name="e"></param>
         internal void NoteFormClosing(StatsDirectForm window, FormClosingEventArgs e)
         {
+            // When the main window closes it asks its windows in turn, and a later one can still refuse.  A window's tab and record then
+            // go only when it has really closed, so that a refused close leaves every window where it was.
+            if (e.CloseReason == CloseReason.MdiFormClosing)
+            {
+                window.FormClosed -= ForgetClosedWindow;
+                window.FormClosed += ForgetClosedWindow;
+                return;
+            }
+            ForgetWindow(window);
+        }
+
+        private void ForgetClosedWindow(object sender, FormClosedEventArgs e)
+        {
+            var window = (StatsDirectForm)sender;
+            window.FormClosed -= ForgetClosedWindow;
+            ForgetWindow(window);
+        }
+
+        private void ForgetWindow(StatsDirectForm window)
+        {
             WindowInformation info = (WindowInformation)window.Tag;
             if (null != info)
             {
-                if (null != info.TabPage)
-                    MainWindow?.RemoveWindow(window);
+                if (null != info.TabPage && MainWindow is { IsDisposed: false })
+                    MainWindow.RemoveWindow(window);
 
                 // Break reference cycles
                 info.Window = null;

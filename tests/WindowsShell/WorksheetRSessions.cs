@@ -10,6 +10,7 @@ internal static partial class Program
 {
     static async Task CheckWorksheetRSessions(frmMain main)
     {
+        CheckWorksheetRPromptLayout(main);
         var installed = RController.CheckR();
         string rscript = installed.Select(version => Path.Combine(version.BinPath, "Rscript.exe")).FirstOrDefault(File.Exists);
         bool hasRGui = installed.Any(version => File.Exists(version.GuiPath));
@@ -313,6 +314,7 @@ internal static partial class Program
 
     static async Task CheckSavedWorksheetR(Form imported, string rscript, string verifyData)
     {
+        var main = (frmMain)imported.MdiParent!;
         string source = (string)Get(RConsole(imported), "Script");
         string transientFolder = Directory.EnumerateDirectories(Path.GetTempPath(), "StatsDirect-worksheet-r-*")
             .Single(folder => source.Contains(Path.GetFileName(folder), StringComparison.Ordinal));
@@ -338,32 +340,59 @@ internal static partial class Program
             Check(!Directory.Exists(transientFolder) && File.Exists(companions[0]),
                 "closing the source R window removes its transient import and retains the saved companion file");
 
-            string probe = Path.Combine(scratch, "verify.R");
-            await File.WriteAllTextAsync(probe,
-                $"source({JsonSerializer.Serialize(scriptName)}, encoding = 'UTF-8')\n{verifyData}\ncat('SHELL_SAVED_WORKSHEET_OK\\n')\n");
-            var start = new ProcessStartInfo(rscript)
+            async Task<(int Exit, string Output)> RunSaved(string folder, string script)
             {
-                WorkingDirectory = scratch, UseShellExecute = false, CreateNoWindow = true,
-                RedirectStandardOutput = true, RedirectStandardError = true
-            };
-            // Let Windows R choose its UTF-8 locale instead of inheriting a Unix locale.
-            start.Environment.Remove("LC_ALL");
-            start.Environment.Remove("LC_CTYPE");
-            start.ArgumentList.Add("--vanilla");
-            start.ArgumentList.Add(probe);
-            using var process = Process.Start(start)!;
+                string probe = Path.Combine(folder, "verify.R");
+                await File.WriteAllTextAsync(probe,
+                    $"source({JsonSerializer.Serialize(script)}, encoding = 'UTF-8')\n{verifyData}\ncat('SHELL_SAVED_WORKSHEET_OK\\n')\n");
+                var start = new ProcessStartInfo(rscript)
+                {
+                    WorkingDirectory = folder, UseShellExecute = false, CreateNoWindow = true,
+                    RedirectStandardOutput = true, RedirectStandardError = true
+                };
+                // Let Windows R choose its UTF-8 locale instead of inheriting a Unix locale.
+                start.Environment.Remove("LC_ALL");
+                start.Environment.Remove("LC_CTYPE");
+                start.ArgumentList.Add("--vanilla");
+                start.ArgumentList.Add(probe);
+                using var process = Process.Start(start)!;
+                try
+                {
+                    var output = process.StandardOutput.ReadToEndAsync();
+                    var errors = process.StandardError.ReadToEndAsync();
+                    await process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(30));
+                    return (process.ExitCode, await output + "\n" + await errors);
+                }
+                finally { if (!process.HasExited) process.Kill(); }
+            }
+            var (exit, receipt) = await RunSaved(scratch, scriptName);
+            Check(exit == 0 && receipt.Split('\n').Any(line => line.Trim() == "SHELL_SAVED_WORKSHEET_OK"),
+                "a fresh Rscript session reads the saved worksheet data after the source window closes" + $"\nR exit code {exit}\n{receipt}");
+
+            // The saved script opened again and saved somewhere else (Save As, or R+, which write through the same code) takes a copy of its
+            // data beside the new script and reads that copy, so the first script and its data file can go.
+            var reopened = (Form)Call(main, "CreateScriptWindow", destination, false);
             try
             {
-                var output = process.StandardOutput.ReadToEndAsync();
-                var errors = process.StandardError.ReadToEndAsync();
-                await process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(30));
-                string receipt = await output;
-                string diagnostic = await errors;
-                Check(process.ExitCode == 0 && receipt.Split('\n').Any(line => line.Trim() == "SHELL_SAVED_WORKSHEET_OK"),
-                    "a fresh Rscript session reads the saved worksheet data after the source window closes" +
-                    $"\nR exit code {process.ExitCode}\n{receipt}\n{diagnostic}");
+                string elsewhere = Path.Combine(scratch, "elsewhere");
+                Directory.CreateDirectory(elsewhere);
+                string second = Path.Combine(elsewhere, "second results.R"), secondData = Path.Combine(elsewhere, "second results.worksheet-data.csv");
+                Call(reopened, "WriteRScript", second, File.ReadAllText(destination));
+                Check(File.Exists(secondData) && File.ReadAllBytes(secondData).SequenceEqual(File.ReadAllBytes(companions[0]))
+                        && File.ReadAllText(second).Contains(secondData.Replace('\\', '/'), StringComparison.Ordinal),
+                    "a saved worksheet script opened again and saved elsewhere carries a copy of its data beside the new script");
+                File.Delete(destination);
+                File.Delete(companions[0]);
+                var (secondExit, secondReceipt) = await RunSaved(elsewhere, "second results.R");
+                Check(secondExit == 0 && secondReceipt.Split('\n').Any(line => line.Trim() == "SHELL_SAVED_WORKSHEET_OK"),
+                    "the script saved elsewhere reads its own copy of the data once the first script and its data file are gone" + $"\nR exit code {secondExit}\n{secondReceipt}");
             }
-            finally { if (!process.HasExited) process.Kill(); }
+            finally
+            {
+                reopened.Close();
+                for (int i = 0; i < 100 && !reopened.IsDisposed; i++)
+                    await Task.Delay(50);
+            }
         }
         finally { await DeleteRFixtureDirectory(scratch, "StatsDirect-worksheet-save-"); }
     }
@@ -432,6 +461,7 @@ internal static partial class Program
                     Check(hint.Visible && hint.Text.Contains("Missing values", StringComparison.Ordinal)
                         && client.Contains(hint.RectangleToScreen(hint.ClientRectangle)),
                         "the list of vectors choice explains per-column missing-value removal inside the dialog");
+                    Check(PromptChoicesWhole(prompt), "with the hint shown, every choice keeps its full size inside the dialog");
                 }
                 if (friendlyNames)
                 {
@@ -446,6 +476,40 @@ internal static partial class Program
         {
             if (prompt.DialogResult == DialogResult.None) prompt.CancelButton?.PerformClick();
         }
+    }
+
+    // Every choice of the prompt whole: its row as tall as it, its width its preferred width (no text cut off), inside the dialog.
+    static bool PromptChoicesWhole(Form prompt)
+    {
+        var layout = (TableLayoutPanel)Field(prompt, "layout");
+        int[] rows = layout.GetRowHeights();
+        var client = prompt.RectangleToScreen(prompt.ClientRectangle);
+        return new[] { "worksheetRAll", "worksheetRSelected", "worksheetRNone", "worksheetRHeaders", "worksheetRFriendlyNames" }
+            .Select(name => prompt.Controls.Find(name, true).Single()).Append((Control)Field(prompt, "formatHint"))
+            .All(control => !control.Visible || rows[layout.GetRow(control)] >= control.Height + control.Margin.Vertical - 1
+                && control.Width >= control.GetPreferredSize(Size.Empty).Width - 1 && client.Contains(control.RectangleToScreen(control.ClientRectangle)));
+    }
+
+    // A long range of several areas (the prompt lists three, then ",…"), with the list's hint shown: the prompt grows to fit it.
+    static void CheckWorksheetRPromptLayout(frmMain main)
+    {
+        var ui = typeof(frmMain).Assembly;
+        var dataType = ui.GetType("StatsDirect.UI.WorksheetRData")!;
+        var flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic;
+        object selection = Activator.CreateInstance(dataType, "XEW1000000:XEX1048576,XEZ1000000:XEZ1048576,XFB1000000:XFB1048576,\u2026", 48_577, 5, true, null)!;
+        object entire = Activator.CreateInstance(dataType, "A1:XFD1048576", 1_048_576, 16_384, true, null)!;
+        object options = Activator.CreateInstance(ui.GetType("StatsDirect.UI.WorksheetRImportOptions")!, "Sheet1", entire, selection, null)!;
+        var prompt = (Form)Activator.CreateInstance(ui.GetType("StatsDirect.UI.WorksheetRPrompt")!, flags, null, new object[] { "Open in StatsDirect R", options }, null)!;
+        try
+        {
+            prompt.Show(main);
+            var selected = (RadioButton)prompt.Controls.Find("worksheetRSelected", true).Single();
+            selected.Checked = true;
+            ((ComboBox)prompt.Controls.Find("worksheetRFormat", true).Single()).SelectedIndex = 1;
+            Check(selected.Text.Contains("XFB1000000:XFB1048576,\u2026 (48,577 rows \u00d7 5 columns)", StringComparison.Ordinal) && PromptChoicesWhole(prompt),
+                "a long range of several areas, with the list's hint shown, leaves every choice of the import prompt whole inside it");
+        }
+        finally { prompt.Close(); prompt.Dispose(); }
     }
 
     static IEnumerable<Button> WorksheetRButtons(Control parent) => parent.Controls.Cast<Control>()

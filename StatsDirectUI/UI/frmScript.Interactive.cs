@@ -161,38 +161,48 @@ public partial class frmScript
         bool copyData = false, placed = false;
         try
         {
-            // Only the approved worksheet snapshot accompanies a saved script.
-            // The running session keeps its temporary import until the window closes.
+            // Only the approved worksheet snapshot accompanies a saved script: the session's import, which the running session keeps
+            // until the window closes, or, for a script saved with its data and opened again, the data file beside the file it came from.
+            string original = null, originalInR = null;
+            bool fromSession = false;
             if (WorksheetImportFolder is string importFolder)
             {
-                string original = System.IO.Path.Combine(importFolder, WorksheetRData.CsvFileName);
-                string originalInR = WorksheetRData.QuotePath(original);
-                if (source.Contains(originalInR, StringComparison.Ordinal))
+                string session = System.IO.Path.Combine(importFolder, WorksheetRData.CsvFileName);
+                if (source.Contains(WorksheetRData.QuotePath(session), StringComparison.Ordinal))
+                    (original, originalInR, fromSession) = (session, WorksheetRData.QuotePath(session), true);
+            }
+            if (original == null && !string.IsNullOrEmpty(currentFile))
+            {
+                string opened = System.IO.Path.GetFullPath(currentFile);
+                string ownData = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(opened), System.IO.Path.GetFileNameWithoutExtension(opened) + ".worksheet-data.csv");
+                if (File.Exists(ownData) && source.Contains(WorksheetRData.QuotePath(ownData), StringComparison.Ordinal))
+                    (original, originalInR) = (ownData, WorksheetRData.QuotePath(ownData));
+            }
+            if (original != null)
+            {
+                string beside = System.IO.Path.Combine(folder, System.IO.Path.GetFileNameWithoutExtension(full) + ".worksheet-data.csv");
+                if (File.Exists(original))
                 {
-                    string beside = System.IO.Path.Combine(folder, System.IO.Path.GetFileNameWithoutExtension(full) + ".worksheet-data.csv");
-                    if (File.Exists(original))
+                    companion = beside;
+                    hash = DataHash(original);
+                    // An unchanged data file is left alone, so that one open in Excel does not stop the save.
+                    copyData = !HoldsData(companion, hash);
+                    if (copyData)
                     {
-                        companion = beside;
-                        hash = DataHash(original);
-                        // An unchanged data file is left alone, so that one open in Excel does not stop the save.
-                        copyData = !HoldsData(companion, hash);
-                        if (copyData)
-                        {
-                            if (File.Exists(companion) && File.GetAttributes(companion).HasFlag(FileAttributes.ReadOnly))
-                                throw new UnauthorizedAccessException("The worksheet data file " + companion + " is read-only, so the script is not saved over it.");
-                            File.Copy(original, temporaryCsv);
-                        }
+                        if (File.Exists(companion) && File.GetAttributes(companion).HasFlag(FileAttributes.ReadOnly))
+                            throw new UnauthorizedAccessException("The worksheet data file " + companion + " is read-only, so the script is not saved over it.");
+                        File.Copy(original, temporaryCsv);
                     }
-                    else if (savedWorksheetData.TryGetValue(full, out var saved) && HoldsData(saved.Path, saved.Hash))
-                        (companion, hash) = saved;   // the session's copy has gone, but this window's data are still beside this script
-                    if (companion != null)
-                    {
-                        source = source.Replace(originalInR, WorksheetRData.QuotePath(companion), StringComparison.Ordinal);
-                        notice = "(the worksheet data is saved beside the script, as " + System.IO.Path.GetFileName(companion) + ")\n";
-                    }
-                    else
-                        notice = "(the script is saved without its worksheet data: the session's copy of the data is no longer there)\n";
                 }
+                else if (fromSession && savedWorksheetData.TryGetValue(full, out var saved) && HoldsData(saved.Path, saved.Hash))
+                    (companion, hash) = saved;   // the session's copy has gone, but this window's data are still beside this script
+                if (companion != null)
+                {
+                    source = source.Replace(originalInR, WorksheetRData.QuotePath(companion), StringComparison.Ordinal);
+                    notice = "(the worksheet data is saved beside the script, as " + System.IO.Path.GetFileName(companion) + ")\n";
+                }
+                else
+                    notice = "(the script is saved without its worksheet data: the session's copy of the data is no longer there)\n";
             }
 
             File.WriteAllText(temporary, source, new UTF8Encoding(false));
