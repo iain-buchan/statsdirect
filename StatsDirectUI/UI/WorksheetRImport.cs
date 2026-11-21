@@ -282,10 +282,10 @@ internal static class WorksheetRImport
         if (numbers > 0 && others == numbers + infinite) return ColumnType.Numeric;
         int booleans = Count(Kind.Boolean, Kind.BooleanText);
         if (booleans > 0 && others == booleans) return ColumnType.Logical;
-        int dates = Count(Kind.Date);
+        // Dates and date-times anchor the words; times of day and durations do not (agreed with the Mac, 21 November 2026).
+        int dates = Count(Kind.Date), dateTimes = Count(Kind.DateTime);
         if (dates > 0 && others == dates) return ColumnType.Date;
-        int clock = Count(Kind.DateTime, Kind.TimeOfDay, Kind.Duration);
-        if (clock > 0 && others == dates + clock) return ColumnType.DateTimeText;
+        if (dateTimes > 0 && others == dates + dateTimes) return ColumnType.DateTimeText;
         return ColumnType.Character;
     }
 
