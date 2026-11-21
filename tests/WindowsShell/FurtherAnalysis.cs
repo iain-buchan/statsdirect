@@ -195,12 +195,16 @@ internal static partial class Program
     /// with Run, each selection takes the next range of the queue and is accepted with OK, and a message in the top bar takes its first
     /// button.  A request made by a follow-on (the window's title no longer names the operation) runs the callback once and is left with
     /// Return, so that the suite cannot hang.</summary>
-    static async Task<(bool completed, Exception failure, int requests)> RunAsTheMenuDoes(frmMain main, SpreadsheetGear.Windows.Forms.WorkbookView workbook, Operation operation, Queue<string> ranges, Func<Task> whileFollowOnAsks)
+    static async Task<(bool completed, Exception failure, int requests)> RunAsTheMenuDoes(frmMain main, SpreadsheetGear.Windows.Forms.WorkbookView workbook, Operation operation, Queue<string> ranges, Func<Task> whileFollowOnAsks, Action dispatch = null)
     {
         bool done = false; Exception failure = null; int requests = 0;
         main.BeginInvoke(() =>
         {
-            try { Call(main, "DoOperationOnceOrUntilCancelled", operation, null); }
+            try
+            {
+                if (dispatch == null) Call(main, "DoOperationOnceOrUntilCancelled", operation, null);
+                else dispatch();
+            }
             catch (Exception ex) { failure = ex is TargetInvocationException thrown ? thrown.InnerException : ex; }
             finally { done = true; }
         });

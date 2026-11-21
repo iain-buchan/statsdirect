@@ -168,6 +168,7 @@ namespace StatsDirect.UI
         internal frmMain CreateMainWindow()
         {
             MainWindow = new frmMain();
+            MainWindow.RestoreWindowPlacement();
             return MainWindow;
         }
 
@@ -184,6 +185,7 @@ namespace StatsDirect.UI
         internal void Run()
         {
             UpdateInstaller.DeleteOldDownloads();
+            R.WorksheetRLauncher.DeleteLeftoverImports(atStart: true);
             Application.Run(MainWindow);
         }
 
@@ -245,6 +247,7 @@ namespace StatsDirect.UI
         /// </summary>
         internal void Shutdown()
         {
+            R.WorksheetRLauncher.DeleteLeftoverImports();
             if (pendingUpgrade == null)
                 return;
             try
@@ -415,11 +418,31 @@ namespace StatsDirect.UI
         /// <param name="e"></param>
         internal void NoteFormClosing(StatsDirectForm window, FormClosingEventArgs e)
         {
+            // When the main window closes it asks its windows in turn, and a later one can still refuse.  A window's tab and record then
+            // go only when it has really closed, so that a refused close leaves every window where it was.
+            if (e.CloseReason == CloseReason.MdiFormClosing)
+            {
+                window.FormClosed -= ForgetClosedWindow;
+                window.FormClosed += ForgetClosedWindow;
+                return;
+            }
+            ForgetWindow(window);
+        }
+
+        private void ForgetClosedWindow(object sender, FormClosedEventArgs e)
+        {
+            var window = (StatsDirectForm)sender;
+            window.FormClosed -= ForgetClosedWindow;
+            ForgetWindow(window);
+        }
+
+        private void ForgetWindow(StatsDirectForm window)
+        {
             WindowInformation info = (WindowInformation)window.Tag;
             if (null != info)
             {
-                if (null != info.TabPage)
-                    MainWindow?.RemoveWindow(window);
+                if (null != info.TabPage && MainWindow is { IsDisposed: false })
+                    MainWindow.RemoveWindow(window);
 
                 // Break reference cycles
                 info.Window = null;
@@ -455,6 +478,12 @@ namespace StatsDirect.UI
         {
             try { htmlHelp.Show(Parent ?? MainWindow, messageHelpTopic ?? Topic, SDConfiguration.HelpDirectory); }
             catch (Exception ex) { MessageBox.Show(Parent, ex.Message, "StatsDirect Help", MessageBoxButtons.OK, MessageBoxIcon.Information); }
+        }
+
+        internal void SearchHelp(Form owner, string query)
+        {
+            try { htmlHelp.Search(owner ?? MainWindow, query, SDConfiguration.HelpDirectory); }
+            catch (Exception ex) { MessageBox.Show(owner, ex.Message, "StatsDirect Help", MessageBoxButtons.OK, MessageBoxIcon.Information); }
         }
 
         internal void ShowHelp(Form Parent)
@@ -555,9 +584,9 @@ namespace StatsDirect.UI
         }
 
         /// <summary>
-        /// Allows the user to select from existing report windows, plus potentially a new one.
+        /// Gets the destination report, creating one when there are no reports open.
         /// </summary>
-        /// <param name="AllowNew">If true, the user may select a new report as well as any existing ones.  If false, only existing reports may be picked.</param>
+        /// <param name="AllowNew">Retained for compatibility with existing report consumers.</param>
         /// <returns></returns>
         public IReport PickReportWindow(bool AllowNew)
         {
@@ -566,7 +595,6 @@ namespace StatsDirect.UI
 
         internal IReport SelectReportWindow(Pane selectedPane)
         {
-            // As we now don't remember reports for output, this is equivalent to a PickReportWindow.
             return PickReportWindow(false);
         }
 

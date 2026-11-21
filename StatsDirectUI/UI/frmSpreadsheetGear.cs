@@ -63,8 +63,13 @@ namespace StatsDirect.UI
                     return;
                 }
                 SdApplication.SoleInstance.NoteFormClosing(this, e);
-                Visible = false;
-                MdiParent = null;
+                // A window closed by itself goes at once (#806).  When the main window closes, a later window can still refuse, so
+                // this one stays in place until the close is certain.
+                if (e.CloseReason != CloseReason.MdiFormClosing)
+                {
+                    Visible = false;
+                    MdiParent = null;
+                }
             }, "Couldn't close form");
         }
 

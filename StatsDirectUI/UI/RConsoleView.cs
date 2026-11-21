@@ -56,6 +56,7 @@ internal sealed partial class RConsoleView : UserControl
     internal event Action? SaveRequested;
     internal new event Action? HelpRequested;
     internal event Action? AIRequested;
+    internal event Action? OpenInRRequested;
     internal event Action? MoreRequested;
     internal event Action<string>? CommandRequested;
     internal event Action<string>? Notice;
@@ -290,6 +291,7 @@ internal sealed partial class RConsoleView : UserControl
                 case "saveScript": UpdateScript(Text("source")); SaveRequested?.Invoke(); break;
                 case "help": HelpRequested?.Invoke(); break;
                 case "ai": await GetScriptAsync(); AIRequested?.Invoke(); break;
+                case "openInR": OpenInRRequested?.Invoke(); break;
                 case "openFile": OpenOutputFile(Text("path")); break;
                 case "openPlot": OpenPlot(Text("plotId"), item.GetProperty("revision").GetInt64()); break;
                 case "copyPlot": await CopyPlotAsync(Text("plotId"), item.GetProperty("revision").GetInt64()); break;
@@ -390,6 +392,7 @@ internal sealed partial class RConsoleView : UserControl
         capabilities["plotMimes"] = JsonSerializer.SerializeToElement(new[] { "image/svg+xml", "image/png", "application/pdf" });
         foreach (var (name, provided) in new[] { ("help", true), ("ai", true), ("consoleInput", true), ("rawStdin", false), ("openPlot", true), ("copyPlot", true) })
             capabilities[name] = JsonSerializer.SerializeToElement(provided);
+        capabilities["openInR"] = JsonSerializer.SerializeToElement(OpenInRRequested != null);
         envelope["capabilities"] = JsonSerializer.SerializeToElement(capabilities);
         envelope["events"] = JsonSerializer.SerializeToElement(history);
         Browser.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(envelope));

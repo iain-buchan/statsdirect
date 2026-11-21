@@ -42,6 +42,7 @@ namespace StatsDirect.UI
                 case "pasteToolStripButton":
                 case "helpToolStripButton":
                 case "findToolStripButton":
+                case "analyseToolStripButton":
                 case "rToolStripButton":
                 case "rPlusToolStripButton":
                 case "aiToolStripButton":
@@ -131,6 +132,10 @@ namespace StatsDirect.UI
                             g.DrawPath(pen, question);
                         }
                         Line(12, 17, 12, 17.2f);
+                        break;
+                    case "analyseToolStripButton":
+                        Lines(new(3, 4), new(3, 20), new(21, 20));
+                        Line(7, 16, 7, 11); Line(12, 16, 12, 6); Line(17, 16, 17, 9);
                         break;
                     case "findToolStripButton":
                         g.DrawEllipse(pen, 3, 3, 12, 12);

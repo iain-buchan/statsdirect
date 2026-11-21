@@ -14,11 +14,48 @@ internal static partial class Program
         async Task<string> JS(string source) => await browser.CoreWebView2.ExecuteScriptAsync(source);
         string[] ids = JsonSerializer.Deserialize<string[]>(await JS("[...document.querySelectorAll('.toolbar>button')].map(b=>b.id)"))!;
         Check(!gridToolbar.Visible && !((ToolStrip)Field(script, "ToolStrip1")).Visible && ((Control)view).Visible
-            && ids.SequenceEqual(new[] { "save", "run", "stop", "restart", "ai", "help", "windows-more" })
+            && ids.SequenceEqual(new[] { "save", "run", "stop", "restart", "ai", "open-in-r", "help", "windows-more" })
             && await JS("document.querySelectorAll('[role=toolbar]').length") == "1",
-            "R has exactly one visible shared toolbar in Save, Run, Stop, Restart, AI, Help order with More last");
+            "R has exactly one visible shared toolbar in Save, Run, Stop, Restart, AI, R+, Help order with More last");
         Check(!((Control)Field(script, "pnlActions")).Visible && Get(view, "Session") == null,
             "the R toolbar replaces the native command row and an unrun script has no R worker");
+        var openInR = view.GetType().GetField("OpenInRRequested", Internal)!;
+        var launch = openInR.GetValue(view);
+        Check(launch is Action, "the R window subscribes to the native Open script in R command");
+        try
+        {
+            foreach (var mode in new[] { "script", "console" })
+            {
+                await JS($"document.getElementById('{mode}-tab').click()");
+                const string buttonVisible = """
+                    (() => {
+                        const button = document.getElementById('open-in-r');
+                        return !button.hidden && !button.disabled && button.getClientRects().length > 0
+                            && button.tabIndex === 0 && button.textContent.trim() === 'R+'
+                            && button.title === 'Open script in R or RStudio'
+                            && button.getAttribute('aria-label') === button.title;
+                    })()
+                    """;
+                string visible = await JS(buttonVisible);
+                for (int wait = 0; wait < 40 && visible != "true"; wait++)
+                {
+                    await Task.Delay(50);
+                    visible = await JS(buttonVisible);
+                }
+                Check(visible == "true" && await JS($"document.getElementById('{mode}-tab').getAttribute('aria-selected')") == "\"true\"",
+                    $"R+ is visible and keyboard-accessible with the Mac tooltip in {mode} mode");
+
+                // Exercise the real browser-to-native command without opening R or RStudio.
+                var requested = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                openInR.SetValue(view, (Action)(() => requested.TrySetResult()));
+                await JS("document.getElementById('open-in-r').click()");
+                Check(await Task.WhenAny(requested.Task, Task.Delay(TimeSpan.FromSeconds(5))) == requested.Task,
+                    $"R+ dispatches the native Open script in R command from {mode} mode");
+            }
+        }
+        finally { openInR.SetValue(view, launch); }
+        Check(await JS("StatsDirectRHost.setScript('   ');const b=document.getElementById('open-in-r');!b.hidden&&b.disabled") == "true",
+            "R+ stays visible but is disabled when the script is empty, as on Mac");
         await JS("StatsDirectRConsole.setMode('script');StatsDirectRHost.setScript('original');const e=document.getElementById('script-source');e.focus();e.setSelectionRange(e.value.length,e.value.length);StatsDirectRHost.edit('insertText',' edited')");
         await JS("StatsDirectRHost.edit('undo')");
         Check(JsonSerializer.Deserialize<string>(await JS("document.getElementById('script-source').value")) == "original",

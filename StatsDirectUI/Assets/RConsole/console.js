@@ -285,6 +285,8 @@
     byId('restart').disabled = !model.sessionId || model.restarting;
     byId('save').disabled = !model.script;
     byId('ai').disabled = !model.capabilities.ai; byId('help').disabled = !model.capabilities.help;
+    byId('open-in-r').hidden = !model.capabilities.openInR;
+    byId('open-in-r').disabled = !model.script.trim();
     sizeInput();
     if (focusAfterRender) {
       focusAfterRender = false;
@@ -353,6 +355,7 @@
   byId('restart').onclick = () => {const previous = model.state, request = model.restart(); if (request && !post(request)) {model.restarting = false; showBridgeFailure(previous);} render();};
   byId('save').onclick = () => send('saveScript', {source: model.script});
   byId('ai').onclick = () => send('ai'); byId('help').onclick = () => send('help');
+  byId('open-in-r').onclick = () => send('openInR');
   for (const name of ['console', 'script']) {
     const tab = byId(name + '-tab'); tab.onclick = () => mode(name);
     tab.onkeydown = event => {if (['ArrowLeft', 'ArrowRight'].includes(event.key)) {event.preventDefault(); mode(name === 'console' ? 'script' : 'console');}};

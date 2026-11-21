@@ -23,7 +23,17 @@ internal sealed class HelpService : IDisposable
 
     internal void Show(Form parent, string topic, string directory)
     {
-        if (disposed) return;
+        if (ShowPane(parent, directory)) view.ShowTopic(topic);
+    }
+
+    internal void Search(Form parent, string query, string directory)
+    {
+        if (ShowPane(parent, directory)) view.Search(query);
+    }
+
+    private bool ShowPane(Form parent, string directory)
+    {
+        if (disposed) return false;
         if (session == null)
         {
             Form root = parent?.MdiParent ?? parent ?? throw new ArgumentNullException(nameof(parent));
@@ -36,7 +46,7 @@ internal sealed class HelpService : IDisposable
             view.TitleChanged += () => session.SetTitle(view.PageTitle);
         }
         session.Show(false);
-        view.ShowTopic(topic);
+        return true;
     }
     internal Task ToggleModeAsync() => session?.ToggleModeAsync() ?? Task.CompletedTask;
     internal void Hide() => session?.Hide();

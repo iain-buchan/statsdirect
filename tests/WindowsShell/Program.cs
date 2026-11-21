@@ -28,10 +28,7 @@ internal static partial class Program
         appType.GetProperty("MainWindow", Internal)!.SetValue(app, main);
         // Use the actual main form and commands, but exclude normal startup,
         // user settings writes, IPC and startup/update dialogs from this fixture.
-        main.Load -= (EventHandler)typeof(frmMain).GetMethod("frmMain_Load", Internal)!.CreateDelegate(typeof(EventHandler), main);
-        main.Shown -= (EventHandler)typeof(frmMain).GetMethod("frmMain_Shown", Internal)!.CreateDelegate(typeof(EventHandler), main);
-        main.FormClosing -= (FormClosingEventHandler)typeof(frmMain).GetMethod("frmMain_FormClosing", Internal)!.CreateDelegate(typeof(FormClosingEventHandler), main);
-        main.FormClosed -= (FormClosedEventHandler)typeof(frmMain).GetMethod("frmMain_FormClosed", Internal)!.CreateDelegate(typeof(FormClosedEventHandler), main);
+        DetachMainWindowLifecycle(main);
         assembly.GetType("StatsDirect.UI.Program")!.GetMethod("ConfigureStartupCommand", BindingFlags.NonPublic | BindingFlags.Static)!
             .Invoke(null, new object[] { new[] { "-calculator" }, main });
         main.StartPosition = FormStartPosition.Manual; main.Location = new Point(-16000, -16000); main.Size = new Size(1800, 1200); main.ShowInTaskbar = false;
@@ -63,8 +60,31 @@ internal static partial class Program
         Check(Get(app, "CalculatorView") is Control startupView && startupView.ContainsFocus && main.ActiveMdiChild == null && !(bool)Get(main, "ShowOpeningDialog"),
             "legacy -calculator startup opens the integrated pane without a document");
         string selectedCheck = Environment.GetEnvironmentVariable("STATSDIRECT_SHELL_CHECK");
+        if (selectedCheck == "main-window-placement")
+        {
+            CheckMainWindowPlacement(main, app);
+            return;
+        }
+        if (selectedCheck == "worksheet-picker")
+        {
+            Call(main, "AddTemplates");
+            await CheckWorksheetCommandPicker(main);
+            return;
+        }
+        if (selectedCheck == "report-destination")
+        {
+            Call(main, "AddTemplates");
+            await CheckReportDestination(main);
+            return;
+        }
+        if (selectedCheck == "worksheet-r-sessions")
+        {
+            await CheckWorksheetRSessions(main);
+            return;
+        }
         if (selectedCheck == "close-for-update")
         {
+            await CheckRefusedCloseKeepsWindows(main, app);
             await CheckCloseForUpdate(main, app);
             return;
         }
@@ -83,7 +103,9 @@ internal static partial class Program
             await CheckScriptCharts(main, selectedGrid);
             return;
         }
+        CheckMainWindowPlacement(main, app);
         await CheckMenuSimplification(main, app);
+        await CheckReportDestination(main);
         await CheckNewRSession(main, app);
         await CheckScriptContextMenu(main);
         await CheckLegacyReportOpening(main);
@@ -110,6 +132,8 @@ internal static partial class Program
             "Analysis > Calculator preserves the worksheet selection and entered data");
         await CheckWorkbookTabs(main, grid, workbook);
         await CheckDocumentToolbars(main, grid, workbook);
+        await CheckWorksheetCommandPicker(main);
+        await CheckWorksheetRSessions(main);
         await CheckScriptCharts(main, grid);
         await CheckScriptChartRuns(main, grid);
         await CheckScriptSvgIsolation(main, grid, Environment.GetEnvironmentVariable("STATSDIRECT_SVG_ARTIFACTS"));
@@ -165,6 +189,7 @@ internal static partial class Program
         var calculatorEdit = (ToolStripDropDownButton)Get(view, "EditMenu");
         calculatorEdit.DropDownItems.OfType<ToolStripMenuItem>().Single(i => i.Text == "Undo").PerformClick();
         Check(input.Text == "2" && main.ActiveMdiChild == null, "calculator Edit menu still works after the last MDI document closes");
+        await CheckRefusedCloseKeepsWindows(main, app);
         await CheckCloseForUpdate(main, app);   // last: its second asking runs the main window's own closing steps
     }
 
@@ -221,10 +246,10 @@ internal static partial class Program
     static async Task CheckDocumentToolbars(frmMain main, Form grid, SpreadsheetGear.Windows.Forms.WorkbookView workbook)
     {
         var toolbar = (ToolStrip)Field(main, "toolStrip");
-        Check(toolbar.Visible && string.Join("|", toolbar.Items.OfType<ToolStripButton>().Select(b => b.Text)) == "Save|Undo|Redo|Cut|Copy|Paste|Find|Help",
+        Check(toolbar.Visible && string.Join("|", toolbar.Items.Cast<ToolStripItem>().Where(b => b is ToolStripButton or ToolStripDropDownButton).Select(b => b.Text)) == "Save|Undo|Redo|Cut|Copy|Paste|Find|Analyse|Open in StatsDirect R|Open in external R|Help",
             "worksheet has one native toolbar in the shared document order");
         CaptureToolbar(toolbar, "grid-toolbar.png");
-        Check(((Control)Field(grid,"formulaBar")).Visible && toolbar.Items.ContainsKey("cboActiveReport"), "formula entry and Results to selection remain available");
+        Check(((Control)Field(grid,"formulaBar")).Visible, "formula entry remains available below the worksheet toolbar");
         workbook.Focus();
         Call(grid,"EditFillDown");
         await Task.Delay(30);
