@@ -327,6 +327,12 @@ internal static partial class Program
             imported.GetType().GetField("currentFile", Internal)!.SetValue(imported, destination);
             async Task<bool> Save() => await ((Task<bool>)Call(imported, "SaveInteractiveAsync", false)).WaitAsync(TimeSpan.FromSeconds(15));
             Check(await Save() && File.Exists(destination), "saving the worksheet R document writes its script");
+            // The session's script now reads the copy saved beside it, as a script opened again does.
+            string savedData = Path.ChangeExtension(destination, null) + ".worksheet-data.csv";
+            string sessionScript = (string)Get(RConsole(imported), "Script");
+            Check(sessionScript.Contains(savedData.Replace('\\', '/'), StringComparison.Ordinal) && !sessionScript.Contains(Path.GetFileName(transientFolder), StringComparison.Ordinal)
+                    && !(bool)Get(imported, "Dirty"),
+                "after Save, the session's script reads the data saved beside it and is saved");
             string[] companions = Directory.GetFiles(scratch, "*.csv", SearchOption.AllDirectories);
             Check(companions.Length == 1 && File.ReadAllBytes(companions[0]).SequenceEqual(File.ReadAllBytes(originalData)),
                 "the saved worksheet R script has a durable, byte-identical copy of its selected data");
@@ -369,37 +375,89 @@ internal static partial class Program
             Check(exit == 0 && receipt.Split('\n').Any(line => line.Trim() == "SHELL_SAVED_WORKSHEET_OK"),
                 "a fresh Rscript session reads the saved worksheet data after the source window closes" + $"\nR exit code {exit}\n{receipt}");
 
-            // The saved script opened again and saved somewhere else (Save As, or R+, which write through the same code) takes a copy of its
-            // data beside the new script and reads that copy, so the first script and its data file can go.
+            // The saved script opened again, as the user opens it, and saved with the window's own Save and Save As, the file the Save As
+            // dialog would give put in the user's place; Run and R+ as the window runs them.  Each must use the script's own data: after a
+            // Save As, the copy beside the new script, whatever is written meanwhile where the first script's data were (Codex's third review).
             var reopened = (Form)Call(main, "CreateScriptWindow", destination, false);
             try
             {
-                string elsewhere = Path.Combine(scratch, "elsewhere");
+                var console = RConsole(reopened);
+                await ((Task)Get(console, "Ready")).WaitAsync(TimeSpan.FromSeconds(45));
+                string firstData = companions[0], elsewhere = Path.Combine(scratch, "elsewhere");
+                byte[] data = File.ReadAllBytes(firstData);
+                string otherData = File.ReadAllText(firstData).Replace("15", "999", StringComparison.Ordinal);
+                Check(otherData != File.ReadAllText(firstData), "the other workbook's data differ from the script's");
                 Directory.CreateDirectory(elsewhere);
-                string second = Path.Combine(elsewhere, "second results.R"), secondData = Path.Combine(elsewhere, "second results.worksheet-data.csv");
-                // The editor's text, which still refers to the first data file after Save As, as the window's editor does.
-                string editorText = File.ReadAllText(destination);
-                Call(reopened, "WriteRScript", second, editorText);
-                reopened.GetType().GetField("currentFile", Internal)!.SetValue(reopened, second);   // Save As: the window's file is the new one
-                Check(File.Exists(secondData) && File.ReadAllBytes(secondData).SequenceEqual(File.ReadAllBytes(companions[0]))
-                        && File.ReadAllText(second).Contains(secondData.Replace('\\', '/'), StringComparison.Ordinal),
-                    "a saved worksheet script opened again and saved elsewhere carries a copy of its data beside the new script");
+                string chosen = null;
+                reopened.GetType().GetProperty("RScriptFileChooser", Internal)!.SetValue(reopened, new Func<string, string>(_ => chosen));
+                async Task<bool> SaveReopenedAs(string file) { chosen = file; return await ((Task<bool>)Call(reopened, "SaveInteractiveAsync", true)).WaitAsync(TimeSpan.FromSeconds(15)); }
+                async Task<bool> SaveReopened() => await ((Task<bool>)Call(reopened, "SaveInteractiveAsync", false)).WaitAsync(TimeSpan.FromSeconds(15));
+                async Task RunReopened(string label)
+                {
+                    int before = RFinished(reopened);
+                    Call(reopened, "RunR");
+                    await CompleteRCommand(reopened, before);
+                    await VerifyWorksheetRValues(reopened, verifyData, label);
+                }
+                async Task Replay(string folder, string script, string label)
+                {
+                    var (code, output) = await RunSaved(folder, script);
+                    Check(code == 0 && output.Split('\n').Any(line => line.Trim() == "SHELL_SAVED_WORKSHEET_OK"), label + $"\nR exit code {code}\n{output}");
+                }
+                async Task OpenReopenedInR(string file, string label)
+                {
+                    string before = Script();
+                    await ((Task<string>)Call(reopened, "WriteOpenInRCopyAsync", file)).WaitAsync(TimeSpan.FromSeconds(15));
+                    string copy = DataBeside(file);
+                    Check(File.ReadAllBytes(copy).SequenceEqual(data) && Refers(File.ReadAllText(file), copy) && Script() == before, label);
+                    await Replay(Path.GetDirectoryName(file)!, Path.GetFileName(file), label + ", and R reads them");
+                }
+                string Script() => (string)Get(console, "Script");
+                static string DataBeside(string script) => Path.ChangeExtension(script, null) + ".worksheet-data.csv";
+                static bool Refers(string text, string dataFile) => text.Contains(dataFile.Replace('\\', '/'), StringComparison.Ordinal);
+                bool Holds(string script) => File.ReadAllBytes(DataBeside(script)).SequenceEqual(data) && Refers(File.ReadAllText(script), DataBeside(script));
+                // The window's script refers to the data beside its file and, as the editor holds it, is the script in the file.
+                bool Reads(string script) => Refers(Script(), DataBeside(script)) && Lf(Script()) == Lf(File.ReadAllText(script));
+                static string Lf(string text) => text.Replace("\r\n", "\n");
+
+                string second = Path.Combine(elsewhere, "second results.R");
+                Check(await SaveReopenedAs(second) && Holds(second) && Reads(second) && !Refers(Script(), firstData) && !(bool)Get(reopened, "Dirty"),
+                    "Save As of a saved worksheet script opened again puts a copy of its data beside the new script, which the window's script now reads");
+                File.WriteAllText(firstData, otherData);   // another workbook's script saved under the first name
+                await RunReopened("after Save As, with another workbook's data where the first script's data were, Run reads the script's own data");
+                Check(await SaveReopened() && Holds(second) && Reads(second),
+                    "Save again keeps the script's own data beside it, with another workbook's data where the first script's data were");
+                await Replay(elsewhere, "second results.R", "the script saved again, run afresh in R, reads its own data");
+                await OpenReopenedInR(Path.Combine(elsewhere, "third results.R"), "R+ after Save As carries the script's own data and leaves the window's script as it is");
+
+                // Save As back to the first name: the other workbook's data there give way to the script's own.
+                Check(await SaveReopenedAs(destination) && Holds(destination) && Reads(destination) && !Refers(Script(), DataBeside(second)),
+                    "Save As back to the first script's name puts the script's own data beside it, in place of the other workbook's data");
+                await RunReopened("after Save As back to the first name, Run reads the script's own data");
+                await Replay(scratch, scriptName, "the script saved back under its first name, run afresh in R, reads its own data");
+
+                // Save As once more, then the first script and its data file go (Codex's second review): the script goes on with its copy.
+                string fourth = Path.Combine(elsewhere, "fourth results.R");
+                Check(await SaveReopenedAs(fourth) && Holds(fourth) && Reads(fourth), "Save As again puts the data beside the next script too");
                 File.Delete(destination);
-                File.Delete(companions[0]);
-                // Save again, the first pair gone: the script keeps reading its own copy (Codex's second review).
-                Call(reopened, "WriteRScript", second, editorText);
-                Check(File.ReadAllText(second).Contains(secondData.Replace('\\', '/'), StringComparison.Ordinal) && File.Exists(secondData),
+                File.Delete(firstData);
+                Check(await SaveReopened() && Holds(fourth) && Reads(fourth),
                     "saving again after Save As, with the first script and its data gone, keeps the script reading its own copy of the data");
-                var (secondExit, secondReceipt) = await RunSaved(elsewhere, "second results.R");
-                Check(secondExit == 0 && secondReceipt.Split('\n').Any(line => line.Trim() == "SHELL_SAVED_WORKSHEET_OK"),
-                    "the script saved elsewhere reads its own copy of the data once the first script and its data file are gone" + $"\nR exit code {secondExit}\n{secondReceipt}");
-                // R+ after Save As writes through the same code: a new file beside which the data are copied too.
-                string third = Path.Combine(elsewhere, "third results.R"), thirdData = Path.Combine(elsewhere, "third results.worksheet-data.csv");
-                Call(reopened, "WriteRScript", third, editorText);
-                var (thirdExit, thirdReceipt) = await RunSaved(elsewhere, "third results.R");
-                Check(File.Exists(thirdData) && File.ReadAllText(third).Contains(thirdData.Replace('\\', '/'), StringComparison.Ordinal)
-                        && thirdExit == 0 && thirdReceipt.Split('\n').Any(line => line.Trim() == "SHELL_SAVED_WORKSHEET_OK"),
-                    "R+ after Save As, with the first pair gone, carries the data beside its new file, and R reads them" + $"\nR exit code {thirdExit}\n{thirdReceipt}");
+                await Replay(elsewhere, "fourth results.R", "the script saved elsewhere reads its own copy of the data once the first script and its data file are gone");
+                await RunReopened("Run reads the script's own copy of the data once the first script and its data file are gone");
+                await OpenReopenedInR(Path.Combine(elsewhere, "fifth results.R"), "R+ after Save As, with the first pair gone, carries the data beside its new file");
+
+                // The script's own data file gone too: a copy that still holds the data, the one it was saved from, gives them back; a copy
+                // that holds other data does not, and the script is saved without them rather than with the other data.
+                string sixth = Path.Combine(elsewhere, "sixth results.R");
+                Check(await SaveReopenedAs(sixth) && Holds(sixth), "Save As from the fourth script puts the data beside the sixth");
+                File.Delete(DataBeside(sixth));
+                Check(await SaveReopened() && Holds(sixth) && Reads(sixth),
+                    "Save with the script's own data file gone takes the data from the copy it was saved from, which still holds them");
+                File.WriteAllText(DataBeside(fourth), otherData);
+                File.Delete(DataBeside(sixth));
+                Check(await SaveReopened() && !File.Exists(DataBeside(sixth)) && Refers(File.ReadAllText(sixth), DataBeside(sixth)),
+                    "Save with the script's own data file gone, and other data in the copy it was saved from, saves the script without the other data");
             }
             finally
             {
@@ -493,15 +551,38 @@ internal static partial class Program
     }
 
     // Every choice of the prompt whole: its row as tall as it, its width its preferred width (no text cut off), inside the dialog.
+    // Every choice whole, within the choices' view itself rather than the dialog, and the view without scroll bars unless the working
+    // area keeps the dialog smaller than its choices (Codex's third review).
     static bool PromptChoicesWhole(Form prompt)
     {
         var layout = (TableLayoutPanel)Field(prompt, "layout");
+        var view = (Panel)prompt.Controls.Find("worksheetRChoices", true).Single();
         int[] rows = layout.GetRowHeights();
-        var client = prompt.RectangleToScreen(prompt.ClientRectangle);
-        return new[] { "worksheetRAll", "worksheetRSelected", "worksheetRNone", "worksheetRHeaders", "worksheetRFriendlyNames" }
-            .Select(name => prompt.Controls.Find(name, true).Single()).Append((Control)Field(prompt, "formatHint"))
+        var shown = view.RectangleToScreen(view.ClientRectangle);
+        var area = Screen.FromControl(prompt).WorkingArea;
+        bool constrained = prompt.Width >= area.Width || prompt.Height >= area.Height;
+        return (constrained || !view.HorizontalScroll.Visible && !view.VerticalScroll.Visible) && PromptChoices(prompt)
             .All(control => !control.Visible || rows[layout.GetRow(control)] >= control.Height + control.Margin.Vertical - 1
-                && control.Width >= control.GetPreferredSize(Size.Empty).Width - 1 && client.Contains(control.RectangleToScreen(control.ClientRectangle)));
+                && control.Width >= control.GetPreferredSize(Size.Empty).Width - 1 && shown.Contains(control.RectangleToScreen(control.ClientRectangle)));
+    }
+
+    static IEnumerable<Control> PromptChoices(Form prompt) =>
+        new[] { "worksheetRAll", "worksheetRSelected", "worksheetRNone", "worksheetRHeaders", "worksheetRFriendlyNames" }
+            .Select(name => prompt.Controls.Find(name, true).Single()).Append((Control)Field(prompt, "formatHint"));
+
+    // Each choice, the sentence above them and the format's row can be scrolled into the view: whole when it fits there, and otherwise
+    // as much of it as the view holds.
+    static bool PromptChoicesReachable(Form prompt)
+    {
+        var view = (Panel)prompt.Controls.Find("worksheetRChoices", true).Single();
+        return PromptChoices(prompt).Append((Control)Field(prompt, "scope")).Append((Control)Field(prompt, "formatRow")).Where(control => control.Visible).All(control =>
+        {
+            view.ScrollControlIntoView(control);
+            Application.DoEvents();
+            var shown = view.RectangleToScreen(view.ClientRectangle);
+            var bounds = control.RectangleToScreen(control.ClientRectangle);
+            return control.Width <= shown.Width && control.Height <= shown.Height ? shown.Contains(bounds) : shown.IntersectsWith(bounds);
+        });
     }
 
     // A long range of several areas (the prompt lists three, then ",…"), with the list's hint shown: the prompt grows to fit it.
@@ -533,8 +614,9 @@ internal static partial class Program
                 && WorksheetRButtons(prompt).All(button => visible.Contains(button.RectangleToScreen(button.ClientRectangle)));
             bool scrolls = (content.Width <= view.ClientSize.Width || view.HorizontalScroll.Visible)
                 && (content.Height <= view.ClientSize.Height || view.VerticalScroll.Visible);
-            Check(actionsInView && scrolls && selected.Width >= selected.GetPreferredSize(Size.Empty).Width - 1,
-                $"in a dialog smaller than its choices, the choices scroll, the range label stays whole, and Open and Cancel stay in view (actions {actionsInView}, scrolls {scrolls})");
+            bool reachable = PromptChoicesReachable(prompt);
+            Check(actionsInView && scrolls && reachable && selected.Width >= selected.GetPreferredSize(Size.Empty).Width - 1,
+                $"in a dialog smaller than its choices, the choices scroll, each can be scrolled into view, the range label stays whole, and Open and Cancel stay in view (actions {actionsInView}, scrolls {scrolls}, reachable {reachable})");
         }
         finally { prompt.Close(); prompt.Dispose(); }
     }

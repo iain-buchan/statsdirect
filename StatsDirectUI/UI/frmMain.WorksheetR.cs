@@ -200,16 +200,21 @@ internal sealed class WorksheetRPrompt : Form
         // shown, with the buttons, but no smaller than the usual size, and within the working area: beyond that the choices scroll.
         // The sentence at the top wraps to the width the choices need, or that the dialog has.
         Size minimum = owner.LogicalToDeviceUnits(PromptSize), border = SizeFromClientSize(Size.Empty);
+        // The choices' view lies within the dialog's padding, the frame's and its own margin (Codex's third review).
+        Size around = new(Padding.Horizontal + frame.Padding.Horizontal + choices.Margin.Horizontal, Padding.Vertical + frame.Padding.Vertical + choices.Margin.Vertical);
         int widest = new Control[] { entireSheet, selectedCells, noData, formatRow, formatHint, headers, friendlyNames }
             .Max(control => control.GetPreferredSize(Size.Empty).Width + control.Margin.Horizontal) + layout.Padding.Horizontal;
-        int width = Math.Min(Math.Max(minimum.Width, Math.Max(widest, buttons.GetPreferredSize(Size.Empty).Width) + Padding.Horizontal),
-            area.Width - border.Width);
-        scope.MaximumSize = new Size(Math.Max(1, Math.Min(widest, width - Padding.Horizontal) - layout.Padding.Horizontal - scope.Margin.Horizontal), 0);
+        int actions = buttons.GetPreferredSize(Size.Empty).Width + buttons.Margin.Horizontal + Padding.Horizontal + frame.Padding.Horizontal;
+        int width = Math.Min(Math.Max(minimum.Width, Math.Max(widest + around.Width, actions)), area.Width - border.Width);
+        scope.MaximumSize = new Size(Math.Max(1, Math.Min(widest, width - around.Width) - layout.Padding.Horizontal - scope.Margin.Horizontal), 0);
         bool hintShown = formatHint.Visible;
         formatHint.Visible = true;
-        int height = layout.GetPreferredSize(Size.Empty).Height + buttons.GetPreferredSize(Size.Empty).Height + buttons.Margin.Vertical + Padding.Vertical;
+        int height = layout.GetPreferredSize(Size.Empty).Height + around.Height + buttons.GetPreferredSize(Size.Empty).Height + buttons.Margin.Vertical;
         formatHint.Visible = hintShown;
-        ClientSize = new Size(width, Math.Min(Math.Max(minimum.Height, height), area.Height - border.Height));
+        int tallest = area.Height - border.Height;
+        // A dialog shorter than its choices shows them with a vertical scroll bar, which takes its width from the view.
+        if (height > tallest) width = Math.Min(width + SystemInformation.GetVerticalScrollBarWidthForDpi(owner.DeviceDpi), area.Width - border.Width);
+        ClientSize = new Size(width, Math.Min(Math.Max(minimum.Height, height), tallest));
         Location = new Point(
             Math.Clamp(owner.Left + (owner.Width - Width) / 2, area.Left, area.Right - Width),
             Math.Clamp(owner.Top + (owner.Height - Height) / 2, area.Top, area.Bottom - Height));

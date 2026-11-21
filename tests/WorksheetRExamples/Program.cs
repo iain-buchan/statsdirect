@@ -251,6 +251,55 @@ internal static class Program
                         + "row.names = c(NA_integer_, -1L), class = \"data.frame\")",
                 },
             },
+            // Rule 3.9, the section that applies (Codex's third review): the character after _ (spacing) or * (fill) is not a section
+            // separator, and a condition's limit may have a decimal point without digits before it, or an exponent.  Codex's own
+            // formats come first; in the last two, a condition misread would take the number section in place of the time or date.
+            new
+            {
+                name = "Windows: spacing and fill characters, and conditions with decimals and exponents",
+                cells = new Dictionary<string, object>
+                {
+                    ["A1"] = Text("Spacing"), ["A2"] = new { time = "1.25", format = "[>10]yyyy-mm-dd_;;0.00;[h]:mm;@" },
+                    ["B1"] = Text("Fill"), ["B2"] = new { time = "1.25", format = "[>10]yyyy-mm-dd*;;0.00;[h]:mm;@" },
+                    ["C1"] = Text("Decimal"), ["C2"] = new { time = "0.25", format = "[>.5]h:mm;0.00" },
+                    ["D1"] = Text("Exponent"), ["D2"] = new { date = "5.5", format = "[>1E2]yyyy-mm-dd;0.00" },
+                    ["E1"] = Text("Decimal time"), ["E2"] = new { time = "0.25", format = "[>.5]0.00;h:mm" },
+                    ["F1"] = Text("Exponent date"), ["F2"] = new { datetime = "5.5", format = "[>1E2]0.00;yyyy-mm-dd hh:mm" },
+                },
+                select = new { entire = true },
+                options = new { format = "data frame", headings = (bool?)null, friendly = false },
+                expect = new
+                {
+                    headingsSuggested = true,
+                    r = "structure(list(c(\"30:00:00\"), c(\"30:00:00\"), c(0.25), c(5.5), c(\"06:00:00\"), c(\"1900-01-05 12:00:00\")), "
+                        + "names = c(\"Spacing\", \"Fill\", \"Decimal\", \"Exponent\", \"Decimal time\", \"Exponent date\"), "
+                        + "row.names = c(NA_integer_, -1L), class = \"data.frame\")",
+                },
+            },
+            // Rule 3.9's boundaries, agreed with the Mac for the shared examples: "below one day" is judged on the value, before the
+            // rounding to the millisecond, which is half away from zero; a duration longer than 9999-12-31's serial is a number.
+            new
+            {
+                name = "Windows: the boundaries of times of day, durations and dates",
+                cells = new Dictionary<string, object>
+                {
+                    ["A1"] = Text("Midnight"), ["A2"] = new { time = "0.999999999", format = "h:mm:ss" },
+                    ["B1"] = Text("Half"), ["B2"] = new { duration = (0.5 / 86_400_000).ToString("R", CultureInfo.InvariantCulture), format = "[h]:mm:ss.000" },
+                    ["C1"] = Text("Longest"), ["C2"] = new { duration = "2958465", format = "[h]:mm" },
+                    ["D1"] = Text("Beyond"), ["D2"] = new { duration = "2958465.25", format = "[h]:mm" },
+                    ["E1"] = Text("Below"), ["E2"] = new { duration = "-3000000", format = "[h]:mm" },
+                    ["F1"] = Text("Rounded"), ["F2"] = new { datetime = "0.9999999999", format = "yyyy-mm-dd hh:mm:ss" },
+                },
+                select = new { entire = true },
+                options = new { format = "data frame", headings = (bool?)null, friendly = false },
+                expect = new
+                {
+                    headingsSuggested = true,
+                    r = "structure(list(c(\"24:00:00\"), c(\"00:00:00.001\"), c(\"71003160:00:00\"), c(2958465.25), c(-3000000), "
+                        + "structure(c(-25567), class = \"Date\")), names = c(\"Midnight\", \"Half\", \"Longest\", \"Beyond\", \"Below\", \"Rounded\"), "
+                        + "row.names = c(NA_integer_, -1L), class = \"data.frame\")",
+                },
+            },
         };
         foreach (var example in cases)
             yield return JsonSerializer.SerializeToElement(example);
@@ -566,8 +615,10 @@ internal static class Program
             sheet.Cells[0, 0, rows, 0].AutoFilter(0, "=0", AutoFilterOperator.And, null, true);
             sheet.Range["C1"].EntireColumn.Hidden = true;
             sheet.Range["XFD1048576"].NumberFormat = "0.00";
+            var watch = System.Diagnostics.Stopwatch.StartNew();
             var describe = Task.Run(() => WorksheetRImport.Describe(sheet, sheet.Range["A1"], write => write()));
             bool finished = describe.Wait(TimeSpan.FromSeconds(20));
+            Console.WriteLine($"Filtered bounds, 150,000 hidden rows, C hidden: " + (finished ? $"{watch.ElapsedMilliseconds:N0} ms" : "not finished in 20 s"));
             var options = finished ? describe.Result : null;
             Check(finished && sheet.Range["A2"].EntireRow.Hidden && options!.EntireSheet?.Address == "A1:C300001",
                 "under an AutoFilter that hides 150,000 rows, with a formatted far corner, the prompt finds the data, a hidden column's in a hidden row "
@@ -577,6 +628,68 @@ internal static class Program
         {
             workbook.Close();
         }
+
+        // Many hidden rows and many hidden columns: D:XFD hidden, so each of the 150,000 hidden rows has 16,381 hidden cells, with data in
+        // one of them (Codex's third review).  The sheet is searched in a copy with the filter off, and is left as it was.
+        workbook = Factory.GetWorkbook(CultureInfo.InvariantCulture);
+        try
+        {
+            var sheet = FilteredColumn(workbook, 300_000);
+            sheet.Range["B3"].Value = 2.0;
+            sheet.Range["C4"].Value = 3.0;
+            sheet.Range["Q200000"].Value = 5.0;
+            sheet.Range["D1:XFD1"].EntireColumn.Hidden = true;
+            sheet.Range["XFD1048576"].NumberFormat = "0.00";
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+            var describe = Task.Run(() => WorksheetRImport.Describe(sheet, sheet.Range["A1"], write => write()));
+            bool finished = describe.Wait(TimeSpan.FromSeconds(20));
+            Console.WriteLine($"Filtered bounds, 150,000 hidden rows, D:XFD hidden: " + (finished ? $"{watch.ElapsedMilliseconds:N0} ms" : "not finished in 20 s"));
+            var options = finished ? describe.Result : null;
+            Check(finished && sheet.Range["A200000"].EntireRow.Hidden && sheet.Range["Q1"].EntireColumn.Hidden && options!.EntireSheet?.Address == "A1:Q300001"
+                    && workbook.Worksheets.Count == 1 && sheet.AutoFilterMode && sheet.Range["A2"].EntireRow.Hidden,
+                "under an AutoFilter that hides 150,000 rows, with D:XFD hidden, the prompt finds the data in a hidden column of a hidden row within 20 s, "
+                + "and leaves the sheet as it was" + (finished ? $" (entire {options!.EntireSheet?.Address})" : " (it did not finish)"));
+        }
+        finally
+        {
+            workbook.Close();
+        }
+
+        // A protected sheet's filter cannot be turned off in the copy, so its hidden columns' cells are read, as before.
+        workbook = Factory.GetWorkbook(CultureInfo.InvariantCulture);
+        try
+        {
+            var sheet = FilteredColumn(workbook, 300_000);
+            sheet.Range["J2"].Value = 9.0;
+            sheet.Range["D1:J1"].EntireColumn.Hidden = true;
+            sheet.Protect("review");
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+            var describe = Task.Run(() => WorksheetRImport.Describe(sheet, sheet.Range["A1"], write => write()));
+            bool finished = describe.Wait(TimeSpan.FromSeconds(20));
+            Console.WriteLine($"Filtered bounds, 150,000 hidden rows, D:J hidden, protected: " + (finished ? $"{watch.ElapsedMilliseconds:N0} ms" : "not finished in 20 s"));
+            var options = finished ? describe.Result : null;
+            Check(finished && sheet.ProtectContents && sheet.Range["A2"].EntireRow.Hidden && options!.EntireSheet?.Address == "A1:J300001",
+                "on a protected sheet under an AutoFilter that hides 150,000 rows, with D:J hidden, the prompt finds the data in a hidden column of a hidden row"
+                + (finished ? $" (entire {options!.EntireSheet?.Address})" : " (it did not finish)"));
+        }
+        finally
+        {
+            workbook.Close();
+        }
+    }
+
+    // A sheet whose column A holds a heading and then 1 and 0 by turns, with a filter that hides the rows of 1: every other row of
+    // 2 to rows + 1, from row 2.
+    private static IWorksheet FilteredColumn(IWorkbook workbook, int rows)
+    {
+        var sheet = workbook.Worksheets[0];
+        sheet.Name = "Sheet1";
+        var column = new object[rows + 1, 1];
+        column[0, 0] = "h";
+        for (int r = 1; r <= rows; r++) column[r, 0] = (double)(r % 2);
+        sheet.Cells[0, 0, rows, 0].Value = column;
+        sheet.Cells[0, 0, rows, 0].AutoFilter(0, "=0", AutoFilterOperator.And, null, true);
+        return sheet;
     }
 
     // RULES.md 3.11 and section 7: Windows sends formulas' current values.  In a workbook that calculates manually, a formula's

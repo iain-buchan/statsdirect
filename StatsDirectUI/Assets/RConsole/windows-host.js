@@ -157,6 +157,27 @@
         if (script.value !== value) { script.value = value; changed(script); }
         return true;
       },
+      // The program's own change to the script, as when a saved script's data file moves with it: each occurrence of a text is
+      // replaced in the script as it is now, so what the user has just typed stays, with the caret, selection and scroll where they
+      // were.  It returns the script.
+      replaceInScript(term, replacement) {
+        if (typeof term !== 'string' || !term || typeof replacement !== 'string') return script.value;
+        const original = script.value;
+        if (!original.includes(term)) return original;
+        const moved = offset => {
+          let shift = 0;
+          for (let at = original.indexOf(term); at !== -1 && at < offset; at = original.indexOf(term, at + term.length)) {
+            if (at + term.length > offset) return at + shift;   // within an occurrence: to its start
+            shift += replacement.length - term.length;
+          }
+          return offset + shift;
+        };
+        const start = moved(script.selectionStart), end = moved(script.selectionEnd), top = script.scrollTop;
+        script.value = original.split(term).join(replacement);
+        try { script.setSelectionRange(start, end); script.scrollTop = top; } catch (error) { /* the change stands without them */ }
+        changed(script);
+        return script.value;
+      },
       edit, selectedText, selectAll, findNext, replaceSelection, replaceAll,
       focus() { if (transcriptTarget) transcript.focus({preventScroll: true}); else field().focus({preventScroll: true}); },
       contextChartSource: () => contextSource,

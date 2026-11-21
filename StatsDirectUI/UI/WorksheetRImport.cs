@@ -112,7 +112,8 @@ internal static class WorksheetRImport
         // While an AutoFilter is on, Find passes over every hidden row (whether the filter or the user hid it): it finds the visible
         // rows' bounds, and the hidden rows are added.  Few hidden cells are read one by one.  Otherwise each hidden row's first and last
         // cell with contents come from the row's ends, as Ctrl+arrow finds them, which pass over hidden columns, so those columns' cells
-        // are read one by one.  A far-off formatted cell, which widens the used range, so costs little however many rows are hidden.
+        // are read one by one, or, when they are many, a copy of the sheet is searched with the filter off.  A far-off formatted cell,
+        // which widens the used range, so costs little however many rows and columns are hidden.
         var bounds = FoundBounds(range);
         var cells = range.Worksheet.Cells;
         int last = range.Row + range.RowCount - 1, first = range.Column, right = range.Column + range.ColumnCount - 1;
@@ -137,6 +138,9 @@ internal static class WorksheetRImport
             return bounds;
         }
         int[] hiddenColumns = Enumerable.Range(first, range.ColumnCount).Where(column => cells[0, column].EntireColumn.Hidden).ToArray();
+        // Where hidden rows meet many hidden columns, a copy of the sheet is searched instead, with the filter off there (Codex's
+        // third review).  A protected sheet's filter cannot be turned off, so its cells are still read.
+        if (hiddenRows * hiddenColumns.Length > 1_000_000 && TryUnfilteredBounds(range, out var unfiltered)) return unfiltered;
         foreach (var (from, to) in runs)
             for (int row = from; row <= to; row++)
             {
@@ -160,6 +164,26 @@ internal static class WorksheetRImport
         if (end.Value != null) return end.Column;
         var next = fromRight ? end.EndLeft : end.EndRight;
         return next.Value != null && next.Column >= first && next.Column <= last ? next.Column : null;
+    }
+
+    // The bounds Find gives in a copy of the sheet, in a workbook of the import's own that calculates nothing, with the filter off there,
+    // so that Find passes over no row.  The copy takes milliseconds, however large the sheet; the sheet itself is left as it is.  False
+    // when the copy cannot be made or its filter turned off, as on a protected sheet: the caller then reads the cells.
+    private static bool TryUnfilteredBounds(IRange range, out (int Top, int Bottom, int Left, int Right)? bounds)
+    {
+        bounds = null;
+        var book = Factory.GetWorkbook(CultureInfo.InvariantCulture);
+        try
+        {
+            book.WorkbookSet.Calculation = Calculation.Manual;
+            var copy = (IWorksheet)range.Worksheet.CopyAfter(book.Worksheets[0]);
+            copy.AutoFilterMode = false;
+            if (copy.AutoFilterMode) return false;
+            bounds = FoundBounds(copy.Cells[range.Row, range.Column, range.Row + range.RowCount - 1, range.Column + range.ColumnCount - 1]);
+            return true;
+        }
+        catch (Exception e) when (e is not OutOfMemoryException) { return false; }
+        finally { book.Close(); }
     }
 
     // The bounds Find gives: every non-blank cell, except in rows hidden while an AutoFilter is on.
@@ -329,7 +353,7 @@ internal static class WorksheetRImport
         {
             char c = format[i];
             if (c == '"') quoted = !quoted;
-            else if (!quoted && c == '\\') i++;
+            else if (!quoted && c is '\\' or '_' or '*') i++;   // an escaped, spacing or fill character
             else if (!quoted && c == '[')
             {
                 int close = format.IndexOf(']', i + 1);
@@ -342,10 +366,12 @@ internal static class WorksheetRImport
         return false;
     }
 
-    private static readonly Regex Condition = new(@"^(<=|>=|<>|<|>|=)\s*([+-]?[0-9]+(?:\.[0-9]+)?)$", RegexOptions.CultureInvariant);
+    // A condition's limit is a number as the spreadsheet writes one: 10, -1.5, .5, 5., 1E2, 1.5e-3.
+    private static readonly Regex Condition = new(@"^(<=|>=|<>|<|>|=)\s*([+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?)$", RegexOptions.CultureInvariant);
 
     // A format's sections, and each section's condition ([<1], [>=100]) where it has one: both found outside quotes and escapes, so
-    // "[>10]" in quotes is text.  Parsed once for each format.
+    // "[>10]" in quotes is text.  The character after _ (a space as wide as it) or * (a fill) is that character, so "_;" is no
+    // separator.  Parsed once for each format.
     private sealed record Sections(string[] Parts, (string Comparison, double Limit)?[] Conditions);
     private static readonly Dictionary<string, Sections> parsedFormats = new(StringComparer.Ordinal);
 
@@ -364,7 +390,7 @@ internal static class WorksheetRImport
                 char c = format[i];
                 if (c == '"') quoted = !quoted;
                 else if (quoted) continue;
-                else if (c == '\\') i++;
+                else if (c is '\\' or '_' or '*') i++;
                 else if (c == '[')
                 {
                     int close = format.IndexOf(']', i + 1);

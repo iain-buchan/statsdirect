@@ -568,8 +568,7 @@ namespace StatsDirect.UI
             try
             {
                 path = OpenInRPath(SDConfiguration.MyStatsDirectRFolder, Text, DateTime.Now);
-                if (IsInteractiveR) await InteractiveConsole.GetScriptAsync();
-                string data = WriteRScript(path, rtbDoc.Text.Replace("\r", "").Replace("\n", "\r\n"));
+                string data = await WriteOpenInRCopyAsync(path);
                 saved = true;
                 if (data != null) AppendScriptNotice(data);
                 string rstudio = RController.FindRStudio();
@@ -600,6 +599,14 @@ namespace StatsDirect.UI
                 AppendScriptNotice("Could not open the script in R: " + ex.Message + "\n"
                     + (saved ? "(the script is saved as " + path + "; open it from there)\n" : ""));
             }
+        }
+
+        /// <summary>R+'s copy of the script, with the script's data beside it: the window's script, its file and its data stay as they
+        /// are.  Returns a notice about the data file, or null.</summary>
+        private async Task<string> WriteOpenInRCopyAsync(string path)
+        {
+            if (IsInteractiveR) await InteractiveConsole.GetScriptAsync();
+            return WriteRScript(path, rtbDoc.Text.Replace("\r", "").Replace("\n", "\r\n")).Notice;
         }
 
         private static void OpenRFolder()
