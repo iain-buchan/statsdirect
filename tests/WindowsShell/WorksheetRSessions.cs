@@ -477,12 +477,15 @@ internal static partial class Program
             // Two windows, one script name (Codex's fourth review).  The second window opens a script that reads the other workbook's
             // data: the import part of the saved script (each check run in the console is added to a window's script, and the first
             // window's checks are for its own data), with its own data file.
-            const string importEnd = "utils::str(worksheet_data)\n";
+            const string importEnd = "utils::str(worksheet_data)\n", markerPrefix = "# StatsDirect worksheet data: ";
             string saved = File.ReadAllText(destination);
-            int end = saved.IndexOf(importEnd, StringComparison.Ordinal);
-            Check(end > 0 && saved.Contains(ImportReader(firstData), StringComparison.Ordinal), "the saved script reads its data file through the import's reader");
+            int body = saved.IndexOf('\n') + 1, end = saved.IndexOf(importEnd, StringComparison.Ordinal);
+            Check(body > 0 && end >= body && saved[..body].TrimEnd('\r', '\n') == markerPrefix + Path.GetFileName(firstData)
+                    && saved.Contains(ImportReader(firstData), StringComparison.Ordinal),
+                "the saved script marks its data file and reads it through the import's reader");
             string twin = Path.Combine(elsewhere, "twin.R");
-            File.WriteAllText(twin, saved[..(end + importEnd.Length)]
+            // Model a pre-marker script using a new companion name, without copying the old companion's marker.
+            File.WriteAllText(twin, saved[body..(end + importEnd.Length)]
                 .Replace(ImportReader(firstData), ImportReader(DataBeside(twin)), StringComparison.Ordinal));
             File.WriteAllText(DataBeside(twin), otherData);
             var secondWindow = await Reopen(twin);
@@ -794,6 +797,29 @@ internal static partial class Program
                     && File.ReadAllText(requoted).Contains("utils::read.csv(file(" + requotedLiteral, StringComparison.Ordinal),
                 "Save As carries the window's data and keeps the reader's single quotes");
             await Replay(requoted, otherVerify, "the script with single quotes, saved and run afresh in R, reads its own data");
+
+            // Older imports used the reader without the marker. A user's comment with the same prefix is part of the script.
+            foreach (string header in new[] { "", "#!/usr/bin/env Rscript\n" })
+            {
+                string older = Path.Combine(elsewhere, header.Length == 0 ? "older.R" : "older with shebang.R");
+                string commentBefore = markerPrefix + "original workbook, checked by hand\n";
+                File.WriteAllText(older, header + commentBefore + ScriptReading(older));
+                File.WriteAllBytes(DataBeside(older), other);
+                var oldWindow = await Reopen(older);
+                Check(OwnCopy(oldWindow, other) && Script(oldWindow).StartsWith(header + commentBefore, StringComparison.Ordinal),
+                    "an older worksheet script opens with its own data and retains the user's marker-like comment");
+
+                // Edit the comment to match the generated line exactly. A save must still preserve both.
+                string genuine = markerPrefix + Path.GetFileName(DataBeside(older)) + "\n";
+                ((RichTextBox)Field(oldWindow, "rtbDoc")).Text = Script(oldWindow).Replace(commentBefore, genuine, StringComparison.Ordinal);
+                Check(await Save(oldWindow) && Holds(older, other)
+                        && File.ReadAllText(older).Replace("\r\n", "\n", StringComparison.Ordinal).StartsWith(header + genuine + genuine, StringComparison.Ordinal),
+                    "Save writes the generated data marker ahead of the user's edited comment");
+                var oldAgain = await Reopen(older);
+                Check(OwnCopy(oldAgain, other) && Script(oldAgain).StartsWith(header + genuine, StringComparison.Ordinal)
+                        && !Script(oldAgain).StartsWith(header + genuine + genuine, StringComparison.Ordinal),
+                    "reopening the saved script keeps the edited comment and hides only the generated marker");
+            }
         }
         finally
         {
