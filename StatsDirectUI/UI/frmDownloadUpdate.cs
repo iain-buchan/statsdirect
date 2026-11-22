@@ -14,16 +14,21 @@ namespace StatsDirect.UI
         private readonly Button cancel;
         private readonly CancellationTokenSource cancellation = new();
         private readonly Func<IProgress<UpdateDownloadProgress>, CancellationToken, Task<UpdateInstaller>> download;
+        private readonly Action<string> failed;
         private bool downloading;
 
         /// <summary>The dialog that downloads the installer of an offer.</summary>
         internal frmDownloadUpdate(UpdateOffer offer) : this((progress, token) => DownloadAsync(offer, progress, token), offer) { }
 
         /// <param name="offer">The offer whose version and host the dialog names; null in tests of the dialog alone.</param>
-        internal frmDownloadUpdate(Func<IProgress<UpdateDownloadProgress>, CancellationToken, Task<UpdateInstaller>> download, UpdateOffer offer = null)
+        /// <param name="failed">What tells the user that the download failed, given the message; a message box when null.  Only
+        /// tests pass another.</param>
+        internal frmDownloadUpdate(Func<IProgress<UpdateDownloadProgress>, CancellationToken, Task<UpdateInstaller>> download, UpdateOffer offer = null,
+            Action<string> failed = null)
         {
             SuspendLayout();
             this.download = download;
+            this.failed = failed ?? (message => MessageBox.Show(this, message, "StatsDirect update", MessageBoxButtons.OK, MessageBoxIcon.Warning));
             Text = "Update StatsDirect";
             AutoScaleDimensions = new SizeF(96F, 96F);
             AutoScaleMode = AutoScaleMode.Dpi;
@@ -69,10 +74,9 @@ namespace StatsDirect.UI
         private static async Task<UpdateInstaller> DownloadAsync(UpdateOffer offer, IProgress<UpdateDownloadProgress> progress, CancellationToken token)
         {
             using HttpClient client = UpdateInstaller.CreateClient();
-            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(token);
-            // ResponseHeadersRead does not apply HttpClient.Timeout to the body; cover the whole transfer.
-            timeout.CancelAfter(TimeSpan.FromMinutes(30));
-            return await UpdateInstaller.DownloadAsync(client, offer, progress, timeout.Token);
+            // The token is the user's Cancel alone.  The download keeps its own time, address by address (UpdateDownloadLimits):
+            // one limit over the whole of it would let the release's address use up the time the mirror needs.
+            return await UpdateInstaller.DownloadAsync(client, offer, progress, token);
         }
 
         protected override async void OnShown(EventArgs e)
@@ -94,9 +98,8 @@ namespace StatsDirect.UI
             {
                 Utilities.DiagnosticLog.Write("Installer download failed: " + ex);
                 string reason = ex is OperationCanceledException ? "The download timed out." : ex.Message;
-                MessageBox.Show(this, "The update could not be downloaded. StatsDirect will stay open.\r\n\r\n" +
-                    reason + "\r\n\r\nPlease try again, or download the installer from https://" + UpdateOffer.DownloadPage + ".",
-                    "StatsDirect update", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                failed("The update could not be downloaded. StatsDirect will stay open.\r\n\r\n" +
+                    reason + "\r\n\r\nPlease try again, or download the installer from https://" + UpdateOffer.DownloadPage + ".");
             }
             finally
             {

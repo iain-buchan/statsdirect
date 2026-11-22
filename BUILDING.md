@@ -145,7 +145,7 @@ at `https://www.statsdirect.com/download/windows-latest.json`
   "schema": 1,
   "version": "5.3.17",
   "url": "https://github.com/iain-buchan/statsdirect/releases/download/v5.3.17/StatsDirectSetup.exe",
-  "mirror": "https://www.statsdirect.com/download/StatsDirectSetup.exe",
+  "mirror": "https://www.statsdirect.com/download/v5.3.17/StatsDirectSetup.exe",
   "size": 304535768,
   "sha256": "79dbc07d18397b55f6c9e7957c30e5242370610f25a106ef0eb648450c394359"
 }
@@ -155,18 +155,30 @@ at `https://www.statsdirect.com/download/windows-latest.json`
   in this repository's GitHub release tagged `v<version>`. The updater accepts
   no other first address.
 - `mirror` need not be given. If it is, it must be `StatsDirectSetup.exe` in
-  `https://www.statsdirect.com/download/` or up to four folders below it. The
-  updater turns to it only when the file cannot be fetched from `url`, as on a
-  network that blocks GitHub: no connection, a refusal, a file that is not the
-  one published, or no answer within half a minute. The mirror is then given
-  all the time the download has. The manifest cannot send a download anywhere
-  but these two places.
+  `https://www.statsdirect.com/download/` or up to four folders below it. A
+  release publishes the versioned one, in the folder `v<version>`: the file
+  there never changes, so an offer goes on finding its own installer after the
+  website has moved on to a later release. The manifest cannot send a download
+  anywhere but these two places.
+- The updater turns to the mirror only when the file cannot be fetched from
+  `url`, as on a network that blocks GitHub: no connection, a refusal, a file
+  that is not the one published, or an address that is too slow. Too slow is no
+  answer for half a minute, at the start or between parts of the file; more
+  than ten minutes in all; or, once the file has been arriving for half a
+  minute, a rate at which it would not arrive within those ten minutes. The
+  mirror then has thirty minutes of its own, which is what an address with no
+  mirror has (`UpdateDownloadLimits`).
 - The updater offers the version only to an older StatsDirect. It downloads the
   file, following redirects only to https addresses, and starts it only if it
-  has that size and SHA-256, is signed by StatsDirect Limited, is StatsDirect,
-  is newer than the version running and is the version offered. That holds
-  whichever address sent the file. Otherwise the download is removed,
-  StatsDirect stays open and the user is given the download page.
+  has that size and SHA-256, is StatsDirect's setup program signed by
+  StatsDirect Limited, is newer than the version running and is the version
+  offered. That holds whichever address sent the file. Otherwise the download
+  is removed, StatsDirect stays open and the user is given the download page.
+- The setup program is told from the program's own signed files by the name in
+  its version resource, `StatsDirectSetup.exe`, which the build takes from
+  `OutputName` in `SDBootstrapper/SDBootstrapper.wixproj`. Like the name on the
+  signing certificate, it has to stay as it is: installed copies refuse a setup
+  program under another name.
 - A reader passes over names it does not know, so fields can be added. A change
   that an older reader would misread needs a new `schema` number and a new
   address for the file: installed versions go on reading `windows-latest.json`
@@ -176,41 +188,50 @@ at `https://www.statsdirect.com/download/windows-latest.json`
   and the updater follows; a version that accepts the new address has to be
   released before anything else takes the old name.
 
-At each release, with the signed installer:
+At each release, with the signed installer. Each command is
+`dotnet run --project tests/UpdateDownloadRegression -c Release --` followed by
+the options shown, and none of them starts an installer.
 
-1. `dotnet run --project tests/UpdateDownloadRegression -c Release -- --verify <StatsDirectSetup.exe> --running <previous version>`
-   must say PASS, as before: installed copies will start this installer.
-2. `... -- --manifest <StatsDirectSetup.exe> --out windows-latest.json --mirror <address>`
+1. `--verify <StatsDirectSetup.exe> --running <previous version>` must say PASS,
+   as before: installed copies will start this installer.
+2. `--manifest <StatsDirectSetup.exe> --out windows-latest.json --versioned-mirror`
    writes the manifest from the signed installer with the updater's own code,
-   and reads it back. The mirror is the address at which the website keeps its
-   own copy of the installer; leave the option out if it keeps none.
+   and reads it back. It refuses a file that is not the setup program.
 3. Attach `windows-latest.json` to the GitHub release with the installers
    before the release is published. With release immutability switched on,
    nothing can be added to a release afterwards.
-4. After publishing, `... -- --check-manifest windows-latest.json --running <previous version> --download`
-   must say PASS: the public file is the one the manifest describes. It starts
-   nothing.
-5. The website then publishes, in one deployment, the manifest (a copy of the
-   release's file, byte for byte), the version on the download page, the
-   installer addresses and its own copy of the installer at the mirror. The
-   manifest names stable releases only, and must never name a version whose
-   installer is not public at its address.
-6. With the website's copy in place, `... -- --check-manifest https://www.statsdirect.com/download/windows-latest.json --running <previous version> --download --block-github`
-   must say PASS: with GitHub refused, as a network that blocks it would, the
-   mirror gives the file published.
+4. After publishing, `--check-manifest windows-latest.json --running <previous version> --download --require-github`
+   must say PASS. It takes the file from the release's address and no other,
+   so a mirror in good order cannot hide a file that is missing or wrong at
+   GitHub.
+5. The website puts its copy of the installer at the manifest's mirror, in the
+   folder for the version, and keeps the folders of earlier versions, so that
+   an update already offered still finds its file. Then
+   `--check-manifest windows-latest.json --running <previous version> --download --block-github`
+   must say PASS. It refuses every request to GitHub, as a network that blocks
+   it would, so the file has to come from the mirror.
+6. Only when both checks have passed does the website publish the manifest (a
+   copy of the release's file, byte for byte), in one deployment with the
+   version on the download page and its own unversioned copy of the installer
+   for earlier versions. The manifest names stable releases only, and must
+   never name a version whose installer is not at both of its addresses.
+7. `--check-manifest https://www.statsdirect.com/download/windows-latest.json --running <previous version>`
+   then reads the manifest from the website as the updater does.
 
 Installed versions before 5.3.17 do not read the manifest, and the website keeps
-their addresses working:
+their addresses working as its own files:
 
 - 5.0.8 to 5.3.16 read the version from the text "Current version ..." on
   `www.statsdirect.com/download.aspx` and fetch
-  `https://www.statsdirect.com/download/StatsDirectSetup.exe`, following
-  redirects that end on an https address. 5.3.15 and 5.3.16 also require the
-  file to be signed by StatsDirect Limited and newer than the version running.
+  `https://www.statsdirect.com/download/StatsDirectSetup.exe`. 5.3.15 and 5.3.16
+  also require the file to be signed by StatsDirect Limited and newer than the
+  version running.
 - 5.0.7 and earlier open `http://www.statsdirect.com/download/StatsDirectSetup.exe`
   in the default browser.
 
-The page must not announce a version before that address serves it.
+That address stays a file on the website, not a redirect to GitHub: an installed
+copy on a network that blocks GitHub can update only from it. The page must not
+announce a version before that address serves it.
 
 ### Desktop HTML5 help
 

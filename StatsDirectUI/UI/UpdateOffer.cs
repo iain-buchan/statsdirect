@@ -88,6 +88,20 @@ namespace StatsDirect.UI
         /// <summary>The one address at which the installer of a version is accepted.</summary>
         internal static string InstallerAddress(Version version) => ReleaseDownloads + "v" + version.ToString(3) + "/" + InstallerName;
 
+        /// <summary>
+        /// The mirror a release publishes for a version: the installer in a folder of its own on the website, named for the version.
+        /// The file there never changes, so an offer goes on finding its own installer after the website has moved on to a later
+        /// release.
+        /// </summary>
+        internal static string VersionedMirrorAddress(Version version) =>
+            "https://www.statsdirect.com/download/v" + ThreeParts(version).ToString(3) + "/" + InstallerName;
+
+        /// <summary>
+        /// This offer with no mirror: the installer from the release's own address or not at all.  The release's check of that
+        /// address uses it, so that a mirror in good order cannot stand in for a file missing or wrong at GitHub.
+        /// </summary>
+        internal UpdateOffer WithoutMirror() => MirrorAddress == null ? this : new UpdateOffer(Version, Size, Sha256, null);
+
         /// <summary>Whether this is an update for a program of the given version.</summary>
         internal bool IsNewerThan(Version running) => Version > ThreeParts(running);
 
@@ -143,56 +157,69 @@ namespace StatsDirect.UI
             }
             using (document)
             {
-                JsonElement root = document.RootElement;
-                if (root.ValueKind != JsonValueKind.Object)
-                    throw new UpdateManifestException("The update manifest is not a JSON object.");
-                JsonElement? schema = null, version = null, url = null, mirror = null, size = null, sha256 = null;
-                foreach (JsonProperty property in root.EnumerateObject())
+                try
                 {
-                    switch (property.Name)
-                    {
-                        case "schema": Take(ref schema, property); break;
-                        case "version": Take(ref version, property); break;
-                        case "url": Take(ref url, property); break;
-                        case "mirror": Take(ref mirror, property); break;
-                        case "size": Take(ref size, property); break;
-                        case "sha256": Take(ref sha256, property); break;
-                    }
+                    return Read(document.RootElement);
                 }
-
-                // The form first: a later form may hold the rest differently.
-                if (schema is not { ValueKind: JsonValueKind.Number } schemaNumber || !WholeNumber.IsMatch(schemaNumber.GetRawText())
-                    || !int.TryParse(schemaNumber.GetRawText(), NumberStyles.None, CultureInfo.InvariantCulture, out int form))
-                    throw new UpdateManifestException("The update manifest does not say which form it is in (\"schema\").");
-                if (form != Schema)
-                    throw new UpdateManifestException(form > Schema
-                        ? $"The update manifest is in a later form ({form}) than this version of StatsDirect reads ({Schema})."
-                        : $"The update manifest is in a form ({form}) that StatsDirect does not read.");
-
-                if (version is not { ValueKind: JsonValueKind.String } versionText || VersionForm.Match(versionText.GetString()) is not { Success: true } parts)
-                    throw new UpdateManifestException("The update manifest does not give a version of three numbers (\"version\").");
-                var offered = new Version(int.Parse(parts.Groups[1].Value, CultureInfo.InvariantCulture),
-                    int.Parse(parts.Groups[2].Value, CultureInfo.InvariantCulture), int.Parse(parts.Groups[3].Value, CultureInfo.InvariantCulture));
-
-                // The address is compared as text, character for character: no other spelling of it is accepted.
-                if (url is not { ValueKind: JsonValueKind.String } address || !string.Equals(address.GetString(), InstallerAddress(offered), StringComparison.Ordinal))
-                    throw new UpdateManifestException($"The update manifest does not give the address of StatsDirect {offered}'s installer (\"url\").");
-
-                // A mirror need not be given.  One that is given must be the installer's name in www.statsdirect.com's download
-                // folder, again compared as text.
-                if (mirror.HasValue && (mirror.Value.ValueKind != JsonValueKind.String || !MirrorForm.IsMatch(mirror.Value.GetString())))
-                    throw new UpdateManifestException("The update manifest gives a second address that is not the installer in www.statsdirect.com's download folder (\"mirror\").");
-
-                if (size is not { ValueKind: JsonValueKind.Number } sizeNumber || !WholeNumber.IsMatch(sizeNumber.GetRawText())
-                    || !long.TryParse(sizeNumber.GetRawText(), NumberStyles.None, CultureInfo.InvariantCulture, out long bytes)
-                    || bytes <= 0 || bytes > MaximumInstallerBytes)
-                    throw new UpdateManifestException("The update manifest does not give a size that an installer can have (\"size\").");
-
-                if (sha256 is not { ValueKind: JsonValueKind.String } digest || !Sha256Form.IsMatch(digest.GetString()))
-                    throw new UpdateManifestException("The update manifest does not give a SHA-256 of 64 hexadecimal digits (\"sha256\").");
-
-                return new UpdateOffer(offered, bytes, digest.GetString().ToLowerInvariant(), mirror?.GetString());
+                catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
+                {
+                    // JSON's grammar lets through an escape that is no text, such as one half of a surrogate pair.  It is found
+                    // only when the name or the value is read, and it makes the manifest unreadable like any other fault.
+                    throw new UpdateManifestException("The update manifest holds text that cannot be read.", ex);
+                }
             }
+        }
+
+        private static UpdateOffer Read(JsonElement root)
+        {
+            if (root.ValueKind != JsonValueKind.Object)
+                throw new UpdateManifestException("The update manifest is not a JSON object.");
+            JsonElement? schema = null, version = null, url = null, mirror = null, size = null, sha256 = null;
+            foreach (JsonProperty property in root.EnumerateObject())
+            {
+                switch (property.Name)
+                {
+                    case "schema": Take(ref schema, property); break;
+                    case "version": Take(ref version, property); break;
+                    case "url": Take(ref url, property); break;
+                    case "mirror": Take(ref mirror, property); break;
+                    case "size": Take(ref size, property); break;
+                    case "sha256": Take(ref sha256, property); break;
+                }
+            }
+
+            // The form first: a later form may hold the rest differently.
+            if (schema is not { ValueKind: JsonValueKind.Number } schemaNumber || !WholeNumber.IsMatch(schemaNumber.GetRawText())
+                || !int.TryParse(schemaNumber.GetRawText(), NumberStyles.None, CultureInfo.InvariantCulture, out int form))
+                throw new UpdateManifestException("The update manifest does not say which form it is in (\"schema\").");
+            if (form != Schema)
+                throw new UpdateManifestException(form > Schema
+                    ? $"The update manifest is in a later form ({form}) than this version of StatsDirect reads ({Schema})."
+                    : $"The update manifest is in a form ({form}) that StatsDirect does not read.");
+
+            if (version is not { ValueKind: JsonValueKind.String } versionText || VersionForm.Match(versionText.GetString()) is not { Success: true } parts)
+                throw new UpdateManifestException("The update manifest does not give a version of three numbers (\"version\").");
+            var offered = new Version(int.Parse(parts.Groups[1].Value, CultureInfo.InvariantCulture),
+                int.Parse(parts.Groups[2].Value, CultureInfo.InvariantCulture), int.Parse(parts.Groups[3].Value, CultureInfo.InvariantCulture));
+
+            // The address is compared as text, character for character: no other spelling of it is accepted.
+            if (url is not { ValueKind: JsonValueKind.String } address || !string.Equals(address.GetString(), InstallerAddress(offered), StringComparison.Ordinal))
+                throw new UpdateManifestException($"The update manifest does not give the address of StatsDirect {offered}'s installer (\"url\").");
+
+            // A mirror need not be given.  One that is given must be the installer's name in www.statsdirect.com's download
+            // folder, again compared as text.
+            if (mirror.HasValue && (mirror.Value.ValueKind != JsonValueKind.String || !MirrorForm.IsMatch(mirror.Value.GetString())))
+                throw new UpdateManifestException("The update manifest gives a second address that is not the installer in www.statsdirect.com's download folder (\"mirror\").");
+
+            if (size is not { ValueKind: JsonValueKind.Number } sizeNumber || !WholeNumber.IsMatch(sizeNumber.GetRawText())
+                || !long.TryParse(sizeNumber.GetRawText(), NumberStyles.None, CultureInfo.InvariantCulture, out long bytes)
+                || bytes <= 0 || bytes > MaximumInstallerBytes)
+                throw new UpdateManifestException("The update manifest does not give a size that an installer can have (\"size\").");
+
+            if (sha256 is not { ValueKind: JsonValueKind.String } digest || !Sha256Form.IsMatch(digest.GetString()))
+                throw new UpdateManifestException("The update manifest does not give a SHA-256 of 64 hexadecimal digits (\"sha256\").");
+
+            return new UpdateOffer(offered, bytes, digest.GetString().ToLowerInvariant(), mirror?.GetString());
         }
 
         // A name given twice is refused: readers of JSON differ on which of the two counts.

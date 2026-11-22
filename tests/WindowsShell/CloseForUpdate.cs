@@ -16,7 +16,7 @@ internal static partial class Program
         FormClosingEventHandler refuse = (_, e) => { asked.Add(((bool)Get(app, "ClosingForUpgrade"), path != null && File.Exists(path))); e.Cancel = true; };
         main.FormClosing += closing;
         main.FormClosing += refuse;
-        Form report = null, rWindow = null;
+        Form report = null, rWindow = null, workbook = null;
         try
         {
             // No report or R window: the close is refused at once, and the update is released with its installer.
@@ -25,6 +25,40 @@ internal static partial class Program
             Call(app, "CloseForUpgrade", installer);
             Check(asked.Count == 1 && asked[0] == (true, true) && !(bool)Get(app, "ClosingForUpgrade") && !File.Exists(path) && !main.IsDisposed,
                 "a close for an update that is refused at once releases the update and removes its installer");
+
+            // A workbook with changes not saved.  The main window asks about it before it closes, and while it asks the update is still
+            // arranged and its installer is there, not started.  Cancel keeps StatsDirect open: the update is released, the installer
+            // removed, and the workbook is as it was.
+            asked.Clear();
+            workbook = (Form)Call(main, "CreateGrid");
+            await Task.Delay(300);
+            workbook.GetType().GetProperty("Dirty", Internal)!.SetValue(workbook, true);
+            installer = await FakeInstaller();
+            path = (string)Get(installer, "FilePath");
+            var question = AnswerQuestion(main, app, installer, 3);
+            Call(app, "CloseForUpgrade", installer);
+            var atCancel = await question;
+            Check(atCancel.text != null && atCancel.text.Contains("has changes that have not been saved") && atCancel.arranged && atCancel.installerWaiting,
+                "a workbook with unsaved changes is asked about before StatsDirect closes for an update, with the update arranged and its installer waiting, not started");
+            Check(!(bool)Get(app, "ClosingForUpgrade") && !File.Exists(path) && !main.IsDisposed && !workbook.IsDisposed && (bool)Get(workbook, "Dirty") && !(bool)Get(main, "CloseIsPending"),
+                "Cancel at that question keeps StatsDirect and the workbook open, releases the update and removes its installer");
+
+            // No at the same question: the changes are given up and the close goes on.  Only then does the main window come to the end of
+            // its closing, still with the update arranged and its installer waiting: the installer is for after the questions.
+            asked.Clear();
+            installer = await FakeInstaller();
+            path = (string)Get(installer, "FilePath");
+            question = AnswerQuestion(main, app, installer, 2);
+            Call(app, "CloseForUpgrade", installer);
+            var atNo = await question;
+            Check(atNo.text != null && atNo.arranged && atNo.installerWaiting && asked.Count == 1 && asked[0] == (true, true),
+                "after No at that question the close goes on, with the update arranged and its installer waiting: " + string.Join(", ", asked));
+            Check(!(bool)Get(app, "ClosingForUpgrade") && !File.Exists(path) && !main.IsDisposed,
+                "when that close is refused, the update is released and its installer removed");
+            workbook.GetType().GetProperty("Dirty", Internal)!.SetValue(workbook, false);
+            workbook.Close();
+            for (int i = 0; i < 100 && !workbook.IsDisposed; i++)
+                await Task.Delay(50);
 
             // A report open: the first asking waits for the report, and the update and its installer are kept for the second asking.
             asked.Clear();
@@ -66,7 +100,9 @@ internal static partial class Program
         {
             main.FormClosing -= refuse;
             main.FormClosing -= closing;
-            foreach (var window in new[] { report, rWindow })
+            if (workbook != null && !workbook.IsDisposed)
+                workbook.GetType().GetProperty("Dirty", Internal)!.SetValue(workbook, false);
+            foreach (var window in new[] { report, rWindow, workbook })
                 if (window != null && !window.IsDisposed)
                 {
                     window.Close();
@@ -114,6 +150,22 @@ internal static partial class Program
             for (int i = 0; i < 100 && !(workbook.IsDisposed && refusing.IsDisposed); i++)
                 await Task.Delay(50);
         }
+    }
+
+    // Answers the question in the main window's top bar when it comes, with the button of the number given (for the question about
+    // unsaved changes: 1 Yes, 2 No, 3 Cancel).  It tells what stood at that moment: the question's text, whether the update was still
+    // arranged, and whether its installer was there and had not been started.
+    static async Task<(string text, bool arranged, bool installerWaiting)> AnswerQuestion(frmMain main, object app, object installer, int button)
+    {
+        for (int i = 0; i < 200 && !(bool)Field(main, "waitingForModalMessage"); i++)
+            await Task.Delay(50);
+        if (!(bool)Field(main, "waitingForModalMessage"))
+            return (null, false, false);
+        string text = ((Label)Field(main, "lblModalMessageText")).Text;
+        bool arranged = (bool)Get(app, "ClosingForUpgrade");
+        bool waiting = File.Exists((string)Get(installer, "FilePath")) && !(bool)Field(installer, "started");
+        ((Button)Field(main, "cmdModalMessage" + button)).PerformClick();
+        return (text, arranged, waiting);
     }
 
     // A downloaded installer as the updater holds one, made from a few bytes of a pretend setup file: it is never started here.

@@ -21,7 +21,7 @@ internal static class Program
         try
         {
             if (args.Contains("--download-only"))
-                return CheckManifest(UpdateOffer.ManifestUri.AbsoluteUri, null, download: true, args.Contains("--block-github")).GetAwaiter().GetResult();
+                return CheckManifest(UpdateOffer.ManifestUri.AbsoluteUri, null, download: true, Required(args)).GetAwaiter().GetResult();
             if (Value(args, "--verify") is string installer)
             {
                 // The release check: would the updater of the version given start this installer?
@@ -32,9 +32,9 @@ internal static class Program
                 return 0;
             }
             if (Value(args, "--manifest") is string signed)
-                return WriteManifest(Path.GetFullPath(signed), Value(args, "--out"), Value(args, "--mirror"));
+                return WriteManifest(Path.GetFullPath(signed), Value(args, "--out"), Value(args, "--mirror"), args.Contains("--versioned-mirror"));
             if (Value(args, "--check-manifest") is string manifest)
-                return CheckManifest(manifest, Value(args, "--running"), args.Contains("--download"), args.Contains("--block-github")).GetAwaiter().GetResult();
+                return CheckManifest(manifest, Value(args, "--running"), args.Contains("--download"), Required(args)).GetAwaiter().GetResult();
             if (args.Contains("--preview"))
             {
                 ApplicationConfiguration.Initialize();
@@ -55,6 +55,8 @@ internal static class Program
             RunDownloads().GetAwaiter().GetResult();
             RunRedirects().GetAwaiter().GetResult();
             RunMirrors().GetAwaiter().GetResult();
+            RunLimits().GetAwaiter().GetResult();
+            RunGates().GetAwaiter().GetResult();
             RunInstallerChecks();
             RunSignedDownloads().GetAwaiter().GetResult();
             ApplicationConfiguration.Initialize();
@@ -71,16 +73,21 @@ internal static class Program
 
     // ---- The release's tools ----
 
-    // Writes the manifest of a signed installer, with the mirror on www.statsdirect.com if one is given.  The installer must be
-    // one the updater would start, and what is written must read back, through the updater's own reader, as the same offer.
-    private static int WriteManifest(string installer, string output, string mirror)
+    // Writes the manifest of a signed installer, with a mirror on www.statsdirect.com if one is asked for: the versioned one,
+    // which is what a release publishes, or an address given.  The installer must be one the updater would start, and what is
+    // written must read back, through the updater's own reader, as the same offer.
+    private static int WriteManifest(string installer, string output, string mirror, bool versionedMirror)
     {
         UpdateInstallerCheck.Verify(installer, new Version(0, 0, 0));
-        FileVersionInfo info = FileVersionInfo.GetVersionInfo(installer);
+        if (versionedMirror && mirror != null)
+            throw new ArgumentException("Give --versioned-mirror or --mirror <address>, not both.");
+        Version version = FileVersion(installer);
+        if (versionedMirror)
+            mirror = UpdateOffer.VersionedMirrorAddress(version);
         string sha256;
         using (FileStream file = File.OpenRead(installer))
             sha256 = Convert.ToHexString(SHA256.HashData(file));
-        UpdateOffer offer = UpdateOffer.Create(new Version(info.FileMajorPart, info.FileMinorPart, info.FileBuildPart), new FileInfo(installer).Length, sha256, mirror);
+        UpdateOffer offer = UpdateOffer.Create(version, new FileInfo(installer).Length, sha256, mirror);
         string manifest = offer.ToManifest();
         if (UpdateOffer.Parse(manifest) != offer)
             throw new Exception("The manifest written does not read back as the offer.");
@@ -93,15 +100,46 @@ internal static class Program
         File.WriteAllBytes(Path.GetFullPath(output), bytes);
         Console.WriteLine($"PASS: wrote {Path.GetFullPath(output)} ({bytes.Length} bytes, SHA-256 {Convert.ToHexString(SHA256.HashData(bytes))}) for {installer}, signed by {UpdateInstallerCheck.Signer(installer)}.");
         Console.WriteLine("It offers " + offer);
-        Console.WriteLine("Publish it only when that address serves this file: check with --check-manifest <file> --download"
-            + (offer.Mirror == null ? "." : ", and the mirror with --check-manifest <file> --download --block-github."));
+        Console.WriteLine("Publish it only when the release's address serves this file (--check-manifest <file> --download --require-github)"
+            + (offer.Mirror == null ? "." : " and the mirror serves it too (--check-manifest <file> --download --block-github)."));
         return 0;
     }
 
+    // Where a check requires the installer to come from.
+    private enum From { Either, GitHub, Mirror }
+
+    private static From Required(string[] args) =>
+        args.Contains("--require-github") && args.Contains("--block-github") ? throw new ArgumentException("--require-github and --block-github cannot go together.")
+        : args.Contains("--require-github") ? From.GitHub
+        : args.Contains("--block-github") ? From.Mirror
+        : From.Either;
+
+    // The download a check makes, over the network given.
+    // GitHub: from the release's own address and no other, so that a mirror in good order cannot stand in for a file that is
+    // missing or wrong at GitHub.
+    // Mirror: as on a network that blocks GitHub, where the file has to come from the manifest's mirror with no help from GitHub.
+    // Either: as the updater downloads.
+    private static async Task<UpdateInstaller> DownloadFrom(HttpMessageHandler network, UpdateOffer offer, From source, Action<string> verify, UpdateDownloadLimits limits = null)
+    {
+        if (source == From.Mirror && offer.Mirror == null)
+        {
+            network.Dispose();
+            throw new IOException("The manifest names no mirror.");
+        }
+        using var client = new HttpClient(source == From.Mirror ? new BlockGitHub(network) : network) { Timeout = Timeout.InfiniteTimeSpan };
+        UpdateInstaller installer = await UpdateInstaller.DownloadAsync(client, source == From.GitHub ? offer.WithoutMirror() : offer, null, CancellationToken.None, verify, limits);
+        Uri required = source switch { From.GitHub => offer.Url, From.Mirror => offer.Mirror, _ => installer.Source };
+        if (installer.Source != required)
+        {
+            installer.Dispose();
+            throw new IOException($"The file came from {installer.Source}, not from {required}.");
+        }
+        return installer;
+    }
+
     // Reads a manifest, from a file or an https address, as the updater reads it; with download, also fetches its installer and
-    // checks it as the updater of the version given would.  With blockGitHub the download is made as on a network that blocks
-    // GitHub, so the file has to come from the manifest's mirror.  It starts nothing.
-    private static async Task<int> CheckManifest(string source, string runningGiven, bool download, bool blockGitHub)
+    // checks it as the updater of the version given would.  It starts nothing.
+    private static async Task<int> CheckManifest(string source, string runningGiven, bool download, From from)
     {
         // With no version given, the updater's own check is made: against this program's version.
         Version running = runningGiven != null ? Version.Parse(runningGiven) : UpdateInstallerCheck.RunningVersion;
@@ -121,18 +159,16 @@ internal static class Program
             ? $"StatsDirect {running} would offer it as an update."
             : $"StatsDirect {running} would say that it has the latest version.");
         if (!download)
-            return 0;
-        using HttpClient downloader = blockGitHub
-            ? new HttpClient(new BlockGitHub()) { Timeout = Timeout.InfiniteTimeSpan }
-            : UpdateInstaller.CreateClient();
-        if (blockGitHub)
-            Console.WriteLine("As on a network that blocks GitHub: every request to github.com and githubusercontent.com is refused here.");
-        using var timeout = new CancellationTokenSource(TimeSpan.FromMinutes(30));
-        using UpdateInstaller installer = await UpdateInstaller.DownloadAsync(downloader, offer, null, timeout.Token,
+            return from == From.Either ? 0 : throw new ArgumentException("--require-github and --block-github go with --download.");
+        Console.WriteLine(from switch
+        {
+            From.GitHub => "From the release's address at GitHub and no other: the manifest's mirror is left out of this check.",
+            From.Mirror => "As on a network that blocks GitHub: every request to github.com and githubusercontent.com is refused here, so the file has to come from the mirror.",
+            _ => "As the updater downloads: from the release's address, or from the mirror if that cannot be fetched."
+        });
+        using UpdateInstaller installer = await DownloadFrom(new HttpClientHandler { AllowAutoRedirect = false }, offer, from,
             path => UpdateInstallerCheck.Verify(path, running, offer.Version));
-        if (blockGitHub && installer.Source != offer.Mirror)
-            throw new Exception("The file did not come from the mirror.");
-        Console.WriteLine($"PASS: downloaded {new FileInfo(installer.FilePath).Length:N0} bytes from {installer.Source}. Size and SHA-256 are the manifest's. It is signed by {UpdateInstallerCheck.Signer(installer.FilePath)} and is StatsDirect {offer.Version}, newer than {running}: the updater would start it. File has Internet-zone metadata. No installer launched; test download removed on exit.");
+        Console.WriteLine($"PASS: downloaded {new FileInfo(installer.FilePath).Length:N0} bytes from {installer.Source}. Size and SHA-256 are the manifest's. It is the setup program, signed by {UpdateInstallerCheck.Signer(installer.FilePath)}, and is StatsDirect {offer.Version}, newer than {running}: the updater would start it. File has Internet-zone metadata. No installer launched; test download removed on exit.");
         return 0;
     }
 
@@ -207,6 +243,29 @@ internal static class Program
                     && (detail == null ? outcome.Detail == null : outcome.Detail.Contains(detail, StringComparison.Ordinal)),
                 $"The check offers nothing and sends the user to the download page: {name}");
         }
+
+        // An escape that JSON's grammar allows but that is no text, one half of a surrogate pair, makes the manifest unreadable
+        // wherever it is read: in a value, or in the name of any field.  (Codex's review of 11afcbbc: it threw past the manifest's
+        // own error.)
+        string half = "\\uD800";
+        Unreadable(Manifest(version: "\"" + half + "\""), "cannot be read", "half a surrogate pair as the version");
+        Unreadable(Manifest(version: "\"5.3.17" + half + "\""), "cannot be read", "half a surrogate pair after the version");
+        Unreadable(Manifest(url: "\"" + Address + half + "\""), "cannot be read", "half a surrogate pair in the address");
+        Unreadable(Manifest(sha256: "\"" + half + "\""), "cannot be read", "half a surrogate pair as the SHA-256");
+        Unreadable(Manifest(extra: "\"mirror\": \"" + half + "\""), "cannot be read", "half a surrogate pair as the mirror");
+        Unreadable(Manifest(extra: "\"note" + half + "\": 1"), "cannot be read", "half a surrogate pair in the name of a field that is not known");
+        Unreadable("{ \"" + half + "\": 1 }", "cannot be read", "half a surrogate pair as the only field's name");
+        Unreadable(Manifest(extra: "\"note\\uDC00\": 1"), "cannot be read", "the second half of a surrogate pair alone in a field's name");
+        UpdateCheckOutcome garbled = UpdateOffer.Evaluate(Manifest(version: "\"" + half + "\""), null, new Version(5, 3, 16));
+        Check(!garbled.Succeeded && garbled.Offer == null && garbled.Message.StartsWith("Could not read the StatsDirect update information", StringComparison.Ordinal)
+                && garbled.Message.EndsWith(page, StringComparison.Ordinal) && garbled.Detail.Contains("cannot be read", StringComparison.Ordinal),
+            "The check offers nothing and sends the user to the download page: a manifest with half a surrogate pair");
+        // Escapes that stand for text are read as that text.
+        Check(UpdateOffer.Parse(Manifest(version: "\"5.3.\\u0031\\u0037\"")) == release
+                && UpdateOffer.Parse(Manifest(url: "\"" + Address.Replace("/", "\\/") + "\"")) == release
+                && UpdateOffer.Parse(Manifest().Replace("\"version\"", "\"vers\\u0069on\"")) == release
+                && UpdateOffer.Parse(Manifest(extra: "\"note\": \"\\uD83D\\uDE00 \\u00e9 \\\" \\\\\", \"n\\u006Fte\": 2")) == release,
+            "Escapes that stand for text are read as the text: in a value, in a field's name, and a whole surrogate pair");
 
         Unreadable("", "is not JSON", "empty");
         Unreadable("   \n", "is not JSON", "white space only");
@@ -559,6 +618,23 @@ internal static class Program
             using UpdateInstaller installer = dialog.Installer;
         }
 
+        // A download that fails, as one whose file fails the updater's check does.  The dialog gives no installer, and StatsDirect
+        // closes for an update only when the dialog gives one: so nothing is closed and nothing is started.  The user is told why,
+        // and where to download the installer by hand.
+        string told = null;
+        int before = Directory.GetDirectories(Path.GetTempPath(), "StatsDirect-update-*").Length;
+        byte[] unsigned = [(byte)'M', (byte)'Z', 0, 0];
+        using (var dialog = new frmDownloadUpdate(async (progress, token) =>
+        {
+            using var client = Client(offer, new ByteArrayContent(unsigned));
+            return await UpdateInstaller.DownloadAsync(client, offer, progress, token);
+        }, offer, message => told = message))
+            Check(dialog.ShowDialog() == DialogResult.Cancel && dialog.Installer == null && told != null
+                    && told.StartsWith("The update could not be downloaded. StatsDirect will stay open.", StringComparison.Ordinal)
+                    && told.Contains("not signed by StatsDirect Limited") && told.EndsWith("download the installer from https://www.statsdirect.com/download.aspx.", StringComparison.Ordinal)
+                    && Directory.GetDirectories(Path.GetTempPath(), "StatsDirect-update-*").Length == before,
+                "A download whose file fails the updater's check gives the dialog no installer and keeps nothing; the user is told why, and where to download it by hand");
+
         bool cancelled = false;
         using (var dialog = new frmDownloadUpdate(async (progress, token) =>
         {
@@ -585,7 +661,7 @@ internal static class Program
         const string site = "https://www.statsdirect.com/download/StatsDirectSetup.exe";
         UpdateOffer offer = UpdateOffer.Create(new Version(9, 9, 9), bytes.Length, Convert.ToHexString(SHA256.HashData(bytes)), site);
         Uri mirror = offer.Mirror;
-        TimeSpan brief = TimeSpan.FromMilliseconds(300);
+        var brief = new UpdateDownloadLimits(TimeSpan.FromMilliseconds(300), TimeSpan.FromSeconds(20), TimeSpan.FromSeconds(60));
         byte[] altered = (byte[])bytes.Clone();
         altered[^1] ^= 1;
 
@@ -674,10 +750,202 @@ internal static class Program
             "After a cancellation the download stops, and the mirror is not announced as the next address");
     }
 
+    // The time a download has.  Each address has its own, so the release's address cannot use up the time the mirror needs.
+    // (Codex's review of 11afcbbc: a first address that kept sending, a byte at a time, was waited on until the one limit over the
+    // whole download ran out, and the mirror was never asked.)
+    private static async Task RunLimits()
+    {
+        byte[] bytes = new byte[120000];
+        new Random(23).NextBytes(bytes);
+        bytes[0] = (byte)'M'; bytes[1] = (byte)'Z';
+        var version = new Version(9, 9, 9);
+        UpdateOffer offer = UpdateOffer.Create(version, bytes.Length, Convert.ToHexString(SHA256.HashData(bytes)), UpdateOffer.VersionedMirrorAddress(version));
+        Uri mirror = offer.Mirror;
+        var watch = Stopwatch.StartNew();
+
+        // A release's address that never falls silent but sends too slowly to finish: given up once that is plain, well within its time.
+        var judged = new UpdateDownloadLimits(TimeSpan.FromMilliseconds(500), TimeSpan.FromSeconds(20), TimeSpan.FromSeconds(60));
+        var trickle = new TrickleStream(bytes, 50);
+        var trickling = new Routes().On(offer.Url, _ => Ok(new TestContent(trickle))).On(mirror, _ => Ok(new ByteArrayContent(bytes)));
+        using (var client = new HttpClient(trickling))
+        using (UpdateInstaller installer = await UpdateInstaller.DownloadAsync(client, offer, null, CancellationToken.None, NoCheck, judged))
+            Check(installer.Source == mirror && File.ReadAllBytes(installer.FilePath).SequenceEqual(bytes) && !File.Exists(installer.FilePath + ".partial")
+                    && trickling.Requested.SequenceEqual([offer.Url, mirror]) && trickle.BytesRead is > 0 and < 1000 && watch.Elapsed < TimeSpan.FromSeconds(10),
+                $"A release's address that sends a byte at a time is given up once it is plain that it cannot finish in its time, and the mirror gives the file ({trickle.BytesRead} bytes taken in {watch.Elapsed.TotalSeconds:F1} s of 20 s)");
+
+        // The same address where the rate is not yet judged: its time still ends, and the mirror has its own time after it.
+        var ended = new UpdateDownloadLimits(TimeSpan.FromSeconds(30), TimeSpan.FromMilliseconds(700), TimeSpan.FromSeconds(60));
+        watch.Restart();
+        var held = new Routes().On(offer.Url, _ => Ok(new TestContent(new TrickleStream(bytes, 50)))).On(mirror, _ => Ok(new ByteArrayContent(bytes)));
+        using (var client = new HttpClient(held))
+        using (UpdateInstaller installer = await UpdateInstaller.DownloadAsync(client, offer, null, CancellationToken.None, NoCheck, ended))
+            Check(installer.Source == mirror && File.ReadAllBytes(installer.FilePath).SequenceEqual(bytes) && watch.Elapsed >= TimeSpan.FromMilliseconds(600) && watch.Elapsed < TimeSpan.FromSeconds(10),
+                $"A release's address that is still sending when its time ends is given up, and the mirror gives the file ({watch.Elapsed.TotalSeconds:F1} s)");
+
+        // A chain of redirects, none of them slow to answer, that takes longer in all than the release's address has.
+        var chain = new Routes();
+        Uri at = offer.Url, last = null;
+        for (int hop = 1; hop <= 8; hop++)
+        {
+            Uri next = new("https://release-assets.example.net/hop/" + hop);
+            chain.OnAsync(at, async (_, token) => { await Task.Delay(250, token); return Redirect(next.AbsoluteUri); });
+            at = last = next;
+        }
+        chain.On(last, _ => Ok(new ByteArrayContent(bytes))).On(mirror, _ => Ok(new ByteArrayContent(bytes)));
+        var hurried = new UpdateDownloadLimits(TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(60));
+        watch.Restart();
+        using (var client = new HttpClient(chain))
+        using (UpdateInstaller installer = await UpdateInstaller.DownloadAsync(client, offer, null, CancellationToken.None, NoCheck, hurried))
+            Check(installer.Source == mirror && File.ReadAllBytes(installer.FilePath).SequenceEqual(bytes) && !chain.Requested.Contains(last) && chain.Requested[^1] == mirror
+                    && watch.Elapsed < TimeSpan.FromSeconds(10),
+                $"A chain of redirects that takes longer than the release's address has is given up part of the way along, and the mirror gives the file ({chain.Requested.Count - 1} of 9 addresses asked in {watch.Elapsed.TotalSeconds:F1} s)");
+
+        // A release's address that is slow but on course is left to finish: a slower connection is not sent to the mirror for nothing.
+        var onCourse = new UpdateDownloadLimits(TimeSpan.FromMilliseconds(200), TimeSpan.FromSeconds(20), TimeSpan.FromSeconds(60));
+        var steady = new Routes().On(offer.Url, _ => Ok(new TestContent(new SteadyStream(bytes, 10000, 40)))).On(mirror, _ => Ok(new ByteArrayContent(bytes)));
+        using (var client = new HttpClient(steady))
+        using (UpdateInstaller installer = await UpdateInstaller.DownloadAsync(client, offer, null, CancellationToken.None, NoCheck, onCourse))
+            Check(installer.Source == offer.Url && File.ReadAllBytes(installer.FilePath).SequenceEqual(bytes) && steady.Requested.SequenceEqual([offer.Url]),
+                "A release's address that sends slowly, but fast enough to finish in its time, is left to finish, and the mirror is not asked");
+
+        // The last address has an end as well: the mirror, and an address with no mirror.
+        var last600 = new UpdateDownloadLimits(TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(30), TimeSpan.FromMilliseconds(600));
+        UpdateOffer alone = Offer(bytes);
+        await Reject("An only address that is still sending when the download's time ends", new HttpClient(new Routes().On(alone.Url, _ => Ok(new TestContent(new TrickleStream(bytes, 50))))),
+            alone, "took too long", verify: NoCheck, limits: last600);
+        await Reject("A mirror that is still sending when its time ends", new HttpClient(new Routes().On(offer.Url, _ => new HttpResponseMessage(HttpStatusCode.Forbidden))
+            .On(mirror, _ => Ok(new TestContent(new TrickleStream(bytes, 50))))), offer, "took too long", verify: NoCheck, limits: last600);
+        // An only address is judged neither on its silences nor on its rate, as before: it has the last address's time.
+        var patient = new UpdateDownloadLimits(TimeSpan.FromMilliseconds(100), TimeSpan.FromMilliseconds(100), TimeSpan.FromSeconds(60));
+        using (var client = new HttpClient(new Routes().On(alone.Url, _ => Ok(new TestContent(new SteadyStream(bytes, 30000, 250))))))
+        using (UpdateInstaller installer = await UpdateInstaller.DownloadAsync(client, alone, null, CancellationToken.None, NoCheck, patient))
+            Check(installer.Source == alone.Url && File.ReadAllBytes(installer.FilePath).SequenceEqual(bytes), "An only address is not held to the first address's limits");
+
+        // The user's Cancel stops the download wherever it has got to, and nothing is kept.
+        using var early = new CancellationTokenSource();
+        early.CancelAfter(200);
+        var sending = new Routes().On(offer.Url, _ => Ok(new TestContent(new TrickleStream(bytes, 50)))).On(mirror, _ => Ok(new ByteArrayContent(bytes)));
+        await Reject("Cancellation while the release's address is sending", new HttpClient(sending), offer, null, early.Token, NoCheck, judged);
+        Check(sending.Requested.SequenceEqual([offer.Url]), "After a cancellation while the release's address is sending, the mirror is not asked");
+
+        // Between the two addresses: the release's address fails at the moment the user cancels.
+        using var between = new CancellationTokenSource();
+        var failing = new Routes().On(offer.Url, _ => { between.Cancel(); return new HttpResponseMessage(HttpStatusCode.Forbidden); }).On(mirror, _ => Ok(new ByteArrayContent(bytes)));
+        var announced = new RecordedProgress();
+        var before = Directory.GetDirectories(Path.GetTempPath(), "StatsDirect-update-*").ToHashSet();
+        string outcome = "completed";
+        using (var client = new HttpClient(failing))
+        {
+            try { using UpdateInstaller unexpected = await UpdateInstaller.DownloadAsync(client, offer, announced, between.Token, NoCheck); }
+            catch (OperationCanceledException) { outcome = "cancelled"; }
+            catch (Exception ex) when (ex is HttpRequestException or IOException) { outcome = "failed: " + ex.Message; }
+        }
+        Check(outcome == "cancelled" && failing.Requested.SequenceEqual([offer.Url]) && announced.Values.Where(p => p.Source != null).Select(p => p.Source).SequenceEqual(["github.com"])
+                && !Directory.GetDirectories(Path.GetTempPath(), "StatsDirect-update-*").Except(before).Any(),
+            $"A cancellation as the release's address fails ends the download as cancelled, not as failed, and the mirror is neither asked nor announced ({outcome})");
+
+        // While the mirror is sending.
+        using var late = new CancellationTokenSource();
+        var onMirror = new Routes().On(offer.Url, _ => new HttpResponseMessage(HttpStatusCode.Forbidden))
+            .On(mirror, _ => { late.CancelAfter(150); return Ok(new TestContent(new WaitingStream())); });
+        await Reject("Cancellation while the mirror is sending", new HttpClient(onMirror), offer, null, late.Token, NoCheck);
+        Check(onMirror.Requested.SequenceEqual([offer.Url, mirror]), "A cancellation while the mirror is sending stops the download there");
+    }
+
+    // The release's checks of where the file comes from.  (Codex's review of 11afcbbc: a check that may fall back to the mirror
+    // says nothing about the file at GitHub, so a release could pass it with that file missing or wrong.)
+    private static async Task RunGates()
+    {
+        byte[] bytes = new byte[90000];
+        new Random(31).NextBytes(bytes);
+        bytes[0] = (byte)'M'; bytes[1] = (byte)'Z';
+        byte[] altered = (byte[])bytes.Clone();
+        altered[^1] ^= 1;
+        var version = new Version(9, 9, 9);
+        string sha256 = Convert.ToHexString(SHA256.HashData(bytes));
+        UpdateOffer offer = UpdateOffer.Create(version, bytes.Length, sha256, UpdateOffer.VersionedMirrorAddress(version));
+        Uri mirror = offer.Mirror, held = new("https://release-assets.example.net/file/1?token=abc");
+        Check(mirror.AbsoluteUri == "https://www.statsdirect.com/download/v9.9.9/StatsDirectSetup.exe" && offer.WithoutMirror().Mirror == null && offer.WithoutMirror().Url == offer.Url
+                && UpdateOffer.Parse(offer.ToManifest()) == offer,
+            "A release's mirror is the installer in the website's folder for that version, and the manifest that names it reads back");
+
+        // The file is missing at GitHub, or wrong there, and the mirror is in good order.
+        Routes Missing() => new Routes().On(offer.Url, _ => new HttpResponseMessage(HttpStatusCode.NotFound)).On(mirror, _ => Ok(new ByteArrayContent(bytes)));
+        Routes Wrong() => new Routes().On(offer.Url, _ => Ok(new ByteArrayContent(altered))).On(mirror, _ => Ok(new ByteArrayContent(bytes)));
+        using (UpdateInstaller either = await DownloadFrom(Missing(), offer, From.Either, NoCheck))
+            Check(either.Source == mirror, "As the updater downloads, a file missing at GitHub is made good by the mirror: that download cannot be the check of GitHub");
+        await NoGate("The check of the release's address fails when the file is missing at GitHub, though the mirror is in good order", Missing(), offer, From.GitHub, "404");
+        await NoGate("The check of the release's address fails when the file at GitHub is not the one published, though the mirror is in good order", Wrong(), offer, From.GitHub, "not the installer published");
+
+        // The right file at GitHub, sent on by GitHub to where it is held, with a mirror that would fail.
+        var healthy = new Routes().On(offer.Url, _ => Redirect(held.AbsoluteUri)).On(held, _ => Ok(new ByteArrayContent(bytes))).On(mirror, _ => Ok(new ByteArrayContent(altered)));
+        using (UpdateInstaller fromGitHub = await DownloadFrom(healthy, offer, From.GitHub, NoCheck))
+            Check(fromGitHub.Source == offer.Url && healthy.Requested.SequenceEqual([offer.Url, held]) && File.ReadAllBytes(fromGitHub.FilePath).SequenceEqual(bytes),
+                "The check of the release's address passes on the right file, redirected by GitHub to where it is held, and does not ask the mirror");
+
+        // The mirror's own check: GitHub is refused, so nothing but the mirror can give the file.
+        var both = new Routes().On(offer.Url, _ => Ok(new ByteArrayContent(bytes))).On(mirror, _ => Ok(new ByteArrayContent(bytes)));
+        using (UpdateInstaller fromMirror = await DownloadFrom(both, offer, From.Mirror, NoCheck))
+            Check(fromMirror.Source == mirror && both.Requested.SequenceEqual([mirror]) && File.ReadAllBytes(fromMirror.FilePath).SequenceEqual(bytes),
+                "The check of the mirror takes the file from the mirror named in the manifest, and no request reaches GitHub");
+        await NoGate("The check of the mirror fails when the manifest names no mirror", new Routes().On(offer.Url, _ => Ok(new ByteArrayContent(bytes))), offer.WithoutMirror(), From.Mirror, "names no mirror");
+        await NoGate("The check of the mirror fails when the mirror's file is not the one published, though GitHub's is", new Routes().On(offer.Url, _ => Ok(new ByteArrayContent(bytes)))
+            .On(mirror, _ => Ok(new ByteArrayContent(altered))), offer, From.Mirror, "not the installer published");
+        await NoGate("The check of the mirror fails when the mirror has no file, though GitHub has", new Routes().On(offer.Url, _ => Ok(new ByteArrayContent(bytes)))
+            .On(mirror, _ => new HttpResponseMessage(HttpStatusCode.NotFound)), offer, From.Mirror, "404");
+        foreach (string onward in new[] { offer.Url.AbsoluteUri, "https://release-assets.githubusercontent.com/file/1", "https://objects.githubusercontent.com/file/1", "https://codeload.github.com/file/1" })
+            await NoGate("The check of the mirror fails when the mirror sends the request on to " + new Uri(onward).Host, new Routes().On(mirror, _ => Redirect(onward))
+                .On(new Uri(onward), _ => Ok(new ByteArrayContent(bytes))), offer, From.Mirror, "Refused for this check");
+        var elsewhere = new Routes().On(mirror, _ => Redirect("https://files.example.net/v9.9.9/StatsDirectSetup.exe")).On(new Uri("https://files.example.net/v9.9.9/StatsDirectSetup.exe"), _ => Ok(new ByteArrayContent(bytes)));
+        using (UpdateInstaller forwarded = await DownloadFrom(elsewhere, offer, From.Mirror, NoCheck))
+            Check(forwarded.Source == mirror && elsewhere.Requested.Count == 2, "The check of the mirror passes when the mirror sends the request on to another https address that is not GitHub's");
+
+        // An offer goes on finding its own installer at its versioned mirror after the website has moved on to the next release.
+        byte[] next = new byte[bytes.Length];
+        new Random(37).NextBytes(next);
+        next[0] = (byte)'M'; next[1] = (byte)'Z';
+        var legacy = new Uri("https://www.statsdirect.com/download/StatsDirectSetup.exe");
+        var moved = new Routes().On(mirror, _ => Ok(new ByteArrayContent(bytes))).On(legacy, _ => Ok(new ByteArrayContent(next)));
+        using (UpdateInstaller kept = await DownloadFrom(moved, offer, From.Mirror, NoCheck))
+            Check(kept.Source == mirror && File.ReadAllBytes(kept.FilePath).SequenceEqual(bytes) && moved.Requested.SequenceEqual([mirror]),
+                "After the website's own download has moved on to the next release, an offer still gets its own installer from its versioned mirror");
+        UpdateOffer unversioned = UpdateOffer.Create(version, bytes.Length, sha256, legacy.AbsoluteUri);
+        await NoGate("An offer whose mirror is the website's unversioned download gets the next release's file after the website has moved on, and refuses it",
+            new Routes().On(legacy, _ => Ok(new ByteArrayContent(next))), unversioned, From.Mirror, "not the installer published");
+    }
+
+    // A check of where the file comes from fails, for the reason given, and keeps nothing.
+    private static async Task NoGate(string name, Routes network, UpdateOffer offer, From source, string because)
+    {
+        var before = Directory.GetDirectories(Path.GetTempPath(), "StatsDirect-update-*").ToHashSet();
+        string reason = null;
+        try
+        {
+            using UpdateInstaller unexpected = await DownloadFrom(network, offer, source, NoCheck);
+        }
+        catch (Exception ex) when (ex is HttpRequestException or IOException)
+        {
+            reason = ex.Message;
+        }
+        if (reason != null && !reason.Contains(because, StringComparison.Ordinal))
+            throw new Exception($"FAIL: {name}: failed for another reason: {reason}");
+        Check(reason != null && !Directory.GetDirectories(Path.GetTempPath(), "StatsDirect-update-*").Except(before).Any(), name);
+    }
+
     // ---- The check of the file ----
 
     private static string Dotnet => Path.GetFullPath(Path.Combine(System.Runtime.InteropServices.RuntimeEnvironment.GetRuntimeDirectory(), "..", "..", "..", "dotnet.exe"));
     private static string Installed => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "StatsDirect", "StatsDirect.exe");
+
+    // A setup program signed by StatsDirect Limited, as a release publishes it: the one named by STATSDIRECT_SIGNED_SETUP, or the
+    // one a release leaves in C:\temp.  Null where there is neither, as on a build machine: the checks that need it say SKIP.
+    private static readonly Lazy<string> SignedSetup = new(() =>
+    {
+        foreach (string path in new[] { Environment.GetEnvironmentVariable("STATSDIRECT_SIGNED_SETUP"), @"C:\temp\StatsDirectSetup.exe" })
+            if (!string.IsNullOrEmpty(path) && File.Exists(path) && UpdateInstallerCheck.Signer(path) == UpdateInstallerCheck.Publisher)
+                return Path.GetFullPath(path);
+        return null;
+    });
 
     private static Version FileVersion(string path)
     {
@@ -685,8 +953,8 @@ internal static class Program
         return new Version(info.FileMajorPart, info.FileMinorPart, info.FileBuildPart);
     }
 
-    // The updater's check itself, on real files: one with no signature, one validly signed by another publisher and, where
-    // this machine has an installed StatsDirect signed by StatsDirect Limited, one of ours.
+    // The updater's check itself, on real files: one with no signature, one validly signed by another publisher, the installed
+    // program's own signed file and, where this machine has one, a published setup program.
     private static void RunInstallerChecks()
     {
         string own = Environment.ProcessPath;
@@ -695,22 +963,55 @@ internal static class Program
             Check(other != UpdateInstallerCheck.Publisher && Refused(Dotnet, new Version(0, 0, 0), null, "not signed by StatsDirect Limited"), $"A file validly signed by another publisher ({other}) is refused");
         else
             Console.WriteLine("SKIP: no validly signed dotnet.exe beside the runtime to stand for another publisher");
+
+        // The program's own file is signed by StatsDirect Limited and carries the same product and version, but it is not the
+        // setup program.  (Codex's review of 11afcbbc: it was accepted, and --manifest wrote a manifest for it.)
         if (File.Exists(Installed) && UpdateInstallerCheck.Signer(Installed) == UpdateInstallerCheck.Publisher)
         {
-            Version version = FileVersion(Installed);
-            UpdateInstallerCheck.Verify(Installed, new Version(0, 0, 0));
-            UpdateInstallerCheck.Verify(Installed, new Version(0, 0, 0), version);
-            UpdateInstallerCheck.Verify(Installed, new Version(0, 0, 0), new Version(version.Major, version.Minor, version.Build, 7));
-            passed++;
-            Console.WriteLine("PASS: A StatsDirect file signed by StatsDirect Limited, newer than the version running and of the version offered, is accepted");
-            Check(Refused(Installed, new Version(999, 0, 0), null, "not a newer version of StatsDirect") && Refused(Installed, version, version, "not a newer version of StatsDirect"),
-                "A signed StatsDirect file that is not newer than the version running is refused");
-            Check(Refused(Installed, new Version(0, 0, 0), new Version(version.Major, version.Minor, version.Build + 1), "not the version offered")
-                    && Refused(Installed, new Version(0, 0, 0), new Version(version.Major, version.Minor, version.Build > 0 ? version.Build - 1 : version.Build + 2), "not the version offered"),
-                "A signed StatsDirect file that is newer, but not the version offered, is refused");
+            FileVersionInfo info = FileVersionInfo.GetVersionInfo(Installed);
+            Check(info.ProductName == UpdateInstallerCheck.Product && info.OriginalFilename != UpdateInstallerCheck.SetupName
+                    && Refused(Installed, new Version(0, 0, 0), null, "is not the StatsDirect installer") && Refused(Installed, new Version(0, 0, 0), FileVersion(Installed), "is not the StatsDirect installer"),
+                $"The installed program's own file, signed by StatsDirect Limited, is refused: it is {info.OriginalFilename}, not the setup program");
+            bool wrote = true;
+            try { WriteManifest(Installed, Path.Combine(Path.GetTempPath(), "StatsDirect-update-check-not-written.json"), null, true); }
+            catch (IOException ex) when (ex.Message.Contains("is not the StatsDirect installer")) { wrote = false; }
+            Check(!wrote && !File.Exists(Path.Combine(Path.GetTempPath(), "StatsDirect-update-check-not-written.json")), "No manifest is written for the installed program's own file");
         }
         else
-            Console.WriteLine("SKIP: no installed StatsDirect signed by StatsDirect Limited on this machine; a release is checked with --verify");
+            Console.WriteLine("SKIP: no installed StatsDirect signed by StatsDirect Limited on this machine to stand for a file of ours that is not the setup program");
+
+        if (SignedSetup.Value is string setup)
+        {
+            Version version = FileVersion(setup);
+            FileVersionInfo info = FileVersionInfo.GetVersionInfo(setup);
+            UpdateInstallerCheck.Verify(setup, new Version(0, 0, 0));
+            UpdateInstallerCheck.Verify(setup, new Version(0, 0, 0), version);
+            UpdateInstallerCheck.Verify(setup, new Version(0, 0, 0), new Version(version.Major, version.Minor, version.Build, 7));
+            passed++;
+            Console.WriteLine($"PASS: The published setup program of StatsDirect {version} ({info.OriginalFilename}), signed by StatsDirect Limited, newer than the version running and of the version offered, is accepted");
+            Check(Refused(setup, new Version(999, 0, 0), null, "not a newer version of StatsDirect") && Refused(setup, version, version, "not a newer version of StatsDirect"),
+                "A signed setup program that is not newer than the version running is refused");
+            Check(Refused(setup, new Version(0, 0, 0), new Version(version.Major, version.Minor, version.Build + 1), "not the version offered")
+                    && Refused(setup, new Version(0, 0, 0), new Version(version.Major, version.Minor, version.Build > 0 ? version.Build - 1 : version.Build + 2), "not the version offered"),
+                "A signed setup program that is newer, but not the version offered, is refused");
+
+            // The release's own tool, on the published setup program: the manifest it writes names the versioned mirror and reads back.
+            string written = Path.Combine(Path.GetTempPath(), "StatsDirect-update-check-" + Guid.NewGuid().ToString("N") + ".json");
+            try
+            {
+                int exit = WriteManifest(setup, written, null, true);
+                UpdateOffer read = UpdateOffer.Parse(File.ReadAllText(written));
+                Check(exit == 0 && read.Version == version && read.Size == new FileInfo(setup).Length && read.MirrorAddress == UpdateOffer.VersionedMirrorAddress(version)
+                        && !File.ReadAllText(written).Contains('\r') && File.ReadAllBytes(written)[0] == (byte)'{',
+                    $"The manifest written for the published setup program gives its version, size and SHA-256, and its mirror in the website's folder for {version}");
+            }
+            finally
+            {
+                File.Delete(written);
+            }
+        }
+        else
+            Console.WriteLine("SKIP: no setup program signed by StatsDirect Limited on this machine (STATSDIRECT_SIGNED_SETUP, or C:\\temp\\StatsDirectSetup.exe); a release is checked with --verify");
         Check(UpdateInstallerCheck.RunningVersion == UpdateOffer.ThreeParts(typeof(Program).Assembly.GetName().Version), "The version running is this program's, in three parts");
     }
 
@@ -726,20 +1027,44 @@ internal static class Program
         else
             Console.WriteLine("SKIP: no validly signed dotnet.exe beside the runtime to serve as a download from another publisher");
 
-        if (File.Exists(Installed) && UpdateInstallerCheck.Signer(Installed) == UpdateInstallerCheck.Publisher && FileVersion(Installed) > UpdateInstallerCheck.RunningVersion)
+        if (File.Exists(Installed) && UpdateInstallerCheck.Signer(Installed) == UpdateInstallerCheck.Publisher)
         {
             byte[] bytes = File.ReadAllBytes(Installed);
             Version version = FileVersion(Installed);
-            UpdateOffer offer = Offer(bytes, version.ToString(3));
-            using (var client = Client(offer, new ByteArrayContent(bytes)))
-            using (UpdateInstaller installer = await UpdateInstaller.DownloadAsync(client, offer, null, CancellationToken.None))
-                Check(File.ReadAllBytes(installer.FilePath).SequenceEqual(bytes),
-                    $"A download that is the file published, signed by StatsDirect Limited and StatsDirect {version} as offered, passes the updater's own check");
-            UpdateOffer another = Offer(bytes, new Version(version.Major, version.Minor, version.Build + 1).ToString(3));
-            await Reject("A download signed by StatsDirect Limited that is not the version offered", Client(another, new ByteArrayContent(bytes)), another, "not the version offered", verify: null);
+            UpdateOffer offer = Offer(bytes, (version > UpdateInstallerCheck.RunningVersion ? version : new Version(999, 0, 0)).ToString(3));
+            await Reject("A download that is the file published and the program's own signed file, under the installer's name", Client(offer, new ByteArrayContent(bytes)), offer, "is not the StatsDirect installer", verify: null);
         }
         else
-            Console.WriteLine("SKIP: no installed StatsDirect signed by StatsDirect Limited on this machine to serve as a download of ours");
+            Console.WriteLine("SKIP: no installed StatsDirect signed by StatsDirect Limited on this machine to serve as a download of ours that is not the setup program");
+
+        if (SignedSetup.Value is string setup && FileVersion(setup) > UpdateInstallerCheck.RunningVersion)
+        {
+            // The published setup program itself, taken through the whole download from each of its two addresses in turn.
+            Version version = FileVersion(setup);
+            long length = new FileInfo(setup).Length;
+            string sha256;
+            await using (FileStream file = File.OpenRead(setup))
+                sha256 = Convert.ToHexString(await SHA256.HashDataAsync(file));
+            UpdateOffer offer = UpdateOffer.Create(version, length, sha256, UpdateOffer.VersionedMirrorAddress(version));
+
+            var github = new Routes().On(offer.Url, _ => Ok(new StreamContent(File.OpenRead(setup))));
+            using (UpdateInstaller installer = await DownloadFrom(github, offer, From.GitHub, null))
+                Check(installer.Source == offer.Url && new FileInfo(installer.FilePath).Length == length
+                        && File.ReadAllText(installer.FilePath + ":Zone.Identifier").Contains("HostUrl=" + offer.Url.AbsoluteUri + "\r\n"),
+                    $"The published setup program of StatsDirect {version}, served as the release's file, passes the whole download with the updater's own check");
+
+            var site = new Routes().On(offer.Mirror, _ => Ok(new StreamContent(File.OpenRead(setup))));
+            using (UpdateInstaller installer = await DownloadFrom(site, offer, From.Mirror, null))
+                Check(installer.Source == offer.Mirror && new FileInfo(installer.FilePath).Length == length && site.Requested.SequenceEqual([offer.Mirror])
+                        && File.ReadAllText(installer.FilePath + ":Zone.Identifier").Contains("HostUrl=" + offer.Mirror.AbsoluteUri + "\r\n"),
+                    $"The published setup program, served from its versioned mirror with GitHub blocked, passes the whole download with the updater's own check");
+
+            UpdateOffer another = UpdateOffer.Create(new Version(version.Major, version.Minor, version.Build + 1), length, sha256);
+            await Reject("The published setup program, offered as another version", new HttpClient(new Routes().On(another.Url, _ => Ok(new StreamContent(File.OpenRead(setup))))),
+                another, "not the version offered", verify: null);
+        }
+        else
+            Console.WriteLine("SKIP: no setup program signed by StatsDirect Limited on this machine to take through the whole download");
     }
 
     private static bool Refused(string path, Version running, Version offered, string reason)
@@ -751,14 +1076,15 @@ internal static class Program
     // The download is refused, for the reason given (or, with none given, because it was cancelled), and nothing of it is kept.
     // The updater's own check is made unless another is given, so a file that came through the transfer when it should not have
     // is still refused, for another reason than the one expected, and the check fails.
-    private static async Task Reject(string name, HttpClient client, UpdateOffer offer, string because, CancellationToken token = default, Action<string> verify = null)
+    private static async Task Reject(string name, HttpClient client, UpdateOffer offer, string because, CancellationToken token = default, Action<string> verify = null,
+        UpdateDownloadLimits limits = null)
     {
         var before = Directory.GetDirectories(Path.GetTempPath(), "StatsDirect-update-*").ToHashSet();
         bool rejected = false;
         string reason = null;
         using (client)
         {
-            try { using UpdateInstaller unexpected = await UpdateInstaller.DownloadAsync(client, offer, null, token, verify); }
+            try { using UpdateInstaller unexpected = await UpdateInstaller.DownloadAsync(client, offer, null, token, verify, limits); }
             catch (Exception ex) when (ex is HttpRequestException or IOException)
             {
                 reason = ex.Message;
@@ -821,8 +1147,9 @@ internal static class Program
         }
     }
 
-    // The release tool's network that blocks GitHub: requests to it fail as a blocked connection does, and the rest go out.
-    private sealed class BlockGitHub() : DelegatingHandler(new HttpClientHandler { AllowAutoRedirect = false })
+    // A network that blocks GitHub, for the release's check of the mirror: requests to GitHub and to the hosts that hold its
+    // files fail as a blocked connection does, and the rest go on to the network given.
+    private sealed class BlockGitHub(HttpMessageHandler network) : DelegatingHandler(network)
     {
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
@@ -864,6 +1191,26 @@ internal static class Program
     {
         public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default) =>
             Position > 0 ? ValueTask.FromException<int>(new IOException("Simulated connection loss")) : base.ReadAsync(buffer, cancellationToken);
+    }
+
+    // Sends the file a byte at a time, never falling silent for long.
+    private sealed class TrickleStream(byte[] bytes, int milliseconds) : NonSeekableStream(bytes)
+    {
+        public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
+        {
+            await Task.Delay(milliseconds, cancellationToken);
+            return await base.ReadAsync(buffer[..1], cancellationToken);
+        }
+    }
+
+    // Sends the file in parts of a size, with a wait before each.
+    private sealed class SteadyStream(byte[] bytes, int part, int milliseconds) : NonSeekableStream(bytes)
+    {
+        public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
+        {
+            await Task.Delay(milliseconds, cancellationToken);
+            return await base.ReadAsync(buffer[..Math.Min(buffer.Length, part)], cancellationToken);
+        }
     }
 
     // Gives the first part of the file and then nothing more.
