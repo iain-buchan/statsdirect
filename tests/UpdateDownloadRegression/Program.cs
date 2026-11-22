@@ -763,24 +763,33 @@ internal static class Program
         Uri mirror = offer.Mirror;
         var watch = Stopwatch.StartNew();
 
-        // A release's address that never falls silent but sends too slowly to finish: given up once that is plain, well within its time.
-        var judged = new UpdateDownloadLimits(TimeSpan.FromMilliseconds(500), TimeSpan.FromSeconds(20), TimeSpan.FromSeconds(60));
-        var trickle = new TrickleStream(bytes, 50);
-        var trickling = new Routes().On(offer.Url, _ => Ok(new TestContent(trickle))).On(mirror, _ => Ok(new ByteArrayContent(bytes)));
-        using (var client = new HttpClient(trickling))
-        using (UpdateInstaller installer = await UpdateInstaller.DownloadAsync(client, offer, null, CancellationToken.None, NoCheck, judged))
-            Check(installer.Source == mirror && File.ReadAllBytes(installer.FilePath).SequenceEqual(bytes) && !File.Exists(installer.FilePath + ".partial")
-                    && trickling.Requested.SequenceEqual([offer.Url, mirror]) && trickle.BytesRead is > 0 and < 1000 && watch.Elapsed < TimeSpan.FromSeconds(10),
-                $"A release's address that sends a byte at a time is given up once it is plain that it cannot finish in its time, and the mirror gives the file ({trickle.BytesRead} bytes taken in {watch.Elapsed.TotalSeconds:F1} s of 20 s)");
+        // The first few bytes make little progress, then the rest arrives within the same attempt's budget.
+        var recoverable = new UpdateDownloadLimits(TimeSpan.FromMilliseconds(500), TimeSpan.FromSeconds(4), TimeSpan.FromSeconds(5));
+        var recovering = new Routes().On(offer.Url, _ => Ok(new TestContent(new RecoveringStream(bytes, 12, 60))))
+            .On(mirror, _ => new HttpResponseMessage(HttpStatusCode.ServiceUnavailable));
+        using (var client = new HttpClient(recovering))
+        using (UpdateInstaller installer = await UpdateInstaller.DownloadAsync(client, offer, null, CancellationToken.None, NoCheck, recoverable))
+            Check(installer.Source == offer.Url && File.ReadAllBytes(installer.FilePath).SequenceEqual(bytes) && recovering.Requested.SequenceEqual([offer.Url]),
+                "A slow start that recovers downloads from GitHub within its budget even when the mirror is unavailable");
 
-        // The same address where the rate is not yet judged: its time still ends, and the mirror has its own time after it.
-        var ended = new UpdateDownloadLimits(TimeSpan.FromSeconds(30), TimeSpan.FromMilliseconds(700), TimeSpan.FromSeconds(60));
+        // An uninterrupted trickle uses its total budget. The mirror then has enough time for its own slower response.
+        var hardLimit = new UpdateDownloadLimits(TimeSpan.FromMilliseconds(500), TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(5));
+        var trickle = new TrickleStream(bytes, 50);
+        TimeSpan mirrorStarted = TimeSpan.Zero;
+        var trickling = new Routes().On(offer.Url, _ => Ok(new TestContent(trickle)))
+            .OnAsync(mirror, async (_, token) =>
+            {
+                mirrorStarted = watch.Elapsed;
+                await Task.Delay(650, token);
+                return Ok(new ByteArrayContent(bytes));
+            });
         watch.Restart();
-        var held = new Routes().On(offer.Url, _ => Ok(new TestContent(new TrickleStream(bytes, 50)))).On(mirror, _ => Ok(new ByteArrayContent(bytes)));
-        using (var client = new HttpClient(held))
-        using (UpdateInstaller installer = await UpdateInstaller.DownloadAsync(client, offer, null, CancellationToken.None, NoCheck, ended))
-            Check(installer.Source == mirror && File.ReadAllBytes(installer.FilePath).SequenceEqual(bytes) && watch.Elapsed >= TimeSpan.FromMilliseconds(600) && watch.Elapsed < TimeSpan.FromSeconds(10),
-                $"A release's address that is still sending when its time ends is given up, and the mirror gives the file ({watch.Elapsed.TotalSeconds:F1} s)");
+        using (var client = new HttpClient(trickling))
+        using (UpdateInstaller installer = await UpdateInstaller.DownloadAsync(client, offer, null, CancellationToken.None, NoCheck, hardLimit))
+            Check(installer.Source == mirror && File.ReadAllBytes(installer.FilePath).SequenceEqual(bytes) && !File.Exists(installer.FilePath + ".partial")
+                    && trickling.Requested.SequenceEqual([offer.Url, mirror]) && trickle.BytesRead is > 0 and < 1000
+                    && mirrorStarted >= TimeSpan.FromMilliseconds(900) && watch.Elapsed < TimeSpan.FromSeconds(10),
+                $"A continuing trickle reaches its total limit before the mirror gets its own time ({trickle.BytesRead} bytes, mirror requested at {mirrorStarted.TotalSeconds:F1} s)");
 
         // A chain of redirects, none of them slow to answer, that takes longer in all than the release's address has.
         var chain = new Routes();
@@ -815,7 +824,7 @@ internal static class Program
             alone, "took too long", verify: NoCheck, limits: last600);
         await Reject("A mirror that is still sending when its time ends", new HttpClient(new Routes().On(offer.Url, _ => new HttpResponseMessage(HttpStatusCode.Forbidden))
             .On(mirror, _ => Ok(new TestContent(new TrickleStream(bytes, 50))))), offer, "took too long", verify: NoCheck, limits: last600);
-        // An only address is judged neither on its silences nor on its rate, as before: it has the last address's time.
+        // An only address has the last address's budget and no idle timeout.
         var patient = new UpdateDownloadLimits(TimeSpan.FromMilliseconds(100), TimeSpan.FromMilliseconds(100), TimeSpan.FromSeconds(60));
         using (var client = new HttpClient(new Routes().On(alone.Url, _ => Ok(new TestContent(new SteadyStream(bytes, 30000, 250))))))
         using (UpdateInstaller installer = await UpdateInstaller.DownloadAsync(client, alone, null, CancellationToken.None, NoCheck, patient))
@@ -825,7 +834,7 @@ internal static class Program
         using var early = new CancellationTokenSource();
         early.CancelAfter(200);
         var sending = new Routes().On(offer.Url, _ => Ok(new TestContent(new TrickleStream(bytes, 50)))).On(mirror, _ => Ok(new ByteArrayContent(bytes)));
-        await Reject("Cancellation while the release's address is sending", new HttpClient(sending), offer, null, early.Token, NoCheck, judged);
+        await Reject("Cancellation while the release's address is sending", new HttpClient(sending), offer, null, early.Token, NoCheck, hardLimit);
         Check(sending.Requested.SequenceEqual([offer.Url]), "After a cancellation while the release's address is sending, the mirror is not asked");
 
         // Between the two addresses: the release's address fails at the moment the user cancels.
@@ -1200,6 +1209,20 @@ internal static class Program
         {
             await Task.Delay(milliseconds, cancellationToken);
             return await base.ReadAsync(buffer[..1], cancellationToken);
+        }
+    }
+
+    // Sends a few bytes slowly, then delivers the rest as soon as it is read.
+    private sealed class RecoveringStream(byte[] bytes, int slowBytes, int milliseconds) : NonSeekableStream(bytes)
+    {
+        public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
+        {
+            if (Position < slowBytes)
+            {
+                await Task.Delay(milliseconds, cancellationToken);
+                buffer = buffer[..1];
+            }
+            return await base.ReadAsync(buffer, cancellationToken);
         }
     }
 

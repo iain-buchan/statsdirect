@@ -162,12 +162,11 @@ at `https://www.statsdirect.com/download/windows-latest.json`
   anywhere but these two places.
 - The updater turns to the mirror only when the file cannot be fetched from
   `url`, as on a network that blocks GitHub: no connection, a refusal, a file
-  that is not the one published, or an address that is too slow. Too slow is no
-  answer for half a minute, at the start or between parts of the file; more
-  than ten minutes in all; or, once the file has been arriving for half a
-  minute, a rate at which it would not arrive within those ten minutes. The
-  mirror then has thirty minutes of its own, which is what an address with no
-  mirror has (`UpdateDownloadLimits`).
+  that is not the one published, or a timeout. With a mirror available, the
+  first address has a 30-second idle timeout for each response or part of
+  the file, and a 10-minute limit for the whole attempt including redirects.
+  The mirror then has 30 minutes of its own, as does an address with no mirror
+  (`UpdateDownloadLimits`).
 - The updater offers the version only to an older StatsDirect. It downloads the
   file, following redirects only to https addresses, and starts it only if it
   has that size and SHA-256, is StatsDirect's setup program signed by

@@ -18,9 +18,7 @@ namespace StatsDirect.UI
     /// </summary>
     /// <param name="Idle">For the first address when a mirror follows it: how long it is waited on for an answer to begin, and
     /// between one part of the file and the next.</param>
-    /// <param name="First">For the first address when a mirror follows it: how long it may take in all, its redirects included.
-    /// It is given up sooner if, once the file has been arriving for as long as <paramref name="Idle"/>, the rest would not arrive
-    /// within this time at the rate so far.</param>
+    /// <param name="First">For the first address when a mirror follows it: how long it may take in all, its redirects included.</param>
     /// <param name="Last">For the last address, which is the mirror or an address with no mirror: how long it may take in all.</param>
     internal sealed record UpdateDownloadLimits(TimeSpan Idle, TimeSpan First, TimeSpan Last)
     {
@@ -38,7 +36,6 @@ namespace StatsDirect.UI
         private const string NotSecure = "The installer download did not use a secure connection.";
         private const string WrongSize = "The file at the installer's address is not the size published for this update, so it has not been opened.";
         private const string NoAnswer = "The installer's address did not answer in time.";
-        private const string TooSlow = "The installer was arriving too slowly from its address.";
         private const string TooLong = "The installer download took too long. Please try again.";
 
         private readonly string directory;
@@ -147,9 +144,8 @@ namespace StatsDirect.UI
         }
 
         // Fetches the offer's file from one address into the partial file: of the offer's size and SHA-256, or nothing.  The whole
-        // attempt, its redirects included, has the budget and no more.  With idle given, the address is the first of two: it is
-        // not waited on longer than that for its answer to begin or for the next part of the file, and it is given up once it is
-        // plain that the file would not arrive within the budget.
+        // attempt, its redirects included, has the budget.  With idle given, each response must begin and each part of the
+        // file must arrive within the idle timeout.
         private static async Task FetchAsync(HttpClient client, Uri address, UpdateOffer offer, string partial,
             IProgress<UpdateDownloadProgress> progress, TimeSpan? idle, TimeSpan budget, CancellationToken cancellationToken)
         {
@@ -157,7 +153,6 @@ namespace StatsDirect.UI
             progress?.Report(new UpdateDownloadProgress(0, offer.Size, address.Host));
             using var attempt = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             attempt.CancelAfter(budget);
-            var taken = Stopwatch.StartNew();
             try
             {
                 try
@@ -178,7 +173,6 @@ namespace StatsDirect.UI
                     {
                         byte[] buffer = new byte[81920];
                         var lastProgress = Stopwatch.StartNew();
-                        var arriving = Stopwatch.StartNew();
                         while (true)
                         {
                             // The wait for each part starts afresh.
@@ -192,12 +186,6 @@ namespace StatsDirect.UI
                                 throw new IOException(WrongSize);
                             hash.AppendData(buffer, 0, count);
                             await destination.WriteAsync(buffer.AsMemory(0, count), attempt.Token).ConfigureAwait(false);
-                            // A first address that keeps sending, but too slowly to finish within its time, is not waited on to
-                            // the end of that time.  It is judged once the file has been arriving for as long as a silence may
-                            // last, on the rate since it began to arrive: what is left must fit in what is left of the budget.
-                            if (idle != null && arriving.Elapsed >= idle.Value
-                                && (offer.Size - received) * (double)arriving.Elapsed.Ticks > received * (double)(budget - taken.Elapsed).Ticks)
-                                throw new IOException(TooSlow);
                             if (lastProgress.ElapsedMilliseconds >= 100)
                             {
                                 progress?.Report(new UpdateDownloadProgress(received, offer.Size));
