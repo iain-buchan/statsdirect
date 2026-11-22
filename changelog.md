@@ -2,6 +2,14 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
+##[v5.3.17] 2026-11-22
+
+### Changed
+- When StatsDirect updates itself, it downloads the installer from the release's page at GitHub, where the installers are now kept. StatsDirect reads the new version from a small file on www.statsdirect.com, together with the installer's address, size and SHA-256, and opens the downloaded installer only if it is exactly that file: of that size and SHA-256, signed by StatsDirect Limited, and the version offered. A download that fails any of these checks is removed and StatsDirect stays open.
+- On a network that blocks GitHub, StatsDirect fetches the same installer from www.statsdirect.com instead, and checks it in the same way.
+- If the update information cannot be read, StatsDirect says so and gives the address of the download page.
+
+
 ##[v5.3.16] 2026-11-21
 
 ### Added

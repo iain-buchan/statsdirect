@@ -6,6 +6,10 @@ namespace StatsDirect.UI
     public partial class frmUpdateCheck : Form
     {
         private bool IsBackgroundChecker { get; set; }
+
+        /// <summary>The update the check found, for the download; null unless the check ended with a newer version.</summary>
+        internal UpdateOffer Offer => ctlUpdateStatsDirectCheck1.Offer;
+
         public frmUpdateCheck(bool isBackgroundChecker)
         {
             InitializeComponent();

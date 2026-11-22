@@ -1282,14 +1282,16 @@ namespace StatsDirect.UI
 
         internal void UpdateCheckClosed(Form dialog, DialogResult result)
         {
+            // The update the user accepted: its version, address, size and SHA-256 go together to the download.
+            UpdateOffer offer = (dialog as frmUpdateCheck)?.Offer;
             // ShowDialog has returned and re-enabled the main window. Release the old dialog's
             // window before showing the download dialog, owned by the main window instead.
             dialog.Dispose();
-            if (result != DialogResult.OK)
+            if (result != DialogResult.OK || offer == null)
                 return;
             try
             {
-                CloseAndUpdate(MainWindow);
+                CloseAndUpdate(MainWindow, offer);
             }
             catch (Exception ex)
             {
@@ -1299,11 +1301,11 @@ namespace StatsDirect.UI
 
         private UpdateInstaller pendingUpgrade;
 
-        internal void CloseAndUpdate(IWin32Window owner)
+        internal void CloseAndUpdate(IWin32Window owner, UpdateOffer offer)
         {
             if (ClosingForUpgrade)
                 return;
-            using var download = new frmDownloadUpdate();
+            using var download = new frmDownloadUpdate(offer);
             if (download.ShowDialog(owner) != DialogResult.OK)
                 return;
             CloseForUpgrade(download.Installer);
