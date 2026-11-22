@@ -21,7 +21,7 @@ internal static class Program
         try
         {
             if (args.Contains("--download-only"))
-                return CheckManifest(UpdateOffer.ManifestUri.AbsoluteUri, null, download: true).GetAwaiter().GetResult();
+                return CheckManifest(UpdateOffer.ManifestUri.AbsoluteUri, null, download: true, args.Contains("--block-github")).GetAwaiter().GetResult();
             if (Value(args, "--verify") is string installer)
             {
                 // The release check: would the updater of the version given start this installer?
@@ -32,9 +32,9 @@ internal static class Program
                 return 0;
             }
             if (Value(args, "--manifest") is string signed)
-                return WriteManifest(Path.GetFullPath(signed), Value(args, "--out"));
+                return WriteManifest(Path.GetFullPath(signed), Value(args, "--out"), Value(args, "--mirror"));
             if (Value(args, "--check-manifest") is string manifest)
-                return CheckManifest(manifest, Value(args, "--running"), args.Contains("--download")).GetAwaiter().GetResult();
+                return CheckManifest(manifest, Value(args, "--running"), args.Contains("--download"), args.Contains("--block-github")).GetAwaiter().GetResult();
             if (args.Contains("--preview"))
             {
                 ApplicationConfiguration.Initialize();
@@ -54,6 +54,7 @@ internal static class Program
             RunManifestFetches().GetAwaiter().GetResult();
             RunDownloads().GetAwaiter().GetResult();
             RunRedirects().GetAwaiter().GetResult();
+            RunMirrors().GetAwaiter().GetResult();
             RunInstallerChecks();
             RunSignedDownloads().GetAwaiter().GetResult();
             ApplicationConfiguration.Initialize();
@@ -70,16 +71,16 @@ internal static class Program
 
     // ---- The release's tools ----
 
-    // Writes the manifest of a signed installer.  The installer must be one the updater would start, and what is written must
-    // read back, through the updater's own reader, as the same offer.
-    private static int WriteManifest(string installer, string output)
+    // Writes the manifest of a signed installer, with the mirror on www.statsdirect.com if one is given.  The installer must be
+    // one the updater would start, and what is written must read back, through the updater's own reader, as the same offer.
+    private static int WriteManifest(string installer, string output, string mirror)
     {
         UpdateInstallerCheck.Verify(installer, new Version(0, 0, 0));
         FileVersionInfo info = FileVersionInfo.GetVersionInfo(installer);
         string sha256;
         using (FileStream file = File.OpenRead(installer))
             sha256 = Convert.ToHexString(SHA256.HashData(file));
-        UpdateOffer offer = UpdateOffer.Create(new Version(info.FileMajorPart, info.FileMinorPart, info.FileBuildPart), new FileInfo(installer).Length, sha256);
+        UpdateOffer offer = UpdateOffer.Create(new Version(info.FileMajorPart, info.FileMinorPart, info.FileBuildPart), new FileInfo(installer).Length, sha256, mirror);
         string manifest = offer.ToManifest();
         if (UpdateOffer.Parse(manifest) != offer)
             throw new Exception("The manifest written does not read back as the offer.");
@@ -92,13 +93,15 @@ internal static class Program
         File.WriteAllBytes(Path.GetFullPath(output), bytes);
         Console.WriteLine($"PASS: wrote {Path.GetFullPath(output)} ({bytes.Length} bytes, SHA-256 {Convert.ToHexString(SHA256.HashData(bytes))}) for {installer}, signed by {UpdateInstallerCheck.Signer(installer)}.");
         Console.WriteLine("It offers " + offer);
-        Console.WriteLine("Publish it only when that address serves this file: check with --check-manifest <file> --download.");
+        Console.WriteLine("Publish it only when that address serves this file: check with --check-manifest <file> --download"
+            + (offer.Mirror == null ? "." : ", and the mirror with --check-manifest <file> --download --block-github."));
         return 0;
     }
 
     // Reads a manifest, from a file or an https address, as the updater reads it; with download, also fetches its installer and
-    // checks it as the updater of the version given would.  It starts nothing.
-    private static async Task<int> CheckManifest(string source, string runningGiven, bool download)
+    // checks it as the updater of the version given would.  With blockGitHub the download is made as on a network that blocks
+    // GitHub, so the file has to come from the manifest's mirror.  It starts nothing.
+    private static async Task<int> CheckManifest(string source, string runningGiven, bool download, bool blockGitHub)
     {
         // With no version given, the updater's own check is made: against this program's version.
         Version running = runningGiven != null ? Version.Parse(runningGiven) : UpdateInstallerCheck.RunningVersion;
@@ -119,11 +122,17 @@ internal static class Program
             : $"StatsDirect {running} would say that it has the latest version.");
         if (!download)
             return 0;
-        using HttpClient downloader = UpdateInstaller.CreateClient();
+        using HttpClient downloader = blockGitHub
+            ? new HttpClient(new BlockGitHub()) { Timeout = Timeout.InfiniteTimeSpan }
+            : UpdateInstaller.CreateClient();
+        if (blockGitHub)
+            Console.WriteLine("As on a network that blocks GitHub: every request to github.com and githubusercontent.com is refused here.");
         using var timeout = new CancellationTokenSource(TimeSpan.FromMinutes(30));
         using UpdateInstaller installer = await UpdateInstaller.DownloadAsync(downloader, offer, null, timeout.Token,
             path => UpdateInstallerCheck.Verify(path, running, offer.Version));
-        Console.WriteLine($"PASS: downloaded {new FileInfo(installer.FilePath).Length:N0} bytes from {offer.Url}. Size and SHA-256 are the manifest's. It is signed by {UpdateInstallerCheck.Signer(installer.FilePath)} and is StatsDirect {offer.Version}, newer than {running}: the updater would start it. File has Internet-zone metadata. No installer launched; test download removed on exit.");
+        if (blockGitHub && installer.Source != offer.Mirror)
+            throw new Exception("The file did not come from the mirror.");
+        Console.WriteLine($"PASS: downloaded {new FileInfo(installer.FilePath).Length:N0} bytes from {installer.Source}. Size and SHA-256 are the manifest's. It is signed by {UpdateInstallerCheck.Signer(installer.FilePath)} and is StatsDirect {offer.Version}, newer than {running}: the updater would start it. File has Internet-zone metadata. No installer launched; test download removed on exit.");
         return 0;
     }
 
@@ -159,7 +168,7 @@ internal static class Program
             "The manifest a release writes is the published form, character for character");
         Check(UpdateOffer.Parse(release.ToManifest()) == release && UpdateOffer.Parse(Manifest()) == release,
             "The manifest a release writes reads back as the same offer");
-        Check(UpdateOffer.Parse("﻿" + release.ToManifest().Replace("\n", "\r\n")) == release
+        Check(UpdateOffer.Parse("\uFEFF" + release.ToManifest().Replace("\n", "\r\n")) == release
                 && UpdateOffer.Parse(Manifest(sha256: "\"" + Digest.ToUpperInvariant() + "\"")) == release
                 && UpdateOffer.Parse("{\"sha256\":\"" + Digest + "\",\"size\":304535768,\"url\":\"" + Address + "\",\"version\":\"5.3.17\",\"schema\":1}") == release,
             "A byte order mark, other line endings, capital hexadecimal digits and another order of fields change nothing");
@@ -227,7 +236,7 @@ internal static class Program
         Unreadable(Manifest(version: "5.3"), "three numbers", "version as a number");
         Unreadable(Manifest(version: "null"), "three numbers", "version null");
         foreach (string text in new[] { "", "5", "5.3", "5.3.17.0", "v5.3.17", "05.3.17", "5.03.17", "5.3.017", " 5.3.17", "5.3.17 ", "5.3.17\\n", "5.3.x", "5.3.-1", "5,3,17", "+5.3.17",
-            "5.3.1234567890", "٥.٣.١٧", "5.3.17-beta", "5.3.17+build" })
+            "5.3.1234567890", "\u0665.\u0663.\u0661\u0667", "5.3.17-beta", "5.3.17+build" })
             Unreadable(Manifest(version: "\"" + text + "\""), "three numbers", "version \"" + text + "\"");
 
         Unreadable(Manifest(url: null), "address of StatsDirect 5.3.17", "no address");
@@ -266,6 +275,52 @@ internal static class Program
             Unreadable(Manifest(sha256: "\"" + text + "\""), "SHA-256 of 64", "SHA-256 \"" + text + "\"");
         Unreadable(Manifest(sha256: "7"), "SHA-256 of 64", "SHA-256 as a number");
 
+        // The mirror: a second address for the same file, on www.statsdirect.com only.
+        const string site = "https://www.statsdirect.com/download/StatsDirectSetup.exe";
+        UpdateOffer mirrored = UpdateOffer.Create(new Version(5, 3, 17), 304535768, Digest, site);
+        Check(release.Mirror == null && release.MirrorAddress == null && mirrored.Mirror.AbsoluteUri == site && mirrored != release && mirrored.Url == release.Url,
+            "An offer has a mirror only when it is given one, and its first address is the release's either way");
+        Check(mirrored.ToManifest() == "{\n  \"schema\": 1,\n  \"version\": \"5.3.17\",\n  \"url\": \"" + Address + "\",\n  \"mirror\": \"" + site + "\",\n  \"size\": 304535768,\n  \"sha256\": \"" + Digest + "\"\n}\n"
+                && UpdateOffer.Parse(mirrored.ToManifest()) == mirrored && UpdateOffer.Parse(Manifest(extra: "\"mirror\": \"" + site + "\"")) == mirrored,
+            "The manifest of an offer with a mirror names it, and reads back as the same offer");
+        foreach (string text in new[]
+        {
+            "https://www.statsdirect.com/download/v5.3.17/StatsDirectSetup.exe",
+            "https://www.statsdirect.com/download/direct/StatsDirectSetup.exe",
+            "https://www.statsdirect.com/download/a/b.c/d-e/f_g/StatsDirectSetup.exe"
+        })
+            Check(UpdateOffer.Parse(Manifest(extra: "\"mirror\": \"" + text + "\"")).MirrorAddress == text, "A mirror in a folder below the site's download folder is read: " + text);
+        foreach (string text in new[]
+        {
+            "http://www.statsdirect.com/download/StatsDirectSetup.exe",
+            "https://statsdirect.com/download/StatsDirectSetup.exe",
+            "https://WWW.statsdirect.com/download/StatsDirectSetup.exe",
+            "https://www.statsdirect.com.example.org/download/StatsDirectSetup.exe",
+            "https://www.statsdirect.com:8443/download/StatsDirectSetup.exe",
+            "https://user@www.statsdirect.com/download/StatsDirectSetup.exe",
+            "https://www.statsdirect.com/StatsDirectSetup.exe",
+            "https://www.statsdirect.com/Download/StatsDirectSetup.exe",
+            "https://www.statsdirect.com/download/StatsDirect-x64.msi",
+            "https://www.statsdirect.com/download/statsdirectsetup.exe",
+            "https://www.statsdirect.com/download/../StatsDirectSetup.exe",
+            "https://www.statsdirect.com/download/./StatsDirectSetup.exe",
+            "https://www.statsdirect.com/download//StatsDirectSetup.exe",
+            "https://www.statsdirect.com/download/a/b/c/d/e/StatsDirectSetup.exe",
+            "https://www.statsdirect.com/download/a%2Fb/StatsDirectSetup.exe",
+            "https://www.statsdirect.com/download/StatsDirectSetup.exe?v=5.3.17",
+            "https://www.statsdirect.com/download/StatsDirectSetup.exe#x",
+            "https://www.statsdirect.com/download/StatsDirectSetup.exe/",
+            " https://www.statsdirect.com/download/StatsDirectSetup.exe",
+            "https://example.org/download/StatsDirectSetup.exe",
+            Address,
+            ""
+        })
+            Unreadable(Manifest(extra: "\"mirror\": \"" + text + "\""), "second address", "mirror \"" + text + "\"");
+        Unreadable(Manifest(extra: "\"mirror\": null"), "second address", "mirror null");
+        Unreadable(Manifest(extra: "\"mirror\": 5"), "second address", "mirror as a number");
+        Unreadable(Manifest(extra: "\"mirror\": [\"" + site + "\"]"), "second address", "mirror as a list");
+        Unreadable(Manifest(extra: "\"mirror\": \"" + site + "\", \"mirror\": \"" + site + "\""), "twice", "a mirror given twice");
+
         foreach (string again in new[] { "\"schema\": 1", "\"version\": \"5.3.17\"", "\"url\": \"" + Address + "\"", "\"size\": 304535768", "\"sha256\": \"" + Digest + "\"",
             "\"vers\\u0069on\": \"5.3.18\"" })
             Unreadable(Manifest(extra: again), "twice", "a field given twice: " + again);
@@ -275,7 +330,9 @@ internal static class Program
             () => UpdateOffer.Create(new Version(5, 3, 17), 0, Digest),
             () => UpdateOffer.Create(new Version(5, 3, 17), UpdateOffer.MaximumInstallerBytes + 1, Digest),
             () => UpdateOffer.Create(new Version(5, 3, 17), 10, Digest[1..]),
-            () => UpdateOffer.Create(new Version(5, 3, 1_000_000_000), 10, Digest)
+            () => UpdateOffer.Create(new Version(5, 3, 1_000_000_000), 10, Digest),
+            () => UpdateOffer.Create(new Version(5, 3, 17), 10, Digest, "https://example.org/download/StatsDirectSetup.exe"),
+            () => UpdateOffer.Create(new Version(5, 3, 17), 10, Digest, Address)
         })
         {
             bool refused = false;
@@ -384,15 +441,16 @@ internal static class Program
             string zone = File.ReadAllText(savedPath + ":Zone.Identifier");
             Check(zone.Contains("ZoneId=3\r\n") && zone.Contains("HostUrl=" + offer.Url.AbsoluteUri + "\r\n"),
                 "Downloaded file retains Internet zone and the address it came from");
-            Check(progress.Values.First() == new UpdateDownloadProgress(0, bytes.Length) && progress.Values.Last() == new UpdateDownloadProgress(bytes.Length, bytes.Length),
-                "Progress includes the start and the completed length, measured against the offer's size");
+            Check(progress.Values[0] == new UpdateDownloadProgress(0, bytes.Length, "github.com") && progress.Values[1] == new UpdateDownloadProgress(0, bytes.Length)
+                    && progress.Values.Last() == new UpdateDownloadProgress(bytes.Length, bytes.Length) && progress.Values.Count(p => p.Source != null) == 1,
+                "Progress names the host asked, then includes the start and the completed length, measured against the offer's size");
         }
         Check(!Directory.Exists(Path.GetDirectoryName(savedPath)), "Unlaunched download removed when a save/close is cancelled");
 
         var unstated = new RecordedProgress();
         using (var client = Client(offer, new TestContent(new NonSeekableStream(bytes))))
         using (UpdateInstaller installer = await UpdateInstaller.DownloadAsync(client, offer, unstated, CancellationToken.None, NoCheck))
-            Check(File.ReadAllBytes(installer.FilePath).SequenceEqual(bytes) && unstated.Values.First().TotalBytes == bytes.Length,
+            Check(File.ReadAllBytes(installer.FilePath).SequenceEqual(bytes) && unstated.Values.All(p => p.TotalBytes == bytes.Length),
                 "Download works without Content-Length, and its progress still has a total");
 
         // With the updater's own check, a complete download that StatsDirect Limited did not sign is not kept.
@@ -517,6 +575,105 @@ internal static class Program
         }
     }
 
+    // An offer with a mirror: the file comes from the release's address while that can be fetched, and from the mirror on
+    // www.statsdirect.com when it cannot, as on a network that blocks GitHub.  Either way it must be the file published.
+    private static async Task RunMirrors()
+    {
+        byte[] bytes = new byte[120000];
+        new Random(11).NextBytes(bytes);
+        bytes[0] = (byte)'M'; bytes[1] = (byte)'Z';
+        const string site = "https://www.statsdirect.com/download/StatsDirectSetup.exe";
+        UpdateOffer offer = UpdateOffer.Create(new Version(9, 9, 9), bytes.Length, Convert.ToHexString(SHA256.HashData(bytes)), site);
+        Uri mirror = offer.Mirror;
+        TimeSpan brief = TimeSpan.FromMilliseconds(300);
+        byte[] altered = (byte[])bytes.Clone();
+        altered[^1] ^= 1;
+
+        var both = new Routes().On(offer.Url, _ => Ok(new ByteArrayContent(bytes))).On(mirror, _ => Ok(new ByteArrayContent(bytes)));
+        using (var client = new HttpClient(both))
+        using (UpdateInstaller installer = await UpdateInstaller.DownloadAsync(client, offer, null, CancellationToken.None, NoCheck))
+            Check(both.Requested.SequenceEqual([offer.Url]) && installer.Source == offer.Url
+                    && File.ReadAllText(installer.FilePath + ":Zone.Identifier").Contains("HostUrl=" + offer.Url.AbsoluteUri + "\r\n"),
+                "While the release's address serves the file, the mirror is not asked");
+
+        // Each way the release's address can fail to give the file.
+        foreach ((string name, Func<Routes, Routes> first) in new (string, Func<Routes, Routes>)[]
+        {
+            ("cannot be reached", r => r.OnAsync(offer.Url, (_, _) => Task.FromException<HttpResponseMessage>(new HttpRequestException("No such host is known. (github.com:443)")))),
+            ("is refused by the network", r => r.On(offer.Url, _ => new HttpResponseMessage(HttpStatusCode.Forbidden) { Content = new StringContent("<html>Blocked by policy</html>") })),
+            ("is answered with a page in place of the file", r => r.On(offer.Url, _ => Ok(new StringContent("<html>Blocked by policy</html>")))),
+            ("is answered with a file of the right size and another SHA-256", r => r.On(offer.Url, _ => Ok(new ByteArrayContent(altered)))),
+            ("is cut short", r => r.On(offer.Url, _ => Ok(new TestContent(new NonSeekableStream(bytes[..^500]))))),
+            ("breaks off part of the way through", r => r.On(offer.Url, _ => Ok(new TestContent(new FailingStream(bytes))))),
+            ("is redirected to an insecure address", r => r.On(offer.Url, _ => Redirect("http://release-assets.example.net/file/1"))),
+            ("does not answer", r => r.OnAsync(offer.Url, async (_, token) => { await Task.Delay(Timeout.Infinite, token); return null; })),
+            ("stops part of the way through", r => r.On(offer.Url, _ => Ok(new TestContent(new StallingStream(bytes, 30000))))),
+            ("is redirected to an address that does not answer", r => r.On(offer.Url, _ => Redirect("https://release-assets.example.net/file/1"))
+                .OnAsync(new Uri("https://release-assets.example.net/file/1"), async (_, token) => { await Task.Delay(Timeout.Infinite, token); return null; }))
+        })
+        {
+            Routes routes = first(new Routes()).On(mirror, _ => Ok(new ByteArrayContent(bytes)));
+            var progress = new RecordedProgress();
+            using var client = new HttpClient(routes);
+            using UpdateInstaller installer = await UpdateInstaller.DownloadAsync(client, offer, progress, CancellationToken.None, NoCheck, brief);
+            Check(File.ReadAllBytes(installer.FilePath).SequenceEqual(bytes) && !File.Exists(installer.FilePath + ".partial")
+                    && installer.Source == mirror && routes.Requested[0] == offer.Url && routes.Requested[^1] == mirror
+                    && File.ReadAllText(installer.FilePath + ":Zone.Identifier").Contains("HostUrl=" + site + "\r\n")
+                    && progress.Values.Where(p => p.Source != null).Select(p => p.Source).SequenceEqual(["github.com", "www.statsdirect.com"])
+                    && progress.Values.Last() == new UpdateDownloadProgress(bytes.Length, bytes.Length),
+                "The mirror gives the file when the release's address " + name);
+        }
+
+        // The mirror is the last address: it is given all the time there is, and so is an address that has no mirror.
+        var patient = new Routes().On(offer.Url, _ => new HttpResponseMessage(HttpStatusCode.Forbidden))
+            .OnAsync(mirror, async (_, token) => { await Task.Delay(700, token); return Ok(new TestContent(new SlowStream(bytes, 700))); });
+        using (var client = new HttpClient(patient))
+        using (UpdateInstaller installer = await UpdateInstaller.DownloadAsync(client, offer, null, CancellationToken.None, NoCheck, brief))
+            Check(installer.Source == mirror && File.ReadAllBytes(installer.FilePath).SequenceEqual(bytes), "The mirror is waited on for longer than the release's address is");
+        UpdateOffer alone = Offer(bytes);
+        var lone = new Routes().OnAsync(alone.Url, async (_, token) => { await Task.Delay(700, token); return Ok(new TestContent(new SlowStream(bytes, 700))); });
+        using (var client = new HttpClient(lone))
+        using (UpdateInstaller installer = await UpdateInstaller.DownloadAsync(client, alone, null, CancellationToken.None, NoCheck, brief))
+            Check(installer.Source == alone.Url && File.ReadAllBytes(installer.FilePath).SequenceEqual(bytes), "An address with no mirror after it is waited on as before");
+
+        // The mirror is followed through https redirects too, and must give the same file.
+        var forwarded = new Routes().On(offer.Url, _ => new HttpResponseMessage(HttpStatusCode.Forbidden))
+            .On(mirror, _ => Redirect("https://files.example.net/StatsDirectSetup.exe")).On(new Uri("https://files.example.net/StatsDirectSetup.exe"), _ => Ok(new ByteArrayContent(bytes)));
+        using (var client = new HttpClient(forwarded))
+        using (UpdateInstaller installer = await UpdateInstaller.DownloadAsync(client, offer, null, CancellationToken.None, NoCheck))
+            Check(installer.Source == mirror && forwarded.Requested.Count == 3 && File.ReadAllBytes(installer.FilePath).SequenceEqual(bytes), "A mirror that redirects to another https address is followed");
+        await Reject("A mirror that redirects to an insecure address", new HttpClient(new Routes().On(offer.Url, _ => new HttpResponseMessage(HttpStatusCode.Forbidden))
+            .On(mirror, _ => Redirect("http://files.example.net/StatsDirectSetup.exe"))), offer, "secure connection", verify: NoCheck);
+        await Reject("A mirror whose file is not the one published", new HttpClient(new Routes().On(offer.Url, _ => new HttpResponseMessage(HttpStatusCode.Forbidden))
+            .On(mirror, _ => Ok(new ByteArrayContent(altered)))), offer, "not the installer published", verify: NoCheck);
+        await Reject("Neither address gives the file", new HttpClient(new Routes().On(offer.Url, _ => new HttpResponseMessage(HttpStatusCode.Forbidden))
+            .On(mirror, _ => new HttpResponseMessage(HttpStatusCode.NotFound))), offer, "404", verify: NoCheck);
+
+        // The mirror holds the same file, so a file that arrived whole and failed the updater's own check is not fetched again.
+        var whole = new Routes().On(offer.Url, _ => Ok(new ByteArrayContent(bytes))).On(mirror, _ => Ok(new ByteArrayContent(bytes)));
+        await Reject("A file that arrived whole from the release's address and is not signed by StatsDirect Limited", new HttpClient(whole), offer, "not signed by StatsDirect Limited");
+        Check(whole.Requested.SequenceEqual([offer.Url]), "The mirror is not asked for a file that arrived whole and failed the check of its signature");
+
+        // Cancelling stops the download: the mirror is not turned to.
+        using var cancelled = new CancellationTokenSource();
+        cancelled.CancelAfter(150);
+        var waiting = new Routes().On(offer.Url, _ => Ok(new TestContent(new WaitingStream()))).On(mirror, _ => Ok(new ByteArrayContent(bytes)));
+        await Reject("Cancellation while the release's address is being fetched", new HttpClient(waiting), offer, null, cancelled.Token, NoCheck);
+        Check(waiting.Requested.SequenceEqual([offer.Url]), "After a cancellation the mirror is not asked");
+        // A request made after the cancellation would not reach the address, so what the download announced is looked at too.
+        using var cancelledAgain = new CancellationTokenSource();
+        cancelledAgain.CancelAfter(150);
+        var announced = new RecordedProgress();
+        bool stopped = false;
+        using (var client = new HttpClient(new Routes().On(offer.Url, _ => Ok(new TestContent(new WaitingStream()))).On(mirror, _ => Ok(new ByteArrayContent(bytes)))))
+        {
+            try { using UpdateInstaller unexpected = await UpdateInstaller.DownloadAsync(client, offer, announced, cancelledAgain.Token, NoCheck); }
+            catch (OperationCanceledException) { stopped = true; }
+        }
+        Check(stopped && announced.Values.Where(p => p.Source != null).Select(p => p.Source).SequenceEqual(["github.com"]),
+            "After a cancellation the download stops, and the mirror is not announced as the next address");
+    }
+
     // ---- The check of the file ----
 
     private static string Dotnet => Path.GetFullPath(Path.Combine(System.Runtime.InteropServices.RuntimeEnvironment.GetRuntimeDirectory(), "..", "..", "..", "dotnet.exe"));
@@ -639,24 +796,40 @@ internal static class Program
     // Answers each address it has been given, and no other: a request to any other address fails the run.
     private sealed class Routes : HttpMessageHandler
     {
-        private readonly Dictionary<string, Func<HttpRequestMessage, HttpResponseMessage>> answers = new(StringComparer.Ordinal);
+        private readonly Dictionary<string, Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>>> answers = new(StringComparer.Ordinal);
         internal readonly List<Uri> Requested = [];
 
-        internal Routes On(Uri address, Func<HttpRequestMessage, HttpResponseMessage> answer)
+        internal Routes On(Uri address, Func<HttpRequestMessage, HttpResponseMessage> answer) =>
+            OnAsync(address, (request, _) => Task.FromResult(answer(request)));
+
+        // An answer that takes time, fails as a connection fails, or never comes.
+        internal Routes OnAsync(Uri address, Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> answer)
         {
             answers[address.AbsoluteUri] = answer;
             return this;
         }
 
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
             Requested.Add(request.RequestUri);
             if (!answers.TryGetValue(request.RequestUri.AbsoluteUri, out var answer))
                 throw new Exception("FAIL: an address that was not expected was asked for: " + request.RequestUri);
-            HttpResponseMessage response = answer(request);
+            HttpResponseMessage response = await answer(request, cancellationToken);
             response.RequestMessage = request;
-            return Task.FromResult(response);
+            return response;
+        }
+    }
+
+    // The release tool's network that blocks GitHub: requests to it fail as a blocked connection does, and the rest go out.
+    private sealed class BlockGitHub() : DelegatingHandler(new HttpClientHandler { AllowAutoRedirect = false })
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            string host = request.RequestUri.Host;
+            return host == "github.com" || host.EndsWith(".github.com", StringComparison.OrdinalIgnoreCase) || host.EndsWith(".githubusercontent.com", StringComparison.OrdinalIgnoreCase)
+                ? Task.FromException<HttpResponseMessage>(new HttpRequestException("Refused for this check, as a network that blocks GitHub would: " + host))
+                : base.SendAsync(request, cancellationToken);
         }
     }
 
@@ -691,6 +864,28 @@ internal static class Program
     {
         public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default) =>
             Position > 0 ? ValueTask.FromException<int>(new IOException("Simulated connection loss")) : base.ReadAsync(buffer, cancellationToken);
+    }
+
+    // Gives the first part of the file and then nothing more.
+    private sealed class StallingStream(byte[] bytes, int given) : NonSeekableStream(bytes)
+    {
+        public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
+        {
+            if (Position >= given)
+                await Task.Delay(Timeout.Infinite, cancellationToken);
+            return await base.ReadAsync(buffer[..(int)Math.Min(buffer.Length, given - Position)], cancellationToken);
+        }
+    }
+
+    // Gives the whole file, after a wait before its first part.
+    private sealed class SlowStream(byte[] bytes, int milliseconds) : NonSeekableStream(bytes)
+    {
+        public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
+        {
+            if (Position == 0)
+                await Task.Delay(milliseconds, cancellationToken);
+            return await base.ReadAsync(buffer, cancellationToken);
+        }
     }
 
     private sealed class WaitingStream() : NonSeekableStream([])

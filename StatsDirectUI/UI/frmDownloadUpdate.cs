@@ -109,6 +109,13 @@ namespace StatsDirect.UI
         {
             if (IsDisposed || cancellation.IsCancellationRequested)
                 return;
+            if (value.Source != null)
+            {
+                // An address is about to be asked: the release's, or the mirror after the release's could not be fetched.
+                progress.Style = ProgressBarStyle.Marquee;
+                status.Text = $"Connecting to {value.Source}…";
+                return;
+            }
             double megabytes = value.BytesReceived / 1048576.0;
             if (value.TotalBytes is > 0)
             {

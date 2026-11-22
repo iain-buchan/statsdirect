@@ -145,6 +145,7 @@ at `https://www.statsdirect.com/download/windows-latest.json`
   "schema": 1,
   "version": "5.3.17",
   "url": "https://github.com/iain-buchan/statsdirect/releases/download/v5.3.17/StatsDirectSetup.exe",
+  "mirror": "https://www.statsdirect.com/download/StatsDirectSetup.exe",
   "size": 304535768,
   "sha256": "79dbc07d18397b55f6c9e7957c30e5242370610f25a106ef0eb648450c394359"
 }
@@ -152,13 +153,20 @@ at `https://www.statsdirect.com/download/windows-latest.json`
 
 - `url` must be, character for character, the address of `StatsDirectSetup.exe`
   in this repository's GitHub release tagged `v<version>`. The updater accepts
-  no other address, so the manifest cannot send a download anywhere else.
+  no other first address.
+- `mirror` need not be given. If it is, it must be `StatsDirectSetup.exe` in
+  `https://www.statsdirect.com/download/` or up to four folders below it. The
+  updater turns to it only when the file cannot be fetched from `url`, as on a
+  network that blocks GitHub: no connection, a refusal, a file that is not the
+  one published, or no answer within half a minute. The mirror is then given
+  all the time the download has. The manifest cannot send a download anywhere
+  but these two places.
 - The updater offers the version only to an older StatsDirect. It downloads the
   file, following redirects only to https addresses, and starts it only if it
   has that size and SHA-256, is signed by StatsDirect Limited, is StatsDirect,
-  is newer than the version running and is the version offered. Otherwise the
-  download is removed, StatsDirect stays open and the user is given the
-  download page.
+  is newer than the version running and is the version offered. That holds
+  whichever address sent the file. Otherwise the download is removed,
+  StatsDirect stays open and the user is given the download page.
 - A reader passes over names it does not know, so fields can be added. A change
   that an older reader would misread needs a new `schema` number and a new
   address for the file: installed versions go on reading `windows-latest.json`
@@ -172,9 +180,10 @@ At each release, with the signed installer:
 
 1. `dotnet run --project tests/UpdateDownloadRegression -c Release -- --verify <StatsDirectSetup.exe> --running <previous version>`
    must say PASS, as before: installed copies will start this installer.
-2. `... -- --manifest <StatsDirectSetup.exe> --out windows-latest.json` writes
-   the manifest from the signed installer with the updater's own code, and
-   reads it back.
+2. `... -- --manifest <StatsDirectSetup.exe> --out windows-latest.json --mirror <address>`
+   writes the manifest from the signed installer with the updater's own code,
+   and reads it back. The mirror is the address at which the website keeps its
+   own copy of the installer; leave the option out if it keeps none.
 3. Attach `windows-latest.json` to the GitHub release with the installers
    before the release is published. With release immutability switched on,
    nothing can be added to a release afterwards.
@@ -182,9 +191,13 @@ At each release, with the signed installer:
    must say PASS: the public file is the one the manifest describes. It starts
    nothing.
 5. The website then publishes, in one deployment, the manifest (a copy of the
-   release's file, byte for byte), the version on the download page and the
-   installer addresses. The manifest names stable releases only, and must never
-   name a version whose installer is not public at its address.
+   release's file, byte for byte), the version on the download page, the
+   installer addresses and its own copy of the installer at the mirror. The
+   manifest names stable releases only, and must never name a version whose
+   installer is not public at its address.
+6. With the website's copy in place, `... -- --check-manifest https://www.statsdirect.com/download/windows-latest.json --running <previous version> --download --block-github`
+   must say PASS: with GitHub refused, as a network that blocks it would, the
+   mirror gives the file published.
 
 Installed versions before 5.3.17 do not read the manifest, and the website keeps
 their addresses working:

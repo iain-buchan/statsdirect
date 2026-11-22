@@ -123,9 +123,9 @@ internal static partial class Program
         var download = type.GetMethod("DownloadAsync", BindingFlags.NonPublic | BindingFlags.Static)!;
         // The update that the pretend setup file answers: an offer of its own size and SHA-256.
         object offer = typeof(frmMain).Assembly.GetType("StatsDirect.UI.UpdateOffer")!.GetMethod("Create", BindingFlags.NonPublic | BindingFlags.Static)!
-            .Invoke(null, new object[] { new Version(999, 0, 0), (long)PretendSetup.Bytes.Length, Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(PretendSetup.Bytes)) })!;
+            .Invoke(null, new object[] { new Version(999, 0, 0), (long)PretendSetup.Bytes.Length, Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(PretendSetup.Bytes)), null })!;
         using var client = new HttpClient(new PretendSetup());
-        var task = (Task)download.Invoke(null, new object[] { client, offer, null, CancellationToken.None, (Action<string>)(_ => { }) })!;
+        var task = (Task)download.Invoke(null, new object[] { client, offer, null, CancellationToken.None, (Action<string>)(_ => { }), null })!;
         await task;
         return task.GetType().GetProperty("Result")!.GetValue(task)!;
     }

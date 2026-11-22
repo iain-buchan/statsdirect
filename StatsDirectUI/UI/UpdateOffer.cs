@@ -27,8 +27,10 @@ namespace StatsDirect.UI
     /// SHA-256.  The four are published together in a small file on statsdirect.com, the update manifest, which is written at
     /// each release from the signed installer.  They stay together from the check to the completed download, so that the
     /// version announced is the file that is started.
-    /// <para>The installer is held with its release at GitHub.  Only that address, for that version, is accepted: the manifest
-    /// cannot send the download anywhere else.</para>
+    /// <para>The installer is held with its release at GitHub.  Only that address, for that version, is accepted as the first
+    /// place to fetch it.  The manifest may name a second place, the mirror, which must be on www.statsdirect.com: it is tried
+    /// when the first cannot be fetched, as on a network that blocks GitHub.  The manifest cannot send the download anywhere
+    /// else, and whichever place sends the file, it must be the file of the size and SHA-256 published.</para>
     /// </summary>
     internal sealed record UpdateOffer
     {
@@ -50,13 +52,17 @@ namespace StatsDirect.UI
         private static readonly Regex VersionForm = new(@"\A(0|[1-9][0-9]{0,8})\.(0|[1-9][0-9]{0,8})\.(0|[1-9][0-9]{0,8})\z", RegexOptions.CultureInvariant);
         private static readonly Regex WholeNumber = new(@"\A(0|[1-9][0-9]{0,17})\z", RegexOptions.CultureInvariant);
         private static readonly Regex Sha256Form = new(@"\A[0-9A-Fa-f]{64}\z", RegexOptions.CultureInvariant);
+        // The mirror: the installer's own name, in the site's download folder or up to four folders below it.  Each folder's name
+        // starts with a letter or a digit, so none of them is "." or "..".
+        private static readonly Regex MirrorForm = new(@"\Ahttps://www\.statsdirect\.com/download/(?:[A-Za-z0-9][A-Za-z0-9._-]{0,63}/){0,4}StatsDirectSetup\.exe\z", RegexOptions.CultureInvariant);
         private static readonly UTF8Encoding StrictUtf8 = new(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
 
-        private UpdateOffer(Version version, long size, string sha256)
+        private UpdateOffer(Version version, long size, string sha256, string mirror)
         {
             Version = version;
             Size = size;
             Sha256 = sha256;
+            MirrorAddress = mirror;
         }
 
         /// <summary>The version offered: major, minor and build.</summary>
@@ -65,11 +71,19 @@ namespace StatsDirect.UI
         internal long Size { get; }
         /// <summary>The installer's SHA-256, as 64 lower-case hexadecimal digits.</summary>
         internal string Sha256 { get; }
+        /// <summary>The mirror as the manifest gives it, or null when it gives none.</summary>
+        internal string MirrorAddress { get; }
         /// <summary>The installer's address: the file of this version's release at GitHub.</summary>
         internal Uri Url => new(InstallerAddress(Version));
+        /// <summary>
+        /// A second address for the same installer, on www.statsdirect.com, tried when the first cannot be fetched; null when
+        /// the manifest gives none.
+        /// </summary>
+        internal Uri Mirror => MirrorAddress == null ? null : new Uri(MirrorAddress);
 
         public override string ToString() =>
-            $"StatsDirect {Version}, {Size.ToString("N0", CultureInfo.InvariantCulture)} bytes, SHA-256 {Sha256}, at {InstallerAddress(Version)}";
+            $"StatsDirect {Version}, {Size.ToString("N0", CultureInfo.InvariantCulture)} bytes, SHA-256 {Sha256}, at {InstallerAddress(Version)}"
+            + (MirrorAddress == null ? "" : ", with a mirror at " + MirrorAddress);
 
         /// <summary>The one address at which the installer of a version is accepted.</summary>
         internal static string InstallerAddress(Version version) => ReleaseDownloads + "v" + version.ToString(3) + "/" + InstallerName;
@@ -78,7 +92,7 @@ namespace StatsDirect.UI
         internal bool IsNewerThan(Version running) => Version > ThreeParts(running);
 
         /// <summary>An offer of the installer of a version, as the release makes it; throws ArgumentException when a value cannot be published.</summary>
-        internal static UpdateOffer Create(Version version, long size, string sha256)
+        internal static UpdateOffer Create(Version version, long size, string sha256, string mirror = null)
         {
             ArgumentNullException.ThrowIfNull(version);
             ArgumentNullException.ThrowIfNull(sha256);
@@ -89,7 +103,9 @@ namespace StatsDirect.UI
                 throw new ArgumentException("The size is not that of an installer.", nameof(size));
             if (!Sha256Form.IsMatch(sha256))
                 throw new ArgumentException("The SHA-256 is not 64 hexadecimal digits.", nameof(sha256));
-            return new UpdateOffer(three, size, sha256.ToLowerInvariant());
+            if (mirror != null && !MirrorForm.IsMatch(mirror))
+                throw new ArgumentException("The mirror is not an address of the installer in www.statsdirect.com's download folder.", nameof(mirror));
+            return new UpdateOffer(three, size, sha256.ToLowerInvariant(), mirror);
         }
 
         /// <summary>The manifest that publishes this offer, as the release writes it and <see cref="Parse"/> reads it.</summary>
@@ -98,20 +114,22 @@ namespace StatsDirect.UI
             "  \"schema\": " + Schema.ToString(CultureInfo.InvariantCulture) + ",\n" +
             "  \"version\": \"" + Version.ToString(3) + "\",\n" +
             "  \"url\": \"" + InstallerAddress(Version) + "\",\n" +
+            (MirrorAddress == null ? "" : "  \"mirror\": \"" + MirrorAddress + "\",\n") +
             "  \"size\": " + Size.ToString(CultureInfo.InvariantCulture) + ",\n" +
             "  \"sha256\": \"" + Sha256 + "\"\n" +
             "}\n";
 
         /// <summary>
         /// Reads a manifest.  Everything in it must be as a release writes it: a version of three numbers, the address that
-        /// belongs to that version, a size an installer can have and a SHA-256.  Anything else throws
-        /// <see cref="UpdateManifestException"/>: a manifest that is not understood offers nothing.
+        /// belongs to that version, a size an installer can have and a SHA-256, and, if it gives a mirror, one on
+        /// www.statsdirect.com.  Anything else throws <see cref="UpdateManifestException"/>: a manifest that is not understood
+        /// offers nothing.
         /// </summary>
         internal static UpdateOffer Parse(string manifest)
         {
             if (manifest == null)
                 throw new UpdateManifestException("The update manifest is missing.");
-            if (manifest.Length > 0 && manifest[0] == '﻿')
+            if (manifest.Length > 0 && manifest[0] == '\uFEFF')
                 manifest = manifest[1..];
             JsonDocument document;
             try
@@ -128,7 +146,7 @@ namespace StatsDirect.UI
                 JsonElement root = document.RootElement;
                 if (root.ValueKind != JsonValueKind.Object)
                     throw new UpdateManifestException("The update manifest is not a JSON object.");
-                JsonElement? schema = null, version = null, url = null, size = null, sha256 = null;
+                JsonElement? schema = null, version = null, url = null, mirror = null, size = null, sha256 = null;
                 foreach (JsonProperty property in root.EnumerateObject())
                 {
                     switch (property.Name)
@@ -136,6 +154,7 @@ namespace StatsDirect.UI
                         case "schema": Take(ref schema, property); break;
                         case "version": Take(ref version, property); break;
                         case "url": Take(ref url, property); break;
+                        case "mirror": Take(ref mirror, property); break;
                         case "size": Take(ref size, property); break;
                         case "sha256": Take(ref sha256, property); break;
                     }
@@ -159,6 +178,11 @@ namespace StatsDirect.UI
                 if (url is not { ValueKind: JsonValueKind.String } address || !string.Equals(address.GetString(), InstallerAddress(offered), StringComparison.Ordinal))
                     throw new UpdateManifestException($"The update manifest does not give the address of StatsDirect {offered}'s installer (\"url\").");
 
+                // A mirror need not be given.  One that is given must be the installer's name in www.statsdirect.com's download
+                // folder, again compared as text.
+                if (mirror.HasValue && (mirror.Value.ValueKind != JsonValueKind.String || !MirrorForm.IsMatch(mirror.Value.GetString())))
+                    throw new UpdateManifestException("The update manifest gives a second address that is not the installer in www.statsdirect.com's download folder (\"mirror\").");
+
                 if (size is not { ValueKind: JsonValueKind.Number } sizeNumber || !WholeNumber.IsMatch(sizeNumber.GetRawText())
                     || !long.TryParse(sizeNumber.GetRawText(), NumberStyles.None, CultureInfo.InvariantCulture, out long bytes)
                     || bytes <= 0 || bytes > MaximumInstallerBytes)
@@ -167,7 +191,7 @@ namespace StatsDirect.UI
                 if (sha256 is not { ValueKind: JsonValueKind.String } digest || !Sha256Form.IsMatch(digest.GetString()))
                     throw new UpdateManifestException("The update manifest does not give a SHA-256 of 64 hexadecimal digits (\"sha256\").");
 
-                return new UpdateOffer(offered, bytes, digest.GetString().ToLowerInvariant());
+                return new UpdateOffer(offered, bytes, digest.GetString().ToLowerInvariant(), mirror?.GetString());
             }
         }
 
