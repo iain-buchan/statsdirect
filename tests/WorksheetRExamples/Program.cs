@@ -74,13 +74,13 @@ internal static class Program
             }
             int sharedCases = document.RootElement.GetProperty("cases").GetArrayLength();
             Check(sharedCases >= 50, $"the shared examples hold at least the 50 cases of the approved rules ({sharedCases})");
+            CheckFilteredBounds(runs, work);
             RunR(runs, work);
             RunRPlus(runs.Where(run => RPlusCases.ContainsKey(run.Name)).ToList(), work);
             Check(runs.Count(run => RPlusCases.ContainsKey(run.Name)) == RPlusCases.Count,
                 "every R+ case is among the cases compared in R: " + string.Join(", ", RPlusCases.Keys.Where(name => !runs.Any(run => run.Name == name))));
             CheckNumberForm(work);
             CheckManualCalculation(work);
-            CheckFilteredBounds();
             CheckPathLiterals();
             if (failures.Count == 0)
             {
@@ -576,7 +576,7 @@ internal static class Program
 
     // Rule 2.1 under an AutoFilter, which makes Find pass over hidden rows: the bounds still take in a hidden row's data, and a
     // formatted cell at the far corner of the grid (which widens the used range to every cell) does not make the prompt read every cell.
-    private static void CheckFilteredBounds()
+    private static void CheckFilteredBounds(List<Run> runs, string work)
     {
         IWorkbook workbook = Factory.GetWorkbook(CultureInfo.InvariantCulture);
         try
@@ -673,6 +673,20 @@ internal static class Program
             var rows = WorksheetRImport.Describe(sheet, sheet.Range["1:11"], write => write());
             Check(sheet.Range["A3"].EntireRow.Hidden && !sheet.Range["A4"].EntireRow.Hidden && entire.EntireSheet?.Address == "A1:D11" && rows.SelectedCells?.Address == "A1:D11",
                 $"under an AutoFilter whose shown rows are not one block, a column with data only in shown rows is in the bounds (entire {entire.EntireSheet?.Address}, rows {rows.SelectedCells?.Address})");
+            var rectangle = WorksheetRImport.Describe(sheet, sheet.Range["A1:D11"], write => write()).SelectedCells;
+            if (rectangle == null)
+            {
+                Check(false, "A1:D11 remains available for R import under the AutoFilter");
+            }
+            else
+            {
+                string folder = Path.Combine(work, "filtered-noncontiguous");
+                Directory.CreateDirectory(folder);
+                string script = rectangle.WriteImportScript(true, WorksheetRDataFormat.DataFrame, false, folder);
+                const string expected = "data.frame(id = as.double(1:10), group = rep(c(\"A\", \"B\"), 5), "
+                    + "score = as.double(seq(10, 100, 10)), comment = c(\"late start\", NA, \"retested\", rep(NA, 7)))";
+                runs.Add(new Run("Windows: A1:D11 under an AutoFilter with noncontiguous shown rows", folder, script, expected));
+            }
         }
         finally
         {
@@ -790,11 +804,24 @@ internal static class Program
                 && !WorksheetRImport.HoldsDataFile("utils::write.csv(x, " + WorksheetRImport.QuotePath(plain) + ")\n", plain)
                 && WorksheetRImport.HoldsDataFile("y <- " + readerOf + "\n", plain),
             "a script holds its data file through the import's reader, or through the marker while its code still names the file");
-        string twice = WorksheetRImport.Marked(WorksheetRImport.Marked(edited, "x.worksheet-data.csv"), "z.worksheet-data.csv");
-        Check(twice == WorksheetRImport.DataFileMarker + "z.worksheet-data.csv\n" + edited && WorksheetRImport.Unmarked(twice) == edited
+        string reopened = WorksheetRImport.Unmarked(marker + edited, plain);
+        Check(reopened == edited && WorksheetRImport.Marked(reopened, "z.worksheet-data.csv") == WorksheetRImport.DataFileMarker + "z.worksheet-data.csv\n" + edited
                 && WorksheetRImport.Marked("#!/usr/bin/env Rscript\r\nx <- 1\r\n", "x.worksheet-data.csv")
                     == "#!/usr/bin/env Rscript\r\n" + WorksheetRImport.DataFileMarker + "x.worksheet-data.csv\r\nx <- 1\r\n",
-            "a saved script has one marker, the latest, after a #! line where there is one, in the script's own line endings");
+            "opening removes the matching marker and saving writes the new marker after any #! line in the script's own line endings");
+
+        string older = WorksheetRImport.DataFileMarker + "source workbook, checked by hand\n" + edited;
+        Check(WorksheetRImport.Unmarked(older, plain) == older
+                && WorksheetRImport.Marked(older, "x.worksheet-data.csv") == marker + older
+                && WorksheetRImport.Unmarked(marker + older, plain) == older,
+            "a first-line comment with the marker prefix survives opening and saving ahead of the older import");
+        string shebang = "#!/usr/bin/env Rscript\r\n";
+        string userComment = (marker + edited).Replace("\n", "\r\n", StringComparison.Ordinal);
+        string secondLine = shebang + userComment;
+        Check(WorksheetRImport.Unmarked(secondLine, @"C:\data\other.worksheet-data.csv") == secondLine
+                && WorksheetRImport.Marked(secondLine, "x.worksheet-data.csv") == shebang + marker.Replace("\n", "\r\n", StringComparison.Ordinal) + userComment
+                && WorksheetRImport.Unmarked(WorksheetRImport.Marked(secondLine, "x.worksheet-data.csv"), plain.ToUpperInvariant()) == secondLine,
+            "after a #! line, save adds the genuine marker even when it matches the user's comment, and reopen removes only the added line");
 
         // The marker is only where StatsDirect writes it, the first line or the second after #!: the same words elsewhere, in a string,
         // a raw string or the user's own comment, are the user's, kept on saving and on opening, and hold nothing (the review of a031b80e).
@@ -803,7 +830,7 @@ internal static class Program
         string inRaw = "tmpl <- r\"(\n" + WorksheetRImport.DataFileMarker + "x.worksheet-data.csv\n)\"\n" + edited;
         Check(WorksheetRImport.Marked(inString, "x.worksheet-data.csv") == marker + inString
                 && WorksheetRImport.Marked(inComment, "x.worksheet-data.csv") == marker + inComment
-                && WorksheetRImport.Unmarked(inString) == inString && WorksheetRImport.Unmarked(inRaw) == inRaw
+                && WorksheetRImport.Unmarked(inString, plain) == inString && WorksheetRImport.Unmarked(inRaw, plain) == inRaw
                 && !WorksheetRImport.HoldsDataFile(inRaw, plain) && !WorksheetRImport.HoldsDataFile(inComment, plain)
                 && WorksheetRImport.HoldsDataFile(WorksheetRImport.Marked(inString, "x.worksheet-data.csv"), plain),
             "the marker words in a string, a raw string or the user's comment are kept, and hold nothing; only the first line is the marker");

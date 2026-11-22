@@ -1046,14 +1046,11 @@ internal static class WorksheetRImport
         return (start, end < 0 ? source.Length : end + 1);
     }
 
-    private static bool HasMarker(string source, (int Start, int End) line) =>
-        source.AsSpan(line.Start, line.End - line.Start).StartsWith(DataFileMarker, StringComparison.Ordinal);
-
-    // The data file a script's marker names, or null when it has none.
-    private static string MarkedDataFile(string source)
+    private static bool HasDataFileMarker(string source, (int Start, int End) line, string dataFile)
     {
-        var line = MarkerLine(source);
-        return HasMarker(source, line) ? source[(line.Start + DataFileMarker.Length)..line.End].TrimEnd('\n').TrimEnd('\r') : null;
+        ReadOnlySpan<char> text = source.AsSpan(line.Start, line.End - line.Start);
+        return text.StartsWith(DataFileMarker, StringComparison.Ordinal)
+            && text[DataFileMarker.Length..].TrimEnd('\n').TrimEnd('\r').Equals(Path.GetFileName(dataFile), StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>
@@ -1063,23 +1060,23 @@ internal static class WorksheetRImport
     /// script that names a file of that name holds nothing.
     /// </summary>
     internal static bool HoldsDataFile(string source, string dataFile) => ReadsAsImport(source, dataFile)
-        || string.Equals(MarkedDataFile(source), Path.GetFileName(dataFile), StringComparison.OrdinalIgnoreCase) && NamesInCode(source, dataFile);
+        || HasDataFileMarker(source, MarkerLine(source), dataFile) && NamesInCode(source, dataFile);
 
-    /// <summary>The script without its marker line: what the editor shows, since StatsDirect writes the marker with each save.</summary>
-    internal static string Unmarked(string source)
+    /// <summary>The editor text with the marker removed only if it names the data file beside the script.</summary>
+    internal static string Unmarked(string source, string dataFile)
     {
         var line = MarkerLine(source);
-        return HasMarker(source, line) ? source.Remove(line.Start, line.End - line.Start) : source;
+        return HasDataFileMarker(source, line, dataFile) ? source.Remove(line.Start, line.End - line.Start) : source;
     }
 
-    /// <summary>The script with one marker, naming its data file, as its first line, or after a #! line: written with the pair.</summary>
+    /// <summary>Adds a marker for the data file to the editor text, after any #! line and before any comment using the same words.</summary>
     internal static string Marked(string source, string dataFileName)
     {
-        string unmarked = Unmarked(source), newline = unmarked.Contains("\r\n", StringComparison.Ordinal) ? "\r\n" : "\n";
+        string newline = source.Contains("\r\n", StringComparison.Ordinal) ? "\r\n" : "\n";
         string marker = DataFileMarker + dataFileName + newline;
-        if (!unmarked.StartsWith("#!", StringComparison.Ordinal)) return marker + unmarked;
-        int end = unmarked.IndexOf('\n');
-        return end < 0 ? unmarked + newline + marker : unmarked[..(end + 1)] + marker + unmarked[(end + 1)..];
+        if (!source.StartsWith("#!", StringComparison.Ordinal)) return marker + source;
+        int end = source.IndexOf('\n');
+        return end < 0 ? source + newline + marker : source[..(end + 1)] + marker + source[(end + 1)..];
     }
 
     /// <summary>R code with each string literal that names one path (<see cref="StringsInCode"/>) naming another, in the literal's own

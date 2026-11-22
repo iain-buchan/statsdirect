@@ -2,6 +2,16 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
+##[v5.3.18]
+
+### Fixed
+- Older R scripts opened with their companion worksheet data retain first-line comments that resemble the StatsDirect data marker, including immediately after a script's shebang.
+
+### Tests
+- Windows uses worksheet-to-R rules and examples from learning-v1.1.11. Windows also checks the complete R data frame exported from a worksheet with an AutoFilter whose visible rows are separated.
+- The corrupt Help index test allows a loaded CI runner more time and reports the state it was waiting for if it times out.
+
+
 ##[v5.3.17] 2026-11-22
 
 ### Changed

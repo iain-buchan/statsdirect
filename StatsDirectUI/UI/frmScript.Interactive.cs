@@ -210,7 +210,7 @@ public partial class frmScript
                 WorksheetImportFolder = folder;
                 string kept = folder;
                 Disposed += (_, _) => StatsDirect.R.WorksheetRLauncher.DeleteImportFolder(kept);
-                return WorksheetRImport.RenameInCode(WorksheetRImport.Unmarked(text), dataFile, own);
+                return WorksheetRImport.RenameInCode(WorksheetRImport.Unmarked(text, dataFile), dataFile, own);
             }
             catch (Exception e) when (e is IOException or UnauthorizedAccessException)
             {
