@@ -10,8 +10,9 @@ namespace StatsDirect.UI
 {
     /// <summary>
     /// What a downloaded installer must be before StatsDirect starts it: a file with a valid Authenticode signature made by
-    /// StatsDirect Limited, whose version resource says it is StatsDirect and newer than the version running.  Windows makes its
-    /// own checks when the file is started; this makes sure first that the file is ours and is an update.
+    /// StatsDirect Limited, whose version resource says it is StatsDirect, newer than the version running, and the version
+    /// that was offered.  Windows makes its own checks when the file is started; this makes sure first that the file is ours
+    /// and is the update.
     /// </summary>
     internal static class UpdateInstallerCheck
     {
@@ -24,21 +25,28 @@ namespace StatsDirect.UI
 
         private const int RevocationFailure = unchecked((int)0x800B010E), RevocationOffline = unchecked((int)0x80092013), NoRevocationCheck = unchecked((int)0x80092012);
 
-        /// <summary>The check the updater makes: against the version of the program that is running.</summary>
-        internal static void VerifyForRunningProgram(string path) =>
-            Verify(path, Assembly.GetEntryAssembly()?.GetName().Version ?? new Version(0, 0, 0));
+        /// <summary>The version of the program that is running, as the updater compares it: major, minor and build.</summary>
+        internal static Version RunningVersion => UpdateOffer.ThreeParts(Assembly.GetEntryAssembly()?.GetName().Version ?? new Version(0, 0, 0));
 
-        /// <summary>Throws unless the file is a StatsDirect installer signed by StatsDirect Limited and newer than <paramref name="running"/>.</summary>
-        internal static void Verify(string path, Version running)
+        /// <summary>The check the updater makes: against the version of the program that is running, and the version it was offered.</summary>
+        internal static void VerifyForRunningProgram(string path, Version offered) => Verify(path, RunningVersion, offered);
+
+        /// <summary>
+        /// Throws unless the file is a StatsDirect installer signed by StatsDirect Limited and newer than <paramref name="running"/>
+        /// and, where the version that was offered is given, of that version.
+        /// </summary>
+        internal static void Verify(string path, Version running, Version offered = null)
         {
             if (Signer(path) != Publisher)
                 throw new IOException("The downloaded installer is not signed by StatsDirect Limited, so it has not been opened.");
             // The version resource is inside what the signature covers, so once the signer is ours it can be believed.
             FileVersionInfo info = FileVersionInfo.GetVersionInfo(path);
-            var offered = new Version(info.FileMajorPart, info.FileMinorPart, info.FileBuildPart);
-            var current = new Version(Math.Max(running.Major, 0), Math.Max(running.Minor, 0), Math.Max(running.Build, 0));
-            if (info.ProductName != Product || offered <= current)
+            var found = new Version(info.FileMajorPart, info.FileMinorPart, info.FileBuildPart);
+            if (info.ProductName != Product || found <= UpdateOffer.ThreeParts(running))
                 throw new IOException("The downloaded installer is not a newer version of StatsDirect, so it has not been opened.");
+            // An offer names one version.  A newer installer of another version is not what the user agreed to install.
+            if (offered != null && found != UpdateOffer.ThreeParts(offered))
+                throw new IOException($"The downloaded installer is StatsDirect {found}, not the version offered ({UpdateOffer.ThreeParts(offered)}), so it has not been opened.");
         }
 
         /// <summary>The name on the certificate that signed the file, or null when the file has no valid signature.</summary>

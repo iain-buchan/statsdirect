@@ -8,6 +8,7 @@
   <ItemGroup>
     <Compile Include="../../StatsDirectUI/UI/UpdateInstaller.cs" Link="Production/UpdateInstaller.cs" />
     <Compile Include="../../StatsDirectUI/UI/UpdateInstallerCheck.cs" Link="Production/UpdateInstallerCheck.cs" />
+    <Compile Include="../../StatsDirectUI/UI/UpdateOffer.cs" Link="Production/UpdateOffer.cs" />
     <Compile Include="../../StatsDirectUI/UI/frmDownloadUpdate.cs" Link="Production/frmDownloadUpdate.cs" />
     <Compile Include="../../StatsDirectUI/Utilities/DiagnosticLog.cs" Link="Production/DiagnosticLog.cs" />
   </ItemGroup>

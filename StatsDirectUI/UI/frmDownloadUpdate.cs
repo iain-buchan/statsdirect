@@ -16,9 +16,11 @@ namespace StatsDirect.UI
         private readonly Func<IProgress<UpdateDownloadProgress>, CancellationToken, Task<UpdateInstaller>> download;
         private bool downloading;
 
-        internal frmDownloadUpdate() : this(DownloadAsync) { }
+        /// <summary>The dialog that downloads the installer of an offer.</summary>
+        internal frmDownloadUpdate(UpdateOffer offer) : this((progress, token) => DownloadAsync(offer, progress, token), offer) { }
 
-        internal frmDownloadUpdate(Func<IProgress<UpdateDownloadProgress>, CancellationToken, Task<UpdateInstaller>> download)
+        /// <param name="offer">The offer whose version and host the dialog names; null in tests of the dialog alone.</param>
+        internal frmDownloadUpdate(Func<IProgress<UpdateDownloadProgress>, CancellationToken, Task<UpdateInstaller>> download, UpdateOffer offer = null)
         {
             SuspendLayout();
             this.download = download;
@@ -44,10 +46,11 @@ namespace StatsDirect.UI
             layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 32));
             layout.Controls.Add(new Label
             {
-                Text = "Downloading the StatsDirect installer. You will be asked to save any unsaved work before StatsDirect closes.",
+                Text = (offer == null ? "Downloading the StatsDirect installer." : $"Downloading the StatsDirect {offer.Version} installer.")
+                    + " You will be asked to save any unsaved work before StatsDirect closes.",
                 Dock = DockStyle.Fill, AutoSize = true
             });
-            status = new Label { Text = "Connecting to statsdirect.com…", Dock = DockStyle.Fill, AutoSize = true };
+            status = new Label { Text = offer == null ? "Connecting…" : $"Connecting to {offer.Url.Host}…", Dock = DockStyle.Fill, AutoSize = true };
             progress = new ProgressBar { Dock = DockStyle.Top, Style = ProgressBarStyle.Marquee, Height = 22 };
             cancel = new Button { Text = "Cancel", Anchor = AnchorStyles.Right, AutoSize = true };
             cancel.Click += (_, _) => CancelDownload();
@@ -63,13 +66,13 @@ namespace StatsDirect.UI
 
         internal UpdateInstaller Installer { get; private set; }
 
-        private static async Task<UpdateInstaller> DownloadAsync(IProgress<UpdateDownloadProgress> progress, CancellationToken token)
+        private static async Task<UpdateInstaller> DownloadAsync(UpdateOffer offer, IProgress<UpdateDownloadProgress> progress, CancellationToken token)
         {
-            using var client = new HttpClient { Timeout = Timeout.InfiniteTimeSpan };
+            using HttpClient client = UpdateInstaller.CreateClient();
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(token);
             // ResponseHeadersRead does not apply HttpClient.Timeout to the body; cover the whole transfer.
             timeout.CancelAfter(TimeSpan.FromMinutes(30));
-            return await UpdateInstaller.DownloadAsync(client, progress, timeout.Token);
+            return await UpdateInstaller.DownloadAsync(client, offer, progress, timeout.Token);
         }
 
         protected override async void OnShown(EventArgs e)
@@ -92,7 +95,7 @@ namespace StatsDirect.UI
                 Utilities.DiagnosticLog.Write("Installer download failed: " + ex);
                 string reason = ex is OperationCanceledException ? "The download timed out." : ex.Message;
                 MessageBox.Show(this, "The update could not be downloaded. StatsDirect will stay open.\r\n\r\n" +
-                    reason + "\r\n\r\nPlease try again, or download the installer from https://www.statsdirect.com.",
+                    reason + "\r\n\r\nPlease try again, or download the installer from https://" + UpdateOffer.DownloadPage + ".",
                     "StatsDirect update", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
             finally

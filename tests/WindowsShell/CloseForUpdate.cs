@@ -121,15 +121,20 @@ internal static partial class Program
     {
         var type = typeof(frmMain).Assembly.GetType("StatsDirect.UI.UpdateInstaller")!;
         var download = type.GetMethod("DownloadAsync", BindingFlags.NonPublic | BindingFlags.Static)!;
+        // The update that the pretend setup file answers: an offer of its own size and SHA-256.
+        object offer = typeof(frmMain).Assembly.GetType("StatsDirect.UI.UpdateOffer")!.GetMethod("Create", BindingFlags.NonPublic | BindingFlags.Static)!
+            .Invoke(null, new object[] { new Version(999, 0, 0), (long)PretendSetup.Bytes.Length, Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(PretendSetup.Bytes)) })!;
         using var client = new HttpClient(new PretendSetup());
-        var task = (Task)download.Invoke(null, new object[] { client, null, CancellationToken.None, (Action<string>)(_ => { }) })!;
+        var task = (Task)download.Invoke(null, new object[] { client, offer, null, CancellationToken.None, (Action<string>)(_ => { }) })!;
         await task;
         return task.GetType().GetProperty("Result")!.GetValue(task)!;
     }
 
     sealed class PretendSetup : HttpMessageHandler
     {
+        internal static readonly byte[] Bytes = { (byte)'M', (byte)'Z', 0, 0 };
+
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) =>
-            Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent(new byte[] { (byte)'M', (byte)'Z', 0, 0 }), RequestMessage = request });
+            Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent(Bytes), RequestMessage = request });
     }
 }

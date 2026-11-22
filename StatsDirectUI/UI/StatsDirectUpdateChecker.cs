@@ -1,89 +1,47 @@
 ﻿using System;
-using System.Net;
-using System.Text.RegularExpressions;
-using System.Windows.Forms;
+using System.Net.Http;
+using System.Threading;
 
 namespace StatsDirect.UI
 {
+    /// <summary>
+    /// The check for a newer StatsDirect.  It reads the update manifest on statsdirect.com (<see cref="UpdateOffer"/>): the
+    /// version published, with the address, size and SHA-256 of its installer.
+    /// <para>Versions before 5.3.17 read the version from the text of the download page ("Current version ...") and fetch the
+    /// installer from www.statsdirect.com/download/StatsDirectSetup.exe.  The website keeps both for them.</para>
+    /// </summary>
     class StatsDirectUpdateChecker : UpdateChecker
     {
+        private static readonly TimeSpan FetchLimit = TimeSpan.FromSeconds(100);
+        private volatile UpdateOffer offer;
+
+        /// <summary>The update the last check found, for the download; null unless that check ended with a newer version.</summary>
+        internal UpdateOffer Offer => offer;
+
         public void StartCheck(StatusChangedEventHandler handler)
         {
-            base.StartCheck(new Uri("https://www.statsdirect.com/download.aspx"), handler);
+            offer = null;
+            base.StartCheck(UpdateOffer.ManifestUri, handler);
         }
 
-        protected override void PageDownloaded(string downloadedPage, Exception error, bool cancelled)
+        // The whole fetch is timed, its text included: the client's own timeout ends when the answer's headers arrive.
+        protected override string Fetch(HttpClient client, Uri uri)
         {
-            const string prefix = "Current version";
+            using var limit = CancellationTokenSource.CreateLinkedTokenSource(Stopped);
+            limit.CancelAfter(FetchLimit);
+            return UpdateOffer.ReadManifestAsync(client, uri, limit.Token).GetAwaiter().GetResult();
+        }
+
+        protected override void PageDownloaded(string manifest, Exception error, bool cancelled)
+        {
             if (cancelled)
                 return;
-            if (null != error || null == downloadedPage)
-            {
-                UpdateStatus(true, false, false, "Could not check for StatsDirect updates. Please check your Internet connection.");
-                return;
-            }
-
-            // Success - look for the version
-            int latestVersionPos = downloadedPage.IndexOf(prefix, StringComparison.OrdinalIgnoreCase);
-            if (latestVersionPos < 0)
-            {
-                UpdateStatus(true, false, false, "Could not locate StatsDirect version on update page. Please check manually at www.statsdirect.com/download.aspx");
-                return;
-            }
-            string latestVersionLine = downloadedPage.Substring(latestVersionPos + prefix.Length);
-            int versionsEndPos = latestVersionLine.IndexOf("<br", StringComparison.OrdinalIgnoreCase);
-            if (versionsEndPos < 0)
-            {
-                UpdateStatus(true, false, false, "Could not locate StatsDirect version on update page. Please check manually at www.statsdirect.com/download.aspx");
-                return;
-            }
-            latestVersionLine = latestVersionLine.Substring(0, versionsEndPos);
-            MajorMinorPoint installedVersion = new MajorMinorPoint(Application.ProductVersion);
-            MajorMinorPoint availableVersion = GetListedVersion(latestVersionLine, installedVersion);
-            if (null == availableVersion || !availableVersion.IsValid)
-            {
-                UpdateStatus(true, false, false, "Could not locate a version of StatsDirect on update page. Please check manually at www.statsdirect.com/download.aspx");
-                return;
-            }
-            // isNewer = true; // useful for testing without updating the web site!
-            if (installedVersion < availableVersion)
-            {
-                UpdateStatus(true, true, true, $"You are presently running StatsDirect version {installedVersion}. Version {availableVersion} is available. Would you like to close StatsDirect and install the new version?");
-            }
-            else
-            {
-                UpdateStatus(true, true, false, $"You are presently running StatsDirect version {installedVersion}. You have the latest version of StatsDirect.");
-            }
-        }
-
-        /// <summary>
-        /// Find the version the update page lists as current.
-        /// </summary>
-        /// <param name="latestVersionLine">The text following "Current version" on the update page</param>
-        /// <param name="installedVersion">The version that is running</param>
-        /// <returns>The listed version, or null if none could be found</returns>
-        /// <remarks>
-        /// The page reads "Current version 4.0.4 (24th June 2024) for Microsoft Windows...", so the version wanted is the one that immediately follows the prefix, whatever its major version.
-        /// Only a colon, an equals sign, "is" or a "v" may come between them: anything looser could pick up another number of the same shape, such as a .Net runtime version.
-        /// Failing that, look further along the line, but only for a version with the same major version as the one running.
-        /// </remarks>
-        private static MajorMinorPoint GetListedVersion(string latestVersionLine, MajorMinorPoint installedVersion)
-        {
-            Match immediatelyFollowing = Regex.Match(latestVersionLine, "^\\s*(?:[:=]|is)?\\s*v?([0-9]+\\.[0-9]+\\.[0-9]+)");
-            if (immediatelyFollowing.Success)
-            {
-                MajorMinorPoint version = new MajorMinorPoint(immediatelyFollowing.Groups[1].Value);
-                if (version.IsValid)
-                    return version;
-            }
-            Regex versionSpotter = new Regex("[0-9]+\\.[0-9]+\\.[0-9]+");
-            foreach (Match m in versionSpotter.Matches(latestVersionLine))
-            {
-                MajorMinorPoint version = new MajorMinorPoint(m.Value);
-                if (version.IsValid && installedVersion.IsValid && version.Major == installedVersion.Major)
-                    return version;
-            }
-            return null;
+            UpdateCheckOutcome outcome = UpdateOffer.Evaluate(manifest, error, UpdateInstallerCheck.RunningVersion);
+            if (outcome.Detail != null)
+                Utilities.DiagnosticLog.Write("update check not made: " + outcome.Detail);
+            // The offer is kept whole: the download fetches this version's installer and no other.
+            offer = outcome.Offer;
+            UpdateStatus(true, outcome.Succeeded, outcome.Offer != null, outcome.Message);
         }
     }
 }

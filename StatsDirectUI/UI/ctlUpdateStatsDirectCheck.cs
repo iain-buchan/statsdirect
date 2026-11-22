@@ -9,6 +9,9 @@ namespace StatsDirect.UI
         private StatsDirectUpdateChecker statsDirectChecker;
         public event EventHandler NewerVersionAvailable;
 
+        /// <summary>The update the check found, for the download; null unless the check ended with a newer version.</summary>
+        internal UpdateOffer Offer => statsDirectChecker?.Offer;
+
         public ctlUpdateStatsDirectCheck()
         {
             InitializeComponent();

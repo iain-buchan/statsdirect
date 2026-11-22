@@ -134,6 +134,71 @@ to the engine's major version would disable the foreground handover.
 The published BAFunctions window-procedure hook is message 1025; its x64
 argument/result structures are 40/16 bytes.
 
+### Updates: the manifest and the installer's address
+
+From 5.3.17 the check for a new version reads a small file, the update manifest,
+at `https://www.statsdirect.com/download/windows-latest.json`
+(`StatsDirectUI/UI/UpdateOffer.cs`):
+
+```json
+{
+  "schema": 1,
+  "version": "5.3.17",
+  "url": "https://github.com/iain-buchan/statsdirect/releases/download/v5.3.17/StatsDirectSetup.exe",
+  "size": 304535768,
+  "sha256": "79dbc07d18397b55f6c9e7957c30e5242370610f25a106ef0eb648450c394359"
+}
+```
+
+- `url` must be, character for character, the address of `StatsDirectSetup.exe`
+  in this repository's GitHub release tagged `v<version>`. The updater accepts
+  no other address, so the manifest cannot send a download anywhere else.
+- The updater offers the version only to an older StatsDirect. It downloads the
+  file, following redirects only to https addresses, and starts it only if it
+  has that size and SHA-256, is signed by StatsDirect Limited, is StatsDirect,
+  is newer than the version running and is the version offered. Otherwise the
+  download is removed, StatsDirect stays open and the user is given the
+  download page.
+- A reader passes over names it does not know, so fields can be added. A change
+  that an older reader would misread needs a new `schema` number and a new
+  address for the file: installed versions go on reading `windows-latest.json`
+  in schema 1.
+- The address names this repository. If the repository is ever moved or
+  renamed, the manifest goes on giving this address, which GitHub redirects
+  and the updater follows; a version that accepts the new address has to be
+  released before anything else takes the old name.
+
+At each release, with the signed installer:
+
+1. `dotnet run --project tests/UpdateDownloadRegression -c Release -- --verify <StatsDirectSetup.exe> --running <previous version>`
+   must say PASS, as before: installed copies will start this installer.
+2. `... -- --manifest <StatsDirectSetup.exe> --out windows-latest.json` writes
+   the manifest from the signed installer with the updater's own code, and
+   reads it back.
+3. Attach `windows-latest.json` to the GitHub release with the installers
+   before the release is published. With release immutability switched on,
+   nothing can be added to a release afterwards.
+4. After publishing, `... -- --check-manifest windows-latest.json --running <previous version> --download`
+   must say PASS: the public file is the one the manifest describes. It starts
+   nothing.
+5. The website then publishes, in one deployment, the manifest (a copy of the
+   release's file, byte for byte), the version on the download page and the
+   installer addresses. The manifest names stable releases only, and must never
+   name a version whose installer is not public at its address.
+
+Installed versions before 5.3.17 do not read the manifest, and the website keeps
+their addresses working:
+
+- 5.0.8 to 5.3.16 read the version from the text "Current version ..." on
+  `www.statsdirect.com/download.aspx` and fetch
+  `https://www.statsdirect.com/download/StatsDirectSetup.exe`, following
+  redirects that end on an https address. 5.3.15 and 5.3.16 also require the
+  file to be signed by StatsDirect Limited and newer than the version running.
+- 5.0.7 and earlier open `http://www.statsdirect.com/download/StatsDirectSetup.exe`
+  in the default browser.
+
+The page must not announce a version before that address serves it.
+
 ### Desktop HTML5 help
 
 The complete offline help bundle is checked in at `StatsDirectUI/Assets/Help`.

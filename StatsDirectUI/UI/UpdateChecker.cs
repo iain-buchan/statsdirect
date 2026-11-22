@@ -3,6 +3,7 @@ using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Net.Http;
+using System.Threading;
 
 namespace StatsDirect.UI
 {
@@ -31,10 +32,15 @@ namespace StatsDirect.UI
         }
 
         private volatile bool stopRequested;
+        private readonly CancellationTokenSource stop = new();
+
+        /// <summary>Cancelled by StopCheck: for a subclass that fetches its page itself.</summary>
+        protected CancellationToken Stopped => stop.Token;
 
         public void StopCheck()
         {
             stopRequested = true;
+            stop.Cancel();
             if (null != httpClient)
                 httpClient.CancelPendingRequests();
         }
@@ -60,7 +66,7 @@ namespace StatsDirect.UI
                 bool cancelled = false;
                 try
                 {
-                    page = httpClient.GetStringAsync(Uri).GetAwaiter().GetResult();
+                    page = Fetch(httpClient, Uri);
                 }
                 catch (System.OperationCanceledException ex)
                 {
@@ -90,6 +96,11 @@ namespace StatsDirect.UI
                 UpdateStatus(true, false, false, "Could not resolve " + DnsDomain + "; are you connected to a network?");
             }
         }
+
+        /// <summary>
+        /// Fetches the page's text.  A subclass that needs more than the text, such as how it arrived or a limit on its length, replaces this.
+        /// </summary>
+        protected virtual string Fetch(HttpClient client, System.Uri uri) => client.GetStringAsync(uri).GetAwaiter().GetResult();
 
         protected void UpdateStatus(bool isFinal, bool successful, bool newerVersionAvailable, string message)
         {
