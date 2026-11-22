@@ -100,8 +100,14 @@ internal static class Program
         File.WriteAllBytes(Path.GetFullPath(output), bytes);
         Console.WriteLine($"PASS: wrote {Path.GetFullPath(output)} ({bytes.Length} bytes, SHA-256 {Convert.ToHexString(SHA256.HashData(bytes))}) for {installer}, signed by {UpdateInstallerCheck.Signer(installer)}.");
         Console.WriteLine("It offers " + offer);
-        Console.WriteLine("Publish it only when the release's address serves this file (--check-manifest <file> --download --require-github)"
-            + (offer.Mirror == null ? "." : " and the mirror serves it too (--check-manifest <file> --download --block-github)."));
+        Console.WriteLine("Check GitHub before deploying the website.");
+        Console.WriteLine("--check-manifest <file> --running <previous version> --download --require-github");
+        Console.WriteLine("In one website deployment, "
+            + (offer.Mirror == null ? "publish" : "place the mirror, compare it byte for byte with the GitHub installer, then publish")
+            + " the release manifest, download page and unversioned installers.");
+        Console.WriteLine(offer.Mirror == null ? "Verify the live manifest after deployment." : "Verify the live manifest and mirror with GitHub blocked after deployment.");
+        Console.WriteLine($"--check-manifest {UpdateOffer.ManifestUri} --running <previous version>"
+            + (offer.Mirror == null ? "" : " --download --block-github"));
         return 0;
     }
 
