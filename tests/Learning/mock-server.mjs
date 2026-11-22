@@ -3,6 +3,7 @@ import {appendFileSync,readFileSync} from 'node:fs';
 import {join} from 'node:path';
 let loggedIn=false,sequence=0;const turns=new Map(),threadTools=new Map(),responses=new Map();
 const workspaceProbePath=process.argv[2]==='--workspace-policy-probe'?process.argv[3]:null;
+const analysisTracePath=process.argv[2]==='--worksheet-analysis-probe'?process.argv[3]:null;
 const probe=record=>{if(workspaceProbePath)appendFileSync(workspaceProbePath,JSON.stringify({pid:process.pid,...record})+'\n');};
 const mockArguments=process.argv.slice(4);
 const workspacePinArgument=mockArguments.find(value=>value.startsWith('forced_chatgpt_workspace_id='));
@@ -15,6 +16,7 @@ if(wrongCachedWorkspace||missingCachedWorkspace)loggedIn=true;
 if(workspaceProbePath)probe({event:'launch',arguments:mockArguments,config:readFileSync(join(process.env.CODEX_HOME,'config.toml'),'utf8')});
 const out=v=>process.stdout.write(JSON.stringify(v)+'\n');
 readline.createInterface({input:process.stdin}).on('line',line=>{
+ if(analysisTracePath)appendFileSync(analysisTracePath,line+'\n');
  const q=JSON.parse(line); if(!q.method){probe({event:'response'});const f=responses.get(q.id);if(f){responses.delete(q.id);f(q.result);}return;}
  probe({event:'request',method:q.method});
  const p=q.params??{};const result=v=>out({id:q.id,result:v});
@@ -61,6 +63,54 @@ readline.createInterface({input:process.stdin}).on('line',line=>{
        const scope=await call('statsdirect_workspace',{}),books=scope.documents.filter(d=>d.kind==='grid'),reads=[];
        for(const book of books) reads.push(await call('statsdirect_read_data',{documentId:book.documentId,firstRow:2,lastRow:2,columns:[0]}));
        answer=JSON.stringify({scopeIds:books.map(b=>b.documentId),readIds:reads.map(d=>d.documentId),titles:reads.map(d=>d.workbook),values:reads.map(d=>d.columns?.[0]?.values?.[0]),datasetIds:reads.map(d=>d.datasetId)});
+     }
+     if(question.startsWith('WORKSHEET_AI_') || question==='Add an Age band column') {
+       const call=(tool,args)=>new Promise(resolve=>{
+         const rid='tool-'+(++sequence);
+         responses.set(rid,resolve);
+         out({id:rid,method:'item/tool/call',params:{threadId:p.threadId,turnId:id,callId:'call-'+sequence,tool,arguments:args}});
+       });
+       const help=await call('statsdirect_search_help',{query:'worksheet'});
+       const scope=await call('statsdirect_workspace',{});
+       const documents=scope.success?JSON.parse(scope.contentItems[0].text).documents:[];
+       const read=await call('statsdirect_read_data',{documentId:documents[0]?.documentId??'unapproved',firstRow:2,lastRow:3,columns:[0]});
+       const demo=question==='Add an Age band column';
+       const proposal=await call('statsdirect_propose_worksheet_edit',demo
+         ? {range:'B1:B4',values:[['Age band'],['18–39'],['40–64'],['65+']],description:'Add age bands in column B'}
+         : {range:'B1:B3',values:[['Age band'],['=2+2'],[null]],description:'Review the proposed column values'});
+       answer=demo?'The proposed Age band column groups the three example ages as 18–39, 40–64 and 65+. Select **Review worksheet edit** to check the target cells and values before applying.':JSON.stringify({
+         help:help.success?help.contentItems[0].text:'',
+         ids:documents.map(d=>d.documentId),
+         read:read.success,
+         proposed:proposal.success,
+         toolNames:threadTools.get(p.threadId).map(t=>t.name)
+       });
+     }
+     const analysisDemo=question==='Compare my two paired measurements using a paired t test';
+     if(question==='TRE_WORKSHEET_ANALYSIS_R_EXAMPLE') {
+       answer='This fictional example illustrates the method.\n```r\nt.test(c(6, 9, 12), c(5, 7, 8), paired = TRUE)\n```';
+     } else if(question.startsWith('TRE_WORKSHEET_ANALYSIS_') || analysisDemo) {
+       const call=(tool,args)=>new Promise(resolve=>{
+         const rid='tool-'+(++sequence);
+         responses.set(rid,resolve);
+         out({id:rid,method:'item/tool/call',params:{threadId:p.threadId,turnId:id,callId:'call-'+sequence,tool,arguments:args}});
+       });
+       const tools=threadTools.get(p.threadId).map(t=>t.name);
+       const help=await call('statsdirect_search_help',{query:'paired t test'});
+       const scope=await call('statsdirect_workspace',{});
+       const read=await call('statsdirect_read_data',{documentId:'unapproved',firstRow:2,lastRow:6,columns:[0,1]});
+       const calculation=await call('statsdirect_run_analysis',{operation:'TPaired',datasetId:'unapproved'});
+       const invalid=await call('statsdirect_propose_worksheet_analysis',{operation:'TPaired',columns:[0,1]});
+       const proposal=question==='TRE_WORKSHEET_ANALYSIS_FOLLOWUP'
+         ? null : await call('statsdirect_propose_worksheet_analysis',{operation:'TPaired'});
+       const pending=proposal?.success?JSON.parse(proposal.contentItems[0].text):null;
+       answer=analysisDemo
+         ? 'A **paired t test** compares the mean difference between matched observations. Go to **Review analysis** to see the proposed method, then choose the variables and run it in StatsDirect. Your worksheet and result stay on this computer.'
+         : JSON.stringify({
+           tools,help:help.success?help.contentItems[0].text:'',
+           workspace:scope.success,read:read.success,calculation:calculation.success,invalid:invalid.success,
+           pending
+         });
      }
      if(question==='LEARN_WORKSHEET') {
        const call=(tool,args)=>new Promise(resolve=>{const rid='tool-'+(++sequence);responses.set(rid,r=>resolve(r.success?JSON.parse(r.contentItems[0].text):{error:r.contentItems[0].text}));out({id:rid,method:'item/tool/call',params:{threadId:p.threadId,turnId:id,callId:'call-'+sequence,tool,arguments:args}});});

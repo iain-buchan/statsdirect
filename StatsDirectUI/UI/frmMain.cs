@@ -178,6 +178,17 @@ namespace StatsDirect.UI
             var redoButton = DocumentToolbar.Button("Redo", "redo", (_, _) => EditHistory(true), "Ctrl+Y");
             var picker = new WorksheetCommandPicker();
             var analyseButton = DocumentToolbar.DropDownButton("Analyse", "analyse", picker);
+            frmSpreadsheetGear CurrentWorksheet() =>
+                mnuMain.Enabled && !InOperation ? ActiveMdiChild as frmSpreadsheetGear : null;
+            var askAiButton = DocumentToolbar.Button("AI Assist", "ai", (_, _) =>
+            {
+                if (CurrentWorksheet() is frmSpreadsheetGear worksheet) Learning.ShowWorksheetAI(worksheet);
+            }, labelled: true);
+            askAiButton.Text = "Assist";
+            var learnButton = DocumentToolbar.Button("Learn", "learn", (_, _) =>
+            {
+                if (CurrentWorksheet() != null) Learning.Show(false);
+            }, labelled: true);
             Form methodWorksheet = null;
             bool CanChooseMethod() => methodWorksheet is IGrid && methodWorksheet == ActiveMdiChild
                 && mnuMain.Enabled && !InOperation;
@@ -223,6 +234,7 @@ namespace StatsDirect.UI
                 DocumentToolbar.Button(WorksheetRPrompt.InternalTitle, "r", (_, _) => OpenWorksheetR(false)),
                 DocumentToolbar.Button(WorksheetRPrompt.ExternalTitle, "rPlus", (_, _) => OpenWorksheetR(true)),
                 new ToolStripSeparator(),
+                learnButton, askAiButton,
                 DocumentToolbar.Button("Help", "help", helpToolStripButton_Click, "F1")
             });
             DocumentToolbar.Configure(toolStrip, () => {
@@ -230,6 +242,7 @@ namespace StatsDirect.UI
                 var calculator = SdApplication.SoleInstance.CalculatorView;
                 undoButton.Enabled = calculator?.ContainsFocus == true ? calculator.Expression.CanUndo : document?.CanUndo == true;
                 redoButton.Enabled = calculator?.ContainsFocus == true ? calculator.Expression.CanRedo : document?.CanRedo == true;
+                askAiButton.Enabled = learnButton.Enabled = CurrentWorksheet() != null;
             });
             toolbarShown = ToolbarShownFor(ActiveMdiChild);
             toolStrip.Visible = toolbarShown;
@@ -3550,7 +3563,9 @@ namespace StatsDirect.UI
             }
         }
 
-        internal IReport SelectedReportWindow
+        internal IReport SelectedReportWindow => (IReport)(ExistingReportDestination ?? CreateReport());
+
+        internal StatsDirectForm ExistingReportDestination
         {
             get
             {
@@ -3560,7 +3575,7 @@ namespace StatsDirect.UI
                         .Select(tab => (tab.Tag as WindowInformation)?.Window)
                         .LastOrDefault(IsOpenReport);
                 }
-                return (IReport)(lastSelectedReport ?? CreateReport());
+                return lastSelectedReport;
             }
         }
 

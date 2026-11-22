@@ -27,9 +27,15 @@ internal static partial class Program
             Check(toolbar.Visible && !toolbar.Items.ContainsKey("lblActiveReport") && !toolbar.Items.ContainsKey("cboActiveReport")
                 && !toolbar.Items.OfType<ToolStripComboBox>().Any(), "the worksheet toolbar has no Results to label or selector");
             int rPlus = toolbar.Items.IndexOfKey("rPlusToolStripButton");
+            int learn = toolbar.Items.IndexOfKey("learnToolStripButton");
+            int askAi = toolbar.Items.IndexOfKey("aiToolStripButton");
             int help = toolbar.Items.IndexOfKey("helpToolStripButton");
-            Check(rPlus >= 0 && help == rPlus + 2 && toolbar.Items[rPlus + 1] is ToolStripSeparator,
-                "one separator divides worksheet Help from the analysis and R buttons");
+            Check(rPlus >= 0 && learn == rPlus + 2 && askAi == learn + 1 && help == askAi + 1
+                && toolbar.Items[rPlus + 1] is ToolStripSeparator,
+                "one separator groups worksheet Learn, AI Assist and Help after the analysis and R buttons");
+            Check(toolbar.Items["aiToolStripButton"] is ToolStripButton
+                { DisplayStyle: ToolStripItemDisplayStyle.ImageAndText, Image: not null, Text: "Assist", AccessibleName: "AI Assist", ToolTipText: "AI Assist" },
+                "AI Assist shows its icon and Assist label with a matching accessible name and tooltip");
 
             async Task<Form> NewReport()
             {

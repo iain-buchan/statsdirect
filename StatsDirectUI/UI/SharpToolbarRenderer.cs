@@ -43,6 +43,7 @@ namespace StatsDirect.UI
                 case "helpToolStripButton":
                 case "findToolStripButton":
                 case "analyseToolStripButton":
+                case "learnToolStripButton":
                 case "rToolStripButton":
                 case "rPlusToolStripButton":
                 case "aiToolStripButton":
@@ -132,6 +133,11 @@ namespace StatsDirect.UI
                             g.DrawPath(pen, question);
                         }
                         Line(12, 17, 12, 17.2f);
+                        break;
+                    case "learnToolStripButton":
+                        Lines(new(12, 6), new(8, 4), new(3, 4), new(3, 17), new(8, 17), new(12, 20),
+                            new(16, 17), new(21, 17), new(21, 4), new(16, 4), new(12, 6));
+                        Line(12, 6, 12, 20);
                         break;
                     case "analyseToolStripButton":
                         Lines(new(3, 4), new(3, 20), new(21, 20));

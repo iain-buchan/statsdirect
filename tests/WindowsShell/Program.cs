@@ -231,7 +231,7 @@ internal static partial class Program
             Check((string)Get(tutor, "Email") == "\u2212\u03B2@example.org", "the account's email is read from the component as UTF-8");
             var messages = new System.Text.Json.Nodes.JsonArray(new System.Text.Json.Nodes.JsonObject { ["role"] = "user", ["text"] = "What are the limits of agreement?" });
             Func<string, System.Text.Json.Nodes.JsonObject, Task<System.Text.Json.Nodes.JsonNode>> noTools = (_, _) => Task.FromResult<System.Text.Json.Nodes.JsonNode>(new System.Text.Json.Nodes.JsonObject());
-            var task = (Task)type.GetMethod("ConverseAsync", Internal)!.Invoke(tutor, new object[] { "{}", messages, new System.Text.Json.Nodes.JsonArray(), true, (Action<string>)(_ => { }), noTools, CancellationToken.None, false, false })!;
+            var task = (Task)type.GetMethod("ConverseAsync", Internal)!.Invoke(tutor, new object[] { "{}", messages, new System.Text.Json.Nodes.JsonArray(), true, (Action<string>)(_ => { }), noTools, CancellationToken.None, false, false, false })!;
             await task;
             object reply = task.GetType().GetProperty("Result")!.GetValue(task)!;
             Check((string)Get(reply, "Text") == "Limits of agreement: \u221210.9 to 123.1 \u03B2", "a streamed reply with a minus sign and a Greek letter arrives intact");
@@ -246,7 +246,7 @@ internal static partial class Program
     static async Task CheckDocumentToolbars(frmMain main, Form grid, SpreadsheetGear.Windows.Forms.WorkbookView workbook)
     {
         var toolbar = (ToolStrip)Field(main, "toolStrip");
-        Check(toolbar.Visible && string.Join("|", toolbar.Items.Cast<ToolStripItem>().Where(b => b is ToolStripButton or ToolStripDropDownButton).Select(b => b.Text)) == "Save|Undo|Redo|Cut|Copy|Paste|Find|Analyse|Open in StatsDirect R|Open in external R|Help",
+        Check(toolbar.Visible && string.Join("|", toolbar.Items.Cast<ToolStripItem>().Where(b => b is ToolStripButton or ToolStripDropDownButton).Select(b => b.Text)) == "Save|Undo|Redo|Cut|Copy|Paste|Find|Analyse|Open in StatsDirect R|Open in external R|Learn|Assist|Help",
             "worksheet has one native toolbar in the shared document order");
         CaptureToolbar(toolbar, "grid-toolbar.png");
         Check(((Control)Field(grid,"formulaBar")).Visible, "formula entry remains available below the worksheet toolbar");

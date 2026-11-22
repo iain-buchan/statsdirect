@@ -16,10 +16,10 @@ internal sealed class AISharingConsent
         DataDocumentId = id; Revoke(); return true;
     }
     internal bool Accepts(IEnumerable<string> dataIds) => Accepted && dataIds.All(approvedDataIds.Contains);
-    internal void Approve(IEnumerable<string> dataIds)
+    internal void Approve(IEnumerable<string> dataIds, bool includeSelectedDataDocument = true)
     {
         Accepted = true; approvedDataIds.UnionWith(dataIds);
-        if (DataDocumentId != null) approvedDataIds.Add(DataDocumentId);
+        if (includeSelectedDataDocument && DataDocumentId != null) approvedDataIds.Add(DataDocumentId);
     }
     internal void Revoke() { Accepted = false; approvedDataIds.Clear(); Revision++; }
 }

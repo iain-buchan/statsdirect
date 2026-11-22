@@ -72,7 +72,7 @@ internal sealed class QuestionContext
         foreach (var report in documents.OfType<frmReportWebView>())
         { reports[report.Id()] = await ReportAIContext.SnapshotAsync(report, resultId); Check(); }
     }
-    private static JsonObject Tool(string name, string description, JsonObject properties, params string[] required) => new() { ["type"] = "function", ["name"] = name, ["description"] = description, ["inputSchema"] = new JsonObject { ["type"] = "object", ["properties"] = properties, ["required"] = new JsonArray(required.Select(s => (JsonNode)JsonValue.Create(s)).ToArray()), ["additionalProperties"] = false } };
+    internal static JsonObject Tool(string name, string description, JsonObject properties, params string[] required) => new() { ["type"] = "function", ["name"] = name, ["description"] = description, ["inputSchema"] = new JsonObject { ["type"] = "object", ["properties"] = properties, ["required"] = new JsonArray(required.Select(s => (JsonNode)JsonValue.Create(s)).ToArray()), ["additionalProperties"] = false } };
     private static JsonObject StringType => new() { ["type"] = "string" };
     private static JsonObject IntegerType => new() { ["type"] = "integer", ["minimum"] = 0 };
     internal JsonArray Tools

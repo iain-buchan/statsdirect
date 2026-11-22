@@ -50,10 +50,12 @@ internal sealed partial class LearningService : IDisposable
             else if (options) _ = View.CallAsync("showOptions");
         }
     }
+    internal void ShowWorksheetAI(frmSpreadsheetGear worksheet) { ai ??= new ScriptAIPane(main, this); ai.Open(worksheet); }
     internal void ShowScriptAI(frmScript script) { ai ??= new ScriptAIPane(main, this); ai.Open(script); }
     internal void ShowReportAI(frmReportWebView report, string resultId = null) { ai ??= new ScriptAIPane(main, this); ai.Open(report, resultId); }
-    internal void ActiveScriptChanged(frmScript script) { if (ai?.IsOpen == true) ai.Open(script); }
-    internal void ActiveReportChanged(frmReportWebView report) { if (ai?.IsOpen == true) ai.Open(report); }
+    internal void ActiveScriptChanged(frmScript script) { if (ai is { IsOpen: true, WorksheetMode: false }) ai.Open(script); }
+    // Keep the worksheet conversation bound when a local analysis activates its result.
+    internal void ActiveReportChanged(frmReportWebView report) { if (ai is { IsOpen: true, WorksheetMode: false }) ai.Open(report); }
     internal void ActiveAIDataDocument(string id)
     {
         // The AI pane shares the whole open-workbook set; changing focus within
