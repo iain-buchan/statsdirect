@@ -15,6 +15,23 @@ const otherWorkspace='33333333-3333-4333-8333-333333333333';
 if(wrongCachedWorkspace||missingCachedWorkspace)loggedIn=true;
 if(workspaceProbePath)probe({event:'launch',arguments:mockArguments,config:readFileSync(join(process.env.CODEX_HOME,'config.toml'),'utf8')});
 const out=v=>process.stdout.write(JSON.stringify(v)+'\n');
+async function readFullHelpForProbe(call) {
+  const topic='references/reference_list.htm';
+  const firstReply=await call('statsdirect_read_help_topic',{topic});
+  const first=firstReply.success?JSON.parse(firstReply.contentItems[0].text):null;
+  const continuationReply=Number.isInteger(first?.nextOffset)
+    ? await call('statsdirect_read_help_topic',{topic,offset:first.nextOffset}) : null;
+  const continuation=continuationReply?.success?JSON.parse(continuationReply.contentItems[0].text):null;
+  const invalid=await call('statsdirect_read_help_topic',{topic:'basics/unknown-help-topic.htm'});
+  return {
+    topic:first?.topic,
+    url:first?.url,
+    introductoryText:first?.text?.includes('Nonparametric inference for a family of counting processes')??false,
+    continued:first?.nextOffset>2400 && continuation?.offset===first.nextOffset &&
+      continuation?.topic===topic && continuation.text.length>2400 && continuation.text!==first.text,
+    invalidRejected:!invalid.success
+  };
+}
 readline.createInterface({input:process.stdin}).on('line',line=>{
  if(analysisTracePath)appendFileSync(analysisTracePath,line+'\n');
  const q=JSON.parse(line); if(!q.method){probe({event:'response'});const f=responses.get(q.id);if(f){responses.delete(q.id);f(q.result);}return;}
@@ -40,6 +57,14 @@ readline.createInterface({input:process.stdin}).on('line',line=>{
      if(text.includes('FORCE_ERROR')){out({method:'turn/completed',params:{threadId:p.threadId,turn:{id,status:'failed',error:{message:'401 SECRET_SHOULD_NOT_BE_SHOWN'}}}});return;}
      let answer='Mock answer: paired observations need paired analysis.\n```r\nx <- c(1,2,3)\nmean(x)\n```';
      const question=lastQuestion;
+     if(analysisTracePath && question==='yes please') {
+       const reference=JSON.parse(request.referenceContext);
+       const asked=reference.openingQuestion==='Do you want me to help you analyse your data?';
+       const guided=reference.methodSelection?.text?.includes('goal');
+       answer=asked&&guided
+         ? 'What would you like to find out from your data? For example, are you comparing groups or looking at a relationship?'
+         : 'The opening offer or Method Selection guide was missing.';
+     }
      if(question==='WORKSPACE_POLICY_TOOL_PROBE'){
        await new Promise(resolve=>{const rid='tool-'+(++sequence);responses.set(rid,resolve);out({id:rid,method:'item/tool/call',params:{threadId:p.threadId,turnId:id,callId:'call-'+sequence,tool:'statsdirect_method_help',arguments:{}}});});
      }
@@ -64,27 +89,43 @@ readline.createInterface({input:process.stdin}).on('line',line=>{
        for(const book of books) reads.push(await call('statsdirect_read_data',{documentId:book.documentId,firstRow:2,lastRow:2,columns:[0]}));
        answer=JSON.stringify({scopeIds:books.map(b=>b.documentId),readIds:reads.map(d=>d.documentId),titles:reads.map(d=>d.workbook),values:reads.map(d=>d.columns?.[0]?.values?.[0]),datasetIds:reads.map(d=>d.datasetId)});
      }
-     if(question.startsWith('WORKSHEET_AI_') || question==='Add an Age band column') {
+     if(question.startsWith('WORKSHEET_AI_') || question==='What is the mean age?') {
        const call=(tool,args)=>new Promise(resolve=>{
          const rid='tool-'+(++sequence);
          responses.set(rid,resolve);
          out({id:rid,method:'item/tool/call',params:{threadId:p.threadId,turnId:id,callId:'call-'+sequence,tool,arguments:args}});
        });
        const help=await call('statsdirect_search_help',{query:'worksheet'});
+       const fullHelp=question==='WORKSHEET_AI_WITHOUT_SHARING'||question==='WORKSHEET_AI_RESTRICTED'
+         ? await readFullHelpForProbe(call) : null;
        const scope=await call('statsdirect_workspace',{});
        const documents=scope.success?JSON.parse(scope.contentItems[0].text).documents:[];
-       const read=await call('statsdirect_read_data',{documentId:documents[0]?.documentId??'unapproved',firstRow:2,lastRow:3,columns:[0]});
-       const demo=question==='Add an Age band column';
-       const proposal=await call('statsdirect_propose_worksheet_edit',demo
-         ? {range:'B1:B4',values:[['Age band'],['18–39'],['40–64'],['65+']],description:'Add age bands in column B'}
-         : {range:'B1:B3',values:[['Age band'],['=2+2'],[null]],description:'Review the proposed column values'});
-       answer=demo?'The proposed Age band column groups the three example ages as 18–39, 40–64 and 65+. Select **Review worksheet edit** to check the target cells and values before applying.':JSON.stringify({
-         help:help.success?help.contentItems[0].text:'',
-         ids:documents.map(d=>d.documentId),
-         read:read.success,
-         proposed:proposal.success,
-         toolNames:threadTools.get(p.threadId).map(t=>t.name)
-       });
+       const read=await call('statsdirect_read_data',{documentId:documents[0]?.documentId??'unapproved',firstRow:2,lastRow:4,columns:[0]});
+       if((question==='WORKSHEET_AI_R_ANSWER' || question==='WORKSHEET_AI_R_PRIOR_ANSWER' || question==='What is the mean age?') && read.success) {
+         const data=JSON.parse(read.contentItems[0].text);
+         const values=data.columns[0].values;
+         const mean=values.reduce((sum,value)=>sum+value,0)/values.length;
+         const age='age <- .statsdirect_data[['+JSON.stringify(data.datasetId)+']]$column_0\n';
+         const followsEarlierAnswer=request.conversation.some(message=>message.role==='assistant' && message.text.startsWith('The median age'));
+         answer=question==='WORKSHEET_AI_R_ANSWER' && !followsEarlierAnswer
+           ? 'The earlier reply is missing from the conversation.'
+           : question==='WORKSHEET_AI_R_PRIOR_ANSWER'
+           ? 'The median age is the middle of the sorted values.\n```r\n'+age+'earlier_answer_only <- TRUE\nprint(median(age))\n```'
+           : 'The mean age is '+mean+' across '+values.length+' worksheet values.\n```r\n'+age+'cat("Mean age: ", mean(age), "\\n", sep = "")\nplot(age, ylab = "Age")\n```';
+       } else {
+         const edit=question==='WORKSHEET_AI_DEPRECATED_EDIT'
+           ? await call('statsdirect_propose_worksheet_edit',{range:'B1:B3',values:[['Age band'],['=2+2'],[null]],description:'Try the old worksheet tool'})
+           : null;
+         answer=JSON.stringify({
+           help:help.success?help.contentItems[0].text:'',
+           fullHelp,
+           ids:documents.map(d=>d.documentId),
+           read:read.success,
+           editAttempted:edit!==null,
+           editAccepted:edit?.success??false,
+           toolNames:threadTools.get(p.threadId).map(t=>t.name)
+         });
+       }
      }
      const analysisDemo=question==='Compare my two paired measurements using a paired t test';
      if(question==='TRE_WORKSHEET_ANALYSIS_R_EXAMPLE') {

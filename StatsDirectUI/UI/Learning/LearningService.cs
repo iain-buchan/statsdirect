@@ -203,8 +203,13 @@ internal sealed partial class LearningService : IDisposable
         }
         return null;
     }
-    internal frmScript OpenScript(string script, string title, bool run)
-    { var doc = (frmScript)main.CreateScriptWindow(); doc.ShowR(script, title, runImmediately: run); return doc; }
+    internal frmScript OpenScript(string script, string title, bool run, bool reportOutput = false)
+    {
+        var doc = (frmScript)main.CreateScriptWindow();
+        doc.OfferROutputToReport = reportOutput;
+        doc.ShowR(script, title, runImmediately: run);
+        return doc;
+    }
     internal void OpenExample(string id, bool r)
     {
         var lesson = Lesson(id) ?? throw new InvalidDataException("Choose a lesson in the current library.");
@@ -235,7 +240,7 @@ internal sealed partial class LearningService : IDisposable
         Tutor.CheckPolicy();
         await Tutor.RefreshAccountAsync();
         string sharingNotice = Tutor.DataSharingDisabled ? ChatGPTTutor.DataSharingPolicyMessage
-            : "Send shares your question and recent conversation with OpenAI. Learning also includes relevant learning options and course excerpts. Share documents only by selecting their context and confirming. This confirmation applies across Report, Script and Learning until you restart StatsDirect or select another data document. Keep person-identifiable data out of questions, documents and course packs.";
+            : "Send shares your question and recent conversation with OpenAI. Learning also includes relevant learning options and course excerpts. Share documents only by selecting their context and confirming. StatsDirect remembers confirmation for the listed documents during this session. Keep person-identifiable data out of questions, documents and course packs.";
         // The same sentences as the Mac sign-in dialog (Sources/LearnHost.swift), so both apps describe the account in one way.
         const string accountUse = "StatsDirect AI uses the Codex allowance on your ChatGPT plan, including Free. Usage limits and workspace settings still apply. Lessons and practice are available without signing in.";
         if (Tutor.Email != null)

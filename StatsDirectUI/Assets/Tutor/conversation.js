@@ -20254,9 +20254,26 @@ ${content}</tr>
       } catch (error) {
       }
     };
-    const render3 = (text3) => richText(text3).replaceAll('data-code="r"', 'data-code="open"');
+    function render3(text3, foldRCode) {
+      const body = document.createElement("div");
+      body.className = "body";
+      body.innerHTML = richText(text3).replaceAll('data-code="r"', 'data-code="open"');
+      if (foldRCode) {
+        for (const block3 of body.querySelectorAll(".code-block")) {
+          if (!block3.querySelector('[data-code="open"]')) continue;
+          const details = document.createElement("details");
+          details.className = "r-code-disclosure";
+          const summary = document.createElement("summary");
+          summary.innerHTML = '<span class="show-r-code">Show R code</span><span class="hide-r-code">Hide R code</span>';
+          block3.replaceWith(details);
+          details.append(summary, block3);
+        }
+      }
+      return body;
+    }
     const rendered = [];
-    let partialElement = null, partialText = "", renders = 0, applied = 0, context = 0, requests = 0, copying = null;
+    let welcomeElement = null;
+    let partialElement = null, partialText = "", renders = 0, applied = 0, context = 0, requests = 0, copying = null, collapseRCode = false;
     function bind(element) {
       element.querySelectorAll("a").forEach((a) => {
         if (!/^https?:\/\//i.test(a.getAttribute("href") ?? "")) a.removeAttribute("href");
@@ -20284,9 +20301,15 @@ ${content}</tr>
       });
     }
     function renderInto(element, text3) {
-      const fresh = document.createElement("div");
-      fresh.innerHTML = render3(text3);
-      const body = element.querySelector(".body"), old = [...body.childNodes], now = [...fresh.childNodes];
+      const body = element.querySelector(".body"), fresh = render3(text3, collapseRCode);
+      if (collapseRCode) {
+        fresh.querySelectorAll("[data-code]").forEach((button) => button.disabled = true);
+        const previous = body.querySelectorAll(".r-code-disclosure");
+        fresh.querySelectorAll(".r-code-disclosure").forEach((details, index) => {
+          details.open = previous[index]?.open ?? false;
+        });
+      }
+      const old = [...body.childNodes], now = [...fresh.childNodes];
       let same = 0;
       while (same < old.length && same < now.length && old[same].isEqualNode(now[same])) same++;
       for (let k = old.length - 1; k >= same; k--) old[k].remove();
@@ -20297,7 +20320,10 @@ ${content}</tr>
     function block2(role, text3) {
       const element = document.createElement("section");
       element.className = "message " + (role === "user" ? "user" : "assistant");
-      element.innerHTML = '<div class="who">' + (role === "user" ? "You" : "StatsDirect AI") + '</div><div class="body">' + render3(text3) + "</div>";
+      const who = document.createElement("div");
+      who.className = "who";
+      who.textContent = role === "user" ? "You" : "StatsDirect AI";
+      element.append(who, render3(text3, collapseRCode && role === "assistant"));
       bind(element);
       renders++;
       return element;
@@ -20340,16 +20366,30 @@ ${content}</tr>
     }
     function update(m) {
       context = m.context;
-      const selection = m.reset ? null : saveSelection();
+      const reset = m.reset || collapseRCode !== Boolean(m.collapseRCode);
+      collapseRCode = Boolean(m.collapseRCode);
+      const selection = reset ? null : saveSelection();
       const top = scroller().scrollTop;
-      const follow = !!m.reset || !selection && atEnd();
-      if (m.reset) {
+      const follow = reset || !selection && atEnd();
+      if (reset) {
         container.replaceChildren();
         rendered.length = 0;
         partialElement = null;
         partialText = "";
+        welcomeElement = null;
       }
       const messages = Array.isArray(m.messages) ? m.messages : [];
+      const partial = String(m.partial ?? "");
+      if (!messages.length && !partial && m.welcome) {
+        if (!welcomeElement) {
+          welcomeElement = block2("assistant", m.welcome);
+          welcomeElement.classList.add("welcome");
+          container.appendChild(welcomeElement);
+        }
+      } else if (welcomeElement) {
+        welcomeElement.remove();
+        welcomeElement = null;
+      }
       let same = 0;
       while (same < rendered.length && same < messages.length && rendered[same].role === messages[same].role && rendered[same].text === messages[same].text) same++;
       for (let j = rendered.length - 1; j >= same; j--) {
@@ -20359,8 +20399,9 @@ ${content}</tr>
       for (let j = same; j < messages.length; j++) {
         const role = messages[j].role === "user" ? "user" : "assistant", text3 = String(messages[j].text ?? "");
         let element;
-        if (j === messages.length - 1 && partialElement && role === "assistant" && text3 === partialText && !m.partial) {
+        if (j === messages.length - 1 && partialElement && role === "assistant" && (text3 === partialText || collapseRCode) && !m.partial) {
           element = partialElement;
+          if (text3 !== partialText) renderInto(element, text3);
           element.classList.remove("partial");
           partialElement = null;
           partialText = "";
@@ -20370,7 +20411,6 @@ ${content}</tr>
         }
         rendered.push({ role, text: text3, element });
       }
-      const partial = String(m.partial ?? "");
       if (partial !== partialText) {
         if (!partial) {
           if (partialElement) partialElement.remove();

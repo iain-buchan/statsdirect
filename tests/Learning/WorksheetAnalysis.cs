@@ -6,6 +6,7 @@ using System.Text.Json.Nodes;
 
 internal static partial class Program
 {
+    private const string WorksheetOpeningText = "Do you want me to help you analyse your data?";
     private const string PrivateWorksheet = "TRE_PRIVATE_ANALYSIS_WORKBOOK";
     private const string PairedSelection = "A1:B6";
     private const string InitialSelection = "A1:A6";
@@ -48,16 +49,15 @@ internal static partial class Program
             await tutor.RefreshAccountAsync();
             await Wait(() => tutor.Email == "mock@example.invalid", "the restricted worksheet assistant uses the local mock account");
             pane = await OpenWorksheetAssistant(main, service, grid);
-            Check(tutor.DataSharingDisabled && !pane.ShareWorkbook.Enabled && pane.Send.Enabled,
-                "level 2 locks worksheet sharing while leaving the assistant's Send action available");
+            Check(tutor.DataSharingDisabled && !pane.ShareWorkbook.Enabled && !pane.Acknowledge.Visible && pane.Send.Enabled,
+                "level 2 locks worksheet sharing and hides confirmation while leaving Send available");
 
             var review = FindWorksheetAnalysisReview(pane);
             var paneView = (Control)Field(pane, "view");
             var reviewActions = paneView.Controls.Find("worksheetReplyActions", true).Single();
             var aiStatus = paneView.Controls.Find("aiStatus", true).Single();
-            var rActions = paneView.Controls.Find("replyRCodeActions", true).Single();
             var viewport = (Control)Field(pane, "viewport");
-            Check(!reviewActions.Visible && !rActions.Visible, "worksheet reply actions begin hidden");
+            Check(!reviewActions.Visible, "worksheet reply actions begin hidden");
             var workbook = (WorkbookView)Field(grid, "workbookView");
             void ChooseRange(string range) => WithWorksheet(workbook, sheet =>
             {
@@ -68,7 +68,7 @@ internal static partial class Program
             const string initialQuestion = "TRE_WORKSHEET_ANALYSIS_NEW_REPORT";
             var response = await WorksheetReply(pane, initialQuestion);
             var tools = response.A("tools").Select(tool => tool.GetValue<string>()).ToHashSet();
-            Check(tools.SetEquals(["statsdirect_method_help", "statsdirect_search_help", "statsdirect_propose_worksheet_analysis"])
+            Check(tools.SetEquals(["statsdirect_method_help", "statsdirect_search_help", "statsdirect_read_help_topic", "statsdirect_propose_worksheet_analysis"])
                 && response.S("help").Contains("paired", StringComparison.OrdinalIgnoreCase),
                 "level 2 exposes bundled help and the worksheet method proposal only");
             Check(!response.B("workspace") && !response.B("read") && !response.B("calculation") && !response.B("invalid"),
@@ -82,10 +82,9 @@ internal static partial class Program
             Check(reviewActions.Visible && ReferenceEquals(review.Parent, reviewActions)
                 && aiStatus.Parent is TableLayoutPanel layout && ReferenceEquals(layout, reviewActions.Parent)
                 && layout.GetRow(reviewActions) == layout.GetRow(aiStatus) + 1
-                && viewport.RectangleToScreen(viewport.ClientRectangle).Contains(review.RectangleToScreen(review.ClientRectangle))
-                && !rActions.Visible,
-                "the plain reply puts Review analysis next to its status without scrolling or unrelated R buttons");
-            CheckWorksheetAnalysisQuestion(trace, initialQuestion);
+                && viewport.RectangleToScreen(viewport.ClientRectangle).Contains(review.RectangleToScreen(review.ClientRectangle)),
+                "the plain reply puts Review analysis next to its status without scrolling");
+            CheckWorksheetAnalysisQuestion(trace, initialQuestion, openingQuestion: true);
             string[] beforeApproval = WorksheetAnalysisDataTraffic(trace);
             var stagedMethod = Field(pane, "worksheetAnalysis");
             otherWorkbook.Activate();
@@ -149,13 +148,21 @@ internal static partial class Program
 
             pane.Composer.Text = "TRE_WORKSHEET_ANALYSIS_R_EXAMPLE";
             await pane.SendAsync();
-            await Wait(() => rActions.Visible && !reviewActions.Visible,
-                "an R reply shows Copy and Open R controls without a pending review action");
-            Check(rActions.Controls.OfType<Button>().Select(button => button.Text).SequenceEqual(["Copy R code", "Open R code"]),
-                "both R actions are present for an R reply");
+            await pane.Transcript.SettledAsync();
+            var browser = pane.Transcript.Browser.CoreWebView2;
+            Check(!reviewActions.Visible && await browser.ExecuteScriptAsync("""
+                (() => {
+                    const section = document.querySelector('.message.assistant:last-child details.r-code-disclosure');
+                    return !!section && !section.open && !!section.querySelector('[data-code=copy]') && !!section.querySelector('[data-code=open]');
+                })()
+                """) == "true", "an R reply keeps Copy and Open in R inside its own collapsed section");
             const string followUp = "TRE_WORKSHEET_ANALYSIS_FOLLOWUP";
             await WorksheetReply(pane, followUp);
-            await Wait(() => !rActions.Visible, "a later plain reply hides the R actions again");
+            await pane.Transcript.SettledAsync();
+            Check(await browser.ExecuteScriptAsync("""
+                document.querySelectorAll('details.r-code-disclosure').length === 1 &&
+                    !document.querySelector('.message.assistant:last-child details.r-code-disclosure')
+                """) == "true", "a later plain reply has no R actions and keeps the earlier reply's code available");
             CheckWorksheetAnalysisQuestion(trace, followUp);
             string wire = ReadWorksheetTrace(trace);
             Check(!wire.Contains(PrivateWorksheet, StringComparison.Ordinal) && !wire.Contains(PrivateCell, StringComparison.Ordinal)
@@ -220,17 +227,72 @@ internal static partial class Program
             return request.S("method") == "turn/start" || request["result"] != null;
         }).ToArray();
 
-    private static void CheckWorksheetAnalysisQuestion(string trace, string question)
+    private static JsonNode LastWorksheetRequest(string trace)
     {
         var turn = WorksheetAnalysisDataTraffic(trace).Select(line => JsonNode.Parse(line))
             .Last(request => request.S("method") == "turn/start");
-        var message = turn["params"].A("input")[0].S("text");
-        var request = JsonNode.Parse(message[(message.IndexOf('\n') + 1)..]);
+        string message = turn["params"].A("input")[0].S("text");
+        return JsonNode.Parse(message[(message.IndexOf('\n') + 1)..])!;
+    }
+
+    private static void CheckWorksheetMethodSelectionContext(string trace, bool openingQuestion, params string[] privateTexts)
+    {
+        var requests = ReadWorksheetTrace(trace).Split('\n', StringSplitOptions.RemoveEmptyEntries)
+            .Select(line => JsonNode.Parse(line)).ToArray();
+        int lastTurn = Array.FindLastIndex(requests, request => request.S("method") == "turn/start");
+        var parameters = requests.Take(lastTurn).LastOrDefault(request => request.S("method") == "thread/start")?["params"];
+        string prompt = parameters.S("baseInstructions");
+        const string helpUrl = "https://www.statsdirect.com/help/methods/method_selection.htm";
+        Check(lastTurn > 0 && parameters.S("serviceName") == "statsdirect-worksheet-assistant",
+            "the question starts after the assistant thread is configured");
+
+        string rawContext = LastWorksheetRequest(trace).S("referenceContext");
+        var reference = JsonNode.Parse(rawContext)!.AsObject();
+        string[] landmarks =
+        [
+            "WHAT SORT OF INVESTIGATION ARE YOU TACKLING?",
+            "Select the appropriate combination of measurement scales",
+            "Only the simpler experimental designs are dealt with here",
+        ];
+        Check(!reference.ContainsKey("statsDirectHelp") && !prompt.Contains(helpUrl, StringComparison.Ordinal)
+            && landmarks.All(text => !prompt.Contains(text, StringComparison.OrdinalIgnoreCase)
+                && !rawContext.Contains(text, StringComparison.OrdinalIgnoreCase)),
+            "requests carry neither bulk Method Selection pages nor automatic Help excerpts");
+
+        if (openingQuestion)
+        {
+            var guide = reference["methodSelection"] as JsonObject;
+            string summary = guide.S("text");
+            Check(reference.S("openingQuestion") == WorksheetOpeningText
+                && guide.S("title") == "Statistical Method Selection" && guide.S("url") == helpUrl
+                && summary.Length <= 700
+                && prompt.Contains("This opening question needs no tool calls.", StringComparison.Ordinal)
+                && new[] { "goal", "scale", "independent", "paired", "association" }
+                    .All(term => summary.Contains(term, StringComparison.OrdinalIgnoreCase)),
+                "the first question carries the opening offer and a short Method Selection guide");
+        }
+        else
+        {
+            Check(!reference.ContainsKey("openingQuestion") && !reference.ContainsKey("methodSelection"),
+                "later questions omit the opening offer and Method Selection guide");
+        }
+        Check(prompt.Contains("Ground instructions about StatsDirect in the manual.", StringComparison.Ordinal)
+            && prompt.Contains("Draw on general statistical and R knowledge", StringComparison.Ordinal),
+            "the prompt grounds StatsDirect guidance in its manual and uses general statistics and R knowledge when useful");
+        Check(privateTexts.All(text => !prompt.Contains(text, StringComparison.Ordinal)
+            && !rawContext.Contains(text, StringComparison.Ordinal)),
+            "the worksheet guidance passes no workbook information without consent");
+    }
+
+    private static void CheckWorksheetAnalysisQuestion(string trace, string question, bool openingQuestion = false)
+    {
+        var request = LastWorksheetRequest(trace);
         var conversation = request.A("conversation");
         var reference = JsonNode.Parse(request.S("referenceContext"))!.AsObject();
         Check(conversation.Count == 1 && conversation[0].S("role") == "user" && conversation[0].S("text") == question
-            && reference.Count == 1 && reference.A("statsDirectHelp").Count > 0,
-            "the restricted request sends only the typed question and excerpts from packaged help");
+            && reference.Count == (openingQuestion ? 2 : 0),
+            "the restricted request supplies the current question without workbook data");
+        CheckWorksheetMethodSelectionContext(trace, openingQuestion, PrivateWorksheet, PrivateCell);
     }
 
     private static void ReviewWorksheetAnalysis(frmMain main, Button review, bool approve, string range, string destination)

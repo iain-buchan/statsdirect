@@ -15,14 +15,17 @@ internal static class ConversationRScript
 {
     internal static string[] Blocks(string markdown, bool rOnly = true) => WebReports.CompletedCodeBlocks.Read(markdown, rOnly);
 
-    internal static string Build(JsonArray messages, int messageIndex, int blockIndex = -1)
+    internal static string Build(JsonArray messages, int messageIndex, int blockIndex = -1, bool currentReplyOnly = false)
     {
         if (messageIndex < 0 || messageIndex >= messages.Count || messages[messageIndex].S("role") is not ("assistant" or "user"))
             throw new InvalidOperationException("Wait for the reply to finish before opening its R code.");
         var selected = Blocks(messages[messageIndex].S("text"));
         if (selected.Length == 0 || blockIndex < -1 || blockIndex >= selected.Length)
             throw new InvalidOperationException("This reply contains no completed R code block.");
-        var result = new StringBuilder("# AI suggestion — review before running. Nothing has been run automatically.\n# Source snapshots and earlier R blocks are included in conversation order.\n# Review earlier examples too: running this script will run all included code.\n");
+        var result = new StringBuilder("# AI suggestion — review before running. Nothing has run automatically.\n");
+        result.Append(currentReplyOnly
+            ? "# Includes the fixed worksheet values read for this reply.\n"
+            : "# Source snapshots and earlier R blocks are included in conversation order.\n# Review earlier examples too: running this script will run all included code.\n");
         string previousSource = "";
         void Append(string label, string code)
         {
@@ -30,7 +33,7 @@ internal static class ConversationRScript
             if ((long)result.Length + code.Length > 2_000_000) throw new InvalidOperationException("The conversation is too large to open as one R script. Start a new conversation with the relevant source script.");
             result.Append("\n# ").Append(label).Append('\n').Append(code).Append('\n');
         }
-        for (int i = 0; i <= messageIndex; i++)
+        for (int i = currentReplyOnly ? messageIndex : 0; i <= messageIndex; i++)
         {
             var message = messages[i];
             string source = message.S("rSource");

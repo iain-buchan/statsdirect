@@ -166,13 +166,13 @@ internal sealed class ConversationView : UserControl
     }
 
     /// <summary>The whole conversation as it stands: the messages, each with a role and its text, and the reply being streamed.</summary>
-    internal void Update(JsonArray messages, string partial, bool reset)
+    internal void Update(JsonArray messages, string partial, bool reset, bool collapseRCode = false, string welcome = "")
     {
         var list = new JsonArray();
         foreach (var message in messages)
             list.Add(new JsonObject { ["role"] = MessageText(message, "role"), ["text"] = MessageText(message, "text") });
         if (reset) context++;
-        var m = new JsonObject { ["action"] = "update", ["sequence"] = ++sequence, ["context"] = context, ["reset"] = reset, ["partial"] = partial ?? "", ["messages"] = list };
+        var m = new JsonObject { ["action"] = "update", ["sequence"] = ++sequence, ["context"] = context, ["reset"] = reset, ["collapseRCode"] = collapseRCode, ["welcome"] = welcome, ["partial"] = partial ?? "", ["messages"] = list };
         last = m;
         if (!failed && ready.Task.IsCompletedSuccessfully) Post(m);
     }

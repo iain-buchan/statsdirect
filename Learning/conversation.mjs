@@ -7,11 +7,28 @@ import {richText} from './Shared/Learning/rich-text.mjs';
   const container = document.getElementById('conversation');
   const post = message => { try { window.chrome.webview.postMessage(message); } catch (error) { } };
   // Same offline, sanitized Markdown/TeX renderer as Learning and the Mac AI pane.
-  const render = text => richText(text).replaceAll('data-code="r"', 'data-code="open"');
+  function render(text, foldRCode) {
+    const body = document.createElement('div');
+    body.className = 'body';
+    body.innerHTML = richText(text).replaceAll('data-code="r"', 'data-code="open"');
+    if (foldRCode) {
+      for (const block of body.querySelectorAll('.code-block')) {
+        if (!block.querySelector('[data-code="open"]')) continue;
+        const details = document.createElement('details');
+        details.className = 'r-code-disclosure';
+        const summary = document.createElement('summary');
+        summary.innerHTML = '<span class="show-r-code">Show R code</span><span class="hide-r-code">Hide R code</span>';
+        block.replaceWith(details);
+        details.append(summary, block);
+      }
+    }
+    return body;
+  }
 
   // The page's state: the messages rendered, in order, and the streamed reply.
   const rendered = [];
-  let partialElement = null, partialText = '', renders = 0, applied = 0, context = 0, requests = 0, copying = null;
+  let welcomeElement = null;
+  let partialElement = null, partialText = '', renders = 0, applied = 0, context = 0, requests = 0, copying = null, collapseRCode = false;
   function bind(element) {
     element.querySelectorAll('a').forEach(a=>{if(!/^https?:\/\//i.test(a.getAttribute('href')??''))a.removeAttribute('href');else {a.target='_blank';a.rel='noopener noreferrer';}});
     element.querySelectorAll('button[data-code]').forEach(button => button.onclick = () => {
@@ -28,8 +45,16 @@ import {richText} from './Shared/Learning/rich-text.mjs';
   // The streamed reply's block, rendered again as it grows: only the children that changed are replaced, so that the paragraphs
   // before the one being written, and any selection in them, stay as they are.
   function renderInto(element, text) {
-    const fresh = document.createElement('div'); fresh.innerHTML = render(text);
-    const body = element.querySelector('.body'), old = [...body.childNodes], now = [...fresh.childNodes];
+    const body = element.querySelector('.body'), fresh = render(text, collapseRCode);
+    // Keep the reader's disclosure state when a reply grows or finishes.
+    if (collapseRCode) {
+      fresh.querySelectorAll('[data-code]').forEach(button => button.disabled = true);
+      const previous = body.querySelectorAll('.r-code-disclosure');
+      fresh.querySelectorAll('.r-code-disclosure').forEach((details, index) => {
+        details.open = previous[index]?.open ?? false;
+      });
+    }
+    const old = [...body.childNodes], now = [...fresh.childNodes];
     let same = 0;
     while (same < old.length && same < now.length && old[same].isEqualNode(now[same])) same++;
     for (let k = old.length - 1; k >= same; k--) old[k].remove();
@@ -39,7 +64,10 @@ import {richText} from './Shared/Learning/rich-text.mjs';
   function block(role, text) {
     const element = document.createElement('section');
     element.className = 'message ' + (role === 'user' ? 'user' : 'assistant');
-    element.innerHTML = '<div class="who">' + (role === 'user' ? 'You' : 'StatsDirect AI') + '</div><div class="body">' + render(text) + '</div>';
+    const who = document.createElement('div');
+    who.className = 'who';
+    who.textContent = role === 'user' ? 'You' : 'StatsDirect AI';
+    element.append(who, render(text, collapseRCode && role === 'assistant'));
     bind(element); renders++;
     return element;
   }
@@ -80,25 +108,39 @@ import {richText} from './Shared/Learning/rich-text.mjs';
 
   function update(m) {
     context = m.context;
-    const selection = m.reset ? null : saveSelection();
+    const reset = m.reset || collapseRCode !== Boolean(m.collapseRCode);
+    collapseRCode = Boolean(m.collapseRCode);
+    const selection = reset ? null : saveSelection();
     const top = scroller().scrollTop;
-    const follow = !!m.reset || (!selection && atEnd());
-    if (m.reset) { container.replaceChildren(); rendered.length = 0; partialElement = null; partialText = ''; }
+    const follow = reset || (!selection && atEnd());
+    if (reset) { container.replaceChildren(); rendered.length = 0; partialElement = null; partialText = ''; welcomeElement = null; }
     const messages = Array.isArray(m.messages) ? m.messages : [];
+    const partial = String(m.partial ?? '');
+    if (!messages.length && !partial && m.welcome) {
+      if (!welcomeElement) {
+        welcomeElement = block('assistant', m.welcome);
+        welcomeElement.classList.add('welcome');
+        container.appendChild(welcomeElement);
+      }
+    } else if (welcomeElement) {
+      welcomeElement.remove();
+      welcomeElement = null;
+    }
     let same = 0;
     while (same < rendered.length && same < messages.length && rendered[same].role === messages[same].role && rendered[same].text === messages[same].text) same++;
     for (let j = rendered.length - 1; j >= same; j--) { rendered[j].element.remove(); rendered.pop(); }
     for (let j = same; j < messages.length; j++) {
       const role = messages[j].role === 'user' ? 'user' : 'assistant', text = String(messages[j].text ?? '');
       let element;
-      if (j === messages.length - 1 && partialElement && role === 'assistant' && text === partialText && !(m.partial)) {
-        // the streamed reply has become the last message, as it is: keep its block rather than render it again
-        element = partialElement; element.classList.remove('partial'); partialElement = null; partialText = '';
+      if (j === messages.length - 1 && partialElement && role === 'assistant' && (text === partialText || collapseRCode) && !m.partial) {
+        // Keep the streamed block on completion, including any open R disclosures.
+        element = partialElement;
+        if (text !== partialText) renderInto(element, text);
+        element.classList.remove('partial'); partialElement = null; partialText = '';
       }
       else { element = block(role, text); container.insertBefore(element, partialElement); }
       rendered.push({ role, text, element });
     }
-    const partial = String(m.partial ?? '');
     if (partial !== partialText) {
       if (!partial) { if (partialElement) partialElement.remove(); partialElement = null; }
       else if (partialElement) renderInto(partialElement, partial);

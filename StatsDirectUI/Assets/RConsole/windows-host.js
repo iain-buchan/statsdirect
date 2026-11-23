@@ -122,7 +122,28 @@
     more.id = 'windows-more'; more.type = 'button'; more.textContent = 'More';
     more.title = 'More R session commands'; more.setAttribute('aria-label', 'More R session commands');
     more.addEventListener('click', () => post({action: 'more'}));
-    document.querySelector('.toolbar').append(more);
+    const toolbar = document.querySelector('.toolbar');
+    toolbar.append(more);
+    const addOutput = document.createElement('button');
+    addOutput.id = 'add-output-to-report';
+    addOutput.type = 'button';
+    addOutput.textContent = 'Add output to report';
+    addOutput.title = 'Add the R results and charts to the last selected report';
+    addOutput.hidden = true;
+    addOutput.disabled = true;
+    addOutput.addEventListener('click', () => post({action: 'addOutputToReport'}));
+    toolbar.insertBefore(addOutput, toolbar.querySelector('.toolbar-space'));
+    let canAddOutput = false;
+    window.chrome?.webview?.addEventListener('message', ({data}) => {
+      if (data?.type === 'session') {
+        canAddOutput = data.addOutputToReport === true;
+        addOutput.hidden = !canAddOutput;
+      }
+      if (!canAddOutput || !['session', 'state', 'commandAccepted', 'inputRequested', 'output', 'plot', 'exited'].includes(data?.type)) return;
+      const {state, transcript} = window.StatsDirectRConsole.snapshot();
+      addOutput.disabled = !['ready', 'stopped'].includes(state) ||
+        !transcript.some(entry => entry.kind === 'plot' && entry.hasPreview || entry.kind === 'output' && entry.text.trim());
+    });
     document.addEventListener('focusin', event => {
       if (event.target === script || event.target === input) { target = event.target; transcriptTarget = false; }
       else if (event.target === transcript) transcriptTarget = true;

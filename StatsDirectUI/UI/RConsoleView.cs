@@ -58,6 +58,7 @@ internal sealed partial class RConsoleView : UserControl
     internal event Action? AIRequested;
     internal event Action? OpenInRRequested;
     internal event Action? MoreRequested;
+    internal event Func<Task>? AddOutputToReportRequested;
     internal event Action<string>? CommandRequested;
     internal event Action<string>? Notice;
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
@@ -259,6 +260,7 @@ internal sealed partial class RConsoleView : UserControl
             if (channel == "statsdirect-r-host")
             {
                 if (action == "more") MoreRequested?.Invoke();
+                else if (action == "addOutputToReport" && AddOutputToReportRequested is { } append) await append();
                 else if (action is "save" or "find" or "replace" or "print" or "help") CommandRequested?.Invoke(action);
                 else if (action == "editorState")
                 {
@@ -383,6 +385,7 @@ internal sealed partial class RConsoleView : UserControl
         if (!pageReady || closing) return;
         var envelope = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(sessionEnvelope.GetRawText())!;
         envelope["script"] = JsonSerializer.SerializeToElement(script);
+        envelope["addOutputToReport"] = JsonSerializer.SerializeToElement(AddOutputToReportRequested != null);
         // Recall belongs to the document, independently of its clearable output.
         envelope["commandHistory"] = JsonSerializer.SerializeToElement(commandHistory);
         // The session's own capabilities stay, among them whether its workspace persists (the Rscript fallback's does not, and the page's status

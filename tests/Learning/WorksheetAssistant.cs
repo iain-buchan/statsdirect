@@ -1,6 +1,5 @@
 using StatsDirect.UI;
 using StatsDirect.UI.Learning;
-using StatsDirect.UI.ToolWindows;
 using SpreadsheetGear.Windows.Forms;
 using System.Text.Json.Nodes;
 
@@ -45,7 +44,6 @@ internal static partial class Program
         try
         {
             await TestWorksheetAssistant(main, service, level => policy = level, trace);
-            TestWorksheetEditDisplay(main);
             await TestWorksheetConsentAcrossPanes(main, service, trace);
         }
         finally { typeof(frmMain).GetField("learning", Members)!.SetValue(main, null); }
@@ -54,7 +52,10 @@ internal static partial class Program
     private static async Task ShowWorksheetAssistantDemo(frmMain main)
     {
         var tutor = WorksheetMockTutor(Path.Combine(root, "preview-worksheet-account"), () => AISecurityLevel.Unrestricted);
-        var service = new LearningService(main, Path.Combine(root, "Preview Learning"), tutor);
+        var service = new LearningService(main, Path.Combine(root, "Preview Learning"), tutor)
+        {
+            ConfirmSharing = _ => LearningService.SharingDecision.Share
+        };
         typeof(frmMain).GetField("learning", Members)!.SetValue(main, service);
         main.FormClosed += (_, _) => { service.Dispose(); tutor.Dispose(); };
         var grid = (frmSpreadsheetGear)main.CreateGrid("Worksheet AI prototype (simulated replies)");
@@ -63,15 +64,12 @@ internal static partial class Program
         await Wait(() => tutor.Email == "mock@example.invalid", "the prototype uses a local simulated AI account");
         var pane = await OpenWorksheetAssistant(main, service, grid);
         pane.ShareWorkbook.Checked = true;
-        pane.Acknowledge.Checked = true;
-        pane.Composer.Text = "Add an Age band column";
+        pane.Composer.Text = "What is the mean age?";
         await pane.SendAsync();
-        var review = FindWorksheetReview(pane);
-        await Wait(() => review.Enabled && review.Visible, "the example edit is ready to preview");
+        await pane.Transcript.SettledAsync();
+        Check((await pane.Transcript.TextAsync()).Contains("The mean age is 49"),
+            "the preview explains the result from the shared sample ages");
     }
-
-    private static Button FindWorksheetReview(ScriptAIPane pane) =>
-        ((Control)Field(pane, "view")).Controls.Find("reviewWorksheetEdit", true).OfType<Button>().Single();
 
     private static async Task<JsonNode> WorksheetReply(ScriptAIPane pane, string prompt)
     {
@@ -84,48 +82,68 @@ internal static partial class Program
         return JsonNode.Parse(messages.Last(message => message.S("role") == "assistant").S("text"));
     }
 
-    private static bool OpenWorksheetReview(ScriptAIPane pane, Button review, string action)
+    private static bool HasWorksheetWriteTool(JsonNode response) =>
+        response.A("toolNames").Any(tool => tool.GetValue<string>() == "statsdirect_propose_worksheet_edit");
+
+    private static bool ReadFullPackagedHelp(JsonNode response)
     {
-        var session = (ToolPaneSession)Field(pane, "session");
-        var originalFrame = session.Window;
-        bool seen = false, handled = false, completePreview = false, stablePresentation = false, controlsFit = false;
-        using var timer = new System.Windows.Forms.Timer { Interval = 150 };
-        timer.Tick += (_, _) =>
+        var fullHelp = response["fullHelp"];
+        return fullHelp.S("topic") == "references/reference_list.htm"
+            && fullHelp.S("url") == "https://www.statsdirect.com/help/references/reference_list.htm"
+            && fullHelp.B("introductoryText") && fullHelp.B("continued") && fullHelp.B("invalidRejected");
+    }
+
+    private static async Task TestWorksheetRAnswer(frmMain main, LearningService service, frmSpreadsheetGear grid, ScriptAIPane pane)
+    {
+        pane.Composer.Text = "WORKSHEET_AI_R_PRIOR_ANSWER";
+        await pane.SendAsync();
+        pane.Composer.Text = "WORKSHEET_AI_R_ANSWER";
+        await pane.SendAsync();
+        await pane.Transcript.SettledAsync();
+        string transcript = await pane.Transcript.TextAsync();
+        Check(transcript.Contains("The median age") && transcript.Contains("The mean age is 49"),
+            "the assistant answers successive questions about the approved values in plain language");
+
+        var browser = pane.Transcript.Browser.CoreWebView2;
+        string check = """
+            (() => {
+                const sections = [...document.querySelectorAll('.message.assistant details.r-code-disclosure')];
+                return sections.length === 2 && sections.every(section => !section.open && section.querySelector('[data-code=open]'));
+            })()
+            """;
+        Check(await browser.ExecuteScriptAsync(check) == "true",
+            "the answer keeps R code and its Open action collapsed by default");
+
+        var view = (WorkbookView)Field(grid, "workbookView");
+        WithWorksheet(view, sheet => { sheet.Cells["A2"].Value = 999; return true; });
+        int before = service.Documents.OfType<frmScript>().Count();
+        await browser.ExecuteScriptAsync("""
+            (() => {
+                const section = [...document.querySelectorAll('.message.assistant details.r-code-disclosure')].at(-1);
+                section.open = true;
+                section.querySelector('[data-code=open]').click();
+            })()
+            """);
+        await Wait(() => service.Documents.OfType<frmScript>().Count() == before + 1,
+            "opening R code from the disclosure creates a script for review");
+
+        var script = (frmScript)main.ActiveMdiChild;
+        try
         {
-            var dialog = Application.OpenForms.OfType<Form>().FirstOrDefault(form => form.Modal);
-            if (dialog == null) return;
-            seen = dialog.Name == "worksheetEditReview";
-            stablePresentation = !session.IsTemporary && session.Window == originalFrame;
-            var values = dialog.Controls.Find("worksheetEditPreview", true).OfType<DataGridView>().SingleOrDefault();
-            completePreview = values?.Rows.Count == 3
-                && values.Rows[0].Cells[0].Value?.ToString()?.Replace("$", "", StringComparison.Ordinal).EndsWith("B1", StringComparison.Ordinal) == true
-                && values.Rows[0].Cells[1].Value?.ToString()?.Contains("Original heading", StringComparison.Ordinal) == true
-                && values.Rows[0].Cells[2].Value?.ToString()?.Contains("Age band", StringComparison.Ordinal) == true;
-            var area = dialog.RectangleToScreen(dialog.ClientRectangle);
-            controlsFit = values?.DisplayedRowCount(false) >= 3
-                && new[] { "applyWorksheetEdit", "cancelWorksheetEdit" }.All(name =>
-                    dialog.Controls.Find(name, true).OfType<Button>().SingleOrDefault() is { Visible: true, Enabled: true } button
-                    && area.Contains(button.RectangleToScreen(button.ClientRectangle))
-                    && button.Parent.RectangleToScreen(button.Parent.ClientRectangle).Contains(button.RectangleToScreen(button.ClientRectangle)));
-            if (!controlsFit) Console.WriteLine($"Preview layout: dialog {dialog.ClientSize}, visible rows {values?.DisplayedRowCount(false)}, buttons {string.Join(", ", dialog.Controls.Find("applyWorksheetEdit", true).Concat(dialog.Controls.Find("cancelWorksheetEdit", true)).Select(control => $"{control.Text} {control.Bounds} in {control.Parent.ClientSize}"))}");
-            var button = dialog.Controls.Find(action, true).OfType<Button>().SingleOrDefault();
-            if (seen && button is { Enabled: true })
-            {
-                handled = true;
-                button.PerformClick();
-            }
-            else dialog.DialogResult = DialogResult.Cancel;
-        };
-        timer.Start();
-        review.PerformClick();
-        timer.Stop();
-        if (seen)
-        {
-            Check(handled && completePreview, "the worksheet preview shows the proposed range, original values, replacements and approval controls");
-            Check(stablePresentation, "the assistant keeps its dock or floating frame while worksheet review is modal");
-            Check(controlsFit, "the proposed rows and both approval buttons fit within the native dialog");
+            Check(!script.LearningRunning && script.LearningOutput.Length == 0,
+                "opening an assistant's R script does not execute it");
+            await RunConversationR(script.LearningScript, "worksheet-ai-answer",
+                "stopifnot(identical(age, c(26, 53, 68)), mean(age) == 49, !exists('earlier_answer_only'))\ncat('WORKSHEET_AI_R_OK\\n')",
+                "WORKSHEET_AI_R_OK");
+            await TestWorksheetRReport(main, script);
         }
-        return seen;
+        finally
+        {
+            CloseTestDocument(script);
+            await Wait(() => script.IsDisposed, "the reviewed worksheet R script closes");
+            WithWorksheet(view, sheet => { sheet.Cells["A2"].Value = 26; return true; });
+            grid.Activate();
+        }
     }
 
     private static T WithWorksheet<T>(WorkbookView view, Func<SpreadsheetGear.IWorksheet, T> action)
@@ -155,7 +173,7 @@ internal static partial class Program
             string help = Path.Combine(root, "oversized-worksheet-help");
             Directory.CreateDirectory(help);
             using (var index = File.Create(Path.Combine(help, "search-index.js"))) index.SetLength(2_000_001);
-            Check(WorksheetAIHelp.Search(help, "worksheet", includeWorksheet: true).Count == 0,
+            Check(WorksheetAIHelp.Search(help, "worksheet").Count == 0,
                 "an oversized packaged Help index leaves worksheet questions available");
 
             var toolbar = WorksheetRibbon(main);
@@ -169,113 +187,95 @@ internal static partial class Program
             await service.Tutor.RefreshAccountAsync();
             await Wait(() => service.Tutor.Email == "mock@example.invalid", "the worksheet assistant test is connected to a mock account");
             pane = await OpenWorksheetAssistant(main, service, grid);
-            Check(pane.Composer.Text.Length == 0 && !pane.ShareWorkbook.Checked, "Ask AI opens a question-only worksheet conversation without sending");
-            var review = FindWorksheetReview(pane);
-            var readOnly = await WorksheetReply(pane, "WORKSHEET_AI_WITHOUT_SHARING");
-            Check(readOnly.S("help").Contains("worksheet", StringComparison.OrdinalIgnoreCase)
-                && !readOnly.B("read") && !readOnly.B("proposed") && !review.Visible,
-                "question-only mode retrieves packaged worksheet help and exposes no workbook read or edit");
+            Check(pane.Composer.Text.Length == 0 && pane.ShareWorkbook.Visible && pane.ShareWorkbook.Enabled
+                && pane.ShareWorkbook.Text.Contains(grid.Text, StringComparison.Ordinal) && !pane.ShareWorkbook.Checked
+                && !pane.Acknowledge.Visible,
+                "the question-only pane shows an unchecked sharing choice for the named workbook");
+            await pane.Transcript.SettledAsync();
+            Check((await pane.Transcript.TextAsync()).Contains(WorksheetOpeningText, StringComparison.Ordinal)
+                && WorksheetAnalysisDataTraffic(trace).Select(line => JsonNode.Parse(line)).All(request => request.S("method") != "turn/start"),
+                "the welcome appears locally without sending a question");
+
+            const string acceptance = "yes please";
+            pane.Composer.Text = acceptance;
+            await pane.SendAsync();
+            await pane.Transcript.SettledAsync();
+            var firstRequest = LastWorksheetRequest(trace);
+            var firstConversation = firstRequest.A("conversation");
+            var firstReference = JsonNode.Parse(firstRequest.S("referenceContext"));
+            Check(firstConversation.Count == 1 && firstConversation[0].S("role") == "user"
+                && firstConversation[0].S("text") == acceptance && firstReference.A("documents").Count == 0,
+                "the first affirmative reply is sent without workbook details");
+            CheckWorksheetMethodSelectionContext(trace, true, grid.Text, other.Text, "Existing cell");
+            Check((await pane.Transcript.TextAsync()).Contains("What would you like to find out from your data?", StringComparison.Ordinal),
+                "the welcome acceptance can lead straight to a question about the analysis goal");
+
+            var questionOnly = await WorksheetReply(pane, "WORKSHEET_AI_WITHOUT_SHARING");
+            var nextRequest = LastWorksheetRequest(trace);
+            Check(nextRequest.A("conversation").Any(message => message.S("role") == "user" && message.S("text") == acceptance),
+                "later questions continue the conversation from the opening offer");
+            CheckWorksheetMethodSelectionContext(trace, false, grid.Text, other.Text, "Existing cell");
+            Check(questionOnly.S("help").Contains("worksheet", StringComparison.OrdinalIgnoreCase)
+                && !questionOnly.B("read") && !HasWorksheetWriteTool(questionOnly),
+                "question-only mode retrieves packaged Help and exposes neither workbook reads nor workbook edits");
+            Check(ReadFullPackagedHelp(questionOnly),
+                "question-only AI can continue beyond a Help excerpt on a non-method topic and rejects unknown topics");
             service.RevokeAISharing();
             other.Activate();
             await Wait(() => main.ActiveMdiChild == other,
                 "a different active workbook leaves the open assistant bound to its original workbook");
-            pane.Acknowledge.Checked = true;
-            Check(!pane.Acknowledge.Enabled && !pane.Acknowledge.Checked && !service.Sharing.Accepts([grid.Id()]) && !service.Sharing.Accepts([other.Id()]),
-                "question-only mode cannot grant workbook consent even if acknowledgement is toggled");
-            pane.ShareWorkbook.Checked = true;
-            Check(pane.Acknowledge.Enabled && !pane.Acknowledge.Checked && !pane.Send.Enabled,
-                "switching on workbook sharing requires confirmation when the bound workbook is unapproved");
-            pane.Acknowledge.Checked = true;
-            Check(service.Sharing.Accepts([grid.Id()]) && !service.Sharing.Accepts([other.Id()]),
-                "worksheet acknowledgement approves only the bound workbook, even while another workbook is active");
+            CheckWorksheetSharing(pane, service, grid, trace, allow: false);
+            var cancelled = await WorksheetReply(pane, "WORKSHEET_AI_AFTER_CANCEL");
+            Check(cancelled.A("ids").Count == 0 && !cancelled.B("read") && !service.Sharing.Accepts([other.Id()]),
+                "after cancelling consent the next question has no workbook scope");
+            CheckWorksheetSharing(pane, service, grid, trace);
+            Check(!service.Sharing.Accepts([other.Id()]),
+                "confirmation approves only the bound workbook, even while another workbook is active");
             pane.ShareWorkbook.Checked = false;
-            Check(!pane.Acknowledge.Enabled && !pane.Acknowledge.Checked && service.Sharing.Accepts([grid.Id()]),
-                "turning sharing off suspends the scope while preserving session acceptance for the approved workbook");
-            pane.ShareWorkbook.Checked = true;
-            Check(pane.Acknowledge.Checked && pane.Send.Enabled && !service.Sharing.Accepts([other.Id()]),
-                "enabling sharing again reuses acceptance for the bound workbook only");
+            Check(!pane.Acknowledge.Visible && service.Sharing.Accepts([grid.Id()]),
+                "turning sharing off suspends the scope while preserving session consent");
+            CheckWorksheetSharing(pane, service, grid, trace, reuse: true);
 
             grid.Activate();
             await Wait(() => main.ActiveMdiChild == grid, "the worksheet assistant returns to its source worksheet");
-            pane.Acknowledge.Checked = true;
-            var result = await WorksheetReply(pane, "WORKSHEET_AI_REVIEW");
-            Check(result.A("ids").Count == 1 && result.A("ids")[0].GetValue<string>() == grid.Id()
-                && result.B("read") && result.B("proposed"), "approved worksheet AI reads and stages an edit for only the selected workbook");
-            Check(WithWorksheet(view, sheet => (string)sheet.Cells["B1"].Value == "Original heading" && sheet.Cells["B2"].HasFormula),
-                "the tool call leaves the worksheet unchanged before approval");
-            Check(OpenWorksheetReview(pane, review, "cancelWorksheetEdit"), "Review opens the native preview and Cancel dismisses it");
-            Check(WithWorksheet(view, sheet => (string)sheet.Cells["B3"].Value == "Existing cell"), "cancelling preview leaves the original cells intact");
-            await WorksheetReply(pane, "WORKSHEET_AI_REVIEW_AGAIN");
-            Check(OpenWorksheetReview(pane, review, "applyWorksheetEdit"), "the user can approve the reviewed edit");
-            Check(WithWorksheet(view, sheet => (string)sheet.Cells["B1"].Value == "Age band"
-                && (string)sheet.Cells["B2"].Value == "=2+2" && !sheet.Cells["B2"].HasFormula
-                && sheet.Cells["B3"].Value == null && (double)sheet.Cells["A2"].Value == 26),
-                "approval edits exactly the target range, preserving text literals and unrelated cells");
-            grid.EditUndo();
-            Check(WithWorksheet(view, sheet => (string)sheet.Cells["B1"].Value == "Original heading"
-                && sheet.Cells["B2"].Formula == "=1+1" && (string)sheet.Cells["B3"].Value == "Existing cell"),
-                "one normal worksheet Undo restores the whole edit including its original formula");
-            grid.EditRedo();
-            Check(WithWorksheet(view, sheet => (string)sheet.Cells["B1"].Value == "Age band" && !sheet.Cells["B2"].HasFormula),
-                "one normal worksheet Redo replays the approved literal edit");
-            grid.EditUndo();
+            int version = grid.LearningVersion;
+            var result = await WorksheetReply(pane, "WORKSHEET_AI_DEPRECATED_EDIT");
+            Check(result.A("ids").Select(id => id.GetValue<string>()).SequenceEqual([grid.Id()]) && result.B("read"),
+                "the assistant reads only the named workbook after confirmation");
+            Check(!HasWorksheetWriteTool(result) && result.B("editAttempted") && !result.B("editAccepted"),
+                "the former worksheet write tool is absent and the mock cannot call it");
+            Check(grid.LearningVersion == version && WithWorksheet(view, sheet =>
+                Equals(sheet.Cells["B1"].Value, "Original heading") && sheet.Cells["B2"].Formula == "=1+1"
+                && Equals(sheet.Cells["B3"].Value, "Existing cell") && Equals(sheet.Cells["A2"].Value, 26d)),
+                "the attempted AI write leaves cell values, formula and workbook revision intact");
+
+            await TestWorksheetRAnswer(main, service, grid, pane);
 
             pane.ShareWorkbook.Checked = false;
-            const string questionOnly = "WORKSHEET_AI_HISTORY_OFF";
-            var noSharing = await WorksheetReply(pane, questionOnly);
+            const string afterSharing = "WORKSHEET_AI_HISTORY_OFF";
+            var noSharing = await WorksheetReply(pane, afterSharing);
             var turn = WorksheetAnalysisDataTraffic(trace).Select(line => JsonNode.Parse(line))
                 .Last(request => request.S("method") == "turn/start");
             string payload = turn["params"].A("input")[0].S("text");
             var conversation = JsonNode.Parse(payload[(payload.IndexOf('\n') + 1)..]).A("conversation");
-            Check(conversation.Count == 1 && conversation[0].S("role") == "user" && conversation[0].S("text") == questionOnly
-                && noSharing.A("ids").Count == 0 && !noSharing.B("read") && !noSharing.B("proposed"),
+            Check(conversation.Count == 1 && conversation[0].S("role") == "user" && conversation[0].S("text") == afterSharing
+                && noSharing.A("ids").Count == 0 && !noSharing.B("read") && !HasWorksheetWriteTool(noSharing),
                 "turning off sharing sends only the new question and excludes earlier replies and worksheet tools");
-            pane.ShareWorkbook.Checked = true;
-            Check(pane.Acknowledge.Checked && pane.Send.Enabled, "the named workbook is still confirmed after sharing is switched back on");
-
-            var target = grid.CaptureWorksheetEditTarget();
-            await Reject(() =>
-            {
-                target.Propose(new JsonObject { ["range"] = "OtherSheet!B2", ["values"] = new JsonArray(new JsonArray(5)) });
-                return Task.CompletedTask;
-            }, "worksheet proposals cannot name a different sheet");
-            await Reject(() =>
-            {
-                target.Propose(new JsonObject { ["range"] = "B1:C1", ["values"] = new JsonArray(new JsonArray(5)) });
-                return Task.CompletedTask;
-            }, "worksheet proposals reject mismatched range dimensions");
-
-            await WorksheetReply(pane, "WORKSHEET_AI_STALE");
-            WithWorksheet(view, sheet => { sheet.Cells["B3"].Value = "User changed this"; return true; });
-            if (review.Visible && review.Enabled)
-                Check(!OpenWorksheetReview(pane, review, "cancelWorksheetEdit"), "a stale worksheet edit is refused before preview");
-            Check(WithWorksheet(view, sheet => (string)sheet.Cells["B3"].Value == "User changed this"), "stale proposals preserve newer cell contents");
-
-            WithWorksheet(view, sheet => { sheet.Cells["B1:B3"].ClearContents(); return true; });
-            var staged = await WorksheetReply(pane, "WORKSHEET_AI_INSERTED_ROW");
-            Check(staged.B("proposed") && review.Visible && review.Enabled, "an edit is staged against blank cells before inserting a row");
-            int version = grid.LearningVersion;
-            WithWorksheet(view, sheet => { sheet.Cells["A1"].EntireRow.Insert(); return true; });
-            await Wait(() => grid.LearningVersion != version, "inserting a row updates the worksheet version");
-            Check(WithWorksheet(view, sheet => Equals(sheet.Cells["A2"].Value, "Age") && sheet.Cells["B1"].Value == null
-                && sheet.Cells["B2"].Value == null && sheet.Cells["B3"].Value == null),
-                "the row moved the data while the proposed target still has the same original blank cells");
-            Check(!OpenWorksheetReview(pane, review, "applyWorksheetEdit"), "inserting a row above a staged edit blocks approval");
-            Check(WithWorksheet(view, sheet => sheet.Cells["B1"].Value == null && sheet.Cells["B2"].Value == null
-                && sheet.Cells["B3"].Value == null), "the stale proposal does not write to its old addresses");
+            CheckWorksheetSharing(pane, service, grid, trace, reuse: true);
 
             setSecurity(AISecurityLevel.DataSharingRestricted);
             pane.UpdateConnection();
-            pane.Acknowledge.Checked = true;
-            Check(!pane.ShareWorkbook.Enabled && !pane.Acknowledge.Enabled && !pane.Acknowledge.Checked,
-                "restricted mode keeps workbook consent disabled even if acknowledgement is toggled");
+            Check(!pane.ShareWorkbook.Enabled && !pane.Acknowledge.Visible && !pane.Acknowledge.Enabled,
+                "restricted mode blocks workbook sharing and hides consent");
             var restricted = await WorksheetReply(pane, "WORKSHEET_AI_RESTRICTED");
             Check(restricted.S("help").Contains("worksheet", StringComparison.OrdinalIgnoreCase) && !restricted.B("read")
-                && !restricted.B("proposed") && !review.Visible, "data-sharing policy keeps help available and disables worksheet reads and edits");
+                && !HasWorksheetWriteTool(restricted), "data-sharing policy keeps Help available without sending worksheet data");
+            Check(ReadFullPackagedHelp(restricted),
+                "guidance-only AI can read the full packaged Help without gaining workbook access");
 
             setSecurity(AISecurityLevel.AIRestricted);
             pane.UpdateConnection();
-            Check(!pane.Send.Enabled && !review.Visible, "organisation AI policy disables AI submission and worksheet proposals");
+            Check(!pane.Send.Enabled, "organisation AI policy disables AI submission");
         }
         finally
         {

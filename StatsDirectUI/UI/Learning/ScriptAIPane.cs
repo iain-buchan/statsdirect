@@ -15,7 +15,7 @@ namespace StatsDirect.UI.Learning;
 /// <summary>A dockable assistant with a fixed document scope and locally reviewed worksheet proposals.</summary>
 internal sealed class ScriptAIPane : IDisposable
 {
-    private const string WorksheetEditTool = "statsdirect_propose_worksheet_edit";
+    private const string WorksheetOpeningQuestion = "Do you want me to help you analyse your data?";
     private readonly LearningService service;
     private readonly UserControl view = new() { Dock = DockStyle.Fill, Font = new Font("Arial", 10) };
     private readonly ToolPaneSession session;
@@ -36,9 +36,7 @@ internal sealed class ScriptAIPane : IDisposable
     private readonly FlowLayoutPanel replyCodeActions = new() { Name = "replyRCodeActions", AutoSize = true, Dock = DockStyle.Fill };
     private readonly Label warning = new() { AutoSize = true };
     private readonly Label questionCaption = new() { AutoSize = true, Dock = DockStyle.Fill };
-    private readonly Button reviewWorksheetEdit = new() { Name = "reviewWorksheetEdit", AutoSize = true, Text = "Review worksheet edit", Visible = false };
     private readonly Button reviewWorksheetAnalysis = new() { Name = "reviewWorksheetAnalysis", AutoSize = true, Text = "Review analysis", Visible = false };
-    private WorksheetEditProposal worksheetEdit;
     private WorksheetAnalysisProposal worksheetAnalysis;
     private readonly Dictionary<string, Conversation> conversations = new();
     private StatsDirectForm script;
@@ -87,7 +85,7 @@ internal sealed class ScriptAIPane : IDisposable
         var actions = new FlowLayoutPanel { AutoSize = true, Dock = DockStyle.Fill };
         var copyCode = new Button { AutoSize = true, Text = "Copy R code" }; var openCode = new Button { AutoSize = true, Text = "Open R code" };
         actions.Controls.AddRange([Send, stop]); layout.Controls.Add(actions, 0, 5); layout.Controls.Add(status, 0, 6);
-        worksheetReplyActions.Controls.AddRange([reviewWorksheetEdit, reviewWorksheetAnalysis]); layout.Controls.Add(worksheetReplyActions, 0, 7);
+        worksheetReplyActions.Controls.Add(reviewWorksheetAnalysis); layout.Controls.Add(worksheetReplyActions, 0, 7);
         layout.Controls.Add(conversationCaption, 0, 8);
         Transcript.AccessibleName = "AI conversation"; layout.Controls.Add(Transcript, 0, 9);
         replyCodeActions.Controls.AddRange([copyCode, openCode]); layout.Controls.Add(replyCodeActions, 0, 10);
@@ -98,7 +96,7 @@ internal sealed class ScriptAIPane : IDisposable
         connection.Click += async (_, _) => { try { await service.ConfigureTutorAsync(view); } catch (Exception ex) { status.Text = ex.Message; } };
         ShareScript.CheckedChanged += (_, _) => ScopeChanged(); ShareWorkbook.CheckedChanged += (_, _) => ScopeChanged();
         Acknowledge.CheckedChanged += (_, _) => {
-            if (refreshing) return;
+            if (refreshing || WorksheetMode) return;
             var documents = SharedDocuments;
             if (documents.Length == 0)
             {
@@ -114,7 +112,6 @@ internal sealed class ScriptAIPane : IDisposable
         };
         SharingOptions.LinkClicked += (_, _) => { sharing.Visible = !sharing.Visible; UpdateControls(); };
         Send.Click += async (_, _) => await SendAsync(); stop.Click += (_, _) => Stop();
-        reviewWorksheetEdit.Click += (_, _) => ReviewWorksheetEdit();
         reviewWorksheetAnalysis.Click += (_, _) => ReviewWorksheetAnalysis();
         Composer.KeyDown += (_, e) => { if (ComposerKey(e.KeyData)) { e.SuppressKeyPress = true; e.Handled = true; } };
         copyCode.Click += (_, _) => { string code = LastCode(); if (code.Length > 0) Clipboard.SetText(code); else status.Text = "The last reply contains no R code block."; };
@@ -143,12 +140,13 @@ internal sealed class ScriptAIPane : IDisposable
     {
         if (script != document)
         {
-            SaveDraft(); Stop(); ClearWorksheetProposals(); status.Text = "";
+            SaveDraft(); Stop(); ClearWorksheetAnalysis(); status.Text = "";
             if (script != null) { script.FormClosed -= ScriptClosed; script.TextChanged -= WorksheetTitleChanged; }
             script = document; script.FormClosed += ScriptClosed;
             if (WorksheetMode) script.TextChanged += WorksheetTitleChanged;
             if (!conversations.TryGetValue(document.Id(), out chat))
                 conversations[document.Id()] = chat = new Conversation { ShareScript = !WorksheetMode && service.ShareAIDocument, ShareWorkbook = !WorksheetMode && service.ShareAIWorkbook };
+            if (WorksheetMode && !service.Sharing.Accepts([document.Id()])) chat.ShareWorkbook = false;
             refreshing = true; Composer.Text = chat.Draft; ShareScript.Checked = chat.ShareScript; ShareWorkbook.Checked = chat.ShareWorkbook; refreshing = false;
             if (!WorksheetMode) { service.ShareAIDocument = ShareScript.Checked; service.ShareAIWorkbook = ShareWorkbook.Checked; }
             sharing.Visible = !WorksheetMode; partial = "";
@@ -158,13 +156,9 @@ internal sealed class ScriptAIPane : IDisposable
         ShareScript.Visible = !WorksheetMode;
         conversationCaption.Visible = !WorksheetMode;
         ShareScript.Text = ReportMode ? "Share this report and its displayed results" : "Share this script and its output";
-        warning.Text = WorksheetMode
-            ? "Sharing lets AI read from this workbook. Remove names, dates of birth, patient IDs and identifying free text first."
-            : "Workbook sharing includes every open workbook. Do not share person-identifiable data: remove names, dates of birth, patient IDs and identifying free text.";
-        Acknowledge.Text = WorksheetMode
-            ? "I have checked this workbook contains no person identifiers. Remember this confirmation for this workbook during this session."
-            : "I have checked the documents selected above contain no person identifiers. Remember this confirmation for those documents during this session.";
-        questionCaption.Text = WorksheetMode ? "Ask about organising or analysing your data" : "Your question (Enter sends; Shift+Enter adds a line)";
+        warning.Text = "Workbook sharing includes every open workbook. Do not share person-identifiable data: remove names, dates of birth, patient IDs and identifying free text.";
+        Acknowledge.Text = "I have checked the documents selected above contain no person identifiers. Remember this confirmation for those documents during this session.";
+        questionCaption.Text = WorksheetMode ? "Ask a question about your data" : "Your question (Enter sends; Shift+Enter adds a line)";
         Composer.AccessibleName = WorksheetMode ? questionCaption.Text : ReportMode ? "Question for the report assistant" : "Question for the script assistant";
         RefreshWorkbooks(); SyncAcceptance(); Render(); session.Show(true); UpdateConnection();
         _ = Transcript.ReopenAsync();
@@ -174,7 +168,7 @@ internal sealed class ScriptAIPane : IDisposable
     {
         title.Text = WorksheetMode ? "Worksheet AI — " + WorksheetName.Limit(24) : ReportMode ? "Report AI" : "Script AI";
         session.SetTitle(WorksheetMode ? "Worksheet AI — " + WorksheetName : title.Text);
-        ShareWorkbook.Text = WorksheetMode ? "Share data from “" + WorksheetName + "”" : "Share open workbook data";
+        ShareWorkbook.Text = WorksheetMode ? "Share workbook data with AI (“" + WorksheetName + "”)" : "Share open workbook data";
     }
 
     private void WorksheetTitleChanged(object sender, EventArgs e) { UpdateScopeTitle(); UpdateControls(); }
@@ -194,7 +188,23 @@ internal sealed class ScriptAIPane : IDisposable
         }
         SyncAcceptance(); UpdateControls();
     }
-    internal void SessionSharingChanged() { Stop(); ClearWorksheetProposals(); SyncAcceptance(); sharing.Visible = !WorksheetMode || ShareWorkbook.Checked; UpdateControls(); }
+    internal void SessionSharingChanged()
+    {
+        Stop();
+        ClearWorksheetAnalysis();
+        if (WorksheetMode) TurnOffWorksheetSharing();
+        SyncAcceptance();
+        sharing.Visible = !WorksheetMode;
+        UpdateControls();
+    }
+
+    private void TurnOffWorksheetSharing()
+    {
+        refreshing = true;
+        ShareWorkbook.Checked = false;
+        refreshing = false;
+        if (chat != null) chat.ShareWorkbook = false;
+    }
     private void SyncAcceptance()
     {
         refreshing = true;
@@ -204,9 +214,33 @@ internal sealed class ScriptAIPane : IDisposable
     private void ScopeChanged()
     {
         if (refreshing || service.Tutor.DataSharingDisabled) return;
-        if (WorksheetMode) { Stop(); ClearWorksheetProposals(); }
-        else { service.ShareAIDocument = ShareScript.Checked; service.ShareAIWorkbook = ShareWorkbook.Checked; }
-        SyncAcceptance(); sharing.Visible = !Acknowledge.Checked;
+        if (WorksheetMode)
+        {
+            Stop();
+            ClearWorksheetAnalysis();
+            if (SharedWorkbooks is [var workbook] && !service.Sharing.Accepts([workbook.Id()]))
+            {
+                var conversation = chat;
+                UpdateControls();
+                bool approved = service.ConfirmSharing is { } confirm
+                    ? confirm([workbook]) == LearningService.SharingDecision.Share
+                    : session.ShowOwnedModal(owner => MessageBox.Show(owner,
+                        "AI can read “" + workbook.Text + "” when answering your questions. Confirm that the workbook contains no person identifiers before sharing. This confirmation lasts for the current StatsDirect session.",
+                        "Share workbook data with AI?", MessageBoxButtons.YesNo, MessageBoxIcon.Information, MessageBoxDefaultButton.Button2) == DialogResult.Yes);
+                if (disposed || chat != conversation || script != workbook) return;
+                if (approved && !service.Tutor.DataSharingDisabled && SharedWorkbooks.Contains(workbook))
+                    service.Sharing.Approve([workbook.Id()]);
+                else
+                    TurnOffWorksheetSharing();
+            }
+        }
+        else
+        {
+            service.ShareAIDocument = ShareScript.Checked;
+            service.ShareAIWorkbook = ShareWorkbook.Checked;
+        }
+        SyncAcceptance();
+        if (!WorksheetMode) sharing.Visible = !Acknowledge.Checked;
         if (chat != null) { chat.ShareScript = ShareScript.Checked; chat.ShareWorkbook = ShareWorkbook.Checked; }
         UpdateControls();
     }
@@ -220,29 +254,27 @@ internal sealed class ScriptAIPane : IDisposable
     {
         var securityLevel = service.Tutor.SecurityLevel;
         bool busy = pending != null, disabled = securityLevel == AISecurityLevel.AIRestricted, sharingRestricted = securityLevel != AISecurityLevel.Unrestricted;
-        bool share = !sharingRestricted && SharedDocuments.Length > 0;
-        Send.Enabled = !busy && !disabled && (!share || Acknowledge.Checked);
+        var documents = SharedDocuments;
+        bool share = !sharingRestricted && documents.Length > 0;
+        Send.Enabled = !busy && !disabled && (!share || service.Sharing.Accepts(documents.Select(d => d.Id())));
         Send.Text = !disabled && service.Tutor.Email == null ? "Use my ChatGPT" : "Send"; stop.Enabled = busy;
         connection.Text = disabled ? ChatGPTTutor.RestrictedLabel : service.Tutor.Email != null ? "ChatGPT connection…" : service.Tutor.LoginUrl != null ? "Finish ChatGPT sign-in…" : "Use my ChatGPT";
         connection.Enabled = !busy && !disabled;
         ShareWorkbook.Enabled = !busy && !sharingRestricted;
-        Acknowledge.Enabled = !busy && share;
+        Acknowledge.Enabled = !WorksheetMode && !busy && share;
         ShareScript.Enabled = !WorksheetMode && ShareWorkbook.Enabled;
-        if ((sharingRestricted && worksheetEdit != null) || (disabled && worksheetAnalysis != null)) ClearWorksheetProposals();
+        if (disabled) ClearWorksheetAnalysis();
         bool showAnalysis = WorksheetMode && !busy && worksheetAnalysis != null && !disabled;
-        bool showEdit = WorksheetMode && !busy && worksheetEdit != null && !sharingRestricted;
         reviewWorksheetAnalysis.Visible = reviewWorksheetAnalysis.Enabled = showAnalysis;
-        reviewWorksheetEdit.Visible = reviewWorksheetEdit.Enabled = showEdit;
-        worksheetReplyActions.Visible = showAnalysis || showEdit;
-        replyCodeActions.Visible = !WorksheetMode || (!busy && LastCode().Length > 0);
+        worksheetReplyActions.Visible = showAnalysis;
+        replyCodeActions.Visible = !WorksheetMode;
         SharingOptions.Enabled = !busy && !sharingRestricted;
-        if (sharingRestricted) sharing.Visible = false;
+        SharingOptions.Visible = !WorksheetMode || sharingRestricted;
+        warning.Visible = Acknowledge.Visible = !WorksheetMode;
+        if (WorksheetMode || sharingRestricted) sharing.Visible = !sharingRestricted;
         if (disabled) SharingOptions.Text = ChatGPTTutor.PolicyMessage;
         else if (sharingRestricted) SharingOptions.Text = ChatGPTTutor.DataSharingPolicyMessage;
-        else if (WorksheetMode)
-            SharingOptions.Text = sharing.Visible ? "Workbook sharing ▾" : !share ? "Question only · Sharing ▸"
-                : Acknowledge.Checked ? "Sharing “" + WorksheetName + "” · Review ▸" : "Confirm workbook sharing ▸";
-        else
+        else if (!WorksheetMode)
             SharingOptions.Text = sharing.Visible ? "Sharing for this session ▾" : share
                 ? Acknowledge.Checked ? "Confirmed: " + (ShareScript.Checked ? (ReportMode ? "report " : "script/output ") : "") + (ShareWorkbook.Checked ? "+ all open workbooks " : "") + "· Review sharing ▸" : "Review sharing ▸"
                 : "Question only · Sharing options ▸";
@@ -251,7 +283,8 @@ internal sealed class ScriptAIPane : IDisposable
     private void Render()
     {
         if (chat == null || disposed) return;
-        Transcript.Update(chat.Messages, partial, renderedChat != chat);
+        Transcript.Update(chat.Messages, partial, renderedChat != chat, collapseRCode: WorksheetMode,
+            welcome: WorksheetMode && !service.Tutor.Disabled ? WorksheetOpeningQuestion : "");
         renderedChat = chat;
     }
     /// <summary>Enter in the question box sends, as the ChatGPT prompt does; Shift+Enter adds a line, as in the calculator.  True when the key was taken as Send.</summary>
@@ -288,33 +321,38 @@ internal sealed class ScriptAIPane : IDisposable
         }
         using var request = new CancellationTokenSource(); pending = request;
         bool reportMode = ReportMode;
-        ClearWorksheetProposals();
+        ClearWorksheetAnalysis();
         QuestionContext context = null;
-        sharing.Visible = false; UpdateControls();
+        if (!worksheetMode) sharing.Visible = false;
+        UpdateControls();
         try
         {
             context = new QuestionContext(approved, true, request.Token, service.Sharing, service.Tutor, guidanceOnly);
             await context.CaptureReportsAsync(focusedResultId);
             var initial = guidanceOnly ? new JsonObject() : context.InitialContext();
             var tools = context.Tools;
-            WorksheetEditTarget editTarget = null;
-            WorksheetEditProposal stagedEdit = null;
             WorksheetAnalysisTarget analysisTarget = null;
             WorksheetAnalysisProposal stagedAnalysis = null;
             bool worksheetShared = worksheetMode && approved.Contains(origin);
             string helpDirectory = Configuration.SDConfiguration.HelpDirectory;
             if (worksheetMode)
             {
-                initial["statsDirectHelp"] = WorksheetAIHelp.Search(helpDirectory, question, includeWorksheet: true);
-                tools.Add(QuestionContext.Tool(WorksheetAIHelp.SearchTool,
-                    "Search packaged StatsDirect Help using keywords. Returns excerpts and links to relevant topics.",
-                    new() { ["query"] = new JsonObject { ["type"] = "string", ["maxLength"] = 200 } }, "query"));
-                var grid = (frmSpreadsheetGear)origin;
-                if (worksheetShared)
+                if (!current.Messages.Any(message => message.S("role") == "assistant"))
                 {
-                    editTarget = grid.CaptureWorksheetEditTarget();
-                    tools.Add(WorksheetEditToolDefinition());
+                    initial["openingQuestion"] = WorksheetOpeningQuestion;
+                    initial["methodSelection"] = WorksheetAIHelp.MethodSelectionGuide();
                 }
+                tools.Add(QuestionContext.Tool(WorksheetAIHelp.SearchTool,
+                    "Search the full packaged StatsDirect Help using keywords. Returns excerpts, links and topic IDs.",
+                    new() { ["query"] = new JsonObject { ["type"] = "string", ["maxLength"] = 200 } }, "query"));
+                tools.Add(QuestionContext.Tool(WorksheetAIHelp.ReadTopicTool,
+                    "Read a full packaged StatsDirect Help topic by its topic ID from search. If nextOffset is present, use it to continue reading.",
+                    new()
+                    {
+                        ["topic"] = new JsonObject { ["type"] = "string", ["maxLength"] = 200 },
+                        ["offset"] = new JsonObject { ["type"] = "integer", ["minimum"] = 0 }
+                    }, "topic"));
+                var grid = (frmSpreadsheetGear)origin;
                 if (grid.MdiParent is frmMain main && ReferenceEquals(main.ActiveMdiChild, grid)
                     && !main.InOperation && !main.LearningCalculationRunning)
                 {
@@ -337,25 +375,24 @@ internal sealed class ScriptAIPane : IDisposable
                         throw new ArgumentException("Provide one search query of up to 200 characters.");
                     return Task.FromResult<JsonNode>(new JsonObject { ["topics"] = WorksheetAIHelp.Search(helpDirectory, query) });
                 }
-                if (worksheetMode && name == WorksheetEditTool)
+                if (worksheetMode && name == WorksheetAIHelp.ReadTopicTool)
                 {
                     context.Check();
-                    if (editTarget == null || service.Tutor.DataSharingDisabled || !ShareWorkbook.Checked || !service.Sharing.Accepts([origin.Id()]))
-                        throw new InvalidOperationException("Worksheet edit proposals require approved sharing for this workbook.");
-                    if (stagedEdit != null || stagedAnalysis != null) throw new InvalidOperationException("A worksheet proposal is already waiting for the user to review.");
-                    stagedEdit = editTarget.Propose(args);
-                    return Task.FromResult<JsonNode>(new JsonObject
-                    {
-                        ["state"] = "pending_review",
-                        ["message"] = "The edit is ready for the user to preview and approve in StatsDirect. The worksheet is unchanged."
-                    });
+                    if (args.Any(pair => pair.Key is not ("topic" or "offset")) || args["topic"] is not JsonValue topicValue
+                        || !topicValue.TryGetValue<string>(out var topic) || topic.Length is < 1 or > 200)
+                        throw new ArgumentException("Choose a topic ID returned by Help search.");
+                    int offset = 0;
+                    if (args.TryGetPropertyValue("offset", out var offsetNode)
+                        && (offsetNode is not JsonValue value || !value.TryGetValue(out offset) || offset < 0))
+                        throw new ArgumentException("Use a non-negative Help text offset.");
+                    return Task.FromResult<JsonNode>(WorksheetAIHelp.ReadTopic(helpDirectory, topic, offset));
                 }
                 if (worksheetMode && name == ChatGPTTutor.WorksheetAnalysisTool)
                 {
                     context.Check();
                     if (analysisTarget == null || service.Tutor.Disabled)
                         throw new InvalidOperationException("Choose an active worksheet before asking for a local analysis proposal.");
-                    if (stagedEdit != null || stagedAnalysis != null) throw new InvalidOperationException("A worksheet proposal is already waiting for the user to review.");
+                    if (stagedAnalysis != null) throw new InvalidOperationException("An analysis is already waiting for the user to review.");
                     if (args.Count != 1 || args["operation"] is not JsonValue operationValue
                         || !operationValue.TryGetValue<string>(out var operation)
                         || !WorksheetAnalysisProposal.SupportedOperations.Contains(operation, StringComparer.Ordinal))
@@ -383,11 +420,10 @@ internal sealed class ScriptAIPane : IDisposable
             context.Check(); current.Messages.Add(new JsonObject { ["role"] = "assistant", ["text"] = reply.Text, ["rData"] = context.RData }); partial = "";
             if (chat == current && script == origin && IsOpen)
             {
-                worksheetEdit = stagedEdit;
                 worksheetAnalysis = stagedAnalysis;
                 Render();
                 status.Text = stagedAnalysis != null ? stagedAnalysis.MethodName.Limit(60) + " · “" + WorksheetName + "”" : worksheetMode
-                    ? stagedEdit != null ? "Edit proposed for “" + WorksheetName + "”." : ""
+                    ? ""
                     : guidanceOnly ? "Reply received. Review suggested code before running." : "Reply received. Review suggested code before running. Earlier shared content remains in this conversation.";
             }
         }
@@ -398,21 +434,6 @@ internal sealed class ScriptAIPane : IDisposable
         }
         finally { if (pending == request) { pending = null; if (!disposed) { SyncAcceptance(); UpdateControls(); } } }
     }
-    private static JsonObject WorksheetEditToolDefinition() => QuestionContext.Tool(WorksheetEditTool,
-        "Propose one rectangular edit in the current worksheet. A user reviews and applies it in StatsDirect. Use an unqualified A1 range and a row-major array of literal numbers, text, booleans or null for clearing a cell. The matrix must match the range and contain at most 4000 cells. Write into empty cells where possible.",
-        new()
-        {
-            ["range"] = new JsonObject { ["type"] = "string" },
-            ["description"] = new JsonObject { ["type"] = "string" },
-            ["values"] = new JsonObject
-            {
-                ["type"] = "array", ["items"] = new JsonObject
-                {
-                    ["type"] = "array", ["items"] = new JsonObject { ["type"] = new JsonArray("string", "number", "boolean", "null") }
-                }
-            }
-        }, "range", "values");
-
     private static JsonObject WorksheetAnalysisToolDefinition() => QuestionContext.Tool(ChatGPTTutor.WorksheetAnalysisTool,
         "Stage one documented StatsDirect analysis for review using the current local worksheet selection. Choose an operation ID from this list. Staging neither opens nor runs the analysis, and this tool returns no data or results.",
         new()
@@ -463,28 +484,6 @@ internal sealed class ScriptAIPane : IDisposable
         finally { if (!disposed) UpdateControls(); }
     }
 
-    private void ReviewWorksheetEdit()
-    {
-        var proposal = worksheetEdit;
-        if (proposal == null || script is not frmSpreadsheetGear grid || grid.MdiParent is not frmMain main) return;
-        if (!ReferenceEquals(main.ActiveMdiChild, grid))
-        {
-            status.Text = "Activate “" + WorksheetName + "” to review this edit.";
-            return;
-        }
-        bool CanApply() => !disposed && IsOpen && pending == null && worksheetEdit == proposal
-            && script == grid && ReferenceEquals(main.ActiveMdiChild, grid) && !main.InOperation && !main.LearningCalculationRunning
-            && !service.Tutor.DataSharingDisabled && ShareWorkbook.Checked && service.Sharing.Accepts([grid.Id()]);
-        if (!CanApply()) return;
-        try
-        {
-            bool applied = session.ShowOwnedModal(owner => proposal.ReviewAndApply(owner, CanApply));
-            status.Text = applied ? "Worksheet edit applied. Use Undo to reverse it." : "Worksheet unchanged.";
-        }
-        catch (Exception ex) { if (!disposed) status.Text = ex.Message; }
-        finally { worksheetEdit = null; if (!disposed) UpdateControls(); }
-    }
-
     internal void Stop() { pending?.Cancel(); }
     private int LastReply()
     { for (int i = (chat?.Messages.Count ?? 0) - 1; i >= 0; i--) if (chat.Messages[i].S("role") == "assistant") return i; return -1; }
@@ -493,24 +492,23 @@ internal sealed class ScriptAIPane : IDisposable
         try
         {
             if (chat == null) return;
-            string code = ConversationRScript.Build(chat.Messages, messageIndex, blockIndex);
-            service.OpenScript(code, "AI suggestion — review before running", false);
+            string code = ConversationRScript.Build(chat.Messages, messageIndex, blockIndex, currentReplyOnly: WorksheetMode);
+            service.OpenScript(code, "AI suggestion — review before running", false, reportOutput: WorksheetMode);
         }
         catch (InvalidOperationException ex) { status.Text = ex.Message; }
     }
     private string LastCode()
     { return string.Join("\n\n", ConversationRScript.Blocks(chat?.Messages.LastOrDefault(m => m.S("role") == "assistant").S("text") ?? "")).Limit(100000); }
-    private void ClearWorksheetProposals()
+    private void ClearWorksheetAnalysis()
     {
-        if (worksheetEdit != null || worksheetAnalysis != null) status.Text = "";
-        worksheetEdit = null;
+        if (worksheetAnalysis != null) status.Text = "";
         worksheetAnalysis = null;
     }
 
-    internal void Hide() { SaveDraft(); Stop(); ClearWorksheetProposals(); session.Hide(); script?.Activate(); }
+    internal void Hide() { SaveDraft(); Stop(); ClearWorksheetAnalysis(); session.Hide(); script?.Activate(); }
     internal void NewConversation()
     {
-        Stop(); ClearWorksheetProposals();
+        Stop(); ClearWorksheetAnalysis();
         if (script == null) return;
         conversations[script.Id()] = chat = new() { ShareScript = !WorksheetMode && ShareScript.Checked, ShareWorkbook = !WorksheetMode && ShareWorkbook.Checked };
         refreshing = true;
@@ -521,7 +519,7 @@ internal sealed class ScriptAIPane : IDisposable
     private void ScriptClosed(object sender, FormClosedEventArgs e)
     {
         if (sender != script) return;
-        Stop(); ClearWorksheetProposals(); conversations.Remove(script.Id()); script.FormClosed -= ScriptClosed; script.TextChanged -= WorksheetTitleChanged;
+        Stop(); ClearWorksheetAnalysis(); conversations.Remove(script.Id()); script.FormClosed -= ScriptClosed; script.TextChanged -= WorksheetTitleChanged;
         script = null; chat = null; session.Hide();
     }
     public void Dispose() { if (disposed) return; disposed = true; Stop(); if (script != null) { script.FormClosed -= ScriptClosed; script.TextChanged -= WorksheetTitleChanged; } session.Dispose(); view.Dispose(); }
