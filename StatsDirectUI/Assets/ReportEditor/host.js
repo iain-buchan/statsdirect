@@ -86,7 +86,17 @@ document.addEventListener('focusin',tellContext);
 window.WindowsReport={async run(request){
   try {let value;
     switch(request.method){
-      case 'append':{const {focusResult,...entry}=request.args;if(!isRecord(entry.record))delete entry.record;append(entry,focusResult);changed();value=true;break;}
+      case 'append':{
+        const {focusResult,namespaceCharts,...entry}=request.args;
+        if(!isRecord(entry.record))delete entry.record;
+        if(namespaceCharts && /<svg\b/i.test(entry.html)){
+          const fragment=document.createElement('template');
+          fragment.innerHTML=entry.html;
+          StatsDirectReportEditor.namespaceSvgIDs(fragment.content);
+          entry.html=fragment.innerHTML;
+        }
+        append(entry,focusResult);changed();value=true;break;
+      }
       case 'extend':extend(request.args.id,request.args.html,request.args.record);changed();value=true;break;
       case 'record':{const e=entryOf(request.args.id);if(!e)throw Error('No such result.');value={title:e.title,operation:e.operation,record:isRecord(e.record)?e.record:null};break;}
       case 'chartImage':value=await StatsDirectReportEditor.chartImage(request.args.format,request.args.scale);break;

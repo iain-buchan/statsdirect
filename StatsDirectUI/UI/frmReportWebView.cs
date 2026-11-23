@@ -123,7 +123,7 @@ internal sealed class frmReportWebView : StatsDirectForm, IReport, IFindTarget
             Dirty = true;
             Activate();
             FocusResultEditor();
-        }, focusResult: true);
+        }, focusResult: true, namespaceCharts: true);
 
     void IReport.AppendRenderable(IRenderable renderable, int helpContextId, Operation operation, object run)
     {
