@@ -12,10 +12,11 @@ internal static partial class Program
         await ((Task)Get(view, "Ready")).WaitAsync(TimeSpan.FromSeconds(45));
         var browser = (WebView2)Get(view, "Browser");
         async Task<string> JS(string source) => await browser.CoreWebView2.ExecuteScriptAsync(source);
-        string[] ids = JsonSerializer.Deserialize<string[]>(await JS("[...document.querySelectorAll('.toolbar>button')].map(b=>b.id)"))!;
+        string[] ids = JsonSerializer.Deserialize<string[]>(await JS("[...document.querySelectorAll('.toolbar>button:not([hidden])')].map(b=>b.id)"))!;
         Check(!gridToolbar.Visible && !((ToolStrip)Field(script, "ToolStrip1")).Visible && ((Control)view).Visible
             && ids.SequenceEqual(new[] { "save", "run", "stop", "restart", "ai", "open-in-r", "help", "windows-more" })
-            && await JS("document.querySelectorAll('[role=toolbar]').length") == "1",
+            && await JS("document.querySelectorAll('[role=toolbar]').length") == "1"
+            && await JS("document.getElementById('add-output-to-report').hidden") == "true",
             "R has exactly one visible shared toolbar in Save, Run, Stop, Restart, AI, R+, Help order with More last");
         Check(!((Control)Field(script, "pnlActions")).Visible && Get(view, "Session") == null,
             "the R toolbar replaces the native command row and an unrun script has no R worker");
