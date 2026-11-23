@@ -133,7 +133,7 @@ internal sealed class WorksheetAnalysisProposal
             {
                 Name = "worksheetAnalysisSelection",
                 AccessibleName = "Selected cells",
-                Text = review.Source.Selection,
+                Text = review.Source.Selection.Replace("$", "", StringComparison.Ordinal),
                 Multiline = longSelection,
                 WordWrap = true,
                 ScrollBars = longSelection ? ScrollBars.Vertical : ScrollBars.None,

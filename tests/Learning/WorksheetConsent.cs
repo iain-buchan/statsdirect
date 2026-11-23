@@ -88,6 +88,8 @@ internal static partial class Program
                 await CheckConfirmedWorkbookRead(pane, workbook, workbookValue, trace, source.Name + "_REUSED_WORKBOOK");
             }
 
+            await TestWorksheetConsentAcrossFocus(main, service, workbook, script, workbookValue, trace);
+
             service.RevokeAISharing();
             service.Show(false);
             await Wait(() => service.View is { IsDisposed: false }, "Learning opens for the document consent check");
@@ -107,6 +109,9 @@ internal static partial class Program
             await LearningAsk(service, learning, "LEARNING_CONFIRMED_SCRIPT");
             Check(learningConsents == 1 && service.Sharing.Accepts([script.Id()]) && !service.Sharing.Accepts([workbook.Id()]),
                 "Learning's script-only confirmation does not approve the active workbook");
+            await service.HandleAsync(learning, new JsonObject { ["action"] = "workspace", ["choice"] = workbook.Id() });
+            Check(learning.SourceId == workbook.Id() && service.Sharing.Accepts([script.Id()]) && !service.Sharing.Accepts([workbook.Id()]),
+                "changing the Learning source preserves explicit script approval and gives no approval to the newly selected workbook");
             pane = await OpenWorksheetAssistant(main, service, workbook);
             pane.ShareWorkbook.Checked = true;
             await CheckConsentBlocksTurn(pane, trace, "LEARNING_THEN_UNCONFIRMED_WORKBOOK");
@@ -122,6 +127,72 @@ internal static partial class Program
             await Wait(() => script.IsDisposed, "the consent fixture waits for the interactive R window to close");
             CloseTestDocument(workbook);
         }
+    }
+
+    private static async Task TestWorksheetConsentAcrossFocus(frmMain main, LearningService service, frmSpreadsheetGear workbook,
+        frmScript script, string workbookValue, string trace)
+    {
+        const string otherValue = "CONSENT_UNAPPROVED_OTHER_WORKBOOK";
+        var other = (frmSpreadsheetGear)main.CreateGrid("Another consent test workbook");
+        var otherView = (SpreadsheetGear.Windows.Forms.WorkbookView)Field(other, "workbookView");
+        var view = (SpreadsheetGear.Windows.Forms.WorkbookView)Field(workbook, "workbookView");
+        try
+        {
+            WithWorksheet(otherView, sheet => { sheet.Cells["B1"].Value = otherValue; return true; });
+            WithWorksheet(view, sheet =>
+            {
+                sheet.Cells["B1"].Value = "Original heading";
+                sheet.Cells["B2"].Formula = "=1+1";
+                sheet.Cells["B3"].Value = "Existing cell";
+                return true;
+            });
+
+            service.RevokeAISharing();
+            script.Activate();
+            await Wait(() => ReferenceEquals(main.ActiveMdiChild, script), "the script is active before its explicit confirmation");
+            service.ShowScriptAI(script);
+            var pane = (ScriptAIPane)Field(service, "ai");
+            pane.ShareWorkbook.Checked = false;
+            pane.ShareScript.Checked = true;
+            pane.Acknowledge.Checked = true;
+            Check(service.Sharing.Accepts([script.Id()]), "the script has its own approval before worksheet activation");
+
+            pane = await OpenWorksheetAssistant(main, service, workbook);
+            pane.ShareWorkbook.Checked = true;
+            pane.Acknowledge.Checked = true;
+            int revision = service.Sharing.Revision;
+            int firstTurn = WorksheetAnalysisDataTraffic(trace).Length;
+            await CheckConfirmedWorkbookRead(pane, workbook, workbookValue, trace, "FOCUS_STAGED_EDIT");
+            var review = FindWorksheetReview(pane);
+            Check(review.Visible && review.Enabled, "the first workbook has a staged edit before another workbook is activated");
+
+            other.Activate();
+            await Wait(() => ReferenceEquals(main.ActiveMdiChild, other), "the user views a second workbook with the first conversation open");
+            Check(ReferenceEquals(Field(pane, "script"), workbook) && !service.Sharing.Accepts([other.Id()]) &&
+                service.Sharing.Accepts([workbook.Id(), script.Id()]) && service.Sharing.Revision == revision,
+                "viewing a different workbook preserves existing approvals without approving that workbook");
+            Check(review.Visible && review.Enabled && !OpenWorksheetReview(pane, review, "cancelWorksheetEdit") &&
+                ((Label)Field(pane, "status")).Text.Contains("Activate", StringComparison.Ordinal),
+                "the retained edit cannot be reviewed from the wrong workbook");
+
+            workbook.Activate();
+            await Wait(() => ReferenceEquals(main.ActiveMdiChild, workbook), "the user returns to the first workbook");
+            Check(pane.Acknowledge.Checked && pane.Send.Enabled && review.Visible && review.Enabled,
+                "returning to the first workbook keeps its confirmation and staged edit available");
+            Check(OpenWorksheetReview(pane, review, "applyWorksheetEdit") &&
+                WithWorksheet(view, sheet => (string)sheet.Cells["B1"].Value == "Age band") &&
+                WithWorksheet(otherView, sheet => (string)sheet.Cells["B1"].Value == otherValue),
+                "the retained edit still applies only to its original workbook");
+            workbook.EditUndo();
+
+            pane = await OpenWorksheetAssistant(main, service, other);
+            pane.ShareWorkbook.Checked = true;
+            await CheckConsentBlocksTurn(pane, trace, "OTHER_WORKBOOK_NEEDS_ITS_OWN_CONFIRMATION");
+            Check(WorksheetAnalysisDataTraffic(trace).Skip(firstTurn).All(line => !line.Contains(otherValue, StringComparison.Ordinal)),
+                "viewing the other workbook and asking before confirmation send none of its cells");
+            pane.Composer.Clear();
+        }
+        finally { CloseTestDocument(other); }
     }
 
     private static async Task CheckConsentBlocksTurn(ScriptAIPane pane, string trace, string prompt)

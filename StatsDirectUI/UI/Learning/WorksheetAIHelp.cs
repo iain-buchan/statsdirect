@@ -61,7 +61,7 @@ internal static class WorksheetAIHelp
                 AddTopic(topics, catalog, documents[doc]);
             }
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException or InvalidOperationException or ArgumentException or KeyNotFoundException or System.Xml.XmlException)
+        catch (Exception ex) when (ex is IOException or InvalidDataException or UnauthorizedAccessException or JsonException or InvalidOperationException or ArgumentException or KeyNotFoundException or System.Xml.XmlException)
         {
             // A damaged or absent help bundle must not prevent asking a question.
         }

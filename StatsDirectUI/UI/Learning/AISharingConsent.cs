@@ -5,14 +5,9 @@ namespace StatsDirect.UI.Learning;
 /// <summary>App-session acceptance, separate from each question's selected documents.</summary>
 internal sealed class AISharingConsent
 {
-    internal string DataDocumentId { get; private set; }
     internal int Revision { get; private set; }
     private readonly HashSet<string> approvedDocumentIds = new();
-    internal bool SelectDataDocument(string id)
-    {
-        if (DataDocumentId == id) return false;
-        DataDocumentId = id; Revoke(); return true;
-    }
+
     internal bool Accepts(IEnumerable<string> documentIds)
     {
         bool hasDocuments = false;

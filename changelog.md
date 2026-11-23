@@ -2,6 +2,16 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
+##[v5.3.19]
+
+### Added
+- The worksheet ribbon has Learn and AI Assist. Learn opens the course. AI Assist can answer questions using StatsDirect Help, propose cell edits for you to preview and apply, and suggest analyses that StatsDirect runs locally and adds to a report. One Undo reverses an approved worksheet edit.
+
+### Changed
+- Script AI and Report AI now ask you to confirm sharing for each script and report. The Learning tutor asks again when you choose to share a document it has not already listed for confirmation.
+- Worksheet AI remembers confirmation for each workbook as you move between open workbooks. When data sharing is restricted, you can still ask for guidance and review a suggested analysis to run locally.
+
+
 ##[v5.3.18] 2026-11-22
 
 ### Fixed

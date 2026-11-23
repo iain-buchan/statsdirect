@@ -26,7 +26,7 @@ internal sealed class ScriptAIPane : IDisposable
     internal readonly TextBox Composer = new() { Multiline = true, Dock = DockStyle.Fill, ScrollBars = ScrollBars.Vertical, WordWrap = true, MaxLength = 4000, AccessibleName = "Question for the script assistant" };
     internal readonly CheckBox ShareScript = new() { AutoSize = true, Text = "Share this script and its R output" };
     internal readonly CheckBox ShareWorkbook = new() { AutoSize = true, Text = "Share open workbook data" };
-    internal readonly CheckBox Acknowledge = new() { AutoSize = true, Text = "I have checked the shared content contains no person identifiers. Remember this for this session, until the open workbooks change." };
+    internal readonly CheckBox Acknowledge = new() { AutoSize = true };
     internal readonly Button Send = new() { AutoSize = true, Text = "Send" };
     private readonly Button stop = new() { AutoSize = true, Text = "Stop", Enabled = false }, connection = new() { AutoSize = true, Text = "Use my ChatGPT" };
     internal readonly LinkLabel SharingOptions = new() { AutoSize = true, Text = "Sharing for this session ▾", Dock = DockStyle.Fill };
@@ -162,8 +162,8 @@ internal sealed class ScriptAIPane : IDisposable
             ? "Sharing lets AI read from this workbook. Remove names, dates of birth, patient IDs and identifying free text first."
             : "Workbook sharing includes every open workbook. Do not share person-identifiable data: remove names, dates of birth, patient IDs and identifying free text.";
         Acknowledge.Text = WorksheetMode
-            ? "I have checked this workbook contains no person identifiers. Remember this for this session."
-            : "I have checked the shared content contains no person identifiers. Remember this for this session, until the open workbooks change.";
+            ? "I have checked this workbook contains no person identifiers. Remember this confirmation for this workbook during this session."
+            : "I have checked the documents selected above contain no person identifiers. Remember this confirmation for those documents during this session.";
         questionCaption.Text = WorksheetMode ? "Ask about organising or analysing your data" : "Your question (Enter sends; Shift+Enter adds a line)";
         Composer.AccessibleName = WorksheetMode ? questionCaption.Text : ReportMode ? "Question for the report assistant" : "Question for the script assistant";
         RefreshWorkbooks(); SyncAcceptance(); Render(); session.Show(true); UpdateConnection();

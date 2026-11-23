@@ -3,6 +3,9 @@ using SpreadsheetGear.Advanced.Cells;
 using StatsDirect.UI.Learning;
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.IO.Compression;
+using System.Xml.Linq;
 
 namespace StatsDirect.UI;
 
@@ -24,20 +27,31 @@ internal partial class frmSpreadsheetGear
 
         var changes = new List<WorksheetCellEdit>();
         var cells = (IValues)sheet;
-        for (int row = request.Top; row <= request.Bottom; row++)
-            for (int column = request.Left; column <= request.Right; column++)
-            {
-                var cell = sheet.Cells[row, column];
-                CheckEditableCell(cell);
-                object after = request.Values[row - request.Top, column - request.Left];
-                if (after is double number && !cells.IsValidNumber(number))
-                    throw new ArgumentException("A proposed number is outside the range supported by the worksheet.");
+        IWorkbook preview = null;
+        try
+        {
+            for (int row = request.Top; row <= request.Bottom; row++)
+                for (int column = request.Left; column <= request.Right; column++)
+                {
+                    var cell = sheet.Cells[row, column];
+                    CheckEditableCell(cell);
+                    object after = request.Values[row - request.Top, column - request.Left];
+                    if (after is double number && !cells.IsValidNumber(number))
+                        throw new ArgumentException("A proposed number is outside the range supported by the worksheet.");
 
-                string previousFormula = cell.HasFormula ? (string)cell.Formula : null;
-                object before = previousFormula == null ? cell.Value : null;
-                if (previousFormula == null && Equals(before, after)) continue;
-                changes.Add(new WorksheetCellEdit(row, column, cell.Address, before, previousFormula, after));
-            }
+                    string previousFormula = cell.HasFormula ? (string)cell.Formula : null;
+                    object before = cell.Value;
+                    if (previousFormula == null && Equals(before, after)) continue;
+
+                    string format = cell.NumberFormat;
+                    string formattedBefore = cell.Text;
+                    string formattedAfter = FormatWorksheetReplacement(after, format, sheet.Workbook, ref preview);
+                    string address = cell.Address.Replace("$", "", StringComparison.Ordinal);
+                    changes.Add(new WorksheetCellEdit(row, column, address, before, previousFormula, after,
+                        format, formattedBefore, formattedAfter));
+                }
+        }
+        finally { preview?.Close(); }
         if (changes.Count == 0) throw new InvalidOperationException("This proposal leaves all the cells as they are.");
         return new WorksheetEditProposal(target, request, Text, changes);
     });
@@ -90,7 +104,8 @@ internal partial class frmSpreadsheetGear
             var cell = sheet.Cells[edit.Row, edit.Column];
             CheckEditableCell(cell);
             string formula = cell.HasFormula ? (string)cell.Formula : null;
-            if (formula != edit.PreviousFormula || (formula == null && !Equals(cell.Value, edit.Before)))
+            if (formula != edit.PreviousFormula || !Equals(cell.Value, edit.Before) ||
+                cell.NumberFormat != edit.NumberFormat || cell.Text != edit.FormattedBefore)
                 throw new InvalidOperationException("The cells changed since the proposal was prepared. Ask for a new edit.");
         }
     }
@@ -112,6 +127,54 @@ internal partial class frmSpreadsheetGear
         // The typed cell setters deliberately bypass protection, validation, array and merge rules.
         if (cell.MergeCells || cell.HasArray || cell.HasValidation)
             throw new InvalidOperationException("Choose a range without merged cells, array formulas or worksheet validation rules.");
+    }
+
+    private static string FormatWorksheetReplacement(object value, string numberFormat, IWorkbook source, ref IWorkbook preview)
+    {
+        if (value == null) return "";
+        // Format the literal with the same spreadsheet engine and date system, without
+        // temporarily writing values or formulas into the user's worksheet.
+        preview ??= CreateWorksheetEditPreviewWorkbook(Factory.GetWorkbookSet(source.WorkbookSet.Culture), source.Date1904);
+        var sheet = preview.Worksheets[0];
+        var cell = sheet.Cells[0, 0];
+        if (cell.NumberFormat != numberFormat) cell.NumberFormat = numberFormat;
+        SpreadsheetFiles.SetLiteral(sheet, 0, 0, value);
+        return cell.Text;
+    }
+
+    internal static IWorkbook CreateWorksheetEditPreviewWorkbook(IWorkbookSet workbookSet, bool date1904)
+    {
+        var blank = workbookSet.Workbooks.Add();
+        if (!date1904) return blank;
+
+        // SpreadsheetGear exposes the date system as read-only. Patch the workbook
+        // property on an empty in-memory .xlsx, then let the normal reader apply it.
+        using var buffer = new MemoryStream();
+        try { blank.SaveToStream(buffer, FileFormat.OpenXMLWorkbook); }
+        finally { blank.Close(); }
+        buffer.Position = 0;
+        using (var archive = new ZipArchive(buffer, ZipArchiveMode.Update, leaveOpen: true))
+        {
+            var part = archive.GetEntry("xl/workbook.xml") ?? throw new InvalidDataException("The preview workbook has no workbook properties.");
+            XDocument xml;
+            using (var stream = part.Open()) xml = XDocument.Load(stream);
+            var root = xml.Root;
+            XNamespace ns = root.Name.Namespace;
+            var properties = root.Element(ns + "workbookPr");
+            if (properties == null)
+            {
+                properties = new XElement(ns + "workbookPr");
+                var previous = root.Element(ns + "fileSharing") ?? root.Element(ns + "fileVersion");
+                if (previous == null) root.AddFirst(properties);
+                else previous.AddAfterSelf(properties);
+            }
+            properties.SetAttributeValue("date1904", "1");
+            using var output = part.Open();
+            output.SetLength(0);
+            xml.Save(output);
+        }
+        buffer.Position = 0;
+        return workbookSet.Workbooks.OpenFromStream(buffer);
     }
 
     private static void WriteWorksheetEditValue(IWorksheet sheet, IValues values, int row, int column, object value)

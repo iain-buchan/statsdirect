@@ -17,7 +17,7 @@ internal static partial class Program
         var pane = (ScriptAIPane)Field(service, "ai");
         await pane.Transcript.SettledAsync().WaitAsync(TimeSpan.FromSeconds(40));
         if (main.ActiveMdiChild != grid) grid.Activate();
-        await Wait(() => main.ActiveMdiChild == grid && (service.ShareAIWorkbook || service.Sharing.DataDocumentId == grid.Id()),
+        await Wait(() => main.ActiveMdiChild == grid,
             "the worksheet and its sharing context are active before the test sends a question");
         return pane;
     }
@@ -44,7 +44,8 @@ internal static partial class Program
         typeof(frmMain).GetField("learning", Members)!.SetValue(main, service);
         try
         {
-            await TestWorksheetAssistant(main, service, level => policy = level);
+            await TestWorksheetAssistant(main, service, level => policy = level, trace);
+            TestWorksheetEditDisplay(main);
             await TestWorksheetConsentAcrossPanes(main, service, trace);
         }
         finally { typeof(frmMain).GetField("learning", Members)!.SetValue(main, null); }
@@ -134,7 +135,7 @@ internal static partial class Program
         finally { view.ReleaseLock(); }
     }
 
-    private static async Task TestWorksheetAssistant(frmMain main, LearningService service, Action<AISecurityLevel> setSecurity)
+    private static async Task TestWorksheetAssistant(frmMain main, LearningService service, Action<AISecurityLevel> setSecurity, string trace)
     {
         var previous = main.ActiveMdiChild;
         var other = (frmSpreadsheetGear)main.CreateGrid("Other private test workbook");
@@ -151,6 +152,12 @@ internal static partial class Program
         ScriptAIPane pane = null;
         try
         {
+            string help = Path.Combine(root, "oversized-worksheet-help");
+            Directory.CreateDirectory(help);
+            using (var index = File.Create(Path.Combine(help, "search-index.js"))) index.SetLength(2_000_001);
+            Check(WorksheetAIHelp.Search(help, "worksheet", includeWorksheet: true).Count == 0,
+                "an oversized packaged Help index leaves worksheet questions available");
+
             var toolbar = WorksheetRibbon(main);
             await Wait(() => main.ActiveMdiChild == grid && toolbar.Items["learnToolStripButton"] is { Available: true, Enabled: true }, "the worksheet ribbon exposes Learn");
             toolbar.Items["learnToolStripButton"]!.PerformClick();
@@ -170,7 +177,7 @@ internal static partial class Program
                 "question-only mode retrieves packaged worksheet help and exposes no workbook read or edit");
             service.RevokeAISharing();
             other.Activate();
-            await Wait(() => main.ActiveMdiChild == other && service.Sharing.DataDocumentId == other.Id(),
+            await Wait(() => main.ActiveMdiChild == other,
                 "a different active workbook leaves the open assistant bound to its original workbook");
             pane.Acknowledge.Checked = true;
             Check(!pane.Acknowledge.Enabled && !pane.Acknowledge.Checked && !service.Sharing.Accepts([grid.Id()]) && !service.Sharing.Accepts([other.Id()]),
@@ -213,6 +220,19 @@ internal static partial class Program
                 "one normal worksheet Redo replays the approved literal edit");
             grid.EditUndo();
 
+            pane.ShareWorkbook.Checked = false;
+            const string questionOnly = "WORKSHEET_AI_HISTORY_OFF";
+            var noSharing = await WorksheetReply(pane, questionOnly);
+            var turn = WorksheetAnalysisDataTraffic(trace).Select(line => JsonNode.Parse(line))
+                .Last(request => request.S("method") == "turn/start");
+            string payload = turn["params"].A("input")[0].S("text");
+            var conversation = JsonNode.Parse(payload[(payload.IndexOf('\n') + 1)..]).A("conversation");
+            Check(conversation.Count == 1 && conversation[0].S("role") == "user" && conversation[0].S("text") == questionOnly
+                && noSharing.A("ids").Count == 0 && !noSharing.B("read") && !noSharing.B("proposed"),
+                "turning off sharing sends only the new question and excludes earlier replies and worksheet tools");
+            pane.ShareWorkbook.Checked = true;
+            Check(pane.Acknowledge.Checked && pane.Send.Enabled, "the named workbook is still confirmed after sharing is switched back on");
+
             var target = grid.CaptureWorksheetEditTarget();
             await Reject(() =>
             {
@@ -230,6 +250,19 @@ internal static partial class Program
             if (review.Visible && review.Enabled)
                 Check(!OpenWorksheetReview(pane, review, "cancelWorksheetEdit"), "a stale worksheet edit is refused before preview");
             Check(WithWorksheet(view, sheet => (string)sheet.Cells["B3"].Value == "User changed this"), "stale proposals preserve newer cell contents");
+
+            WithWorksheet(view, sheet => { sheet.Cells["B1:B3"].ClearContents(); return true; });
+            var staged = await WorksheetReply(pane, "WORKSHEET_AI_INSERTED_ROW");
+            Check(staged.B("proposed") && review.Visible && review.Enabled, "an edit is staged against blank cells before inserting a row");
+            int version = grid.LearningVersion;
+            WithWorksheet(view, sheet => { sheet.Cells["A1"].EntireRow.Insert(); return true; });
+            await Wait(() => grid.LearningVersion != version, "inserting a row updates the worksheet version");
+            Check(WithWorksheet(view, sheet => Equals(sheet.Cells["A2"].Value, "Age") && sheet.Cells["B1"].Value == null
+                && sheet.Cells["B2"].Value == null && sheet.Cells["B3"].Value == null),
+                "the row moved the data while the proposed target still has the same original blank cells");
+            Check(!OpenWorksheetReview(pane, review, "applyWorksheetEdit"), "inserting a row above a staged edit blocks approval");
+            Check(WithWorksheet(view, sheet => sheet.Cells["B1"].Value == null && sheet.Cells["B2"].Value == null
+                && sheet.Cells["B3"].Value == null), "the stale proposal does not write to its old addresses");
 
             setSecurity(AISecurityLevel.DataSharingRestricted);
             pane.UpdateConnection();

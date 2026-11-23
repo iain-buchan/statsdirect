@@ -29,7 +29,6 @@ internal sealed partial class LearningService : IDisposable
     internal LearningService(frmMain main, string storage = null, ChatGPTTutor tutor = null)
     {
         this.main = main;
-        if (main.ActiveMdiChild is frmSpreadsheetGear grid) Sharing.SelectDataDocument(grid.Id());
         Storage = storage ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "StatsDirect", "Learning");
         Tutor = tutor ?? ChatGPTTutor.OnDemand(Storage);
         Tutor.Changed += UpdateConnection;
@@ -56,18 +55,6 @@ internal sealed partial class LearningService : IDisposable
     internal void ActiveScriptChanged(frmScript script) { if (ai is { IsOpen: true, WorksheetMode: false }) ai.Open(script); }
     // Keep the worksheet conversation bound when a local analysis activates its result.
     internal void ActiveReportChanged(frmReportWebView report) { if (ai is { IsOpen: true, WorksheetMode: false }) ai.Open(report); }
-    internal void ActiveAIDataDocument(string id)
-    {
-        // The AI pane shares the whole open-workbook set; changing focus within
-        // that set does not choose different data. Explicit Learning choices
-        // continue to use SelectAIDataDocument and its existing revocation.
-        if (!ShareAIWorkbook) SelectAIDataDocument(id);
-    }
-    internal void SelectAIDataDocument(string id)
-    {
-        if (!Sharing.SelectDataDocument(id)) return;
-        CancelQuestion(); ai?.SessionSharingChanged(); RefreshWorkspace();
-    }
     internal void RevokeAISharing() { Sharing.Revoke(); CancelQuestion(); ai?.SessionSharingChanged(); RefreshWorkspace(); }
     internal void RefreshWorkspace()
     {
@@ -150,7 +137,6 @@ internal sealed partial class LearningService : IDisposable
                 string choice = body.S("choice", view.SourceId);
                 if (Tutor.DataSharingDisabled) view.SourceId = "__none__";
                 else if (choice is "" or "__none__" || Documents.Any(d => d.Id() == choice)) view.SourceId = choice;
-                if (Documents.OfType<frmSpreadsheetGear>().Any(d => d.Id() == view.SourceId)) SelectAIDataDocument(view.SourceId);
                 RefreshWorkspace(); break;
             case "ask": await AskAsync(view, body); break;
             case "cancel": if (body.S("id") == requestId) CancelQuestion(); break;

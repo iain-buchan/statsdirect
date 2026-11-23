@@ -34,6 +34,7 @@ internal static partial class Program
         using var tutor = WorksheetMockTutor(Path.Combine(root, "worksheet-analysis-account"), () => AISecurityLevel.DataSharingRestricted, trace);
         using var service = new LearningService(main, Path.Combine(root, "Worksheet Analysis Learning"), tutor);
         typeof(frmMain).GetField("learning", Members)!.SetValue(main, service);
+        var otherWorkbook = (frmSpreadsheetGear)main.CreateGrid("Other test workbook");
         var grid = PairedWorksheet(main, PrivateWorksheet, privateFixture: true);
         var prefs = SdApplication.SoleInstance.Preferences;
         bool originalDefault = prefs.CanDefaultConfidenceInterval;
@@ -86,6 +87,13 @@ internal static partial class Program
                 "the plain reply puts Review analysis next to its status without scrolling or unrelated R buttons");
             CheckWorksheetAnalysisQuestion(trace, initialQuestion);
             string[] beforeApproval = WorksheetAnalysisDataTraffic(trace);
+            var stagedMethod = Field(pane, "worksheetAnalysis");
+            otherWorkbook.Activate();
+            await Wait(() => ReferenceEquals(main.ActiveMdiChild, otherWorkbook), "the user switches to another workbook with an analysis staged");
+            grid.Activate();
+            await Wait(() => ReferenceEquals(main.ActiveMdiChild, grid), "the user returns to the original worksheet");
+            Check(stagedMethod != null && ReferenceEquals(Field(pane, "worksheetAnalysis"), stagedMethod) && review.Visible && review.Enabled,
+                "the reviewed worksheet method survives visiting another workbook");
             ReviewWorksheetAnalysis(main, review, approve: false, InitialSelection, "A new report");
             Check(!main.InOperation && !main.MdiChildren.OfType<frmReportWebView>().Any() && review.Visible && review.Enabled,
                 "cancelling review leaves the workbook and reports alone and retains the proposed method");
@@ -162,6 +170,7 @@ internal static partial class Program
             pane?.Hide();
             foreach (var report in main.MdiChildren.OfType<frmReportWebView>().ToArray()) CloseTestDocument(report);
             CloseTestDocument(grid);
+            CloseTestDocument(otherWorkbook);
             typeof(frmMain).GetField("learning", Members)!.SetValue(main, null);
         }
     }

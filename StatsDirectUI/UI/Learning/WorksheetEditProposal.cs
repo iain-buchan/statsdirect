@@ -98,21 +98,23 @@ internal sealed record WorksheetEditRequest(string Address, int Top, int Left, i
     }
 }
 
-internal sealed record WorksheetCellEdit(int Row, int Column, string Address, object Before, string PreviousFormula, object After)
+internal sealed record WorksheetCellEdit(int Row, int Column, string Address, object Before, string PreviousFormula,
+    object After, string NumberFormat, string FormattedBefore, string FormattedAfter)
 {
     internal bool ReplacesExisting => PreviousFormula != null || Before != null;
-    internal string BeforeText => PreviousFormula == null ? Display(Before) : "Formula: " + PreviousFormula;
+    internal string BeforeText => PreviousFormula == null
+        ? Display(Before, FormattedBefore)
+        : Display(Before, FormattedBefore) + " (formula " + PreviousFormula + ")";
+    internal string AfterText => Display(After, FormattedAfter);
 
-    internal string AfterText => Display(After);
-
-    private static string Display(object value) => value switch
+    private static string Display(object value, string formatted)
     {
-        null => "(blank)",
-        bool flag => flag ? "TRUE" : "FALSE",
-        string text => "\"" + text.Replace("\\", "\\\\").Replace("\"", "\\\"")
-            .Replace("\r", "\\r").Replace("\n", "\\n").Replace("\t", "\\t") + "\"",
-        _ => Convert.ToString(value, CultureInfo.CurrentCulture)
-    };
+        if (value == null) return "(blank)";
+        if (string.IsNullOrEmpty(formatted) && value is not "") return "(hidden by cell format)";
+        if (value is not string) return formatted;
+        return "\"" + (formatted ?? "").Replace("\\", "\\\\").Replace("\"", "\\\"")
+            .Replace("\r", "\\r").Replace("\n", "\\n").Replace("\t", "\\t") + "\"";
+    }
 }
 
 internal sealed class WorksheetEditProposal
@@ -207,7 +209,7 @@ internal sealed class WorksheetEditProposal
             grid.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "After", FillWeight = 70, SortMode = DataGridViewColumnSortMode.NotSortable });
             foreach (var cell in proposal.PreviewCells)
             {
-                int row = grid.Rows.Add(cell.Address.Replace("$", "", StringComparison.Ordinal), cell.BeforeText, cell.AfterText);
+                int row = grid.Rows.Add(cell.Address, cell.BeforeText, cell.AfterText);
                 grid.Rows[row].Cells[1].ToolTipText = cell.BeforeText;
                 grid.Rows[row].Cells[2].ToolTipText = cell.AfterText;
             }

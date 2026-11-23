@@ -34,18 +34,15 @@ internal static partial class Program
 
         var consent = new AISharingConsent();
         Check(!consent.Accepts(["A"]) && !consent.Accepts([]), "new application session has no document approval");
-        consent.SelectDataDocument("A");
         int revision = consent.Revision;
         consent.Approve(["report"]);
         Check(consent.Accepts(["report"]) && !consent.Accepts(["A"]) && !consent.Accepts([]),
-            "report confirmation approves exactly its named document without approving the active workbook");
+            "report confirmation approves exactly its named document without approving a workbook");
         consent.Approve(["A", "B"]);
         Check(consent.Accepts(["A", "B", "report"]) && consent.Revision == revision, "separate confirmations preserve explicitly approved document IDs");
-        Check(!consent.SelectDataDocument("A") && consent.Accepts(["A", "report"]), "same data document keeps session acceptance");
-        Check(consent.SelectDataDocument("B") && !consent.Accepts(["B"]) && !consent.Accepts(["report"]) && consent.Revision > revision,
-            "selecting a different previously approved workbook still revokes acceptance");
-        consent.Approve(["B"]); consent.SelectDataDocument("A");
-        Check(!consent.Accepts(["A"]) && !consent.Accepts(["B"]), "returning to the earlier workbook requires fresh acceptance");
+        consent.Revoke();
+        Check(!consent.Accepts(["A"]) && !consent.Accepts(["B"]) && !consent.Accepts(["report"]) && consent.Revision > revision,
+            "explicit revocation removes all approved documents and invalidates previously captured contexts");
 
         var report = (frmReportWebView)main.CreateReport(); await report.LearningReport.Ready;
         string record = "{\"version\":1,\"operation\":\"Test\",\"values\":{\"hidden\":\"PRIVATE_RAW_DATA\"},\"inputs\":[],\"source\":\"C:/PRIVATE_FILE.xlsx\"}";
