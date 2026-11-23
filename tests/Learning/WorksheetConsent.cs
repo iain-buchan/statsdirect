@@ -138,7 +138,12 @@ internal static partial class Program
         var view = (SpreadsheetGear.Windows.Forms.WorkbookView)Field(workbook, "workbookView");
         try
         {
-            WithWorksheet(otherView, sheet => { sheet.Cells["B1"].Value = otherValue; return true; });
+            WithWorksheet(otherView, sheet =>
+            {
+                sheet.Cells["A2"].Value = otherValue;
+                sheet.Cells["B1"].Value = otherValue;
+                return true;
+            });
             WithWorksheet(view, sheet =>
             {
                 sheet.Cells["B1"].Value = "Original heading";
@@ -185,11 +190,15 @@ internal static partial class Program
                 "the retained edit still applies only to its original workbook");
             workbook.EditUndo();
 
+            other.Activate();
+            await Wait(() => ReferenceEquals(main.ActiveMdiChild, other), "the other workbook is in front for a question from the confirmed workbook's pane");
+            await CheckConfirmedWorkbookRead(pane, workbook, workbookValue, trace, "FOCUS_OTHER_WORKBOOK_ACTIVE");
+
             pane = await OpenWorksheetAssistant(main, service, other);
             pane.ShareWorkbook.Checked = true;
             await CheckConsentBlocksTurn(pane, trace, "OTHER_WORKBOOK_NEEDS_ITS_OWN_CONFIRMATION");
             Check(WorksheetAnalysisDataTraffic(trace).Skip(firstTurn).All(line => !line.Contains(otherValue, StringComparison.Ordinal)),
-                "viewing the other workbook and asking before confirmation send none of its cells");
+                "asking from the first workbook's pane or trying the unconfirmed pane sends none of the other workbook's cells");
             pane.Composer.Clear();
         }
         finally { CloseTestDocument(other); }
