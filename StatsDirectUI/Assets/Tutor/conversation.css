@@ -32,3 +32,18 @@ body { font: 10pt Arial, "Segoe UI", sans-serif; line-height: 1.45; }
 .body th, .body td { border: 1px solid #cfd8dc; padding: 3px 8px; text-align: left; vertical-align: top; }
 .body th { background: #eef1f3; }
 .body a { color: #175e79; }
+.worksheet-analysis { border: 1px solid #dce5e9; }
+.worksheet-analysis > p, .worksheet-analysis h2 { margin: 0 0 6px; }
+.worksheet-analysis h2 { color: #173c52; font-size: 1.1em; line-height: 1.25; }
+.worksheet-analysis dl { display: grid; grid-template-columns: fit-content(40%) minmax(0, 1fr); gap: 3px 8px; margin: 0 0 8px; }
+.worksheet-analysis dt { color: #4a5a62; }
+.worksheet-analysis dd { margin: 0; overflow-wrap: anywhere; }
+.worksheet-analysis .worksheet-analysis-effect { color: #4a5a62; margin: 0 0 8px; }
+.worksheet-analysis-actions { display: flex; flex-wrap: wrap; gap: 5px; }
+.worksheet-analysis-actions button { font: inherit; padding: 4px 8px; border: 1px solid #b8c6cd; border-radius: 4px; background: #ffffff; color: #173c52; cursor: pointer; }
+.worksheet-analysis-actions button:hover { background: #eef5f8; }
+.worksheet-analysis-actions button[data-choice="continue"] { border-color: #175e79; background: #175e79; color: #ffffff; }
+.worksheet-analysis-actions button[data-choice="continue"]:hover { background: #124b61; }
+@media (pointer: coarse) {
+  .worksheet-analysis-actions button { min-height: 44px; }
+}

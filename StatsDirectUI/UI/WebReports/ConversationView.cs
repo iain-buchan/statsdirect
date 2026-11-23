@@ -14,7 +14,7 @@ namespace StatsDirect.UI.WebReports;
 /// <summary>
 /// The Script AI conversation as a page: each message's Markdown rendered, R code blocks with Copy and Open in R, the view following
 /// a streamed reply while the reader is at its end.  The page gets the whole conversation after every change and renders only what
-/// changed; nothing from the page is trusted but its two requests, and no page but the bundled one can load.
+/// changed. Only the bundled page can load, and the host validates its action requests against the displayed conversation.
 /// </summary>
 internal sealed class ConversationView : UserControl
 {
@@ -28,6 +28,8 @@ internal sealed class ConversationView : UserControl
     internal Task Ready => ready.Task;
     /// <summary>A code block's button: "copy" or "open", and the code.</summary>
     internal event Action<string, string, int, int> CodeRequested;
+    /// <summary>A native worksheet action token and the selected option.</summary>
+    internal event Action<string, string> WorksheetActionRequested;
     internal event Action<string> Notice;
     /// <summary>Opens a link the reader clicked, in the system browser unless a host says otherwise.</summary>
     [System.ComponentModel.DesignerSerializationVisibility(System.ComponentModel.DesignerSerializationVisibility.Hidden)]
@@ -139,9 +141,15 @@ internal sealed class ConversationView : UserControl
             if (e.WebMessageAsJson.Length > 1_000_000) return;
             using var json = JsonDocument.Parse(e.WebMessageAsJson);
             var m = json.RootElement;
-            if (m.ValueKind != JsonValueKind.Object || !m.TryGetProperty("action", out var action) || action.GetString() != "code") return;
-            // A queued click from a different script's page must not use the new conversation's data.
-            if (!m.TryGetProperty("context", out var ctx) || !ctx.TryGetInt32(out int requestedContext) || requestedContext != context) return;
+            if (m.ValueKind != JsonValueKind.Object || !m.TryGetProperty("action", out var action) || action.ValueKind != JsonValueKind.String) return;
+            // A queued click from a different conversation must not act on the new one.
+            if (!m.TryGetProperty("context", out var ctx) || ctx.ValueKind != JsonValueKind.Number || !ctx.TryGetInt32(out int requestedContext) || requestedContext != context) return;
+            if (action.GetString() == "worksheetAnalysis")
+            {
+                ReceiveWorksheetAction(m, requestedContext);
+                return;
+            }
+            if (action.GetString() != "code") return;
             string what = m.TryGetProperty("what", out var w) && w.ValueKind == JsonValueKind.String ? w.GetString() : "";
             string code = m.TryGetProperty("code", out var c) && c.ValueKind == JsonValueKind.String ? c.GetString() : "";
             int messageIndex = m.TryGetProperty("messageIndex", out var mi) && mi.TryGetInt32(out int index) ? index : -1;
@@ -165,14 +173,41 @@ internal sealed class ConversationView : UserControl
         catch (Exception ex) { Notice?.Invoke(ex.Message); }
     }
 
-    /// <summary>The whole conversation as it stands: the messages, each with a role and its text, and the reply being streamed.</summary>
-    internal void Update(JsonArray messages, string partial, bool reset, bool collapseRCode = false, string welcome = "")
+    private void ReceiveWorksheetAction(JsonElement message, int requestedContext)
+    {
+        if (!message.TryGetProperty("token", out var tokenValue) || tokenValue.ValueKind != JsonValueKind.String
+            || !message.TryGetProperty("choice", out var choiceValue) || choiceValue.ValueKind != JsonValueKind.String)
+            return;
+        string token = tokenValue.GetString(), choice = choiceValue.GetString();
+        if (!Guid.TryParse(token, out _)) return;
+        var source = Browser;
+        // Return from WebMessageReceived before the confirmation opens a native modal.
+        BeginInvoke(new Action(() =>
+        {
+            if (!Current(source) || failed || requestedContext != context || last?["worksheetAction"] is not JsonObject active
+                || token != MessageText(active, "token")) return;
+            bool allowed = MessageText(active, "kind") switch
+            {
+                "compare" => choice is "compare" or "browse",
+                "choose" => choice is "paired" or "independent",
+                "confirm" => choice == "continue" || (choice == "change" && MessageText(active, "choice") is ("paired" or "independent")),
+                _ => false
+            };
+            if (!allowed) return;
+            try { WorksheetActionRequested?.Invoke(token, choice); }
+            catch (Exception ex) { Notice?.Invoke(ex.Message); }
+        }));
+    }
+
+    /// <summary>The whole conversation, its streamed reply and any current worksheet action.</summary>
+    internal void Update(JsonArray messages, string partial, bool reset, bool collapseRCode = false, string welcome = "", JsonObject worksheetAction = null)
     {
         var list = new JsonArray();
         foreach (var message in messages)
             list.Add(new JsonObject { ["role"] = MessageText(message, "role"), ["text"] = MessageText(message, "text") });
         if (reset) context++;
         var m = new JsonObject { ["action"] = "update", ["sequence"] = ++sequence, ["context"] = context, ["reset"] = reset, ["collapseRCode"] = collapseRCode, ["welcome"] = welcome, ["partial"] = partial ?? "", ["messages"] = list };
+        if (worksheetAction != null) m["worksheetAction"] = worksheetAction.DeepClone();
         last = m;
         if (!failed && ready.Task.IsCompletedSuccessfully) Post(m);
     }

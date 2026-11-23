@@ -13,14 +13,14 @@ using System.Windows.Forms;
 namespace StatsDirect.UI.Learning;
 
 /// <summary>A dockable assistant with a fixed document scope and locally reviewed worksheet proposals.</summary>
-internal sealed class ScriptAIPane : IDisposable
+internal sealed partial class ScriptAIPane : IDisposable
 {
     private const string WorksheetOpeningQuestion = "Do you want me to help you analyse your data?";
     private readonly LearningService service;
     private readonly UserControl view = new() { Dock = DockStyle.Fill, Font = new Font("Arial", 10) };
     private readonly ToolPaneSession session;
     private readonly Panel viewport = new() { Dock = DockStyle.Fill, AutoScroll = true };
-    private readonly TableLayoutPanel layout = new() { Dock = DockStyle.Top, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink, ColumnCount = 1, RowCount = 11, Padding = new Padding(8) };
+    private readonly TableLayoutPanel layout = new() { Dock = DockStyle.Top, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink, ColumnCount = 1, RowCount = 10, Padding = new Padding(8) };
     private readonly FlowLayoutPanel sharing = new() { AutoSize = true, Dock = DockStyle.Fill, FlowDirection = FlowDirection.TopDown, WrapContents = false };
     internal readonly ConversationView Transcript;   // the conversation as a page: Markdown rendered, code blocks with their buttons
     internal readonly TextBox Composer = new() { Multiline = true, Dock = DockStyle.Fill, ScrollBars = ScrollBars.Vertical, WordWrap = true, MaxLength = 4000, AccessibleName = "Question for the script assistant" };
@@ -32,12 +32,9 @@ internal sealed class ScriptAIPane : IDisposable
     internal readonly LinkLabel SharingOptions = new() { AutoSize = true, Text = "Sharing for this session ▾", Dock = DockStyle.Fill };
     private readonly Label status = new() { Name = "aiStatus", AutoSize = true, Dock = DockStyle.Fill, AccessibleName = "AI status" };
     private readonly Label conversationCaption = new() { Name = "conversationCaption", AutoSize = true, Text = "Conversation", Dock = DockStyle.Fill };
-    private readonly FlowLayoutPanel worksheetReplyActions = new() { Name = "worksheetReplyActions", AutoSize = true, Dock = DockStyle.Fill, Visible = false };
     private readonly FlowLayoutPanel replyCodeActions = new() { Name = "replyRCodeActions", AutoSize = true, Dock = DockStyle.Fill };
     private readonly Label warning = new() { AutoSize = true };
     private readonly Label questionCaption = new() { AutoSize = true, Dock = DockStyle.Fill };
-    private readonly Button reviewWorksheetAnalysis = new() { Name = "reviewWorksheetAnalysis", AutoSize = true, Text = "Review analysis", Visible = false };
-    private WorksheetAnalysisProposal worksheetAnalysis;
     private readonly Dictionary<string, Conversation> conversations = new();
     private StatsDirectForm script;
     private readonly ToolStripLabel title = new("Script AI");
@@ -74,10 +71,11 @@ internal sealed class ScriptAIPane : IDisposable
         Transcript = new ConversationView(Path.Combine(Configuration.SDConfiguration.InstallationDirectory, "Tutor"), Path.Combine(service.Storage, "WebView")) { Dock = DockStyle.Fill };
         Transcript.CodeRequested += (what, code, messageIndex, blockIndex) => { if (what == "copy") Clipboard.SetText(code); else OpenCode(messageIndex, blockIndex); };
         Transcript.Notice += text => { if (!disposed) status.Text = text; };
+        Transcript.WorksheetActionRequested += ChooseWorksheetAction;
         var heading = new ToolStrip { GripStyle = ToolStripGripStyle.Hidden, Dock = DockStyle.Top };
         var pop = new ToolStripButton("Pop out"); var close = new ToolStripButton("Close");
         heading.Items.AddRange([title, new ToolStripButton("New conversation", null, (_, _) => NewConversation()), pop, close]);
-        for (int row = 0; row < 11; row++) layout.RowStyles.Add(new RowStyle(row == 9 ? SizeType.Percent : row == 4 ? SizeType.Absolute : SizeType.AutoSize, row == 9 ? 100 : row == 4 ? 100 : 0));
+        for (int row = 0; row < 10; row++) layout.RowStyles.Add(new RowStyle(row == 8 ? SizeType.Percent : row == 4 ? SizeType.Absolute : SizeType.AutoSize, row == 8 ? 100 : row == 4 ? 100 : 0));
         layout.Controls.Add(connection, 0, 0); layout.Controls.Add(SharingOptions, 0, 1);
         sharing.Controls.AddRange([warning, ShareScript, ShareWorkbook, Acknowledge]); layout.Controls.Add(sharing, 0, 2);
         layout.Controls.Add(questionCaption, 0, 3);
@@ -85,10 +83,9 @@ internal sealed class ScriptAIPane : IDisposable
         var actions = new FlowLayoutPanel { AutoSize = true, Dock = DockStyle.Fill };
         var copyCode = new Button { AutoSize = true, Text = "Copy R code" }; var openCode = new Button { AutoSize = true, Text = "Open R code" };
         actions.Controls.AddRange([Send, stop]); layout.Controls.Add(actions, 0, 5); layout.Controls.Add(status, 0, 6);
-        worksheetReplyActions.Controls.Add(reviewWorksheetAnalysis); layout.Controls.Add(worksheetReplyActions, 0, 7);
-        layout.Controls.Add(conversationCaption, 0, 8);
-        Transcript.AccessibleName = "AI conversation"; layout.Controls.Add(Transcript, 0, 9);
-        replyCodeActions.Controls.AddRange([copyCode, openCode]); layout.Controls.Add(replyCodeActions, 0, 10);
+        layout.Controls.Add(conversationCaption, 0, 7);
+        Transcript.AccessibleName = "AI conversation"; layout.Controls.Add(Transcript, 0, 8);
+        replyCodeActions.Controls.AddRange([copyCode, openCode]); layout.Controls.Add(replyCodeActions, 0, 9);
         viewport.Controls.Add(layout); view.Controls.Add(viewport); view.Controls.Add(heading);
         session = new ToolPaneSession(main, view, "Script AI", DockStyle.Right, 440, new Size(500, 760),
             (floating, canDock) => { pop.Text = floating ? "Dock" : "Pop out"; pop.Enabled = !floating || canDock; }, () => Composer.Focus(), text => status.Text = text, minimumDockLength: 330);
@@ -112,7 +109,6 @@ internal sealed class ScriptAIPane : IDisposable
         };
         SharingOptions.LinkClicked += (_, _) => { sharing.Visible = !sharing.Visible; UpdateControls(); };
         Send.Click += async (_, _) => await SendAsync(); stop.Click += (_, _) => Stop();
-        reviewWorksheetAnalysis.Click += (_, _) => ReviewWorksheetAnalysis();
         Composer.KeyDown += (_, e) => { if (ComposerKey(e.KeyData)) { e.SuppressKeyPress = true; e.Handled = true; } };
         copyCode.Click += (_, _) => { string code = LastCode(); if (code.Length > 0) Clipboard.SetText(code); else status.Text = "The last reply contains no R code block."; };
         openCode.Click += (_, _) => OpenCode(LastReply());
@@ -191,7 +187,7 @@ internal sealed class ScriptAIPane : IDisposable
     internal void SessionSharingChanged()
     {
         Stop();
-        ClearWorksheetAnalysis();
+        if (ClearWorksheetAnalysis()) Render();
         if (WorksheetMode) TurnOffWorksheetSharing();
         SyncAcceptance();
         sharing.Visible = !WorksheetMode;
@@ -217,7 +213,7 @@ internal sealed class ScriptAIPane : IDisposable
         if (WorksheetMode)
         {
             Stop();
-            ClearWorksheetAnalysis();
+            if (ClearWorksheetAnalysis()) Render();
             if (SharedWorkbooks is [var workbook] && !service.Sharing.Accepts([workbook.Id()]))
             {
                 var conversation = chat;
@@ -263,10 +259,7 @@ internal sealed class ScriptAIPane : IDisposable
         ShareWorkbook.Enabled = !busy && !sharingRestricted;
         Acknowledge.Enabled = !WorksheetMode && !busy && share;
         ShareScript.Enabled = !WorksheetMode && ShareWorkbook.Enabled;
-        if (disabled) ClearWorksheetAnalysis();
-        bool showAnalysis = WorksheetMode && !busy && worksheetAnalysis != null && !disabled;
-        reviewWorksheetAnalysis.Visible = reviewWorksheetAnalysis.Enabled = showAnalysis;
-        worksheetReplyActions.Visible = showAnalysis;
+        if (disabled && (ClearWorksheetAnalysis() || WorksheetMode)) Render();
         replyCodeActions.Visible = !WorksheetMode;
         SharingOptions.Enabled = !busy && !sharingRestricted;
         SharingOptions.Visible = !WorksheetMode || sharingRestricted;
@@ -284,7 +277,8 @@ internal sealed class ScriptAIPane : IDisposable
     {
         if (chat == null || disposed) return;
         Transcript.Update(chat.Messages, partial, renderedChat != chat, collapseRCode: WorksheetMode,
-            welcome: WorksheetMode && !service.Tutor.Disabled ? WorksheetOpeningQuestion : "");
+            welcome: WorksheetMode && !service.Tutor.Disabled ? WorksheetOpeningQuestion : "",
+            worksheetAction: VisibleWorksheetAction?.Display());
         renderedChat = chat;
     }
     /// <summary>Enter in the question box sends, as the ChatGPT prompt does; Shift+Enter adds a line, as in the calculator.  True when the key was taken as Send.</summary>
@@ -332,7 +326,8 @@ internal sealed class ScriptAIPane : IDisposable
             var initial = guidanceOnly ? new JsonObject() : context.InitialContext();
             var tools = context.Tools;
             WorksheetAnalysisTarget analysisTarget = null;
-            WorksheetAnalysisProposal stagedAnalysis = null;
+            WorksheetCommand[] analysisCommands = [];
+            WorksheetAction stagedAnalysis = null;
             bool worksheetShared = worksheetMode && approved.Contains(origin);
             string helpDirectory = Configuration.SDConfiguration.HelpDirectory;
             if (worksheetMode)
@@ -358,7 +353,16 @@ internal sealed class ScriptAIPane : IDisposable
                 {
                     try { analysisTarget = grid.CaptureWorksheetAnalysisTarget(worksheetShared); }
                     catch (InvalidOperationException) { /* The question can proceed without a local analysis target. */ }
-                    if (analysisTarget != null) tools.Add(WorksheetAnalysisToolDefinition());
+                    if (analysisTarget != null)
+                    {
+                        analysisCommands = main.WorksheetCommands();
+                        tools.Add(QuestionContext.Tool(ChatGPTTutor.WorksheetMethodSearchTool,
+                            "Find native methods in the Analyse picker by name, menu path or operation. Returns up to eight public method descriptions and IDs. It does not inspect the worksheet.",
+                            new() { ["query"] = new JsonObject { ["type"] = "string", ["maxLength"] = 120 } }, "query"));
+                        tools.Add(WorksheetAnalysisToolDefinition());
+                        tools.Add(QuestionContext.Tool(ChatGPTTutor.WorksheetTTestChoiceTool,
+                            "Ask whether selected measurements are matched or independent using clickable choices in chat. Does not share data or start an analysis.", new JsonObject()));
+                    }
                 }
             }
             string reference = guidanceOnly && !worksheetMode ? "" : initial.ToJsonString();
@@ -387,17 +391,48 @@ internal sealed class ScriptAIPane : IDisposable
                         throw new ArgumentException("Use a non-negative Help text offset.");
                     return Task.FromResult<JsonNode>(WorksheetAIHelp.ReadTopic(helpDirectory, topic, offset));
                 }
+                if (worksheetMode && name == ChatGPTTutor.WorksheetMethodSearchTool)
+                {
+                    context.Check();
+                    if (analysisTarget == null || args.Count != 1 || args["query"] is not JsonValue queryValue
+                        || !queryValue.TryGetValue<string>(out var query) || query.Length is < 1 or > 120 || string.IsNullOrWhiteSpace(query))
+                        throw new ArgumentException("Provide one method name or search term of up to 120 characters.");
+                    var matches = WorksheetCommandPicker.Search(analysisCommands, query).Where(command => command.CanRun).Take(8);
+                    return Task.FromResult<JsonNode>(new JsonObject
+                    {
+                        ["methods"] = new JsonArray(matches.Select(command => (JsonNode)new JsonObject
+                        {
+                            ["id"] = command.Id, ["name"] = command.Name, ["menuPath"] = command.MenuPath, ["operation"] = command.Operation
+                        }).ToArray())
+                    });
+                }
+                if (worksheetMode && name == ChatGPTTutor.WorksheetTTestChoiceTool)
+                {
+                    context.Check();
+                    if (analysisTarget == null || service.Tutor.Disabled || args.Count != 0)
+                        throw new InvalidOperationException("Choose an active worksheet before offering a study-design choice.");
+                    if (stagedAnalysis != null) throw new InvalidOperationException("A worksheet action is already waiting.");
+                    analysisTarget.Grid.ResolveWorksheetAnalysisTarget(analysisTarget, allowSelectionChanges: false);
+                    stagedAnalysis = new WorksheetAction("choose", analysisTarget);
+                    return Task.FromResult<JsonNode>(new JsonObject
+                    {
+                        ["state"] = "awaiting_design",
+                        ["message"] = "The user can choose Same people or Separate groups in the chat. Ask them to select a button."
+                    });
+                }
                 if (worksheetMode && name == ChatGPTTutor.WorksheetAnalysisTool)
                 {
                     context.Check();
                     if (analysisTarget == null || service.Tutor.Disabled)
                         throw new InvalidOperationException("Choose an active worksheet before asking for a local analysis proposal.");
                     if (stagedAnalysis != null) throw new InvalidOperationException("An analysis is already waiting for the user to review.");
-                    if (args.Count != 1 || args["operation"] is not JsonValue operationValue
-                        || !operationValue.TryGetValue<string>(out var operation)
-                        || !WorksheetAnalysisProposal.SupportedOperations.Contains(operation, StringComparer.Ordinal))
-                        throw new ArgumentException("Choose one StatsDirect operation ID from the tool’s list.");
-                    try { stagedAnalysis = analysisTarget.Propose(operation); }
+                    if (args.Count != 1 || args["methodId"] is not JsonValue idValue
+                        || !idValue.TryGetValue<string>(out var methodId) || methodId.Length is < 1 or > 600)
+                        throw new ArgumentException("Choose one method ID returned by the Analyse search.");
+                    var method = analysisCommands.FirstOrDefault(command => command.Id == methodId && command.CanRun);
+                    if (method == null)
+                        throw new ArgumentException("Find a method in the Analyse picker before proposing it.");
+                    try { stagedAnalysis = ConfirmWorksheetAnalysis(analysisTarget, method); }
                     catch (InvalidOperationException)
                     {
                         // Keep errors about the captured workbook or selection on the user's side of the connection.
@@ -406,7 +441,9 @@ internal sealed class ScriptAIPane : IDisposable
                     return Task.FromResult<JsonNode>(new JsonObject
                     {
                         ["state"] = "pending_review",
-                        ["message"] = "Ask the user to choose Review analysis in StatsDirect. This is a local proposal awaiting approval."
+                        ["operation"] = method.Operation,
+                        ["method"] = stagedAnalysis.Proposal.MethodName,
+                        ["message"] = "The proposal is shown in this chat. Ask the user to check it and choose Continue to analysis. Nothing has run."
                     });
                 }
                 return context.CallAsync(name, args);
@@ -420,9 +457,9 @@ internal sealed class ScriptAIPane : IDisposable
             context.Check(); current.Messages.Add(new JsonObject { ["role"] = "assistant", ["text"] = reply.Text, ["rData"] = context.RData }); partial = "";
             if (chat == current && script == origin && IsOpen)
             {
-                worksheetAnalysis = stagedAnalysis;
+                worksheetAction = stagedAnalysis;
                 Render();
-                status.Text = stagedAnalysis != null ? stagedAnalysis.MethodName.Limit(60) + " · “" + WorksheetName + "”" : worksheetMode
+                status.Text = worksheetMode
                     ? ""
                     : guidanceOnly ? "Reply received. Review suggested code before running." : "Reply received. Review suggested code before running. Earlier shared content remains in this conversation.";
             }
@@ -432,57 +469,11 @@ internal sealed class ScriptAIPane : IDisposable
             if (chat == current && pending == request)
             { if (partial.Length > 0) current.Messages.Add(new JsonObject { ["role"] = "assistant", ["text"] = partial + "\n[Reply stopped before completion.]", ["rData"] = context?.RData }); partial = ""; if (Composer.Text.Length == 0) Composer.Text = question; Render(); status.Text = ex is OperationCanceledException ? "Reply stopped. Your question is kept here." : ex.Message; }
         }
-        finally { if (pending == request) { pending = null; if (!disposed) { SyncAcceptance(); UpdateControls(); } } }
+        finally { if (pending == request) { pending = null; if (!disposed) { SyncAcceptance(); UpdateControls(); if (WorksheetMode) Render(); } } }
     }
     private static JsonObject WorksheetAnalysisToolDefinition() => QuestionContext.Tool(ChatGPTTutor.WorksheetAnalysisTool,
-        "Stage one documented StatsDirect analysis for review using the current local worksheet selection. Choose an operation ID from this list. Staging neither opens nor runs the analysis, and this tool returns no data or results.",
-        new()
-        {
-            ["operation"] = new JsonObject
-            {
-                ["type"] = "string",
-                ["enum"] = new JsonArray(WorksheetAnalysisProposal.SupportedOperations.Select(operation => (JsonNode)JsonValue.Create(operation)).ToArray())
-            }
-        }, "operation");
-
-    private void ReviewWorksheetAnalysis()
-    {
-        var proposal = worksheetAnalysis;
-        var conversation = chat;
-        if (proposal == null || script is not frmSpreadsheetGear grid || grid.MdiParent is not frmMain main) return;
-        if (!ReferenceEquals(main.ActiveMdiChild, grid))
-        {
-            status.Text = "Activate “" + WorksheetName + "” to review this analysis.";
-            return;
-        }
-        bool CanOpen() => !disposed && IsOpen && pending == null && chat == conversation && script == grid
-            && ReferenceEquals(main.ActiveMdiChild, grid) && !main.InOperation && !main.LearningCalculationRunning
-            && !service.Tutor.Disabled;
-        if (!CanOpen()) return;
-        try
-        {
-            bool approved = session.ShowOwnedModal(owner => proposal.Review(owner, () => worksheetAnalysis == proposal && CanOpen()));
-            if (!approved)
-            {
-                if (worksheetAnalysis == proposal && chat == conversation)
-                    status.Text = "Review closed. You can review the proposed analysis again.";
-                return;
-            }
-            worksheetAnalysis = null;
-            UpdateControls();
-            if (!CanOpen()) throw new InvalidOperationException("The worksheet analysis is no longer available in this conversation.");
-            const string choosingSettings = "Choose the analysis settings in StatsDirect.";
-            status.Text = choosingSettings;
-            proposal.Open(CanOpen);
-            if (!disposed && chat == conversation && status.Text == choosingSettings) status.Text = "";
-        }
-        catch (Exception ex)
-        {
-            if (worksheetAnalysis == proposal) worksheetAnalysis = null;
-            if (!disposed && chat == conversation) status.Text = ex.Message;
-        }
-        finally { if (!disposed) UpdateControls(); }
-    }
+        "Stage one native method using an exact id from statsdirect_find_worksheet_methods. It posts a local confirmation with the current worksheet selection. Staging does not run the method or return data or results.",
+        new() { ["methodId"] = new JsonObject { ["type"] = "string", ["maxLength"] = 600 } }, "methodId");
 
     internal void Stop() { pending?.Cancel(); }
     private int LastReply()
@@ -499,12 +490,6 @@ internal sealed class ScriptAIPane : IDisposable
     }
     private string LastCode()
     { return string.Join("\n\n", ConversationRScript.Blocks(chat?.Messages.LastOrDefault(m => m.S("role") == "assistant").S("text") ?? "")).Limit(100000); }
-    private void ClearWorksheetAnalysis()
-    {
-        if (worksheetAnalysis != null) status.Text = "";
-        worksheetAnalysis = null;
-    }
-
     internal void Hide() { SaveDraft(); Stop(); ClearWorksheetAnalysis(); session.Hide(); script?.Activate(); }
     internal void NewConversation()
     {

@@ -141,16 +141,25 @@ readline.createInterface({input:process.stdin}).on('line',line=>{
        const scope=await call('statsdirect_workspace',{});
        const read=await call('statsdirect_read_data',{documentId:'unapproved',firstRow:2,lastRow:6,columns:[0,1]});
        const calculation=await call('statsdirect_run_analysis',{operation:'TPaired',datasetId:'unapproved'});
-       const invalid=await call('statsdirect_propose_worksheet_analysis',{operation:'TPaired',columns:[0,1]});
-       const proposal=question==='TRE_WORKSHEET_ANALYSIS_FOLLOWUP'
-         ? null : await call('statsdirect_propose_worksheet_analysis',{operation:'TPaired'});
+       const mannWhitney=question==='TRE_WORKSHEET_ANALYSIS_MANN_WHITNEY';
+       const operation=mannWhitney?'MannWhitney':'TPaired';
+       const found=await call('statsdirect_find_worksheet_methods',{query:mannWhitney?'Mann–Whitney':'Paired t'});
+       const matches=found.success ? JSON.parse(found.contentItems[0].text).methods : [];
+       const methodId=matches.find(method=>method.operation===operation)?.id;
+       const broad=await call('statsdirect_find_worksheet_methods',{query:'Analysis'});
+       const broadMatches=broad.success?JSON.parse(broad.contentItems[0].text).methods.length:0;
+       const invalid=await call('statsdirect_propose_worksheet_analysis',{methodId,columns:[0,1]});
+       const unknownMethod=await call('statsdirect_propose_worksheet_analysis',{methodId:'not-a-picker-command'});
+       const proposal=question==='TRE_WORKSHEET_ANALYSIS_FOLLOWUP' ? null
+         : question==='TRE_WORKSHEET_ANALYSIS_DESIGN' ? await call('statsdirect_choose_worksheet_t_test',{})
+         : methodId ? await call('statsdirect_propose_worksheet_analysis',{methodId}) : null;
        const pending=proposal?.success?JSON.parse(proposal.contentItems[0].text):null;
        answer=analysisDemo
-         ? 'A **paired t test** compares the mean difference between matched observations. Go to **Review analysis** to see the proposed method, then choose the variables and run it in StatsDirect. Your worksheet and result stay on this computer.'
+         ? 'A **paired t test** compares the mean difference between matched observations. Check the method and selection in the conversation, then choose **Continue to analysis**. Your worksheet and result stay on this computer.'
          : JSON.stringify({
            tools,help:help.success?help.contentItems[0].text:'',
            workspace:scope.success,read:read.success,calculation:calculation.success,invalid:invalid.success,
-           pending
+           unknownMethod:unknownMethod.success,matches,broadMatches,pending
          });
      }
      if(question==='LEARN_WORKSHEET') {

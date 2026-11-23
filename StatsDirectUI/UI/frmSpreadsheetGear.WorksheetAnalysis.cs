@@ -1,5 +1,4 @@
 using SpreadsheetGear;
-using StatsDirect.Templates;
 using StatsDirect.UI.Learning;
 using System;
 
@@ -43,17 +42,5 @@ internal partial class frmSpreadsheetGear
         if (main.InOperation || main.LearningCalculationRunning || workbookView.IsEditing)
             throw new InvalidOperationException("Finish the current analysis or cell edit before starting an analysis.");
         return main;
-    }
-}
-
-public partial class frmMain
-{
-    internal void OpenReviewedWorksheetAnalysis(Operation operation)
-    {
-        if (!mnuMain.Enabled)
-            throw new InvalidOperationException("Finish the current task before starting an analysis.");
-
-        // Use the same selection, parameters, output routing and operation record as the Analysis menu.
-        DoOperationWithPossibleBatching(operation);
     }
 }

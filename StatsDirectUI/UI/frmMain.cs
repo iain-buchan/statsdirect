@@ -146,6 +146,8 @@ namespace StatsDirect.UI
         };
 
         private Calculator.CalculatorView calculatorMenuTarget;
+        private readonly ToolStripDropDownButton analyseWorksheetButton;
+        private Action<WorksheetCommand> worksheetMethodReview;
         [System.ComponentModel.DesignerSerializationVisibility(System.ComponentModel.DesignerSerializationVisibility.Hidden)]
         internal bool ShowOpeningDialog { get; set; } = true;
         internal bool TryCalculatorEdit(string command) =>
@@ -177,7 +179,7 @@ namespace StatsDirect.UI
             var undoButton = DocumentToolbar.Button("Undo", "undo", (_, _) => EditHistory(false), "Ctrl+Z");
             var redoButton = DocumentToolbar.Button("Redo", "redo", (_, _) => EditHistory(true), "Ctrl+Y");
             var picker = new WorksheetCommandPicker();
-            var analyseButton = DocumentToolbar.DropDownButton("Analyse", "analyse", picker);
+            var analyseButton = analyseWorksheetButton = DocumentToolbar.DropDownButton("Analyse", "analyse", picker);
             frmSpreadsheetGear CurrentWorksheet() =>
                 mnuMain.Enabled && !InOperation ? ActiveMdiChild as frmSpreadsheetGear : null;
             var askAiButton = DocumentToolbar.Button("AI Assist", "ai", (_, _) =>
@@ -190,24 +192,29 @@ namespace StatsDirect.UI
                 if (CurrentWorksheet() != null) Learning.Show(false);
             }, labelled: true);
             Form methodWorksheet = null;
+            int methodOpening = 0;
             bool CanChooseMethod() => methodWorksheet is IGrid && methodWorksheet == ActiveMdiChild
                 && mnuMain.Enabled && !InOperation;
 
             analyseButton.DropDownOpening += (_, _) =>
             {
-                methodWorksheet = ActiveMdiChild;
-                if (CanChooseMethod()) picker.Prepare(WorksheetCommands(), this, analyseButton);
-            };
-            picker.Opening += (_, e) => e.Cancel = !CanChooseMethod();
-            picker.CommandChosen += command =>
-            {
-                var worksheet = methodWorksheet;
-                BeginInvoke(() =>
+                var worksheet = methodWorksheet = ActiveMdiChild;
+                var review = worksheetMethodReview;
+                int opening = ++methodOpening;
+                if (!CanChooseMethod()) return;
+                picker.Prepare(WorksheetCommands(), this, analyseButton, command =>
                 {
-                    if (ActiveMdiChild == worksheet && command.CanRun && mnuMain.Enabled && !InOperation)
-                        command.Item.PerformClick();
+                    if (IsDisposed || Disposing || !IsHandleCreated) return;
+                    BeginInvoke(() =>
+                    {
+                        if (IsDisposed || Disposing || opening != methodOpening || ActiveMdiChild != worksheet
+                            || !command.CanRun || !mnuMain.Enabled || InOperation) return;
+                        if (review != null) review(command);
+                        else command.Item.PerformClick();
+                    });
                 });
             };
+            picker.Opening += (_, e) => e.Cancel = !CanChooseMethod();
             picker.HelpSearchRequested += query => BeginInvoke(() => SdApplication.SoleInstance.SearchHelp(this, query));
             picker.Closed += (_, e) =>
             {
@@ -259,7 +266,32 @@ namespace StatsDirect.UI
             UpdateFileList();
         }
 
-        private WorksheetCommand[] WorksheetCommands()
+        internal void ChooseWorksheetCommand(Action<WorksheetCommand> review)
+        {
+            CheckWorksheetCommandReady();
+            if (analyseWorksheetButton.DropDown.Visible)
+                throw new InvalidOperationException("Close the method picker before opening another.");
+            worksheetMethodReview = review;
+            try { analyseWorksheetButton.ShowDropDown(); }
+            finally { worksheetMethodReview = null; }
+        }
+
+        internal void OpenReviewedWorksheetCommand(WorksheetCommand command)
+        {
+            CheckWorksheetCommandReady();
+            if (!WorksheetCommands().Any(item => ReferenceEquals(item.Item, command.Item) && item.Id == command.Id && item.CanRun))
+                throw new InvalidOperationException("This method is unavailable. Choose another analysis.");
+            command.Item.PerformClick();
+        }
+
+        private void CheckWorksheetCommandReady()
+        {
+            if (IsDisposed || Disposing || ActiveMdiChild is not frmSpreadsheetGear || !mnuMain.Enabled
+                || InOperation || LearningCalculationRunning)
+                throw new InvalidOperationException("Activate the worksheet and finish the current task before choosing a method.");
+        }
+
+        internal WorksheetCommand[] WorksheetCommands()
         {
             var commands = new List<WorksheetCommand>();
             foreach (string name in new[] { "Analysis", "Data", "Graphics" })

@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "format": "statsdirect-desktop-help-v1",
-  "publishedAtUtc": "2026-11-23T18:44:53.1415829+00:00",
-  "sourceSha256": "19fd2dd69b251a73a2c2dc51418fb08dffa2b270817e00bc381420d04d26a04a",
+  "publishedAtUtc": "2026-11-23T22:38:41.7846809+00:00",
+  "sourceSha256": "66c95cf73e4014584fbce8a034497d5789b313a469879bf63a629c029830a312",
   "entryPage": "index.html",
   "topicCount": 405,
   "searchDocumentCount": 404,
@@ -2031,7 +2031,7 @@
   "aliasSourceSha256": "1b982112068d44a22dbe95a98db37b6cb08abb54a29927d112e32fb65db5ddcf",
   "contextHeaderSha256": "65a27d8c45a47b3ec913e0aa3b85d7166527d716cc3ffa6861a725ffcb804099",
   "previousKind": "EditorOwned",
-  "previousSha256": "f56d27967039cdbe72e636a4b0a4c3d73649154e27abc706a626eaa5a08d0d56",
+  "previousSha256": "7d42d7a2f535ba4f391435c833357d84015d3d109252389e718197b510f69126",
   "adoptedFlareOutput": false,
   "files": [
     {
@@ -2306,13 +2306,13 @@
     },
     {
       "path": "basics/worksheet_ai.htm",
-      "bytes": 12274,
-      "sha256": "0954332e2bbee31b84ae66ac386e60d4e1b1c96308165f33682b6ce0b68d0c5d"
+      "bytes": 11978,
+      "sha256": "d6b91dd7b27293f9bd5f11474c9e16dd6e29015de3f6e970342d0dd5e5b5a526"
     },
     {
       "path": "build-info.json",
       "bytes": 220,
-      "sha256": "57914064dcbdcd896e5336af2161da3723b7310fbd0ee79f858d139de5dcdeaf"
+      "sha256": "0d11b9a439ba7c90202961351705700876ff66bfa1a7d51f0673bc1ba34be5d4"
     },
     {
       "path": "chi_square_tests/22.htm",
@@ -2841,13 +2841,13 @@
     },
     {
       "path": "keyword-index.js",
-      "bytes": 135311,
-      "sha256": "8b2f8c071839b6347cb88de51a6a3e327529a6dd30577bb73e192a3c45510c9e"
+      "bytes": 135416,
+      "sha256": "d23aa523f48f7f343c3f63635c07a037adab416968a415400fb39662d3814ce7"
     },
     {
       "path": "keyword-index.json",
-      "bytes": 97936,
-      "sha256": "e10a619dd9cde34af4b8ca84a2a2b2da069d4bde347b81b2e86f3e0220f464ca"
+      "bytes": 98041,
+      "sha256": "e49d17ea6c5a6750d0ef8053b48b3d98a1f9c4378e3bc6fd0c83dd650493917d"
     },
     {
       "path": "menus/about.htm",
@@ -6081,8 +6081,8 @@
     },
     {
       "path": "search-index.js",
-      "bytes": 884931,
-      "sha256": "fe188d0fd5cbd809651a4f3a3ae2a74f94bbc28de15aca4368f56647be0d1a19"
+      "bytes": 884856,
+      "sha256": "4acc65350a77bcf3574d306af96160193cbb925f8e61c1abbd5a6def1baa662d"
     },
     {
       "path": "survival_analysis/abridged_life_table.htm",

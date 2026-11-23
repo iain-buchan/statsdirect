@@ -20273,6 +20273,7 @@ ${content}</tr>
     }
     const rendered = [];
     let welcomeElement = null;
+    let worksheetActionElement = null, worksheetActionKey = "";
     let partialElement = null, partialText = "", renders = 0, applied = 0, context = 0, requests = 0, copying = null, collapseRCode = false;
     function bind(element) {
       element.querySelectorAll("a").forEach((a) => {
@@ -20333,6 +20334,75 @@ ${content}</tr>
       const d = scroller();
       return d.scrollTop + d.clientHeight >= d.scrollHeight - 4;
     };
+    function updateWorksheetAction(action) {
+      const available = typeof action?.token === "string" && ["compare", "choose", "confirm"].includes(action.kind);
+      const key = available ? JSON.stringify(action) : "";
+      if (key === worksheetActionKey) return;
+      const transferFocus = worksheetActionElement?.contains(document.activeElement);
+      worksheetActionElement?.remove();
+      worksheetActionElement = null;
+      worksheetActionKey = key;
+      if (!available) return;
+      const section = document.createElement("section");
+      section.className = "message assistant worksheet-analysis";
+      section.dataset.worksheetAction = action.kind;
+      section.dataset.token = action.token;
+      section.setAttribute("aria-label", action.kind === "confirm" ? "Proposed worksheet method" : action.kind === "choose" ? "Compare two samples" : "Choose a worksheet method");
+      const actions = document.createElement("div");
+      actions.className = "worksheet-analysis-actions";
+      const requestContext = context;
+      function button(label, choice) {
+        const option = document.createElement("button");
+        option.type = "button";
+        option.textContent = label;
+        option.dataset.action = "worksheet-analysis";
+        option.dataset.choice = choice;
+        option.addEventListener("click", () => post({ action: "worksheetAnalysis", token: action.token, choice, context: requestContext }));
+        actions.append(option);
+      }
+      if (action.kind === "compare") {
+        if (action.showCompare !== false) button("Compare two samples", "compare");
+        button("Choose a method", "browse");
+      } else if (action.kind === "choose") {
+        const question = document.createElement("p");
+        question.textContent = "Were these measurements taken from the same people?";
+        section.append(question);
+        button("Same people", "paired");
+        button("Separate groups", "independent");
+      } else {
+        const heading = document.createElement("h2");
+        heading.textContent = String(action.method ?? "");
+        section.append(heading);
+        const details = document.createElement("dl");
+        const sheet = [action.workbook, action.sheet].filter(Boolean).join(" \xB7 ");
+        for (const [label, value] of [
+          ["Menu", action.menuPath],
+          ["Worksheet", sheet],
+          ["Selection", action.selection],
+          ["Expected inputs", action.inputs],
+          ["Results", action.destination]
+        ]) {
+          if (!value) continue;
+          const term = document.createElement("dt"), description = document.createElement("dd");
+          term.textContent = label;
+          description.textContent = String(value);
+          details.append(term, description);
+        }
+        section.append(details);
+        if (action.effect) {
+          const effect = document.createElement("p");
+          effect.className = "worksheet-analysis-effect";
+          effect.textContent = String(action.effect);
+          section.append(effect);
+        }
+        button("Continue to analysis", "continue");
+        if (action.choice === "paired" || action.choice === "independent") button("Change design", "change");
+      }
+      section.append(actions);
+      container.append(section);
+      worksheetActionElement = section;
+      if (transferFocus) actions.querySelector("button")?.focus({ preventScroll: true });
+    }
     function saveSelection() {
       const selection = getSelection();
       if (!selection || selection.isCollapsed || !container.contains(selection.anchorNode) || !container.contains(selection.focusNode)) return null;
@@ -20377,6 +20447,8 @@ ${content}</tr>
         partialElement = null;
         partialText = "";
         welcomeElement = null;
+        worksheetActionElement = null;
+        worksheetActionKey = "";
       }
       const messages = Array.isArray(m.messages) ? m.messages : [];
       const partial = String(m.partial ?? "");
@@ -20407,7 +20479,7 @@ ${content}</tr>
           partialText = "";
         } else {
           element = block2(role, text3);
-          container.insertBefore(element, partialElement);
+          container.insertBefore(element, partialElement ?? worksheetActionElement);
         }
         rendered.push({ role, text: text3, element });
       }
@@ -20419,12 +20491,13 @@ ${content}</tr>
         else {
           partialElement = block2("assistant", partial);
           partialElement.classList.add("partial");
-          container.appendChild(partialElement);
+          container.insertBefore(partialElement, worksheetActionElement);
         }
         partialText = partial;
       }
       if (partialElement) partialElement.querySelectorAll("[data-code]").forEach((button) => button.disabled = true);
       for (const row of rendered) row.element.querySelectorAll("[data-code]").forEach((button) => button.disabled = false);
+      updateWorksheetAction(m.worksheetAction);
       restoreSelection(selection);
       scroller().scrollTop = follow ? scroller().scrollHeight : top;
       if (typeof m.sequence === "number") applied = m.sequence;

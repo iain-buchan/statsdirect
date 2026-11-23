@@ -3,6 +3,7 @@ import {richText} from './Shared/Learning/rich-text.mjs';
 // being streamed.  Each message is rendered from its Markdown once; only the streamed reply is rendered again as it grows, and the
 // view follows it while the reader is at the end, staying put when they have scrolled up or are selecting text.  Everything in a
 // message is text to be escaped: Markdown is read into a small set of elements, and no markup in a reply reaches the page as markup.
+// Worksheet controls come separately from the native host and never from the reply's Markdown.
 (() => {
   const container = document.getElementById('conversation');
   const post = message => { try { window.chrome.webview.postMessage(message); } catch (error) { } };
@@ -28,6 +29,7 @@ import {richText} from './Shared/Learning/rich-text.mjs';
   // The page's state: the messages rendered, in order, and the streamed reply.
   const rendered = [];
   let welcomeElement = null;
+  let worksheetActionElement = null, worksheetActionKey = '';
   let partialElement = null, partialText = '', renders = 0, applied = 0, context = 0, requests = 0, copying = null, collapseRCode = false;
   function bind(element) {
     element.querySelectorAll('a').forEach(a=>{if(!/^https?:\/\//i.test(a.getAttribute('href')??''))a.removeAttribute('href');else {a.target='_blank';a.rel='noopener noreferrer';}});
@@ -74,6 +76,78 @@ import {richText} from './Shared/Learning/rich-text.mjs';
   const scroller = () => document.scrollingElement || document.documentElement;
   const atEnd = () => { const d = scroller(); return d.scrollTop + d.clientHeight >= d.scrollHeight - 4; };
 
+  function updateWorksheetAction(action) {
+    const available = typeof action?.token === 'string' && ['compare', 'choose', 'confirm'].includes(action.kind);
+    const key = available ? JSON.stringify(action) : '';
+    if (key === worksheetActionKey) return;
+    const transferFocus = worksheetActionElement?.contains(document.activeElement);
+    worksheetActionElement?.remove();
+    worksheetActionElement = null;
+    worksheetActionKey = key;
+    if (!available) return;
+
+    const section = document.createElement('section');
+    section.className = 'message assistant worksheet-analysis';
+    section.dataset.worksheetAction = action.kind;
+    section.dataset.token = action.token;
+    section.setAttribute('aria-label', action.kind === 'confirm' ? 'Proposed worksheet method'
+      : action.kind === 'choose' ? 'Compare two samples' : 'Choose a worksheet method');
+    const actions = document.createElement('div');
+    actions.className = 'worksheet-analysis-actions';
+    const requestContext = context;
+    function button(label, choice) {
+      const option = document.createElement('button');
+      option.type = 'button';
+      option.textContent = label;
+      option.dataset.action = 'worksheet-analysis';
+      option.dataset.choice = choice;
+      option.addEventListener('click', () => post({ action: 'worksheetAnalysis', token: action.token, choice, context: requestContext }));
+      actions.append(option);
+    }
+    if (action.kind === 'compare') {
+      if (action.showCompare !== false) button('Compare two samples', 'compare');
+      button('Choose a method', 'browse');
+    } else if (action.kind === 'choose') {
+      const question = document.createElement('p');
+      question.textContent = 'Were these measurements taken from the same people?';
+      section.append(question);
+      button('Same people', 'paired');
+      button('Separate groups', 'independent');
+    } else {
+      const heading = document.createElement('h2');
+      heading.textContent = String(action.method ?? '');
+      section.append(heading);
+      const details = document.createElement('dl');
+      const sheet = [action.workbook, action.sheet].filter(Boolean).join(' · ');
+      for (const [label, value] of [
+        ['Menu', action.menuPath],
+        ['Worksheet', sheet],
+        ['Selection', action.selection],
+        ['Expected inputs', action.inputs],
+        ['Results', action.destination]
+      ]) {
+        if (!value) continue;
+        const term = document.createElement('dt'), description = document.createElement('dd');
+        term.textContent = label;
+        description.textContent = String(value);
+        details.append(term, description);
+      }
+      section.append(details);
+      if (action.effect) {
+        const effect = document.createElement('p');
+        effect.className = 'worksheet-analysis-effect';
+        effect.textContent = String(action.effect);
+        section.append(effect);
+      }
+      button('Continue to analysis', 'continue');
+      if (action.choice === 'paired' || action.choice === 'independent') button('Change design', 'change');
+    }
+    section.append(actions);
+    container.append(section);
+    worksheetActionElement = section;
+    if (transferFocus) actions.querySelector('button')?.focus({ preventScroll: true });
+  }
+
   // A streamed paragraph can be replaced when its Markdown changes. Bookmark the
   // selection within each message body so removing those nodes does not remove
   // the reader's selection. Keep anchor/focus separately for backwards selections.
@@ -113,7 +187,10 @@ import {richText} from './Shared/Learning/rich-text.mjs';
     const selection = reset ? null : saveSelection();
     const top = scroller().scrollTop;
     const follow = reset || (!selection && atEnd());
-    if (reset) { container.replaceChildren(); rendered.length = 0; partialElement = null; partialText = ''; welcomeElement = null; }
+    if (reset) {
+      container.replaceChildren(); rendered.length = 0; partialElement = null; partialText = ''; welcomeElement = null;
+      worksheetActionElement = null; worksheetActionKey = '';
+    }
     const messages = Array.isArray(m.messages) ? m.messages : [];
     const partial = String(m.partial ?? '');
     if (!messages.length && !partial && m.welcome) {
@@ -138,17 +215,18 @@ import {richText} from './Shared/Learning/rich-text.mjs';
         if (text !== partialText) renderInto(element, text);
         element.classList.remove('partial'); partialElement = null; partialText = '';
       }
-      else { element = block(role, text); container.insertBefore(element, partialElement); }
+      else { element = block(role, text); container.insertBefore(element, partialElement ?? worksheetActionElement); }
       rendered.push({ role, text, element });
     }
     if (partial !== partialText) {
       if (!partial) { if (partialElement) partialElement.remove(); partialElement = null; }
       else if (partialElement) renderInto(partialElement, partial);
-      else { partialElement = block('assistant', partial); partialElement.classList.add('partial'); container.appendChild(partialElement); }
+      else { partialElement = block('assistant', partial); partialElement.classList.add('partial'); container.insertBefore(partialElement, worksheetActionElement); }
       partialText = partial;
     }
     if (partialElement) partialElement.querySelectorAll('[data-code]').forEach(button=>button.disabled=true);
     for (const row of rendered) row.element.querySelectorAll('[data-code]').forEach(button=>button.disabled=false);
+    updateWorksheetAction(m.worksheetAction);
     restoreSelection(selection);
     scroller().scrollTop = follow ? scroller().scrollHeight : top;
     if (typeof m.sequence === 'number') applied = m.sequence;
