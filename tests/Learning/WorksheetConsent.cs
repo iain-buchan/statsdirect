@@ -166,7 +166,6 @@ internal static partial class Program
             pane.ShareWorkbook.Checked = true;
             pane.Acknowledge.Checked = true;
             int revision = service.Sharing.Revision;
-            int firstTurn = WorksheetAnalysisDataTraffic(trace).Length;
             await CheckConfirmedWorkbookRead(pane, workbook, workbookValue, trace, "FOCUS_STAGED_EDIT");
             var review = FindWorksheetReview(pane);
             Check(review.Visible && review.Enabled, "the first workbook has a staged edit before another workbook is activated");
@@ -197,7 +196,7 @@ internal static partial class Program
             pane = await OpenWorksheetAssistant(main, service, other);
             pane.ShareWorkbook.Checked = true;
             await CheckConsentBlocksTurn(pane, trace, "OTHER_WORKBOOK_NEEDS_ITS_OWN_CONFIRMATION");
-            Check(WorksheetAnalysisDataTraffic(trace).Skip(firstTurn).All(line => !line.Contains(otherValue, StringComparison.Ordinal)),
+            Check(!ReadWorksheetTrace(trace).Contains(otherValue, StringComparison.Ordinal),
                 "asking from the first workbook's pane or trying the unconfirmed pane sends none of the other workbook's cells");
             pane.Composer.Clear();
         }
