@@ -44,6 +44,7 @@ internal static partial class Program
         try
         {
             await tutor.SignInAsync();
+            await tutor.RefreshAccountAsync();
             await Wait(() => tutor.Email == "mock@example.invalid", "the restricted worksheet assistant uses the local mock account");
             pane = await OpenWorksheetAssistant(main, service, grid);
             Check(tutor.DataSharingDisabled && !pane.ShareWorkbook.Enabled && pane.Send.Enabled,
@@ -148,7 +149,7 @@ internal static partial class Program
             await WorksheetReply(pane, followUp);
             await Wait(() => !rActions.Visible, "a later plain reply hides the R actions again");
             CheckWorksheetAnalysisQuestion(trace, followUp);
-            string wire = File.ReadAllText(trace);
+            string wire = ReadWorksheetTrace(trace);
             Check(!wire.Contains(PrivateWorksheet, StringComparison.Ordinal) && !wire.Contains(PrivateCell, StringComparison.Ordinal)
                 && !wire.Contains("4.706787", StringComparison.Ordinal) && !wire.Contains("0.009261696", StringComparison.Ordinal)
                 && !wire.Contains("differences between Before and After", StringComparison.Ordinal),
@@ -194,8 +195,17 @@ internal static partial class Program
     private static Button FindWorksheetAnalysisReview(ScriptAIPane pane) =>
         ((Control)Field(pane, "view")).Controls.Find("reviewWorksheetAnalysis", true).OfType<Button>().Single();
 
+    private static string ReadWorksheetTrace(string trace)
+    {
+        // The mock can append transport housekeeping while the fixture reads its trace.
+        using var file = new FileStream(trace, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+        using var reader = new StreamReader(file);
+        string text = reader.ReadToEnd();
+        return text[..(text.LastIndexOf('\n') + 1)];
+    }
+
     private static string[] WorksheetAnalysisDataTraffic(string trace) =>
-        File.ReadLines(trace).Where(line =>
+        ReadWorksheetTrace(trace).Split('\n', StringSplitOptions.RemoveEmptyEntries).Where(line =>
         {
             var request = JsonNode.Parse(line);
             return request.S("method") == "turn/start" || request["result"] != null;

@@ -14,7 +14,12 @@ internal static partial class Program
         await Wait(() => main.ActiveMdiChild == grid && WorksheetRibbon(main).Items["aiToolStripButton"] is { Available: true, Enabled: true }, "the worksheet ribbon exposes Ask AI");
         WorksheetRibbon(main).Items["aiToolStripButton"]!.PerformClick();
         await Wait(() => Field(service, "ai") is ScriptAIPane { IsOpen: true }, "Ask AI opens the existing assistant");
-        return (ScriptAIPane)Field(service, "ai");
+        var pane = (ScriptAIPane)Field(service, "ai");
+        await pane.Transcript.SettledAsync().WaitAsync(TimeSpan.FromSeconds(40));
+        if (main.ActiveMdiChild != grid) grid.Activate();
+        await Wait(() => main.ActiveMdiChild == grid && (service.ShareAIWorkbook || service.Sharing.DataDocumentId == grid.Id()),
+            "the worksheet and its sharing context are active before the test sends a question");
+        return pane;
     }
 
     private static ChatGPTTutor WorksheetMockTutor(string directory, Func<AISecurityLevel> securityLevel, string analysisTrace = null)
@@ -33,12 +38,14 @@ internal static partial class Program
     private static async Task RunWorksheetAssistantFixture(frmMain main)
     {
         var policy = AISecurityLevel.Unrestricted;
-        using var tutor = WorksheetMockTutor(Path.Combine(root, "worksheet-account"), () => policy);
+        string trace = Path.Combine(root, "worksheet-consent-wire.jsonl");
+        using var tutor = WorksheetMockTutor(Path.Combine(root, "worksheet-account"), () => policy, trace);
         using var service = new LearningService(main, Path.Combine(root, "Worksheet Learning"), tutor);
         typeof(frmMain).GetField("learning", Members)!.SetValue(main, service);
         try
         {
             await TestWorksheetAssistant(main, service, level => policy = level);
+            await TestWorksheetConsentAcrossPanes(main, service, trace);
         }
         finally { typeof(frmMain).GetField("learning", Members)!.SetValue(main, null); }
     }
@@ -67,9 +74,12 @@ internal static partial class Program
 
     private static async Task<JsonNode> WorksheetReply(ScriptAIPane pane, string prompt)
     {
+        var messages = (JsonArray)Field(Field(pane, "chat"), "Messages");
+        int before = messages.Count(message => message.S("role") == "assistant");
         pane.Composer.Text = prompt;
         await pane.SendAsync();
-        var messages = (JsonArray)Field(Field(pane, "chat"), "Messages");
+        if (messages.Count(message => message.S("role") == "assistant") != before + 1)
+            throw new InvalidOperationException($"The mock reply to {prompt} did not arrive. {((Label)Field(pane, "status")).Text}");
         return JsonNode.Parse(messages.Last(message => message.S("role") == "assistant").S("text"));
     }
 
@@ -149,6 +159,7 @@ internal static partial class Program
             service.View.Close();
 
             if (service.Tutor.Email == null) await service.Tutor.SignInAsync();
+            await service.Tutor.RefreshAccountAsync();
             await Wait(() => service.Tutor.Email == "mock@example.invalid", "the worksheet assistant test is connected to a mock account");
             pane = await OpenWorksheetAssistant(main, service, grid);
             Check(pane.Composer.Text.Length == 0 && !pane.ShareWorkbook.Checked, "Ask AI opens a question-only worksheet conversation without sending");
@@ -162,7 +173,7 @@ internal static partial class Program
             await Wait(() => main.ActiveMdiChild == other && service.Sharing.DataDocumentId == other.Id(),
                 "a different active workbook leaves the open assistant bound to its original workbook");
             pane.Acknowledge.Checked = true;
-            Check(!pane.Acknowledge.Enabled && !pane.Acknowledge.Checked && !service.Sharing.Accepted,
+            Check(!pane.Acknowledge.Enabled && !pane.Acknowledge.Checked && !service.Sharing.Accepts([grid.Id()]) && !service.Sharing.Accepts([other.Id()]),
                 "question-only mode cannot grant workbook consent even if acknowledgement is toggled");
             pane.ShareWorkbook.Checked = true;
             Check(pane.Acknowledge.Enabled && !pane.Acknowledge.Checked && !pane.Send.Enabled,

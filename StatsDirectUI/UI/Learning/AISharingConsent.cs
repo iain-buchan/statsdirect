@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 
 namespace StatsDirect.UI.Learning;
 
@@ -7,19 +6,24 @@ namespace StatsDirect.UI.Learning;
 internal sealed class AISharingConsent
 {
     internal string DataDocumentId { get; private set; }
-    internal bool Accepted { get; private set; }
     internal int Revision { get; private set; }
-    private readonly HashSet<string> approvedDataIds = new();
+    private readonly HashSet<string> approvedDocumentIds = new();
     internal bool SelectDataDocument(string id)
     {
         if (DataDocumentId == id) return false;
         DataDocumentId = id; Revoke(); return true;
     }
-    internal bool Accepts(IEnumerable<string> dataIds) => Accepted && dataIds.All(approvedDataIds.Contains);
-    internal void Approve(IEnumerable<string> dataIds, bool includeSelectedDataDocument = true)
+    internal bool Accepts(IEnumerable<string> documentIds)
     {
-        Accepted = true; approvedDataIds.UnionWith(dataIds);
-        if (includeSelectedDataDocument && DataDocumentId != null) approvedDataIds.Add(DataDocumentId);
+        bool hasDocuments = false;
+        foreach (string id in documentIds)
+        {
+            if (!approvedDocumentIds.Contains(id)) return false;
+            hasDocuments = true;
+        }
+        return hasDocuments;
     }
-    internal void Revoke() { Accepted = false; approvedDataIds.Clear(); Revision++; }
+
+    internal void Approve(IEnumerable<string> documentIds) => approvedDocumentIds.UnionWith(documentIds);
+    internal void Revoke() { approvedDocumentIds.Clear(); Revision++; }
 }

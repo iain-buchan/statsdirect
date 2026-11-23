@@ -60,8 +60,8 @@ internal sealed partial class LearningService
             var revisions = approved.OfType<frmSpreadsheetGear>().ToDictionary(d => d.Id(), d => d.LearningVersion);
             if (approved.Length > 0)
             {
-                var dataIds = approved.OfType<frmSpreadsheetGear>().Select(d => d.Id()).ToArray();
-                bool reused = Sharing.Accepts(dataIds);
+                var documentIds = approved.Select(d => d.Id()).ToArray();
+                bool reused = Sharing.Accepts(documentIds);
                 var decision = reused ? SharingDecision.Share : ConfirmSharing?.Invoke(approved) ?? AskSharing(main, approved);
                 pending.Token.ThrowIfCancellationRequested();
                 Tutor.CheckPolicy(mayShareData: !guidanceOnly);
@@ -74,7 +74,7 @@ internal sealed partial class LearningService
                     var result = await view.CallAsync("recordSharingConsent", consent);
                     SaveState(result?["state"]); // Must persist before granting access.
                     pending.Token.ThrowIfCancellationRequested();
-                    Sharing.Approve(dataIds);
+                    Sharing.Approve(documentIds);
                 }
             }
             workspace = new QuestionContext(approved, false, pending.Token, Sharing, Tutor, guidanceOnly);

@@ -56,7 +56,16 @@ internal sealed class ScriptAIPane : IDisposable
     internal frmSpreadsheetGear[] SharedWorkbooks => ShareWorkbook.Checked && !service.Tutor.DataSharingDisabled
         ? service.Documents.OfType<frmSpreadsheetGear>().Where(g => (!WorksheetMode || g == script) && !g.IsDisposed && !g.Disposing && g.MdiParent != null).ToArray()
         : Array.Empty<frmSpreadsheetGear>();
-    private IEnumerable<string> SharedDataIds => SharedWorkbooks.Select(g => g.Id());
+    private StatsDirectForm[] SharedDocuments
+    {
+        get
+        {
+            var workbooks = SharedWorkbooks;
+            return !WorksheetMode && ShareScript.Checked && !service.Tutor.DataSharingDisabled
+                && script is { IsDisposed: false, Disposing: false, MdiParent: not null }
+                ? [script, .. workbooks] : workbooks;
+        }
+    }
     private bool ReportMode => script is frmReportWebView;
     internal bool WorksheetMode => script is frmSpreadsheetGear;
     private string WorksheetName => string.IsNullOrWhiteSpace(script?.Text) ? "Worksheet" : script.Text.Trim().Limit(32);
@@ -90,14 +99,14 @@ internal sealed class ScriptAIPane : IDisposable
         ShareScript.CheckedChanged += (_, _) => ScopeChanged(); ShareWorkbook.CheckedChanged += (_, _) => ScopeChanged();
         Acknowledge.CheckedChanged += (_, _) => {
             if (refreshing) return;
-            var dataIds = SharedDataIds;
-            if (service.Tutor.DataSharingDisabled || (WorksheetMode && !dataIds.Any()))
+            var documents = SharedDocuments;
+            if (documents.Length == 0)
             {
-                if (WorksheetMode) SyncAcceptance();
+                SyncAcceptance();
                 return;
             }
             if (Acknowledge.Checked) {
-                service.Sharing.Approve(dataIds, includeSelectedDataDocument: !WorksheetMode); sharing.Visible = false;
+                service.Sharing.Approve(documents.Select(d => d.Id())); sharing.Visible = false;
                 if (status.Text == "Review the selected content and confirm sharing for this session." || status.Text == "The open workbooks changed. Review their data and confirm sharing again.") status.Text = "";
                 Composer.Focus();
             } else service.RevokeAISharing();
@@ -188,9 +197,8 @@ internal sealed class ScriptAIPane : IDisposable
     internal void SessionSharingChanged() { Stop(); ClearWorksheetProposals(); SyncAcceptance(); sharing.Visible = !WorksheetMode || ShareWorkbook.Checked; UpdateControls(); }
     private void SyncAcceptance()
     {
-        var dataIds = SharedDataIds;
         refreshing = true;
-        Acknowledge.Checked = !service.Tutor.DataSharingDisabled && (!WorksheetMode || dataIds.Any()) && service.Sharing.Accepts(dataIds);
+        Acknowledge.Checked = service.Sharing.Accepts(SharedDocuments.Select(d => d.Id()));
         refreshing = false;
     }
     private void ScopeChanged()
@@ -205,20 +213,20 @@ internal sealed class ScriptAIPane : IDisposable
     internal void UpdateConnection()
     {
         if (disposed) return;
-        if (WorksheetMode) SyncAcceptance();
+        SyncAcceptance();
         UpdateControls();
     }
     private void UpdateControls()
     {
         var securityLevel = service.Tutor.SecurityLevel;
         bool busy = pending != null, disabled = securityLevel == AISecurityLevel.AIRestricted, sharingRestricted = securityLevel != AISecurityLevel.Unrestricted;
-        bool share = !sharingRestricted && ((!WorksheetMode && ShareScript.Checked) || ShareWorkbook.Checked);
+        bool share = !sharingRestricted && SharedDocuments.Length > 0;
         Send.Enabled = !busy && !disabled && (!share || Acknowledge.Checked);
         Send.Text = !disabled && service.Tutor.Email == null ? "Use my ChatGPT" : "Send"; stop.Enabled = busy;
         connection.Text = disabled ? ChatGPTTutor.RestrictedLabel : service.Tutor.Email != null ? "ChatGPT connection…" : service.Tutor.LoginUrl != null ? "Finish ChatGPT sign-in…" : "Use my ChatGPT";
         connection.Enabled = !busy && !disabled;
         ShareWorkbook.Enabled = !busy && !sharingRestricted;
-        Acknowledge.Enabled = ShareWorkbook.Enabled && (!WorksheetMode || ShareWorkbook.Checked);
+        Acknowledge.Enabled = !busy && share;
         ShareScript.Enabled = !WorksheetMode && ShareWorkbook.Enabled;
         if ((sharingRestricted && worksheetEdit != null) || (disabled && worksheetAnalysis != null)) ClearWorksheetProposals();
         bool showAnalysis = WorksheetMode && !busy && worksheetAnalysis != null && !disabled;
@@ -271,17 +279,12 @@ internal sealed class ScriptAIPane : IDisposable
         RefreshWorkbooks(); SyncAcceptance();
         bool guidanceOnly = service.Tutor.DataSharingDisabled;
         bool worksheetMode = WorksheetMode;
-        if (!guidanceOnly && ((!worksheetMode && ShareScript.Checked) || ShareWorkbook.Checked) && !Acknowledge.Checked)
+        StatsDirectForm[] approved = guidanceOnly ? [] : SharedDocuments;
+        if (approved.Length > 0 && !service.Sharing.Accepts(approved.Select(d => d.Id())))
         {
             // the reason the confirmation lapsed, when the open workbooks changed, stands; the general reminder otherwise
             if (status.Text != "The open workbooks changed. Review their data and confirm sharing again.") status.Text = "Review the selected content and confirm sharing for this session.";
             return;
-        }
-        var approved = new List<StatsDirectForm>();
-        if (!guidanceOnly)
-        {
-            if (!worksheetMode && ShareScript.Checked) approved.Add(origin);
-            approved.AddRange(SharedWorkbooks);
         }
         using var request = new CancellationTokenSource(); pending = request;
         bool reportMode = ReportMode;
@@ -323,7 +326,7 @@ internal sealed class ScriptAIPane : IDisposable
             string reference = guidanceOnly && !worksheetMode ? "" : initial.ToJsonString();
             if (reference.Length > 28000) throw new InvalidOperationException("The shared context is too large. Close some workbooks or turn off workbook sharing for this question.");
             current.Messages.Add(new JsonObject { ["role"] = "user", ["text"] = question, ["rSource"] = context.RSource }); Composer.Clear(); current.Draft = ""; partial = ""; Render();
-            status.Text = guidanceOnly ? "Sending your question…" : approved.Count == 0 ? "Sending the question and conversation only…" : "Sending the confirmed context…";
+            status.Text = guidanceOnly ? "Sending your question…" : approved.Length == 0 ? "Sending the question and conversation only…" : "Sending the confirmed context…";
 
             Task<JsonNode> CallTool(string name, JsonObject args)
             {
@@ -471,7 +474,7 @@ internal sealed class ScriptAIPane : IDisposable
         }
         bool CanApply() => !disposed && IsOpen && pending == null && worksheetEdit == proposal
             && script == grid && ReferenceEquals(main.ActiveMdiChild, grid) && !main.InOperation && !main.LearningCalculationRunning
-            && !service.Tutor.DataSharingDisabled && ShareWorkbook.Checked && service.Sharing.Accepts(SharedDataIds);
+            && !service.Tutor.DataSharingDisabled && ShareWorkbook.Checked && service.Sharing.Accepts([grid.Id()]);
         if (!CanApply()) return;
         try
         {
