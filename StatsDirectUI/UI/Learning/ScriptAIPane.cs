@@ -361,7 +361,7 @@ internal sealed partial class ScriptAIPane : IDisposable
                             new() { ["query"] = new JsonObject { ["type"] = "string", ["maxLength"] = 120 } }, "query"));
                         tools.Add(WorksheetAnalysisToolDefinition());
                         tools.Add(QuestionContext.Tool(ChatGPTTutor.WorksheetTTestChoiceTool,
-                            "Ask whether selected measurements are matched or independent using clickable choices in chat. Does not share data or start an analysis.", new JsonObject()));
+                            "Ask whether selected measurements are matched or independent using clickable choices in chat. Use for a comparison of quantitative means when pairing is the remaining question. Does not share data or start an analysis.", new JsonObject()));
                     }
                 }
             }
@@ -472,7 +472,7 @@ internal sealed partial class ScriptAIPane : IDisposable
         finally { if (pending == request) { pending = null; if (!disposed) { SyncAcceptance(); UpdateControls(); if (WorksheetMode) Render(); } } }
     }
     private static JsonObject WorksheetAnalysisToolDefinition() => QuestionContext.Tool(ChatGPTTutor.WorksheetAnalysisTool,
-        "Stage one native method using an exact id from statsdirect_find_worksheet_methods. It posts a local confirmation with the current worksheet selection. Staging does not run the method or return data or results.",
+        "Stage one requested native method using an exact id from statsdirect_find_worksheet_methods. Use after any clarifications needed to choose the method, or when the user explicitly requests the method by name. It posts a local confirmation with the current worksheet selection. Staging does not run the method or return data or results.",
         new() { ["methodId"] = new JsonObject { ["type"] = "string", ["maxLength"] = 600 } }, "methodId");
 
     internal void Stop() { pending?.Cancel(); }

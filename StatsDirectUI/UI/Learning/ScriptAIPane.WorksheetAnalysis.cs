@@ -56,7 +56,16 @@ internal sealed partial class ScriptAIPane
     {
         var action = VisibleWorksheetAction;
         if (disposed || !IsOpen || action == null || action.Token != token
-            || script is not frmSpreadsheetGear grid || grid.MdiParent is not frmMain main) return;
+            || script is not frmSpreadsheetGear grid || grid.IsDisposed || grid.Disposing
+            || grid.MdiParent is not frmMain main) return;
+        // The pane stays with its workbook when an analysis brings a report forward.
+        // Browsing can bring that workbook back, but continuing a reviewed operation still requires it to be active.
+        if (main.ActiveMdiChild != grid && action.Kind == "compare" && choice is "browse" or "compare"
+            && !main.InOperation && !main.LearningCalculationRunning)
+        {
+            grid.Activate();
+            if (script != grid || !ReferenceEquals(action, VisibleWorksheetAction)) return;
+        }
         if (!ReferenceEquals(main.ActiveMdiChild, grid))
         {
             status.Text = "Activate “" + WorksheetName + "” to continue this analysis.";

@@ -147,6 +147,13 @@ internal static partial class Program
             Check(beforeApproval.SequenceEqual(WorksheetAnalysisDataTraffic(trace)),
                 "confirming and running on local data sends no additional question or result");
 
+            // The workbook conversation remains open even while its destination report has focus.
+            await CheckWorksheetPickerConfirmation(main, pane, "paired t", "TPaired", reportExpected: true, reportDestination: chosen);
+            await CheckWorksheetConfirmation(pane, "Paired Student t test", PairedSelection, chosen.Text);
+            Check(ReferenceEquals(main.ActiveMdiChild, grid) && ReferenceEquals(main.SelectedReportWindow, chosen)
+                && await WorksheetAnalysisResultCount(chosen) == 1 && beforeApproval.SequenceEqual(WorksheetAnalysisDataTraffic(trace)),
+                "choosing a method from the report returns to the chat's worksheet, keeps the selected report, and creates no additional result or AI traffic");
+
             // With two reports open, select the older one as the destination.
             chosen.Text = "Local analysis report";
             var other = (frmReportWebView)main.CreateReport();
@@ -338,7 +345,8 @@ internal static partial class Program
                 : [item];
     }
 
-    private static async Task CheckWorksheetPickerConfirmation(frmMain main, ScriptAIPane pane, string query, string operation, bool reportExpected)
+    private static async Task CheckWorksheetPickerConfirmation(frmMain main, ScriptAIPane pane, string query, string operation, bool reportExpected,
+        frmReportWebView reportDestination = null)
     {
         await WaitForWorksheetAction(pane, "compare");
         var toolbar = (ToolStrip)Field(main, "toolStrip");
@@ -347,8 +355,10 @@ internal static partial class Program
         var content = picker.Items.OfType<ToolStripControlHost>().Single().Control;
         var search = (TextBox)content.Controls.Find("worksheetCommandSearch", true).Single();
         var results = (TreeView)content.Controls.Find("worksheetCommandResults", true).Single();
+        var source = (frmSpreadsheetGear)Field(pane, "script");
         await ClickWorksheetAction(pane, "browse");
-        await Wait(() => picker.Visible, "Choose a method opens the worksheet's Analyse picker");
+        await Wait(() => picker.Visible && ReferenceEquals(main.ActiveMdiChild, source),
+            "Choose a method activates the conversation's worksheet and opens its Analyse picker");
         search.Text = query;
         var command = results.SelectedNode?.Tag as WorksheetCommand;
         Check(command != null && command.Operation == operation && command.CanRun,
@@ -358,7 +368,7 @@ internal static partial class Program
         string cardText = confirmation.S("text");
         Check(!picker.Visible && cardText.Contains(command.MenuPath, StringComparison.Ordinal)
             && cardText.Contains("Continue to analysis", StringComparison.Ordinal)
-            && cardText.Contains("A new report", StringComparison.Ordinal) == reportExpected
+            && cardText.Contains(reportDestination?.Text ?? "A new report", StringComparison.Ordinal) == reportExpected
             && !main.InOperation,
             "the same picker command shows its own inline review before running with the applicable report destination");
     }
@@ -464,6 +474,12 @@ internal static partial class Program
         Check(lastTurn > 0 && parameters.S("serviceName") == "statsdirect-worksheet-assistant",
             "the question starts after the assistant thread is configured");
 
+        string turnMessage = requests[lastTurn]["params"].A("input")[0].S("text");
+        int firstLineEnd = turnMessage.IndexOf('\n');
+        Check(firstLineEnd > 0 && turnMessage[..firstLineEnd].Contains(
+                "Ask the most important unanswered question before naming or staging a test.", StringComparison.Ordinal),
+            "the first line of the worksheet turn repeats the instruction to clarify before naming or staging a test");
+
         string rawContext = LastWorksheetRequest(trace).S("referenceContext");
         var reference = JsonNode.Parse(rawContext)!.AsObject();
         string[] landmarks =
@@ -497,6 +513,16 @@ internal static partial class Program
         Check(prompt.Contains("Ground instructions about StatsDirect in the manual.", StringComparison.Ordinal)
             && prompt.Contains("Draw on general statistical and R knowledge", StringComparison.Ordinal),
             "the prompt grounds StatsDirect guidance in its manual and uses general statistics and R knowledge when useful");
+        string[] clarification =
+        [
+            "ask before recommending or staging a specific method",
+            "what the outcome measures and its scale",
+            "what the user wants to compare",
+            "how the observations were obtained and related",
+            "Sample size alone does not choose the test."
+        ];
+        Check(clarification.All(instruction => prompt.Contains(instruction, StringComparison.Ordinal)),
+            "the worksheet prompt asks about scale, comparison and study design before proposing a method and explains the role of sample size");
         Check(privateTexts.All(text => !prompt.Contains(text, StringComparison.Ordinal)
             && !rawContext.Contains(text, StringComparison.Ordinal)),
             "the worksheet guidance passes no workbook information without consent");
