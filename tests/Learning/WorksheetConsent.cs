@@ -46,15 +46,18 @@ internal static partial class Program
                 service.RevokeAISharing();
                 await OpenWorksheetAssistant(main, service, workbook);
                 await OpenSource();
+                string acknowledgment = pane.Acknowledge.Text;
                 pane.ShareWorkbook.Checked = false;
                 pane.ShareScript.Checked = true;
                 pane.Acknowledge.Checked = true;
                 Check(service.Sharing.Accepts([source.Document.Id()]) && !service.Sharing.Accepts([workbook.Id()]),
                     source.Name + " confirmation grants only that document even when the workbook was last active");
                 pane = await OpenWorksheetAssistant(main, service, workbook);
+                Check(pane.Acknowledge.Text == acknowledgment,
+                    "worksheet and " + source.Name + " assistance use the same sharing acknowledgment");
                 CheckWorksheetSharing(pane, service, workbook, trace, allow: false);
                 Check(service.Sharing.Accepts([source.Document.Id()]),
-                    "cancelling worksheet consent leaves the earlier " + source.Name + " approval in place");
+                    "leaving worksheet sharing unconfirmed preserves the earlier " + source.Name + " approval");
                 CheckWorksheetSharing(pane, service, workbook, trace);
                 await CheckConfirmedWorkbookRead(pane, workbook, workbookValue, trace, source.Name + "_THEN_CONFIRMED_WORKBOOK");
 
@@ -98,13 +101,16 @@ internal static partial class Program
                     "returning from " + source.Name + " after revocation unchecks worksheet sharing and leaves questions enabled");
             }
 
-            await TestWorksheetConsentAcrossFocus(main, service, workbook, script, workbookValue, trace);
+            await TestWorksheetConsentAcrossFocus(main, service, workbook, script, report, workbookValue, trace);
 
             service.RevokeAISharing();
             service.Show(false);
             await Wait(() => service.View is { IsDisposed: false }, "Learning opens for the document consent check");
             var learning = service.View;
             await learning.Ready.Task.WaitAsync(TimeSpan.FromSeconds(40));
+            await Wait(() => ReferenceEquals(main.ActiveMdiChild, learning), "the learning document is in front");
+            Check(ReferenceEquals(Field(pane, "script"), workbook) && pane.WorksheetMode,
+                "opening Learning leaves the worksheet conversation in place");
             await JS(learning, "document.querySelector('[data-lesson=precision]').click()");
             learning.SourceId = script.Id();
             service.RefreshWorkspace();
@@ -138,7 +144,7 @@ internal static partial class Program
     }
 
     private static async Task TestWorksheetConsentAcrossFocus(frmMain main, LearningService service, frmSpreadsheetGear workbook,
-        frmScript script, string workbookValue, string trace)
+        frmScript script, frmReportWebView report, string workbookValue, string trace)
     {
         const string otherValue = "CONSENT_UNAPPROVED_OTHER_WORKBOOK";
         var other = (frmSpreadsheetGear)main.CreateGrid("Another consent test workbook");
@@ -168,21 +174,56 @@ internal static partial class Program
             await CheckConfirmedWorkbookRead(pane, workbook, workbookValue, trace, "FOCUS_BEFORE_SWITCH");
 
             other.Activate();
-            await Wait(() => ReferenceEquals(main.ActiveMdiChild, other), "the other workbook is in front for a question from the confirmed workbook's pane");
-            Check(ReferenceEquals(Field(pane, "script"), workbook) && !service.Sharing.Accepts([other.Id()]) &&
+            await CheckWorksheetPaneBinding(main, pane, other, shared: false);
+            Check(!service.Sharing.Accepts([other.Id()]) &&
                 service.Sharing.Accepts([workbook.Id(), script.Id()]) && service.Sharing.Revision == revision,
                 "viewing a different workbook preserves existing approvals without approving that workbook");
-            await CheckConfirmedWorkbookRead(pane, workbook, workbookValue, trace, "FOCUS_OTHER_WORKBOOK_ACTIVE");
+            await pane.Transcript.SettledAsync();
+            Check(!(await pane.Transcript.TextAsync()).Contains("FOCUS_BEFORE_SWITCH", StringComparison.Ordinal),
+                "the first workbook's conversation is hidden when the other workbook is in front");
+            pane.ShareWorkbook.Checked = true;
+            await CheckConsentBlocksTurn(pane, trace, "WORKSHEET_AI_FOCUS_OTHER_UNCONFIRMED");
+            pane.ShareWorkbook.Checked = false;
+            await CheckUnsharedWorksheetTurn(pane, trace, "WORKSHEET_AI_FOCUS_OTHER_UNAPPROVED",
+                workbook.Id(), workbookValue, workbook.Text, other.Id(), otherValue, other.Text);
+
+            CheckWorksheetSharing(pane, service, other, trace);
+            await CheckConfirmedWorkbookRead(pane, other, otherValue, trace, "FOCUS_OTHER_CONFIRMED",
+                workbook.Id(), workbookValue, workbook.Text);
+            pane.Acknowledge.Checked = false;
+            Check(!service.Sharing.Accepts([other.Id()]) && service.Sharing.Accepts([workbook.Id(), script.Id()]),
+                "withdrawing the other workbook's acknowledgment preserves the first workbook and script approvals");
+            await CheckConsentBlocksTurn(pane, trace, "WORKSHEET_AI_FOCUS_OTHER_WITHDRAWN");
+            pane.Acknowledge.Checked = true;
 
             workbook.Activate();
-            await Wait(() => ReferenceEquals(main.ActiveMdiChild, workbook), "the user returns to the first worksheet");
-            Check(pane.ShareWorkbook.Checked && !pane.Acknowledge.Visible && pane.Send.Enabled,
-                "returning to the confirmed worksheet keeps the conversation available with one sharing checkbox");
-            pane = await OpenWorksheetAssistant(main, service, other);
-            CheckWorksheetSharing(pane, service, other, trace, allow: false);
-            Check(!ReadWorksheetTrace(trace).Contains(otherValue, StringComparison.Ordinal),
-                "asking from the first workbook's pane or trying the unconfirmed pane sends none of the other workbook's cells");
-            pane.Composer.Clear();
+            await CheckWorksheetPaneBinding(main, pane, workbook, shared: true);
+            await pane.Transcript.SettledAsync();
+            string conversation = await pane.Transcript.TextAsync();
+            Check(conversation.Contains("FOCUS_BEFORE_SWITCH", StringComparison.Ordinal)
+                && !conversation.Contains("FOCUS_OTHER_CONFIRMED", StringComparison.Ordinal),
+                "returning to the first worksheet restores only its own conversation and sharing choice");
+            await CheckConfirmedWorkbookRead(pane, workbook, workbookValue, trace, "FOCUS_RETURNED",
+                other.Id(), otherValue, other.Text);
+            Check(LastWorksheetRequest(trace).A("conversation").Any(message =>
+                    message.S("text") == "WORKSHEET_AI_CONSENT_FOCUS_BEFORE_SWITCH"),
+                "the resumed conversation sends its earlier worksheet question");
+
+            foreach (var document in new StatsDirectForm[] { script, report })
+            {
+                document.Activate();
+                await Wait(() => ReferenceEquals(main.ActiveMdiChild, document), "the non-workbook document is in front");
+                Check(pane.WorksheetMode && ReferenceEquals(Field(pane, "script"), workbook) && pane.ShareWorkbook.Checked,
+                    "activating " + document.GetType().Name + " leaves the worksheet conversation and its confirmation in place");
+            }
+
+            other.Activate();
+            await CheckWorksheetPaneBinding(main, pane, other, shared: true);
+            await pane.Transcript.SettledAsync();
+            Check((await pane.Transcript.TextAsync()).Contains("FOCUS_OTHER_CONFIRMED", StringComparison.Ordinal),
+                "returning to the other worksheet restores its confirmed conversation too");
+            workbook.Activate();
+            await CheckWorksheetPaneBinding(main, pane, workbook, shared: true);
         }
         finally { CloseTestDocument(other); }
     }
@@ -192,28 +233,19 @@ internal static partial class Program
     {
         pane.ShareWorkbook.Checked = false;
         string[] before = WorksheetAnalysisDataTraffic(trace);
-        var previous = service.ConfirmSharing;
-        int confirmations = 0;
-        StatsDirectForm[] requested = null;
-        try
-        {
-            service.ConfirmSharing = documents =>
-            {
-                confirmations++;
-                requested = documents;
-                return allow ? LearningService.SharingDecision.Share : LearningService.SharingDecision.Cancel;
-            };
-            pane.ShareWorkbook.Checked = true;
-        }
-        finally { service.ConfirmSharing = previous; }
-
-        Check(reuse ? confirmations == 0 : confirmations == 1 && requested.SequenceEqual([workbook]),
-            reuse ? "the checkbox reuses existing workbook consent without reopening confirmation"
-                : "ticking the checkbox requests consent for exactly the named workbook");
-        Check(pane.ShareWorkbook.Visible && pane.ShareWorkbook.Checked == allow && !pane.Acknowledge.Visible
-            && pane.Send.Enabled && service.Sharing.Accepts([workbook.Id()]) == allow,
-            allow ? "approval enables workbook questions using the single sharing checkbox"
-                : "cancelling restores question-only mode with the checkbox off");
+        pane.ShareWorkbook.Checked = true;
+        Check(ReferenceEquals(Field(pane, "script"), workbook)
+            && pane.ShareWorkbook.Visible && pane.Acknowledge.Visible && pane.Acknowledge.Enabled
+            && pane.Acknowledge.Checked == reuse && pane.Send.Enabled == reuse
+            && service.Sharing.Accepts([workbook.Id()]) == reuse,
+            reuse ? "the sharing checkbox restores the named workbook's existing confirmation"
+                : "the sharing checkbox alone does not authorize the named workbook or enable Send");
+        if (allow && !reuse) pane.Acknowledge.Checked = true;
+        if (!allow) pane.ShareWorkbook.Checked = false;
+        Check(pane.ShareWorkbook.Checked == allow && pane.Acknowledge.Enabled == allow && pane.Send.Enabled
+            && service.Sharing.Accepts([workbook.Id()]) == allow,
+            allow ? "the acknowledgment enables questions sharing the named workbook"
+                : "turning off unconfirmed sharing leaves questions enabled without workbook approval");
         Check(before.SequenceEqual(WorksheetAnalysisDataTraffic(trace)),
             "changing the sharing choice by itself does not send a question or workbook data");
     }
@@ -231,12 +263,14 @@ internal static partial class Program
     }
 
     private static async Task CheckConfirmedWorkbookRead(
-        ScriptAIPane pane, frmSpreadsheetGear workbook, string sample, string trace, string check)
+        ScriptAIPane pane, frmSpreadsheetGear workbook, string sample, string trace, string check, params string[] excluded)
     {
         int before = WorksheetAnalysisDataTraffic(trace).Length;
         var reply = await WorksheetReply(pane, "WORKSHEET_AI_CONSENT_" + check);
+        string[] traffic = WorksheetAnalysisDataTraffic(trace).Skip(before).ToArray();
         Check(reply.A("ids").Select(id => id.GetValue<string>()).SequenceEqual([workbook.Id()]) && reply.B("read") &&
-            WorksheetAnalysisDataTraffic(trace).Skip(before).Any(line => line.Contains(sample, StringComparison.Ordinal)),
+            traffic.Any(line => line.Contains(sample, StringComparison.Ordinal)) &&
+            traffic.All(line => excluded.All(value => !line.Contains(value, StringComparison.Ordinal))),
             check + " reads a real cell from exactly the named workbook after its confirmation");
     }
 }

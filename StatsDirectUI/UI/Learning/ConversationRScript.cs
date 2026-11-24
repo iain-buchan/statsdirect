@@ -17,11 +17,7 @@ internal static class ConversationRScript
 
     internal static string Build(JsonArray messages, int messageIndex, int blockIndex = -1, bool currentReplyOnly = false)
     {
-        if (messageIndex < 0 || messageIndex >= messages.Count || messages[messageIndex].S("role") is not ("assistant" or "user"))
-            throw new InvalidOperationException("Wait for the reply to finish before opening its R code.");
-        var selected = Blocks(messages[messageIndex].S("text"));
-        if (selected.Length == 0 || blockIndex < -1 || blockIndex >= selected.Length)
-            throw new InvalidOperationException("This reply contains no completed R code block.");
+        var selected = SelectedBlocks(messages, messageIndex, blockIndex);
         var result = new StringBuilder("# AI suggestion — review before running. Nothing has run automatically.\n");
         result.Append(currentReplyOnly
             ? "# Includes the fixed worksheet values read for this reply.\n"
@@ -40,11 +36,41 @@ internal static class ConversationRScript
             if (source.Length > 0 && source != previousSource) { Append("Source script snapshot shared for this question", source); previousSource = source; }
             Append("Worksheet values read for this reply (fixed snapshot)", message.S("rData"));
             if (message.S("role") is not ("assistant" or "user")) continue;
-            var blocks = Blocks(message.S("text"));
+            var blocks = i == messageIndex ? selected : Blocks(message.S("text"));
             int count = i == messageIndex && blockIndex >= 0 ? blockIndex + 1 : blocks.Length;
             for (int b = 0; b < count; b++) Append(i == messageIndex ? "Selected reply — R block " + (b + 1) : "Earlier conversation — R block " + (b + 1), blocks[b]);
         }
         return result.ToString();
+    }
+
+    internal static string BuildForCurrentSession(JsonArray messages, int messageIndex, int blockIndex = -1)
+    {
+        var blocks = SelectedBlocks(messages, messageIndex, blockIndex);
+        var result = new StringBuilder("# AI suggestion\n");
+        void Append(string code)
+        {
+            if (string.IsNullOrWhiteSpace(code)) return;
+            if ((long)result.Length + code.Length > 2_000_000)
+                throw new InvalidOperationException("The R code and worksheet snapshots are too large to run together. Start a new conversation or copy the code you need.");
+            result.Append('\n').Append(code).Append('\n');
+        }
+
+        // Restore only the app-generated worksheet bindings. The existing R session
+        // already owns its variables and may have run a different version of the script.
+        for (int i = 0; i <= messageIndex; i++) Append(messages[i].S("rData"));
+        if (blockIndex >= 0) Append(blocks[blockIndex]);
+        else foreach (string block in blocks) Append(block);
+        return result.ToString();
+    }
+
+    private static string[] SelectedBlocks(JsonArray messages, int messageIndex, int blockIndex)
+    {
+        if (messageIndex < 0 || messageIndex >= messages.Count || messages[messageIndex].S("role") is not ("assistant" or "user"))
+            throw new InvalidOperationException("Wait for the reply to finish before opening its R code.");
+        var selected = Blocks(messages[messageIndex].S("text"));
+        if (selected.Length == 0 || blockIndex < -1 || blockIndex >= selected.Length)
+            throw new InvalidOperationException("This reply contains no completed R code block.");
+        return selected;
     }
 
     internal static string Dataset(JsonObject data)

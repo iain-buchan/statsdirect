@@ -136,6 +136,15 @@ jobs:
           WEBVIEW2_USER_DATA_FOLDER: ${{ runner.temp }}/statsdirect-worksheet-ai-analysis/webview
         shell: pwsh
         run: dotnet run --project tests/Learning -c Release -p:StatsDirectBin="$env:GITHUB_WORKSPACE/StatsDirectUI/bin/Release/net10.0-windows10.0.17763.0"
+      - name: Native Script AI current R session regression (blocking)
+        if: steps.profile.outputs.licensed == 'true'
+        env:
+          STATSDIRECT_LEARNING_ONLY: script-ai-r-session
+          STATSDIRECT_SKIP_CLIPBOARD: 1
+          STATSDIRECT_USER_DATA_ROOT: ${{ runner.temp }}/statsdirect-script-ai-r-session/user-data
+          WEBVIEW2_USER_DATA_FOLDER: ${{ runner.temp }}/statsdirect-script-ai-r-session/webview
+        shell: pwsh
+        run: dotnet run --project tests/Learning -c Release -p:StatsDirectBin="$env:GITHUB_WORKSPACE/StatsDirectUI/bin/Release/net10.0-windows10.0.17763.0"
       - name: Sanity check and operations test
         shell: bash
         run: |

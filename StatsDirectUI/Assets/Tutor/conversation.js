@@ -20258,6 +20258,12 @@ ${content}</tr>
       const body = document.createElement("div");
       body.className = "body";
       body.innerHTML = richText(text3).replaceAll('data-code="r"', 'data-code="open"');
+      if (runInCurrentR) {
+        for (const button of body.querySelectorAll('button[data-code="open"]')) {
+          button.textContent = "Run in this R session";
+          button.dataset.code = "run";
+        }
+      }
       if (foldRCode) {
         for (const block3 of body.querySelectorAll(".code-block")) {
           if (!block3.querySelector('[data-code="open"]')) continue;
@@ -20274,7 +20280,7 @@ ${content}</tr>
     const rendered = [];
     let welcomeElement = null;
     let worksheetActionElement = null, worksheetActionKey = "";
-    let partialElement = null, partialText = "", renders = 0, applied = 0, context = 0, requests = 0, copying = null, collapseRCode = false;
+    let partialElement = null, partialText = "", renders = 0, applied = 0, context = 0, requests = 0, copying = null, collapseRCode = false, runInCurrentR = false;
     function bind(element) {
       element.querySelectorAll("a").forEach((a) => {
         if (!/^https?:\/\//i.test(a.getAttribute("href") ?? "")) a.removeAttribute("href");
@@ -20294,7 +20300,7 @@ ${content}</tr>
           context,
           request,
           messageIndex: [...container.children].indexOf(element),
-          blockIndex: [...element.querySelectorAll("button[data-code=open]")].indexOf(button)
+          blockIndex: [...element.querySelectorAll("button[data-code=open], button[data-code=run]")].indexOf(button)
         });
       });
       element.querySelectorAll("a").forEach((a) => {
@@ -20436,8 +20442,9 @@ ${content}</tr>
     }
     function update(m) {
       context = m.context;
-      const reset = m.reset || collapseRCode !== Boolean(m.collapseRCode);
+      const reset = m.reset || collapseRCode !== Boolean(m.collapseRCode) || runInCurrentR !== Boolean(m.runInCurrentR);
       collapseRCode = Boolean(m.collapseRCode);
+      runInCurrentR = Boolean(m.runInCurrentR);
       const selection = reset ? null : saveSelection();
       const top = scroller().scrollTop;
       const follow = reset || !selection && atEnd();

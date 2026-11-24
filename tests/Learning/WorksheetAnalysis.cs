@@ -135,20 +135,22 @@ internal static partial class Program
             string[] beforeApproval = WorksheetAnalysisDataTraffic(trace);
             string stagedToken = (await WorksheetActionSnapshot(pane)).S("token");
             otherWorkbook.Activate();
-            await Wait(() => ReferenceEquals(main.ActiveMdiChild, otherWorkbook), "the user switches to another workbook with an analysis staged");
-            await ClickWorksheetAction(pane, "continue");
-            await Wait(() => aiStatus.Text.Contains("Activate", StringComparison.OrdinalIgnoreCase)
-                && aiStatus.Text.Contains(grid.Text, StringComparison.Ordinal),
-                "Continue from another workbook asks the user to return to the original workbook");
-            var retainedConfirmation = await WorksheetActionSnapshot(pane);
-            Check(retainedConfirmation.S("kind") == "confirm" && retainedConfirmation.S("token") == stagedToken
-                && ReferenceEquals(main.ActiveMdiChild, otherWorkbook) && !main.InOperation
-                && !main.MdiChildren.OfType<frmReportWebView>().Any(),
-                "Continue with another workbook active preserves the confirmation and runs nothing");
+            await CheckWorksheetPaneBinding(main, pane, otherWorkbook, shared: false);
+            await WaitForWorksheetAction(pane, "compare");
+            await browser.ExecuteScriptAsync("window.chrome.webview.postMessage(" + JsonSerializer.Serialize(new
+            {
+                action = "worksheetAnalysis", token = stagedToken, choice = "continue", context = (int)Field(pane.Transcript, "context")
+            }) + ")");
+            await Task.Delay(80);
+            Check(stagedToken.Length > 0 && !main.InOperation && !main.MdiChildren.OfType<frmReportWebView>().Any()
+                && beforeApproval.SequenceEqual(WorksheetAnalysisDataTraffic(trace)),
+                "switching workbooks dismisses the staged method and rejects Continue with its old token");
             grid.Activate();
-            await Wait(() => ReferenceEquals(main.ActiveMdiChild, grid), "the user returns to the original worksheet");
-            Check(stagedToken.Length > 0 && (await WorksheetActionSnapshot(pane)).S("token") == stagedToken,
-                "the proposed worksheet method survives visiting another workbook");
+            await CheckWorksheetPaneBinding(main, pane, grid, shared: false);
+            await WaitForWorksheetAction(pane, "compare");
+            await WorksheetReply(pane, "TRE_WORKSHEET_ANALYSIS_RESTAGED");
+            await CheckWorksheetConfirmation(pane, "Paired Student t test", PairedSelection, "A new report");
+            beforeApproval = WorksheetAnalysisDataTraffic(trace);
             await ContinueWorksheetAnalysis(main, pane, "Paired Student t test");
             await Wait(() => main.MdiChildren.OfType<frmReportWebView>().Count() == 1,
                 "confirming the inline proposal creates a report when none was open");
@@ -179,6 +181,12 @@ internal static partial class Program
             await CheckWorksheetConfirmation(pane, "Paired Student t test", PairedSelection, chosen.Text);
             other.Activate();
             await Wait(() => ReferenceEquals(main.ActiveMdiChild, other), "the user changes the report after staging the analysis");
+            await ClickWorksheetAction(pane, "continue");
+            await Wait(() => aiStatus.Text.Contains("Activate", StringComparison.OrdinalIgnoreCase)
+                && aiStatus.Text.Contains(grid.Text, StringComparison.Ordinal),
+                "Continue still requires the proposal's source worksheet in front when the chat stays open over a report");
+            Check(!main.InOperation && (await WorksheetActionSnapshot(pane)).S("kind") == "confirm",
+                "refusing Continue leaves the confirmation available without starting an analysis");
             grid.Activate();
             await Wait(() => ReferenceEquals(main.ActiveMdiChild, grid), "the source worksheet is active again");
             await ClickWorksheetAction(pane, "continue");
@@ -549,6 +557,11 @@ internal static partial class Program
         Check(prompt.Contains("Ground instructions about StatsDirect in the manual.", StringComparison.Ordinal)
             && prompt.Contains("Draw on general statistical and R knowledge", StringComparison.Ordinal),
             "the prompt grounds StatsDirect guidance in its manual and uses general statistics and R knowledge when useful");
+        Check(prompt.Contains("only the workbook named in the Share open workbook data checkbox", StringComparison.Ordinal)
+            && prompt.Contains("the user brings it to the front and the chat follows", StringComparison.Ordinal)
+            && prompt.Contains("without asking the user to tick or confirm the checkbox again", StringComparison.Ordinal)
+            && !prompt.Contains("Share workbook data with AI", StringComparison.Ordinal),
+            "the assistant explains the active-workbook scope and recognizes an already confirmed workbook");
         string[] clarification =
         [
             "ask before recommending or staging a specific method",

@@ -157,11 +157,12 @@ internal sealed class ConversationView : UserControl
             var messages = last?["messages"] as JsonArray;
             if (messages == null || messageIndex < 0 || messageIndex >= messages.Count) return;
             int request = m.TryGetProperty("request", out var rq) && rq.TryGetInt32(out int number) ? number : -1;
-            if (what is not ("copy" or "open") || code.Length == 0 || code.Length > 200_000) return;
+            if (what is not ("copy" or "open" or "run") || code.Length == 0 || code.Length > 200_000) return;
+            if (what != "copy" && (what == "run") != (last?["runInCurrentR"]?.GetValue<bool>() == true)) return;
             // The program reads the saved reply itself and uses its own text of the block the click means: the block at the
             // page's position when its text as shown is the text clicked, otherwise the first block shown with that text.  When
             // there is none it says so, and neither copies nor opens another block.
-            bool open = what == "open";
+            bool open = what is "open" or "run";
             var blocks = CompletedCodeBlocks.ReadBlocks(MessageText(messages[messageIndex], "text"));
             int found = CompletedCodeBlocks.Find(blocks, open ? blockIndex : -1, code, rOnly: open);
             if (found < 0) { Notice?.Invoke(CompletedCodeBlocks.Unmatched); return; }
@@ -200,13 +201,14 @@ internal sealed class ConversationView : UserControl
     }
 
     /// <summary>The whole conversation, its streamed reply and any current worksheet action.</summary>
-    internal void Update(JsonArray messages, string partial, bool reset, bool collapseRCode = false, string welcome = "", JsonObject worksheetAction = null)
+    internal void Update(JsonArray messages, string partial, bool reset, bool collapseRCode = false, string welcome = "",
+        JsonObject worksheetAction = null, bool runInCurrentR = false)
     {
         var list = new JsonArray();
         foreach (var message in messages)
             list.Add(new JsonObject { ["role"] = MessageText(message, "role"), ["text"] = MessageText(message, "text") });
-        if (reset) context++;
-        var m = new JsonObject { ["action"] = "update", ["sequence"] = ++sequence, ["context"] = context, ["reset"] = reset, ["collapseRCode"] = collapseRCode, ["welcome"] = welcome, ["partial"] = partial ?? "", ["messages"] = list };
+        if (reset || last?["runInCurrentR"]?.GetValue<bool>() != runInCurrentR) context++;
+        var m = new JsonObject { ["action"] = "update", ["sequence"] = ++sequence, ["context"] = context, ["reset"] = reset, ["collapseRCode"] = collapseRCode, ["runInCurrentR"] = runInCurrentR, ["welcome"] = welcome, ["partial"] = partial ?? "", ["messages"] = list };
         if (worksheetAction != null) m["worksheetAction"] = worksheetAction.DeepClone();
         last = m;
         if (!failed && ready.Task.IsCompletedSuccessfully) Post(m);

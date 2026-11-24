@@ -1,5 +1,5 @@
 import readline from 'node:readline';
-import {appendFileSync,readFileSync} from 'node:fs';
+import {appendFileSync,existsSync,readFileSync} from 'node:fs';
 import {join} from 'node:path';
 let loggedIn=false,sequence=0;const turns=new Map(),threadTools=new Map(),responses=new Map();
 const workspaceProbePath=process.argv[2]==='--workspace-policy-probe'?process.argv[3]:null;
@@ -53,7 +53,7 @@ readline.createInterface({input:process.stdin}).on('line',line=>{
    const id='turn-'+(++sequence);result({turn:{id}});const text=p.input[0].text;
    const request=JSON.parse(text.slice(text.indexOf('\n')+1));
    const lastQuestion=request.conversation.at(-1).text.replace(/^\[Lesson context: [^\n]*\]\n/,'');
-   const timer=setTimeout(async()=>{
+   const reply=async()=>{
      if(text.includes('FORCE_ERROR')){out({method:'turn/completed',params:{threadId:p.threadId,turn:{id,status:'failed',error:{message:'401 SECRET_SHOULD_NOT_BE_SHOWN'}}}});return;}
      let answer='Mock answer: paired observations need paired analysis.\n```r\nx <- c(1,2,3)\nmean(x)\n```';
      const question=lastQuestion;
@@ -72,6 +72,7 @@ readline.createInterface({input:process.stdin}).on('line',line=>{
        const sample=readFileSync(new URL('ai-pefr.R',import.meta.url),'utf8');
        answer='Use the shared paired data.\n```r\n'+sample.split('\n')[0]+'\n```\nThen analyse and plot:\n```r\n'+sample.split('\n').slice(1).join('\n')+'\n```';
      }
+     if(question==='PEFR_CONTEXT_SESSION') answer='Use the shared paired data.\n```r\nd <- before - after\n```\nThen analyse:\n```r\nprint(t.test(before, after, paired = TRUE))\nprint(t.test(d, mu = 0))\n```';
      if(question==='PEFR_FOLLOWUP') answer='Continue with the same differences.\n```r\nstopifnot(length(d) == 9)\nprint(mean(d))\n```';
      if(question==='LOCAL_CONTEXT_PRIVACY') answer=text.includes('LOCAL_REPLAY_ONLY')?'PRIVATE_SNAPSHOT_LEAK':'LOCAL_METADATA_EXCLUDED';
      if(question.startsWith('TRE_GUIDANCE_PROBE')) {
@@ -176,7 +177,18 @@ readline.createInterface({input:process.stdin}).on('line',line=>{
      out({method:'item/agentMessage/delta',params:{threadId:p.threadId,turnId:id,itemId:'reply',delta:answer}});
      out({method:'item/completed',params:{threadId:p.threadId,turnId:id,item:{type:'agentMessage',id:'reply',text:answer}}});
      out({method:'turn/completed',params:{threadId:p.threadId,turn:{id,status:'completed'}}});
-   },lastQuestion.includes('COPY_SELECTION_CHECK')?60000:lastQuestion.includes('SLOW_REPLY')?8000:50);turns.set(id,timer);break;}
+   };
+   if(analysisTracePath && lastQuestion.startsWith('WORKSHEET_AI_FOCUS_GATED_')) {
+     const release=analysisTracePath+'.'+lastQuestion;
+     function waitForRelease() {
+       if(existsSync(release)) void reply();
+       else turns.set(id,setTimeout(waitForRelease,30));
+     }
+     waitForRelease();
+   } else {
+     turns.set(id,setTimeout(reply,lastQuestion.includes('COPY_SELECTION_CHECK')?60000:lastQuestion.includes('SLOW_REPLY')?8000:50));
+   }
+   break;}
  case 'turn/interrupt':clearTimeout(turns.get(p.turnId));result({});break;
  case 'thread/unsubscribe':result({});break;
  default: if(q.id!==undefined)out({id:q.id,error:{code:-32601,message:'Unsupported mock method'}});

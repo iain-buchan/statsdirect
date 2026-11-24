@@ -24,6 +24,7 @@ public partial class frmMain
         MdiChildActivate += (_, _) =>
         {
             learning?.RefreshWorkspace();
+            if (ActiveMdiChild is frmSpreadsheetGear workbook) learning?.ActiveWorksheetChanged(workbook);
             if (ActiveMdiChild is frmScript script) learning?.ActiveScriptChanged(script);
             if (ActiveMdiChild is frmReportWebView report) learning?.ActiveReportChanged(report);
         };
