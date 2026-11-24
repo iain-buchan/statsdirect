@@ -45,7 +45,8 @@ internal static partial class Program
         {
             try
             {
-                await Run(main);
+                if (args.Contains("--heavy-output", StringComparer.Ordinal)) await CheckHeavyOutput(main);
+                else await Run(main);
                 Check(unhandled == 0, "no exception escapes to the Windows UI thread");
                 Console.WriteLine($"PASS {checks} integrated Windows interactive R checks");
                 result = 0;
@@ -123,7 +124,8 @@ internal static partial class Program
             if (!host.Document.IsDisposed && host.Browser.CoreWebView2 != null)
             {
                 await using var stream = File.Create(Path.Combine(artifacts, $"console-{index}.png"));
-                await host.Browser.CoreWebView2.CapturePreviewAsync(Microsoft.Web.WebView2.Core.CoreWebView2CapturePreviewImageFormat.Png, stream);
+                await host.Browser.CoreWebView2.CapturePreviewAsync(Microsoft.Web.WebView2.Core.CoreWebView2CapturePreviewImageFormat.Png, stream)
+                    .WaitAsync(TimeSpan.FromSeconds(10));
             }
         }
         catch (Exception error) { Console.WriteLine("Evidence note: " + error.Message); }
@@ -151,6 +153,7 @@ internal static partial class Program
         await CheckRestartAndIsolation(main, host);
         await CheckRscriptFallback(main);
         await CheckUnrunnableWorkerFallback(main);
+        await CheckHeavyOutput(main);
         await CheckClosingAndSaving(main);
     }
 }
