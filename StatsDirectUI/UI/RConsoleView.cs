@@ -24,6 +24,8 @@ namespace StatsDirect.UI;
 internal sealed partial class RConsoleView : UserControl
 {
     private const string Origin = "https://rconsole.statsdirect.invalid";
+    private const int SessionEventBatchSize = 512;
+    private const int BrowserBatchCharacterLimit = 512 * 1024;
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     internal WebView2 Browser { get; private set; } = new() { Dock = DockStyle.Fill };
     private TaskCompletionSource ready = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -34,12 +36,15 @@ internal sealed partial class RConsoleView : UserControl
     private readonly Dictionary<string, JsonElement> latestPlots = new();
     private readonly HashSet<string> outputFiles = new(StringComparer.OrdinalIgnoreCase);
     private readonly StringBuilder transcript = new();
+    private readonly Queue<JsonElement> sessionEvents = new();
+    private readonly System.Windows.Forms.Timer sessionEventTimer = new() { Interval = 30 };
     private readonly LinkLabel displayFailure = new() { Dock = DockStyle.Top, AutoSize = true, Padding = new Padding(8), Visible = false, Text = "The R display stopped. Reload display (your R workspace is retained)." };
     private JsonElement sessionEnvelope;
     private string sessionId = Guid.NewGuid().ToString("N"), script = "";
     private long generation, offlineSeq, historySize, commandHistorySize;
     private bool browserFailed, recovering;
     private bool startingPage, pageReady, closing;
+    private bool sessionEventDrainPending;
     internal IRSession? Session { get; private set; }
     internal Task Ready => ready.Task;
     internal string NativeState { get; private set; } = "ready";
@@ -81,6 +86,7 @@ internal sealed partial class RConsoleView : UserControl
         Controls.Add(Browser);
         Controls.Add(displayFailure);
         displayFailure.LinkClicked += async (_, _) => { try { await RecoverDisplayAsync(); } catch (Exception ex) { Notice?.Invoke(ex.Message); } };
+        sessionEventTimer.Tick += (_, _) => DrainSessionEvents(SessionEventBatchSize);
         sessionEnvelope = JsonSerializer.SerializeToElement(new { protocolVersion = 1, type = "session", sessionId, generation = 0, seq = 0 });
     }
 
@@ -124,7 +130,14 @@ internal sealed partial class RConsoleView : UserControl
                 displayFailure.Visible = true; displayFailure.BringToFront();
                 Notice?.Invoke("The R display stopped. Reload display to return to the same R workspace.");
             };
-            await core.AddScriptToExecuteOnDocumentCreatedAsync("window.chrome.webview.addEventListener('message', e => window.StatsDirectRConsole?.receive(e.data));");
+            await core.AddScriptToExecuteOnDocumentCreatedAsync("""
+                window.chrome.webview.addEventListener('message', ({data}) => {
+                    const console = window.StatsDirectRConsole;
+                    if (Array.isArray(data)) {
+                        for (const event of data) console?.receive(event);
+                    } else console?.receive(data);
+                });
+                """);
             await core.AddScriptToExecuteOnDocumentCreatedAsync(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "RConsole", "windows-host.js")));
             core.Navigate(Origin + "/index.html");
         }
@@ -172,6 +185,7 @@ internal sealed partial class RConsoleView : UserControl
         try
         {
             ObjectDisposedException.ThrowIf(closing, this);
+            bool newSession = Session == null;
             if (Session == null)
             {
                 string helper = Path.Combine(AppContext.BaseDirectory, "StatsDirect.RConsole.Native.exe");
@@ -210,6 +224,9 @@ internal sealed partial class RConsoleView : UserControl
                 }
             }
             await Session.StartAsync();
+            // The first prompt and startup notice should be ready when Start
+            // returns, including the synchronous Rscript fallback start.
+            if (newSession) DrainSessionEvents(SessionEventBatchSize);
         }
         finally { startingR.Release(); }
     }
@@ -310,14 +327,56 @@ internal sealed partial class RConsoleView : UserControl
     }
     private void OnSessionEvent(JsonElement item)
     {
-        if (closing || IsDisposed) return;
-        // Queue UI-originated state notices too: applying them immediately could
-        // overtake earlier worker events and make the page drop older sequence IDs.
-        var copy = item.Clone();
-        try { BeginInvoke(new Action(() => ApplySessionEvent(copy))); }
+        lock (sessionEvents)
+        {
+            if (closing || IsDisposed) return;
+            // Queue UI-originated state notices too, so they cannot overtake worker output.
+            sessionEvents.Enqueue(item.Clone());
+            if (sessionEventDrainPending) return;
+            sessionEventDrainPending = true;
+        }
+        // One dispatch starts the pump. A timer lets Windows process input and
+        // paint between batches, even when R is writing thousands of chunks.
+        try { BeginInvoke(new Action(() => { if (!closing) sessionEventTimer.Start(); })); }
         catch (InvalidOperationException) when (closing || IsDisposed) { }
     }
-    private void ApplySessionEvent(JsonElement item)
+
+    private void DrainSessionEvents(int limit, bool discardOutput = false)
+    {
+        List<JsonElement> batch;
+        lock (sessionEvents)
+        {
+            int count = Math.Min(sessionEvents.Count, limit);
+            batch = new List<JsonElement>(count);
+            for (int i = 0; i < count; i++) batch.Add(sessionEvents.Dequeue());
+            if (sessionEvents.Count == 0)
+            {
+                sessionEventTimer.Stop();
+                sessionEventDrainPending = false;
+            }
+        }
+        var delivery = new List<string>(batch.Count);
+        int characters = 0;
+        foreach (var item in batch)
+        {
+            if (discardOutput && item.GetProperty("type").GetString() == "output") continue;
+            ApplySessionEvent(item, delivery, ref characters);
+        }
+        SendEventBatch(delivery, ref characters);
+    }
+
+    private void SendEventBatch(List<string> delivery, ref int characters)
+    {
+        if (delivery.Count > 0 && pageReady && !closing)
+        {
+            string json = delivery.Count == 1 ? delivery[0] : "[" + string.Join(",", delivery) + "]";
+            Browser.CoreWebView2.PostWebMessageAsJson(json);
+        }
+        delivery.Clear();
+        characters = 0;
+    }
+
+    private void ApplySessionEvent(JsonElement item, List<string> delivery, ref int characters)
     {
         if (closing || IsDisposed) return;
         string? type = item.GetProperty("type").GetString();
@@ -327,6 +386,7 @@ internal sealed partial class RConsoleView : UserControl
         sessionId = item.GetProperty("sessionId").GetString()!; generation = incoming;
         if (type == "session")
         {
+            SendEventBatch(delivery, ref characters);
             CloseChartWindows();
             history.Clear(); historySize = 0; plots.Clear(); latestPlots.Clear(); outputFiles.Clear(); transcript.Clear();
             sessionEnvelope = item.Clone(); NativeState = "starting";
@@ -355,14 +415,22 @@ internal sealed partial class RConsoleView : UserControl
             if (transcript.Length > 200000) transcript.Remove(0, transcript.Length - 200000);
         }
         if (type == "notice" && item.TryGetProperty("filePath", out var filePath)) outputFiles.Add(Path.GetFullPath(filePath.GetString()!));
-        history.Add(item.Clone());
-        historySize += item.GetRawText().Length;
+        string json = item.GetRawText();
+        history.Add(item);
+        historySize += json.Length;
         // Replay is bounded independently of the R workspace and saved chart files.
         while (history.Count > 500 || history.Count > 1 && historySize > 24 * 1024 * 1024)
         {
             historySize -= history[0].GetRawText().Length; history.RemoveAt(0);
         }
-        if (pageReady) Browser.CoreWebView2.PostWebMessageAsJson(item.GetRawText());
+        if (pageReady)
+        {
+            // A large chart or source echo already has its own size limit. Send
+            // it alone instead of combining it with the rest of the batch.
+            if (characters + json.Length > BrowserBatchCharacterLimit) SendEventBatch(delivery, ref characters);
+            delivery.Add(json);
+            characters += json.Length;
+        }
     }
     private void RememberCommand(JsonElement item)
     {
@@ -412,6 +480,9 @@ internal sealed partial class RConsoleView : UserControl
     }
     internal async Task ClearOutputAsync()
     {
+        // Keep pending command echoes and states in order, but avoid sending
+        // queued output to the browser just to clear it immediately afterwards.
+        DrainSessionEvents(int.MaxValue, discardOutput: true);
         // Questions are transcript rows too. The R session owns any live request;
         // republish it after clearing rather than replaying historical questions.
         history.RemoveAll(x => x.GetProperty("type").GetString() is "inputRequested" or "inputEcho" or "output" or "notice" or "plot");
@@ -419,6 +490,8 @@ internal sealed partial class RConsoleView : UserControl
         transcript.Clear();
         await ExecuteAsync("window.StatsDirectRConsole.clearOutput()");
         Session?.PublishState();
+        // Restore any live question without waiting for the output timer.
+        DrainSessionEvents(SessionEventBatchSize);
     }
     internal async Task RecoverDisplayAsync()
     {
@@ -511,7 +584,12 @@ internal sealed partial class RConsoleView : UserControl
     {
         if (disposing && !closing)
         {
-            closing = true;
+            lock (sessionEvents)
+            {
+                closing = true;
+                sessionEvents.Clear();
+            }
+            sessionEventTimer.Dispose();
             CloseChartWindows();
             chartContextMenu?.Dispose();
             if (Session != null) { Session.Event -= OnSessionEvent; Session.Dispose(); }

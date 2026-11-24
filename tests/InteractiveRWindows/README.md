@@ -31,6 +31,10 @@ dotnet run --project tests/InteractiveRWindows -c Release -p:StatsDirectBin=C:\p
 node --test tests/InteractiveRWindows/shared-console-ui.test.mjs tests/InteractiveRWindows/r-console-model.test.mjs
 ```
 
+Append `-- --heavy-output` to run just the 20,000-line regression. It checks
+the live page, retained transcript, and the next prompt in both the Rscript
+fallback and the persistent R worker.
+
 For physical keyboard/mouse acceptance, append `-- --manual` to the `dotnet run`
 command. It opens a visible **StatsDirect — R console acceptance** fixture and an
 empty R script through File > New R session, without running the automated suite.

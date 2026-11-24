@@ -42,12 +42,13 @@ internal static partial class Program
         public object Session => Get(View, "Session") ?? throw new InvalidOperationException("The R session has not started.");
         public WebView2 Browser => (WebView2)Get(View, "Browser")!;
         public string State => (string)Get(View, "NativeState")!;
-        public JsonElement[] Events
+        public JsonElement[] Events => Since(0);
+        public int Mark
         {
             get
             {
                 AttachEventJournal();
-                lock (eventGate) return journal.Select(e => e.Clone()).ToArray();
+                lock (eventGate) return journal.Count;
             }
         }
         void AttachEventJournal()
@@ -63,8 +64,11 @@ internal static partial class Program
                 lock (eventGate) journal.Add(entry.Clone());
             }));
         }
-        public int Mark => Events.Length;
-        public JsonElement[] Since(int mark) => Events.Skip(mark).ToArray();
+        public JsonElement[] Since(int mark)
+        {
+            AttachEventJournal();
+            lock (eventGate) return journal.Skip(mark).Select(e => e.Clone()).ToArray();
+        }
         public string Output(int mark = 0) => string.Concat(Since(mark).Where(e => Kind(e) == "output").Select(e => Text(e, "text")));
         public Task Ready() => ((Task)Get(View, "Ready")!).WaitAsync(TimeSpan.FromSeconds(45));
         public async Task<string> JS(string source) => await Browser.CoreWebView2.ExecuteScriptAsync(source);
