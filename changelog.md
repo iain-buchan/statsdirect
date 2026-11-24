@@ -10,6 +10,8 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 ### Changed
 - Script AI and Report AI now ask you to confirm sharing for each script and report. The Learning tutor asks again when you choose to share a document it has not already listed for confirmation.
 - Worksheet AI remembers confirmation for each workbook as you move between open workbooks. When data sharing is restricted, you can still ask for guidance and review a suggested analysis to run locally.
+- AI Assist follows the active workbook after any reply finishes, restoring that workbook’s conversation and sharing choice. Its workbook sharing and confirmation checkboxes work like those in Script AI.
+- In Script AI, Run in this R session runs the suggested code in your current R window, where you can keep using its variables and see the output.
 
 
 ##[v5.3.18] 2026-11-22

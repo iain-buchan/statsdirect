@@ -38,7 +38,12 @@ namespace StatsDirect.UI
         public frmScript()
         {
             InitializeComponent();
-            cboLanguage.SelectedIndexChanged += (_, _) => { if (!KeepRForWorksheetData()) RefreshScriptPresentation(); };
+            cboLanguage.SelectedIndexChanged += (_, _) =>
+            {
+                if (KeepRForWorksheetData()) return;
+                RefreshScriptPresentation();
+                ScriptLanguageChanged?.Invoke(this, EventArgs.Empty);
+            };
             editTarget = rtbDoc;
             rtbDoc.Enter += (_, _) => editTarget = rtbDoc;
             outputPane.Enter += (_, _) => editTarget = outputPane;
@@ -527,6 +532,7 @@ namespace StatsDirect.UI
 
         internal string LearningScript => IsInteractiveR ? InteractiveConsole.Script : rtbDoc.Text;
         internal string LearningLanguage => ScriptLanguageForScript();
+        internal event EventHandler ScriptLanguageChanged;
         internal string LearningOutput => IsInteractiveR ? InteractiveConsole.Transcript : outputPane.Text;
         internal bool LearningRunning => IsInteractiveR && InteractiveConsole.NativeState is "starting" or "busy" or "input" or "continuation" or "interrupting";
 

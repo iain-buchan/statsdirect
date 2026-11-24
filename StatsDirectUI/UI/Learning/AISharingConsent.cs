@@ -20,5 +20,9 @@ internal sealed class AISharingConsent
     }
 
     internal void Approve(IEnumerable<string> documentIds) => approvedDocumentIds.UnionWith(documentIds);
+    internal void Withdraw(string documentId)
+    {
+        if (approvedDocumentIds.Remove(documentId)) Revision++;
+    }
     internal void Revoke() { approvedDocumentIds.Clear(); Revision++; }
 }

@@ -6,60 +6,152 @@ using System.Text.Json.Nodes;
 
 internal static partial class Program
 {
+    private static async Task RunScriptAIConversationFixture(frmMain main)
+    {
+        using var tutor = WorksheetMockTutor(Path.Combine(root, "script-ai-account"), () => AISecurityLevel.Unrestricted);
+        using var service = new LearningService(main, Path.Combine(root, "script-ai-learning"), tutor);
+        typeof(frmMain).GetField("learning", Members)!.SetValue(main, service);
+        try
+        {
+            var grid = (frmSpreadsheetGear)main.CreateGrid("Script AI test workbook");
+            await tutor.SignInAsync();
+            await Wait(() => tutor.Email == "mock@example.invalid", "Script AI connects to the local mock account");
+            await TestConversationR(main, service, grid);
+        }
+        finally { typeof(frmMain).GetField("learning", Members)!.SetValue(main, null); }
+    }
+
     static async Task TestConversationR(frmMain main, LearningService service, frmSpreadsheetGear grid)
     {
         const string source = "before <- c(312,242,340,388,296,254,391,402,290)\nafter <- c(300,201,232,312,220,256,328,330,231)\n";
         var original = service.OpenScript(source, "PEFR source", false);
+        var console = original.InteractiveConsole;
+        await console.Ready.WaitAsync(TimeSpan.FromSeconds(40));
+        int CompletedCommands() => console.History.Count(entry =>
+            entry.GetProperty("type").GetString() == "commandFinished" && entry.GetProperty("status").GetString() == "ok");
+        async Task RunAndWait(Func<Task> run, string description)
+        {
+            int completed = CompletedCommands();
+            await run();
+            await Wait(() => CompletedCommands() > completed && console.NativeState == "ready", description, 30000);
+        }
+        await RunAndWait(() => console.SubmitAsync(source + "session_only <- 123\n", "script"), "the original R session loads data and a session-only object");
+        Check(console.Session?.PersistentWorkspace == true, "the Script AI session test uses the persistent R worker");
+
         service.ShowScriptAI(original);
-        var pane = (ScriptAIPane)Field(service,"ai");
-        pane.ShareScript.Checked = true; pane.Acknowledge.Checked = true; pane.Composer.Text = "PEFR_CONTEXT";
-        await pane.SendAsync(); await pane.Transcript.SettledAsync();
-        ((RichTextBox)Field(original,"rtbDoc")).Text = "before <- after <- 999\n";
-        var paneView = (Control)Field(pane,"view");
-        IEnumerable<Control> Controls(Control c) => c.Controls.Cast<Control>().SelectMany(x => new[]{x}.Concat(Controls(x)));
-        var open = Controls(paneView).OfType<Button>().Single(b=>b.Text=="Open R code");
-        int count=service.Documents.OfType<frmScript>().Count(); open.PerformClick();
-        await Wait(()=>service.Documents.OfType<frmScript>().Count()==count+1,"bottom Open R code creates a reviewable script");
-        var exported=(frmScript)main.ActiveMdiChild;
-        Check(exported.LearningScript.Contains(source)&&!exported.LearningScript.Contains("999"),"AI export uses the original shared snapshot after the source script is edited");
-        Check(!exported.LearningRunning&&exported.LearningOutput.Length==0,"opening suggested R code does not run it");
-        await RunConversationR(exported.LearningScript,"ai-pefr-open", "stopifnot(length(before)==9, length(after)==9, abs(unname(t.test(before, after, paired=TRUE)$statistic)-4.9257744860354)<1e-11, identical(d, before-after))\ncat('PEFR_CONTEXT_OK\\n')", "PEFR_CONTEXT_OK");
-        Check(((RichTextBox)Field(original,"rtbDoc")).Text=="before <- after <- 999\n","AI export leaves the user's source edits unchanged");
+        var pane = (ScriptAIPane)Field(service, "ai");
+        pane.ShareScript.Checked = true;
+        pane.Acknowledge.Checked = true;
+        pane.Composer.Text = "PEFR_CONTEXT_SESSION";
+        await pane.SendAsync();
+        await pane.Transcript.SettledAsync();
+        var messages = (JsonArray)Field(Field(pane, "chat"), "Messages");
+        string exported = ConversationRScript.Build(messages, 1);
+        const string edited = "before <- after <- 999\n";
+        await console.ExecuteAsync("window.StatsDirectRHost.setScript(" + System.Text.Json.JsonSerializer.Serialize(edited) + ")");
+        string editorBeforeRun = await console.GetScriptAsync();
+        Check(editorBeforeRun.Contains("999", StringComparison.Ordinal), "the R editor has unrun changes before the AI action");
+        Check(exported.Contains(source) && !exported.Contains("999"), "the reviewable export retains the original shared snapshot after the source script is edited");
+        await RunConversationR(exported, "ai-pefr-open", "stopifnot(length(before)==9, length(after)==9, abs(unname(t.test(before, after, paired=TRUE)$statistic)-4.9257744860354)<1e-11, identical(d, before-after))\ncat('PEFR_CONTEXT_OK\\n')", "PEFR_CONTEXT_OK");
 
-        // A later block requires d from the first block in that same reply.
-        service.ShowScriptAI(original); await pane.Transcript.SettledAsync();
-        count=service.Documents.OfType<frmScript>().Count();
-        await pane.Transcript.Browser.CoreWebView2.ExecuteScriptAsync("document.querySelectorAll('[data-code=open]')[1].click()");
-        await Wait(()=>service.Documents.OfType<frmScript>().Count()==count+1,"per-block Open in R opens the selected reply with its context");
-        var blockExport=(frmScript)main.ActiveMdiChild;
-        Check(blockExport.LearningScript.Contains(source)&&blockExport.LearningScript.IndexOf("d <- before - after")<blockExport.LearningScript.IndexOf("t.test(before"),"per-block export includes preceding definitions in their original order");
+        var paneView = (Control)Field(pane, "view");
+        IEnumerable<Control> Controls(Control c) => c.Controls.Cast<Control>().SelectMany(x => new[] { x }.Concat(Controls(x)));
+        var runInSession = Controls(paneView).OfType<Button>().Single(b => b.Text == "Run in this R session");
+        int count = service.Documents.OfType<frmScript>().Count();
+        try
+        {
+            await RunAndWait(() => { runInSession.PerformClick(); return Task.CompletedTask; },
+                "the pane's Run in this R session runs the reply in the original console");
+        }
+        catch
+        {
+            var status = (Label)Field(pane, "status");
+            Console.WriteLine($"Script AI action: button visible={runInSession.Visible}, enabled={runInSession.Enabled}; pane open={pane.IsOpen}; console state={console.NativeState}; status={status.Text}");
+            Console.WriteLine(string.Join("\n", console.History.TakeLast(6)));
+            throw;
+        }
+        Check(service.Documents.OfType<frmScript>().Count() == count && ReferenceEquals(original.InteractiveConsole, console),
+            "running an AI reply keeps the original R console and creates no window");
+        Check(await console.GetScriptAsync() == editorBeforeRun, "running an AI reply preserves the editor's unrun changes");
+        await RunAndWait(() => console.SubmitAsync("stopifnot(identical(session_only,123),identical(d,before-after),length(before)==9)", "script"),
+            "running the reply sees existing R variables and keeps the session's objects");
 
-        // Question-only follow-ups can refer to earlier shared data without sharing current edits.
-        service.ShowScriptAI(original); pane.ShareScript.Checked=false; pane.Composer.Text="PEFR_FOLLOWUP";
-        await pane.SendAsync(); await pane.Transcript.SettledAsync();
-        open.PerformClick(); await Task.Delay(100);
-        var followup=(frmScript)main.ActiveMdiChild;
-        Check(followup.LearningScript.Contains(source)&&!followup.LearningScript.Contains("999"),"a question-only follow-up retains earlier data without reading unshared source edits");
-        await RunConversationR(followup.LearningScript,"ai-pefr-followup", "cat('FOLLOWUP_CONTEXT_OK\\n')", "FOLLOWUP_CONTEXT_OK");
-        service.ShowScriptAI(original); await pane.Transcript.SettledAsync();
-        await pane.Transcript.Browser.CoreWebView2.ExecuteScriptAsync("document.querySelector('[data-code=open]').click()"); await Task.Delay(100);
-        var earlier=(frmScript)main.ActiveMdiChild;
-        Check(earlier.LearningScript.Contains(source)&&!earlier.LearningScript.Contains("stopifnot(length(d)"),"an older reply keeps its own context and excludes later replies");
+        const string secondBlock = "document.querySelectorAll('[data-code=run]')[1]";
+        Check(await pane.Transcript.Browser.CoreWebView2.ExecuteScriptAsync(secondBlock + ".textContent") == "\"Run in this R session\"",
+            "the R block button makes its immediate execution clear");
+        await RunAndWait(() => console.SubmitAsync("d <- seq_len(9)", "script"), "the user changes an object in the current R workspace");
+        await RunAndWait(() => pane.Transcript.Browser.CoreWebView2.ExecuteScriptAsync(secondBlock + ".click()"),
+            "the selected AI block runs in the original R console");
+        await RunAndWait(() => console.SubmitAsync("stopifnot(identical(d,seq_len(9)),identical(session_only,123))", "script"),
+            "running a particular block does not rerun its preceding setup or the editor contents");
+        Check(service.Documents.OfType<frmScript>().Count() == count, "per-block execution creates no other script window");
+        string exportedBlock = ConversationRScript.Build(messages, 1, 1);
+        Check(exportedBlock.Contains(source) && exportedBlock.IndexOf("d <- before - after", StringComparison.Ordinal) < exportedBlock.IndexOf("t.test(before", StringComparison.Ordinal),
+            "the separate-script export still includes preceding definitions in order");
 
-        service.ShowScriptAI(original); pane.NewConversation(); pane.Composer.Text="A new unrelated example";
-        await pane.SendAsync(); await pane.Transcript.SettledAsync(); open.PerformClick(); await Task.Delay(100);
-        Check(!((frmScript)main.ActiveMdiChild).LearningScript.Contains("before <-"),"a new conversation does not inherit old or unshared data");
+        pane.ShareScript.Checked = false;
+        pane.Composer.Text = "PEFR_FOLLOWUP";
+        await pane.SendAsync();
+        await pane.Transcript.SettledAsync();
+        string followup = ConversationRScript.Build(messages, 3);
+        Check(followup.Contains(source) && !followup.Contains("999"), "a question-only follow-up retains the earlier approved snapshot without reading unshared edits");
+        await RunConversationR(followup, "ai-pefr-followup", "cat('FOLLOWUP_CONTEXT_OK\\n')", "FOLLOWUP_CONTEXT_OK");
+        Check(!ConversationRScript.Build(messages, 1, 0).Contains("stopifnot(length(d)"), "an older reply's export excludes later replies");
+        string runFollowup = ConversationRScript.BuildForCurrentSession(messages, 3);
+        Check(!runFollowup.Contains(source) && !runFollowup.Contains("d <- before - after"),
+            "a follow-up runs without replaying the shared editor snapshot or past suggestions");
+        await RunAndWait(() => { runInSession.PerformClick(); return Task.CompletedTask; }, "a follow-up runs in the same R workspace");
+
+        pane.NewConversation();
+        pane.Composer.Text = "A new unrelated example";
+        await pane.SendAsync();
+        await pane.Transcript.SettledAsync();
+        var newMessages = (JsonArray)Field(Field(pane, "chat"), "Messages");
+        Check(!ConversationRScript.BuildForCurrentSession(newMessages, 1).Contains("before <-"),
+            "a new conversation does not replay old or unshared data");
+
+        var language = (ComboBox)Field(original, "cboLanguage");
+        language.SelectedIndex = 0;
+        await pane.Transcript.SettledAsync();
+        Check(await pane.Transcript.Browser.CoreWebView2.ExecuteScriptAsync("document.querySelector('[data-code=open]').textContent") == "\"Open in R\"",
+            "switching the same script window to C# restores the separate Open in R action");
+        language.SelectedIndex = 1;
+        await pane.Transcript.SettledAsync();
+        Check(await pane.Transcript.Browser.CoreWebView2.ExecuteScriptAsync("document.querySelector('[data-code=run]').textContent") == "\"Run in this R session\"",
+            "switching the same script window to R restores Run in this R session");
+
+        // The report pane has no R workspace and retains its review-before-run action.
+        var report = (frmReportWebView)main.CreateReport();
+        service.ShowReportAI(report);
+        pane.Composer.Text = "Give me an R example";
+        await pane.SendAsync();
+        await pane.Transcript.SettledAsync();
+        Check(await pane.Transcript.Browser.CoreWebView2.ExecuteScriptAsync("document.querySelector('[data-code=open]').textContent") == "\"Open in R\"",
+            "Report AI keeps its separate Open in R action");
+        await pane.Transcript.Browser.CoreWebView2.ExecuteScriptAsync("document.querySelector('[data-code=open]').click()");
+        await Wait(() => service.Documents.OfType<frmScript>().Count() == count + 1, "Report AI opens a new, reviewable script");
+        var review = (frmScript)main.ActiveMdiChild;
+        Check(review.LearningScript.Contains("mean(x)") && !review.LearningRunning && review.LearningOutput.Length == 0,
+            "Report AI leaves the suggestion for the user to review before running");
         pane.Hide();
+        CloseTestDocument(review);
+        CloseTestDocument(report);
+        CloseTestDocument(original);
 
         grid.LoadLearningExample(JsonNode.Parse("""[{"title":"Before","values":[312,242,340]},{"title":"After","values":[300,201,232]}]""")!.AsArray());
         var context=new QuestionContext([grid],true,CancellationToken.None);
         var data=await context.CallAsync("statsdirect_read_data",new JsonObject{["documentId"]=grid.Id(),["firstRow"]=2,["lastRow"]=4,["columns"]=new JsonArray(0,1)});
         string datasetId=RScriptWriter.Quote(data.S("datasetId"));
         string aliases=$"before <- .statsdirect_data[[{datasetId}]][['column_0']]\nafter <- .statsdirect_data[[{datasetId}]][['column_1']]\n";
-        var messages=new JsonArray(new JsonObject{["role"]="assistant",["rData"]=context.RData,["text"]="```r\n"+aliases+"d <- before - after\n```"});
+        var snapshotMessages=new JsonArray(new JsonObject{["role"]="assistant",["rData"]=context.RData,["text"]="```r\n"+aliases+"d <- before - after\n```"});
         grid.LoadLearningExample(JsonNode.Parse("""[{"title":"Replaced","values":[999]}]""")!.AsArray());
         Check(data.S("rCode")==context.RData,"worksheet tools expose the same R bindings used by the local export");
-        await RunConversationR(ConversationRScript.Build(messages,0),"ai-workbook-snapshot","stopifnot(identical(before,c(312,242,340)),identical(after,c(300,201,232)))\ncat('WORKBOOK_CONTEXT_OK\\n')","WORKBOOK_CONTEXT_OK");
+        await RunConversationR(ConversationRScript.Build(snapshotMessages,0),"ai-workbook-snapshot","stopifnot(identical(before,c(312,242,340)),identical(after,c(300,201,232)))\ncat('WORKBOOK_CONTEXT_OK\\n')","WORKBOOK_CONTEXT_OK");
+        snapshotMessages.Add(new JsonObject { ["role"] = "assistant", ["text"] = "```r\ncat(mean(.statsdirect_data[[" + datasetId + "]][['column_0']]))\n```" });
+        string currentSession = ConversationRScript.BuildForCurrentSession(snapshotMessages, 1, 0);
+        Check(currentSession.Contains(context.RData) && !currentSession.Contains("d <- before - after"),
+            "the current-session action includes an earlier fixed workbook snapshot without re-executing the earlier reply");
+        await RunConversationR(currentSession, "ai-session-workbook-snapshot", "cat('SESSION_WORKBOOK_CONTEXT_OK\\n')", "SESSION_WORKBOOK_CONTEXT_OK");
         var literal=new JsonObject{["datasetId"]="escaped",["columns"]=new JsonArray(new JsonObject{["index"]=3,["values"]=new JsonArray("quoted\"\\\ntext",null,"plain")},new JsonObject{["index"]=7,["values"]=new JsonArray(2,null,4)})};
         await RunConversationR(ConversationRScript.Dataset(literal),"ai-literal-data","stopifnot(identical(.statsdirect_data[['escaped']][['column_3']],c(\"quoted\\\"\\\\\\ntext\",NA,\"plain\")),identical(.statsdirect_data[['escaped']][['column_7']],c(2,NA,4)))\ncat('LITERAL_CONTEXT_OK\\n')","LITERAL_CONTEXT_OK");
         await TestSnapshotMetadata();

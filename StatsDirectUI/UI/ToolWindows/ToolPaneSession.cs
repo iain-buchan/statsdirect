@@ -74,16 +74,6 @@ internal sealed class ToolPaneSession : IDisposable
     }
 
 
-    internal bool ShowOwnedModal(Func<IWin32Window, bool> show)
-    {
-        // An owned review should stay in front of the pane that opened it.
-        // Keep the current dock or floating frame in place for this modal loop.
-        bool wasChanging = changing;
-        changing = true;
-        try { return show(window ?? host); }
-        finally { changing = wasChanging; }
-    }
-
     internal async Task ToggleModeAsync()
     {
         if (!visible || temporary || changing) return;

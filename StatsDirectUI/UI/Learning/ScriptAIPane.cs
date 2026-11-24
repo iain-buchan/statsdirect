@@ -12,10 +12,12 @@ using System.Windows.Forms;
 
 namespace StatsDirect.UI.Learning;
 
-/// <summary>A dockable assistant with a fixed document scope and locally reviewed worksheet proposals.</summary>
+/// <summary>A dockable assistant with per-document conversations and locally reviewed worksheet proposals.</summary>
 internal sealed partial class ScriptAIPane : IDisposable
 {
     private const string WorksheetOpeningQuestion = "Do you want me to help you analyse your data?";
+    private const string ShareWorkbookLabel = "Share open workbook data";
+    private const string RunCodeLabel = "Run in this R session";
     private readonly LearningService service;
     private readonly UserControl view = new() { Dock = DockStyle.Fill, Font = new Font("Arial", 10) };
     private readonly ToolPaneSession session;
@@ -25,7 +27,7 @@ internal sealed partial class ScriptAIPane : IDisposable
     internal readonly ConversationView Transcript;   // the conversation as a page: Markdown rendered, code blocks with their buttons
     internal readonly TextBox Composer = new() { Multiline = true, Dock = DockStyle.Fill, ScrollBars = ScrollBars.Vertical, WordWrap = true, MaxLength = 4000, AccessibleName = "Question for the script assistant" };
     internal readonly CheckBox ShareScript = new() { AutoSize = true, Text = "Share this script and its R output" };
-    internal readonly CheckBox ShareWorkbook = new() { AutoSize = true, Text = "Share open workbook data" };
+    internal readonly CheckBox ShareWorkbook = new() { AutoSize = true, Text = ShareWorkbookLabel };
     internal readonly CheckBox Acknowledge = new() { AutoSize = true };
     internal readonly Button Send = new() { AutoSize = true, Text = "Send" };
     private readonly Button stop = new() { AutoSize = true, Text = "Stop", Enabled = false }, connection = new() { AutoSize = true, Text = "Use my ChatGPT" };
@@ -33,6 +35,7 @@ internal sealed partial class ScriptAIPane : IDisposable
     private readonly Label status = new() { Name = "aiStatus", AutoSize = true, Dock = DockStyle.Fill, AccessibleName = "AI status" };
     private readonly Label conversationCaption = new() { Name = "conversationCaption", AutoSize = true, Text = "Conversation", Dock = DockStyle.Fill };
     private readonly FlowLayoutPanel replyCodeActions = new() { Name = "replyRCodeActions", AutoSize = true, Dock = DockStyle.Fill };
+    private readonly Button openCode = new() { AutoSize = true };
     private readonly Label warning = new() { AutoSize = true };
     private readonly Label questionCaption = new() { AutoSize = true, Dock = DockStyle.Fill };
     private readonly Dictionary<string, Conversation> conversations = new();
@@ -42,6 +45,7 @@ internal sealed partial class ScriptAIPane : IDisposable
     private Conversation chat;
     private Conversation renderedChat;
     private CancellationTokenSource pending;
+    private frmSpreadsheetGear nextWorksheet;
     private bool refreshing, disposed;
     private HashSet<string> openWorkbookIds;
     private string partial = "";
@@ -63,13 +67,18 @@ internal sealed partial class ScriptAIPane : IDisposable
     }
     private bool ReportMode => script is frmReportWebView;
     internal bool WorksheetMode => script is frmSpreadsheetGear;
-    private string WorksheetName => string.IsNullOrWhiteSpace(script?.Text) ? "Worksheet" : script.Text.Trim().Limit(32);
+    private bool RunInCurrentR => script is frmScript { CanRunAISuggestion: true };
+    private string WorksheetName => string.IsNullOrWhiteSpace(script?.Text) ? "Worksheet" : script.Text.Trim();
     internal ScriptAIPane(frmMain main, LearningService service)
     {
         this.service = service;
         openWorkbookIds = service.Documents.OfType<frmSpreadsheetGear>().Select(g => g.Id()).ToHashSet();
         Transcript = new ConversationView(Path.Combine(Configuration.SDConfiguration.InstallationDirectory, "Tutor"), Path.Combine(service.Storage, "WebView")) { Dock = DockStyle.Fill };
-        Transcript.CodeRequested += (what, code, messageIndex, blockIndex) => { if (what == "copy") Clipboard.SetText(code); else OpenCode(messageIndex, blockIndex); };
+        Transcript.CodeRequested += (what, code, messageIndex, blockIndex) =>
+        {
+            if (what == "copy") Clipboard.SetText(code);
+            else _ = OpenCodeAsync(messageIndex, blockIndex, what == "run");
+        };
         Transcript.Notice += text => { if (!disposed) status.Text = text; };
         Transcript.WorksheetActionRequested += ChooseWorksheetAction;
         var heading = new ToolStrip { GripStyle = ToolStripGripStyle.Hidden, Dock = DockStyle.Top };
@@ -81,7 +90,7 @@ internal sealed partial class ScriptAIPane : IDisposable
         layout.Controls.Add(questionCaption, 0, 3);
         layout.Controls.Add(Composer, 0, 4);
         var actions = new FlowLayoutPanel { AutoSize = true, Dock = DockStyle.Fill };
-        var copyCode = new Button { AutoSize = true, Text = "Copy R code" }; var openCode = new Button { AutoSize = true, Text = "Open R code" };
+        var copyCode = new Button { AutoSize = true, Text = "Copy R code" };
         actions.Controls.AddRange([Send, stop]); layout.Controls.Add(actions, 0, 5); layout.Controls.Add(status, 0, 6);
         layout.Controls.Add(conversationCaption, 0, 7);
         Transcript.AccessibleName = "AI conversation"; layout.Controls.Add(Transcript, 0, 8);
@@ -93,7 +102,7 @@ internal sealed partial class ScriptAIPane : IDisposable
         connection.Click += async (_, _) => { try { await service.ConfigureTutorAsync(view); } catch (Exception ex) { status.Text = ex.Message; } };
         ShareScript.CheckedChanged += (_, _) => ScopeChanged(); ShareWorkbook.CheckedChanged += (_, _) => ScopeChanged();
         Acknowledge.CheckedChanged += (_, _) => {
-            if (refreshing || WorksheetMode) return;
+            if (refreshing || service.Tutor.DataSharingDisabled) return;
             var documents = SharedDocuments;
             if (documents.Length == 0)
             {
@@ -101,17 +110,25 @@ internal sealed partial class ScriptAIPane : IDisposable
                 return;
             }
             if (Acknowledge.Checked) {
-                service.Sharing.Approve(documents.Select(d => d.Id())); sharing.Visible = false;
+                service.Sharing.Approve(documents.Select(d => d.Id()));
+                if (!WorksheetMode) sharing.Visible = false;
                 if (status.Text == "Review the selected content and confirm sharing for this session." || status.Text == "The open workbooks changed. Review their data and confirm sharing again.") status.Text = "";
                 Composer.Focus();
-            } else service.RevokeAISharing();
+            }
+            else if (WorksheetMode)
+            {
+                service.Sharing.Withdraw(script.Id());
+                Stop();
+                if (ClearWorksheetAnalysis()) Render();
+            }
+            else service.RevokeAISharing();
             UpdateControls();
         };
         SharingOptions.LinkClicked += (_, _) => { sharing.Visible = !sharing.Visible; UpdateControls(); };
         Send.Click += async (_, _) => await SendAsync(); stop.Click += (_, _) => Stop();
         Composer.KeyDown += (_, e) => { if (ComposerKey(e.KeyData)) { e.SuppressKeyPress = true; e.Handled = true; } };
         copyCode.Click += (_, _) => { string code = LastCode(); if (code.Length > 0) Clipboard.SetText(code); else status.Text = "The last reply contains no R code block."; };
-        openCode.Click += (_, _) => OpenCode(LastReply());
+        openCode.Click += async (_, _) => await OpenCodeAsync(LastReply(), -1, openCode.Text == RunCodeLabel);
         void FitContent()
         {
             int width = Math.Max(120, viewport.ClientSize.Width - SystemInformation.VerticalScrollBarWidth - layout.Padding.Horizontal - 12);
@@ -132,14 +149,35 @@ internal sealed partial class ScriptAIPane : IDisposable
         foreach (var box in new[] { ShareScript, ShareWorkbook, Acknowledge }) box.TextChanged += (_, _) => FitContent();
         FitContent();
     }
-    internal void Open(StatsDirectForm document, string resultId = null)
+    internal void FollowWorksheet(frmSpreadsheetGear worksheet)
     {
+        if (disposed || !IsOpen || !WorksheetMode
+            || worksheet is not { IsDisposed: false, Disposing: false, MdiParent: not null }) return;
+        if (pending != null)
+        {
+            // Let the original conversation receive the reply; keep only the latest workbook selected.
+            nextWorksheet = worksheet == script ? null : worksheet;
+            return;
+        }
+        if (worksheet != script) Open(worksheet, takeFocus: false);
+    }
+
+    internal void Open(StatsDirectForm document, string resultId = null, bool takeFocus = true)
+    {
+        if (IsOpen && WorksheetMode && pending != null && document is frmSpreadsheetGear worksheet)
+        {
+            FollowWorksheet(worksheet);
+            if (takeFocus) session.Show(true);
+            return;
+        }
+        nextWorksheet = null;
         if (script != document)
         {
             SaveDraft(); Stop(); ClearWorksheetAnalysis(); status.Text = "";
-            if (script != null) { script.FormClosed -= ScriptClosed; script.TextChanged -= WorksheetTitleChanged; }
+            UnbindDocument();
             script = document; script.FormClosed += ScriptClosed;
             if (WorksheetMode) script.TextChanged += WorksheetTitleChanged;
+            if (script is frmScript rScript) rScript.ScriptLanguageChanged += ScriptLanguageChanged;
             if (!conversations.TryGetValue(document.Id(), out chat))
                 conversations[document.Id()] = chat = new Conversation { ShareScript = !WorksheetMode && service.ShareAIDocument, ShareWorkbook = !WorksheetMode && service.ShareAIWorkbook };
             if (WorksheetMode && !service.Sharing.Accepts([document.Id()])) chat.ShareWorkbook = false;
@@ -152,22 +190,30 @@ internal sealed partial class ScriptAIPane : IDisposable
         ShareScript.Visible = !WorksheetMode;
         conversationCaption.Visible = !WorksheetMode;
         ShareScript.Text = ReportMode ? "Share this report and its displayed results" : "Share this script and its output";
-        warning.Text = "Workbook sharing includes every open workbook. Do not share person-identifiable data: remove names, dates of birth, patient IDs and identifying free text.";
+        UpdateCodeAction();
+        warning.Text = (WorksheetMode ? "Workbook sharing includes the named workbook. " : "Workbook sharing includes every open workbook. ")
+            + "Do not share person-identifiable data: remove names, dates of birth, patient IDs and identifying free text.";
         Acknowledge.Text = "I have checked the documents selected above contain no person identifiers. Remember this confirmation for those documents during this session.";
         questionCaption.Text = WorksheetMode ? "Ask a question about your data" : "Your question (Enter sends; Shift+Enter adds a line)";
         Composer.AccessibleName = WorksheetMode ? questionCaption.Text : ReportMode ? "Question for the report assistant" : "Question for the script assistant";
-        RefreshWorkbooks(); SyncAcceptance(); Render(); session.Show(true); UpdateConnection();
-        _ = Transcript.ReopenAsync();
-        _ = RefreshAccountAsync();
+        RefreshWorkbooks(); SyncAcceptance(); Render(); UpdateConnection();
+        if (takeFocus)
+        {
+            session.Show(true);
+            _ = Transcript.ReopenAsync();
+            _ = RefreshAccountAsync();
+        }
     }
     private void UpdateScopeTitle()
     {
         title.Text = WorksheetMode ? "Worksheet AI — " + WorksheetName.Limit(24) : ReportMode ? "Report AI" : "Script AI";
         session.SetTitle(WorksheetMode ? "Worksheet AI — " + WorksheetName : title.Text);
-        ShareWorkbook.Text = WorksheetMode ? "Share workbook data with AI (“" + WorksheetName + "”)" : "Share open workbook data";
+        ShareWorkbook.Text = WorksheetMode ? ShareWorkbookLabel + " (“" + WorksheetName + "”)" : ShareWorkbookLabel;
     }
 
     private void WorksheetTitleChanged(object sender, EventArgs e) { UpdateScopeTitle(); UpdateControls(); }
+    private void UpdateCodeAction() => openCode.Text = RunInCurrentR ? RunCodeLabel : "Open R code";
+    private void ScriptLanguageChanged(object sender, EventArgs e) { UpdateCodeAction(); Render(); }
 
     private async Task RefreshAccountAsync() { try { if (!service.Tutor.Disabled) await service.Tutor.RefreshAccountAsync(); } catch (Exception ex) { if (!disposed) status.Text = ex.Message; } }
     internal void RefreshWorkbooks()
@@ -214,21 +260,6 @@ internal sealed partial class ScriptAIPane : IDisposable
         {
             Stop();
             if (ClearWorksheetAnalysis()) Render();
-            if (SharedWorkbooks is [var workbook] && !service.Sharing.Accepts([workbook.Id()]))
-            {
-                var conversation = chat;
-                UpdateControls();
-                bool approved = service.ConfirmSharing is { } confirm
-                    ? confirm([workbook]) == LearningService.SharingDecision.Share
-                    : session.ShowOwnedModal(owner => MessageBox.Show(owner,
-                        "AI can read “" + workbook.Text + "” when answering your questions. Confirm that the workbook contains no person identifiers before sharing. This confirmation lasts for the current StatsDirect session.",
-                        "Share workbook data with AI?", MessageBoxButtons.YesNo, MessageBoxIcon.Information, MessageBoxDefaultButton.Button2) == DialogResult.Yes);
-                if (disposed || chat != conversation || script != workbook) return;
-                if (approved && !service.Tutor.DataSharingDisabled && SharedWorkbooks.Contains(workbook))
-                    service.Sharing.Approve([workbook.Id()]);
-                else
-                    TurnOffWorksheetSharing();
-            }
         }
         else
         {
@@ -257,13 +288,12 @@ internal sealed partial class ScriptAIPane : IDisposable
         connection.Text = disabled ? ChatGPTTutor.RestrictedLabel : service.Tutor.Email != null ? "ChatGPT connection…" : service.Tutor.LoginUrl != null ? "Finish ChatGPT sign-in…" : "Use my ChatGPT";
         connection.Enabled = !busy && !disabled;
         ShareWorkbook.Enabled = !busy && !sharingRestricted;
-        Acknowledge.Enabled = !WorksheetMode && !busy && share;
+        Acknowledge.Enabled = !busy && share;
         ShareScript.Enabled = !WorksheetMode && ShareWorkbook.Enabled;
         if (disabled && (ClearWorksheetAnalysis() || WorksheetMode)) Render();
         replyCodeActions.Visible = !WorksheetMode;
         SharingOptions.Enabled = !busy && !sharingRestricted;
         SharingOptions.Visible = !WorksheetMode || sharingRestricted;
-        warning.Visible = Acknowledge.Visible = !WorksheetMode;
         if (WorksheetMode || sharingRestricted) sharing.Visible = !sharingRestricted;
         if (disabled) SharingOptions.Text = ChatGPTTutor.PolicyMessage;
         else if (sharingRestricted) SharingOptions.Text = ChatGPTTutor.DataSharingPolicyMessage;
@@ -278,7 +308,7 @@ internal sealed partial class ScriptAIPane : IDisposable
         if (chat == null || disposed) return;
         Transcript.Update(chat.Messages, partial, renderedChat != chat, collapseRCode: WorksheetMode,
             welcome: WorksheetMode && !service.Tutor.Disabled ? WorksheetOpeningQuestion : "",
-            worksheetAction: VisibleWorksheetAction?.Display());
+            worksheetAction: VisibleWorksheetAction?.Display(), runInCurrentR: RunInCurrentR);
         renderedChat = chat;
     }
     /// <summary>Enter in the question box sends, as the ChatGPT prompt does; Shift+Enter adds a line, as in the calculator.  True when the key was taken as Send.</summary>
@@ -469,7 +499,21 @@ internal sealed partial class ScriptAIPane : IDisposable
             if (chat == current && pending == request)
             { if (partial.Length > 0) current.Messages.Add(new JsonObject { ["role"] = "assistant", ["text"] = partial + "\n[Reply stopped before completion.]", ["rData"] = context?.RData }); partial = ""; if (Composer.Text.Length == 0) Composer.Text = question; Render(); status.Text = ex is OperationCanceledException ? "Reply stopped. Your question is kept here." : ex.Message; }
         }
-        finally { if (pending == request) { pending = null; if (!disposed) { SyncAcceptance(); UpdateControls(); if (WorksheetMode) Render(); } } }
+        finally
+        {
+            if (pending == request)
+            {
+                pending = null;
+                var worksheet = nextWorksheet;
+                nextWorksheet = null;
+                if (!disposed)
+                {
+                    FollowWorksheet(worksheet);
+                    SyncAcceptance(); UpdateControls();
+                    if (WorksheetMode) Render();
+                }
+            }
+        }
     }
     private static JsonObject WorksheetAnalysisToolDefinition() => QuestionContext.Tool(ChatGPTTutor.WorksheetAnalysisTool,
         "Stage one requested native method using an exact id from statsdirect_find_worksheet_methods. Use after any clarifications needed to choose the method, or when the user explicitly requests the method by name. It posts a local confirmation with the current worksheet selection. Staging does not run the method or return data or results.",
@@ -478,19 +522,27 @@ internal sealed partial class ScriptAIPane : IDisposable
     internal void Stop() { pending?.Cancel(); }
     private int LastReply()
     { for (int i = (chat?.Messages.Count ?? 0) - 1; i >= 0; i--) if (chat.Messages[i].S("role") == "assistant") return i; return -1; }
-    private void OpenCode(int messageIndex, int blockIndex = -1)
+    private async Task OpenCodeAsync(int messageIndex, int blockIndex, bool run)
     {
         try
         {
-            if (chat == null) return;
+            if (disposed || !IsOpen || chat == null) return;
+            if (run)
+            {
+                if (script is not frmScript { CanRunAISuggestion: true } rScript)
+                    throw new InvalidOperationException("Choose an R window before running this code.");
+                string suggestion = ConversationRScript.BuildForCurrentSession(chat.Messages, messageIndex, blockIndex);
+                await rScript.RunAISuggestionAsync(suggestion);
+                return;
+            }
             string code = ConversationRScript.Build(chat.Messages, messageIndex, blockIndex, currentReplyOnly: WorksheetMode);
             service.OpenScript(code, "AI suggestion — review before running", false, reportOutput: WorksheetMode);
         }
-        catch (InvalidOperationException ex) { status.Text = ex.Message; }
+        catch (Exception ex) { if (!disposed) status.Text = ex.Message; }
     }
     private string LastCode()
     { return string.Join("\n\n", ConversationRScript.Blocks(chat?.Messages.LastOrDefault(m => m.S("role") == "assistant").S("text") ?? "")).Limit(100000); }
-    internal void Hide() { SaveDraft(); Stop(); ClearWorksheetAnalysis(); session.Hide(); script?.Activate(); }
+    internal void Hide() { nextWorksheet = null; SaveDraft(); Stop(); ClearWorksheetAnalysis(); session.Hide(); script?.Activate(); }
     internal void NewConversation()
     {
         Stop(); ClearWorksheetAnalysis();
@@ -504,8 +556,16 @@ internal sealed partial class ScriptAIPane : IDisposable
     private void ScriptClosed(object sender, FormClosedEventArgs e)
     {
         if (sender != script) return;
-        Stop(); ClearWorksheetAnalysis(); conversations.Remove(script.Id()); script.FormClosed -= ScriptClosed; script.TextChanged -= WorksheetTitleChanged;
+        nextWorksheet = null;
+        Stop(); ClearWorksheetAnalysis(); conversations.Remove(script.Id()); UnbindDocument();
         script = null; chat = null; session.Hide();
     }
-    public void Dispose() { if (disposed) return; disposed = true; Stop(); if (script != null) { script.FormClosed -= ScriptClosed; script.TextChanged -= WorksheetTitleChanged; } session.Dispose(); view.Dispose(); }
+    private void UnbindDocument()
+    {
+        if (script == null) return;
+        script.FormClosed -= ScriptClosed;
+        script.TextChanged -= WorksheetTitleChanged;
+        if (script is frmScript rScript) rScript.ScriptLanguageChanged -= ScriptLanguageChanged;
+    }
+    public void Dispose() { if (disposed) return; disposed = true; Stop(); UnbindDocument(); session.Dispose(); view.Dispose(); }
 }

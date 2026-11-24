@@ -45,6 +45,7 @@ internal static partial class Program
         {
             await TestWorksheetAssistant(main, service, level => policy = level, trace);
             await TestWorksheetConsentAcrossPanes(main, service, trace);
+            await TestWorksheetActivationFromCommands(main, service, trace);
         }
         finally { typeof(frmMain).GetField("learning", Members)!.SetValue(main, null); }
     }
@@ -52,10 +53,7 @@ internal static partial class Program
     private static async Task ShowWorksheetAssistantDemo(frmMain main)
     {
         var tutor = WorksheetMockTutor(Path.Combine(root, "preview-worksheet-account"), () => AISecurityLevel.Unrestricted);
-        var service = new LearningService(main, Path.Combine(root, "Preview Learning"), tutor)
-        {
-            ConfirmSharing = _ => LearningService.SharingDecision.Share
-        };
+        var service = new LearningService(main, Path.Combine(root, "Preview Learning"), tutor);
         typeof(frmMain).GetField("learning", Members)!.SetValue(main, service);
         main.FormClosed += (_, _) => { service.Dispose(); tutor.Dispose(); };
         var grid = (frmSpreadsheetGear)main.CreateGrid("Worksheet AI prototype (simulated replies)");
@@ -64,6 +62,7 @@ internal static partial class Program
         await Wait(() => tutor.Email == "mock@example.invalid", "the prototype uses a local simulated AI account");
         var pane = await OpenWorksheetAssistant(main, service, grid);
         pane.ShareWorkbook.Checked = true;
+        pane.Acknowledge.Checked = true;
         pane.Composer.Text = "What is the mean age?";
         await pane.SendAsync();
         await pane.Transcript.SettledAsync();
@@ -141,6 +140,8 @@ internal static partial class Program
         {
             CloseTestDocument(script);
             await Wait(() => script.IsDisposed, "the reviewed worksheet R script closes");
+            await Wait(() => !((System.Windows.Forms.Timer)Field(main, "postTabTimer")).Enabled,
+                "closing the script finishes the deferred window-tab activation");
             WithWorksheet(view, sheet => { sheet.Cells["A2"].Value = 26; return true; });
             grid.Activate();
         }
@@ -188,9 +189,9 @@ internal static partial class Program
             await Wait(() => service.Tutor.Email == "mock@example.invalid", "the worksheet assistant test is connected to a mock account");
             pane = await OpenWorksheetAssistant(main, service, grid);
             Check(pane.Composer.Text.Length == 0 && pane.ShareWorkbook.Visible && pane.ShareWorkbook.Enabled
-                && pane.ShareWorkbook.Text.Contains(grid.Text, StringComparison.Ordinal) && !pane.ShareWorkbook.Checked
-                && !pane.Acknowledge.Visible,
-                "the question-only pane shows an unchecked sharing choice for the named workbook");
+                && pane.ShareWorkbook.Text == $"Share open workbook data (“{grid.Text}”)" && !pane.ShareWorkbook.Checked
+                && pane.Acknowledge.Visible && !pane.Acknowledge.Enabled && !pane.Acknowledge.Checked,
+                "the worksheet pane names its workbook and displays the same sharing and confirmation controls as Script AI");
             await pane.Transcript.SettledAsync();
             Check((await pane.Transcript.TextAsync()).Contains(WorksheetOpeningText, StringComparison.Ordinal)
                 && WorksheetAnalysisDataTraffic(trace).Select(line => JsonNode.Parse(line)).All(request => request.S("method") != "turn/start"),
@@ -221,18 +222,15 @@ internal static partial class Program
             Check(ReadFullPackagedHelp(questionOnly),
                 "question-only AI can continue beyond a Help excerpt on a non-method topic and rejects unknown topics");
             service.RevokeAISharing();
-            other.Activate();
-            await Wait(() => main.ActiveMdiChild == other,
-                "a different active workbook leaves the open assistant bound to its original workbook");
             CheckWorksheetSharing(pane, service, grid, trace, allow: false);
-            var cancelled = await WorksheetReply(pane, "WORKSHEET_AI_AFTER_CANCEL");
-            Check(cancelled.A("ids").Count == 0 && !cancelled.B("read") && !service.Sharing.Accepts([other.Id()]),
-                "after cancelling consent the next question has no workbook scope");
+            var unconfirmed = await WorksheetReply(pane, "WORKSHEET_AI_AFTER_UNCONFIRMED");
+            Check(unconfirmed.A("ids").Count == 0 && !unconfirmed.B("read") && !service.Sharing.Accepts([other.Id()]),
+                "the next question has no workbook scope when the sharing checkbox was left unconfirmed");
             CheckWorksheetSharing(pane, service, grid, trace);
             Check(!service.Sharing.Accepts([other.Id()]),
-                "confirmation approves only the bound workbook, even while another workbook is active");
+                "confirmation approves only the bound workbook when another workbook is open");
             pane.ShareWorkbook.Checked = false;
-            Check(!pane.Acknowledge.Visible && service.Sharing.Accepts([grid.Id()]),
+            Check(!pane.Acknowledge.Enabled && service.Sharing.Accepts([grid.Id()]),
                 "turning sharing off suspends the scope while preserving session consent");
             CheckWorksheetSharing(pane, service, grid, trace, reuse: true);
 
@@ -250,6 +248,7 @@ internal static partial class Program
                 "the attempted AI write leaves cell values, formula and workbook revision intact");
 
             await TestWorksheetRAnswer(main, service, grid, pane);
+            await CheckWorksheetPaneBinding(main, pane, grid, shared: true);
 
             pane.ShareWorkbook.Checked = false;
             const string afterSharing = "WORKSHEET_AI_HISTORY_OFF";

@@ -17,6 +17,7 @@ public partial class frmScript
     private bool mirroringRSource, savingInteractive, allowInteractiveClose, addingROutputToReport;
     internal Task<bool> PendingInteractiveClose { get; private set; }
     private bool IsInteractiveR => cboLanguage.SelectedIndex == 1 && InteractiveConsole != null;
+    internal bool CanRunAISuggestion => IsInteractiveR;
 
     private void EnsureInteractiveConsole()
     {
@@ -112,6 +113,21 @@ public partial class frmScript
         else await InteractiveConsole.SubmitAsync(source, "script");
         await InteractiveConsole.SetModeAsync("console");
     });
+
+    internal async Task RunAISuggestionAsync(string source)
+    {
+        if (IsDisposed || Disposing || !IsInteractiveR)
+            throw new InvalidOperationException("The original R session is no longer open.");
+        if (LearningRunning)
+            throw new InvalidOperationException("R is busy or is waiting for an answer. Finish or stop that command first.");
+        var console = InteractiveConsole;
+        Activate();
+        await console.SetModeAsync("console");
+        if (IsDisposed || Disposing || !IsInteractiveR)
+            throw new InvalidOperationException("The original R session is no longer open.");
+        // Ordinary prompt submissions append to the editor; show this as a run without changing its text.
+        await console.SubmitAsync(source, "script");
+    }
 
     private async Task AddROutputToReportAsync()
     {

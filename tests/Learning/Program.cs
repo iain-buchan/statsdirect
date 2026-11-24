@@ -48,6 +48,7 @@ internal static partial class Program
                 }
                 else if (mode == "worksheet-ai") await RunWorksheetAssistantFixture(main);
                 else if (mode == "worksheet-ai-analysis") await RunWorksheetAnalysisFixture(main);
+                else if (mode == "script-ai-r-session") await RunScriptAIConversationFixture(main);
                 else if (mode == "worksheet-ai-analysis-show") await ShowWorksheetAnalysisDemo(main);
                 else if (showWorksheetPreview) await ShowWorksheetAssistantDemo(main);
                 else await Run(main);

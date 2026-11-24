@@ -12,6 +12,12 @@ import {richText} from './Shared/Learning/rich-text.mjs';
     const body = document.createElement('div');
     body.className = 'body';
     body.innerHTML = richText(text).replaceAll('data-code="r"', 'data-code="open"');
+    if (runInCurrentR) {
+      for (const button of body.querySelectorAll('button[data-code="open"]')) {
+        button.textContent = 'Run in this R session';
+        button.dataset.code = 'run';
+      }
+    }
     if (foldRCode) {
       for (const block of body.querySelectorAll('.code-block')) {
         if (!block.querySelector('[data-code="open"]')) continue;
@@ -30,7 +36,7 @@ import {richText} from './Shared/Learning/rich-text.mjs';
   const rendered = [];
   let welcomeElement = null;
   let worksheetActionElement = null, worksheetActionKey = '';
-  let partialElement = null, partialText = '', renders = 0, applied = 0, context = 0, requests = 0, copying = null, collapseRCode = false;
+  let partialElement = null, partialText = '', renders = 0, applied = 0, context = 0, requests = 0, copying = null, collapseRCode = false, runInCurrentR = false;
   function bind(element) {
     element.querySelectorAll('a').forEach(a=>{if(!/^https?:\/\//i.test(a.getAttribute('href')??''))a.removeAttribute('href');else {a.target='_blank';a.rel='noopener noreferrer';}});
     element.querySelectorAll('button[data-code]').forEach(button => button.onclick = () => {
@@ -40,7 +46,7 @@ import {richText} from './Shared/Learning/rich-text.mjs';
       if (button.dataset.code === 'copy') copying = { request, button };
       post({ action: 'code', what: button.dataset.code, code, context, request,
         messageIndex: [...container.children].indexOf(element),
-        blockIndex: [...element.querySelectorAll('button[data-code=open]')].indexOf(button) });
+        blockIndex: [...element.querySelectorAll('button[data-code=open], button[data-code=run]')].indexOf(button) });
     });
     element.querySelectorAll('a').forEach(a => { if (!/^https?:\/\//i.test(a.getAttribute('href') || '')) a.removeAttribute('href'); });
   }
@@ -182,8 +188,9 @@ import {richText} from './Shared/Learning/rich-text.mjs';
 
   function update(m) {
     context = m.context;
-    const reset = m.reset || collapseRCode !== Boolean(m.collapseRCode);
+    const reset = m.reset || collapseRCode !== Boolean(m.collapseRCode) || runInCurrentR !== Boolean(m.runInCurrentR);
     collapseRCode = Boolean(m.collapseRCode);
+    runInCurrentR = Boolean(m.runInCurrentR);
     const selection = reset ? null : saveSelection();
     const top = scroller().scrollTop;
     const follow = reset || (!selection && atEnd());
