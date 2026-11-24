@@ -21,7 +21,7 @@ internal sealed partial class ScriptAIPane
                 card["method"] = Proposal.MethodName;
                 card["workbook"] = Source.WorkbookName;
                 card["sheet"] = Source.WorksheetName;
-                card["selection"] = Source.Selection;
+                card["selection"] = Source.Selection.Replace("$", "", StringComparison.Ordinal);
                 card["inputs"] = Proposal.Inputs;
                 card["menuPath"] = Proposal.MenuPath;
                 card["destination"] = Proposal.DestinationTitle;
@@ -31,13 +31,13 @@ internal sealed partial class ScriptAIPane
         }
     }
 
-    private readonly WorksheetAction compareSamples = new("compare");
+    private readonly WorksheetAction compareMeans = new("compare");
     private readonly WorksheetAction chooseMethod = new("compare", ShowCompare: false);
     private WorksheetAction worksheetAction;
 
     private WorksheetAction VisibleWorksheetAction =>
         WorksheetMode && pending == null && !service.Tutor.Disabled
-            ? worksheetAction ?? (chat?.Messages.Count == 0 ? compareSamples : chooseMethod)
+            ? worksheetAction ?? (chat?.Messages.Count == 0 ? compareMeans : chooseMethod)
             : null;
 
     private static WorksheetAction ConfirmWorksheetAnalysis(WorksheetAnalysisTarget source, WorksheetCommand command)

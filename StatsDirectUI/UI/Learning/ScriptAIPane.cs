@@ -417,7 +417,7 @@ internal sealed partial class ScriptAIPane : IDisposable
                     return Task.FromResult<JsonNode>(new JsonObject
                     {
                         ["state"] = "awaiting_design",
-                        ["message"] = "The user can choose Same people or Separate groups in the chat. Ask them to select a button."
+                        ["message"] = "Ask the user to choose “Same people or units” or “Separate groups” in the chat."
                     });
                 }
                 if (worksheetMode && name == ChatGPTTutor.WorksheetAnalysisTool)

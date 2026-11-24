@@ -22,7 +22,7 @@ internal partial class frmSpreadsheetGear
         if (target.Grid != this || target.Workbook != workbookView.ActiveWorkbook ||
             target.Worksheet != workbookView.ActiveWorksheet || target.WorksheetName != target.Worksheet.Name ||
             target.WorkbookName != Text)
-            throw new InvalidOperationException("Open the original worksheet to review this analysis.");
+            throw new InvalidOperationException("The workbook or worksheet changed. Choose the method again.");
 
         string selection = workbookView.RangeSelection.Address;
         if (target.Version == LearningVersion && target.Selection == selection) return (main, target);
@@ -31,7 +31,7 @@ internal partial class frmSpreadsheetGear
 
         string reason = target.WorkbookShared
             ? "The shared worksheet or selection changed. Ask for a new analysis suggestion."
-            : "The worksheet or selection changed during review. Review the analysis again.";
+            : "The worksheet or selection changed. Choose the method again.";
         throw new InvalidOperationException(reason);
     });
 

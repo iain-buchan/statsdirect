@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "format": "statsdirect-desktop-help-v1",
-  "publishedAtUtc": "2026-11-24T04:59:13.5498952+00:00",
-  "sourceSha256": "82a3d90b25c431b94b9da32d664591c170595c37f6a42bf6963432ea8bb67747",
+  "publishedAtUtc": "2026-11-24T06:51:45.6386255+00:00",
+  "sourceSha256": "6fba22a6d844871452c36d0eadb9b1554d40b73312da323c27204650ba515754",
   "entryPage": "index.html",
   "topicCount": 405,
   "searchDocumentCount": 404,
@@ -2031,7 +2031,7 @@
   "aliasSourceSha256": "1b982112068d44a22dbe95a98db37b6cb08abb54a29927d112e32fb65db5ddcf",
   "contextHeaderSha256": "65a27d8c45a47b3ec913e0aa3b85d7166527d716cc3ffa6861a725ffcb804099",
   "previousKind": "EditorOwned",
-  "previousSha256": "34601b6832e35c44155c032604cf206436cd2f27b39a6d5166c10c1e8ef03b30",
+  "previousSha256": "a0e805322d052d7ae550d2801f3aaaf84e47184a54fa654e8242338e0673363e",
   "adoptedFlareOutput": false,
   "files": [
     {
@@ -2306,13 +2306,13 @@
     },
     {
       "path": "basics/worksheet_ai.htm",
-      "bytes": 12628,
-      "sha256": "00dbe0f73af55b6124eeba04c5353c4555d945208a483390b096a6f9e3646adf"
+      "bytes": 12920,
+      "sha256": "e061603c669e6959edd98c5747c62b0b09b2e7194be35b3d18b8e033ddc8d6d8"
     },
     {
       "path": "build-info.json",
-      "bytes": 219,
-      "sha256": "c86f572c6ce90485300bd785a27d3a7bbd63e96ef5b4949e9c3d3d5f52a92cd1"
+      "bytes": 220,
+      "sha256": "71dc728aba51e3f3b7fd4d3ec4cca1676534c5e7834f19385e10558fc2e38b05"
     },
     {
       "path": "chi_square_tests/22.htm",
@@ -6081,8 +6081,8 @@
     },
     {
       "path": "search-index.js",
-      "bytes": 885066,
-      "sha256": "33e5ae2adc5e85793b483bd6e0a4f5471e07630346aedc88ebf74d6e785d6e76"
+      "bytes": 885122,
+      "sha256": "468265e58e3663e93ac3059cd9d8d157e6a43681c0115961aeb3de6df5079ee9"
     },
     {
       "path": "survival_analysis/abridged_life_table.htm",

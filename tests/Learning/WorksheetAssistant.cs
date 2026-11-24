@@ -206,7 +206,7 @@ internal static partial class Program
             Check(firstConversation.Count == 1 && firstConversation[0].S("role") == "user"
                 && firstConversation[0].S("text") == acceptance && firstReference.A("documents").Count == 0,
                 "the first affirmative reply is sent without workbook details");
-            CheckWorksheetMethodSelectionContext(trace, true, grid.Text, other.Text, "Existing cell");
+            CheckWorksheetMethodSelectionContext(trace, true, guidanceOnly: false, grid.Text, other.Text, "Existing cell");
             Check((await pane.Transcript.TextAsync()).Contains("What would you like to find out from your data?", StringComparison.Ordinal),
                 "the welcome acceptance can lead straight to a question about the analysis goal");
 
@@ -214,7 +214,7 @@ internal static partial class Program
             var nextRequest = LastWorksheetRequest(trace);
             Check(nextRequest.A("conversation").Any(message => message.S("role") == "user" && message.S("text") == acceptance),
                 "later questions continue the conversation from the opening offer");
-            CheckWorksheetMethodSelectionContext(trace, false, grid.Text, other.Text, "Existing cell");
+            CheckWorksheetMethodSelectionContext(trace, false, guidanceOnly: false, grid.Text, other.Text, "Existing cell");
             Check(questionOnly.S("help").Contains("worksheet", StringComparison.OrdinalIgnoreCase)
                 && !questionOnly.B("read") && !HasWorksheetWriteTool(questionOnly),
                 "question-only mode retrieves packaged Help and exposes neither workbook reads nor workbook edits");

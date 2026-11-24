@@ -76,10 +76,13 @@ internal static partial class Program
             Check(!main.InOperation && !main.MdiChildren.OfType<frmReportWebView>().Any()
                 && initialTraffic.SequenceEqual(WorksheetAnalysisDataTraffic(trace)),
                 "browsing and staging commands from three Analyse picker categories run nothing and send nothing");
-            await WaitForWorksheetAction(pane, "compare");
+            var offer = await WaitForWorksheetAction(pane, "compare");
+            Check(offer.S("text").Contains("Compare two means", StringComparison.Ordinal),
+                "the shortcut specifies that it compares means");
             await ClickWorksheetAction(pane, "compare");
             var designChoices = await WaitForWorksheetAction(pane, "choose");
-            Check(designChoices.A("choices").Select(item => item.GetValue<string>()).SequenceEqual(["paired", "independent"]),
+            Check(designChoices.A("choices").Select(item => item.GetValue<string>()).SequenceEqual(["paired", "independent"])
+                && designChoices.S("text").Contains("Same people or units", StringComparison.Ordinal),
                 "the worksheet conversation offers two explicit study-design choices");
             await ClickWorksheetAction(pane, "paired");
             var local = await CheckWorksheetConfirmation(pane, "Paired Student t test", PairedSelection, "A new report");
@@ -100,7 +103,7 @@ internal static partial class Program
 
             ChooseRange(InitialSelection);
             await ClickWorksheetAction(pane, "continue");
-            await Wait(() => aiStatus.Text.Contains("changed", StringComparison.OrdinalIgnoreCase),
+            await Wait(() => aiStatus.Text.Contains("Choose the method again.", StringComparison.Ordinal),
                 "Continue refuses a range changed since the confirmation was shown");
             Check(!main.InOperation && !main.MdiChildren.OfType<frmReportWebView>().Any(),
                 "a changed range does not launch an analysis or create a report");
@@ -133,6 +136,15 @@ internal static partial class Program
             string stagedToken = (await WorksheetActionSnapshot(pane)).S("token");
             otherWorkbook.Activate();
             await Wait(() => ReferenceEquals(main.ActiveMdiChild, otherWorkbook), "the user switches to another workbook with an analysis staged");
+            await ClickWorksheetAction(pane, "continue");
+            await Wait(() => aiStatus.Text.Contains("Activate", StringComparison.OrdinalIgnoreCase)
+                && aiStatus.Text.Contains(grid.Text, StringComparison.Ordinal),
+                "Continue from another workbook asks the user to return to the original workbook");
+            var retainedConfirmation = await WorksheetActionSnapshot(pane);
+            Check(retainedConfirmation.S("kind") == "confirm" && retainedConfirmation.S("token") == stagedToken
+                && ReferenceEquals(main.ActiveMdiChild, otherWorkbook) && !main.InOperation
+                && !main.MdiChildren.OfType<frmReportWebView>().Any(),
+                "Continue with another workbook active preserves the confirmation and runs nothing");
             grid.Activate();
             await Wait(() => ReferenceEquals(main.ActiveMdiChild, grid), "the user returns to the original worksheet");
             Check(stagedToken.Length > 0 && (await WorksheetActionSnapshot(pane)).S("token") == stagedToken,
@@ -324,6 +336,14 @@ internal static partial class Program
         Check(available.Length > 100 && !main.InOperation,
             $"all {available.Length} available Analyse entries can create their own confirmation without running a command");
 
+        // Cochran Q reports from a conditional branch. Univariate Summary can write to the worksheet from a branch.
+        var cochranQ = target.Propose(available.Single(command => command.Operation == "CochranQ"));
+        Check(cochranQ.DestinationTitle == "A new report",
+            "the Cochran Q confirmation names a report destination for its nested report step");
+        var summary = target.Propose(available.Single(command => command.Operation == "UnivariateSummary" && command.Groups[0] == "Analysis"));
+        Check(summary.Effect.Contains("change worksheet data", StringComparison.OrdinalIgnoreCase),
+            "the Univariate Summary confirmation warns about worksheet changes for its nested output step");
+
         var calculator = available.Single(command => command.Item.Name == "calculatorMenuItem");
         var stagedCalculator = target.Propose(calculator);
         calculator.Item.Enabled = false;
@@ -429,7 +449,7 @@ internal static partial class Program
     private static async Task<JsonNode> CheckWorksheetConfirmation(ScriptAIPane pane, string method, string range, string destination)
     {
         var action = await WaitForWorksheetAction(pane, "confirm");
-        string text = action.S("text").Replace("$", "", StringComparison.Ordinal);
+        string text = action.S("text");
         Check(text.Contains(method, StringComparison.OrdinalIgnoreCase)
             && text.Contains(PrivateWorksheet, StringComparison.Ordinal)
             && text.Contains(range, StringComparison.Ordinal)
@@ -463,7 +483,7 @@ internal static partial class Program
         return JsonNode.Parse(message[(message.IndexOf('\n') + 1)..])!;
     }
 
-    private static void CheckWorksheetMethodSelectionContext(string trace, bool openingQuestion, params string[] privateTexts)
+    private static void CheckWorksheetMethodSelectionContext(string trace, bool openingQuestion, bool guidanceOnly, params string[] privateTexts)
     {
         var requests = ReadWorksheetTrace(trace).Split('\n', StringSplitOptions.RemoveEmptyEntries)
             .Select(line => JsonNode.Parse(line)).ToArray();
@@ -476,9 +496,25 @@ internal static partial class Program
 
         string turnMessage = requests[lastTurn]["params"].A("input")[0].S("text");
         int firstLineEnd = turnMessage.IndexOf('\n');
-        Check(firstLineEnd > 0 && turnMessage[..firstLineEnd].Contains(
-                "Ask the most important unanswered question before naming or staging a test.", StringComparison.Ordinal),
-            "the first line of the worksheet turn repeats the instruction to clarify before naming or staging a test");
+        string turnHeader = firstLineEnd > 0 ? turnMessage[..firstLineEnd] : "";
+        const string askOne = "Ask the most important unanswered question before naming or staging a test.";
+        string[] askTogether =
+        [
+            "cannot see earlier messages",
+            "ask for all missing non-confidential details together",
+            "restate the full question with those details in one message",
+            "pairing is the sole missing detail",
+            "buttons complete that choice locally"
+        ];
+        bool includesAllTogether(string text) => askTogether.All(rule => text.Contains(rule, StringComparison.Ordinal));
+        Check(guidanceOnly
+                ? includesAllTogether(prompt) && includesAllTogether(turnHeader)
+                    && !prompt.Contains(askOne, StringComparison.Ordinal) && !turnHeader.Contains(askOne, StringComparison.Ordinal)
+                : prompt.Contains(askOne, StringComparison.Ordinal) && turnHeader.Contains(askOne, StringComparison.Ordinal)
+                    && !includesAllTogether(prompt) && !includesAllTogether(turnHeader),
+            guidanceOnly
+                ? "restricted worksheet instructions ask for all missing details in a single reply and a self-contained follow-up"
+                : "ordinary worksheet instructions ask the most important unanswered question");
 
         string rawContext = LastWorksheetRequest(trace).S("referenceContext");
         var reference = JsonNode.Parse(rawContext)!.AsObject();
@@ -536,7 +572,7 @@ internal static partial class Program
         Check(conversation.Count == 1 && conversation[0].S("role") == "user" && conversation[0].S("text") == question
             && reference.Count == (openingQuestion ? 2 : 0),
             "the restricted request supplies the current question without workbook data");
-        CheckWorksheetMethodSelectionContext(trace, openingQuestion, PrivateWorksheet, PrivateCell);
+        CheckWorksheetMethodSelectionContext(trace, openingQuestion, guidanceOnly: true, PrivateWorksheet, PrivateCell);
     }
 
     private static async Task ContinueWorksheetAnalysis(frmMain main, ScriptAIPane pane, string method, Func<Task> verifyImmediateResult = null)

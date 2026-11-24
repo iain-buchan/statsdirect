@@ -5,7 +5,7 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 ##[v5.3.19]
 
 ### Added
-- Learn opens the course from the worksheet toolbar. AI Assist helps you choose an analysis and can answer questions about a workbook you choose to share. It asks about the measurement scale, study design and comparison goal when it needs more detail. Choose a method opens the same list as Analyse. Check the method and report destination in chat, then select Continue to analysis to open the usual settings. AI Assist can also provide R code in a collapsible section. After you run the code locally, Add output to report keeps the results and charts in your report.
+- Learn opens the course from the worksheet toolbar. AI Assist helps you choose an analysis and can answer questions about a workbook you choose to share. It asks about the measurement scale, study design and comparison goal when it needs more detail. Choose a method opens the same list as Analyse. Check the method and report destination in chat, then select Continue to analysis. StatsDirect opens the usual controls or runs the method with the available settings. AI Assist can also provide R code in a collapsible section. After you run the code locally, Add output to report keeps the results and charts in your report.
 
 ### Changed
 - Script AI and Report AI now ask you to confirm sharing for each script and report. The Learning tutor asks again when you choose to share a document it has not already listed for confirmation.

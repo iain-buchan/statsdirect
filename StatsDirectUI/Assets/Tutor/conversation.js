@@ -20347,7 +20347,7 @@ ${content}</tr>
       section.className = "message assistant worksheet-analysis";
       section.dataset.worksheetAction = action.kind;
       section.dataset.token = action.token;
-      section.setAttribute("aria-label", action.kind === "confirm" ? "Proposed worksheet method" : action.kind === "choose" ? "Compare two samples" : "Choose a worksheet method");
+      section.setAttribute("aria-label", action.kind === "confirm" ? "Proposed worksheet method" : action.kind === "choose" ? "Compare two means" : "Choose a worksheet method");
       const actions = document.createElement("div");
       actions.className = "worksheet-analysis-actions";
       const requestContext = context;
@@ -20361,13 +20361,13 @@ ${content}</tr>
         actions.append(option);
       }
       if (action.kind === "compare") {
-        if (action.showCompare !== false) button("Compare two samples", "compare");
+        if (action.showCompare !== false) button("Compare two means", "compare");
         button("Choose a method", "browse");
       } else if (action.kind === "choose") {
         const question = document.createElement("p");
-        question.textContent = "Were these measurements taken from the same people?";
+        question.textContent = "Were these measurements taken from the same people or units?";
         section.append(question);
-        button("Same people", "paired");
+        button("Same people or units", "paired");
         button("Separate groups", "independent");
       } else {
         const heading = document.createElement("h2");

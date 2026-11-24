@@ -91,7 +91,7 @@ import {richText} from './Shared/Learning/rich-text.mjs';
     section.dataset.worksheetAction = action.kind;
     section.dataset.token = action.token;
     section.setAttribute('aria-label', action.kind === 'confirm' ? 'Proposed worksheet method'
-      : action.kind === 'choose' ? 'Compare two samples' : 'Choose a worksheet method');
+      : action.kind === 'choose' ? 'Compare two means' : 'Choose a worksheet method');
     const actions = document.createElement('div');
     actions.className = 'worksheet-analysis-actions';
     const requestContext = context;
@@ -105,13 +105,13 @@ import {richText} from './Shared/Learning/rich-text.mjs';
       actions.append(option);
     }
     if (action.kind === 'compare') {
-      if (action.showCompare !== false) button('Compare two samples', 'compare');
+      if (action.showCompare !== false) button('Compare two means', 'compare');
       button('Choose a method', 'browse');
     } else if (action.kind === 'choose') {
       const question = document.createElement('p');
-      question.textContent = 'Were these measurements taken from the same people?';
+      question.textContent = 'Were these measurements taken from the same people or units?';
       section.append(question);
-      button('Same people', 'paired');
+      button('Same people or units', 'paired');
       button('Separate groups', 'independent');
     } else {
       const heading = document.createElement('h2');
