@@ -22,14 +22,21 @@ const bundle=(entry,globalName,plugins)=>build({entryPoints:[upstream(entry+'.mj
 
 // Windows copies a drag with Ctrl where macOS uses Option, and a Ctrl+click is an
 // ordinary click (on macOS it opens the context menu).
-await bundle('editor','StatsDirectReportEditor',[{name:'windows-report-transfer',setup(b){b.onLoad({filter:/transfer\.mjs$/},async ({path})=>{
-  let contents=await readFile(path,'utf8');
-  const drift=message=>{throw new Error('Review the Windows transfer adapter for the new upstream source: '+message);};
-  if((contents.match(/event\.altKey/g)||[]).length!==3)drift('Option-drag copy tests');
-  if(!contents.includes('||event.ctrlKey||event.metaKey||event.shiftKey'))drift('modified pointer guard');
-  contents=contents.replace('||event.ctrlKey||event.metaKey||event.shiftKey','||event.metaKey||event.shiftKey').replaceAll('event.altKey','event.ctrlKey');
-  return {contents,loader:'js'};
-});}}]);
+await bundle('editor','StatsDirectReportEditor',[{name:'windows-report-editor',setup(b){
+  // Windows appends R charts directly. Expose the same ID isolation used for imports and paste.
+  b.onLoad({filter:/[\\/]editor\.mjs$/},async ({path})=>({
+    contents:(await readFile(path,'utf8'))+"\nexport {namespaceSvgIDs} from './svg-isolation.mjs';\n",
+    loader:'js'
+  }));
+  b.onLoad({filter:/transfer\.mjs$/},async ({path})=>{
+    let contents=await readFile(path,'utf8');
+    const drift=message=>{throw new Error('Review the Windows transfer adapter for the new upstream source: '+message);};
+    if((contents.match(/event\.altKey/g)||[]).length!==3)drift('Option-drag copy tests');
+    if(!contents.includes('||event.ctrlKey||event.metaKey||event.shiftKey'))drift('modified pointer guard');
+    contents=contents.replace('||event.ctrlKey||event.metaKey||event.shiftKey','||event.metaKey||event.shiftKey').replaceAll('event.altKey','event.ctrlKey');
+    return {contents,loader:'js'};
+  });
+}}]);
 
 await bundle('export','StatsDirectReportExport',[{name:'windows-report-export-style',setup(b){b.onLoad({filter:/export\.mjs$/},async ({path})=>({contents:windowsExportStyle(await readFile(path,'utf8')),loader:'js'}));}}]);
 

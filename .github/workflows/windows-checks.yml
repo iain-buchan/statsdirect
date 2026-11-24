@@ -118,6 +118,24 @@ jobs:
           STATSDIRECT_SKIP_CLIPBOARD: 1
         shell: pwsh
         run: dotnet run --project tests/Learning -c Release -p:StatsDirectBin="$env:GITHUB_WORKSPACE/StatsDirectUI/bin/Release/net10.0-windows10.0.17763.0"
+      - name: Native worksheet AI and consent regression (blocking)
+        if: steps.profile.outputs.licensed == 'true'
+        env:
+          STATSDIRECT_LEARNING_ONLY: worksheet-ai
+          STATSDIRECT_SKIP_CLIPBOARD: 1
+          STATSDIRECT_USER_DATA_ROOT: ${{ runner.temp }}/statsdirect-worksheet-ai/user-data
+          WEBVIEW2_USER_DATA_FOLDER: ${{ runner.temp }}/statsdirect-worksheet-ai/webview
+        shell: pwsh
+        run: dotnet run --project tests/Learning -c Release -p:StatsDirectBin="$env:GITHUB_WORKSPACE/StatsDirectUI/bin/Release/net10.0-windows10.0.17763.0"
+      - name: Native worksheet AI analysis regression (blocking)
+        if: steps.profile.outputs.licensed == 'true'
+        env:
+          STATSDIRECT_LEARNING_ONLY: worksheet-ai-analysis
+          STATSDIRECT_SKIP_CLIPBOARD: 1
+          STATSDIRECT_USER_DATA_ROOT: ${{ runner.temp }}/statsdirect-worksheet-ai-analysis/user-data
+          WEBVIEW2_USER_DATA_FOLDER: ${{ runner.temp }}/statsdirect-worksheet-ai-analysis/webview
+        shell: pwsh
+        run: dotnet run --project tests/Learning -c Release -p:StatsDirectBin="$env:GITHUB_WORKSPACE/StatsDirectUI/bin/Release/net10.0-windows10.0.17763.0"
       - name: Sanity check and operations test
         shell: bash
         run: |

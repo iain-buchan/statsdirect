@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "format": "statsdirect-desktop-help-v1",
-  "publishedAtUtc": "2026-11-21T10:03:27.0188526+00:00",
-  "sourceSha256": "da0d1b026ca0e7e0bf76da617a7a777f691198cf28e3e9ca2b4eea8012945a4c",
+  "publishedAtUtc": "2026-11-24T06:51:45.6386255+00:00",
+  "sourceSha256": "6fba22a6d844871452c36d0eadb9b1554d40b73312da323c27204650ba515754",
   "entryPage": "index.html",
-  "topicCount": 404,
-  "searchDocumentCount": 403,
+  "topicCount": 405,
+  "searchDocumentCount": 404,
   "contexts": [
     {
       "name": "CONTENTS",
@@ -2030,14 +2030,14 @@
   ],
   "aliasSourceSha256": "1b982112068d44a22dbe95a98db37b6cb08abb54a29927d112e32fb65db5ddcf",
   "contextHeaderSha256": "65a27d8c45a47b3ec913e0aa3b85d7166527d716cc3ffa6861a725ffcb804099",
-  "previousKind": "PortableArtifact",
-  "previousSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "previousKind": "EditorOwned",
+  "previousSha256": "a0e805322d052d7ae550d2801f3aaaf84e47184a54fa654e8242338e0673363e",
   "adoptedFlareOutput": false,
   "files": [
     {
       "path": ".statsdirect-help-output.json",
-      "bytes": 55120,
-      "sha256": "e4fe5ab2e035efb61062cc2d3761ecd6fea0ef4d87f0810b009e1eb35b0e27dd"
+      "bytes": 55097,
+      "sha256": "6b6de01f3e9ecd29f6654648f2ae0623639c5012b6eeb816c5a5ca1d9dea0e9f"
     },
     {
       "path": "Data/Alias.xml",
@@ -2231,8 +2231,8 @@
     },
     {
       "path": "basics/learning.htm",
-      "bytes": 13192,
-      "sha256": "af5b8b319c2eb81c72f740923b176270cdd2c0d245cc9f3cf245cd46f26add03"
+      "bytes": 13596,
+      "sha256": "380da55bd7ad9612e12598bc9733e1ffc046e8ed53da16d5e61ebdb0d3f543fa"
     },
     {
       "path": "basics/licence.htm",
@@ -2281,8 +2281,8 @@
     },
     {
       "path": "basics/script_ai.htm",
-      "bytes": 14146,
-      "sha256": "97146768e1e8bacbec8e56426b100682a491f982bab37c10ecb2c45e1f4beadb"
+      "bytes": 14621,
+      "sha256": "8835c01c5216eee53eabf44125771803ea9d58fae1f20d8dc3530f0887ec9f9f"
     },
     {
       "path": "basics/statistics.htm",
@@ -2301,13 +2301,18 @@
     },
     {
       "path": "basics/worksheet.htm",
-      "bytes": 17568,
-      "sha256": "bb01c6c58298ee6ede73fe5b67a4f97bd7a7d0f8b304ee22be86f99a5a944a46"
+      "bytes": 17879,
+      "sha256": "c381871f73a4407caf3994faaf70b66c4b95108597e1c31600845bec772169d5"
+    },
+    {
+      "path": "basics/worksheet_ai.htm",
+      "bytes": 12920,
+      "sha256": "e061603c669e6959edd98c5747c62b0b09b2e7194be35b3d18b8e033ddc8d6d8"
     },
     {
       "path": "build-info.json",
       "bytes": 220,
-      "sha256": "b4ddeeb64ad958b5e7cb08e0f0c9f525ed74d727e5815ee20efe45af291b6e62"
+      "sha256": "71dc728aba51e3f3b7fd4d3ec4cca1676534c5e7834f19385e10558fc2e38b05"
     },
     {
       "path": "chi_square_tests/22.htm",
@@ -2386,8 +2391,8 @@
     },
     {
       "path": "contents-data.js",
-      "bytes": 23697,
-      "sha256": "acde8a1fccc88a39b799ac349ad3e3b73cc0b04a00a2b73a3c438d6a83571755"
+      "bytes": 23785,
+      "sha256": "560dce9a14a693051e9ddb6657946fc9165d534af67b85dc2fe62a5498102c62"
     },
     {
       "path": "contents.htm",
@@ -2836,13 +2841,13 @@
     },
     {
       "path": "keyword-index.js",
-      "bytes": 134837,
-      "sha256": "01d006d71525cdef50c0f110782f4e56f7433d72e4bc378091c138fa70aadd01"
+      "bytes": 135416,
+      "sha256": "d23aa523f48f7f343c3f63635c07a037adab416968a415400fb39662d3814ce7"
     },
     {
       "path": "keyword-index.json",
-      "bytes": 97536,
-      "sha256": "131e7507ea107dfb5f4234cdcb7ef78a2b41eb9637fa62534a844eb7ae1d51d9"
+      "bytes": 98041,
+      "sha256": "e49d17ea6c5a6750d0ef8053b48b3d98a1f9c4378e3bc6fd0c83dd650493917d"
     },
     {
       "path": "menus/about.htm",
@@ -5500,11 +5505,6 @@
       "sha256": "9fef48d868277a8bc1852f7ba796b33ead812d38916a7131b0a29ea48961a6a4"
     },
     {
-      "path": "resources/help-editor-runtime/publication.json",
-      "bytes": 133,
-      "sha256": "00af037caa438843b7f62251cd6091ebb831ed989bce04903e1f4755bca5633a"
-    },
-    {
       "path": "resources/help-editor-runtime/topic.css",
       "bytes": 3543,
       "sha256": "3481127310fffba5acb4cbe16b4003945d3920cd9b8d4e679275bcd45522f8a2"
@@ -6081,8 +6081,8 @@
     },
     {
       "path": "search-index.js",
-      "bytes": 882442,
-      "sha256": "f820c556fa0bb5af94aed7c7d7a9525666e4c5557045c8788475a26e59cbd9de"
+      "bytes": 885122,
+      "sha256": "468265e58e3663e93ac3059cd9d8d157e6a43681c0115961aeb3de6df5079ee9"
     },
     {
       "path": "survival_analysis/abridged_life_table.htm",
@@ -6420,5 +6420,5 @@
       "sha256": "10f5155b3fbf0d431bb8ad559e3b8103fcf3b355e001208dfacb2855b22936c9"
     }
   ],
-  "publicationSnapshotSha256": "7b92b0e3eac78d4ddbd92f5fc329076ee3bc9c8ad289a25d83adf56e2e92652e"
+  "publicationSnapshotSha256": null
 }

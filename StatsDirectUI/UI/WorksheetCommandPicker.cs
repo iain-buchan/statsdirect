@@ -11,6 +11,7 @@ namespace StatsDirect.UI;
 internal sealed record WorksheetCommand(ToolStripMenuItem Item, string Name, string[] Groups, string Operation)
 {
     internal string MenuPath => string.Join(" › ", Groups);
+    internal string Id => (Operation.Length == 0 ? Item.Name : Operation) + "|" + MenuPath + " › " + Name;
     internal bool CanRun => Item.Available && Item.Enabled;
 }
 
@@ -38,8 +39,7 @@ internal sealed class WorksheetCommandPicker : ToolStripDropDown
     private readonly HashSet<string> expanded = new(StringComparer.Ordinal);
     private WorksheetCommand[] source = [];
     private bool rebuilding;
-
-    internal event Action<WorksheetCommand> CommandChosen;
+    private Action<WorksheetCommand> commandChosen;
     internal event Action<string> HelpSearchRequested;
 
     internal WorksheetCommandPicker()
@@ -83,9 +83,10 @@ internal sealed class WorksheetCommandPicker : ToolStripDropDown
         };
     }
 
-    internal void Prepare(WorksheetCommand[] available, Control owner, ToolStripItem button)
+    internal void Prepare(WorksheetCommand[] available, Control owner, ToolStripItem button, Action<WorksheetCommand> chosen)
     {
         source = available;
+        commandChosen = chosen;
         if (search.TextLength == 0) UpdateResults();
         else search.Clear();
 
@@ -108,6 +109,12 @@ internal sealed class WorksheetCommandPicker : ToolStripDropDown
     {
         base.OnOpened(e);
         BeginInvoke(() => { if (Visible && !IsDisposed) search.Focus(); });
+    }
+
+    protected override void OnClosed(ToolStripDropDownClosedEventArgs e)
+    {
+        commandChosen = null;
+        base.OnClosed(e);
     }
 
     protected override bool ProcessCmdKey(ref Message msg, Keys keyData) => HandleKey(keyData) || base.ProcessCmdKey(ref msg, keyData);
@@ -164,8 +171,9 @@ internal sealed class WorksheetCommandPicker : ToolStripDropDown
         if (node.Tag is WorksheetCommand command)
         {
             if (!command.CanRun) return;
+            var chosen = commandChosen;
             Close(ToolStripDropDownCloseReason.ItemClicked);
-            CommandChosen?.Invoke(command);
+            chosen?.Invoke(command);
         }
         else if (node.Nodes.Count > 0 && (!search.Focused || string.IsNullOrWhiteSpace(search.Text))) node.Toggle();
     }
@@ -254,6 +262,12 @@ internal sealed class WorksheetCommandPicker : ToolStripDropDown
             ToolTipText = command.MenuPath
         };
 
+
+    internal static IEnumerable<WorksheetCommand> Search(WorksheetCommand[] source, string query)
+    {
+        string[] terms = Words(query);
+        return terms.Length == 0 ? source : Find(source, terms);
+    }
 
     private static IEnumerable<WorksheetCommand> Find(WorksheetCommand[] source, string[] query)
     {

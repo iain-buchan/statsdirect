@@ -115,6 +115,16 @@ internal sealed class frmReportWebView : StatsDirectForm, IReport, IFindTarget
         }, focusResult: true);
     }
 
+    internal Task<string> AppendROutputAsync(string html) =>
+        view.AppendAsync(html, "R output", "", 0, beforeAppend: () =>
+        {
+            if (IsDisposed || Disposing) throw new InvalidOperationException("The destination report closed.");
+            if (allowClosing) CancelParentClose();
+            Dirty = true;
+            Activate();
+            FocusResultEditor();
+        }, focusResult: true, namespaceCharts: true);
+
     void IReport.AppendRenderable(IRenderable renderable, int helpContextId, Operation operation, object run)
     {
         string html = new HtmlRenderer(SdApplication.SoleInstance).Render(renderable);

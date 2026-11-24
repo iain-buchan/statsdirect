@@ -203,19 +203,21 @@ the options shown, and none of them starts an installer.
    must say PASS. It takes the file from the release's address and no other,
    so a mirror in good order cannot hide a file that is missing or wrong at
    GitHub.
-5. The website puts its copy of the installer at the manifest's mirror, in the
-   folder for the version, and keeps the folders of earlier versions, so that
-   an update already offered still finds its file. Then
-   `--check-manifest windows-latest.json --running <previous version> --download --block-github`
-   must say PASS. It refuses every request to GitHub, as a network that blocks
-   it would, so the file has to come from the mirror.
-6. Only when both checks have passed does the website publish the manifest (a
-   copy of the release's file, byte for byte), in one deployment with the
-   version on the download page and its own unversioned copy of the installer
-   for earlier versions. The manifest names stable releases only, and must
-   never name a version whose installer is not at both of its addresses.
-7. `--check-manifest https://www.statsdirect.com/download/windows-latest.json --running <previous version>`
-   then reads the manifest from the website as the updater does.
+5. After the GitHub check passes, deploy the website in one operation. Place the
+   signed setup at the manifest's versioned mirror and compare it byte for byte
+   with the GitHub release's setup. Keep earlier version folders so updates
+   already offered can still find their installers. In the same deployment,
+   publish the manifest byte for byte from the release, update the download page,
+   and publish the website's unversioned setup and MSI. The manifest names stable
+   releases only, and both installer addresses must serve the same file when it
+   goes live.
+6. After deployment,
+   `--check-manifest https://www.statsdirect.com/download/windows-latest.json --running <previous version>`
+   must read the live manifest and offer the new version as the updater would.
+7. `--check-manifest https://www.statsdirect.com/download/windows-latest.json --running <previous version> --download --block-github`
+   must say PASS. It refuses GitHub requests, so the download must come from the
+   mirror in the live manifest. If that check fails, tell the website maintainer
+   immediately so they can correct the mirror or withdraw the new manifest.
 
 Installed versions before 5.3.17 do not read the manifest, and the website keeps
 their addresses working as its own files:

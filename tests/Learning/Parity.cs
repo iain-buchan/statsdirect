@@ -33,20 +33,23 @@ internal static partial class Program
         await Reject(() => { PromptLesson(oversized); return Task.CompletedTask; }, "irreducibly large lesson content is still rejected");
 
         var consent = new AISharingConsent();
-        Check(!consent.Accepted && !consent.Accepts([]), "new application session has no acceptance");
-        consent.SelectDataDocument("A"); consent.Approve(["A", "B"]); int revision = consent.Revision;
-        consent.Approve([]);
-        Check(consent.Accepts(["A", "B"]) && consent.Revision == revision, "report-only approval preserves all previously accepted data documents");
-        Check(!consent.SelectDataDocument("A") && consent.Accepted, "same data document keeps session acceptance");
-        Check(consent.SelectDataDocument("B") && !consent.Accepted && consent.Revision > revision, "selecting a different previously approved workbook still revokes acceptance");
-        consent.Approve(["B"]); consent.SelectDataDocument("A");
-        Check(!consent.Accepted, "returning to the earlier workbook requires fresh acceptance");
+        Check(!consent.Accepts(["A"]) && !consent.Accepts([]), "new application session has no document approval");
+        int revision = consent.Revision;
+        consent.Approve(["report"]);
+        Check(consent.Accepts(["report"]) && !consent.Accepts(["A"]) && !consent.Accepts([]),
+            "report confirmation approves exactly its named document without approving a workbook");
+        consent.Approve(["A", "B"]);
+        Check(consent.Accepts(["A", "B", "report"]) && consent.Revision == revision, "separate confirmations preserve explicitly approved document IDs");
+        consent.Revoke();
+        Check(!consent.Accepts(["A"]) && !consent.Accepts(["B"]) && !consent.Accepts(["report"]) && consent.Revision > revision,
+            "explicit revocation removes all approved documents and invalidates previously captured contexts");
 
         var report = (frmReportWebView)main.CreateReport(); await report.LearningReport.Ready;
         string record = "{\"version\":1,\"operation\":\"Test\",\"values\":{\"hidden\":\"PRIVATE_RAW_DATA\"},\"inputs\":[],\"source\":\"C:/PRIVATE_FILE.xlsx\"}";
         string item = await report.LearningReport.AppendAsync("<h2>Visible result</h2><p>P = 0.04</p><span style='display:none'>PRIVATE_HIDDEN_TEXT</span><svg xmlns='http://www.w3.org/2000/svg' width='200' height='60'><text x='10' y='30'>Visible chart label</text><text style='display:none'>PRIVATE_HIDDEN_CHART</text></svg>", "Visible title", "Test", 0, record);
         await Task.Delay(80);
-        service.Sharing.Approve([grid.Id()]);
+        service.RevokeAISharing();
+        service.Sharing.Approve([report.Id()]);
         var context = new QuestionContext([report], true, CancellationToken.None, service.Sharing);
         await context.CaptureReportsAsync(item);
         string initial = context.InitialContext().ToJsonString();
@@ -58,9 +61,15 @@ internal static partial class Program
         await report.LearningReport.AppendAsync("<p>"+new string('x',19000)+"</p>","Long report","",0);
         var longContext=new QuestionContext([report],true,CancellationToken.None,service.Sharing);await longContext.CaptureReportsAsync();
         Check(longContext.InitialContext(14000).B("readDetailsWithTools") && !longContext.InitialContext(14000).ContainsKey("currentReport"),"long report uses approved tool snapshot instead of exceeding Learning's initial-context budget");
+        service.RevokeAISharing();
+        service.Sharing.Approve([grid.Id()]);
         service.ShowReportAI(report,item); var pane = (ScriptAIPane)Field(service,"ai");
         pane.ShareScript.Checked = true; pane.ShareWorkbook.Checked = false;
-        Check(pane.Acknowledge.Checked && pane.Send.Enabled && pane.ShareScript.Text.Contains("report"), "Report AI reuses session acceptance and labels the shared report explicitly");
+        Check(!pane.Acknowledge.Checked && !pane.Send.Enabled && pane.ShareScript.Text.Contains("report"),
+            "Report AI requires confirmation for the report even when the workbook is already approved");
+        pane.Acknowledge.Checked = true;
+        Check(pane.Acknowledge.Checked && pane.Send.Enabled && service.Sharing.Accepts([report.Id()]),
+            "Report AI can use the explicitly approved report");
         pane.NewConversation(); Check(pane.Acknowledge.Checked && pane.ShareScript.Checked, "New conversation keeps app-session acceptance and sharing choices");
         pane.Composer.Text = "Interpret this report"; await pane.SendAsync(); await pane.Transcript.SettledAsync();
         Check((await pane.Transcript.TextAsync()).Contains("Mock answer"), "Report AI completes a question through the shared native conversation transport");

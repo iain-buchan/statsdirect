@@ -29,7 +29,6 @@ internal sealed partial class LearningService : IDisposable
     internal LearningService(frmMain main, string storage = null, ChatGPTTutor tutor = null)
     {
         this.main = main;
-        if (main.ActiveMdiChild is frmSpreadsheetGear grid) Sharing.SelectDataDocument(grid.Id());
         Storage = storage ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "StatsDirect", "Learning");
         Tutor = tutor ?? ChatGPTTutor.OnDemand(Storage);
         Tutor.Changed += UpdateConnection;
@@ -50,22 +49,12 @@ internal sealed partial class LearningService : IDisposable
             else if (options) _ = View.CallAsync("showOptions");
         }
     }
+    internal void ShowWorksheetAI(frmSpreadsheetGear worksheet) { ai ??= new ScriptAIPane(main, this); ai.Open(worksheet); }
     internal void ShowScriptAI(frmScript script) { ai ??= new ScriptAIPane(main, this); ai.Open(script); }
     internal void ShowReportAI(frmReportWebView report, string resultId = null) { ai ??= new ScriptAIPane(main, this); ai.Open(report, resultId); }
-    internal void ActiveScriptChanged(frmScript script) { if (ai?.IsOpen == true) ai.Open(script); }
-    internal void ActiveReportChanged(frmReportWebView report) { if (ai?.IsOpen == true) ai.Open(report); }
-    internal void ActiveAIDataDocument(string id)
-    {
-        // The AI pane shares the whole open-workbook set; changing focus within
-        // that set does not choose different data. Explicit Learning choices
-        // continue to use SelectAIDataDocument and its existing revocation.
-        if (!ShareAIWorkbook) SelectAIDataDocument(id);
-    }
-    internal void SelectAIDataDocument(string id)
-    {
-        if (!Sharing.SelectDataDocument(id)) return;
-        CancelQuestion(); ai?.SessionSharingChanged(); RefreshWorkspace();
-    }
+    internal void ActiveScriptChanged(frmScript script) { if (ai is { IsOpen: true, WorksheetMode: false }) ai.Open(script); }
+    // Keep the worksheet conversation bound when a local analysis activates its result.
+    internal void ActiveReportChanged(frmReportWebView report) { if (ai is { IsOpen: true, WorksheetMode: false }) ai.Open(report); }
     internal void RevokeAISharing() { Sharing.Revoke(); CancelQuestion(); ai?.SessionSharingChanged(); RefreshWorkspace(); }
     internal void RefreshWorkspace()
     {
@@ -148,7 +137,6 @@ internal sealed partial class LearningService : IDisposable
                 string choice = body.S("choice", view.SourceId);
                 if (Tutor.DataSharingDisabled) view.SourceId = "__none__";
                 else if (choice is "" or "__none__" || Documents.Any(d => d.Id() == choice)) view.SourceId = choice;
-                if (Documents.OfType<frmSpreadsheetGear>().Any(d => d.Id() == view.SourceId)) SelectAIDataDocument(view.SourceId);
                 RefreshWorkspace(); break;
             case "ask": await AskAsync(view, body); break;
             case "cancel": if (body.S("id") == requestId) CancelQuestion(); break;
@@ -215,8 +203,13 @@ internal sealed partial class LearningService : IDisposable
         }
         return null;
     }
-    internal frmScript OpenScript(string script, string title, bool run)
-    { var doc = (frmScript)main.CreateScriptWindow(); doc.ShowR(script, title, runImmediately: run); return doc; }
+    internal frmScript OpenScript(string script, string title, bool run, bool reportOutput = false)
+    {
+        var doc = (frmScript)main.CreateScriptWindow();
+        doc.OfferROutputToReport = reportOutput;
+        doc.ShowR(script, title, runImmediately: run);
+        return doc;
+    }
     internal void OpenExample(string id, bool r)
     {
         var lesson = Lesson(id) ?? throw new InvalidDataException("Choose a lesson in the current library.");
@@ -247,7 +240,7 @@ internal sealed partial class LearningService : IDisposable
         Tutor.CheckPolicy();
         await Tutor.RefreshAccountAsync();
         string sharingNotice = Tutor.DataSharingDisabled ? ChatGPTTutor.DataSharingPolicyMessage
-            : "Send shares your question and recent conversation with OpenAI. Learning also includes relevant learning options and course excerpts. Share documents only by selecting their context and confirming. This confirmation applies across Report, Script and Learning until you restart StatsDirect or select another data document. Keep person-identifiable data out of questions, documents and course packs.";
+            : "Send shares your question and recent conversation with OpenAI. Learning also includes relevant learning options and course excerpts. Share documents only by selecting their context and confirming. StatsDirect remembers confirmation for the listed documents during this session. Keep person-identifiable data out of questions, documents and course packs.";
         // The same sentences as the Mac sign-in dialog (Sources/LearnHost.swift), so both apps describe the account in one way.
         const string accountUse = "StatsDirect AI uses the Codex allowance on your ChatGPT plan, including Free. Usage limits and workspace settings still apply. Lessons and practice are available without signing in.";
         if (Tutor.Email != null)

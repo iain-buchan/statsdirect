@@ -29,9 +29,41 @@ internal static partial class Program
         using var main=new frmMain();appType.GetProperty("MainWindow",Members)!.SetValue(app,main);
         foreach(var (evt,method) in new[]{("Load","frmMain_Load"),("Shown","frmMain_Shown"),("FormClosing","frmMain_FormClosing"),("FormClosed","frmMain_FormClosed")})
         {var e=typeof(frmMain).GetEvent(evt)!;e.RemoveEventHandler(main,typeof(frmMain).GetMethod(method,Members)!.CreateDelegate(e.EventHandlerType!,main));}
-        main.StartPosition=FormStartPosition.Manual;main.Location=new(-16000,-16000);main.Size=new(1500,1000);main.ShowInTaskbar=false;
-        int exit=1;
-        main.Shown+=async(_,_)=>{try{if(Environment.GetEnvironmentVariable("STATSDIRECT_LEARNING_ONLY")=="filtered-replay"){await TestFilteredReplay(main);await TestSavedRunRereads(main);}else await Run(main);Console.WriteLine($"PASS {checks} Windows Learning/AI/R setup checks");exit=0;}catch(Exception ex){Console.WriteLine("FAIL "+ex);}finally{foreach(var child in main.MdiChildren)child.Dispose();main.Close();}};
+        string mode = Environment.GetEnvironmentVariable("STATSDIRECT_LEARNING_ONLY");
+        bool showWorksheetPreview = mode is "worksheet-ai-show" or "worksheet-ai-analysis-show";
+        main.StartPosition = showWorksheetPreview ? FormStartPosition.CenterScreen : FormStartPosition.Manual;
+        if (showWorksheetPreview) main.WindowState = FormWindowState.Maximized;
+        else main.Location = new(-16000, -16000);
+        main.Size = new(1500, 1000);
+        main.ShowInTaskbar = showWorksheetPreview;
+        int exit = 1;
+        main.Shown += async (_, _) =>
+        {
+            try
+            {
+                if (mode == "filtered-replay")
+                {
+                    await TestFilteredReplay(main);
+                    await TestSavedRunRereads(main);
+                }
+                else if (mode == "worksheet-ai") await RunWorksheetAssistantFixture(main);
+                else if (mode == "worksheet-ai-analysis") await RunWorksheetAnalysisFixture(main);
+                else if (mode == "worksheet-ai-analysis-show") await ShowWorksheetAnalysisDemo(main);
+                else if (showWorksheetPreview) await ShowWorksheetAssistantDemo(main);
+                else await Run(main);
+                Console.WriteLine($"PASS {checks} Windows Learning/AI/R setup checks");
+                exit = 0;
+            }
+            catch (Exception ex) { Console.WriteLine("FAIL " + ex); }
+            finally
+            {
+                if (!showWorksheetPreview || exit != 0)
+                {
+                    foreach (var child in main.MdiChildren) child.Dispose();
+                    main.Close();
+                }
+            }
+        };
         Application.Run(main);
         if (unhandled > 0) { Console.WriteLine($"FAIL {unhandled} unhandled exception(s) on the UI thread"); return 1; }
         return exit;

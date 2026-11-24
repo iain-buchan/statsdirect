@@ -180,7 +180,8 @@ internal sealed class ReportView : UserControl
     }
 
     /// <param name="record">The JSON record of the run that made the result (RunRecord), kept with the item, or null.</param>
-    internal Task<string> AppendAsync(string html, string title, string operation, int helpContextId, string record = null, Action beforeAppend = null, bool focusResult = false)
+    internal Task<string> AppendAsync(string html, string title, string operation, int helpContextId,
+        string record = null, Action beforeAppend = null, bool focusResult = false, bool namespaceCharts = false)
     {
         async Task<string> AppendAfter(Task prior)
         {
@@ -188,7 +189,7 @@ internal sealed class ReportView : UserControl
             await Ready.WaitAsync(TimeSpan.FromSeconds(45));
             beforeAppend?.Invoke();
             string id = Guid.NewGuid().ToString("D");
-            await CallAsync("append", new { id, html, title, operation, helpContextId, record = Record(record), focusResult });
+            await CallAsync("append", new { id, html, title, operation, helpContextId, record = Record(record), focusResult, namespaceCharts });
             return id;
         }
         Task<string> appended = AppendAfter(mutations);

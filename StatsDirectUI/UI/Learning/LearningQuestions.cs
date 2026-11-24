@@ -21,7 +21,7 @@ internal sealed partial class LearningService
         layout.RowStyles.Add(new RowStyle(SizeType.AutoSize)); layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100)); layout.RowStyles.Add(new RowStyle(SizeType.AutoSize)); layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         layout.Controls.Add(new Label { AutoSize = true, MaximumSize = new Size(525, 0), Text = "OpenAI will receive these document names and headings and may read their values or text for this question. The learning assistant can run supported StatsDirect analyses on approved worksheet ranges and add results to your report. Remove names, dates of birth, patient IDs and identifying free text. Earlier shared content may remain in the conversation." });
         layout.Controls.Add(new TextBox { Dock = DockStyle.Fill, Multiline = true, ReadOnly = true, ScrollBars = ScrollBars.Vertical, Text = string.Join(Environment.NewLine, documents.Select(d => "â€¢ " + d.Text + " (" + Kind(d) + ")")) });
-        var acknowledge = new CheckBox { Name = "sharingAcknowledgement", AutoSize = true, MaximumSize = new Size(525, 0), Text = "I have checked these documents contain no person identifiers. Remember this until I select different data or restart." }; layout.Controls.Add(acknowledge);
+        var acknowledge = new CheckBox { Name = "sharingAcknowledgement", AutoSize = true, MaximumSize = new Size(525, 0), Text = "I have checked these documents contain no person identifiers. Remember this confirmation for these documents during this session." }; layout.Controls.Add(acknowledge);
         var buttons = new FlowLayoutPanel { AutoSize = true, Dock = DockStyle.Fill }; var share = new Button { Name = "shareForQuestion", AutoSize = true, Text = "Confirm sharing", Enabled = false, DialogResult = DialogResult.Yes };
         var none = new Button { AutoSize = true, Text = "Use lessons only", DialogResult = DialogResult.No }; var cancel = new Button { AutoSize = true, Text = "Cancel", DialogResult = DialogResult.Cancel };
         buttons.Controls.AddRange([share, none, cancel]); layout.Controls.Add(buttons); form.Controls.Add(layout); form.CancelButton = cancel; form.AcceptButton = none;
@@ -60,8 +60,8 @@ internal sealed partial class LearningService
             var revisions = approved.OfType<frmSpreadsheetGear>().ToDictionary(d => d.Id(), d => d.LearningVersion);
             if (approved.Length > 0)
             {
-                var dataIds = approved.OfType<frmSpreadsheetGear>().Select(d => d.Id()).ToArray();
-                bool reused = Sharing.Accepts(dataIds);
+                var documentIds = approved.Select(d => d.Id()).ToArray();
+                bool reused = Sharing.Accepts(documentIds);
                 var decision = reused ? SharingDecision.Share : ConfirmSharing?.Invoke(approved) ?? AskSharing(main, approved);
                 pending.Token.ThrowIfCancellationRequested();
                 Tutor.CheckPolicy(mayShareData: !guidanceOnly);
@@ -70,11 +70,11 @@ internal sealed partial class LearningService
                 else
                 {
                     if (approved.Any(d => d.IsDisposed || d.MdiParent == null || d is frmSpreadsheetGear g && g.LearningVersion != revisions[g.Id()])) throw new InvalidOperationException("A document changed while you reviewed sharing. Review it again for a new question.");
-                    var consent = new JsonObject { ["id"] = Guid.NewGuid().ToString(), ["at"] = DateTimeOffset.UtcNow.ToString("O"), ["requestID"] = id, ["policyVersion"] = "document-sharing-v2", ["scope"] = "app-session", ["reusedAcceptance"] = reused, ["noPersonIdentifiers"] = true, ["statement"] = "This question can access only the listed documents. I have checked that they contain no person identifiers. Acceptance is remembered until I choose different data or restart.", ["documents"] = new JsonArray(approved.Select(d => (JsonNode)new JsonObject { ["id"] = d.Id(), ["title"] = d.Text, ["kind"] = Kind(d), ["version"] = d is frmSpreadsheetGear g ? g.LearningVersion : 0 }).ToArray()) };
+                    var consent = new JsonObject { ["id"] = Guid.NewGuid().ToString(), ["at"] = DateTimeOffset.UtcNow.ToString("O"), ["requestID"] = id, ["policyVersion"] = "document-sharing-v2", ["scope"] = "app-session", ["reusedAcceptance"] = reused, ["noPersonIdentifiers"] = true, ["statement"] = "This question can access only the listed documents. I have checked that they contain no person identifiers. Confirmation is remembered for the listed documents during this session.", ["documents"] = new JsonArray(approved.Select(d => (JsonNode)new JsonObject { ["id"] = d.Id(), ["title"] = d.Text, ["kind"] = Kind(d), ["version"] = d is frmSpreadsheetGear g ? g.LearningVersion : 0 }).ToArray()) };
                     var result = await view.CallAsync("recordSharingConsent", consent);
                     SaveState(result?["state"]); // Must persist before granting access.
                     pending.Token.ThrowIfCancellationRequested();
-                    Sharing.Approve(dataIds);
+                    Sharing.Approve(documentIds);
                 }
             }
             workspace = new QuestionContext(approved, false, pending.Token, Sharing, Tutor, guidanceOnly);

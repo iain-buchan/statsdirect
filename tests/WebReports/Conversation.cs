@@ -180,6 +180,67 @@ internal static partial class Program
         Check(code.Count == beforeUnmatched && notices.Count == 1 && notices[0] == CompletedCodeBlocks.Unmatched, "Open in R on a block the program cannot match opens nothing and says so");
         await Page("document.querySelector('button[data-code=copy]').click()"); await Task.Delay(150);
         Check(code.Count == beforeUnmatched && notices.Count == 2 && await PageTrue("document.querySelector('button[data-code=copy]').textContent==='Copy'"), "Copy on a block the program cannot match copies nothing, says so, and does not say Copied");
+        // Worksheet answers keep R code optional. The same transcript stays
+        // expanded for Script/Report AI, and prose and Python remain visible.
+        const string firstCode = "```r\nx <- c(2, 4)\n```";
+        const string secondCode = "```rscript\nmean(x)\n```";
+        const string worksheetReply = "The observed mean is **3**.\n\n" + firstCode
+            + "\n\nHere is how to check it.\n\n" + secondCode + "\n\n```python\nprint(3)\n```";
+        var worksheetMessages = Messages(("user", "Summarise these observations"), ("assistant", worksheetReply));
+        page.Update(worksheetMessages, "", true, collapseRCode: true); await page.SettledAsync();
+        Check(await PageTrue("""
+            document.querySelectorAll('details.r-code-disclosure').length === 2 &&
+            [...document.querySelectorAll('details.r-code-disclosure')].every(d => !d.open && d.querySelector('summary').innerText === 'Show R code') &&
+            !conversation.state().text.includes('mean(x)') &&
+            conversation.state().text.includes('The observed mean is 3.') &&
+            conversation.state().text.includes('print(3)')
+            """), "a worksheet answer shows its findings and folds just the R code");
+        await Page("document.querySelector('details.r-code-disclosure > summary').click()");
+        Check(await PageTrue("""
+            [...document.querySelectorAll('details.r-code-disclosure')].map(d => d.open).join(',') === 'true,false' &&
+            document.querySelector('details.r-code-disclosure[open] > summary').innerText === 'Hide R code' &&
+            conversation.state().text.includes('x <- c(2, 4)') && !conversation.state().text.includes('mean(x)')
+            """), "each worksheet R disclosure expands independently");
+        int beforeWorksheetCode = code.Count;
+        await Page("document.querySelector('details[open] [data-code=open]').click(); document.querySelector('details[open] [data-code=copy]').click()");
+        await Task.Delay(150);
+        Check(code.Count == beforeWorksheetCode + 2 && code[^2] == ("open", "x <- c(2, 4)")
+            && code[^1] == ("copy", "x <- c(2, 4)") && positions[^2] == (1, 0)
+            && await PageTrue("document.querySelector('details[open] [data-code=copy]').textContent === 'Copied'"),
+            "the expanded worksheet code opens and copies its actual reply block");
+        page.Update(worksheetMessages, "", false); await page.SettledAsync();
+        Check(await PageTrue("!document.querySelector('.r-code-disclosure') && conversation.state().text.includes('mean(x)')"),
+            "the same code shows inline in the ordinary Script and Report AI view");
+
+        const string firstPart = "Here is the method.\n\n" + firstCode;
+        page.Update(question, firstPart, true, collapseRCode: true); await page.SettledAsync();
+        await Page("document.querySelector('details.r-code-disclosure > summary').click()");
+        Check(await PageTrue("document.querySelector('details[open] [data-code=open]').disabled"),
+            "an expanded streaming R block can be read while its action is disabled");
+        string nextPart = firstPart + "\n\nThe calculation is short.\n\n" + secondCode;
+        page.Update(question, nextPart, false, collapseRCode: true); await page.SettledAsync();
+        Check(await PageTrue("[...document.querySelectorAll('details.r-code-disclosure')].map(d => d.open).join(',') === 'true,false'"),
+            "streaming more code keeps the reader's earlier disclosure open");
+        page.Update(Messages(("user", "Please explain the streamed reply."), ("assistant", nextPart + "\n\nThe mean is 3.")),
+            "", false, collapseRCode: true); await page.SettledAsync();
+        Check(await PageTrue("""
+            [...document.querySelectorAll('details.r-code-disclosure')].map(d => d.open).join(',') === 'true,false' &&
+            !document.querySelector('details[open] [data-code=open]').disabled &&
+            conversation.state().text.includes('The mean is 3.')
+            """), "a completed worksheet answer retains the disclosure state and enables Open in R");
+
+        const string welcome = "Do you want me to help you analyse your data?";
+        page.Update(new JsonArray(), "", true, collapseRCode: true, welcome: welcome); await page.SettledAsync();
+        Check((await page.TextAsync()).Contains(welcome, StringComparison.Ordinal) &&
+            (await page.StateAsync()).GetProperty("count").GetInt32() == 0,
+            "a new worksheet conversation shows a local welcome without adding a message");
+        page.Update(worksheetMessages, "", false, collapseRCode: true, welcome: welcome); await page.SettledAsync();
+        Check(!(await page.TextAsync()).Contains(welcome, StringComparison.Ordinal) &&
+            (await page.StateAsync()).GetProperty("count").GetInt32() == 2,
+            "the first worksheet reply replaces the welcome and preserves conversation indices");
+        page.Update(new JsonArray(), "", true, collapseRCode: true, welcome: welcome); await page.SettledAsync();
+        Check((await page.TextAsync()).Contains(welcome, StringComparison.Ordinal), "New conversation restores the worksheet welcome");
+
         // a new conversation clears the page
         page.Update(new JsonArray(), "", true); await page.SettledAsync();
         Check((await page.TextAsync()).Trim().Length == 0 && (await page.StateAsync()).GetProperty("count").GetInt32() == 0, "a new conversation clears the page");

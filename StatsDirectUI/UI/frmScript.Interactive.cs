@@ -12,7 +12,9 @@ public partial class frmScript
     internal RConsoleView InteractiveConsole { get; private set; }
     [System.ComponentModel.DesignerSerializationVisibility(System.ComponentModel.DesignerSerializationVisibility.Hidden)]
     internal string WorksheetImportFolder { private get; set; }
-    private bool mirroringRSource, savingInteractive, allowInteractiveClose;
+    [System.ComponentModel.DesignerSerializationVisibility(System.ComponentModel.DesignerSerializationVisibility.Hidden)]
+    internal bool OfferROutputToReport { private get; set; }
+    private bool mirroringRSource, savingInteractive, allowInteractiveClose, addingROutputToReport;
     internal Task<bool> PendingInteractiveClose { get; private set; }
     private bool IsInteractiveR => cboLanguage.SelectedIndex == 1 && InteractiveConsole != null;
 
@@ -34,6 +36,7 @@ public partial class frmScript
             view.AIRequested += () => (MdiParent as frmMain)?.Learning.ShowScriptAI(this);
             view.OpenInRRequested += OpenInR;
             view.MoreRequested += ShowRMoreMenu;
+            if (OfferROutputToReport) view.AddOutputToReportRequested += AddROutputToReportAsync;
             // Before the page is up nothing else can show a notice: a page that failed to load is reported here
             view.Notice += message => { if (!IsDisposed && !view.Ready.IsCompletedSuccessfully) MessageBox.Show(this, message, "R"); };
             view.CommandRequested += command =>
@@ -109,6 +112,21 @@ public partial class frmScript
         else await InteractiveConsole.SubmitAsync(source, "script");
         await InteractiveConsole.SetModeAsync("console");
     });
+
+    private async Task AddROutputToReportAsync()
+    {
+        if (addingROutputToReport || MdiParent is not frmMain main) return;
+        addingROutputToReport = true;
+        try
+        {
+            string output = await InteractiveConsole.ReportOutputAsync();
+            if (IsDisposed || Disposing || MdiParent != main) return;
+            var report = main.SelectedReportWindow as frmReportWebView
+                ?? throw new InvalidOperationException("Open a report to receive the R output.");
+            await report.AppendROutputAsync(output);
+        }
+        finally { addingROutputToReport = false; }
+    }
 
     internal async Task<bool> SaveInteractiveAsync(bool choose)
     {

@@ -20254,9 +20254,27 @@ ${content}</tr>
       } catch (error) {
       }
     };
-    const render3 = (text3) => richText(text3).replaceAll('data-code="r"', 'data-code="open"');
+    function render3(text3, foldRCode) {
+      const body = document.createElement("div");
+      body.className = "body";
+      body.innerHTML = richText(text3).replaceAll('data-code="r"', 'data-code="open"');
+      if (foldRCode) {
+        for (const block3 of body.querySelectorAll(".code-block")) {
+          if (!block3.querySelector('[data-code="open"]')) continue;
+          const details = document.createElement("details");
+          details.className = "r-code-disclosure";
+          const summary = document.createElement("summary");
+          summary.innerHTML = '<span class="show-r-code">Show R code</span><span class="hide-r-code">Hide R code</span>';
+          block3.replaceWith(details);
+          details.append(summary, block3);
+        }
+      }
+      return body;
+    }
     const rendered = [];
-    let partialElement = null, partialText = "", renders = 0, applied = 0, context = 0, requests = 0, copying = null;
+    let welcomeElement = null;
+    let worksheetActionElement = null, worksheetActionKey = "";
+    let partialElement = null, partialText = "", renders = 0, applied = 0, context = 0, requests = 0, copying = null, collapseRCode = false;
     function bind(element) {
       element.querySelectorAll("a").forEach((a) => {
         if (!/^https?:\/\//i.test(a.getAttribute("href") ?? "")) a.removeAttribute("href");
@@ -20284,9 +20302,15 @@ ${content}</tr>
       });
     }
     function renderInto(element, text3) {
-      const fresh = document.createElement("div");
-      fresh.innerHTML = render3(text3);
-      const body = element.querySelector(".body"), old = [...body.childNodes], now = [...fresh.childNodes];
+      const body = element.querySelector(".body"), fresh = render3(text3, collapseRCode);
+      if (collapseRCode) {
+        fresh.querySelectorAll("[data-code]").forEach((button) => button.disabled = true);
+        const previous = body.querySelectorAll(".r-code-disclosure");
+        fresh.querySelectorAll(".r-code-disclosure").forEach((details, index) => {
+          details.open = previous[index]?.open ?? false;
+        });
+      }
+      const old = [...body.childNodes], now = [...fresh.childNodes];
       let same = 0;
       while (same < old.length && same < now.length && old[same].isEqualNode(now[same])) same++;
       for (let k = old.length - 1; k >= same; k--) old[k].remove();
@@ -20297,7 +20321,10 @@ ${content}</tr>
     function block2(role, text3) {
       const element = document.createElement("section");
       element.className = "message " + (role === "user" ? "user" : "assistant");
-      element.innerHTML = '<div class="who">' + (role === "user" ? "You" : "StatsDirect AI") + '</div><div class="body">' + render3(text3) + "</div>";
+      const who = document.createElement("div");
+      who.className = "who";
+      who.textContent = role === "user" ? "You" : "StatsDirect AI";
+      element.append(who, render3(text3, collapseRCode && role === "assistant"));
       bind(element);
       renders++;
       return element;
@@ -20307,6 +20334,75 @@ ${content}</tr>
       const d = scroller();
       return d.scrollTop + d.clientHeight >= d.scrollHeight - 4;
     };
+    function updateWorksheetAction(action) {
+      const available = typeof action?.token === "string" && ["compare", "choose", "confirm"].includes(action.kind);
+      const key = available ? JSON.stringify(action) : "";
+      if (key === worksheetActionKey) return;
+      const transferFocus = worksheetActionElement?.contains(document.activeElement);
+      worksheetActionElement?.remove();
+      worksheetActionElement = null;
+      worksheetActionKey = key;
+      if (!available) return;
+      const section = document.createElement("section");
+      section.className = "message assistant worksheet-analysis";
+      section.dataset.worksheetAction = action.kind;
+      section.dataset.token = action.token;
+      section.setAttribute("aria-label", action.kind === "confirm" ? "Proposed worksheet method" : action.kind === "choose" ? "Compare two means" : "Choose a worksheet method");
+      const actions = document.createElement("div");
+      actions.className = "worksheet-analysis-actions";
+      const requestContext = context;
+      function button(label, choice) {
+        const option = document.createElement("button");
+        option.type = "button";
+        option.textContent = label;
+        option.dataset.action = "worksheet-analysis";
+        option.dataset.choice = choice;
+        option.addEventListener("click", () => post({ action: "worksheetAnalysis", token: action.token, choice, context: requestContext }));
+        actions.append(option);
+      }
+      if (action.kind === "compare") {
+        if (action.showCompare !== false) button("Compare two means", "compare");
+        button("Choose a method", "browse");
+      } else if (action.kind === "choose") {
+        const question = document.createElement("p");
+        question.textContent = "Were these measurements taken from the same people or units?";
+        section.append(question);
+        button("Same people or units", "paired");
+        button("Separate groups", "independent");
+      } else {
+        const heading = document.createElement("h2");
+        heading.textContent = String(action.method ?? "");
+        section.append(heading);
+        const details = document.createElement("dl");
+        const sheet = [action.workbook, action.sheet].filter(Boolean).join(" \xB7 ");
+        for (const [label, value] of [
+          ["Menu", action.menuPath],
+          ["Worksheet", sheet],
+          ["Selection", action.selection],
+          ["Expected inputs", action.inputs],
+          ["Results", action.destination]
+        ]) {
+          if (!value) continue;
+          const term = document.createElement("dt"), description = document.createElement("dd");
+          term.textContent = label;
+          description.textContent = String(value);
+          details.append(term, description);
+        }
+        section.append(details);
+        if (action.effect) {
+          const effect = document.createElement("p");
+          effect.className = "worksheet-analysis-effect";
+          effect.textContent = String(action.effect);
+          section.append(effect);
+        }
+        button("Continue to analysis", "continue");
+        if (action.choice === "paired" || action.choice === "independent") button("Change design", "change");
+      }
+      section.append(actions);
+      container.append(section);
+      worksheetActionElement = section;
+      if (transferFocus) actions.querySelector("button")?.focus({ preventScroll: true });
+    }
     function saveSelection() {
       const selection = getSelection();
       if (!selection || selection.isCollapsed || !container.contains(selection.anchorNode) || !container.contains(selection.focusNode)) return null;
@@ -20340,16 +20436,32 @@ ${content}</tr>
     }
     function update(m) {
       context = m.context;
-      const selection = m.reset ? null : saveSelection();
+      const reset = m.reset || collapseRCode !== Boolean(m.collapseRCode);
+      collapseRCode = Boolean(m.collapseRCode);
+      const selection = reset ? null : saveSelection();
       const top = scroller().scrollTop;
-      const follow = !!m.reset || !selection && atEnd();
-      if (m.reset) {
+      const follow = reset || !selection && atEnd();
+      if (reset) {
         container.replaceChildren();
         rendered.length = 0;
         partialElement = null;
         partialText = "";
+        welcomeElement = null;
+        worksheetActionElement = null;
+        worksheetActionKey = "";
       }
       const messages = Array.isArray(m.messages) ? m.messages : [];
+      const partial = String(m.partial ?? "");
+      if (!messages.length && !partial && m.welcome) {
+        if (!welcomeElement) {
+          welcomeElement = block2("assistant", m.welcome);
+          welcomeElement.classList.add("welcome");
+          container.appendChild(welcomeElement);
+        }
+      } else if (welcomeElement) {
+        welcomeElement.remove();
+        welcomeElement = null;
+      }
       let same = 0;
       while (same < rendered.length && same < messages.length && rendered[same].role === messages[same].role && rendered[same].text === messages[same].text) same++;
       for (let j = rendered.length - 1; j >= same; j--) {
@@ -20359,18 +20471,18 @@ ${content}</tr>
       for (let j = same; j < messages.length; j++) {
         const role = messages[j].role === "user" ? "user" : "assistant", text3 = String(messages[j].text ?? "");
         let element;
-        if (j === messages.length - 1 && partialElement && role === "assistant" && text3 === partialText && !m.partial) {
+        if (j === messages.length - 1 && partialElement && role === "assistant" && (text3 === partialText || collapseRCode) && !m.partial) {
           element = partialElement;
+          if (text3 !== partialText) renderInto(element, text3);
           element.classList.remove("partial");
           partialElement = null;
           partialText = "";
         } else {
           element = block2(role, text3);
-          container.insertBefore(element, partialElement);
+          container.insertBefore(element, partialElement ?? worksheetActionElement);
         }
         rendered.push({ role, text: text3, element });
       }
-      const partial = String(m.partial ?? "");
       if (partial !== partialText) {
         if (!partial) {
           if (partialElement) partialElement.remove();
@@ -20379,12 +20491,13 @@ ${content}</tr>
         else {
           partialElement = block2("assistant", partial);
           partialElement.classList.add("partial");
-          container.appendChild(partialElement);
+          container.insertBefore(partialElement, worksheetActionElement);
         }
         partialText = partial;
       }
       if (partialElement) partialElement.querySelectorAll("[data-code]").forEach((button) => button.disabled = true);
       for (const row of rendered) row.element.querySelectorAll("[data-code]").forEach((button) => button.disabled = false);
+      updateWorksheetAction(m.worksheetAction);
       restoreSelection(selection);
       scroller().scrollTop = follow ? scroller().scrollHeight : top;
       if (typeof m.sequence === "number") applied = m.sequence;

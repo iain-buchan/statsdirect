@@ -1,25 +1,24 @@
 using System.Collections.Generic;
-using System.Linq;
 
 namespace StatsDirect.UI.Learning;
 
 /// <summary>App-session acceptance, separate from each question's selected documents.</summary>
 internal sealed class AISharingConsent
 {
-    internal string DataDocumentId { get; private set; }
-    internal bool Accepted { get; private set; }
     internal int Revision { get; private set; }
-    private readonly HashSet<string> approvedDataIds = new();
-    internal bool SelectDataDocument(string id)
+    private readonly HashSet<string> approvedDocumentIds = new();
+
+    internal bool Accepts(IEnumerable<string> documentIds)
     {
-        if (DataDocumentId == id) return false;
-        DataDocumentId = id; Revoke(); return true;
+        bool hasDocuments = false;
+        foreach (string id in documentIds)
+        {
+            if (!approvedDocumentIds.Contains(id)) return false;
+            hasDocuments = true;
+        }
+        return hasDocuments;
     }
-    internal bool Accepts(IEnumerable<string> dataIds) => Accepted && dataIds.All(approvedDataIds.Contains);
-    internal void Approve(IEnumerable<string> dataIds)
-    {
-        Accepted = true; approvedDataIds.UnionWith(dataIds);
-        if (DataDocumentId != null) approvedDataIds.Add(DataDocumentId);
-    }
-    internal void Revoke() { Accepted = false; approvedDataIds.Clear(); Revision++; }
+
+    internal void Approve(IEnumerable<string> documentIds) => approvedDocumentIds.UnionWith(documentIds);
+    internal void Revoke() { approvedDocumentIds.Clear(); Revision++; }
 }

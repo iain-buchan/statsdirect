@@ -27,6 +27,28 @@ internal static partial class Program
         service.View.ShowHelp();
         string learning = await WaitForTopic("basics/learning.htm");
         Check(learning.Contains("basics/learning.htm"), "Help from the Learning window opens the Learning topic (" + learning + ")");
+        ((SdApplication)app).ShowHelp(main, "basics/worksheet.htm");
+        string worksheet = await WaitForTopic("basics/worksheet.htm");
+        Check(worksheet.Contains("basics/worksheet.htm"), "the desktop Help bundle opens the worksheet topic");
+        object helpService = Field(app, "htmlHelp");
+        object helpView = Field(helpService, "view");
+        var helpBrowser = (Microsoft.Web.WebView2.WinForms.WebView2)Field(helpView, "Browser");
+        bool openedAssistHelp = false;
+        for (int attempt = 0; attempt < 40 && !openedAssistHelp; attempt++)
+        {
+            string clicked = await helpBrowser.CoreWebView2.ExecuteScriptAsync("""
+                (() => {
+                    const link = document.querySelector('a[href$="worksheet_ai.htm"]');
+                    if (!link) return false;
+                    link.click();
+                    return true;
+                })()
+                """);
+            openedAssistHelp = clicked == "true";
+            if (!openedAssistHelp) await Task.Delay(50);
+        }
+        Check(openedAssistHelp && (await WaitForTopic("basics/worksheet_ai.htm")).Contains("basics/worksheet_ai.htm"),
+            "the worksheet topic links to the installed AI Assist help page");
         var report = (frmReportWebView)main.CreateReport(); await report.LearningReport.Ready;
         report.ShowHelp();
         string window = await WaitForTopic("basics/report_window.htm");
