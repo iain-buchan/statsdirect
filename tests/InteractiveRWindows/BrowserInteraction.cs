@@ -1,18 +1,24 @@
+using System.Diagnostics;
 using System.Text.Json;
 
 internal static partial class Program
 {
     static async Task CheckDomAndWheel(ConsoleHost host)
     {
+        const string focusedNotice = "A host update arrived while a chart action had keyboard focus.";
+        const string pointerNotice = "A host update arrived during a chart pointer press.";
+        // The preceding command can complete before its last transcript paint.
+        await host.TwoFrames();
         try
         {
             await host.JS("""
                 (()=>{
-                  const buttons=[...document.querySelector('.plot').querySelectorAll('.plot-actions button')];
+                  const figure=document.querySelector('.plot');
+                  const buttons=[...figure.querySelectorAll('.plot-actions button')];
                   const open=buttons.find(b=>b.textContent.startsWith('Open')),copy=buttons.find(b=>b.textContent==='Copy chart');
                   if(!open||!copy)throw new Error('Original plot actions were not found');
                   const bridge=window.chrome.webview,original=bridge.postMessage;
-                  const state=window.__plotInteraction={open,copy,original,actions:[]};
+                  const state=window.__plotInteraction={open,copy,original,actions:[],plotId:figure.dataset.plotId,revision:Number(figure.dataset.revision)};
                   bridge.postMessage=message=>{
                     if(['openPlot','copyPlot'].includes(message.action))state.actions.push(message);
                     else original.call(bridge,message);
@@ -21,8 +27,13 @@ internal static partial class Program
                 })()
                 """);
             await host.TwoFrames();
-            Check(await host.JS("window.__plotInteraction.open.isConnected&&window.__plotInteraction.copy.isConnected") == "true",
+            const string focusedActionsRemain = "(()=>{const r=window.__plotInteraction;return r.open.isConnected&&r.copy.isConnected&&document.activeElement===r.open})()";
+            Check(await host.JS(focusedActionsRemain) == "true",
                 "focusing a chart action retains the original Open and Copy DOM controls");
+            Call(host.Session, "PublishNotice", focusedNotice);
+            await WaitForNotice(focusedNotice, rendered: true);
+            Check(await host.JS(focusedActionsRemain) == "true",
+                "rendering new console output keeps the original chart actions and keyboard focus");
             await host.JS("""
                 (()=>{
                   const r=window.__plotInteraction;r.open.click();
@@ -32,9 +43,12 @@ internal static partial class Program
                 })()
                 """);
             Call(host.Session, "PublishState");
-            Call(host.Session, "PublishNotice", "A host update arrived during a chart pointer press.");
+            Call(host.Session, "PublishNotice", pointerNotice);
+            await WaitForNotice(pointerNotice, rendered: false);
             await host.TwoFrames();
-            Check(await host.JS("window.__plotInteraction.copy.isConnected") == "true", "host output and state updates preserve a chart button while a pointer press is held");
+            Check(await host.JS($$"""
+                window.__plotInteraction.copy.isConnected && !({{RenderedNotice(pointerNotice)}})
+                """) == "true", "host output waits for the chart pointer release before repainting");
             await host.JS("""
                 (()=>{
                   const r=window.__plotInteraction;
@@ -42,11 +56,13 @@ internal static partial class Program
                   r.copy.dispatchEvent(new MouseEvent('mouseup',{bubbles:true,button:0,buttons:0}));r.copy.click();
                 })()
                 """);
-            await host.TwoFrames();
-            var actions = JsonSerializer.Deserialize<JsonElement>(await host.JS("window.__plotInteraction.actions"));
-            var first = host.Events.First(e => Kind(e) == "plot");
+            await WaitForNotice(pointerNotice, rendered: true);
+            var interaction = JsonSerializer.Deserialize<JsonElement>(await host.JS("""
+                (()=>{const {actions,plotId,revision}=window.__plotInteraction;return {actions,plotId,revision}})()
+                """));
+            var actions = interaction.GetProperty("actions");
             Check(actions.GetArrayLength() == 2 && Text(actions[0], "action") == "openPlot" && Text(actions[1], "action") == "copyPlot"
-                && actions.EnumerateArray().All(e => Text(e, "plotId") == Text(first, "plotId") && Number(e, "revision") == Number(first, "revision")),
+                && actions.EnumerateArray().All(e => Text(e, "plotId") == Text(interaction, "plotId") && Number(e, "revision") == Number(interaction, "revision")),
                 "the retained chart controls dispatch their exact original plot revision after pointer release");
         }
         finally
@@ -91,6 +107,22 @@ internal static partial class Program
         Check(wheel.GetProperty("native").GetBoolean() && wheel.GetProperty("boundary").GetBoolean(), "multiline input keeps native scrolling until its directional boundary, then scrolls history");
         Check(wheel.GetProperty("preserved").GetBoolean(), "prompt scrolling preserves draft text, caret, focus, script and command history");
         await CheckBrowserEditing(host);
+
+        static string RenderedNotice(string notice) =>
+            $"[...document.querySelectorAll('#transcript .notice')].some(row=>row.textContent==={JsonSerializer.Serialize(notice)})";
+
+        async Task WaitForNotice(string notice, bool rendered)
+        {
+            string predicate = rendered ? RenderedNotice(notice)
+                : $"window.StatsDirectRConsole.snapshot().transcript.some(entry=>entry.kind==='notice'&&entry.text==={JsonSerializer.Serialize(notice)})";
+            var watch = Stopwatch.StartNew();
+            while (await host.JS(predicate) != "true")
+            {
+                if (watch.ElapsedMilliseconds > 15000)
+                    throw new TimeoutException("The console notice did not reach the " + (rendered ? "transcript paint" : "model") + ": " + notice);
+                await Task.Delay(30);
+            }
+        }
     }
 
     static async Task CheckBrowserEditing(ConsoleHost host)
