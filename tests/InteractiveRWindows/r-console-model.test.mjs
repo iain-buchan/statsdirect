@@ -112,6 +112,36 @@ test('optional file notice metadata survives live output and renderer recovery',
   assert.equal(recovered.entries.at(-1).filePath, undefined);
 });
 
+test('a new command keeps the tail of an output entry that filled the console', () => {
+  const textBudget = 64;
+  const model = new ConsoleModel({textBudget});
+  const lastLine = 'LAST LINE 1\n';
+  const output = 'x'.repeat(textBudget - lastLine.length) + lastLine;
+  const next = 'cat(42)', nextOutput = '42\n';
+  model.receive(event('session', 0));
+  model.receive(event('output', 1, {stream: 'stdout', text: output}));
+  assert.equal(model.snapshot().outputText, output);
+
+  model.receive(event('inputEcho', 2, {origin: 'console', text: next, prompt: '> '}));
+  model.receive(event('output', 3, {stream: 'stdout', text: nextOutput}));
+  const retained = model.snapshot();
+  const retainedTail = output.slice(next.length + nextOutput.length);
+  assert.equal(retained.transcript[0].text, retainedTail);
+  assert.equal(retained.transcript[0].stream, 'stdout');
+  assert.equal(retained.outputText, `${retainedTail}\n> ${next}\n${nextOutput}`);
+  assert.equal(retained.trimmed, true);
+});
+
+test('retaining an output tail keeps a pending question and does not split a character', () => {
+  const model = new ConsoleModel({textBudget: 6});
+  model.receive(event('session', 0));
+  model.receive(event('output', 1, {stream: 'stdout', text: 'ab\u{1f642}cd'}));
+  model.receive(event('inputRequested', 2, {requestId: 'q1', prompt: 'Q? '}));
+  assert.equal(model.snapshot().outputText, 'cd\nQ? ');
+  assert.equal(model.snapshot().requestId, 'q1');
+  assert.equal(model.snapshot().trimmed, true);
+});
+
 
 test('executed startup batches enter recall intact without duplicating Script or executing recalled code', () => {
   const source = '# Startup example\nvalues <- c(\n  1, 2, 3\n)\nmean(values)\n';

@@ -109,20 +109,31 @@
         const index = this.entries.findIndex(entry => !(entry.kind === 'question' && entry.requestId === this.requestId));
         if (index < 0) break;
         const candidate = this.entries[index];
-        // With only an active question and the newest output left, retain the
-        // newest output tail instead of dropping it merely to pin the question.
-        if (index === this.entries.length - 1 && this.entries.length <= this.entryBudget) {
-          const remaining = Math.max(0, this.textBudget - (chars - (candidate.text?.length || 0)));
-          if (candidate.text?.length > remaining) { chars -= candidate.text.length - remaining; candidate.text = remaining ? candidate.text.slice(-remaining) : ''; this.trimmed = true; }
-          if (media > this.mediaBudget && candidate.preview) { media -= candidate.preview.length; candidate.preview = null; this.trimmed = true; }
-          if (chars <= this.textBudget && media <= this.mediaBudget) break;
+        const newest = index === this.entries.length - 1;
+        const remaining = Math.max(0, this.textBudget - (chars - (candidate.text?.length || 0)));
+        // Cut only the overflow from the oldest output that still fits in part.
+        // The newest entry may also share the budget with a pinned question.
+        const keepOutputTail = candidate.kind === 'output' && remaining > 0 && media <= this.mediaBudget;
+        if (this.entries.length <= this.entryBudget && (keepOutputTail || newest)) {
+          if (candidate.text?.length > remaining) chars -= this.trimText(candidate, remaining);
+          if (newest && media > this.mediaBudget && candidate.preview) { media -= candidate.preview.length; candidate.preview = null; this.trimmed = true; }
+          if (chars <= this.textBudget && media <= this.mediaBudget && (newest || candidate.text)) break;
         }
         const [entry] = this.entries.splice(index, 1); chars -= entry.text?.length || 0; media -= entry.preview?.length || 0; this.trimmed = true;
       }
       const first = this.entries[0];
-      if (first?.text?.length > this.textBudget && !(first.kind === 'question' && first.requestId === this.requestId)) { first.text = first.text.slice(-this.textBudget); this.trimmed = true; }
+      if (first?.text?.length > this.textBudget && !(first.kind === 'question' && first.requestId === this.requestId)) this.trimText(first, this.textBudget);
       // Large plot previews can be reopened from their original native assets.
       if (first?.preview?.length > this.mediaBudget) { first.preview = null; this.trimmed = true; }
+    }
+    trimText(entry, remaining) {
+      let start = entry.text.length - remaining;
+      // Do not retain the second half of a UTF-16 surrogate pair by itself.
+      const first = entry.text.charCodeAt(start), preceding = entry.text.charCodeAt(start - 1);
+      if (first >= 0xdc00 && first <= 0xdfff && preceding >= 0xd800 && preceding <= 0xdbff) start++;
+      entry.text = entry.text.slice(start);
+      this.trimmed = true;
+      return start;
     }
     remember(source) {
       if (this.history[this.history.length - 1] !== source) this.history.push(source);
