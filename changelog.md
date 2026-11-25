@@ -2,7 +2,7 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
-##[v5.3.20]
+##[v5.3.20] 2026-11-25
 
 ### Fixed
 - The R console stays responsive when commands print large amounts of output. Before, a long loop that printed many lines could stop the console answering for minutes.
