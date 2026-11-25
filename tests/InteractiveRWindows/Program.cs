@@ -45,7 +45,8 @@ internal static partial class Program
         {
             try
             {
-                if (args.Contains("--heavy-output", StringComparer.Ordinal)) await CheckHeavyOutput(main);
+                if (args.Contains("--stress-output", StringComparer.Ordinal)) await CheckHeavyOutput(main, lines: 200_000);
+                else if (args.Contains("--heavy-output", StringComparer.Ordinal)) await CheckHeavyOutput(main);
                 else await Run(main);
                 Check(unhandled == 0, "no exception escapes to the Windows UI thread");
                 Console.WriteLine($"PASS {checks} integrated Windows interactive R checks");

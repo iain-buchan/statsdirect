@@ -32,7 +32,7 @@ internal static partial class Program
         return value.ValueKind == JsonValueKind.String ? long.Parse(value.GetString()!, System.Globalization.CultureInfo.InvariantCulture) : value.GetInt64();
     }
 
-    sealed class ConsoleHost(Form document)
+    sealed class ConsoleHost(Form document, bool recordEvents = true)
     {
         readonly object eventGate = new();
         readonly List<JsonElement> journal = new();
@@ -53,6 +53,7 @@ internal static partial class Program
         }
         void AttachEventJournal()
         {
+            if (!recordEvents) return;
             var session = Get(View, "Session");
             if (ReferenceEquals(subscribedSession, session)) return;
             lock (eventGate)

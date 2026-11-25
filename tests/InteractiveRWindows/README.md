@@ -31,9 +31,12 @@ dotnet run --project tests/InteractiveRWindows -c Release -p:StatsDirectBin=C:\p
 node --test tests/InteractiveRWindows/shared-console-ui.test.mjs tests/InteractiveRWindows/r-console-model.test.mjs
 ```
 
-Append `-- --heavy-output` to run just the 20,000-line regression. It checks
-the live page, retained transcript, and the next prompt in both the Rscript
-fallback and the persistent R worker.
+Append `-- --heavy-output` to run just the 20,000-line regression, or
+`-- --stress-output` for the same checks at 200,000 lines. Both exercise the
+Rscript fallback and the persistent R worker, checking the live page, the output
+retained after the next command, and the report's text after Add output to report.
+They print the time from native completion to the ready prompt and the longest UI
+timer gap. They compare the output as it arrives without saving a raw event journal.
 
 For physical keyboard/mouse acceptance, append `-- --manual` to the `dotnet run`
 command. It opens a visible **StatsDirect — R console acceptance** fixture and an

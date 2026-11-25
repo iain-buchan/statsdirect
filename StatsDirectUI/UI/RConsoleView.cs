@@ -25,6 +25,8 @@ internal sealed partial class RConsoleView : UserControl
 {
     private const string Origin = "https://rconsole.statsdirect.invalid";
     private const int SessionEventBatchSize = 512;
+    private const int SessionOutputChunkLimit = 16 * 1024;
+    private const int SessionOutputDrainLimit = 48 * 1024;
     private const int BrowserBatchCharacterLimit = 512 * 1024;
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     internal WebView2 Browser { get; private set; } = new() { Dock = DockStyle.Fill };
@@ -36,7 +38,8 @@ internal sealed partial class RConsoleView : UserControl
     private readonly Dictionary<string, JsonElement> latestPlots = new();
     private readonly HashSet<string> outputFiles = new(StringComparer.OrdinalIgnoreCase);
     private readonly StringBuilder transcript = new();
-    private readonly Queue<JsonElement> sessionEvents = new();
+    private readonly Queue<QueuedSessionEvent> sessionEvents = new();
+    private QueuedSessionEvent? queuedOutputTail;
     private readonly System.Windows.Forms.Timer sessionEventTimer = new() { Interval = 30 };
     private readonly LinkLabel displayFailure = new() { Dock = DockStyle.Top, AutoSize = true, Padding = new Padding(8), Visible = false, Text = "The R display stopped. Reload display (your R workspace is retained)." };
     private JsonElement sessionEnvelope;
@@ -325,13 +328,66 @@ internal sealed partial class RConsoleView : UserControl
         script = value;
         ScriptChanged?.Invoke();
     }
+    // Session generations are unique across both R engines. Keep the two
+    // streams, command boundaries and native diagnostic output distinct.
+    private readonly record struct OutputIdentity(long Generation, uint? CommandId, bool StandardError, bool Native)
+    {
+        internal static OutputIdentity From(JsonElement item) => new(
+            item.GetProperty("generation").GetInt64(),
+            item.TryGetProperty("commandId", out var command) && command.ValueKind == JsonValueKind.Number ? command.GetUInt32() : null,
+            item.GetProperty("stream").ValueEquals("stderr"u8),
+            item.TryGetProperty("native", out var native) && native.ValueKind == JsonValueKind.True);
+    }
+
+    private sealed class QueuedSessionEvent(JsonElement item, string? text = null, OutputIdentity identity = default)
+    {
+        private readonly JsonElement original = item.Clone();
+        private StringBuilder? combined;
+        private long lastSequence;
+
+        internal bool IsOutput => text != null;
+        internal int TextLength => combined?.Length ?? text?.Length ?? 0;
+
+        internal bool TryAppend(string chunk, OutputIdentity next, long sequence)
+        {
+            if (next != identity || chunk.Length > SessionOutputChunkLimit - TextLength) return false;
+            combined ??= new StringBuilder(text);
+            combined.Append(chunk);
+            lastSequence = sequence;
+            return true;
+        }
+
+        internal JsonElement ToJson()
+        {
+            if (combined == null) return original;
+            var fields = original.Deserialize<Dictionary<string, JsonElement>>()!;
+            fields["text"] = JsonSerializer.SerializeToElement(combined.ToString());
+            // The browser requires increasing sequence numbers and allows gaps.
+            fields["seq"] = JsonSerializer.SerializeToElement(lastSequence);
+            return JsonSerializer.SerializeToElement(fields);
+        }
+    }
+
     private void OnSessionEvent(JsonElement item)
     {
         lock (sessionEvents)
         {
             if (closing || IsDisposed) return;
-            // Queue UI-originated state notices too, so they cannot overtake worker output.
-            sessionEvents.Enqueue(item.Clone());
+            // Combine adjacent writes before the UI sees them. Other events are
+            // ordering boundaries, including UI-originated state notices.
+            if (item.GetProperty("type").ValueEquals("output"u8))
+            {
+                string text = item.GetProperty("text").GetString() ?? "";
+                var identity = OutputIdentity.From(item);
+                if (queuedOutputTail?.TryAppend(text, identity, item.GetProperty("seq").GetInt64()) == true) return;
+                queuedOutputTail = new QueuedSessionEvent(item, text, identity);
+                sessionEvents.Enqueue(queuedOutputTail);
+            }
+            else
+            {
+                queuedOutputTail = null;
+                sessionEvents.Enqueue(new QueuedSessionEvent(item));
+            }
             if (sessionEventDrainPending) return;
             sessionEventDrainPending = true;
         }
@@ -343,25 +399,32 @@ internal sealed partial class RConsoleView : UserControl
 
     private void DrainSessionEvents(int limit, bool discardOutput = false)
     {
-        List<JsonElement> batch;
+        List<QueuedSessionEvent> batch;
         lock (sessionEvents)
         {
             int count = Math.Min(sessionEvents.Count, limit);
-            batch = new List<JsonElement>(count);
-            for (int i = 0; i < count; i++) batch.Add(sessionEvents.Dequeue());
+            batch = new List<QueuedSessionEvent>(Math.Min(count, SessionEventBatchSize));
+            int textLength = 0;
+            for (int i = 0; i < count; i++)
+            {
+                var next = sessionEvents.Peek();
+                // Bound the text work per UI tick as well as the number of events.
+                if (!discardOutput && textLength > 0 && next.TextLength > SessionOutputDrainLimit - textLength) break;
+                sessionEvents.Dequeue();
+                if (discardOutput && next.IsOutput) continue;
+                batch.Add(next);
+                textLength += next.TextLength;
+            }
             if (sessionEvents.Count == 0)
             {
+                queuedOutputTail = null;
                 sessionEventTimer.Stop();
                 sessionEventDrainPending = false;
             }
         }
         var delivery = new List<string>(batch.Count);
         int characters = 0;
-        foreach (var item in batch)
-        {
-            if (discardOutput && item.GetProperty("type").GetString() == "output") continue;
-            ApplySessionEvent(item, delivery, ref characters);
-        }
+        foreach (var item in batch) ApplySessionEvent(item.ToJson(), delivery, ref characters);
         SendEventBatch(delivery, ref characters);
     }
 
@@ -427,7 +490,8 @@ internal sealed partial class RConsoleView : UserControl
         {
             // A large chart or source echo already has its own size limit. Send
             // it alone instead of combining it with the rest of the batch.
-            if (characters + json.Length > BrowserBatchCharacterLimit) SendEventBatch(delivery, ref characters);
+            if (delivery.Count > 0 && characters + json.Length + delivery.Count + 2 > BrowserBatchCharacterLimit)
+                SendEventBatch(delivery, ref characters);
             delivery.Add(json);
             characters += json.Length;
         }
@@ -588,6 +652,7 @@ internal sealed partial class RConsoleView : UserControl
             {
                 closing = true;
                 sessionEvents.Clear();
+                queuedOutputTail = null;
             }
             sessionEventTimer.Dispose();
             CloseChartWindows();
