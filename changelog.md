@@ -2,7 +2,13 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
-##[v5.3.19]
+##[v5.3.20]
+
+### Fixed
+- The R console stays responsive when commands print large amounts of output. Before, a long loop that printed many lines could stop the console answering for minutes.
+
+
+##[v5.3.19] 2026-11-24
 
 ### Added
 - Learn opens the course from the worksheet toolbar. AI Assist helps you choose an analysis and can answer questions about a workbook you choose to share. It asks about the measurement scale, study design and comparison goal when it needs more detail. Choose a method opens the same list as Analyse. Check the method and report destination in chat, then select Continue to analysis. StatsDirect opens the usual controls or runs the method with the available settings. AI Assist can also provide R code in a collapsible section. After you run the code locally, Add output to report keeps the results and charts in your report.
