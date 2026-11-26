@@ -183,6 +183,7 @@
   const byId = id => doc.getElementById(id), input = byId('console-input'), script = byId('script-source'), transcript = byId('transcript');
   let scheduled = false, renderingScript = false, focusAfterRender = false, transcriptDirty = true;
   const transcriptPointers = new Set();
+  const chartRows = new WeakMap();
   let followEnd = true, lastTranscriptTop = 0, transcriptVersion = 0, followScheduled = false, followVersion = 0;
   function selectingTranscript() {
     const range = global.getSelection();
@@ -226,25 +227,40 @@
   }
   function schedule() { if (!scheduled) { scheduled = true; global.requestAnimationFrame(() => {scheduled = false; render();}); } }
   function element(tag, className, value) { const node = doc.createElement(tag); if (className) node.className = className; if (value !== undefined) node.textContent = value; return node; }
+  function updateTranscript(rows) {
+    const retained = new Set(rows.filter(row => row.parentNode === transcript));
+    if (!retained.size) { transcript.replaceChildren(...rows); return; }
+
+    // Retained charts stay connected and in their original relative order.
+    // Replacing or moving them would discard focus on their action buttons.
+    for (const row of [...transcript.children]) if (!retained.has(row)) row.remove();
+    const pending = doc.createDocumentFragment();
+    for (const row of rows) {
+      if (retained.has(row)) transcript.insertBefore(pending, row);
+      else pending.append(row);
+    }
+    transcript.append(pending);
+  }
   function render() {
     trackTranscriptScroll();
     const selecting = selectingTranscript();
     // Keep copied text selected and keep a pressed plot button alive until its click.
     // Control, focus and selection changes alone must not replace transcript nodes.
     if (transcriptDirty && !selecting && !transcriptPointers.size) {
-      const version = ++transcriptVersion;
-      const fragment = doc.createDocumentFragment();
-      if (model.trimmed) fragment.append(element('p', 'notice', 'Earlier output is omitted from this view. Your R script is retained.'));
-      if (!model.entries.length) fragment.append(element('p', 'notice', model.sessionId ? 'Enter R commands below, or switch to Script.' : 'An interactive R session will start here.'));
+      transcriptVersion++;
+      const rows = [];
+      const canOpenChart = Boolean(model.capabilities.openPlot), canCopyChart = Boolean(model.capabilities.copyPlot);
+      if (model.trimmed) rows.push(element('p', 'notice', 'Earlier output is omitted from this view. Your R script is retained.'));
+      if (!model.entries.length) rows.push(element('p', 'notice', model.sessionId ? 'Enter R commands below, or switch to Script.' : 'An interactive R session will start here.'));
       for (const entry of model.entries) {
         if (entry.kind === 'input') {
           const row = element('div', 'input-entry' + (entry.origin === 'input' ? ' reply' : ''));
-          row.append(element('pre', 'echo-prompt', entry.prompt), element('pre', '', entry.text)); fragment.append(row);
+          row.append(element('pre', 'echo-prompt', entry.prompt), element('pre', '', entry.text)); rows.push(row);
         } else if (entry.kind === 'question') {
           const row = element('pre', 'question-entry', entry.text);
           row.dataset.requestId = entry.requestId; if (entry.commandId) row.dataset.commandId = entry.commandId;
-          fragment.append(row);
-        } else if (entry.kind === 'output') fragment.append(element('pre', 'output-entry ' + entry.stream, entry.text));
+          rows.push(row);
+        } else if (entry.kind === 'output') rows.push(element('pre', 'output-entry ' + entry.stream, entry.text));
         else if (entry.kind === 'notice') {
           const row = element('p', 'notice', entry.text);
           if (entry.filePath) {
@@ -253,24 +269,30 @@
             link.href = 'file:///' + encodeURI(entry.filePath.replace(/\\/g, '/')).replace(/#/g, '%23').replace(/\?/g, '%3F');
             link.onclick = event => {event.preventDefault(); send('openFile', {path: entry.filePath});}; row.append(link);
           }
-          fragment.append(row);
+          rows.push(row);
         }
         else if (entry.kind === 'plot') {
+          const cached = chartRows.get(entry);
+          if (cached && cached.preview === entry.preview && cached.canOpenChart === canOpenChart && cached.canCopyChart === canCopyChart) {
+            rows.push(cached.figure); continue;
+          }
           const figure = element('figure', 'plot');
           figure.dataset.plotId = entry.plotId; figure.dataset.revision = entry.revision;
           if (entry.preview) {
             const image = element('img');
-            image.addEventListener('load', () => {if (image.isConnected) followTranscriptEnd(version);}, {once: true});
+            image.addEventListener('load', () => {if (image.isConnected) followTranscriptEnd();}, {once: true});
             image.src = entry.preview; image.alt = entry.label; figure.append(image);
           }
           figure.append(element('figcaption', '', entry.label));
           const actions = element('div', 'plot-actions');
-          if (model.capabilities.openPlot) { const open = element('button', '', entry.mime === 'application/pdf' ? 'Open vector PDF' : 'Open chart'); open.type = 'button'; open.onclick = () => {const request = model.plotAction('openPlot', entry); if (request) post(request);}; actions.append(open); }
-          if (model.capabilities.copyPlot) { const copy = element('button', '', 'Copy chart'); copy.type = 'button'; copy.onclick = () => {const request = model.plotAction('copyPlot', entry); if (request) post(request);}; actions.append(copy); }
-          if (actions.childNodes.length) figure.append(actions); fragment.append(figure);
+          if (canOpenChart) { const open = element('button', '', entry.mime === 'application/pdf' ? 'Open vector PDF' : 'Open chart'); open.type = 'button'; open.onclick = () => {const request = model.plotAction('openPlot', entry); if (request) post(request);}; actions.append(open); }
+          if (canCopyChart) { const copy = element('button', '', 'Copy chart'); copy.type = 'button'; copy.onclick = () => {const request = model.plotAction('copyPlot', entry); if (request) post(request);}; actions.append(copy); }
+          if (actions.childNodes.length) figure.append(actions);
+          chartRows.set(entry, {figure, preview: entry.preview, canOpenChart, canCopyChart});
+          rows.push(figure);
         }
       }
-      transcript.replaceChildren(fragment);
+      updateTranscript(rows);
       transcriptDirty = false;
       lastTranscriptTop = transcript.scrollTop;
     }
