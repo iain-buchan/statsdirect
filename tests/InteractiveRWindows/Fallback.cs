@@ -28,6 +28,46 @@ internal static partial class Program
             Check(log.Any(e => Kind(e) == "plot"), "a fallback command's chart becomes a chart card");
             await host.Run("stop('FALLBACK_ERROR')", "", "console", "error");
             Check(true, "an R error in a fallback command finishes the command as an error and the window stays ready");
+            var ordered = await host.Run("""
+                options(warn=1)
+                cat('RSC_CAT_ONE\n')
+                message('RSC_MESSAGE')
+                suppressMessages(message('RSC_HIDDEN_MESSAGE'))
+                suppressWarnings(warning('RSC_HIDDEN_WARNING'))
+                warning('RSC_WARNING', call.=FALSE)
+                cat('RSC_EXPLICIT_STDERR\n', file=stderr())
+                print('RSC_PRINT')
+                cat('RSC_CAFÉ\n')
+                sink('output-sink.txt')
+                cat('RSC_IN_FILE\n')
+                message('RSC_MESSAGE_WHILE_SUNK')
+                sink()
+                local({
+                  target <- file('message-sink.txt', open='wt')
+                  sink(target, type='message')
+                  message('RSC_IN_MESSAGE_FILE')
+                  sink(type='message')
+                  close(target)
+                })
+                stop('RSC_ERROR', call.=FALSE)
+                """, status: "error");
+            string[] markers = ["RSC_CAT_ONE", "RSC_MESSAGE\n", "RSC_PRINT", "RSC_CAFÉ"];
+            string allOutput = string.Concat(ordered.Where(e => Kind(e) == "output").Select(e => Text(e, "text")));
+            int position = -1;
+            Check(markers.All(marker => (position = allOutput.IndexOf(marker, position + 1, StringComparison.Ordinal)) >= 0),
+                "Rscript keeps ordinary cat, message and print output in order, including Unicode");
+            string errorOutput = string.Concat(ordered.Where(e => Kind(e) == "output" && Text(e, "stream") == "stderr").Select(e => Text(e, "text")));
+            Check(new[] { "RSC_MESSAGE\n", "RSC_WARNING", "RSC_EXPLICIT_STDERR", "RSC_ERROR" }.All(marker => errorOutput.Contains(marker, StringComparison.Ordinal))
+                && !errorOutput.Contains("RSC_CAT_ONE", StringComparison.Ordinal) && !errorOutput.Contains("RSC_PRINT", StringComparison.Ordinal)
+                && !allOutput.Contains("RSC_HIDDEN_", StringComparison.Ordinal),
+                "Rscript keeps stderr styling and respects suppressed messages and warnings");
+            string workingDirectory = (string)Get(host.View, "WorkingDirectory")!;
+            Check(File.ReadAllText(Path.Combine(workingDirectory, "output-sink.txt")).TrimEnd() == "RSC_IN_FILE"
+                && File.ReadAllText(Path.Combine(workingDirectory, "message-sink.txt")).TrimEnd() == "RSC_IN_MESSAGE_FILE"
+                && errorOutput.Contains("RSC_MESSAGE_WHILE_SUNK\n", StringComparison.Ordinal)
+                && !allOutput.Contains("RSC_IN_FILE", StringComparison.Ordinal)
+                && !allOutput.Contains("RSC_IN_MESSAGE_FILE", StringComparison.Ordinal),
+                "Rscript respects user output and message sinks without leaking transport markers");
             // Restart from the fallback chooses the session afresh: the page must follow the replacement session, whose generation must rise above the old
             await host.Restart();
             await host.Run("cat('FALLBACK_RESTARTED=1\n')", "FALLBACK_RESTARTED=1");

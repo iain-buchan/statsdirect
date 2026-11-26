@@ -38,6 +38,10 @@ retained after the next command, and the report's text after Add output to repor
 They print the time from native completion to the ready prompt and the longest UI
 timer gap. They compare the output as it arrives without saving a raw event journal.
 
+Append `-- --rscript-followups` to run just the Rscript fallback checks. They include
+an ordered burst of 40,000 output and message pairs, the bounded queue during a
+paused UI pump, exact retained text, and recovery and clearing in the browser.
+
 For physical keyboard/mouse acceptance, append `-- --manual` to the `dotnet run`
 command. It opens a visible **StatsDirect — R console acceptance** fixture and an
 empty R script through File > New R session, without running the automated suite.

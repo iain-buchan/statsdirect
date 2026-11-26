@@ -24,6 +24,7 @@ namespace StatsDirect.UI;
 internal sealed partial class RConsoleView : UserControl
 {
     private const string Origin = "https://rconsole.statsdirect.invalid";
+    private const int TranscriptCharacterLimit = 200000;
     private const int SessionEventBatchSize = 512;
     private const int SessionOutputChunkLimit = 16 * 1024;
     private const int SessionOutputDrainLimit = 48 * 1024;
@@ -38,8 +39,10 @@ internal sealed partial class RConsoleView : UserControl
     private readonly Dictionary<string, JsonElement> latestPlots = new();
     private readonly HashSet<string> outputFiles = new(StringComparer.OrdinalIgnoreCase);
     private readonly StringBuilder transcript = new();
-    private readonly Queue<QueuedSessionEvent> sessionEvents = new();
-    private QueuedSessionEvent? queuedOutputTail;
+    private readonly LinkedList<QueuedSessionEvent> sessionEvents = new();
+    private readonly Queue<LinkedListNode<QueuedSessionEvent>> queuedFallbackOutput = new();
+    private long? fallbackGeneration;
+    private int queuedFallbackOutputCharacters;
     private readonly System.Windows.Forms.Timer sessionEventTimer = new() { Interval = 30 };
     private readonly LinkLabel displayFailure = new() { Dock = DockStyle.Top, AutoSize = true, Padding = new Padding(8), Visible = false, Text = "The R display stopped. Reload display (your R workspace is retained)." };
     private JsonElement sessionEnvelope;
@@ -47,7 +50,7 @@ internal sealed partial class RConsoleView : UserControl
     private long generation, offlineSeq, historySize, commandHistorySize;
     private bool browserFailed, recovering;
     private bool startingPage, pageReady, closing;
-    private bool sessionEventDrainPending;
+    private bool sessionEventDrainPending, transcriptOmitted;
     internal IRSession? Session { get; private set; }
     internal Task Ready => ready.Task;
     internal string NativeState { get; private set; } = "ready";
@@ -344,26 +347,43 @@ internal sealed partial class RConsoleView : UserControl
         private readonly JsonElement original = item.Clone();
         private StringBuilder? combined;
         private long lastSequence;
+        private int textStart;
 
         internal bool IsOutput => text != null;
-        internal int TextLength => combined?.Length ?? text?.Length ?? 0;
+        internal long Generation => identity.Generation;
+        internal bool OutputOmitted { get; set; }
+        private int BufferedLength => combined?.Length ?? text?.Length ?? 0;
+        internal int TextLength => BufferedLength - textStart;
 
         internal bool TryAppend(string chunk, OutputIdentity next, long sequence)
         {
-            if (next != identity || chunk.Length > SessionOutputChunkLimit - TextLength) return false;
+            if (!IsOutput || next != identity || chunk.Length > SessionOutputChunkLimit - BufferedLength) return false;
             combined ??= new StringBuilder(text);
             combined.Append(chunk);
             lastSequence = sequence;
             return true;
         }
 
+        internal int TrimPrefix(int characters)
+        {
+            int start = textStart + characters;
+            char At(int index) => combined == null ? text![index] : combined[index];
+            if (char.IsHighSurrogate(At(start - 1)) && char.IsLowSurrogate(At(start))) start++;
+            int removed = start - textStart;
+            textStart = start;
+            OutputOmitted = true;
+            return removed;
+        }
+
         internal JsonElement ToJson()
         {
-            if (combined == null) return original;
+            if (combined == null && textStart == 0 && !OutputOmitted) return original;
             var fields = original.Deserialize<Dictionary<string, JsonElement>>()!;
-            fields["text"] = JsonSerializer.SerializeToElement(combined.ToString());
+            if (combined != null || textStart != 0)
+                fields["text"] = JsonSerializer.SerializeToElement(combined?.ToString(textStart, TextLength) ?? text![textStart..]);
             // The browser requires increasing sequence numbers and allows gaps.
-            fields["seq"] = JsonSerializer.SerializeToElement(lastSequence);
+            if (combined != null) fields["seq"] = JsonSerializer.SerializeToElement(lastSequence);
+            if (OutputOmitted) fields["outputOmitted"] = JsonSerializer.SerializeToElement(true);
             return JsonSerializer.SerializeToElement(fields);
         }
     }
@@ -375,18 +395,33 @@ internal sealed partial class RConsoleView : UserControl
             if (closing || IsDisposed) return;
             // Combine adjacent writes before the UI sees them. Other events are
             // ordering boundaries, including UI-originated state notices.
-            if (item.GetProperty("type").ValueEquals("output"u8))
+            var type = item.GetProperty("type");
+            if (type.ValueEquals("output"u8))
             {
                 string text = item.GetProperty("text").GetString() ?? "";
                 var identity = OutputIdentity.From(item);
-                if (queuedOutputTail?.TryAppend(text, identity, item.GetProperty("seq").GetInt64()) == true) return;
-                queuedOutputTail = new QueuedSessionEvent(item, text, identity);
-                sessionEvents.Enqueue(queuedOutputTail);
+                bool boundOutput = identity.Generation == fallbackGeneration;
+                if (boundOutput && text.Length == 0) return;
+                if (sessionEvents.Last?.Value.TryAppend(text, identity, item.GetProperty("seq").GetInt64()) != true)
+                {
+                    var node = sessionEvents.AddLast(new QueuedSessionEvent(item, text, identity));
+                    if (boundOutput) queuedFallbackOutput.Enqueue(node);
+                }
+                if (boundOutput)
+                {
+                    queuedFallbackOutputCharacters += text.Length;
+                    TrimQueuedFallbackOutput();
+                }
             }
             else
             {
-                queuedOutputTail = null;
-                sessionEvents.Enqueue(new QueuedSessionEvent(item));
+                if (type.ValueEquals("session"u8))
+                    fallbackGeneration = item.TryGetProperty("capabilities", out var capabilities)
+                        && capabilities.ValueKind == JsonValueKind.Object
+                        && capabilities.TryGetProperty("persistentWorkspace", out var persistent)
+                        && persistent.ValueKind == JsonValueKind.False
+                        ? item.GetProperty("generation").GetInt64() : null;
+                sessionEvents.AddLast(new QueuedSessionEvent(item));
             }
             if (sessionEventDrainPending) return;
             sessionEventDrainPending = true;
@@ -395,6 +430,30 @@ internal sealed partial class RConsoleView : UserControl
         // paint between batches, even when R is writing thousands of chunks.
         try { BeginInvoke(new Action(() => { if (!closing) sessionEventTimer.Start(); })); }
         catch (InvalidOperationException) when (closing || IsDisposed) { }
+    }
+
+    private void TrimQueuedFallbackOutput()
+    {
+        // The oldest output beyond the visible text budget cannot reach the
+        // final transcript. An index of output nodes keeps this independent of
+        // control events, which stay in the main queue in their original order.
+        while (queuedFallbackOutputCharacters > TranscriptCharacterLimit)
+        {
+            var oldest = queuedFallbackOutput.Peek();
+            var entry = oldest.Value;
+            int excess = queuedFallbackOutputCharacters - TranscriptCharacterLimit;
+            if (entry.TextLength > excess)
+            {
+                queuedFallbackOutputCharacters -= entry.TrimPrefix(excess);
+                if (entry.TextLength > 0) break;
+            }
+            else queuedFallbackOutputCharacters -= entry.TextLength;
+
+            queuedFallbackOutput.Dequeue();
+            sessionEvents.Remove(oldest);
+            if (queuedFallbackOutput.TryPeek(out var next) && next.Value.Generation == entry.Generation)
+                next.Value.OutputOmitted = true;
+        }
     }
 
     private void DrainSessionEvents(int limit, bool discardOutput = false)
@@ -407,17 +466,22 @@ internal sealed partial class RConsoleView : UserControl
             int textLength = 0;
             for (int i = 0; i < count; i++)
             {
-                var next = sessionEvents.Peek();
+                var node = sessionEvents.First!;
+                var next = node.Value;
                 // Bound the text work per UI tick as well as the number of events.
                 if (!discardOutput && textLength > 0 && next.TextLength > SessionOutputDrainLimit - textLength) break;
-                sessionEvents.Dequeue();
+                sessionEvents.RemoveFirst();
+                if (queuedFallbackOutput.TryPeek(out var fallback) && fallback == node)
+                {
+                    queuedFallbackOutput.Dequeue();
+                    queuedFallbackOutputCharacters -= next.TextLength;
+                }
                 if (discardOutput && next.IsOutput) continue;
                 batch.Add(next);
                 textLength += next.TextLength;
             }
             if (sessionEvents.Count == 0)
             {
-                queuedOutputTail = null;
                 sessionEventTimer.Stop();
                 sessionEventDrainPending = false;
             }
@@ -452,6 +516,7 @@ internal sealed partial class RConsoleView : UserControl
             SendEventBatch(delivery, ref characters);
             CloseChartWindows();
             history.Clear(); historySize = 0; plots.Clear(); latestPlots.Clear(); outputFiles.Clear(); transcript.Clear();
+            transcriptOmitted = false;
             sessionEnvelope = item.Clone(); NativeState = "starting";
             if (pageReady) SendSession();
             return;
@@ -459,6 +524,8 @@ internal sealed partial class RConsoleView : UserControl
         if (type == "state") NativeState = item.GetProperty("state").GetString()!;
         if (type == "exited") NativeState = "stopped";
         if (type == "inputEcho") RememberCommand(item);
+        if (type == "output" && item.TryGetProperty("outputOmitted", out var omitted) && omitted.ValueKind == JsonValueKind.True)
+            transcriptOmitted = true;
         if (type == "plot")
         {
             string id = item.GetProperty("plotId").GetString()!;
@@ -475,7 +542,7 @@ internal sealed partial class RConsoleView : UserControl
             if (type == "inputEcho") transcript.Append(item.TryGetProperty("prompt", out var prompt) ? prompt.GetString() : "> ");
             if (item.TryGetProperty("text", out var text)) transcript.Append(text.GetString());
             if (type is "inputEcho" or "notice") transcript.AppendLine();
-            if (transcript.Length > 200000) transcript.Remove(0, transcript.Length - 200000);
+            if (transcript.Length > TranscriptCharacterLimit) transcript.Remove(0, transcript.Length - TranscriptCharacterLimit);
         }
         if (type == "notice" && item.TryGetProperty("filePath", out var filePath)) outputFiles.Add(Path.GetFullPath(filePath.GetString()!));
         string json = item.GetRawText();
@@ -530,6 +597,7 @@ internal sealed partial class RConsoleView : UserControl
         capabilities["openInR"] = JsonSerializer.SerializeToElement(OpenInRRequested != null);
         envelope["capabilities"] = JsonSerializer.SerializeToElement(capabilities);
         envelope["events"] = JsonSerializer.SerializeToElement(history);
+        if (transcriptOmitted) envelope["outputOmitted"] = JsonSerializer.SerializeToElement(true);
         Browser.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(envelope));
         if (Session == null) SendOfflineState();
         else Session.PublishState(); // The latest pending prompt can outlive the bounded replay.
@@ -552,6 +620,7 @@ internal sealed partial class RConsoleView : UserControl
         history.RemoveAll(x => x.GetProperty("type").GetString() is "inputRequested" or "inputEcho" or "output" or "notice" or "plot");
         historySize = history.Sum(x => (long)x.GetRawText().Length);
         transcript.Clear();
+        transcriptOmitted = false;
         await ExecuteAsync("window.StatsDirectRConsole.clearOutput()");
         Session?.PublishState();
         // Restore any live question without waiting for the output timer.
@@ -652,7 +721,8 @@ internal sealed partial class RConsoleView : UserControl
             {
                 closing = true;
                 sessionEvents.Clear();
-                queuedOutputTail = null;
+                queuedFallbackOutput.Clear();
+                queuedFallbackOutputCharacters = 0;
             }
             sessionEventTimer.Dispose();
             CloseChartWindows();

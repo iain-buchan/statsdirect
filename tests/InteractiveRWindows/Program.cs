@@ -47,6 +47,11 @@ internal static partial class Program
             {
                 if (args.Contains("--stress-output", StringComparer.Ordinal)) await CheckHeavyOutput(main, lines: 200_000);
                 else if (args.Contains("--heavy-output", StringComparer.Ordinal)) await CheckHeavyOutput(main);
+                else if (args.Contains("--rscript-followups", StringComparer.Ordinal))
+                {
+                    await CheckRscriptFallback(main);
+                    await CheckRscriptOutputBurst(main);
+                }
                 else await Run(main);
                 Check(unhandled == 0, "no exception escapes to the Windows UI thread");
                 Console.WriteLine($"PASS {checks} integrated Windows interactive R checks");
@@ -99,7 +104,7 @@ internal static partial class Program
         finally { foreach (var child in main.MdiChildren) child.Dispose(); }
         return unhandled > 0 ? 1 : result;
     }
-    static async Task<ConsoleHost> NewConsole(frmMain main)
+    static async Task<ConsoleHost> NewConsole(frmMain main, bool recordEvents = true)
     {
         var file = (ToolStripMenuItem)Get(main, "fileToolStripMenuItem")!;
         var before = main.MdiChildren.ToHashSet();
@@ -107,7 +112,7 @@ internal static partial class Program
         await Wait(() => main.MdiChildren.Any(c => !before.Contains(c)), "File > New R session did not create a document.");
         var created = main.MdiChildren.Where(c => !before.Contains(c)).ToArray();
         Check(created.Length == 1 && created[0] is frmScript && main.ActiveMdiChild == created[0], "File > New R session opens the actual R script MDI window");
-        var host = new ConsoleHost(created.Single()); hosts.Add(host);
+        var host = new ConsoleHost(created.Single(), recordEvents); hosts.Add(host);
         await host.Ready();
         Set(host.View, "WorkingDirectory", Path.Combine(artifacts, "working-" + hosts.Count));
         return host;
@@ -153,6 +158,7 @@ internal static partial class Program
         await CheckClearOutput(host);
         await CheckRestartAndIsolation(main, host);
         await CheckRscriptFallback(main);
+        await CheckRscriptOutputBurst(main);
         await CheckUnrunnableWorkerFallback(main);
         await CheckHeavyOutput(main);
         await CheckClosingAndSaving(main);
