@@ -112,6 +112,22 @@ test('optional file notice metadata survives live output and renderer recovery',
   assert.equal(recovered.entries.at(-1).filePath, undefined);
 });
 
+test('host-reported output omission survives renderer recovery and resets with a new session', () => {
+  const model = new ConsoleModel();
+  model.receive(event('session', 0));
+  model.receive(event('output', 3, {stream: 'stderr', text: 'Newest line\n', outputOmitted: true}));
+  assert.equal(model.snapshot().trimmed, true);
+  assert.deepEqual(model.snapshot().transcript, [{kind: 'output', stream: 'stderr', text: 'Newest line\n', hasPreview: false}]);
+
+  const recovered = new ConsoleModel();
+  recovered.receive(event('session', 0, {outputOmitted: true, events: replay}));
+  assert.equal(recovered.snapshot().trimmed, true);
+  assert.equal(recovered.snapshot().state, 'ready');
+  recovered.receive(event('session', 0, {generation: 2, sessionId: 'next'}));
+  assert.equal(recovered.snapshot().trimmed, false);
+  assert.deepEqual(recovered.snapshot().transcript, []);
+});
+
 test('a new command keeps the tail of an output entry that filled the console', () => {
   const textBudget = 64;
   const model = new ConsoleModel({textBudget});

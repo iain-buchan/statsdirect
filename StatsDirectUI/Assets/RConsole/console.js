@@ -22,7 +22,7 @@
       if (event.type === 'session') {
         if (event.generation < 0 || event.seq < 0 || this.sessionId !== null && event.generation <= this.generation) return false;
         this.sessionId = event.sessionId; this.generation = event.generation; this.seq = event.seq;
-        this.state = 'starting'; this.prompt = '> '; this.requestId = null; this.requestKind = null; this.entries = []; this.plotKeys.clear(); this.trimmed = false; this.restarting = false;
+        this.state = 'starting'; this.prompt = '> '; this.requestId = null; this.requestKind = null; this.entries = []; this.plotKeys.clear(); this.trimmed = event.outputOmitted === true; this.restarting = false;
         this.historyIndex = null; this.historyDraft = ''; this.questionSerial = 0; this.capabilities = event.capabilities && typeof event.capabilities === 'object' ? {...event.capabilities} : {};
         if (Array.isArray(event.events)) for (const item of event.events) this.receive(item);
         // A host replay already includes console commands in its saved script.
@@ -81,6 +81,7 @@
           this.trim(); break;
         }
         case 'output': {
+          if (event.outputOmitted === true) this.trimmed = true;
           const value = text(event.text); if (!value) break;
           const stream = event.stream === 'stderr' ? 'stderr' : 'stdout', previous = this.entries[this.entries.length - 1];
           if (previous?.kind === 'output' && previous.stream === stream) previous.text += value;

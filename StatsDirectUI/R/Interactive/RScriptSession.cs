@@ -124,12 +124,14 @@ public sealed class RScriptSession : IRSession
         Emit(current, "inputEcho", new() { ["commandId"] = run.Id, ["text"] = source, ["prompt"] = "> ", ["origin"] = origin });
         Emit(current, "state", new() { ["state"] = "busy", ["prompt"] = "" });
         string script = Path.Combine(workingDirectory, $"console-{sessionId}-{current}-run-{run.Id}.r");
+        // An ASCII separator unique to this run survives both the UTF-8 and older Windows code pages.
+        string messageMarker = "\u001e" + Guid.NewGuid().ToString("N") + "\u001f";
         Process? child = null;
         try
         {
             Directory.CreateDirectory(workingDirectory);
             // R reads the file as UTF-8 (--encoding below) and takes LF line ends; without a BOM, which R would read as text.
-            await File.WriteAllTextAsync(script, Head(current, run.Id) + source.Replace("\r\n", "\n").Replace('\r', '\n') + "\n", Utf8);
+            await File.WriteAllTextAsync(script, Head(current, run.Id, messageMarker) + source.Replace("\r\n", "\n").Replace('\r', '\n') + "\n", Utf8);
             var info = new ProcessStartInfo(rscriptPath)
             {
                 WorkingDirectory = workingDirectory, UseShellExecute = false, CreateNoWindow = true,
@@ -157,7 +159,7 @@ public sealed class RScriptSession : IRSession
             // A Stop that came while R was starting still ends this run.
             if (killNow) Kill(child);
             // Pumping R's output and reading its chart files must not capture the WinForms synchronization context of the caller.
-            _ = Task.Run(() => RunAsync(run, child, current, before, script));
+            _ = Task.Run(() => RunAsync(run, child, current, before, script, messageMarker));
         }
         catch (Exception error) when (error is not OutOfMemoryException)
         {
@@ -217,15 +219,16 @@ public sealed class RScriptSession : IRSession
         await run.Finished.Task;
     }
 
-    private async Task RunAsync(Run run, Process child, long current, IReadOnlyDictionary<string, ROutputFiles.FileStamp> before, string script)
+    private async Task RunAsync(Run run, Process child, long current, IReadOnlyDictionary<string, ROutputFiles.FileStamp> before, string script, string messageMarker)
     {
         // Process.Dispose leaves readers that were read directly open until they are finalized, so they are disposed here by name.
         StreamReader? output = null, errors = null;
         try
         {
             output = child.StandardOutput; errors = child.StandardError;
-            // Both streams flow to the page as R writes them, so a long command shows its progress and a message its place among the output.
-            Task stdout = PumpAsync(output, "stdout", run.Id, current), stderr = PumpAsync(errors, "stderr", run.Id, current);
+            // R conditions routed through the output pipe keep their place among ordinary output.
+            // The error pipe still carries R's own warnings, errors and other raw stderr writes.
+            Task stdout = PumpAsync(output, "stdout", run.Id, current, messageMarker), stderr = PumpAsync(errors, "stderr", run.Id, current);
             await child.WaitForExitAsync();
             await Task.WhenAll(stdout, stderr);
             int exitCode = child.ExitCode;
@@ -252,28 +255,63 @@ public sealed class RScriptSession : IRSession
         finally { output?.Dispose(); errors?.Dispose(); child.Dispose(); run.Finished.TrySetResult(); }
     }
 
-    private async Task PumpAsync(StreamReader reader, string stream, uint commandId, long current)
+    private async Task PumpAsync(StreamReader reader, string stream, uint commandId, long current, string? messageMarker = null)
     {
         char[] buffer = new char[4096];
         var text = new StringBuilder();
-        bool pendingReturn = false;
+        char? pendingCharacter = null;
+        string markerPrefix = "";
+        bool withinMessage = false;
         try
         {
             int count;
             while ((count = await reader.ReadAsync(buffer)) > 0)
             {
-                // R writes Windows line ends to the pipe; the page takes LF alone, as the worker's output has it.  A CR ending a chunk
-                // waits for the next chunk to show whether an LF follows it.
                 text.Clear();
-                if (pendingReturn) { text.Append('\r'); pendingReturn = false; }
+                if (pendingCharacter is char pending) text.Append(pending);
+                pendingCharacter = null;
                 text.Append(buffer, 0, count);
-                if (text[text.Length - 1] == '\r') { pendingReturn = true; text.Length--; }
+                // A CR or a Unicode surrogate pair can straddle two StreamReader reads.
+                char last = text[^1];
+                if (last == '\r' || char.IsHighSurrogate(last)) { pendingCharacter = last; text.Length--; }
                 text.Replace("\r\n", "\n");
-                if (text.Length > 0) Emit(current, "output", new() { ["stream"] = stream, ["text"] = text.ToString(), ["commandId"] = commandId });
+                Publish(text.ToString());
             }
-            if (pendingReturn) Emit(current, "output", new() { ["stream"] = stream, ["text"] = "\n", ["commandId"] = commandId });
+            Publish(pendingCharacter switch { '\r' => "\n", char last => last.ToString(), _ => "" });
+            EmitText(markerPrefix);
         }
         catch (Exception error) when (error is IOException or ObjectDisposedException or InvalidOperationException) { }
+
+        void Publish(string chunk)
+        {
+            if (messageMarker == null) { EmitText(chunk); return; }
+            chunk = markerPrefix + chunk;
+            markerPrefix = "";
+            int start = 0;
+            for (;;)
+            {
+                int marker = chunk.IndexOf(messageMarker, start, StringComparison.Ordinal);
+                if (marker < 0) break;
+                EmitText(chunk[start..marker]);
+                withinMessage = !withinMessage;
+                start = marker + messageMarker.Length;
+            }
+            // Hold just a possible split marker, never a whole message.
+            int end = chunk.Length, split = chunk.LastIndexOf(messageMarker[0]);
+            if (split >= start && chunk.Length - split < messageMarker.Length
+                && messageMarker.AsSpan().StartsWith(chunk.AsSpan(split), StringComparison.Ordinal))
+            {
+                markerPrefix = chunk[split..];
+                end = split;
+            }
+            EmitText(chunk[start..end]);
+        }
+
+        void EmitText(string value)
+        {
+            if (value.Length > 0)
+                Emit(current, "output", new() { ["stream"] = withinMessage ? "stderr" : stream, ["text"] = value, ["commandId"] = commandId });
+        }
     }
 
     /// <summary>The run's automatic charts, console-&lt;session&gt;-&lt;generation&gt;-run-&lt;n&gt;-device-&lt;d&gt;-&lt;page&gt;.svg, as cards in device then
@@ -315,7 +353,7 @@ public sealed class RScriptSession : IRSession
 
     /// <summary>The head of each run's script: the program's package library first on the search path, as the runner and the console have it, and
     /// ordinary plots to SVG files in the working folder, one per page, that become this command's cards.  Nothing is left in the user's workspace.</summary>
-    private string Head(long current, uint commandId)
+    private string Head(long current, uint commandId, string messageMarker)
     {
         string Q(string value) => JsonSerializer.Serialize(value.Replace('\\', '/'));
         string folder = Q(workingDirectory), pattern = Q($"console-{sessionId}-{current}-run-{commandId}-device-%d-%%03d.svg");
@@ -327,6 +365,20 @@ public sealed class RScriptSession : IRSession
           libdir <- file.path({{folder}}, 'Lib')
           dir.create(libdir, recursive=TRUE, showWarnings=FALSE)
           .libPaths(c(libdir, .libPaths()))
+          # Keep default R messages in the same pipe as the ordinary output.
+          # An explicitly diverted message stream and a caller's handlers still take priority.
+          if (exists('globalCallingHandlers', envir=baseenv(), inherits=FALSE)) {
+            console <- stdout()
+            marker <- {{Q(messageMarker)}}
+            globalCallingHandlers(message=function(c) {
+              if (sink.number() != 0L || sink.number(type='message') != 2L) return(invisible(NULL))
+              restart <- findRestart('muffleMessage')
+              if (is.null(restart)) return(invisible(NULL))
+              value <- paste(conditionMessage(c), collapse='')
+              cat(paste0(marker, value, marker), sep='', file=console)
+              invokeRestart(restart)
+            })
+          }
           n <- 0L
           device <- function() {
             n <<- n + 1L
