@@ -2,11 +2,13 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
-## [Unreleased]
+##[v5.3.21]
 
 ### Fixed
 - The R console displays long runs of output sooner. It keeps the latest output when you run another command, and Add output to report includes that retained text.
-- The Rscript fallback keeps ordinary R messages in order with printed results. During very large runs, the console can discard older queued output and shows when earlier text has been omitted.
+- A chart's Open and Copy buttons in the R console keep keyboard focus when new output arrives.
+- When the R console runs each command through Rscript (R before 4.2 or 32-bit R), messages now appear in order with printed results. During very large runs, the console can skip older output that has not been shown yet, and it says when earlier text has been omitted.
+
 
 ##[v5.3.20] 2026-11-25
 
