@@ -2,7 +2,7 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
-##[v5.3.21]
+##[v5.3.21] 2026-11-26
 
 ### Fixed
 - The R console displays long runs of output sooner. It keeps the latest output when you run another command, and Add output to report includes that retained text.
