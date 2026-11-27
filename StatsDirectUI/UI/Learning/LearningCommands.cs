@@ -30,7 +30,7 @@ public partial class frmMain
         };
         FormClosed += (_, _) => learning?.Dispose();
     }
-    private void OpenExampleWorkbook()
+    internal void OpenExampleWorkbook()
     {
         // An unsaved working copy uses the normal Save As flow, preserving the installed example.
         string path = Path.Combine(AppContext.BaseDirectory, "Data", Properties.Settings.Default.DefaultRecentlyUsedFile);

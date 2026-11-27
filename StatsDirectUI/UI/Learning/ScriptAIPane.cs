@@ -31,6 +31,10 @@ internal sealed partial class ScriptAIPane : IDisposable
     internal readonly CheckBox Acknowledge = new() { AutoSize = true };
     internal readonly Button Send = new() { AutoSize = true, Text = "Send" };
     private readonly Button stop = new() { AutoSize = true, Text = "Stop", Enabled = false }, connection = new() { AutoSize = true, Text = "Use my ChatGPT" };
+    private readonly Label replyActivity = new()
+    {
+        Name = "aiReplyActivity", AutoSize = true, Text = "Reply in progress…", Visible = false, Margin = new Padding(6, 7, 3, 3)
+    };
     internal readonly LinkLabel SharingOptions = new() { AutoSize = true, Text = "Sharing for this session ▾", Dock = DockStyle.Fill };
     private readonly Label status = new() { Name = "aiStatus", AutoSize = true, Dock = DockStyle.Fill, AccessibleName = "AI status" };
     private readonly Label conversationCaption = new() { Name = "conversationCaption", AutoSize = true, Text = "Conversation", Dock = DockStyle.Fill };
@@ -38,6 +42,7 @@ internal sealed partial class ScriptAIPane : IDisposable
     private readonly Button openCode = new() { AutoSize = true };
     private readonly Label warning = new() { AutoSize = true };
     private readonly Label questionCaption = new() { AutoSize = true, Dock = DockStyle.Fill };
+    private readonly Label worksheetSelection = new() { Name = "worksheetSelection", AutoSize = true, Dock = DockStyle.Fill, ForeColor = SystemColors.GrayText };
     private readonly Dictionary<string, Conversation> conversations = new();
     private StatsDirectForm script;
     private readonly ToolStripLabel title = new("Script AI");
@@ -87,11 +92,14 @@ internal sealed partial class ScriptAIPane : IDisposable
         for (int row = 0; row < 10; row++) layout.RowStyles.Add(new RowStyle(row == 8 ? SizeType.Percent : row == 4 ? SizeType.Absolute : SizeType.AutoSize, row == 8 ? 100 : row == 4 ? 100 : 0));
         layout.Controls.Add(connection, 0, 0); layout.Controls.Add(SharingOptions, 0, 1);
         sharing.Controls.AddRange([warning, ShareScript, ShareWorkbook, Acknowledge]); layout.Controls.Add(sharing, 0, 2);
-        layout.Controls.Add(questionCaption, 0, 3);
+        var questionHeading = new TableLayoutPanel { AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink, Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 2, Margin = Padding.Empty };
+        questionHeading.Controls.Add(questionCaption, 0, 0);
+        questionHeading.Controls.Add(worksheetSelection, 0, 1);
+        layout.Controls.Add(questionHeading, 0, 3);
         layout.Controls.Add(Composer, 0, 4);
         var actions = new FlowLayoutPanel { AutoSize = true, Dock = DockStyle.Fill };
         var copyCode = new Button { AutoSize = true, Text = "Copy R code" };
-        actions.Controls.AddRange([Send, stop]); layout.Controls.Add(actions, 0, 5); layout.Controls.Add(status, 0, 6);
+        actions.Controls.AddRange([Send, stop, replyActivity]); layout.Controls.Add(actions, 0, 5); layout.Controls.Add(status, 0, 6);
         layout.Controls.Add(conversationCaption, 0, 7);
         Transcript.AccessibleName = "AI conversation"; layout.Controls.Add(Transcript, 0, 8);
         replyCodeActions.Controls.AddRange([copyCode, openCode]); layout.Controls.Add(replyCodeActions, 0, 9);
@@ -132,7 +140,7 @@ internal sealed partial class ScriptAIPane : IDisposable
         void FitContent()
         {
             int width = Math.Max(120, viewport.ClientSize.Width - SystemInformation.VerticalScrollBarWidth - layout.Padding.Horizontal - 12);
-            warning.MaximumSize = status.MaximumSize = questionCaption.MaximumSize = SharingOptions.MaximumSize = new Size(width, 0);
+            warning.MaximumSize = status.MaximumSize = questionCaption.MaximumSize = worksheetSelection.MaximumSize = SharingOptions.MaximumSize = new Size(width, 0);
             // AutoSize checkboxes can clip wrapped text at high DPI. Measure the full label
             // and keep a scrollable minimum height for the conversation in small panes.
             foreach (var box in new[] { ShareScript, ShareWorkbook, Acknowledge })
@@ -176,7 +184,12 @@ internal sealed partial class ScriptAIPane : IDisposable
             SaveDraft(); Stop(); ClearWorksheetAnalysis(); status.Text = "";
             UnbindDocument();
             script = document; script.FormClosed += ScriptClosed;
-            if (WorksheetMode) script.TextChanged += WorksheetTitleChanged;
+            if (script is frmSpreadsheetGear grid)
+            {
+                script.TextChanged += WorksheetTitleChanged;
+                grid.WorkbookContentsChanged += WorkbookContentsChanged;
+                grid.WorkbookSelectionChanged += WorkbookSelectionChanged;
+            }
             if (script is frmScript rScript) rScript.ScriptLanguageChanged += ScriptLanguageChanged;
             if (!conversations.TryGetValue(document.Id(), out chat))
                 conversations[document.Id()] = chat = new Conversation { ShareScript = !WorksheetMode && service.ShareAIDocument, ShareWorkbook = !WorksheetMode && service.ShareAIWorkbook };
@@ -194,8 +207,14 @@ internal sealed partial class ScriptAIPane : IDisposable
         warning.Text = (WorksheetMode ? "Workbook sharing includes the named workbook. " : "Workbook sharing includes every open workbook. ")
             + "Do not share person-identifiable data: remove names, dates of birth, patient IDs and identifying free text.";
         Acknowledge.Text = "I have checked the documents selected above contain no person identifiers. Remember this confirmation for those documents during this session.";
-        questionCaption.Text = WorksheetMode ? "Ask a question about your data" : "Your question (Enter sends; Shift+Enter adds a line)";
-        Composer.AccessibleName = WorksheetMode ? questionCaption.Text : ReportMode ? "Question for the report assistant" : "Question for the script assistant";
+        if (!WorksheetMode)
+        {
+            questionCaption.Text = "Your question (Enter sends; Shift+Enter adds a line)";
+            Composer.AccessibleName = ReportMode ? "Question for the report assistant" : "Question for the script assistant";
+        }
+        RefreshWorksheetContents();
+        UpdateWorksheetSelection();
+        if (pending == null) RefreshWorksheetGuidance();
         RefreshWorkbooks(); SyncAcceptance(); Render(); UpdateConnection();
         if (takeFocus)
         {
@@ -285,6 +304,7 @@ internal sealed partial class ScriptAIPane : IDisposable
         bool share = !sharingRestricted && documents.Length > 0;
         Send.Enabled = !busy && !disabled && (!share || service.Sharing.Accepts(documents.Select(d => d.Id())));
         Send.Text = !disabled && service.Tutor.Email == null ? "Use my ChatGPT" : "Send"; stop.Enabled = busy;
+        replyActivity.Visible = busy;
         connection.Text = disabled ? ChatGPTTutor.RestrictedLabel : service.Tutor.Email != null ? "ChatGPT connection…" : service.Tutor.LoginUrl != null ? "Finish ChatGPT sign-in…" : "Use my ChatGPT";
         connection.Enabled = !busy && !disabled;
         ShareWorkbook.Enabled = !busy && !sharingRestricted;
@@ -307,7 +327,8 @@ internal sealed partial class ScriptAIPane : IDisposable
     {
         if (chat == null || disposed) return;
         Transcript.Update(chat.Messages, partial, renderedChat != chat, collapseRCode: WorksheetMode,
-            welcome: WorksheetMode && !service.Tutor.Disabled ? WorksheetOpeningQuestion : "",
+            welcome: WorksheetMode && !service.Tutor.Disabled
+                ? (workbookHasData ? WorksheetOpeningQuestion : "This workbook is empty.") : "",
             worksheetAction: VisibleWorksheetAction?.Display(), runInCurrentR: RunInCurrentR);
         renderedChat = chat;
     }
@@ -318,7 +339,7 @@ internal sealed partial class ScriptAIPane : IDisposable
         _ = SendAsync();
         return true;
     }
-    internal async Task SendAsync()
+    internal async Task SendAsync(string choiceAnswer = null, bool isClarificationReply = false)
     {
         if (pending != null || chat == null || script?.IsDisposed != false) return;
         if (service.Tutor.Disabled) { status.Text = ChatGPTTutor.PolicyMessage; UpdateControls(); return; }
@@ -330,9 +351,16 @@ internal sealed partial class ScriptAIPane : IDisposable
             try { await service.Tutor.RefreshAccountAsync(); } catch (Exception ex) { status.Text = ex.Message; }
             if (disposed || origin != script || current != chat || pending != null || !IsOpen) return;
             UpdateConnection();
-            if (service.Tutor.Email == null) { try { await service.ConfigureTutorAsync(view); } catch (Exception ex) { status.Text = ex.Message; } return; }
+            if (service.Tutor.Email == null)
+            {
+                if (choiceAnswer != null && Composer.Text.Length == 0) Composer.Text = choiceAnswer;
+                try { await service.ConfigureTutorAsync(view); } catch (Exception ex) { status.Text = ex.Message; }
+                return;
+            }
         }
-        string question = Composer.Text.Trim(); if (question.Length == 0) { status.Text = "Enter a question."; return; }
+        if (isClarificationReply && service.Tutor.DataSharingDisabled) { UpdateControls(); return; }
+        if (WorksheetMode && RefreshWorksheetContents()) Render();
+        string question = choiceAnswer ?? Composer.Text.Trim(); if (question.Length == 0) { status.Text = "Enter a question."; return; }
         RefreshWorkbooks(); SyncAcceptance();
         bool guidanceOnly = service.Tutor.DataSharingDisabled;
         bool worksheetMode = WorksheetMode;
@@ -347,11 +375,17 @@ internal sealed partial class ScriptAIPane : IDisposable
         bool reportMode = ReportMode;
         ClearWorksheetAnalysis();
         QuestionContext context = null;
+        JsonObject AssistantMessage(string message)
+        {
+            var item = new JsonObject { ["role"] = "assistant", ["text"] = message, ["rData"] = context?.RData };
+            if (worksheetMode) item["worksheetReads"] = context?.WorksheetReads ?? new JsonArray();
+            return item;
+        }
         if (!worksheetMode) sharing.Visible = false;
         UpdateControls();
         try
         {
-            context = new QuestionContext(approved, true, request.Token, service.Sharing, service.Tutor, guidanceOnly);
+            context = new QuestionContext(approved, true, request.Token, service.Sharing, service.Tutor, guidanceOnly, trackWorksheetReads: worksheetMode);
             await context.CaptureReportsAsync(focusedResultId);
             var initial = guidanceOnly ? new JsonObject() : context.InitialContext();
             var tools = context.Tools;
@@ -362,7 +396,7 @@ internal sealed partial class ScriptAIPane : IDisposable
             string helpDirectory = Configuration.SDConfiguration.HelpDirectory;
             if (worksheetMode)
             {
-                if (!current.Messages.Any(message => message.S("role") == "assistant"))
+                if (workbookHasData && !current.Messages.Any(message => message.S("role") == "assistant"))
                 {
                     initial["openingQuestion"] = WorksheetOpeningQuestion;
                     initial["methodSelection"] = WorksheetAIHelp.MethodSelectionGuide();
@@ -378,7 +412,7 @@ internal sealed partial class ScriptAIPane : IDisposable
                         ["offset"] = new JsonObject { ["type"] = "integer", ["minimum"] = 0 }
                     }, "topic"));
                 var grid = (frmSpreadsheetGear)origin;
-                if (grid.MdiParent is frmMain main && ReferenceEquals(main.ActiveMdiChild, grid)
+                if (workbookHasData && grid.MdiParent is frmMain main && ReferenceEquals(main.ActiveMdiChild, grid)
                     && !main.InOperation && !main.LearningCalculationRunning)
                 {
                     try { analysisTarget = grid.CaptureWorksheetAnalysisTarget(worksheetShared); }
@@ -391,13 +425,20 @@ internal sealed partial class ScriptAIPane : IDisposable
                             new() { ["query"] = new JsonObject { ["type"] = "string", ["maxLength"] = 120 } }, "query"));
                         tools.Add(WorksheetAnalysisToolDefinition());
                         tools.Add(QuestionContext.Tool(ChatGPTTutor.WorksheetTTestChoiceTool,
-                            "Ask whether selected measurements are matched or independent using clickable choices in chat. Use for a comparison of quantitative means when pairing is the remaining question. Does not share data or start an analysis.", new JsonObject()));
+                            "Open the Help decision tree for a quantitative comparison. Omit design when the study design is unclear. Use paired for matched pairs and independent for two independent samples. The card considers the relevant counts and distributions locally. This tool shares no diagnostic data and runs no analysis.",
+                            new() { ["design"] = new JsonObject { ["type"] = "string", ["enum"] = new JsonArray("paired", "independent") } }));
+                        if (!guidanceOnly)
+                            tools.Add(QuestionContext.Tool(ChatGPTTutor.WorksheetClarificationTool,
+                                "Show a fixed set of clickable answers for the next missing detail: goal, outcome scale or study design. Wait for the user's answer before proposing a method. Does not inspect the worksheet or run an analysis.",
+                                new() { ["dimension"] = new JsonObject { ["type"] = "string", ["enum"] = new JsonArray("goal", "scale", "design") } }, "dimension"));
                     }
                 }
             }
             string reference = guidanceOnly && !worksheetMode ? "" : initial.ToJsonString();
             if (reference.Length > 28000) throw new InvalidOperationException("The shared context is too large. Close some workbooks or turn off workbook sharing for this question.");
-            current.Messages.Add(new JsonObject { ["role"] = "user", ["text"] = question, ["rSource"] = context.RSource }); Composer.Clear(); current.Draft = ""; partial = ""; Render();
+            current.Messages.Add(new JsonObject { ["role"] = "user", ["text"] = question, ["rSource"] = context.RSource });
+            if (choiceAnswer == null) { Composer.Clear(); current.Draft = ""; }
+            partial = ""; Render();
             status.Text = guidanceOnly ? "Sending your question…" : approved.Length == 0 ? "Sending the question and conversation only…" : "Sending the confirmed context…";
 
             Task<JsonNode> CallTool(string name, JsonObject args)
@@ -436,18 +477,44 @@ internal sealed partial class ScriptAIPane : IDisposable
                         }).ToArray())
                     });
                 }
+                if (worksheetMode && name == ChatGPTTutor.WorksheetClarificationTool)
+                {
+                    context.Check();
+                    if (analysisTarget == null || guidanceOnly || service.Tutor.DataSharingDisabled)
+                        throw new InvalidOperationException("Choose an active worksheet before offering analysis choices.");
+                    if (stagedAnalysis != null) throw new InvalidOperationException("A worksheet action is already waiting.");
+                    if (args.Count != 1 || args["dimension"] is not JsonValue dimensionValue
+                        || !dimensionValue.TryGetValue<string>(out var dimension))
+                        throw new ArgumentException("Choose goal, scale or design.");
+                    var clarification = AnalysisClarification.Create(dimension);
+                    stagedAnalysis = new WorksheetAction("clarify", CaptureCurrentGuidanceTarget(analysisTarget), Clarification: clarification);
+                    return Task.FromResult<JsonNode>(new JsonObject
+                    {
+                        ["state"] = "awaiting_clarification",
+                        ["message"] = "The question and its answers are shown in the chat. Ask the user to choose an answer."
+                    });
+                }
                 if (worksheetMode && name == ChatGPTTutor.WorksheetTTestChoiceTool)
                 {
                     context.Check();
-                    if (analysisTarget == null || service.Tutor.Disabled || args.Count != 0)
+                    if (analysisTarget == null || service.Tutor.Disabled)
                         throw new InvalidOperationException("Choose an active worksheet before offering a study-design choice.");
                     if (stagedAnalysis != null) throw new InvalidOperationException("A worksheet action is already waiting.");
-                    analysisTarget.Grid.ResolveWorksheetAnalysisTarget(analysisTarget, allowSelectionChanges: false);
-                    stagedAnalysis = new WorksheetAction("choose", analysisTarget);
+                    IntervalDecision interval = null;
+                    if (args.Count != 0)
+                    {
+                        if (args.Count != 1 || args["design"] is not JsonValue designValue
+                            || !designValue.TryGetValue<string>(out var design) || design is not ("paired" or "independent"))
+                            throw new ArgumentException("Omit design or set it to paired or independent.");
+                        interval = new IntervalDecision(design == "paired");
+                    }
+                    stagedAnalysis = new WorksheetAction(interval?.Kind ?? "choose", CaptureCurrentGuidanceTarget(analysisTarget), Interval: interval);
                     return Task.FromResult<JsonNode>(new JsonObject
                     {
-                        ["state"] = "awaiting_design",
-                        ["message"] = "Ask the user to choose “Same people or units” or “Separate groups” in the chat."
+                        ["state"] = interval == null ? "awaiting_design" : "awaiting_distribution",
+                        ["message"] = interval == null
+                            ? "Ask the user to choose “Same people or units” or “Separate groups” in the chat."
+                            : "The decision card lets the user check their selection locally and choose a branch. Ask them to review the card."
                     });
                 }
                 if (worksheetMode && name == ChatGPTTutor.WorksheetAnalysisTool)
@@ -484,10 +551,10 @@ internal sealed partial class ScriptAIPane : IDisposable
                 ? new JsonArray(current.Messages[^1].DeepClone()) : current.Messages;
             current.WorksheetHistoryShared |= worksheetShared;
             var reply = await service.Tutor.ConverseAsync(reference, outgoing, tools, true, text => { if (!disposed && pending == request && chat == current) { partial = text; Render(); } }, CallTool, request.Token, report: reportMode, guidanceOnly: guidanceOnly, worksheet: worksheetMode);
-            context.Check(); current.Messages.Add(new JsonObject { ["role"] = "assistant", ["text"] = reply.Text, ["rData"] = context.RData }); partial = "";
+            context.Check(); current.Messages.Add(AssistantMessage(reply.Text)); partial = "";
             if (chat == current && script == origin && IsOpen)
             {
-                worksheetAction = stagedAnalysis;
+                worksheetAction = WithCurrentWorksheetSelection(stagedAnalysis, newCard: true);
                 Render();
                 status.Text = worksheetMode
                     ? ""
@@ -497,7 +564,17 @@ internal sealed partial class ScriptAIPane : IDisposable
         catch (Exception ex)
         {
             if (chat == current && pending == request)
-            { if (partial.Length > 0) current.Messages.Add(new JsonObject { ["role"] = "assistant", ["text"] = partial + "\n[Reply stopped before completion.]", ["rData"] = context?.RData }); partial = ""; if (Composer.Text.Length == 0) Composer.Text = question; Render(); status.Text = ex is OperationCanceledException ? "Reply stopped. Your question is kept here." : ex.Message; }
+            {
+                bool stopped = ex is OperationCanceledException;
+                if (partial.Length > 0)
+                    current.Messages.Add(AssistantMessage(partial + "\n[Reply stopped before completion.]"));
+                else if (context?.HasWorksheetReads == true)
+                    current.Messages.Add(AssistantMessage(stopped ? "[Reply stopped before any text.]" : "[No reply was received.]"));
+                partial = "";
+                if (Composer.Text.Length == 0) Composer.Text = question;
+                Render();
+                status.Text = stopped ? "Reply stopped. Your question is kept here." : ex.Message;
+            }
         }
         finally
         {
@@ -510,7 +587,7 @@ internal sealed partial class ScriptAIPane : IDisposable
                 {
                     FollowWorksheet(worksheet);
                     SyncAcceptance(); UpdateControls();
-                    if (WorksheetMode) Render();
+                    if (WorksheetMode) { UpdateWorksheetSelection(); RefreshWorksheetContents(); Render(); }
                 }
             }
         }
@@ -564,7 +641,12 @@ internal sealed partial class ScriptAIPane : IDisposable
     {
         if (script == null) return;
         script.FormClosed -= ScriptClosed;
-        script.TextChanged -= WorksheetTitleChanged;
+        if (script is frmSpreadsheetGear grid)
+        {
+            script.TextChanged -= WorksheetTitleChanged;
+            grid.WorkbookContentsChanged -= WorkbookContentsChanged;
+            grid.WorkbookSelectionChanged -= WorkbookSelectionChanged;
+        }
         if (script is frmScript rScript) rScript.ScriptLanguageChanged -= ScriptLanguageChanged;
     }
     public void Dispose() { if (disposed) return; disposed = true; Stop(); UnbindDocument(); session.Dispose(); view.Dispose(); }

@@ -30,7 +30,7 @@ internal static class WorksheetAIHelp
         ["title"] = "Statistical Method Selection",
         ["url"] = "https://www.statsdirect.com/help/methods/method_selection.htm",
         ["text"] = """
-            Start with the goal. The Method Selection Help begins with three possibilities: compare independent groups, compare paired measurements such as before and after on the same people, or examine an association between variables measured on the same people or units. Ask what the user wants to find out. Once the goal is clear, ask about the outcome and its scale (quantitative, ordered categories, unordered categories or binary) and whether observations are independent or paired, if the user has not already said.
+            Start with the goal: compare independent groups, compare paired measurements, or examine an association on the same people or units. Establish the measurement scale and study design. When size, distribution or other conditions affect the choice, use what the user supplied and what the approved selection clearly establishes. Ask for the remaining details only.
             """,
     };
 
