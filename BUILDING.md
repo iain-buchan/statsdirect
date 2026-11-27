@@ -211,13 +211,13 @@ the options shown, and none of them starts an installer.
    and publish the website's unversioned setup and MSI. The manifest names stable
    releases only, and both installer addresses must serve the same file when it
    goes live.
-6. After deployment,
-   `--check-manifest https://www.statsdirect.com/download/windows-latest.json --running <previous version>`
-   must read the live manifest and offer the new version as the updater would.
-7. `--check-manifest https://www.statsdirect.com/download/windows-latest.json --running <previous version> --download --block-github`
-   must say PASS. It refuses GitHub requests, so the download must come from the
-   mirror in the live manifest. If that check fails, tell the website maintainer
-   immediately so they can correct the mirror or withdraw the new manifest.
+6. Record the live checks as part of the website deployment. Run
+   `--check-manifest https://www.statsdirect.com/download/windows-latest.json --running <previous version> --download --block-github`
+   to confirm that the live manifest offers the new version and that the updater
+   can verify the installer from the mirror with GitHub blocked. If the check
+   fails, tell the website maintainer immediately so they can correct the mirror
+   or withdraw the new manifest. Use the website team's results when they cover
+   the same live manifest and installers.
 
 Installed versions before 5.3.17 do not read the manifest, and the website keeps
 their addresses working as its own files:

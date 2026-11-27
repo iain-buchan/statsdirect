@@ -102,10 +102,10 @@ internal static class Program
         Console.WriteLine("It offers " + offer);
         Console.WriteLine("Check GitHub before deploying the website.");
         Console.WriteLine("--check-manifest <file> --running <previous version> --download --require-github");
-        Console.WriteLine("In one website deployment, "
-            + (offer.Mirror == null ? "publish" : "place the mirror, compare it byte for byte with the GitHub installer, then publish")
-            + " the release manifest, download page and unversioned installers.");
-        Console.WriteLine(offer.Mirror == null ? "Verify the live manifest after deployment." : "Verify the live manifest and mirror with GitHub blocked after deployment.");
+        Console.WriteLine("Deploy the release manifest, download page and unversioned installers together"
+            + (offer.Mirror == null ? "." : " with the versioned mirror, which must match the GitHub installer byte for byte."));
+        Console.WriteLine(offer.Mirror == null ? "Record the live manifest check with the deployment."
+            : "Record the live manifest and mirror check with GitHub blocked as part of the deployment.");
         Console.WriteLine($"--check-manifest {UpdateOffer.ManifestUri} --running <previous version>"
             + (offer.Mirror == null ? "" : " --download --block-github"));
         return 0;
