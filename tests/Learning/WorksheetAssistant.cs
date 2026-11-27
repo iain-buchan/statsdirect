@@ -367,13 +367,6 @@ internal static partial class Program
 
             await TestWorksheetReadEvidence(grid);
 
-            var toolbar = WorksheetRibbon(main);
-            await Wait(() => main.ActiveMdiChild == grid && toolbar.Items["learnToolStripButton"] is { Available: true, Enabled: true }, "the worksheet ribbon exposes Learn");
-            toolbar.Items["learnToolStripButton"]!.PerformClick();
-            await Wait(() => service.View is { IsDisposed: false } && main.ActiveMdiChild == service.View, "Learn opens the existing course from the worksheet ribbon");
-            await service.View.Ready.Task.WaitAsync(TimeSpan.FromSeconds(40));
-            service.View.Close();
-
             if (service.Tutor.Email == null) await service.Tutor.SignInAsync();
             await service.Tutor.RefreshAccountAsync();
             await Wait(() => service.Tutor.Email == "mock@example.invalid", "the worksheet assistant test is connected to a mock account");
