@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "format": "statsdirect-desktop-help-v1",
-  "publishedAtUtc": "2026-11-24T15:36:23.2445196+00:00",
-  "sourceSha256": "466c151d1fbe505c6e1c32fc7a61d198cc1ef0e3e758982e2403e2553dba5a6e",
+  "publishedAtUtc": "2026-11-27T16:03:31.5297589+00:00",
+  "sourceSha256": "49c57f723a30e07175d026b92e5f19e9a7d7e5b18ae100bc540411d52284e002",
   "entryPage": "index.html",
   "topicCount": 405,
   "searchDocumentCount": 404,
@@ -2030,14 +2030,14 @@
   ],
   "aliasSourceSha256": "1b982112068d44a22dbe95a98db37b6cb08abb54a29927d112e32fb65db5ddcf",
   "contextHeaderSha256": "65a27d8c45a47b3ec913e0aa3b85d7166527d716cc3ffa6861a725ffcb804099",
-  "previousKind": "EditorOwned",
-  "previousSha256": "b2b0bef6c674c7213f2d14b7df99fa6eb9311c41b34f30f27da17d22e384b5d1",
+  "previousKind": "PortableArtifact",
+  "previousSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
   "adoptedFlareOutput": false,
   "files": [
     {
       "path": ".statsdirect-help-output.json",
-      "bytes": 55097,
-      "sha256": "6b6de01f3e9ecd29f6654648f2ae0623639c5012b6eeb816c5a5ca1d9dea0e9f"
+      "bytes": 55146,
+      "sha256": "82ece22128aaf69b60ff159db98e6ba6f10d2e5c407769f957fb28a22c1c3282"
     },
     {
       "path": "Data/Alias.xml",
@@ -2281,8 +2281,8 @@
     },
     {
       "path": "basics/script_ai.htm",
-      "bytes": 15128,
-      "sha256": "fc8ca690fd9fe409544f6b338333efb06baa3ee1fb80e6c04d85747bcf67ee65"
+      "bytes": 15340,
+      "sha256": "3b77360fc53004f611855150f46f470dba75435c2889802d19ca34eb1de15ce2"
     },
     {
       "path": "basics/statistics.htm",
@@ -2301,18 +2301,18 @@
     },
     {
       "path": "basics/worksheet.htm",
-      "bytes": 17879,
-      "sha256": "c381871f73a4407caf3994faaf70b66c4b95108597e1c31600845bec772169d5"
+      "bytes": 17867,
+      "sha256": "d0e2fe01647718769efd779a9332206f0a635b768f6d5ceafdf1545441b2ee8d"
     },
     {
       "path": "basics/worksheet_ai.htm",
-      "bytes": 13130,
-      "sha256": "a5e17e02a9a5726c82d83678e397530ee2bce9bdd610ebf381baffe2f6b23bcf"
+      "bytes": 16766,
+      "sha256": "e9d3ced365de8afe24ff34a450671d05dcf03966f8eb1f46c89fdf9362e14d2a"
     },
     {
       "path": "build-info.json",
       "bytes": 220,
-      "sha256": "39364ac41eaddc4bc62dbc08cc7b7fb25b74f84165daaa4f3c26ea8daf21e020"
+      "sha256": "bb3b6dc439828a10f0a64cb81082b9adf9ccc41a4242880cea1ab0ddbf1bce7e"
     },
     {
       "path": "chi_square_tests/22.htm",
@@ -2841,13 +2841,13 @@
     },
     {
       "path": "keyword-index.js",
-      "bytes": 135416,
-      "sha256": "d23aa523f48f7f343c3f63635c07a037adab416968a415400fb39662d3814ce7"
+      "bytes": 135609,
+      "sha256": "67fc5942424cd7c3a3db38f19d4cfe8c7ec0384c955588a65285083eb66b4b7e"
     },
     {
       "path": "keyword-index.json",
-      "bytes": 98041,
-      "sha256": "e49d17ea6c5a6750d0ef8053b48b3d98a1f9c4378e3bc6fd0c83dd650493917d"
+      "bytes": 98234,
+      "sha256": "40081eeecdec21c6f4e9f56426015468538c312a58a91580e0d5865b47e9465a"
     },
     {
       "path": "menus/about.htm",
@@ -5505,6 +5505,11 @@
       "sha256": "9fef48d868277a8bc1852f7ba796b33ead812d38916a7131b0a29ea48961a6a4"
     },
     {
+      "path": "resources/help-editor-runtime/publication.json",
+      "bytes": 133,
+      "sha256": "31e9898b2c14cfde16373b3569a838f7d93f2885fac4ec69bf78d71234a8c1a3"
+    },
+    {
       "path": "resources/help-editor-runtime/topic.css",
       "bytes": 3543,
       "sha256": "3481127310fffba5acb4cbe16b4003945d3920cd9b8d4e679275bcd45522f8a2"
@@ -6081,8 +6086,8 @@
     },
     {
       "path": "search-index.js",
-      "bytes": 885264,
-      "sha256": "7fb719243bdc310d36dde838e6ef27d715196890d432897820a13b2fdc05ed0d"
+      "bytes": 886185,
+      "sha256": "e8b560009741721e6e46ff39aed62084b3e29abdbd16a6234b9b0ecd299844d5"
     },
     {
       "path": "survival_analysis/abridged_life_table.htm",
@@ -6420,5 +6425,5 @@
       "sha256": "10f5155b3fbf0d431bb8ad559e3b8103fcf3b355e001208dfacb2855b22936c9"
     }
   ],
-  "publicationSnapshotSha256": null
+  "publicationSnapshotSha256": "cb309176babaec3e529c58dacbff197e279f8770f10d81ba7e0d8d952ebf5158"
 }
