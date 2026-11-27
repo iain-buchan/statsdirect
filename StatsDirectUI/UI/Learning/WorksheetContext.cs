@@ -2,6 +2,7 @@ using SpreadsheetGear;
 using StatsDirect.UI.Learning;
 using StatsDirect.Utilities;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -62,6 +63,7 @@ internal partial class frmSpreadsheetGear
         int count = last - first + 1;
         if (first < 1 || last > 1048576 || count <= 0 || (long)count * columns.Length > 4000) throw new ArgumentException("Choose a smaller range: at most 4,000 cells per read. No cells have been sampled or cropped.");
         bool errors = false; var data = new JsonArray();
+        var headingColumns = captureEvidence != null && first > 1 ? new List<int>() : null;
         foreach (int column in columns)
         {
             var values = new JsonArray(); var texts = new JsonArray();
@@ -75,23 +77,32 @@ internal partial class frmSpreadsheetGear
                 texts.Add(cell.Text);
             }
             // Titles are descriptive metadata only: row 1 is not silently discarded from the requested range.
-            string title = sheet.Cells[0, column].Value is string heading ? heading.Limit(200) : "Column " + (column + 1);
+            string heading = sheet.Cells[0, column].Value as string;
+            if (heading != null) headingColumns?.Add(column);
+            string title = heading?.Limit(200) ?? "Column " + (column + 1);
             data.Add(new JsonObject { ["index"] = column, ["title"] = title, ["values"] = values, ["text"] = texts });
         }
         if (captureEvidence != null)
         {
             var ranges = new JsonArray();
-            int[] ordered = columns.Order().ToArray();
-            int start = ordered[0];
-            for (int i = 0; i < ordered.Length; i++)
+            void AddRanges(int top, int bottom, int[] ordered, string suffix)
             {
-                if (i + 1 < ordered.Length && ordered[i + 1] == ordered[i] + 1) continue;
-                ranges.Add(sheet.Cells[first - 1, start, last - 1, ordered[i]].Address.Replace("$", "", StringComparison.Ordinal));
-                if (i + 1 < ordered.Length) start = ordered[i + 1];
+                int start = 0;
+                for (int i = 0; i < ordered.Length; i++)
+                {
+                    if (i + 1 < ordered.Length && ordered[i + 1] == ordered[i] + 1) continue;
+                    string address = sheet.Cells[top, ordered[start], bottom, ordered[i]].Address;
+                    ranges.Add(address.Replace("$", "", StringComparison.Ordinal) + suffix);
+                    start = i + 1;
+                }
             }
+            AddRanges(0, 0, headingColumns?.Order().ToArray() ?? [], " (headings)");
+            AddRanges(first - 1, last - 1, columns.Order().ToArray(), "");
+
             int usedRight = used.Column + used.ColumnCount - 1;
-            bool coversUsedRange = first <= used.Row + 1 && last >= used.Row + used.RowCount
-                && ordered.Count(column => column >= used.Column && column <= usedRight) == used.ColumnCount;
+            bool InUsedColumns(int column) => column >= used.Column && column <= usedRight;
+            bool coversTop = first <= used.Row + 1 || first == 2 && headingColumns?.Count(InUsedColumns) == used.ColumnCount;
+            bool coversUsedRange = coversTop && last >= used.Row + used.RowCount && columns.Count(InUsedColumns) == used.ColumnCount;
             captureEvidence(new JsonObject { ["workbook"] = Text, ["sheet"] = sheet.Name, ["ranges"] = ranges, ["partial"] = !coversUsedRange });
         }
         return new JsonObject { ["documentId"] = Id(), ["columns"] = data, ["rowCount"] = count, ["firstRow"] = first, ["lastRow"] = last, ["sheetIndex"] = sheetIndex, ["sheet"] = sheet.Name, ["workbook"] = Text, ["range"] = sheet.Cells[first - 1, columns.Min(), last - 1, columns.Max()].Address,

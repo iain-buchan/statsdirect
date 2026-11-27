@@ -385,8 +385,19 @@ internal static partial class Program
             await WaitForWorksheetAction(pane, "paired-interval");
         }
 
+        const string alternateSelection = "D1:E13";
         WithWorksheet(workbook, sheet =>
         {
+            int[] differences = [-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 1000];
+            object[,] values = new object[13, 2];
+            values[0, 0] = "Other Before";
+            values[0, 1] = "Other After";
+            for (int i = 0; i < differences.Length; i++)
+            {
+                values[i + 1, 0] = 20 + differences[i];
+                values[i + 1, 1] = 20;
+            }
+            sheet.Cells[alternateSelection].Value = values;
             workbook.RangeSelection = sheet.Cells["A1"];
             return true;
         });
@@ -416,6 +427,34 @@ internal static partial class Program
             && !selected.A("choices").Any(choice => choice.GetValue<string>() == "check")
             && before.SequenceEqual(WorksheetAnalysisDataTraffic(trace)),
             "selecting paired data clears the earlier message and shows the evidence without an AI turn");
+
+        string previousToken = selected.S("token");
+        Check(Equals(typeof(ScriptAIPane).GetMethod("RefreshWorksheetGuidance", Members)!.Invoke(pane, null), false),
+            "an unchanged worksheet selection and revision keep the current guidance card");
+        var chooseAction = typeof(ScriptAIPane).GetMethod("ChooseWorksheetAction", Members)!
+            .CreateDelegate<Action<string, string>>(pane);
+        WithWorksheet(workbook, sheet => { workbook.RangeSelection = sheet.Cells[alternateSelection]; return true; });
+        // Deliver the earlier click before the selection change posted to the UI loop can run.
+        chooseAction(previousToken, "normal");
+        var warning = await WaitForWorksheetEvidence(pane, "paired-interval", "12 complete pairs", "box-plot");
+        Check(warning.S("token") != previousToken, "a stale branch click cannot skip the warning for a different selection");
+
+        string warningToken = warning.S("token");
+        WithWorksheet(workbook, sheet => { sheet.Cells["D13"].Value = 26; return true; });
+        chooseAction(warningToken, "normal");
+        var updated = await WaitForWorksheetEvidence(pane, "paired-interval", "12 complete pairs", "Suggested branch");
+        Check(updated.S("token") != warningToken && updated.A("recommended").Single().S("choice") == "normal",
+            "a same-range edit refreshes the evidence and retires the older branch click");
+        await ClickWorksheetAction(pane, "normal");
+        await CheckWorksheetConfirmation(pane, "Paired Student t test", alternateSelection, "A new report");
+        await ClickWorksheetAction(pane, "sample");
+        WithWorksheet(workbook, sheet =>
+        {
+            sheet.Cells[alternateSelection].ClearContents();
+            workbook.RangeSelection = sheet.Cells[PairedSelection];
+            return true;
+        });
+        await WaitForWorksheetEvidence(pane, "paired-interval", "5 complete pairs");
         await ClickWorksheetAction(pane, "non-normal");
         await CheckWorksheetConfirmation(pane, "Wilcoxon signed ranks test", PairedSelection, "A new report");
         Check(before.SequenceEqual(WorksheetAnalysisDataTraffic(trace)),

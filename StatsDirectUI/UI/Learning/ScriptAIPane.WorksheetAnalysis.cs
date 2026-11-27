@@ -136,7 +136,7 @@ internal sealed partial class ScriptAIPane
         AnalysisClarification Clarification = null, IntervalDecision Interval = null, string IntervalBranch = null,
         string Feedback = null)
     {
-        internal string Token { get; } = Guid.NewGuid().ToString("N");
+        internal string Token { get; init; } = Guid.NewGuid().ToString("N");
 
         internal JsonObject Display()
         {
@@ -273,7 +273,8 @@ internal sealed partial class ScriptAIPane
         catch (InvalidOperationException) { return action; }
 
         if (!newCard && current == action.Source) return action;
-        var updated = action with { Source = current, Feedback = null };
+        // A delayed click belongs to the selection and evidence the user saw.
+        var updated = action with { Source = current, Feedback = null, Token = Guid.NewGuid().ToString("N") };
         if (action.Interval == null) return updated;
 
         var interval = new IntervalDecision(action.Interval.Paired);

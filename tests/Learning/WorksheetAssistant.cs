@@ -118,7 +118,7 @@ internal static partial class Program
                 const sections = [...document.querySelectorAll('.message.assistant details.worksheet-evidence')].slice(-2);
                 return sections.length === 2 && sections.every(section => !section.open &&
                     section.querySelector('summary')?.textContent === 'Data used' &&
-                    section.querySelector('li')?.textContent === 'Worksheet assistant test · Fictional data · A2:A4 (part of the worksheet’s used range)');
+                    section.querySelector('li')?.textContent === 'Worksheet assistant test · Fictional data · A1 (headings), A2:A4 (part of the worksheet’s used range)');
             })()
             """);
         Check(evidence == "true", "both data-based replies display their own app-generated, collapsed evidence");
@@ -180,7 +180,9 @@ internal static partial class Program
             "worksheet evidence is kept locally and outside the provider's tool response");
         var reads = context.WorksheetReads;
         Check(reads.Count == 1 && reads[0].B("partial") && reads[0].A("ranges").Select(range => range.GetValue<string>())
-            .SequenceEqual(["A2:A4", "C2:C4"]), "disjoint evidence describes only the requested columns");
+            .SequenceEqual(["A1 (headings)", "A2:A4", "C2:C4"])
+            && data.A("columns").Select(column => column.S("title")).SequenceEqual(["Column 3", "Age"]),
+            "disjoint evidence identifies only the requested data columns and the row-1 text used as a title");
         await context.CallAsync("statsdirect_read_data", separated);
         Check(context.WorksheetReads.Count == 1, "repeating a read keeps one evidence entry");
 
@@ -196,6 +198,24 @@ internal static partial class Program
         reads = context.WorksheetReads;
         Check(reads.Count == 2 && !reads[1].B("partial") && reads[1].A("ranges")[0]?.GetValue<string>() == "A1:B4",
             "a read of the whole used worksheet range is not marked as partial");
+        var withHeadings = await context.CallAsync("statsdirect_read_data", new JsonObject
+        {
+            ["documentId"] = grid.Id(), ["firstRow"] = 2, ["lastRow"] = 4, ["columns"] = new JsonArray(0, 1)
+        });
+        reads = context.WorksheetReads;
+        Check(reads.Count == 3 && !reads[2].B("partial")
+            && reads[2].A("ranges").Select(range => range.GetValue<string>()).SequenceEqual(["A1:B1 (headings)", "A2:B4"])
+            && withHeadings.A("columns").Select(column => column.S("title")).SequenceEqual(["Age", "Original heading"]),
+            "row-1 titles and all data rows together cover the used worksheet range");
+
+        await context.CallAsync("statsdirect_read_data", new JsonObject
+        {
+            ["documentId"] = grid.Id(), ["firstRow"] = 3, ["lastRow"] = 4, ["columns"] = new JsonArray(0, 1)
+        });
+        reads = context.WorksheetReads;
+        Check(reads.Count == 4 && reads[3].B("partial")
+            && reads[3].A("ranges").Select(range => range.GetValue<string>()).SequenceEqual(["A1:B1 (headings)", "A3:B4"]),
+            "reported headings do not fill a gap in the requested data rows");
     }
 
     private static async Task TestWorksheetAssistant(frmMain main, LearningService service, Action<AISecurityLevel> setSecurity, string trace)
