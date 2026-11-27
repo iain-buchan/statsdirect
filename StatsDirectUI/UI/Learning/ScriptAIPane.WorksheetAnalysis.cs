@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Nodes;
 
@@ -78,7 +79,7 @@ internal sealed partial class ScriptAIPane
 
         internal string Conflict(bool large) => Paired
             ? large
-                ? "The local check found more than 100 complete pairs. Choose the large-sample branch."
+                ? "The local check found more than 100 complete pairs. Choose the large-sample route for the mean difference or the non-normal route for Wilcoxon signed ranks."
                 : "The local check found at most 100 complete pairs. Choose the branch for the distribution of the differences."
             : large
                 ? "The local check found more than 100 observations in each sample. Review their distributions before choosing a method."
@@ -94,7 +95,14 @@ internal sealed partial class ScriptAIPane
                 summary += NormalityText(pairs.ShapiroWilkW, pairs.ShapiroWilkP);
                 if (pairs.ShapiroWilkW == null && LargeSample == false)
                     summary += ". Shapiro–Wilk needs at least three finite differences with some variation.";
-                card["diagnostics"] = new JsonArray(summary);
+                var lines = new JsonArray(summary);
+                if (LargeSample == true && pairs.Shape is { } shape)
+                {
+                    lines.Add($"Shape check · {shape.FarOutCount} beyond the 3× IQR fences");
+                    if (shape.Skewness is double skewness && shape.ExcessKurtosis is double kurtosis)
+                        lines.Add($"Skewness {skewness:G3} · Excess kurtosis {kurtosis:G3}");
+                }
+                card["diagnostics"] = lines;
             }
             else if (Columns is { } columns)
             {
@@ -114,7 +122,20 @@ internal sealed partial class ScriptAIPane
             if (!pairs.HasVariation)
                 return (null, "All the paired differences are the same, leaving zero variation for the test. Check the selected measurements.");
             if (pairs.Count > MeasurementDistributionDiagnostics.LargeSampleThreshold)
-                return ("large", "More than 100 complete pairs puts this in the Help’s large-sample branch. A paired t test answers the question about the mean difference. Review any potentially influential differences before confirming.");
+            {
+                var signals = new List<string>();
+                if (pairs.HasPotentialOutlier) signals.Add("far-out differences");
+                if (pairs.HasSkewSignal) signals.Add("pronounced skew");
+                if (pairs.Shape?.HasHeavyTails == true) signals.Add("heavy tails");
+                if (signals.Count == 0)
+                    return ("large", "There are more than 100 complete pairs and the shape checks found no substantial departure. A paired t test answers the question about the mean difference.");
+
+                string evidence = "The shape checks flagged " + string.Join(", ", signals) + ". ";
+                string signedRanks = pairs.HasSkewSignal
+                    ? "Wilcoxon signed ranks addresses a shift in location and assumes roughly symmetric differences. Pronounced skew makes that assumption doubtful."
+                    : "Consider Wilcoxon signed ranks for a shift in location if the differences look roughly symmetric.";
+                return (null, evidence + signedRanks + " A paired t test still answers the question about the mean difference. Review any influential differences before choosing.");
+            }
             if (pairs.HasPotentialOutlier)
                 return (null, "The box-plot check flagged an unusually distant difference. Review whether it reflects a data error or strongly affects the mean before choosing.");
             if (pairs.HasSkewSignal)
@@ -344,8 +365,7 @@ internal sealed partial class ScriptAIPane
                 case ("paired-interval" or "independent-interval", "large" or "normal" or "non-normal"):
                     grid.ResolveWorksheetAnalysisTarget(action.Source, allowSelectionChanges: false);
                     var decision = action.Interval;
-                    if (decision.LargeSample is bool large && large != (choice == "large")
-                        && (decision.Paired || !large || choice != "non-normal"))
+                    if (decision.LargeSample is bool large && large != (choice == "large") && choice != "non-normal")
                     {
                         ShowIntervalFeedback(action, decision.Conflict(large));
                         return;

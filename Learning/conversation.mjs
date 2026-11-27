@@ -182,7 +182,7 @@ import {richText} from './Shared/Learning/rich-text.mjs';
         button(paired ? 'Check selected pairs' : diagnostics.length ? 'Use these as separate samples' : 'Check two sample columns', 'check');
       button(paired ? 'Large sample (more than 100 complete pairs)' : 'Large samples (more than 100 in each group)', 'large');
       button(paired ? 'Small or medium · Approximately normal differences' : 'Small or medium · Approximately normal within groups', 'normal');
-      button(paired ? 'Small or medium · Non-normal differences' : 'Non-normal distributions within groups', 'non-normal');
+      button(paired ? 'Non-normal differences' : 'Non-normal distributions within groups', 'non-normal');
       button('Change design', 'back');
     } else if (action.kind === 'clarify') {
       const question = document.createElement('p');
