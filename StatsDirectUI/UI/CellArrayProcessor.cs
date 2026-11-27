@@ -120,7 +120,8 @@ namespace StatsDirect.UI
             for (int c = 0; c < cellSelection.TotalColumns; c++)
             {
                 CellColumnSelection ccs = cellSelection.ColumnSelections[c];
-                double[] numericValues = ccs.GetDataValues();
+                var read = ccs.ReadDataValues();
+                double[] numericValues = read.Values;
 
                 // If there's no data in the row (for example if it's hidden), ignore the row
                 if (null == numericValues)
@@ -142,7 +143,8 @@ namespace StatsDirect.UI
                 bool isTextual = false;
                 for (int row = 0; row <= lastRow; row++)
                 {
-                    if ((numericValues.Length <= row || numericValues[row] == Constant.MISSING) && !string.IsNullOrWhiteSpace(textValues[row]))
+                    if ((numericValues.Length <= row || numericValues[row] == Constant.MISSING) && !string.IsNullOrWhiteSpace(textValues[row])
+                        && !read.HasMisplacedSeparator(row))
                     {
                         isTextual = true;
                         break;
@@ -203,6 +205,7 @@ namespace StatsDirect.UI
                 }
                 else
                 {
+                    read.RequireValidNumbers(ccs.ColumnIndex);
                     DoubleVariable variable = new(lastRow + 1, ccs.ColumnTitle);
                     for (int row = 0; row <= lastRow; row++)
                     {
@@ -676,28 +679,31 @@ namespace StatsDirect.UI
             DataFrame frame = new();
             foreach (CellColumnSelection column in cellSelection.ColumnSelections)
             {
-                DoubleVariable variable = ReadSelectedNumericColumn(column, rowLengthHint, isRefill, titleWasInData, originGroup, out _, false);
+                var (variable, _, read, offset) = ReadSelectedNumericColumn(column, rowLengthHint, isRefill, titleWasInData, originGroup, false);
+                read.RequireValidNumbers(column.ColumnIndex, offset);
                 if (variable != null)
                     frame.Variables.Add(variable);
             }
             return frame;
         }
 
-        private static DoubleVariable ReadSelectedNumericColumn(CellColumnSelection column, int rowLengthHint, bool isRefill, bool titleWasInData, int originGroup, out string[] dataTexts, bool includeTexts = true)
+        private static (DoubleVariable Variable, string[] Texts, WorksheetNumericValues Read, int Offset) ReadSelectedNumericColumn(
+            CellColumnSelection column, int rowLengthHint, bool isRefill, bool titleWasInData, int originGroup, bool includeTexts = true)
         {
-            dataTexts = null;
-            double[] selected = column.GetSelectedDataValues();
+            var read = column.ReadSelectedDataValues();
+            double[] selected = read.Values;
             if (selected == null)
-                return null;
+                return (null, null, read, 0);
             string[] texts = column.GetTexts();
             string first = selected.Length > 0 && texts.Length > 0 ? (texts[0] ?? string.Empty).Trim() : string.Empty;
             // A count hint, when supplied, must agree with an optional selected title.
             // Matched columns have no count hint yet; only genuine text can be their selected header.
             bool hasTitle = isRefill ? titleWasInData : (rowLengthHint == 0 || selected.Length == rowLengthHint + 1)
-                && first.Length > 0 && selected[0] == Constant.MISSING && !IsMissingRowText(first);
+                && first.Length > 0 && selected[0] == Constant.MISSING
+                && !read.HasMisplacedSeparator(0) && !IsMissingRowText(first);
             int offset = hasTitle && selected.Length > 0 && column.FirstSelectedRowIsVisible() ? 1 : 0;
             double[] values = new double[selected.Length - offset];
-            dataTexts = includeTexts ? new string[values.Length] : null;
+            string[] dataTexts = includeTexts ? new string[values.Length] : null;
             for (int row = 0; row < values.Length; row++)
             {
                 double value = selected[row + offset];
@@ -705,11 +711,12 @@ namespace StatsDirect.UI
                 if (dataTexts != null)
                     dataTexts[row] = row + offset < texts.Length ? texts[row + offset] ?? string.Empty : string.Empty;
             }
-            return new DoubleVariable(values, column.ColumnTitle)
+            var variable = new DoubleVariable(values, column.ColumnTitle)
             {
                 // Numeric columns have already made their continuous/header decisions; replay must not ask again.
                 Origin = column.GetWorksheetOrigin(DataAcquisitionMode.NumericPreserveRows, hasTitle, originGroup)
             };
+            return (variable, dataTexts, read, offset);
         }
 
         /// <summary>Read aligned predictors before asking how any categorical values should be coded.</summary>
@@ -719,7 +726,7 @@ namespace StatsDirect.UI
             bool CanCode(int row) => codingRows == null || row < codingRows.Count && codingRows[row];
             foreach (CellColumnSelection column in cellSelection.ColumnSelections)
             {
-                DoubleVariable numeric = ReadSelectedNumericColumn(column, rowLengthHint, isRefill, titleWasInData, originGroup, out string[] texts);
+                var (numeric, texts, read, offset) = ReadSelectedNumericColumn(column, rowLengthHint, isRefill, titleWasInData, originGroup);
                 if (numeric == null)
                     continue;
                 int beforeNormalization = numeric.Length;
@@ -728,13 +735,18 @@ namespace StatsDirect.UI
                 {
                     // The shared positive-origin guard proved that this was an empty selected header.
                     string[] dataTexts = new string[numeric.Length];
-                    Array.Copy(texts, beforeNormalization - numeric.Length, dataTexts, 0, dataTexts.Length);
+                    int removedHeaderRows = beforeNormalization - numeric.Length;
+                    Array.Copy(texts, removedHeaderRows, dataTexts, 0, dataTexts.Length);
                     texts = dataTexts;
+                    offset += removedHeaderRows;
                 }
                 bool textual = false;
                 for (int row = 0; row < numeric.Length; row++)
-                    if (CanCode(row) && numeric.Data[row] == Constant.MISSING && !string.IsNullOrWhiteSpace(texts[row]) && !IsMissingRowText(texts[row].Trim()))
+                    if (CanCode(row) && numeric.Data[row] == Constant.MISSING && !string.IsNullOrWhiteSpace(texts[row])
+                        && !read.HasMisplacedSeparator(row + offset) && !IsMissingRowText(texts[row].Trim()))
                         textual = true;
+                if (!textual)
+                    read.RequireValidNumbers(column.ColumnIndex, offset, codingRows);
 
                 ClassifierVariable classifier = new() { Title = numeric.Title };
                 classifier.EnsureLength(numeric.Length, Constant.MISSING);
@@ -784,7 +796,10 @@ namespace StatsDirect.UI
                     classifier.Groups[(int)group.Id] = group;
                 DataFrame dummies = Sheet.ToDummyVariables(host ?? SdApplication.SoleInstance, classifier, !textual);
                 if (dummies == null)
+                {
+                    read.RequireValidNumbers(column.ColumnIndex, offset, codingRows);
                     frame.Variables.Add(numeric);
+                }
                 else
                     foreach (IVariable variable in dummies.Variables)
                         frame.Variables.Add(variable); // Expanded columns retain the existing entered-data snapshot contract.

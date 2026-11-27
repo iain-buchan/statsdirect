@@ -808,7 +808,14 @@ namespace StatsDirect.UI
                 return null;
             }
 
-            return CellArrayProcessor.ProcessCellArrayWithReference(cellSelection, mode, rowLengthHint, false, false, originGroup, ((WindowInformation)Tag).FriendlyName, rowReference, codingRows);
+            try
+            {
+                return CellArrayProcessor.ProcessCellArrayWithReference(cellSelection, mode, rowLengthHint, false, false, originGroup, ((WindowInformation)Tag).FriendlyName, rowReference, codingRows);
+            }
+            catch (WorksheetNumberFormatException ex)
+            {
+                throw new TemplateOperationCancelledException(ex.Message, "Worksheet Data Selection");
+            }
         }
 
         /// <summary>
@@ -817,28 +824,7 @@ namespace StatsDirect.UI
         /// </summary>
         /// <param name="val">The value to be converted</param>
         /// <returns>MISSING if the value could not be converted, MISSING * 10 if the value was previously MISSING, or the converted value</returns>
-        public static double ToCellValue(object val)
-        {
-            if (null == val)
-                return Constant.MISSING;
-            if (val is double)
-                return (double)val;
-            if (val is int)
-                return (int)val;
-            if (val is string buf)
-            {
-                if (double.TryParse(buf, out double dval))
-                    return dval;
-                string ubuf = buf.ToUpper(CultureInfo.InvariantCulture);
-                if (ubuf == "*" || ubuf == "MISSING" || ubuf == ".")
-                    return Constant.MISSING * 10D;
-                // if (ubuf == "#NULL!" || ubuf == "#NUM!")
-                //    return Constant.MISSING;
-                return Constant.MISSING; // If we can't parse it as a number, and we want numbers, it's MISSING.
-            }
-            // throw new NotImplementedException("Don't know how to handle type " + val.GetType().FullName);
-            return Constant.MISSING;
-        }
+        public static double ToCellValue(object val) => WorksheetNumber.Parse(val, out _);
 
         /// <summary>
         /// The guts of the data conversion to a DateTime.
@@ -873,6 +859,12 @@ namespace StatsDirect.UI
         {
             return workbookView.WithLock(() => ToCellValue(workbookView.ActiveWorksheet.Cells[row, column].Value));
         }
+
+        bool IGetCells.CanBeColumnTitle(int row, int column) => workbookView.WithLock(() =>
+        {
+            object value = workbookView.ActiveWorksheet.Cells[row, column].Value;
+            return WorksheetNumber.Parse(value, out bool misplacedSeparator) == Constant.MISSING && !misplacedSeparator;
+        });
 
         string IGetCells.GetCellText(int row, int column)
         {
@@ -966,16 +958,32 @@ namespace StatsDirect.UI
 
         (double[], int) IGetCells.GetCellValues(int column, int firstRow, int lastRow)
         {
+            var read = ((IGetCells)this).ReadNumericCells(column, firstRow, lastRow);
+            read.RequireValidNumbers(column);
+            return (read.Values, read.VisibleRows);
+        }
+
+        WorksheetNumericValues IGetCells.ReadNumericCells(int column, int firstRow, int lastRow) => workbookView.WithLock(() =>
+        {
             if (IsHiddenColumn(column))
-                return (null, 0);
+                return new WorksheetNumericValues(null, 0);
 
             (object[,] values, int nonHiddenRowCount) = GetCellObjects(column, firstRow, lastRow);
-
             double[] returnValues = new double[nonHiddenRowCount];
+            Dictionary<int, int> misplaced = null;
+            int[] visibleRows = null;
             for (int r = 0; r < nonHiddenRowCount; r++)
-                returnValues[r] = ToCellValue(values[r, 0]);
-            return (returnValues, nonHiddenRowCount);
-        }
+            {
+                returnValues[r] = WorksheetNumber.Parse(values[r, 0], out bool misplacedSeparator);
+                if (misplacedSeparator)
+                {
+                    // Compacted values have no gaps for hidden rows. Record the physical cell.
+                    visibleRows ??= ((IGetCells)this).GetVisibleRowIndices(column, firstRow, lastRow);
+                    (misplaced ??= new()).Add(r, visibleRows[r]);
+                }
+            }
+            return new WorksheetNumericValues(returnValues, nonHiddenRowCount, misplaced);
+        });
 
         private bool IsHiddenColumn(int column)
         {

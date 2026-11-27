@@ -3143,7 +3143,15 @@ namespace StatsDirect.UI
 
                 Parameter parameter = (Parameter)control.Tag;
                 InlineParameterValueExtractor extractor = new() { Context = context, Control = control, DoValidation = doValidation, OutputParameters = outputParameters, Processor = processor };
-                parameter.Accept(extractor);
+                try
+                {
+                    parameter.Accept(extractor);
+                }
+                catch (WorksheetNumberFormatException ex)
+                {
+                    SdApplication.SoleInstance.MsgboxX(ex.Message, MessageBoxButtons.OK, MessageBoxIcon.Error, "Worksheet Data Selection", true);
+                    return control;
+                }
                 return extractor.FailedValidationControl;
             }
 

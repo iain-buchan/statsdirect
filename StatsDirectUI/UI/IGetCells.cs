@@ -46,8 +46,16 @@ namespace StatsDirect.UI
         /// <returns></returns>
         (string[], int) GetCellTexts(int column, int firstRow, int lastRow);
         double GetCellValue(int gridRow, int gridColumn);
+        bool CanBeColumnTitle(int gridRow, int gridColumn) => GetCellValue(gridRow, gridColumn) == StatsDirect.Numerics.Constant.MISSING;
         /// <returns>(Array of values, hidden row count)</returns>
         (double[], int) GetCellValues(int column, int firstRow, int lastRow);
+
+        internal WorksheetNumericValues ReadNumericCells(int column, int firstRow, int lastRow)
+        {
+            var (values, rows) = GetCellValues(column, firstRow, lastRow);
+            return new WorksheetNumericValues(values, rows);
+        }
+
         string GetColumnTitle(int column);
         bool IsFormattedLikeATitle(int column, int row);
     }

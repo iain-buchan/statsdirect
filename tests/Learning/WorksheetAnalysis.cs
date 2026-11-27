@@ -135,6 +135,8 @@ internal static partial class Program
             ChooseRange(PairedSelection);
             await CheckOtherPairedIntervalBranches(main, pane, grid, workbook, trace);
             await CheckOtherIndependentIntervalBranches(main, pane, workbook, trace);
+            CheckWorksheetLocaleNumberAcquisition();
+            await CheckPairedLocaleGuidance(main, pane, workbook, trace);
             pane.NewConversation();
             const string initialQuestion = "TRE_WORKSHEET_ANALYSIS_NEW_REPORT";
             var response = await WorksheetReply(pane, initialQuestion);
@@ -717,6 +719,75 @@ internal static partial class Program
         Check(before.SequenceEqual(WorksheetAnalysisDataTraffic(trace)) && !main.InOperation
             && !main.MdiChildren.OfType<frmReportWebView>().Any(),
             "all large-pair shape checks and Wilcoxon confirmations stay local and run no analysis");
+    }
+
+    private static async Task CheckPairedLocaleGuidance(frmMain main, ScriptAIPane pane, WorkbookView workbook, string trace)
+    {
+        const string range = "D17:E22";
+        const string warning = "Cell D20 has a misplaced number separator.";
+        CultureInfo originalCulture = CultureInfo.CurrentCulture;
+        CultureInfo originalDefault = CultureInfo.DefaultThreadCurrentCulture;
+        try
+        {
+            CultureInfo.DefaultThreadCurrentCulture = CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("en-GB");
+            pane.NewConversation();
+            WithWorksheet(workbook, sheet =>
+            {
+                sheet.Cells["D18:D20"].NumberFormat = "@";
+                sheet.Cells[range].Value = new object[,]
+                {
+                    { "Before", "After" },
+                    { "1,002", 1000 },
+                    { "9,6", 6 },
+                    { "4,5", 3 },
+                    { 14, 9 },
+                    { 17, 10 }
+                };
+                sheet.Cells["D19"].EntireRow.Hidden = true;
+                workbook.RangeSelection = sheet.Cells[range];
+                return true;
+            });
+
+            await WorksheetReply(pane, KnownPairedQuestion);
+            var malformed = await WaitForWorksheetEvidence(pane, "paired-interval", warning);
+            Check(!malformed.S("text").Contains("Cell D19", StringComparison.Ordinal)
+                && !malformed.S("text").Contains("Local check found", StringComparison.Ordinal)
+                && malformed.A("choices").Any(choice => choice.GetValue<string>() == "check"),
+                "the initial paired decision names the visible text cell rather than the hidden physical row");
+
+            string[] before = WorksheetAnalysisDataTraffic(trace);
+            object beforeCheck = Field(pane, "worksheetAction");
+            await ClickWorksheetAction(pane, "check");
+            await Wait(() => !ReferenceEquals(beforeCheck, Field(pane, "worksheetAction")),
+                "the paired decision processes the explicit local check");
+            await WaitForWorksheetEvidence(pane, "paired-interval", warning);
+
+            WithWorksheet(workbook, sheet =>
+            {
+                sheet.Cells["D20"].Value = "4.5";
+                return true;
+            });
+            await CheckPairedDifferenceCard(pane, 4, expectShapiroWilk: true);
+            var corrected = await WorksheetActionSnapshot(pane);
+            Check(corrected.S("token") != malformed.S("token")
+                && !corrected.S("text").Contains("misplaced number separator", StringComparison.Ordinal)
+                && before.SequenceEqual(WorksheetAnalysisDataTraffic(trace)) && !main.InOperation
+                && !main.MdiChildren.OfType<frmReportWebView>().Any(),
+                "correcting the number restores local paired diagnostics without another AI request or an analysis");
+        }
+        finally
+        {
+            CultureInfo.DefaultThreadCurrentCulture = originalDefault;
+            CultureInfo.CurrentCulture = originalCulture;
+            WithWorksheet(workbook, sheet =>
+            {
+                sheet.Cells["D19"].EntireRow.Hidden = false;
+                sheet.Cells[range].ClearContents();
+                sheet.Cells["D18:D20"].NumberFormat = "General";
+                workbook.RangeSelection = sheet.Cells[PairedSelection];
+                return true;
+            });
+        }
     }
 
     private static async Task CheckOtherIndependentIntervalBranches(frmMain main, ScriptAIPane pane, WorkbookView workbook, string trace)
