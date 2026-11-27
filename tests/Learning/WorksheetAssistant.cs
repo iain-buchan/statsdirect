@@ -178,12 +178,15 @@ internal static partial class Program
         var data = await context.CallAsync("statsdirect_read_data", separated);
         Check(data["worksheetReads"] == null && data["ranges"] == null && data["partial"] == null,
             "worksheet evidence is kept locally and outside the provider's tool response");
+        Check(!context.HasWorksheetReads && context.RData.Length == 0,
+            "reading the cells locally does not yet add evidence or save an R snapshot");
+        context.WorksheetReadSent(data);
         var reads = context.WorksheetReads;
         Check(reads.Count == 1 && reads[0].B("partial") && reads[0].A("ranges").Select(range => range.GetValue<string>())
             .SequenceEqual(["A1 (headings)", "A2:A4", "C2:C4"])
             && data.A("columns").Select(column => column.S("title")).SequenceEqual(["Column 3", "Age"]),
             "disjoint evidence identifies only the requested data columns and the row-1 text used as a title");
-        await context.CallAsync("statsdirect_read_data", separated);
+        context.WorksheetReadSent(await context.CallAsync("statsdirect_read_data", separated));
         Check(context.WorksheetReads.Count == 1, "repeating a read keeps one evidence entry");
 
         var invalid = (JsonObject)separated.DeepClone();
@@ -191,10 +194,10 @@ internal static partial class Program
         await Reject(() => context.CallAsync("statsdirect_read_data", invalid),
             "an oversize read cannot add worksheet evidence");
         Check(context.WorksheetReads.Count == 1, "a failed read adds no worksheet evidence");
-        await context.CallAsync("statsdirect_read_data", new JsonObject
+        context.WorksheetReadSent(await context.CallAsync("statsdirect_read_data", new JsonObject
         {
             ["documentId"] = grid.Id(), ["firstRow"] = 1, ["lastRow"] = 4, ["columns"] = new JsonArray(0, 1)
-        });
+        }));
         reads = context.WorksheetReads;
         Check(reads.Count == 2 && !reads[1].B("partial") && reads[1].A("ranges")[0]?.GetValue<string>() == "A1:B4",
             "a read of the whole used worksheet range is not marked as partial");
@@ -202,16 +205,17 @@ internal static partial class Program
         {
             ["documentId"] = grid.Id(), ["firstRow"] = 2, ["lastRow"] = 4, ["columns"] = new JsonArray(0, 1)
         });
+        context.WorksheetReadSent(withHeadings);
         reads = context.WorksheetReads;
         Check(reads.Count == 3 && !reads[2].B("partial")
             && reads[2].A("ranges").Select(range => range.GetValue<string>()).SequenceEqual(["A1:B1 (headings)", "A2:B4"])
             && withHeadings.A("columns").Select(column => column.S("title")).SequenceEqual(["Age", "Original heading"]),
             "row-1 titles and all data rows together cover the used worksheet range");
 
-        await context.CallAsync("statsdirect_read_data", new JsonObject
+        context.WorksheetReadSent(await context.CallAsync("statsdirect_read_data", new JsonObject
         {
             ["documentId"] = grid.Id(), ["firstRow"] = 3, ["lastRow"] = 4, ["columns"] = new JsonArray(0, 1)
-        });
+        }));
         reads = context.WorksheetReads;
         Check(reads.Count == 4 && reads[3].B("partial")
             && reads[3].A("ranges").Select(range => range.GetValue<string>()).SequenceEqual(["A1:B1 (headings)", "A3:B4"]),
@@ -294,6 +298,48 @@ internal static partial class Program
             && history.Any(message => message.S("text") == "[No reply was received.]")
             && history.All(message => message["worksheetReads"] == null),
             "the next provider request includes the interruption messages and excludes local worksheet evidence");
+    }
+
+    private static async Task TestRefusedWorksheetReceipt(WorkbookView view, ScriptAIPane pane, string trace)
+    {
+        const string marker = "FICTIONAL_REFUSED_WORKSHEET_CELL";
+        string cell = marker + new string('\\', 20_000);
+        Check(WithWorksheet(view, sheet => Enumerable.Range(1, 3).All(row => sheet.Cells[row, 2].Value == null)),
+            "the oversized response fixture uses otherwise empty cells");
+        WithWorksheet(view, sheet =>
+        {
+            sheet.Cells["C2:C4"].Value = cell;
+            return true;
+        });
+        try
+        {
+            int trafficStart = WorksheetAnalysisDataTraffic(trace).Length;
+            var reply = await WorksheetReply(pane, "WORKSHEET_AI_RECEIPT_TRANSPORT_LIMIT");
+            Check(!reply.B("read") && reply.S("error") == "Request a smaller range."
+                && WorksheetAnalysisDataTraffic(trace).Skip(trafficStart).All(line => !line.Contains(marker, StringComparison.Ordinal)),
+                "an oversized serialized tool result sends only the size refusal, without its cells");
+            var messages = (JsonArray)Field(Field(pane, "chat"), "Messages");
+            var answer = messages.Last(message => message.S("role") == "assistant");
+            Check(answer.A("worksheetReads").Count == 0 && !answer.S("rData").Contains(marker, StringComparison.Ordinal),
+                "a transport-refused worksheet read appears in neither Data used nor the answer's R snapshot");
+
+            reply = await WorksheetReply(pane, "WORKSHEET_AI_RECEIPT_KEEPS_DELIVERED");
+            answer = messages.Last(message => message.S("role") == "assistant");
+            var reads = answer.A("worksheetReads");
+            Check(reply.B("delivered") && !reply.B("read") && reads.Count == 1
+                && reads[0].A("ranges").Select(range => range.GetValue<string>()).SequenceEqual(["A1 (headings)", "A2:A4"])
+                && answer.S("rData").Contains("column_0", StringComparison.Ordinal)
+                && !answer.S("rData").Contains(marker, StringComparison.Ordinal),
+                "refusing a later read keeps only the earlier delivered cells in Data used and the R snapshot");
+        }
+        finally
+        {
+            WithWorksheet(view, sheet =>
+            {
+                sheet.Cells["C2:C4"].ClearContents();
+                return true;
+            });
+        }
     }
 
     private static async Task TestWorksheetAssistant(frmMain main, LearningService service, Action<AISecurityLevel> setSecurity, string trace)
@@ -396,6 +442,7 @@ internal static partial class Program
             await TestWorksheetRAnswer(main, service, grid, pane, trace);
             await CheckWorksheetPaneBinding(main, pane, grid, shared: true);
             await TestInterruptedWorksheetReceipts(grid, pane, trace);
+            await TestRefusedWorksheetReceipt(view, pane, trace);
 
             pane.ShareWorkbook.Checked = false;
             const string afterSharing = "WORKSHEET_AI_HISTORY_OFF";

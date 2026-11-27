@@ -550,7 +550,10 @@ internal sealed partial class ScriptAIPane : IDisposable
             var outgoing = worksheetMode && !worksheetShared && current.WorksheetHistoryShared
                 ? new JsonArray(current.Messages[^1].DeepClone()) : current.Messages;
             current.WorksheetHistoryShared |= worksheetShared;
-            var reply = await service.Tutor.ConverseAsync(reference, outgoing, tools, true, text => { if (!disposed && pending == request && chat == current) { partial = text; Render(); } }, CallTool, request.Token, report: reportMode, guidanceOnly: guidanceOnly, worksheet: worksheetMode);
+            var reply = await service.Tutor.ConverseAsync(reference, outgoing, tools, true,
+                text => { if (!disposed && pending == request && chat == current) { partial = text; Render(); } },
+                CallTool, request.Token, report: reportMode, guidanceOnly: guidanceOnly, worksheet: worksheetMode,
+                worksheetReadSent: worksheetMode ? context.WorksheetReadSent : null);
             context.Check(); current.Messages.Add(AssistantMessage(reply.Text)); partial = "";
             if (chat == current && script == origin && IsOpen)
             {

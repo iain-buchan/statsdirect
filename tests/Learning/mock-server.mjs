@@ -102,7 +102,12 @@ readline.createInterface({input:process.stdin}).on('line',line=>{
          ? await readFullHelpForProbe(call) : null;
        const scope=await call('statsdirect_workspace',{});
        const documents=scope.success?JSON.parse(scope.contentItems[0].text).documents:[];
-       const read=await call('statsdirect_read_data',{documentId:documents[0]?.documentId??'unapproved',firstRow:2,lastRow:4,columns:[0]});
+       const keepDelivered=question==='WORKSHEET_AI_RECEIPT_KEEPS_DELIVERED';
+       const transportLimit=question==='WORKSHEET_AI_RECEIPT_TRANSPORT_LIMIT'||keepDelivered;
+       const delivered=keepDelivered
+         ? await call('statsdirect_read_data',{documentId:documents[0]?.documentId??'unapproved',firstRow:2,lastRow:4,columns:[0]})
+         : null;
+       const read=await call('statsdirect_read_data',{documentId:documents[0]?.documentId??'unapproved',firstRow:2,lastRow:4,columns:[transportLimit?2:0]});
        if(question==='WORKSHEET_AI_RECEIPT_STOP_AFTER_READ') return;
        if(question==='WORKSHEET_AI_RECEIPT_STOP_AFTER_TEXT') {
          out({method:'item/agentMessage/delta',params:{threadId:p.threadId,turnId:id,itemId:'reply',delta:'Partial reply after a worksheet read.'}});
@@ -112,7 +117,9 @@ readline.createInterface({input:process.stdin}).on('line',line=>{
          out({method:'turn/completed',params:{threadId:p.threadId,turn:{id,status:'failed',error:{message:'Mock reply failed after a worksheet read.'}}}});
          return;
        }
-       if((question==='WORKSHEET_AI_R_ANSWER' || question==='WORKSHEET_AI_R_PRIOR_ANSWER' || question==='What is the mean age?') && read.success) {
+       if(transportLimit) {
+         answer=JSON.stringify({read:read.success,delivered:delivered?.success??false,error:read.success?'':read.contentItems[0].text});
+       } else if((question==='WORKSHEET_AI_R_ANSWER' || question==='WORKSHEET_AI_R_PRIOR_ANSWER' || question==='What is the mean age?') && read.success) {
          const data=JSON.parse(read.contentItems[0].text);
          const values=data.columns[0].values;
          const mean=values.reduce((sum,value)=>sum+value,0)/values.length;
