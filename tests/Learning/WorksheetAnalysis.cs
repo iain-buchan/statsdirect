@@ -2,6 +2,7 @@ using SpreadsheetGear.Windows.Forms;
 using StatsDirect.UI;
 using StatsDirect.UI.HtmlHelp;
 using StatsDirect.UI.Learning;
+using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
@@ -132,7 +133,7 @@ internal static partial class Program
                 "a changed range does not launch an analysis or create a report");
 
             ChooseRange(PairedSelection);
-            await CheckOtherPairedIntervalBranches(main, pane, workbook, trace);
+            await CheckOtherPairedIntervalBranches(main, pane, grid, workbook, trace);
             await CheckOtherIndependentIntervalBranches(main, pane, workbook, trace);
             pane.NewConversation();
             const string initialQuestion = "TRE_WORKSHEET_ANALYSIS_NEW_REPORT";
@@ -374,7 +375,7 @@ internal static partial class Program
                 : $"the {n}-pair decision explains and highlights the {expectedBranch} option while leaving the decision open");
     }
 
-    private static async Task CheckOtherPairedIntervalBranches(frmMain main, ScriptAIPane pane, WorkbookView workbook, string trace)
+    private static async Task CheckOtherPairedIntervalBranches(frmMain main, ScriptAIPane pane, frmSpreadsheetGear grid, WorkbookView workbook, string trace)
     {
         async Task StartKnownPairing()
         {
@@ -478,9 +479,15 @@ internal static partial class Program
         });
         try
         {
+            var oracle = await PairedShapeOracles();
             await StartKnownPairing();
             before = WorksheetAnalysisDataTraffic(trace);
             await CheckPairedDifferenceCard(pane, 100, expectShapiroWilk: true);
+            var boundary = grid.CheckSelectedPairedDifferences();
+            var expected = oracle["boundary100"];
+            Check(boundary.ShapiroWilkW is double w && Math.Abs(w - expected.W) < 5e-6
+                && boundary.ShapiroWilkP is double p && Math.Abs(p - expected.P) < 5e-6,
+                "at 100 pairs the retained Shapiro–Wilk check agrees with R");
             WithWorksheet(workbook, sheet =>
             {
                 workbook.RangeSelection = sheet.Cells[largeSelection];
@@ -488,6 +495,17 @@ internal static partial class Program
             });
             await CheckPairedDifferenceCard(pane, 101, expectShapiroWilk: false);
             await CheckPairedRecommendation(pane, 101, "large");
+            var largeCard = await WaitForWorksheetEvidence(pane, "paired-interval", "Shape check", "Skewness", "Excess kurtosis", "3× IQR");
+            Check(!largeCard.S("text").Contains("Small or medium · Non-normal differences", StringComparison.Ordinal)
+                && largeCard.S("text").Contains("Non-normal differences", StringComparison.Ordinal),
+                "the non-normal button has no small-sample qualifier at the 101-pair boundary");
+            CheckPairedShapeOracle(grid.CheckSelectedPairedDifferences(), oracle["boundary101"], "101-pair boundary");
+            await ClickWorksheetAction(pane, "normal");
+            await WaitForWorksheetEvidence(pane, "paired-interval", "more than 100 complete pairs", "large-sample", "non-normal");
+            await ClickWorksheetAction(pane, "non-normal");
+            await CheckWorksheetConfirmation(pane, "Wilcoxon signed ranks test", largeSelection, "A new report");
+            await ClickWorksheetAction(pane, "sample");
+            await WaitForWorksheetAction(pane, "paired-interval");
             await ClickWorksheetAction(pane, "large");
             await CheckWorksheetConfirmation(pane, "Paired Student t test", largeSelection, "A new report");
             Check(before.SequenceEqual(WorksheetAnalysisDataTraffic(trace))
@@ -504,6 +522,7 @@ internal static partial class Program
             await CheckRecommendationForDifferences([3, 3, 3, 3, 3, 3], null, "variation");
             await CheckRecommendationForDifferences(Enumerable.Repeat(3, 101).ToArray(), null, "variation");
             await CheckRecommendationForDifferences([1, 2], null);
+            await CheckLargePairedShapes(main, pane, grid, workbook, trace, oracle);
             Check(before.SequenceEqual(WorksheetAnalysisDataTraffic(trace)) && !main.InOperation,
                 "updating the paired recommendation from new local data sends no AI request and runs no analysis");
 
@@ -537,6 +556,127 @@ internal static partial class Program
                 return true;
             });
         }
+    }
+
+    private sealed record PairedShapeOracle(double[] Differences, double Lower, double Upper,
+        double Skewness, double ExcessKurtosis, int FarOutCount, double W, double P);
+
+    private static async Task<Dictionary<string, PairedShapeOracle>> PairedShapeOracles()
+    {
+        const string name = "worksheet-paired-shape-oracle";
+        await RunConversationR("", name, """
+            set.seed(5136)
+            centre <- qnorm(ppoints(101))
+            boundary <- rep(c(1, 2, 3, 4, 0), 20)
+            cases <- list(
+              boundary100 = boundary, boundary101 = c(boundary, 1),
+              normal101 = rnorm(101), normal500 = rnorm(500), normal5000 = rnorm(5000),
+              heavy = c(centre, -4.5, 4.5),
+              outlier = c(centre, 30),
+              skew = c(rep(0, 40), rep(1, 65), rep(3.5, 10))
+            )
+            lines <- vapply(names(cases), function(name) {
+              x <- cases[[name]]
+              q <- quantile(x, c(.25, .75), type = 6)
+              z <- x - mean(x)
+              m2 <- mean(z^2)
+              far <- sum(x < q[1] - 3*diff(q) | x > q[2] + 3*diff(q))
+              sw <- if (length(x) <= 100) {
+                with(shapiro.test(x), c(statistic, p.value))
+              } else {
+                c(NA_real_, NA_real_)
+              }
+              results <- c(q, mean(z^3)/m2^1.5, mean(z^4)/m2^2 - 3, far, sw, x)
+              paste(c(name, sprintf("%.17g", results)), collapse = ",")
+            }, "")
+            writeLines(lines, "paired-shape.csv")
+            cat("PAIRED_SHAPE_ORACLE_OK\n")
+            """, "PAIRED_SHAPE_ORACLE_OK");
+        var oracle = new Dictionary<string, PairedShapeOracle>();
+        foreach (var line in File.ReadLines(Path.Combine(artifacts, name, "paired-shape.csv")))
+        {
+            var fields = line.Split(',');
+            var values = fields.Skip(1)
+                .Select(value => value == "NA" ? double.NaN : double.Parse(value, CultureInfo.InvariantCulture)).ToArray();
+            oracle.Add(fields[0], new PairedShapeOracle(values[7..], values[0], values[1], values[2], values[3], (int)values[4], values[5], values[6]));
+        }
+        return oracle;
+    }
+
+    private static void CheckPairedShapeOracle(PairedDifferenceDiagnostics diagnostics, PairedShapeOracle expected, string label)
+    {
+        Check(diagnostics.Count == expected.Differences.Length && diagnostics.Shape is { } shape
+            && Math.Abs(shape.LowerQuartile - expected.Lower) < 1e-10
+            && Math.Abs(shape.UpperQuartile - expected.Upper) < 1e-10
+            && shape.Skewness is double skewness && Math.Abs(skewness - expected.Skewness) < 1e-10
+            && shape.ExcessKurtosis is double kurtosis && Math.Abs(kurtosis - expected.ExcessKurtosis) < 1e-10
+            && shape.FarOutCount == expected.FarOutCount,
+            $"{label}: quartiles, skewness, excess kurtosis and far-out count agree with base R");
+    }
+
+    private static async Task CheckLargePairedShapes(frmMain main, ScriptAIPane pane, frmSpreadsheetGear grid,
+        WorkbookView workbook, string trace, Dictionary<string, PairedShapeOracle> oracle)
+    {
+        string[] before = WorksheetAnalysisDataTraffic(trace);
+        string previousRange = null;
+        foreach (string name in new[] { "heavy", "outlier", "skew", "normal101", "normal500", "normal5000" })
+        {
+            var expected = oracle[name];
+            int n = expected.Differences.Length;
+            string range = $"H1:I{n + 1}";
+            WithWorksheet(workbook, sheet =>
+            {
+                if (previousRange != null) sheet.Cells[previousRange].ClearContents();
+                var cells = new object[n + 1, 2];
+                cells[0, 0] = "Before";
+                cells[0, 1] = "After";
+                for (int index = 0; index < n; index++)
+                {
+                    cells[index + 1, 0] = expected.Differences[index];
+                    cells[index + 1, 1] = 0.0;
+                }
+                sheet.Cells[range].Value = cells;
+                workbook.RangeSelection = sheet.Cells[range];
+                return true;
+            });
+            previousRange = range;
+
+            await CheckPairedDifferenceCard(pane, n, expectShapiroWilk: false);
+            await WaitForWorksheetEvidence(pane, "paired-interval", "Shape check", "Skewness", "Excess kurtosis", "3× IQR");
+            var actual = grid.CheckSelectedPairedDifferences();
+            CheckPairedShapeOracle(actual, expected, name);
+            bool normal = name.StartsWith("normal", StringComparison.Ordinal);
+            if (normal)
+            {
+                await CheckPairedRecommendation(pane, n, "large");
+                Check(!actual.HasPotentialOutlier && !actual.HasSkewSignal && !actual.Shape.HasHeavyTails,
+                    $"{n} seeded normal differences have no substantial-departure warning");
+            }
+            else
+            {
+                await CheckPairedRecommendation(pane, n, null, "Wilcoxon signed ranks", "symmetric", "mean difference");
+                Check(name switch
+                {
+                    "heavy" => actual.Shape.HasHeavyTails && !actual.HasPotentialOutlier && !actual.HasSkewSignal,
+                    "outlier" => actual.HasPotentialOutlier && actual.Shape.FarOutCount == 1,
+                    "skew" => actual.HasSkewSignal && !actual.HasPotentialOutlier,
+                    _ => false
+                }, $"{name}: the shape check flags the intended departure using all pairs");
+                await ClickWorksheetAction(pane, "non-normal");
+                await CheckWorksheetConfirmation(pane, "Wilcoxon signed ranks test", range, "A new report");
+                await ClickWorksheetAction(pane, "sample");
+                await WaitForWorksheetAction(pane, "paired-interval");
+            }
+        }
+        WithWorksheet(workbook, sheet =>
+        {
+            sheet.Cells[previousRange].ClearContents();
+            workbook.RangeSelection = sheet.Cells[PairedSelection];
+            return true;
+        });
+        Check(before.SequenceEqual(WorksheetAnalysisDataTraffic(trace)) && !main.InOperation
+            && !main.MdiChildren.OfType<frmReportWebView>().Any(),
+            "all large-pair shape checks and Wilcoxon confirmations stay local and run no analysis");
     }
 
     private static async Task CheckOtherIndependentIntervalBranches(frmMain main, ScriptAIPane pane, WorkbookView workbook, string trace)

@@ -20434,7 +20434,7 @@ ${content}</tr>
           button(paired ? "Check selected pairs" : diagnostics.length ? "Use these as separate samples" : "Check two sample columns", "check");
         button(paired ? "Large sample (more than 100 complete pairs)" : "Large samples (more than 100 in each group)", "large");
         button(paired ? "Small or medium \xB7 Approximately normal differences" : "Small or medium \xB7 Approximately normal within groups", "normal");
-        button(paired ? "Small or medium \xB7 Non-normal differences" : "Non-normal distributions within groups", "non-normal");
+        button(paired ? "Non-normal differences" : "Non-normal distributions within groups", "non-normal");
         button("Change design", "back");
       } else if (action.kind === "clarify") {
         const question = document.createElement("p");
