@@ -25,15 +25,18 @@ internal sealed class QuestionContext
     private readonly bool guidanceOnly;
     private readonly CancellationToken token;
     private readonly bool scriptOnly;
+    private readonly bool trackWorksheetReads;
+    private readonly List<JsonObject> worksheetReads = new();
     private readonly Dictionary<string, (frmSpreadsheetGear Grid, JsonObject Data)> datasets = new();
     private readonly Dictionary<string, Task<JsonNode>> calculations = new();
     // Full local source is kept for Open R code, independently of the bounded AI excerpt.
     internal string RSource { get; }
     internal string RData => string.Join("\n", datasets.Values.Select(d => ConversationRScript.Dataset(d.Data)));
-    internal QuestionContext(IEnumerable<StatsDirectForm> documents, bool scriptOnly, CancellationToken token, AISharingConsent sharing = null, ChatGPTTutor tutor = null, bool guidanceOnly = false)
+    internal JsonArray WorksheetReads => new(worksheetReads.Select(read => read.DeepClone()).ToArray());
+    internal QuestionContext(IEnumerable<StatsDirectForm> documents, bool scriptOnly, CancellationToken token, AISharingConsent sharing = null, ChatGPTTutor tutor = null, bool guidanceOnly = false, bool trackWorksheetReads = false)
     {
         tutor?.CheckPolicy(mayShareData: !guidanceOnly);
-        this.tutor = tutor; this.guidanceOnly = guidanceOnly;
+        this.tutor = tutor; this.guidanceOnly = guidanceOnly; this.trackWorksheetReads = trackWorksheetReads;
         this.documents = guidanceOnly ? [] : documents.ToArray(); this.token = token; this.scriptOnly = scriptOnly;
         this.sharing = guidanceOnly ? null : sharing; sharingRevision = this.sharing?.Revision ?? 0;
         RSource = string.Join("\n\n", this.documents.OfType<frmScript>().Where(s => s.LearningLanguage == "R").Select(s => s.LearningScript));
@@ -112,11 +115,14 @@ internal sealed class QuestionContext
         var doc = documents.FirstOrDefault(d => d.Id() == arguments.S("documentId")) ?? throw new InvalidOperationException("That document was not approved for this question.");
         if (name == "statsdirect_read_data" && doc is frmSpreadsheetGear grid)
         {
-            var data = grid.LearningRead(arguments); Check();
+            JsonObject evidence = null;
+            var data = grid.LearningRead(arguments, trackWorksheetReads ? read => evidence = read : null);
+            Check();
             string id = Guid.NewGuid().ToString("N"); data["datasetId"] = id;
             datasets[id] = (grid, (JsonObject)data.DeepClone());
             // The R editor uses the same literal values, never a later read of the worksheet.
             data["rCode"] = ConversationRScript.Dataset(data);
+            if (evidence != null && !worksheetReads.Any(read => JsonNode.DeepEquals(read, evidence))) worksheetReads.Add(evidence);
             return data;
         }
         if (name == "statsdirect_read_document")

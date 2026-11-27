@@ -1,5 +1,6 @@
 using SpreadsheetGear.Windows.Forms;
 using StatsDirect.UI;
+using StatsDirect.UI.HtmlHelp;
 using StatsDirect.UI.Learning;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -9,6 +10,7 @@ internal static partial class Program
     private const string WorksheetOpeningText = "Do you want me to help you analyse your data?";
     private const string PrivateWorksheet = "TRE_PRIVATE_ANALYSIS_WORKBOOK";
     private const string PairedSelection = "A1:B6";
+    private const string KnownPairedQuestion = "TRE_WORKSHEET_ANALYSIS_PAIRED_INTERVAL";
     private const string InitialSelection = "A1:A6";
     private const string PrivateCell = "TRE_PRIVATE_ANALYSIS_CELL";
 
@@ -32,7 +34,8 @@ internal static partial class Program
     private static async Task RunWorksheetAnalysisFixture(frmMain main)
     {
         string trace = Path.Combine(root, "worksheet-analysis-wire.jsonl");
-        using var tutor = WorksheetMockTutor(Path.Combine(root, "worksheet-analysis-account"), () => AISecurityLevel.DataSharingRestricted, trace);
+        var securityLevel = AISecurityLevel.DataSharingRestricted;
+        using var tutor = WorksheetMockTutor(Path.Combine(root, "worksheet-analysis-account"), () => securityLevel, trace);
         using var service = new LearningService(main, Path.Combine(root, "Worksheet Analysis Learning"), tutor);
         typeof(frmMain).GetField("learning", Members)!.SetValue(main, service);
         var otherWorkbook = (frmSpreadsheetGear)main.CreateGrid("Other test workbook");
@@ -76,27 +79,47 @@ internal static partial class Program
             Check(!main.InOperation && !main.MdiChildren.OfType<frmReportWebView>().Any()
                 && initialTraffic.SequenceEqual(WorksheetAnalysisDataTraffic(trace)),
                 "browsing and staging commands from three Analyse picker categories run nothing and send nothing");
-            var offer = await WaitForWorksheetAction(pane, "compare");
-            Check(offer.S("text").Contains("Compare two means", StringComparison.Ordinal),
-                "the shortcut specifies that it compares means");
-            await ClickWorksheetAction(pane, "compare");
+            await CheckChooseMethodOpening(pane);
+            var designReply = await WorksheetReply(pane, "TRE_WORKSHEET_ANALYSIS_DESIGN");
+            Check(designReply["pending"].S("state") == "awaiting_design",
+                "the model offers study-design choices when comparing quantitative means");
+            string[] designTraffic = WorksheetAnalysisDataTraffic(trace);
             var designChoices = await WaitForWorksheetAction(pane, "choose");
             Check(designChoices.A("choices").Select(item => item.GetValue<string>()).SequenceEqual(["paired", "independent"])
                 && designChoices.S("text").Contains("Same people or units", StringComparison.Ordinal),
                 "the worksheet conversation offers two explicit study-design choices");
             await ClickWorksheetAction(pane, "paired");
+            var pairedChoices = await WaitForWorksheetAction(pane, "paired-interval");
+            Check(pairedChoices.A("choices").Select(item => item.GetValue<string>()).ToHashSet()
+                    .SetEquals(["large", "normal", "non-normal", "back"]),
+                "matched measurements ask about sample size and the distribution of differences before offering a method");
+            Check(pairedChoices.S("text").Contains("5 complete pairs", StringComparison.OrdinalIgnoreCase)
+                && !pairedChoices.S("text").Contains("How many complete pairs", StringComparison.OrdinalIgnoreCase)
+                && !pairedChoices.S("text").Contains("How are the within-pair differences distributed?", StringComparison.OrdinalIgnoreCase),
+                "a clear paired selection supplies its complete-pair count and replaces the generic distribution question");
+            await CheckPairedDifferenceCard(pane, 5, expectShapiroWilk: true);
+            await CheckPairedRecommendation(pane, 5, "normal", "Shapiro–Wilk", "limited evidence");
+            var diagnostics = grid.CheckSelectedPairedDifferences();
+            // R 4.6.2: shapiro.test(c(11,14,17,22,23) - c(10,11,15,20,19)).
+            Check(diagnostics.Count == 5 && diagnostics.ShapiroWilkW is double w && diagnostics.ShapiroWilkP is double p
+                && Math.Abs(w - 0.96085899914851) < 0.000005 && Math.Abs(p - 0.81395212735703) < 0.000005,
+                "the local normality check agrees with base R on the within-pair differences");
+            await ClickWorksheetAction(pane, "large");
+            await WaitForWorksheetEvidence(pane, "paired-interval", "at most 100 complete pairs");
+            await ClickWorksheetAction(pane, "normal");
             var local = await CheckWorksheetConfirmation(pane, "Paired Student t test", PairedSelection, "A new report");
-            await ClickWorksheetAction(pane, "change");
+            await ClickWorksheetAction(pane, "sample");
+            await WaitForWorksheetAction(pane, "paired-interval");
+            await ClickWorksheetAction(pane, "back");
             await WaitForWorksheetAction(pane, "choose");
             await ClickWorksheetAction(pane, "independent");
+            await WaitForWorksheetAction(pane, "independent-interval");
+            await ClickWorksheetAction(pane, "normal");
             await CheckWorksheetConfirmation(pane, "Unpaired Student t test", PairedSelection, "A new report");
             Check(!main.InOperation && !main.MdiChildren.OfType<frmReportWebView>().Any()
-                && initialTraffic.SequenceEqual(WorksheetAnalysisDataTraffic(trace)),
+                && designTraffic.SequenceEqual(WorksheetAnalysisDataTraffic(trace)),
                 "choosing and changing the method changes only the local confirmation");
-            await browser.ExecuteScriptAsync("window.chrome.webview.postMessage(" + JsonSerializer.Serialize(new
-            {
-                action = "worksheetAnalysis", token = local.S("token"), choice = "continue", context = (int)Field(pane.Transcript, "context")
-            }) + ")");
+            await PostWorksheetAction(pane, local.S("token"), "continue");
             await Task.Delay(80);
             Check(!main.InOperation && (await WorksheetActionSnapshot(pane)).S("kind") == "confirm",
                 "a stale Continue button cannot confirm a different method");
@@ -109,6 +132,9 @@ internal static partial class Program
                 "a changed range does not launch an analysis or create a report");
 
             ChooseRange(PairedSelection);
+            await CheckOtherPairedIntervalBranches(main, pane, workbook, trace);
+            await CheckOtherIndependentIntervalBranches(main, pane, workbook, trace);
+            pane.NewConversation();
             const string initialQuestion = "TRE_WORKSHEET_ANALYSIS_NEW_REPORT";
             var response = await WorksheetReply(pane, initialQuestion);
             var tools = response.A("tools").Select(tool => tool.GetValue<string>()).ToHashSet();
@@ -121,8 +147,8 @@ internal static partial class Program
                     && method.S("id").Length > 0 && method.S("menuPath").Contains("Analysis", StringComparison.Ordinal)),
                 "restricted lookup returns compact, bounded native menu identities");
             Check(!response.B("workspace") && !response.B("read") && !response.B("calculation")
-                && !response.B("invalid") && !response.B("unknownMethod"),
-                "the restricted transport refuses workbook scope, cell reads, direct calculations, arbitrary methods and AI-selected columns");
+                && !response.B("invalid") && !response.B("unknownMethod") && !response.B("clarification"),
+                "the restricted transport refuses workbook scope, cell reads, direct calculations, arbitrary methods, AI-selected columns and multi-turn clarification");
             var receipt = response["pending"] as JsonObject;
             Check(receipt.S("state") == "pending_review" && receipt.S("operation") == "TPaired"
                 && receipt.S("method") == "Paired Student t test" && receipt.ContainsKey("message")
@@ -136,11 +162,8 @@ internal static partial class Program
             string stagedToken = (await WorksheetActionSnapshot(pane)).S("token");
             otherWorkbook.Activate();
             await CheckWorksheetPaneBinding(main, pane, otherWorkbook, shared: false);
-            await WaitForWorksheetAction(pane, "compare");
-            await browser.ExecuteScriptAsync("window.chrome.webview.postMessage(" + JsonSerializer.Serialize(new
-            {
-                action = "worksheetAnalysis", token = stagedToken, choice = "continue", context = (int)Field(pane.Transcript, "context")
-            }) + ")");
+            await WaitForWorksheetAction(pane, "empty", ["example", "help"]);
+            await PostWorksheetAction(pane, stagedToken, "continue");
             await Task.Delay(80);
             Check(stagedToken.Length > 0 && !main.InOperation && !main.MdiChildren.OfType<frmReportWebView>().Any()
                 && beforeApproval.SequenceEqual(WorksheetAnalysisDataTraffic(trace)),
@@ -205,6 +228,8 @@ internal static partial class Program
             await WaitForWorksheetAction(pane, "choose");
             beforeApproval = WorksheetAnalysisDataTraffic(trace);
             await ClickWorksheetAction(pane, "independent");
+            await WaitForWorksheetAction(pane, "independent-interval");
+            await ClickWorksheetAction(pane, "normal");
             await CheckWorksheetConfirmation(pane, "Unpaired Student t test", PairedSelection, chosen.Text);
             await ContinueWorksheetAnalysis(main, pane, "Unpaired Student t test", () => CheckWorksheetUnpairedResult(chosen, 2));
             Check(await WorksheetAnalysisResultCount(other) == 0 && ReferenceEquals(main.SelectedReportWindow, chosen),
@@ -260,9 +285,8 @@ internal static partial class Program
             pane.Composer.Text = "TRE_WORKSHEET_ANALYSIS_R_EXAMPLE";
             await pane.SendAsync();
             await pane.Transcript.SettledAsync();
-            var browseOnly = await WaitForWorksheetAction(pane, "compare");
-            Check(browseOnly.A("choices").Select(choice => choice.GetValue<string>()).SequenceEqual(["browse"])
-                && await browser.ExecuteScriptAsync("""
+            await CheckChooseMethodOpening(pane);
+            Check(await browser.ExecuteScriptAsync("""
                 (() => {
                     const section = [...document.querySelectorAll('.message.assistant:not(.worksheet-analysis)')].at(-1)?.querySelector('details.r-code-disclosure');
                     return !!section && !section.open && !!section.querySelector('[data-code=copy]') && !!section.querySelector('[data-code=open]');
@@ -281,6 +305,12 @@ internal static partial class Program
                 && !wire.Contains("4.706787", StringComparison.Ordinal) && !wire.Contains("0.009261696", StringComparison.Ordinal)
                 && !wire.Contains("differences between Before and After", StringComparison.Ordinal),
                 "neither workbook metadata and values nor native result content appear in the wire trace, including the next question");
+
+            securityLevel = AISecurityLevel.Unrestricted;
+            await CheckWorksheetClarification(main, pane, trace, chosen, ChooseRange);
+
+            securityLevel = AISecurityLevel.DataSharingRestricted;
+            await CheckWorksheetOpening(main, service, otherWorkbook, trace);
         }
         finally
         {
@@ -295,6 +325,489 @@ internal static partial class Program
         }
     }
 
+    private static Task CheckWorksheetSelectionLabel(ScriptAIPane pane, string expected)
+    {
+        var label = ((Control)Field(pane, "view")).Controls.Find("worksheetSelection", true).Single();
+        return Wait(() => label.Visible && label.Text.Replace("$", "", StringComparison.Ordinal) == expected,
+            "worksheet AI displays " + expected);
+    }
+
+    private static async Task<JsonNode> WaitForWorksheetEvidence(ScriptAIPane pane, string kind, params string[] evidence)
+    {
+        JsonNode action = null;
+        for (int attempt = 0; attempt < 100; attempt++)
+        {
+            action = await WorksheetActionSnapshot(pane);
+            if (Matches(action)) break;
+            await Task.Delay(50);
+        }
+        Check(Matches(action), $"the {kind} card shows {string.Join(", ", evidence)}");
+        return action;
+
+        bool Matches(JsonNode card) => card.S("kind") == kind
+            && evidence.All(text => card.S("text").Contains(text, StringComparison.Ordinal));
+    }
+
+    private static async Task CheckPairedDifferenceCard(ScriptAIPane pane, int n, bool expectShapiroWilk)
+    {
+        string count = $"{n} complete pairs";
+        var card = await WaitForWorksheetEvidence(pane, "paired-interval", count);
+        string text = card.S("text");
+        bool hasShapiroWilk = text.Contains("W =", StringComparison.Ordinal) && text.Contains("P =", StringComparison.Ordinal);
+        Check(hasShapiroWilk == expectShapiroWilk && !card.A("choices").Any(choice => choice.GetValue<string>() == "check"),
+            $"the automatic local check displays {count} and removes the check button"
+                + (expectShapiroWilk ? " while showing Shapiro–Wilk W and P" : ""));
+    }
+
+    private static async Task CheckPairedRecommendation(ScriptAIPane pane, int n, string expectedBranch, params string[] reasons)
+    {
+        string heading = expectedBranch == null ? "Review the differences" : "Suggested branch";
+        var card = await WaitForWorksheetEvidence(pane, "paired-interval", $"{n} complete pairs", heading);
+        var recommendations = card.A("recommended");
+        bool correctBranch = expectedBranch == null ? recommendations.Count == 0
+            : recommendations.Count == 1 && recommendations[0].S("choice") == expectedBranch
+                && recommendations[0].S("label").StartsWith("Suggested · ", StringComparison.Ordinal);
+        string text = card.S("text");
+        Check(correctBranch && reasons.All(reason => text.Contains(reason, StringComparison.OrdinalIgnoreCase))
+            && !card.A("choices").Any(choice => choice.GetValue<string>() == "continue"),
+            expectedBranch == null ? $"the {n}-pair decision explains why it needs review before suggesting a test"
+                : $"the {n}-pair decision explains and highlights the {expectedBranch} option while leaving the decision open");
+    }
+
+    private static async Task CheckOtherPairedIntervalBranches(frmMain main, ScriptAIPane pane, WorkbookView workbook, string trace)
+    {
+        async Task StartKnownPairing()
+        {
+            var reply = await WorksheetReply(pane, KnownPairedQuestion);
+            Check(reply["pending"].S("state") == "awaiting_distribution"
+                && !reply.B("invalidDesign") && !reply.B("extraDesign"),
+                "the model can open the distribution decision directly for an already-matched design");
+            await WaitForWorksheetAction(pane, "paired-interval");
+        }
+
+        WithWorksheet(workbook, sheet =>
+        {
+            workbook.RangeSelection = sheet.Cells["A1"];
+            return true;
+        });
+        await StartKnownPairing();
+        await CheckWorksheetSelectionLabel(pane, "Current cell: Fictional data!A1");
+        var undecided = await WorksheetActionSnapshot(pane);
+        Check(undecided.S("text").Contains("How many complete pairs", StringComparison.OrdinalIgnoreCase)
+            && !undecided.S("text").Contains("Local check found", StringComparison.Ordinal)
+            && undecided.A("choices").Any(choice => choice.GetValue<string>() == "check"),
+            "the paired card offers the local check when only one cell is current");
+        string[] before = WorksheetAnalysisDataTraffic(trace);
+        await ClickWorksheetAction(pane, "check");
+        var invalid = await WaitForWorksheetEvidence(pane, "paired-interval", "Select two adjacent");
+        Check(invalid.A("choices").Any(choice => choice.GetValue<string>() == "check")
+            && !invalid.S("text").Contains("Local check found", StringComparison.Ordinal),
+            "checking a single cell explains the required selection in the paired card");
+
+        WithWorksheet(workbook, sheet =>
+        {
+            workbook.RangeSelection = sheet.Cells[PairedSelection];
+            return true;
+        });
+        await CheckWorksheetSelectionLabel(pane, "Selection: Fictional data!" + PairedSelection);
+        var selected = await WaitForWorksheetEvidence(pane, "paired-interval", "5 complete pairs");
+        Check(!selected.S("text").Contains("How many complete pairs", StringComparison.OrdinalIgnoreCase)
+            && !selected.S("text").Contains("Select two adjacent", StringComparison.Ordinal)
+            && !selected.A("choices").Any(choice => choice.GetValue<string>() == "check")
+            && before.SequenceEqual(WorksheetAnalysisDataTraffic(trace)),
+            "selecting paired data clears the earlier message and shows the evidence without an AI turn");
+        await ClickWorksheetAction(pane, "non-normal");
+        await CheckWorksheetConfirmation(pane, "Wilcoxon signed ranks test", PairedSelection, "A new report");
+        Check(before.SequenceEqual(WorksheetAnalysisDataTraffic(trace)),
+            "the non-normal branch prepares Wilcoxon signed ranks locally");
+
+        const string largeSelection = "H1:I103";
+        WithWorksheet(workbook, sheet =>
+        {
+            object[,] values = new object[103, 2];
+            values[0, 0] = "Large Before";
+            values[0, 1] = "Large After";
+            for (int row = 1; row <= 101; row++)
+            {
+                values[row, 0] = row + row % 5;
+                values[row, 1] = row;
+            }
+            values[102, 0] = 102; // One unmatched observation must not count as a pair.
+            sheet.Cells[largeSelection].Value = values;
+            workbook.RangeSelection = sheet.Cells["H1:I101"];
+            return true;
+        });
+        try
+        {
+            await StartKnownPairing();
+            before = WorksheetAnalysisDataTraffic(trace);
+            await CheckPairedDifferenceCard(pane, 100, expectShapiroWilk: true);
+            WithWorksheet(workbook, sheet =>
+            {
+                workbook.RangeSelection = sheet.Cells[largeSelection];
+                return true;
+            });
+            await CheckPairedDifferenceCard(pane, 101, expectShapiroWilk: false);
+            await CheckPairedRecommendation(pane, 101, "large");
+            await ClickWorksheetAction(pane, "large");
+            await CheckWorksheetConfirmation(pane, "Paired Student t test", largeSelection, "A new report");
+            Check(before.SequenceEqual(WorksheetAnalysisDataTraffic(trace))
+                && !main.InOperation && !main.MdiChildren.OfType<frmReportWebView>().Any(),
+                "the large-sample branch prepares a paired t test without sending data or running an analysis");
+
+            await StartKnownPairing();
+            before = WorksheetAnalysisDataTraffic(trace);
+            await CheckRecommendationForDifferences(
+                [-109, -108, -107, -106, -105, -104, -103, -102, -101, -100, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109],
+                "non-normal", "Shapiro–Wilk", "symmetric");
+            await CheckRecommendationForDifferences([-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 1000], null, "box-plot");
+            await CheckRecommendationForDifferences([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 4, 5, 6, 7, 8], null, "skewness");
+            await CheckRecommendationForDifferences([3, 3, 3, 3, 3, 3], null, "variation");
+            await CheckRecommendationForDifferences(Enumerable.Repeat(3, 101).ToArray(), null, "variation");
+            await CheckRecommendationForDifferences([1, 2], null);
+            Check(before.SequenceEqual(WorksheetAnalysisDataTraffic(trace)) && !main.InOperation,
+                "updating the paired recommendation from new local data sends no AI request and runs no analysis");
+
+            async Task CheckRecommendationForDifferences(int[] differences, string branch, params string[] reasons)
+            {
+                WithWorksheet(workbook, sheet =>
+                {
+                    var values = new object[differences.Length + 1, 2];
+                    values[0, 0] = "Before";
+                    values[0, 1] = "After";
+                    for (int i = 0; i < differences.Length; i++)
+                    {
+                        values[i + 1, 0] = 20 + differences[i];
+                        values[i + 1, 1] = 20;
+                    }
+                    sheet.Cells[largeSelection].ClearContents();
+                    var pairs = sheet.Cells[$"H1:I{differences.Length + 1}"];
+                    pairs.Value = values;
+                    workbook.RangeSelection = pairs;
+                    return true;
+                });
+                await CheckPairedRecommendation(pane, differences.Length, branch, reasons);
+            }
+        }
+        finally
+        {
+            WithWorksheet(workbook, sheet =>
+            {
+                sheet.Cells[largeSelection].ClearContents();
+                workbook.RangeSelection = sheet.Cells[PairedSelection];
+                return true;
+            });
+        }
+    }
+
+    private static async Task CheckOtherIndependentIntervalBranches(frmMain main, ScriptAIPane pane, WorkbookView workbook, string trace)
+    {
+        const string knownIndependentQuestion = "TRE_WORKSHEET_ANALYSIS_INDEPENDENT_INTERVAL";
+        const string testCells = "J1:K103";
+
+        void SetSamples(int n1, int n2, string selection)
+        {
+            WithWorksheet(workbook, sheet =>
+            {
+                object[,] values = new object[103, 2];
+                values[0, 0] = "Independent sample x";
+                values[0, 1] = "Independent sample y";
+                for (int i = 0; i < n1; i++) values[i + 1, 0] = i + 2;
+                for (int i = 0; i < n2; i++) values[i + 1, 1] = 2 * i + 1;
+                sheet.Cells[testCells].Value = values;
+                workbook.RangeSelection = sheet.Cells[selection];
+                return true;
+            });
+        }
+
+        async Task<JsonNode> StartKnownIndependence()
+        {
+            var reply = await WorksheetReply(pane, knownIndependentQuestion);
+            Check(reply["pending"].S("state") == "awaiting_distribution"
+                && !reply.B("invalidDesign") && !reply.B("extraDesign"),
+                "a known independent design opens the sample-size and distribution card without staging a test");
+            return await WaitForWorksheetAction(pane, "independent-interval");
+        }
+
+        async Task CheckIndependentCounts(int n1, int n2, bool expectShapiroWilk)
+        {
+            string previousToken = (await WorksheetActionSnapshot(pane)).S("token");
+            await ClickWorksheetAction(pane, "check");
+            string first = $"Column 1: n = {n1}", second = $"Column 2: n = {n2}";
+            JsonNode checkedCard = null;
+            for (int i = 0; i < 100; i++)
+            {
+                checkedCard = await WorksheetActionSnapshot(pane);
+                if (Confirmed(checkedCard)) break;
+                await Task.Delay(50);
+            }
+            string current = checkedCard.S("text");
+            bool hasShapiroWilk = current.Contains("W =", StringComparison.Ordinal) && current.Contains("P =", StringComparison.Ordinal);
+            Check(Confirmed(checkedCard) && hasShapiroWilk == expectShapiroWilk
+                && !current.Contains("Selected columns, if they hold the two samples separately:", StringComparison.Ordinal),
+                $"confirming the two sample columns displays counts {n1} and {n2} and removes the check button");
+
+            bool Confirmed(JsonNode card) => card.S("kind") == "independent-interval" && card.S("token") != previousToken
+                && card.S("text").Contains(first, StringComparison.Ordinal) && card.S("text").Contains(second, StringComparison.Ordinal)
+                && !card.A("choices").Any(choice => choice.GetValue<string>() == "check");
+        }
+
+        try
+        {
+            SetSamples(7, 4, "J1");
+            var ambiguous = await StartKnownIndependence();
+            await CheckWorksheetSelectionLabel(pane, "Current cell: Fictional data!J1");
+            Check(ambiguous.S("text").Contains("How many observations are there in each group?", StringComparison.Ordinal)
+                && !ambiguous.S("text").Contains("Column 1: n =", StringComparison.Ordinal),
+                "an ambiguous independent selection asks for group sizes");
+
+            string[] before = WorksheetAnalysisDataTraffic(trace);
+            const string smallSelection = "J1:K8";
+            WithWorksheet(workbook, sheet =>
+            {
+                workbook.RangeSelection = sheet.Cells[smallSelection];
+                return true;
+            });
+            await CheckWorksheetSelectionLabel(pane, "Selection: Fictional data!" + smallSelection);
+            var smallCard = await WaitForWorksheetEvidence(pane, "independent-interval", "Column 1: n = 7", "Column 2: n = 4");
+            Check(smallCard.A("choices").Select(value => value.GetValue<string>()).ToHashSet()
+                .SetEquals(["large", "normal", "non-normal", "check", "back"]),
+                "the independent numeric route offers sample-size and distribution choices");
+            Check(smallCard.S("text").Contains("Selected columns, if they hold the two samples separately:", StringComparison.Ordinal)
+                && smallCard.S("text").Contains("Use these as separate samples", StringComparison.Ordinal)
+                && smallCard.S("text").Contains("Column 1: n = 7", StringComparison.Ordinal)
+                && before.SequenceEqual(WorksheetAnalysisDataTraffic(trace)),
+                "selecting the two columns during the question updates local counts without sending an AI turn");
+            await CheckIndependentCounts(7, 4, expectShapiroWilk: true);
+            var diagnostics = ((frmSpreadsheetGear)main.ActiveMdiChild).CheckSelectedIndependentSamples();
+            // R 4.6.2: shapiro.test(2:8) and shapiro.test(c(1, 3, 5, 7)).
+            Check(diagnostics.First.Count == 7 && diagnostics.Second.Count == 4
+                && diagnostics.First.ShapiroWilkW is double w1 && diagnostics.First.ShapiroWilkP is double p1
+                && diagnostics.Second.ShapiroWilkW is double w2 && diagnostics.Second.ShapiroWilkP is double p2
+                && Math.Abs(w1 - 0.978001629412) < 0.000005 && Math.Abs(p1 - 0.949288562354) < 0.000005
+                && Math.Abs(w2 - 0.992912006801) < 0.000005 && Math.Abs(p2 - 0.971877057621) < 0.000005,
+                "the two independent normality checks agree with R even when their usable counts differ");
+            var checkedSmall = await WorksheetActionSnapshot(pane);
+            await PostWorksheetAction(pane, checkedSmall.S("token"), "large");
+            await WaitForWorksheetEvidence(pane, "independent-interval", "at most 100 observations in at least one sample");
+            await ClickWorksheetAction(pane, "non-normal");
+            await CheckWorksheetConfirmation(pane, "Mann-Whitney U (two-sample Wilcoxon) test", smallSelection, "A new report");
+            Check(before.SequenceEqual(WorksheetAnalysisDataTraffic(trace)),
+                "the non-normal independent branch stages Mann–Whitney without sending either sample");
+
+            SetSamples(101, 4, testCells);
+            await StartKnownIndependence();
+            before = WorksheetAnalysisDataTraffic(trace);
+            await CheckIndependentCounts(101, 4, expectShapiroWilk: true);
+            var mixedSize = await WorksheetActionSnapshot(pane);
+            await PostWorksheetAction(pane, mixedSize.S("token"), "large");
+            await WaitForWorksheetEvidence(pane, "independent-interval", "at most 100 observations in at least one sample");
+            Check(before.SequenceEqual(WorksheetAnalysisDataTraffic(trace)),
+                "one independent group above 100 does not make both groups large or send an AI request");
+
+            SetSamples(101, 102, testCells);
+            await StartKnownIndependence();
+            before = WorksheetAnalysisDataTraffic(trace);
+            await CheckIndependentCounts(101, 102, expectShapiroWilk: false);
+            await ClickWorksheetAction(pane, "large");
+            await CheckWorksheetConfirmation(pane, "Unpaired two-sample z(normal distribution) test", testCells, "A new report");
+            Check(before.SequenceEqual(WorksheetAnalysisDataTraffic(trace))
+                && !main.InOperation && !main.MdiChildren.OfType<frmReportWebView>().Any(),
+                "the large independent branch stages the native Z test without sending data or running the test");
+        }
+        finally
+        {
+            WithWorksheet(workbook, sheet =>
+            {
+                sheet.Cells[testCells].ClearContents();
+                workbook.RangeSelection = sheet.Cells[PairedSelection];
+                return true;
+            });
+        }
+    }
+
+    private static async Task CheckWorksheetOpening(frmMain main, LearningService service, frmSpreadsheetGear grid, string trace)
+    {
+        string[] before = WorksheetAnalysisDataTraffic(trace);
+        var pane = await OpenWorksheetAssistant(main, service, grid);
+        var empty = await WaitForWorksheetAction(pane, "empty", ["example", "help"]);
+        Check(empty.S("text").Contains("example workbook", StringComparison.OrdinalIgnoreCase)
+            && empty.S("text").Contains("Workbook help", StringComparison.OrdinalIgnoreCase)
+            && (await pane.Transcript.TextAsync()).Contains("This workbook is empty.", StringComparison.Ordinal),
+            "an empty workbook offers the example and workbook help");
+
+        var workbook = (WorkbookView)Field(grid, "workbookView");
+        WithWorksheet(workbook, sheet => { sheet.Cells["H12"].NumberFormat = "0.00"; return true; });
+        await WaitForWorksheetAction(pane, "empty", ["example", "help"]);
+        WithWorksheet(workbook, sheet => { sheet.Cells["H12"].Value = 0; return true; });
+        await CheckChooseMethodOpening(pane);
+        await PostWorksheetAction(pane, empty.S("token"), "example");
+        await Task.Delay(80);
+        Check(ReferenceEquals(main.ActiveMdiChild, grid), "a stale empty-workbook choice cannot open the example after data is entered");
+
+        WithWorksheet(workbook, sheet => { sheet.Cells["H12"].ClearContents(); return true; });
+        await WaitForWorksheetAction(pane, "empty", ["example", "help"]);
+        var otherSheet = WithWorksheet(workbook, sheet =>
+        {
+            var another = sheet.Workbook.Worksheets.Add();
+            another.Cells["E3"].Value = "Other worksheet value";
+            workbook.ActiveWorksheet = sheet;
+            return another;
+        });
+        await CheckChooseMethodOpening(pane);
+        WithWorksheet(workbook, _ => { otherSheet.Cells["E3"].ClearContents(); return true; });
+        await WaitForWorksheetAction(pane, "empty", ["example", "help"]);
+        var help = (HelpService)Field(SdApplication.SoleInstance, "htmlHelp");
+        await ClickWorksheetAction(pane, "help");
+        try
+        {
+            await Wait(() => help.IsVisible && help.View?.Browser.Source is Uri source
+                && source.AbsolutePath.EndsWith("/basics/worksheet.htm", StringComparison.Ordinal),
+                "the workbook help choice opens the local Workbook help topic", 20000);
+        }
+        finally { help.Hide(); }
+        await ClickWorksheetAction(pane, "example");
+        await Wait(() => main.ActiveMdiChild is frmSpreadsheetGear { Text: "Example workbook" },
+            "the example choice opens the bundled workbook");
+        var example = (frmSpreadsheetGear)main.ActiveMdiChild;
+        try
+        {
+            await CheckWorksheetPaneBinding(main, pane, example, shared: false);
+            await CheckChooseMethodOpening(pane);
+            Check(before.SequenceEqual(WorksheetAnalysisDataTraffic(trace)),
+                "opening workbook help and the example works without sending a question or workbook data");
+            await ClickWorksheetAction(pane, "guide");
+            const string guidance = "Help me choose a statistical method.";
+            await Wait(() => Field(pane, "pending") == null && WorksheetAnalysisDataTraffic(trace).Length > before.Length,
+                "the method guidance choice starts a conversation");
+            var request = LastWorksheetRequest(trace);
+            var messages = request.A("conversation");
+            Check(messages.Count == 1 && messages[0].S("text") == guidance
+                && !request.S("referenceContext").Contains(example.Text, StringComparison.Ordinal) && !main.InOperation,
+                "the method guidance choice sends a general question and leaves the workbook private under level 2");
+            await CheckWorksheetPickerConfirmation(main, pane, "calculator", "", reportExpected: false);
+            var exampleView = (WorkbookView)Field(example, "workbookView");
+            WithWorksheet(exampleView, sheet =>
+            {
+                var parametric = sheet.Workbook.Worksheets["Parametric"];
+                exampleView.ActiveWorksheet = parametric;
+                exampleView.RangeSelection = parametric.Cells["A:B"];
+                return true;
+            });
+            await WorksheetReply(pane, KnownPairedQuestion);
+            before = WorksheetAnalysisDataTraffic(trace);
+            await WaitForWorksheetAction(pane, "paired-interval");
+            await CheckPairedDifferenceCard(pane, 9, expectShapiroWilk: true);
+            await CheckPairedRecommendation(pane, 9, "normal", "Shapiro–Wilk", "limited evidence");
+            var pefr = example.CheckSelectedPairedDifferences();
+            // R 4.6.2 shapiro.test() on the nine bundled PEFR Before minus PEFR After values.
+            Check(pefr.Count == 9 && pefr.ShapiroWilkW is double w && pefr.ShapiroWilkP is double p
+                && Math.Abs(w - 0.9393052) < 0.000005 && Math.Abs(p - 0.5746038) < 0.000005
+                && before.SequenceEqual(WorksheetAnalysisDataTraffic(trace)),
+                "checking whole columns A:B of the bundled PEFR example agrees with R and sends nothing to the AI");
+        }
+        finally { CloseTestDocument(example); }
+    }
+
+    private static async Task CheckChooseMethodOpening(ScriptAIPane pane)
+    {
+        var offer = await WaitForWorksheetAction(pane, "compare", ["guide", "browse"]);
+        Check(offer.S("text").Contains("Help me choose a method", StringComparison.OrdinalIgnoreCase)
+            && offer.S("text").Contains("Browse methods", StringComparison.OrdinalIgnoreCase)
+            && !offer.S("text").Contains("Compare two means", StringComparison.OrdinalIgnoreCase),
+            "a populated workbook offers help choosing a method without singling out means");
+    }
+
+    private static async Task CheckWorksheetClarification(frmMain main, ScriptAIPane pane, string trace,
+        frmReportWebView report, Action<string> chooseRange)
+    {
+        const string question = "TRE_WORKSHEET_ANALYSIS_CLARIFY";
+        string[] goals = ["means", "ordered", "proportions", "association", "agreement", "unsure"];
+        string[] scales = ["quantitative", "ordinal", "binary", "nominal", "unsure"];
+        string[] designs = ["paired", "independent", "repeated", "unsure"];
+        int firstNewLine = WorksheetAnalysisDataTraffic(trace).Length;
+        int beforeResults = await WorksheetAnalysisResultCount(report);
+
+        pane.NewConversation();
+        var reply = await WorksheetReply(pane, question);
+        Check(reply.B("available") && reply.B("accepted") && !reply.B("invalid") && !reply.B("extra"),
+            "ordinary AI can ask clarifying questions through the typed tool without choosing workbook content");
+        var goal = await WaitForWorksheetAction(pane, "clarify", goals);
+        Check(goal.S("text").Contains("agreement", StringComparison.OrdinalIgnoreCase)
+            && !goal.S("text").Contains("Continue to analysis", StringComparison.OrdinalIgnoreCase),
+            "an unclear goal shows meaningful choices before any method confirmation");
+
+        await ClickWorksheetAction(pane, "agreement");
+        await WaitForWorksheetAction(pane, "clarify", scales);
+        Check(LastWorksheetRequest(trace).A("conversation").Last().S("text") == "I want to assess agreement between measurements.",
+            "the goal click answers the question in the same conversation");
+        int beforeOldClick = WorksheetAnalysisDataTraffic(trace).Count(line => JsonNode.Parse(line).S("method") == "turn/start");
+        await PostWorksheetAction(pane, goal.S("token"), "means");
+        await WaitForWorksheetAction(pane, "clarify", scales);
+        Check(WorksheetAnalysisDataTraffic(trace).Count(line => JsonNode.Parse(line).S("method") == "turn/start") == beforeOldClick,
+            "an old clarification button cannot replace the current question or send another answer");
+
+        await ClickWorksheetAction(pane, "ordinal");
+        await WaitForWorksheetAction(pane, "clarify", designs);
+        Check(LastWorksheetRequest(trace).A("conversation").Last().S("text") == "My outcome is an ordered score or category.",
+            "the scale click answers the next question without assuming means");
+
+        await ClickWorksheetAction(pane, "paired");
+        var confirmation = await WaitForWorksheetAction(pane, "confirm");
+        var request = LastWorksheetRequest(trace);
+        Check(request.A("conversation").Last().S("text") == "The measurements are matched on the same people or units."
+            && confirmation.S("text").Contains("Kappa", StringComparison.OrdinalIgnoreCase)
+            && !confirmation.S("text").Contains("Student t test", StringComparison.OrdinalIgnoreCase),
+            "matched ordinal agreement reaches a native Kappa proposal after all three choices");
+        Check(!main.InOperation && await WorksheetAnalysisResultCount(report) == beforeResults,
+            "answering clarification questions and staging a method do not start or publish an analysis");
+        string[] traffic = WorksheetAnalysisDataTraffic(trace).Skip(firstNewLine).ToArray();
+        Check(traffic.Count(line => JsonNode.Parse(line).S("method") == "turn/start") == 4
+            && traffic.All(line => !line.Contains(PrivateWorksheet, StringComparison.Ordinal) && !line.Contains(PrivateCell, StringComparison.Ordinal)),
+            "the three clicks send one answer each without sharing the unapproved worksheet");
+
+        pane.NewConversation();
+        chooseRange("A1");
+        pane.ShareWorkbook.Checked = true;
+        pane.Acknowledge.Checked = true;
+        try
+        {
+            await WorksheetReply(pane, question);
+            await WaitForWorksheetAction(pane, "clarify", goals);
+            await CheckWorksheetSelectionLabel(pane, "Current cell: Fictional data!A1");
+            Check(SharedSelection(LastWorksheetRequest(trace)) == "A1",
+                "the initial approved clarification uses the current cell");
+            string[] beforeRangeChange = WorksheetAnalysisDataTraffic(trace);
+            chooseRange(PairedSelection);
+            await CheckWorksheetSelectionLabel(pane, "Selection: Fictional data!" + PairedSelection);
+            await WaitForWorksheetAction(pane, "clarify", goals);
+            Check(beforeRangeChange.SequenceEqual(WorksheetAnalysisDataTraffic(trace)),
+                "selecting data during clarification sends nothing even when workbook sharing is approved");
+
+            await ClickWorksheetAction(pane, "agreement");
+            await WaitForWorksheetAction(pane, "clarify", scales);
+            var latest = LastWorksheetRequest(trace);
+            Check(WorksheetAnalysisDataTraffic(trace).Skip(beforeRangeChange.Length)
+                    .Count(line => JsonNode.Parse(line).S("method") == "turn/start") == 1
+                && latest.A("conversation").Last().S("text") == "I want to assess agreement between measurements."
+                && SharedSelection(latest) == PairedSelection && !main.InOperation
+                && await WorksheetAnalysisResultCount(report) == beforeResults,
+                "an unanswered clarification sends one answer with the current approved selection and starts no analysis");
+        }
+        finally
+        {
+            pane.ShareWorkbook.Checked = false;
+        }
+
+        static string SharedSelection(JsonNode request)
+        {
+            var documents = JsonNode.Parse(request.S("referenceContext")).A("documents");
+            return documents.Count == 1 && documents[0].S("title") == PrivateWorksheet
+                ? documents[0]["worksheet"].S("selection").Replace("$", "", StringComparison.Ordinal)
+                : "";
+        }
+    }
+
     private static async Task ShowWorksheetAnalysisDemo(frmMain main)
     {
         var tutor = WorksheetMockTutor(Path.Combine(root, "preview-worksheet-analysis-account"), () => AISecurityLevel.DataSharingRestricted);
@@ -306,9 +819,7 @@ internal static partial class Program
         await tutor.SignInAsync();
         await Wait(() => tutor.Email == "mock@example.invalid", "the prototype uses a local simulated AI account");
         var pane = await OpenWorksheetAssistant(main, service, grid);
-        await WaitForWorksheetAction(pane, "compare");
-        await ClickWorksheetAction(pane, "compare");
-        await WaitForWorksheetAction(pane, "choose");
+        await CheckChooseMethodOpening(pane);
     }
 
     private static void EnsureWorksheetMethodMenus(frmMain main)
@@ -421,24 +932,36 @@ internal static partial class Program
                     kind: card.dataset.worksheetAction,
                     token: card.dataset.token,
                     text: card.innerText,
-                    choices: [...card.querySelectorAll('button[data-action="worksheet-analysis"]')].map(button => button.dataset.choice)
+                    choices: [...card.querySelectorAll('button[data-action="worksheet-analysis"]')].map(button => button.dataset.choice),
+                    recommended: [...card.querySelectorAll('button[data-recommended="true"]')]
+                        .map(button => ({ choice: button.dataset.choice, label: button.innerText }))
                 } : null;
             })()
             """));
     }
 
-    private static async Task<JsonNode> WaitForWorksheetAction(ScriptAIPane pane, string kind)
+    private static async Task<JsonNode> WaitForWorksheetAction(ScriptAIPane pane, string kind, string[] choices = null)
     {
         JsonNode action = null;
         for (int attempt = 0; attempt < 100; attempt++)
         {
             action = await WorksheetActionSnapshot(pane);
-            if (action.S("kind") == kind) break;
+            if (Matches(action)) break;
             await Task.Delay(50);
         }
-        Check(action.S("kind") == kind && !string.IsNullOrEmpty(action.S("token")), $"the conversation shows the {kind} action");
+        Check(Matches(action), choices == null ? $"the conversation shows the {kind} action"
+            : $"the {kind} action offers {string.Join(", ", choices)}");
         return action;
+
+        bool Matches(JsonNode card) => card.S("kind") == kind && card.S("token").Length > 0
+            && (choices == null || card.A("choices").Select(choice => choice.GetValue<string>()).SequenceEqual(choices));
     }
+
+    private static Task PostWorksheetAction(ScriptAIPane pane, string token, string choice) =>
+        pane.Transcript.Browser.CoreWebView2.ExecuteScriptAsync("window.chrome.webview.postMessage(" + JsonSerializer.Serialize(new
+        {
+            action = "worksheetAnalysis", token, choice, context = (int)Field(pane.Transcript, "context")
+        }) + ")");
 
     private static async Task ClickWorksheetAction(ScriptAIPane pane, string choice)
     {
@@ -511,8 +1034,10 @@ internal static partial class Program
             "cannot see earlier messages",
             "ask for all missing non-confidential details together",
             "restate the full question with those details in one message",
-            "pairing is the sole missing detail",
-            "buttons complete that choice locally"
+            "pairing is unclear",
+            "pass design paired to the same tool",
+            "pass design independent",
+            "buttons collect the next details locally"
         ];
         bool includesAllTogether(string text) => askTogether.All(rule => text.Contains(rule, StringComparison.Ordinal));
         Check(guidanceOnly
@@ -544,7 +1069,7 @@ internal static partial class Program
             Check(reference.S("openingQuestion") == WorksheetOpeningText
                 && guide.S("title") == "Statistical Method Selection" && guide.S("url") == helpUrl
                 && summary.Length <= 700
-                && prompt.Contains("This opening question needs no tool calls.", StringComparison.Ordinal)
+                && prompt.Contains("Use the clickable clarification if available. The opening exchange does not need worksheet reads or Help searches.", StringComparison.Ordinal)
                 && new[] { "goal", "scale", "independent", "paired", "association" }
                     .All(term => summary.Contains(term, StringComparison.OrdinalIgnoreCase)),
                 "the first question carries the opening offer and a short Method Selection guide");
@@ -572,6 +1097,18 @@ internal static partial class Program
         ];
         Check(clarification.All(instruction => prompt.Contains(instruction, StringComparison.Ordinal)),
             "the worksheet prompt asks about scale, comparison and study design before proposing a method and explains the role of sample size");
+        string[] evidenceRules =
+        [
+            "Ask only for the remaining details before recommending or staging a method.",
+            "Selection dimensions and partial reads cannot establish the whole-sample counts or distribution.",
+            "For three or more independent groups, establish per-group sizes",
+            "the shape and linearity of the relationship",
+            "the residuals and variance where they affect inference",
+            "sparse cells, expected counts or discordant pairs"
+        ];
+        Check(turnHeader.Contains("Check sample size, distribution or other conditions when they could change the method.", StringComparison.Ordinal)
+            && evidenceRules.All(rule => prompt.Contains(rule, StringComparison.Ordinal)),
+            "the worksheet prompts cover method-dependent sample size, distribution and other conditions beyond paired data");
         Check(privateTexts.All(text => !prompt.Contains(text, StringComparison.Ordinal)
             && !rawContext.Contains(text, StringComparison.Ordinal)),
             "the worksheet guidance passes no workbook information without consent");

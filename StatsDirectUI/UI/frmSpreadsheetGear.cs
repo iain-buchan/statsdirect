@@ -51,6 +51,7 @@ namespace StatsDirect.UI
                 }
                 workbookView.ActiveWorkbook = workbookView.ActiveWorkbookSet.Workbooks.Add();
             });
+            workbookView.RangeSelectionChanged += (_, _) => WorkbookSelectionChanged?.Invoke(this, EventArgs.Empty);
         }
 
         private void frmSpreadsheetGear_FormClosing(object sender, FormClosingEventArgs e)
@@ -83,12 +84,14 @@ namespace StatsDirect.UI
         private void workbookView_CellEndEdit(object sender, CellEndEditEventArgs e)
         {
             Dirty = true;
+            WorkbookContentsChanged?.Invoke(this, EventArgs.Empty);
         }
 
         private void workbookView_RangeChanged(object sender, RangeChangedEventArgs e)
         {
             LearningVersion++;
             Dirty = true;
+            WorkbookContentsChanged?.Invoke(this, EventArgs.Empty);
         }
 
         /// <summary>
@@ -193,6 +196,7 @@ namespace StatsDirect.UI
                 if (imported) SetUnsavedName(System.IO.Path.GetFileName(filename));
                 if (rExecutable != null && RDataFiles.LastWarnings.Length > 0)
                     SdApplication.SoleInstance.MsgboxX("Opened the supported R tables. Skipped: " + RDataFiles.LastWarnings, MessageBoxButtons.OK, MessageBoxIcon.Information, "Open R data", true);
+                if (wb != null) WorkbookContentsChanged?.Invoke(this, EventArgs.Empty);
                 return null != wb;
             });
         }

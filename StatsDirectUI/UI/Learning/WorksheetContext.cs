@@ -1,3 +1,4 @@
+using SpreadsheetGear;
 using StatsDirect.UI.Learning;
 using StatsDirect.Utilities;
 using System;
@@ -10,6 +11,31 @@ namespace StatsDirect.UI;
 internal partial class frmSpreadsheetGear
 {
     internal int LearningVersion { get; private set; }
+    internal event EventHandler WorkbookContentsChanged;
+    internal event EventHandler WorkbookSelectionChanged;
+
+    internal (string Sheet, string Range, bool SingleCell) WorksheetSelectionInfo() => workbookView.WithLock(() =>
+    {
+        if (workbookView.ActiveWorksheet is not IWorksheet sheet || workbookView.RangeSelection is not IRange selection)
+            return (string.Empty, string.Empty, false);
+        return (sheet.Name, selection.Address.Replace("$", string.Empty, StringComparison.Ordinal),
+            selection.AreaCount == 1 && selection.RowCount == 1 && selection.ColumnCount == 1);
+    });
+
+    internal bool HasWorkbookData() => workbookView.WithLock(() =>
+    {
+        foreach (IWorksheet sheet in workbookView.ActiveWorkbook.Worksheets)
+        {
+            var used = sheet.UsedRange;
+            var last = used[used.RowCount - 1, used.ColumnCount - 1];
+            if (used.Find("*", last, FindLookIn.Formulas, LookAt.Part, SearchOrder.ByRows, SearchDirection.Next, false) != null)
+                return true;
+            // Find skips filtered rows. Count cells when the filter may have hidden every match.
+            if (sheet.AutoFilterMode && sheet.EvaluateValue("COUNTA(" + used.Address + ")") is double count && count > 0)
+                return true;
+        }
+        return false;
+    });
     internal JsonObject LearningInfo() => workbookView.WithLock(() =>
     {
         var book = workbookView.ActiveWorkbook;
@@ -19,7 +45,7 @@ internal partial class frmSpreadsheetGear
             ["usedRange"] = workbookView.ActiveWorksheet.UsedRange.Address,
             ["version"] = LearningVersion };
     });
-    internal JsonObject LearningRead(JsonObject options) => workbookView.WithLock(() =>
+    internal JsonObject LearningRead(JsonObject options, Action<JsonObject> captureEvidence = null) => workbookView.WithLock(() =>
     {
         var book = workbookView.ActiveWorkbook;
         int sheetIndex = options.I("sheetIndex", workbookView.ActiveWorksheet.Index);
@@ -52,6 +78,22 @@ internal partial class frmSpreadsheetGear
             string title = sheet.Cells[0, column].Value is string heading ? heading.Limit(200) : "Column " + (column + 1);
             data.Add(new JsonObject { ["index"] = column, ["title"] = title, ["values"] = values, ["text"] = texts });
         }
+        if (captureEvidence != null)
+        {
+            var ranges = new JsonArray();
+            int[] ordered = columns.Order().ToArray();
+            int start = ordered[0];
+            for (int i = 0; i < ordered.Length; i++)
+            {
+                if (i + 1 < ordered.Length && ordered[i + 1] == ordered[i] + 1) continue;
+                ranges.Add(sheet.Cells[first - 1, start, last - 1, ordered[i]].Address.Replace("$", "", StringComparison.Ordinal));
+                if (i + 1 < ordered.Length) start = ordered[i + 1];
+            }
+            int usedRight = used.Column + used.ColumnCount - 1;
+            bool coversUsedRange = first <= used.Row + 1 && last >= used.Row + used.RowCount
+                && ordered.Count(column => column >= used.Column && column <= usedRight) == used.ColumnCount;
+            captureEvidence(new JsonObject { ["workbook"] = Text, ["sheet"] = sheet.Name, ["ranges"] = ranges, ["partial"] = !coversUsedRange });
+        }
         return new JsonObject { ["documentId"] = Id(), ["columns"] = data, ["rowCount"] = count, ["firstRow"] = first, ["lastRow"] = last, ["sheetIndex"] = sheetIndex, ["sheet"] = sheet.Name, ["workbook"] = Text, ["range"] = sheet.Cells[first - 1, columns.Min(), last - 1, columns.Max()].Address,
             ["complete"] = true, ["hasErrors"] = errors, ["hasStaleFormulas"] = workbookView.ActiveWorkbookSet.Calculation != SpreadsheetGear.Calculation.Automatic,
             ["headerRow"] = false, ["note"] = "Rows are literal worksheet rows; select firstRow 2 to exclude row-1 headings where appropriate." };
@@ -66,5 +108,6 @@ internal partial class frmSpreadsheetGear
         }
         if (columns.Count > 0) workbookView.RangeSelection = sheet.Cells[0, 0, rows, columns.Count - 1];
         Dirty = false; LearningVersion++;
+        WorkbookContentsChanged?.Invoke(this, EventArgs.Empty);
     });
 }

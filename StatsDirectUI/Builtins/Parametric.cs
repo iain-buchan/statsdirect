@@ -996,7 +996,15 @@ namespace StatsDirect.Builtins
 
         }
 
-        ///  <summary> Shapiro-Francia test for normality</summary>
+        // Local normality evidence for a finite sample.
+        internal static (double W, double P)? ShapiroWilkDiagnostics(double[] data)
+        {
+            if (data.Length < 3) return null;
+            normality_sw(data, 0, data.Length, out double w, out double p, out _, out _);
+            return w is >= 0 and <= 1 && p is >= 0 and <= 1 ? (w, p) : null;
+        }
+
+        ///  <summary> Shapiro-Wilk test for normality</summary>
         ///  <param name="x">Vector of observations</param>
         ///  <param name="lowerBound">Lower bound of observation vector</param>
         ///  <param name="n">Number of observations</param>

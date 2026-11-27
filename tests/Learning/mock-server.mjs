@@ -128,40 +128,74 @@ readline.createInterface({input:process.stdin}).on('line',line=>{
          });
        }
      }
+     const clarificationStart='TRE_WORKSHEET_ANALYSIS_CLARIFY';
+     const clarificationSteps=new Map([
+       [clarificationStart,'goal'],
+       ['I want to assess agreement between measurements.','scale'],
+       ['My outcome is an ordered score or category.','design'],
+       ['The measurements are matched on the same people or units.',null]
+     ]);
+     const worksheetClarification=clarificationSteps.has(question) && request.conversation.some(message=>
+       message.role==='user' && message.text===clarificationStart);
      const analysisDemo=question==='Compare my two paired measurements using a paired t test';
      if(question==='TRE_WORKSHEET_ANALYSIS_R_EXAMPLE') {
        answer='This fictional example illustrates the method.\n```r\nt.test(c(6, 9, 12), c(5, 7, 8), paired = TRUE)\n```';
-     } else if(question.startsWith('TRE_WORKSHEET_ANALYSIS_') || analysisDemo) {
+     } else if(question.startsWith('TRE_WORKSHEET_ANALYSIS_') || analysisDemo || worksheetClarification) {
        const call=(tool,args)=>new Promise(resolve=>{
          const rid='tool-'+(++sequence);
          responses.set(rid,resolve);
          out({id:rid,method:'item/tool/call',params:{threadId:p.threadId,turnId:id,callId:'call-'+sequence,tool,arguments:args}});
        });
        const tools=threadTools.get(p.threadId).map(t=>t.name);
-       const help=await call('statsdirect_search_help',{query:'paired t test'});
-       const scope=await call('statsdirect_workspace',{});
-       const read=await call('statsdirect_read_data',{documentId:'unapproved',firstRow:2,lastRow:6,columns:[0,1]});
-       const calculation=await call('statsdirect_run_analysis',{operation:'TPaired',datasetId:'unapproved'});
-       const mannWhitney=question==='TRE_WORKSHEET_ANALYSIS_MANN_WHITNEY';
-       const operation=mannWhitney?'MannWhitney':'TPaired';
-       const found=await call('statsdirect_find_worksheet_methods',{query:mannWhitney?'Mann–Whitney':'Paired t'});
-       const matches=found.success ? JSON.parse(found.contentItems[0].text).methods : [];
-       const methodId=matches.find(method=>method.operation===operation)?.id;
-       const broad=await call('statsdirect_find_worksheet_methods',{query:'Analysis'});
-       const broadMatches=broad.success?JSON.parse(broad.contentItems[0].text).methods.length:0;
-       const invalid=await call('statsdirect_propose_worksheet_analysis',{methodId,columns:[0,1]});
-       const unknownMethod=await call('statsdirect_propose_worksheet_analysis',{methodId:'not-a-picker-command'});
-       const proposal=question==='TRE_WORKSHEET_ANALYSIS_FOLLOWUP' ? null
-         : question==='TRE_WORKSHEET_ANALYSIS_DESIGN' ? await call('statsdirect_choose_worksheet_t_test',{})
-         : methodId ? await call('statsdirect_propose_worksheet_analysis',{methodId}) : null;
-       const pending=proposal?.success?JSON.parse(proposal.contentItems[0].text):null;
-       answer=analysisDemo
-         ? 'A **paired t test** compares the mean difference between matched observations. Check the method and selection in the conversation, then choose **Continue to analysis**. Your worksheet and result stay on this computer.'
-         : JSON.stringify({
-           tools,help:help.success?help.contentItems[0].text:'',
-           workspace:scope.success,read:read.success,calculation:calculation.success,invalid:invalid.success,
-           unknownMethod:unknownMethod.success,matches,broadMatches,pending
-         });
+       if(worksheetClarification) {
+         const dimension=clarificationSteps.get(question);
+         const clarify='statsdirect_clarify_worksheet_analysis';
+         if(dimension) {
+           const invalid=await call(clarify,{dimension:'guess'});
+           const extra=await call(clarify,{dimension,workbook:'another workbook'});
+           const valid=await call(clarify,{dimension});
+           answer=JSON.stringify({dimension,available:tools.includes(clarify),invalid:invalid.success,extra:extra.success,
+             accepted:valid.success});
+         } else {
+           const found=await call('statsdirect_find_worksheet_methods',{query:'Categorical Kappa'});
+           const methods=found.success ? JSON.parse(found.contentItems[0].text).methods : [];
+           const method=methods.find(item=>item.operation==='Kappa');
+           const proposal=method ? await call('statsdirect_propose_worksheet_analysis',{methodId:method.id}) : null;
+           answer=JSON.stringify({pending:proposal?.success?JSON.parse(proposal.contentItems[0].text):null});
+         }
+       } else {
+         const help=await call('statsdirect_search_help',{query:'paired t test'});
+         const scope=await call('statsdirect_workspace',{});
+         const read=await call('statsdirect_read_data',{documentId:'unapproved',firstRow:2,lastRow:6,columns:[0,1]});
+         const calculation=await call('statsdirect_run_analysis',{operation:'TPaired',datasetId:'unapproved'});
+         const clarification=await call('statsdirect_clarify_worksheet_analysis',{dimension:'goal'});
+         const mannWhitney=question==='TRE_WORKSHEET_ANALYSIS_MANN_WHITNEY';
+         const operation=mannWhitney?'MannWhitney':'TPaired';
+         const found=await call('statsdirect_find_worksheet_methods',{query:mannWhitney?'Mann–Whitney':'Paired t'});
+         const matches=found.success ? JSON.parse(found.contentItems[0].text).methods : [];
+         const methodId=matches.find(method=>method.operation===operation)?.id;
+         const broad=await call('statsdirect_find_worksheet_methods',{query:'Analysis'});
+         const broadMatches=broad.success?JSON.parse(broad.contentItems[0].text).methods.length:0;
+         const invalid=await call('statsdirect_propose_worksheet_analysis',{methodId,columns:[0,1]});
+         const unknownMethod=await call('statsdirect_propose_worksheet_analysis',{methodId:'not-a-picker-command'});
+         const knownDesign=question==='TRE_WORKSHEET_ANALYSIS_PAIRED_INTERVAL' ? 'paired'
+           : question==='TRE_WORKSHEET_ANALYSIS_INDEPENDENT_INTERVAL' ? 'independent' : null;
+         const designTool='statsdirect_choose_worksheet_t_test';
+         const invalidDesign=knownDesign && (await call(designTool,{design:'paired maybe'})).success;
+         const extraDesign=knownDesign && (await call(designTool,{design:knownDesign,columns:[0,1]})).success;
+         const proposal=question==='TRE_WORKSHEET_ANALYSIS_FOLLOWUP' ? null
+           : knownDesign ? await call(designTool,{design:knownDesign})
+           : question==='TRE_WORKSHEET_ANALYSIS_DESIGN' ? await call(designTool,{})
+           : methodId ? await call('statsdirect_propose_worksheet_analysis',{methodId}) : null;
+         const pending=proposal?.success?JSON.parse(proposal.contentItems[0].text):null;
+         answer=analysisDemo
+           ? 'A **paired t test** compares the mean difference between matched observations. Check the method and selection in the conversation, then choose **Continue to analysis**. Your worksheet and result stay on this computer.'
+           : JSON.stringify({
+             tools,help:help.success?help.contentItems[0].text:'',
+             workspace:scope.success,read:read.success,calculation:calculation.success,invalid:invalid.success,clarification:clarification.success,
+             unknownMethod:unknownMethod.success,matches,broadMatches,pending,invalidDesign,extraDesign
+           });
+       }
      }
      if(question==='LEARN_WORKSHEET') {
        const call=(tool,args)=>new Promise(resolve=>{const rid='tool-'+(++sequence);responses.set(rid,r=>resolve(r.success?JSON.parse(r.contentItems[0].text):{error:r.contentItems[0].text}));out({id:rid,method:'item/tool/call',params:{threadId:p.threadId,turnId:id,callId:'call-'+sequence,tool,arguments:args}});});

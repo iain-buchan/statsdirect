@@ -77,9 +77,13 @@ internal static partial class Program
             await Wait(() => session.IsDocked, "the user docks the worksheet assistant again");
             original.Activate();
             await CheckWorksheetPaneBinding(main, pane, original, shared: true);
+            var activity = ((Control)Field(pane, "view")).Controls.Find("aiReplyActivity", true).Single();
+            Check(!activity.Visible, "the worksheet assistant starts without a reply indicator");
             const string delayed = "WORKSHEET_AI_FOCUS_GATED_REPLY";
             var reply = WorksheetReply(pane, delayed);
             await WaitForWorksheetTurn(trace, delayed);
+            Check(activity.Visible && activity.Text == "Reply in progress…",
+                "the worksheet assistant shows a reply in progress while waiting for the first response");
             imported.Activate();
             await Wait(() => ReferenceEquals(main.ActiveMdiChild, imported), "an imported workbook is selected during the reply");
             created = (frmSpreadsheetGear)main.CreateGrid("New active worksheet");
@@ -93,6 +97,8 @@ internal static partial class Program
                 && WorksheetAnalysisDataTraffic(trace).Skip(beforeRelease).Any(line => line.Contains(sample, StringComparison.Ordinal)),
                 "the pending turn reads the original worksheet even after new workbooks are activated");
             await CheckWorksheetPaneBinding(main, pane, created, shared: false);
+            Check(!activity.Visible && pane.Send.Enabled,
+                "the reply indicator goes away when the reply finishes");
             await pane.Transcript.SettledAsync();
             Check(!(await pane.Transcript.TextAsync()).Contains(delayed, StringComparison.Ordinal),
                 "the finished question and reply are not copied to the latest active worksheet");
@@ -130,7 +136,8 @@ internal static partial class Program
         next.Activate();
         await Wait(() => ReferenceEquals(main.ActiveMdiChild, next), "the example workbook is selected while the reply waits");
         var stop = (Button)Field(pane, "stop");
-        Check(stop.Enabled && ReferenceEquals(Field(pane, "script"), original),
+        var activity = ((Control)Field(pane, "view")).Controls.Find("aiReplyActivity", true).Single();
+        Check(stop.Enabled && activity.Visible && ReferenceEquals(Field(pane, "script"), original),
             "Stop remains available in the original chat while another workbook is in front");
         if (returnBeforeStop)
         {
@@ -145,6 +152,7 @@ internal static partial class Program
             original.Activate();
         }
         await CheckWorksheetPaneBinding(main, pane, original, shared: true);
+        Check(!activity.Visible && !stop.Enabled, "stopping the reply clears the reply indicator");
         Check(pane.Composer.Text == question, "Stop preserves the question in the workbook where it was asked");
     }
 }

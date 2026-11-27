@@ -92,7 +92,7 @@ internal static partial class Program
             && fullHelp.B("introductoryText") && fullHelp.B("continued") && fullHelp.B("invalidRejected");
     }
 
-    private static async Task TestWorksheetRAnswer(frmMain main, LearningService service, frmSpreadsheetGear grid, ScriptAIPane pane)
+    private static async Task TestWorksheetRAnswer(frmMain main, LearningService service, frmSpreadsheetGear grid, ScriptAIPane pane, string trace)
     {
         pane.Composer.Text = "WORKSHEET_AI_R_PRIOR_ANSWER";
         await pane.SendAsync();
@@ -112,6 +112,20 @@ internal static partial class Program
             """;
         Check(await browser.ExecuteScriptAsync(check) == "true",
             "the answer keeps R code and its Open action collapsed by default");
+
+        string evidence = await browser.ExecuteScriptAsync("""
+            (() => {
+                const sections = [...document.querySelectorAll('.message.assistant details.worksheet-evidence')].slice(-2);
+                return sections.length === 2 && sections.every(section => !section.open &&
+                    section.querySelector('summary')?.textContent === 'Data used' &&
+                    section.querySelector('li')?.textContent === 'Worksheet assistant test · Fictional data · A2:A4 (part of the worksheet’s used range)');
+            })()
+            """);
+        Check(evidence == "true", "both data-based replies display their own app-generated, collapsed evidence");
+        var wire = LastWorksheetRequest(trace).A("conversation");
+        Check(wire.Any(row => row.S("role") == "assistant" && row.S("text").StartsWith("The median age", StringComparison.Ordinal))
+            && wire.All(row => row["worksheetReads"] == null),
+            "a later question can carry the preceding reply without resending its local evidence metadata");
 
         var view = (WorkbookView)Field(grid, "workbookView");
         WithWorksheet(view, sheet => { sheet.Cells["A2"].Value = 999; return true; });
@@ -154,6 +168,36 @@ internal static partial class Program
         finally { view.ReleaseLock(); }
     }
 
+    private static async Task TestWorksheetReadEvidence(frmSpreadsheetGear grid)
+    {
+        var context = new QuestionContext([grid], true, CancellationToken.None, trackWorksheetReads: true);
+        var separated = new JsonObject
+        {
+            ["documentId"] = grid.Id(), ["firstRow"] = 2, ["lastRow"] = 4, ["columns"] = new JsonArray(2, 0)
+        };
+        var data = await context.CallAsync("statsdirect_read_data", separated);
+        Check(data["worksheetReads"] == null && data["ranges"] == null && data["partial"] == null,
+            "worksheet evidence is kept locally and outside the provider's tool response");
+        var reads = context.WorksheetReads;
+        Check(reads.Count == 1 && reads[0].B("partial") && reads[0].A("ranges").Select(range => range.GetValue<string>())
+            .SequenceEqual(["A2:A4", "C2:C4"]), "disjoint evidence describes only the requested columns");
+        await context.CallAsync("statsdirect_read_data", separated);
+        Check(context.WorksheetReads.Count == 1, "repeating a read keeps one evidence entry");
+
+        var invalid = (JsonObject)separated.DeepClone();
+        invalid["lastRow"] = 4002;
+        await Reject(() => context.CallAsync("statsdirect_read_data", invalid),
+            "an oversize read cannot add worksheet evidence");
+        Check(context.WorksheetReads.Count == 1, "a failed read adds no worksheet evidence");
+        await context.CallAsync("statsdirect_read_data", new JsonObject
+        {
+            ["documentId"] = grid.Id(), ["firstRow"] = 1, ["lastRow"] = 4, ["columns"] = new JsonArray(0, 1)
+        });
+        reads = context.WorksheetReads;
+        Check(reads.Count == 2 && !reads[1].B("partial") && reads[1].A("ranges")[0]?.GetValue<string>() == "A1:B4",
+            "a read of the whole used worksheet range is not marked as partial");
+    }
+
     private static async Task TestWorksheetAssistant(frmMain main, LearningService service, Action<AISecurityLevel> setSecurity, string trace)
     {
         var previous = main.ActiveMdiChild;
@@ -176,6 +220,8 @@ internal static partial class Program
             using (var index = File.Create(Path.Combine(help, "search-index.js"))) index.SetLength(2_000_001);
             Check(WorksheetAIHelp.Search(help, "worksheet").Count == 0,
                 "an oversized packaged Help index leaves worksheet questions available");
+
+            await TestWorksheetReadEvidence(grid);
 
             var toolbar = WorksheetRibbon(main);
             await Wait(() => main.ActiveMdiChild == grid && toolbar.Items["learnToolStripButton"] is { Available: true, Enabled: true }, "the worksheet ribbon exposes Learn");
@@ -210,6 +256,8 @@ internal static partial class Program
             CheckWorksheetMethodSelectionContext(trace, true, guidanceOnly: false, grid.Text, other.Text, "Existing cell");
             Check((await pane.Transcript.TextAsync()).Contains("What would you like to find out from your data?", StringComparison.Ordinal),
                 "the welcome acceptance can lead straight to a question about the analysis goal");
+            Check((await pane.Transcript.TextAsync()).Contains("General guidance · No worksheet cells read for this reply", StringComparison.Ordinal),
+                "the welcome's answer explains when it has read no worksheet cells");
 
             var questionOnly = await WorksheetReply(pane, "WORKSHEET_AI_WITHOUT_SHARING");
             var nextRequest = LastWorksheetRequest(trace);
@@ -247,7 +295,7 @@ internal static partial class Program
                 && Equals(sheet.Cells["B3"].Value, "Existing cell") && Equals(sheet.Cells["A2"].Value, 26d)),
                 "the attempted AI write leaves cell values, formula and workbook revision intact");
 
-            await TestWorksheetRAnswer(main, service, grid, pane);
+            await TestWorksheetRAnswer(main, service, grid, pane, trace);
             await CheckWorksheetPaneBinding(main, pane, grid, shared: true);
 
             pane.ShareWorkbook.Checked = false;
@@ -271,6 +319,10 @@ internal static partial class Program
                 && !HasWorksheetWriteTool(restricted), "data-sharing policy keeps Help available without sending worksheet data");
             Check(ReadFullPackagedHelp(restricted),
                 "guidance-only AI can read the full packaged Help without gaining workbook access");
+            await pane.Transcript.SettledAsync();
+            Check(await pane.Transcript.Browser.CoreWebView2.ExecuteScriptAsync(
+                "[...document.querySelectorAll('.message.assistant .worksheet-evidence')].at(-1)?.textContent.includes('General guidance')") == "true",
+                "the restricted reply does not display worksheet evidence from previous replies");
 
             setSecurity(AISecurityLevel.AIRestricted);
             pane.UpdateConnection();

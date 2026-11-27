@@ -189,9 +189,16 @@ internal sealed class ConversationView : UserControl
                 || token != MessageText(active, "token")) return;
             bool allowed = MessageText(active, "kind") switch
             {
-                "compare" => choice is "compare" or "browse",
+                "empty" => choice is "example" or "help",
+                "compare" => choice is "guide" or "browse",
                 "choose" => choice is "paired" or "independent",
-                "confirm" => choice == "continue" || (choice == "change" && MessageText(active, "choice") is ("paired" or "independent")),
+                "paired-interval" or "independent-interval" => choice is "large" or "normal" or "non-normal" or "back"
+                    || (choice == "check" && active["canCheck"]?.GetValue<bool>() == true),
+                "clarify" => active["options"] is JsonArray options
+                    && options.OfType<JsonObject>().Any(option => MessageText(option, "id") == choice),
+                "confirm" => choice == "continue"
+                    || (choice == "sample" && MessageText(active, "intervalAdvice").Length > 0)
+                    || (choice == "change" && MessageText(active, "choice") is ("paired" or "independent")),
                 _ => false
             };
             if (!allowed) return;
@@ -206,7 +213,12 @@ internal sealed class ConversationView : UserControl
     {
         var list = new JsonArray();
         foreach (var message in messages)
-            list.Add(new JsonObject { ["role"] = MessageText(message, "role"), ["text"] = MessageText(message, "text") });
+        {
+            var item = new JsonObject { ["role"] = MessageText(message, "role"), ["text"] = MessageText(message, "text") };
+            if (item["role"].GetValue<string>() == "assistant" && message is JsonObject row && row["worksheetReads"] is JsonArray reads)
+                item["worksheetReads"] = reads.DeepClone();
+            list.Add(item);
+        }
         if (reset || last?["runInCurrentR"]?.GetValue<bool>() != runInCurrentR) context++;
         var m = new JsonObject { ["action"] = "update", ["sequence"] = ++sequence, ["context"] = context, ["reset"] = reset, ["collapseRCode"] = collapseRCode, ["runInCurrentR"] = runInCurrentR, ["welcome"] = welcome, ["partial"] = partial ?? "", ["messages"] = list };
         if (worksheetAction != null) m["worksheetAction"] = worksheetAction.DeepClone();

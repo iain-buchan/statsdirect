@@ -20324,6 +20324,29 @@ ${content}</tr>
       bind(element);
       renders++;
     }
+    function appendWorksheetReads(element, reads) {
+      if (!Array.isArray(reads)) return;
+      if (reads.length === 0) {
+        const guidance = document.createElement("p");
+        guidance.className = "worksheet-evidence";
+        guidance.textContent = "General guidance \xB7 No worksheet cells read for this reply";
+        element.append(guidance);
+        return;
+      }
+      const details = document.createElement("details");
+      details.className = "worksheet-evidence";
+      const summary = document.createElement("summary");
+      summary.textContent = "Data used";
+      const list = document.createElement("ul");
+      for (const read of reads) {
+        const item = document.createElement("li");
+        item.textContent = [read.workbook, read.sheet, read.ranges.join(", ")].join(" \xB7 ");
+        if (read.partial) item.append(" (part of the worksheet\u2019s used range)");
+        list.append(item);
+      }
+      details.append(summary, list);
+      element.append(details);
+    }
     function block2(role, text3) {
       const element = document.createElement("section");
       element.className = "message " + (role === "user" ? "user" : "assistant");
@@ -20341,7 +20364,7 @@ ${content}</tr>
       return d.scrollTop + d.clientHeight >= d.scrollHeight - 4;
     };
     function updateWorksheetAction(action) {
-      const available = typeof action?.token === "string" && ["compare", "choose", "confirm"].includes(action.kind);
+      const available = typeof action?.token === "string" && ["empty", "compare", "choose", "paired-interval", "independent-interval", "clarify", "confirm"].includes(action.kind);
       const key = available ? JSON.stringify(action) : "";
       if (key === worksheetActionKey) return;
       const transferFocus = worksheetActionElement?.contains(document.activeElement);
@@ -20353,28 +20376,71 @@ ${content}</tr>
       section.className = "message assistant worksheet-analysis";
       section.dataset.worksheetAction = action.kind;
       section.dataset.token = action.token;
-      section.setAttribute("aria-label", action.kind === "confirm" ? "Proposed worksheet method" : action.kind === "choose" ? "Compare two means" : "Choose a worksheet method");
+      section.setAttribute("aria-label", action.kind === "confirm" ? "Proposed worksheet method" : action.kind === "empty" ? "Getting started with a workbook" : action.kind === "choose" ? "Study design" : action.kind === "paired-interval" ? "Paired interval measurements" : action.kind === "independent-interval" ? "Independent interval measurements" : action.kind === "clarify" ? "Analysis question" : "Choose a worksheet method");
       const actions = document.createElement("div");
       actions.className = "worksheet-analysis-actions";
       const requestContext = context;
       function button(label, choice) {
         const option = document.createElement("button");
         option.type = "button";
-        option.textContent = label;
+        const suggested = choice === action.suggestedBranch;
+        option.textContent = suggested ? "Suggested \xB7 " + label : label;
+        if (suggested) option.dataset.recommended = "true";
         option.dataset.action = "worksheet-analysis";
         option.dataset.choice = choice;
         option.addEventListener("click", () => post({ action: "worksheetAnalysis", token: action.token, choice, context: requestContext }));
         actions.append(option);
       }
-      if (action.kind === "compare") {
-        if (action.showCompare !== false) button("Compare two means", "compare");
-        button("Choose a method", "browse");
+      function paragraph(text3) {
+        const p = document.createElement("p");
+        p.textContent = text3;
+        section.append(p);
+        return p;
+      }
+      if (action.kind === "empty") {
+        button("Open example workbook", "example");
+        button("Workbook help", "help");
+      } else if (action.kind === "compare") {
+        button("Help me choose a method", "guide");
+        button("Browse methods", "browse");
       } else if (action.kind === "choose") {
         const question = document.createElement("p");
         question.textContent = "Were these measurements taken from the same people or units?";
         section.append(question);
         button("Same people or units", "paired");
         button("Separate groups", "independent");
+      } else if (action.kind === "paired-interval" || action.kind === "independent-interval") {
+        const paired = action.kind === "paired-interval";
+        const { sizeKnown, diagnostics = [] } = action;
+        for (const line of diagnostics) paragraph(line);
+        if (!sizeKnown && !diagnostics.length)
+          paragraph(paired ? "How many complete pairs are there?" : "How many observations are there in each group?");
+        if (action.recommendation) {
+          const explanation = paragraph(action.recommendation);
+          explanation.className = "worksheet-analysis-recommendation";
+          const heading = document.createElement("strong");
+          heading.textContent = action.suggestedBranch ? "Suggested branch" : "Review the differences";
+          explanation.prepend(heading, document.createElement("br"));
+        } else {
+          paragraph(paired ? "How are the within-pair differences distributed?" : "How are the observations distributed within each group?");
+          paragraph("Look at the shape and any influential points. A large Shapiro\u2013Wilk P value is inconclusive.");
+        }
+        if (action.feedback) {
+          const feedback = paragraph(action.feedback);
+          feedback.className = "worksheet-analysis-feedback";
+          feedback.setAttribute("role", "status");
+        }
+        if (action.canCheck)
+          button(paired ? "Check selected pairs" : diagnostics.length ? "Use these as separate samples" : "Check two sample columns", "check");
+        button(paired ? "Large sample (more than 100 complete pairs)" : "Large samples (more than 100 in each group)", "large");
+        button(paired ? "Small or medium \xB7 Approximately normal differences" : "Small or medium \xB7 Approximately normal within groups", "normal");
+        button(paired ? "Small or medium \xB7 Non-normal differences" : "Non-normal distributions within groups", "non-normal");
+        button("Change design", "back");
+      } else if (action.kind === "clarify") {
+        const question = document.createElement("p");
+        question.textContent = action.question;
+        section.append(question);
+        for (const option of action.options) button(option.label, option.id);
       } else {
         const heading = document.createElement("h2");
         heading.textContent = String(action.method ?? "");
@@ -20401,8 +20467,11 @@ ${content}</tr>
           effect.textContent = String(action.effect);
           section.append(effect);
         }
+        for (const line of action.diagnostics ?? []) paragraph(line);
+        if (action.intervalAdvice) paragraph(action.intervalAdvice);
         button("Continue to analysis", "continue");
-        if (action.choice === "paired" || action.choice === "independent") button("Change design", "change");
+        if (action.intervalAdvice) button("Change sample choice", "sample");
+        else if (action.choice === "paired" || action.choice === "independent") button("Change design", "change");
       }
       section.append(actions);
       container.append(section);
@@ -20460,10 +20529,12 @@ ${content}</tr>
       const messages = Array.isArray(m.messages) ? m.messages : [];
       const partial = String(m.partial ?? "");
       if (!messages.length && !partial && m.welcome) {
-        if (!welcomeElement) {
+        if (welcomeElement?.dataset.welcome !== m.welcome) {
+          welcomeElement?.remove();
           welcomeElement = block2("assistant", m.welcome);
           welcomeElement.classList.add("welcome");
-          container.appendChild(welcomeElement);
+          welcomeElement.dataset.welcome = m.welcome;
+          container.insertBefore(welcomeElement, worksheetActionElement);
         }
       } else if (welcomeElement) {
         welcomeElement.remove();
@@ -20488,6 +20559,7 @@ ${content}</tr>
           element = block2(role, text3);
           container.insertBefore(element, partialElement ?? worksheetActionElement);
         }
+        if (role === "assistant") appendWorksheetReads(element, messages[j].worksheetReads);
         rendered.push({ role, text: text3, element });
       }
       if (partial !== partialText) {
