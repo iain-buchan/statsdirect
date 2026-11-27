@@ -2,6 +2,18 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
+##[v5.3.22]
+
+### Added
+- AI Assist can help you choose a method from the start of a conversation. A workbook without data offers the example workbook and workbook Help. Clickable answers let you say what you want to find out, how the outcome was measured and how the observations were collected.
+- For two sets of quantitative measurements, AI Assist shows a decision card that checks the selected columns on your computer. It counts the complete pairs or the observations in each group and summarises their distribution. It then suggests a branch of the Help's method selection, with its reason, or asks you to review the data. You choose the method, and the checks send nothing to ChatGPT. Above 100 pairs, Wilcoxon signed ranks remains available.
+- The current selection shows above the question, and AI Assist's cards update when you select other cells.
+- Data used, under each AI Assist reply, lists the worksheet cells it read, including row-1 headings sent as column titles.
+- Reply in progress appears beside Stop while AI Assist prepares or writes a reply.
+
+### Changed
+- In AI Assist, Choose a method is now Browse methods.
+
 ##[v5.3.21] 2026-11-26
 
 ### Fixed
