@@ -140,7 +140,12 @@ internal partial class frmSpreadsheetGear
         bool skew = !RunRecord.Missing(skewness) && Math.Abs(skewness) >= 1.0;
         if (!large)
         {
-            bool outlier = (lower - sample[0]) / 1.5 > iqr || (sample[^1] - upper) / 1.5 > iqr;
+            bool outlier = false;
+            if (count >= PairedOutlierFence.MinimumPairs)
+            {
+                double multiplier = PairedOutlierFence.Multiplier(count);
+                outlier = (lower - sample[0]) / multiplier > iqr || (sample[^1] - upper) / multiplier > iqr;
+            }
             return new PairedDifferenceDiagnostics(count, normality?.W, normality?.P, true, outlier, skew);
         }
 

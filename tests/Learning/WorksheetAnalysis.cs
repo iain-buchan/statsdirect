@@ -514,19 +514,47 @@ internal static partial class Program
 
             await StartKnownPairing();
             before = WorksheetAnalysisDataTraffic(trace);
+            await CheckFenceWarning([-4.4, -1, -1, 0, 0, 0, 0, 1, 1, 4.4], false,
+                "ten differences beyond the old 1.5× IQR fence but inside the calibrated fence give no box-plot warning");
+            await CheckFenceWarning([-5.5, -1, -1, 0, 0, 0, 0, 1, 1, 5.5], true,
+                "ten differences beyond the calibrated fence give a box-plot warning");
+            await CheckFenceWarning([-10, -1, -1, 0, 1, 1, 10], false,
+                "seven pairs do not trigger a box-plot warning");
+            await CheckFenceWarning([-10, -1, -1, 0, 0, 1, 1, 10], true,
+                "eight pairs use the calibrated fence");
+            CheckPairedFenceTable();
             await CheckRecommendationForDifferences(
                 [-109, -108, -107, -106, -105, -104, -103, -102, -101, -100, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109],
                 "non-normal", "Shapiro–Wilk", "symmetric");
             await CheckRecommendationForDifferences([-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 1000], null, "box-plot");
             await CheckRecommendationForDifferences([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 4, 5, 6, 7, 8], null, "skewness");
             await CheckRecommendationForDifferences([3, 3, 3, 3, 3, 3], null, "variation");
-            await CheckRecommendationForDifferences(Enumerable.Repeat(3, 101).ToArray(), null, "variation");
+            await CheckRecommendationForDifferences(Enumerable.Repeat(3.0, 101).ToArray(), null, "variation");
             await CheckRecommendationForDifferences([1, 2], null);
             await CheckLargePairedShapes(main, pane, grid, workbook, trace, oracle);
             Check(before.SequenceEqual(WorksheetAnalysisDataTraffic(trace)) && !main.InOperation,
                 "updating the paired recommendation from new local data sends no AI request and runs no analysis");
 
-            async Task CheckRecommendationForDifferences(int[] differences, string branch, params string[] reasons)
+            async Task CheckFenceWarning(double[] differences, bool expected, string label)
+            {
+                const string warning = "The box-plot check flagged";
+                SelectPairedDifferences(differences);
+                string count = $"{differences.Length} complete pairs";
+                var card = expected
+                    ? await WaitForWorksheetEvidence(pane, "paired-interval", count, warning)
+                    : await WaitForWorksheetEvidence(pane, "paired-interval", count);
+                var actual = grid.CheckSelectedPairedDifferences();
+                bool visible = card.S("text").Contains(warning, StringComparison.Ordinal);
+                Check(actual.HasPotentialOutlier == expected && visible == expected, label);
+            }
+
+            async Task CheckRecommendationForDifferences(double[] differences, string branch, params string[] reasons)
+            {
+                SelectPairedDifferences(differences);
+                await CheckPairedRecommendation(pane, differences.Length, branch, reasons);
+            }
+
+            void SelectPairedDifferences(double[] differences)
             {
                 WithWorksheet(workbook, sheet =>
                 {
@@ -544,7 +572,6 @@ internal static partial class Program
                     workbook.RangeSelection = pairs;
                     return true;
                 });
-                await CheckPairedRecommendation(pane, differences.Length, branch, reasons);
             }
         }
         finally
@@ -555,6 +582,19 @@ internal static partial class Program
                 workbook.RangeSelection = sheet.Cells[PairedSelection];
                 return true;
             });
+        }
+    }
+
+    private static void CheckPairedFenceTable()
+    {
+        var rows = File.ReadAllLines(Path.Combine(AppContext.BaseDirectory, "paired-outlier-fence.csv"));
+        Check(rows.Length == 94 && rows[0] == "pairs,multiplier", "the calibration records a multiplier for every size from 8 to 100");
+        for (int pairs = 8; pairs <= 100; pairs++)
+        {
+            var values = rows[pairs - 7].Split(',');
+            Check(int.Parse(values[0], CultureInfo.InvariantCulture) == pairs
+                && double.Parse(values[1], CultureInfo.InvariantCulture) == PairedOutlierFence.Multiplier(pairs),
+                $"the {pairs}-pair fence equals the recorded R calibration");
         }
     }
 
