@@ -142,7 +142,10 @@ internal sealed class ChatGPTTutor : IDisposable
         internal HashSet<string> Tools, Calls = new();
         internal Func<string, JsonObject, Task<JsonNode>> Call;
         internal Action<string> Progress;
+        internal Action<JsonNode> WorksheetReadSent;
+        internal Task WorksheetWrite;
     }
+    private sealed record WorksheetDelivery(ReplySession Session, JsonNode Response);
     internal ChatGPTTutor(string executable, string storage, string resources, params string[] prefixArguments)
     {
         this.executable = executable; this.storage = storage; this.resources = resources; this.prefixArguments = prefixArguments;
@@ -221,17 +224,26 @@ internal sealed class ChatGPTTutor : IDisposable
     }
     private static async Task DrainErrorsAsync(Process child)
     { try { char[] buffer = new char[4096]; while (await child.StandardError.ReadAsync(buffer) > 0) { } } catch (ObjectDisposedException) { } catch (IOException) { } }
-    private async Task WriteAsync(JsonNode message, bool mayShareData = false)
+    private async Task WriteAsync(JsonNode message, bool mayShareData = false, WorksheetDelivery worksheet = null)
     {
         await writer.WaitAsync();
+        TaskCompletionSource settled = null;
         try
         {
+            if (worksheet != null && (reply != worksheet.Session || worksheet.Session.Token.IsCancellationRequested)) return;
             CheckPolicy(mayShareData);
             if (process == null || process.HasExited) throw new IOException("ChatGPT is disconnected. Reconnect and try again.");
-            await process.StandardInput.WriteLineAsync(message.ToJsonString());
-            await process.StandardInput.FlushAsync();
+            if (worksheet != null)
+            {
+                settled = new(TaskCreationOptions.RunContinuationsAsynchronously);
+                worksheet.Session.WorksheetWrite = settled.Task;
+            }
+            var input = process.StandardInput;
+            await input.WriteLineAsync(message.ToJsonString());
+            await input.FlushAsync();
+            worksheet?.Session.WorksheetReadSent(worksheet.Response);
         }
-        finally { writer.Release(); }
+        finally { settled?.TrySetResult(); writer.Release(); }
     }
     private async Task<JsonNode> RequestAsync(string method, JsonObject arguments = null, int timeout = 30, bool mayShareData = false)
     {
@@ -335,6 +347,7 @@ internal sealed class ChatGPTTutor : IDisposable
     {
         var current = reply; var args = message["params"];
         JsonObject result;
+        WorksheetDelivery worksheet = null;
         try
         {
             string name = args.S("tool"), call = args.S("callId");
@@ -346,6 +359,8 @@ internal sealed class ChatGPTTutor : IDisposable
             string output = value.ToJsonString();
             if (output.Length > 200_000) throw new IOException("Request a smaller range.");
             result = ToolResult(true, output);
+            if (name == "statsdirect_read_data" && current.WorksheetReadSent != null)
+                worksheet = new(current, value);
         }
         catch (Exception ex)
         {
@@ -356,7 +371,8 @@ internal sealed class ChatGPTTutor : IDisposable
             result = ToolResult(false, error);
         }
         if (current != null && reply != current) return;
-        try { await WriteAsync(new JsonObject { ["id"] = message["id"].DeepClone(), ["result"] = result }, mayShareData: current is { GuidanceOnly: false }); }
+        try { await WriteAsync(new JsonObject { ["id"] = message["id"].DeepClone(), ["result"] = result },
+            mayShareData: current is { GuidanceOnly: false }, worksheet: worksheet); }
         catch (InvalidOperationException ex) { current?.Completion.TrySetException(ex); }
         catch (Exception) { }
     }
@@ -413,7 +429,7 @@ internal sealed class ChatGPTTutor : IDisposable
     internal async Task CancelSignInAsync()
     { var id = loginId; loginId = null; LoginUrl = null; if (id != null) { try { await RequestAsync("account/login/cancel", new JsonObject { ["loginId"] = id }); } catch (Exception) { } } Status = Email == null ? "Not connected" : "Connected to ChatGPT"; Changed?.Invoke(); }
     internal async Task SignOutAsync() { await EnsureStartedAsync(); await CancelSignInAsync(); await RequestAsync("account/logout"); Disconnect("Signed out of ChatGPT"); }
-    internal async Task<Reply> ConverseAsync(string context, JsonArray messages, JsonArray tools, bool script, Action<string> progress, Func<string, JsonObject, Task<JsonNode>> call, CancellationToken token, bool report = false, bool guidanceOnly = false, bool worksheet = false)
+    internal async Task<Reply> ConverseAsync(string context, JsonArray messages, JsonArray tools, bool script, Action<string> progress, Func<string, JsonObject, Task<JsonNode>> call, CancellationToken token, bool report = false, bool guidanceOnly = false, bool worksheet = false, Action<JsonNode> worksheetReadSent = null)
     {
         CheckPolicy(mayShareData: !guidanceOnly);
         if (preparing || reply != null) throw new InvalidOperationException("Wait for the current reply or stop it first.");
@@ -453,7 +469,7 @@ internal sealed class ChatGPTTutor : IDisposable
             var response = await RequestAsync("thread/start", new JsonObject { ["cwd"] = Path.Combine(storage, "Workspace"), ["approvalPolicy"] = "never", ["sandbox"] = "read-only", ["ephemeral"] = true, ["environments"] = new JsonArray(), ["baseInstructions"] = instructions, ["serviceName"] = worksheet ? "statsdirect-worksheet-assistant" : report ? "statsdirect-report-assistant" : script ? "statsdirect-script-assistant" : "statsdirect-learning", ["dynamicTools"] = tools.DeepClone() }, mayShareData: !guidanceOnly);
             threadId = response["thread"].S("id"); token.ThrowIfCancellationRequested();
             if (threadId.Length == 0) throw new IOException("ChatGPT could not start this conversation.");
-            var active = new ReplySession { Thread = threadId, Model = response.S("model", "ChatGPT"), Token = token, Tools = tools.Select(t => t.S("name")).ToHashSet(), Call = call, Progress = progress, GuidanceOnly = guidanceOnly };
+            var active = new ReplySession { Thread = threadId, Model = response.S("model", "ChatGPT"), Token = token, Tools = tools.Select(t => t.S("name")).ToHashSet(), Call = call, Progress = progress, GuidanceOnly = guidanceOnly, WorksheetReadSent = worksheetReadSent };
             reply = active;
             var turn = await RequestAsync("turn/start", new JsonObject { ["threadId"] = threadId, ["input"] = new JsonArray(new JsonObject { ["type"] = "text", ["text"] = prompt }), ["environments"] = new JsonArray(), ["sandboxPolicy"] = new JsonObject { ["type"] = "readOnly", ["networkAccess"] = false } }, mayShareData: !guidanceOnly);
             active.Turn ??= turn["turn"].S("id");
@@ -461,7 +477,15 @@ internal sealed class ChatGPTTutor : IDisposable
         }
         finally
         {
-            var current = reply; reply = null; preparing = false;
+            var current = reply; reply = null;
+            // A read already being written can reach ChatGPT even after Stop. Settle
+            // it before the caller snapshots Data used, but do not wait for a stalled pipe.
+            if (current?.WorksheetWrite is { IsCompleted: false } sending)
+            {
+                try { await sending.WaitAsync(TimeSpan.FromSeconds(5)); }
+                catch (TimeoutException) { Disconnect("ChatGPT disconnected while receiving worksheet data. Press Send to reconnect."); }
+            }
+            preparing = false;
             if (current?.Turn != null) _ = QuietRequestAsync("turn/interrupt", new JsonObject { ["threadId"] = current.Thread, ["turnId"] = current.Turn });
             if (threadId != null) _ = QuietRequestAsync("thread/unsubscribe", new JsonObject { ["threadId"] = threadId });
         }

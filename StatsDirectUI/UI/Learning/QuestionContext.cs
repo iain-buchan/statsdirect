@@ -28,6 +28,7 @@ internal sealed class QuestionContext
     private readonly bool trackWorksheetReads;
     private readonly List<JsonObject> worksheetReads = new();
     private readonly Dictionary<string, (frmSpreadsheetGear Grid, JsonObject Data)> datasets = new();
+    private readonly Dictionary<string, (frmSpreadsheetGear Grid, JsonObject Data, JsonObject Evidence)> pendingWorksheetReads = new();
     private readonly Dictionary<string, Task<JsonNode>> calculations = new();
     // Full local source is kept for Open R code, independently of the bounded AI excerpt.
     internal string RSource { get; }
@@ -120,10 +121,11 @@ internal sealed class QuestionContext
             var data = grid.LearningRead(arguments, trackWorksheetReads ? read => evidence = read : null);
             Check();
             string id = Guid.NewGuid().ToString("N"); data["datasetId"] = id;
-            datasets[id] = (grid, (JsonObject)data.DeepClone());
+            var snapshot = (JsonObject)data.DeepClone();
+            if (evidence == null) datasets[id] = (grid, snapshot);
+            else pendingWorksheetReads[id] = (grid, snapshot, evidence);
             // The R editor uses the same literal values, never a later read of the worksheet.
             data["rCode"] = ConversationRScript.Dataset(data);
-            if (evidence != null && !worksheetReads.Any(read => JsonNode.DeepEquals(read, evidence))) worksheetReads.Add(evidence);
             return data;
         }
         if (name == "statsdirect_read_document")
@@ -134,6 +136,14 @@ internal sealed class QuestionContext
         if (name == "statsdirect_open_analysis" && !scriptOnly && doc is frmSpreadsheetGear)
         { ((frmMain)doc.MdiParent).OpenLearningAnalysis(arguments.S("operation"), doc); return new JsonObject { ["state"] = "awaiting_user_input", ["message"] = "The method is opening. No calculation has been completed by this tool." }; }
         throw new InvalidOperationException("This document does not support that action.");
+    }
+    internal void WorksheetReadSent(JsonNode response)
+    {
+        string id = response.S("datasetId");
+        if (!pendingWorksheetReads.Remove(id, out var read)) return;
+        datasets.Add(id, (read.Grid, read.Data));
+        if (!worksheetReads.Any(existing => JsonNode.DeepEquals(existing, read.Evidence)))
+            worksheetReads.Add(read.Evidence);
     }
     private async Task<JsonNode> CalculateAsync(frmSpreadsheetGear grid, JsonObject data, JsonObject arguments)
     {
