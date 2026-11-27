@@ -564,7 +564,17 @@ internal sealed partial class ScriptAIPane : IDisposable
         catch (Exception ex)
         {
             if (chat == current && pending == request)
-            { if (partial.Length > 0) current.Messages.Add(AssistantMessage(partial + "\n[Reply stopped before completion.]")); partial = ""; if (Composer.Text.Length == 0) Composer.Text = question; Render(); status.Text = ex is OperationCanceledException ? "Reply stopped. Your question is kept here." : ex.Message; }
+            {
+                bool stopped = ex is OperationCanceledException;
+                if (partial.Length > 0)
+                    current.Messages.Add(AssistantMessage(partial + "\n[Reply stopped before completion.]"));
+                else if (context?.HasWorksheetReads == true)
+                    current.Messages.Add(AssistantMessage(stopped ? "[Reply stopped before any text.]" : "[No reply was received.]"));
+                partial = "";
+                if (Composer.Text.Length == 0) Composer.Text = question;
+                Render();
+                status.Text = stopped ? "Reply stopped. Your question is kept here." : ex.Message;
+            }
         }
         finally
         {

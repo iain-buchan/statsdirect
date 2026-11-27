@@ -218,6 +218,84 @@ internal static partial class Program
             "reported headings do not fill a gap in the requested data rows");
     }
 
+    private static async Task TestInterruptedWorksheetReceipts(frmSpreadsheetGear grid, ScriptAIPane pane, string trace)
+    {
+        const string partialReply = "Partial reply after a worksheet read.";
+        var messages = (JsonArray)Field(Field(pane, "chat"), "Messages");
+        var status = (Label)Field(pane, "status");
+        var stop = (Button)Field(pane, "stop");
+        var cases = new (string Question, string Reply, bool Stop, bool Streamed)[]
+        {
+            ("WORKSHEET_AI_RECEIPT_STOP_AFTER_READ", "[Reply stopped before any text.]", true, false),
+            ("WORKSHEET_AI_RECEIPT_FAIL_AFTER_READ", "[No reply was received.]", false, false),
+            ("WORKSHEET_AI_RECEIPT_STOP_AFTER_TEXT", partialReply + "\n[Reply stopped before completion.]", true, true),
+            ("WORKSHEET_AI_RECEIPT_STOP_BEFORE_READ", null, true, false)
+        };
+
+        foreach (var scenario in cases)
+        {
+            int start = messages.Count;
+            int trafficStart = WorksheetAnalysisDataTraffic(trace).Length;
+            bool ReadReachedProvider() => WorksheetAnalysisDataTraffic(trace).Skip(trafficStart)
+                .Select(line => JsonNode.Parse(line)["result"])
+                .Any(result => result is JsonObject && result.B("success") && result.A("contentItems").Any(item =>
+                    item.S("text").Contains("\"datasetId\":", StringComparison.Ordinal)
+                    && item.S("text").Contains(grid.Id(), StringComparison.Ordinal)));
+
+            pane.Composer.Text = scenario.Question;
+            var send = pane.SendAsync();
+            if (scenario.Stop)
+            {
+                await WaitForWorksheetTurn(trace, scenario.Question);
+                if (scenario.Reply != null)
+                    await Wait(ReadReachedProvider, "the mock receives the worksheet cells before Stop");
+                if (scenario.Streamed)
+                    await Wait(() => Equals(Field(pane, "partial"), partialReply), "the mock streams partial reply text before Stop");
+                Check(stop.Enabled && !send.IsCompleted, "the mock holds the current worksheet reply open for Stop");
+                stop.PerformClick();
+            }
+            await send.WaitAsync(TimeSpan.FromSeconds(15));
+            Check(ReadReachedProvider() == (scenario.Reply != null), scenario.Question + " has the expected worksheet traffic");
+            Check(pane.Composer.Text == scenario.Question
+                && (scenario.Stop ? status.Text == "Reply stopped. Your question is kept here."
+                    : status.Text.StartsWith("ChatGPT could not complete the reply.", StringComparison.Ordinal)),
+                "an interrupted reply restores its question and reports its status");
+
+            var added = messages.Skip(start).ToArray();
+            Check(added.Length == (scenario.Reply == null ? 1 : 2)
+                && added[0].S("role") == "user" && added[0].S("text") == scenario.Question
+                && (scenario.Reply == null || added[1].S("role") == "assistant" && added[1].S("text") == scenario.Reply),
+                scenario.Question + " records only the expected conversation messages");
+            if (scenario.Reply != null)
+            {
+                await pane.Transcript.SettledAsync();
+                var browser = pane.Transcript.Browser.CoreWebView2;
+                string evidence = await browser.ExecuteScriptAsync("""
+                    (() => {
+                        const reply = [...document.querySelectorAll('.message.assistant:not(.worksheet-analysis)')].at(-1);
+                        const receipt = reply?.querySelector('details.worksheet-evidence');
+                        return [receipt?.querySelector('summary')?.textContent, receipt?.querySelector('li')?.textContent];
+                    })()
+                    """);
+                var fields = JsonNode.Parse(evidence).AsArray();
+                bool matches = fields[0]?.GetValue<string>() == "Data used" && fields[1]?.GetValue<string>()
+                    == $"{grid.Text} · Fictional data · A1 (headings), A2:A4 (part of the worksheet’s used range)";
+                Check(matches, matches ? scenario.Question + " displays the exact cells already used"
+                    : $"{scenario.Question} displays the exact cells already used (found {evidence})");
+            }
+        }
+
+        const string followUp = "What should I consider next?";
+        pane.Composer.Text = followUp;
+        await pane.SendAsync();
+        var history = LastWorksheetRequest(trace).A("conversation");
+        Check(history.Last().S("text") == followUp
+            && history.Any(message => message.S("text") == "[Reply stopped before any text.]")
+            && history.Any(message => message.S("text") == "[No reply was received.]")
+            && history.All(message => message["worksheetReads"] == null),
+            "the next provider request includes the interruption messages and excludes local worksheet evidence");
+    }
+
     private static async Task TestWorksheetAssistant(frmMain main, LearningService service, Action<AISecurityLevel> setSecurity, string trace)
     {
         var previous = main.ActiveMdiChild;
@@ -317,6 +395,7 @@ internal static partial class Program
 
             await TestWorksheetRAnswer(main, service, grid, pane, trace);
             await CheckWorksheetPaneBinding(main, pane, grid, shared: true);
+            await TestInterruptedWorksheetReceipts(grid, pane, trace);
 
             pane.ShareWorkbook.Checked = false;
             const string afterSharing = "WORKSHEET_AI_HISTORY_OFF";

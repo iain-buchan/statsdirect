@@ -91,6 +91,7 @@ readline.createInterface({input:process.stdin}).on('line',line=>{
        answer=JSON.stringify({scopeIds:books.map(b=>b.documentId),readIds:reads.map(d=>d.documentId),titles:reads.map(d=>d.workbook),values:reads.map(d=>d.columns?.[0]?.values?.[0]),datasetIds:reads.map(d=>d.datasetId)});
      }
      if(question.startsWith('WORKSHEET_AI_') || question==='What is the mean age?') {
+       if(question==='WORKSHEET_AI_RECEIPT_STOP_BEFORE_READ') return;
        const call=(tool,args)=>new Promise(resolve=>{
          const rid='tool-'+(++sequence);
          responses.set(rid,resolve);
@@ -102,6 +103,15 @@ readline.createInterface({input:process.stdin}).on('line',line=>{
        const scope=await call('statsdirect_workspace',{});
        const documents=scope.success?JSON.parse(scope.contentItems[0].text).documents:[];
        const read=await call('statsdirect_read_data',{documentId:documents[0]?.documentId??'unapproved',firstRow:2,lastRow:4,columns:[0]});
+       if(question==='WORKSHEET_AI_RECEIPT_STOP_AFTER_READ') return;
+       if(question==='WORKSHEET_AI_RECEIPT_STOP_AFTER_TEXT') {
+         out({method:'item/agentMessage/delta',params:{threadId:p.threadId,turnId:id,itemId:'reply',delta:'Partial reply after a worksheet read.'}});
+         return;
+       }
+       if(question==='WORKSHEET_AI_RECEIPT_FAIL_AFTER_READ') {
+         out({method:'turn/completed',params:{threadId:p.threadId,turn:{id,status:'failed',error:{message:'Mock reply failed after a worksheet read.'}}}});
+         return;
+       }
        if((question==='WORKSHEET_AI_R_ANSWER' || question==='WORKSHEET_AI_R_PRIOR_ANSWER' || question==='What is the mean age?') && read.success) {
          const data=JSON.parse(read.contentItems[0].text);
          const values=data.columns[0].values;

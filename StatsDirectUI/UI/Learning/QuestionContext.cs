@@ -32,6 +32,7 @@ internal sealed class QuestionContext
     // Full local source is kept for Open R code, independently of the bounded AI excerpt.
     internal string RSource { get; }
     internal string RData => string.Join("\n", datasets.Values.Select(d => ConversationRScript.Dataset(d.Data)));
+    internal bool HasWorksheetReads => worksheetReads.Count > 0;
     internal JsonArray WorksheetReads => new(worksheetReads.Select(read => read.DeepClone()).ToArray());
     internal QuestionContext(IEnumerable<StatsDirectForm> documents, bool scriptOnly, CancellationToken token, AISharingConsent sharing = null, ChatGPTTutor tutor = null, bool guidanceOnly = false, bool trackWorksheetReads = false)
     {
