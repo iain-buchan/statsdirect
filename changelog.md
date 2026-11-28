@@ -2,7 +2,7 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
-## [Unreleased]
+##[v5.3.23]
 
 ### Fixed
 - Windows checks separators in worksheet numbers stored as text and names the cell when a separator needs correcting. It preserves date-like headings and labels in categorical data.
