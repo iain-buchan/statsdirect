@@ -2,7 +2,7 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
-##[v5.3.22]
+##[v5.3.22] 2026-11-27
 
 ### Added
 - AI Assist can help you choose a method from the start of a conversation. A workbook without data offers the example workbook and workbook Help. Clickable answers let you say what you want to find out, how the outcome was measured and how the observations were collected.
