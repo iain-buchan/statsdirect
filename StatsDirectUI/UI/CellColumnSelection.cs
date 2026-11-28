@@ -37,8 +37,8 @@ namespace StatsDirect.UI
         // Things that are calculated at the same time as knowing how long the column really is
         private int nonHiddenRowCount = -1;
         private int nonHiddenDataRowCount = -1;
-        private double[] cachedDataValues;
-        private double[] cachedSelectedDataValues;
+        private WorksheetNumericValues? cachedDataValues;
+        private WorksheetNumericValues? cachedSelectedDataValues;
         private string[] cachedTextValues;
         private string[] cachedTexts;
         private string[] cachedFormulae;
@@ -73,7 +73,7 @@ namespace StatsDirect.UI
             titleIsInData = false;
             dataRows = RowCount;
             int candidateFirstGridRow = RowIndex;
-            if (cellGetter.GetCellValue(candidateFirstGridRow, ColumnIndex) == Constant.MISSING)
+            if (cellGetter.CanBeColumnTitle(candidateFirstGridRow, ColumnIndex))
             {
                 // Could be text, i.e. a title - let's find out
                 candidateTitle = cellGetter.GetCellText(candidateFirstGridRow, ColumnIndex).Trim();
@@ -87,7 +87,7 @@ namespace StatsDirect.UI
                     // It's not numeric or text - look back up to two rows to see whether there's a title in there.
                     for (int r = candidateFirstGridRow - 1; r >= Math.Max(0, candidateFirstGridRow - 2); r--)
                     {
-                        if (cellGetter.GetCellValue(r, ColumnIndex) == Constant.MISSING)
+                        if (cellGetter.CanBeColumnTitle(r, ColumnIndex))
                         {
                             candidateTitle = cellGetter.GetCellText(r, ColumnIndex).Trim();
                             if (candidateTitle.Length > 0)
@@ -106,7 +106,7 @@ namespace StatsDirect.UI
                 // First row is numeric.  Look back up to two rows to see whether there's a title in there.
                 for (int r = candidateFirstGridRow - 1; r >= Math.Max(0, candidateFirstGridRow - 2); r--)
                 {
-                    if (cellGetter.GetCellValue(r, ColumnIndex) == Constant.MISSING)
+                    if (cellGetter.CanBeColumnTitle(r, ColumnIndex))
                     {
                         candidateTitle = cellGetter.GetCellText(r, ColumnIndex).Trim();
                         if (candidateTitle.Length > 0)
@@ -198,17 +198,24 @@ namespace StatsDirect.UI
         /// </summary>
         internal double[] GetDataValues()
         {
-            if (null == cachedDataValues)
-                (cachedDataValues, nonHiddenDataRowCount) = cellGetter.GetCellValues(ColumnIndex, GridFirstDataRow, GridFirstDataRow + DataRows - 1);
-            return cachedDataValues;
+            var read = ReadDataValues();
+            read.RequireValidNumbers(ColumnIndex);
+            return read.Values;
+        }
+
+        internal WorksheetNumericValues ReadDataValues()
+        {
+            var read = cachedDataValues ??= cellGetter.ReadNumericCells(ColumnIndex, GridFirstDataRow, GridFirstDataRow + DataRows - 1);
+            nonHiddenDataRowCount = read.VisibleRows;
+            return read;
         }
 
         /// <summary>The numeric values of the full selected visible range, without title or blank-row trimming.</summary>
-        internal double[] GetSelectedDataValues()
+        internal WorksheetNumericValues ReadSelectedDataValues()
         {
-            if (cachedSelectedDataValues == null)
-                (cachedSelectedDataValues, nonHiddenRowCount) = cellGetter.GetCellValues(ColumnIndex, RowIndex, RowIndex + RowCount - 1);
-            return cachedSelectedDataValues;
+            var read = cachedSelectedDataValues ??= cellGetter.ReadNumericCells(ColumnIndex, RowIndex, RowIndex + RowCount - 1);
+            nonHiddenRowCount = read.VisibleRows;
+            return read;
         }
 
         /// <summary>Whether the physical first row of the selection is visible (the first visible row may be later).</summary>
@@ -248,7 +255,7 @@ namespace StatsDirect.UI
         private void EnsureKnowsNonHiddenDataRowCount()
         {
             if (nonHiddenDataRowCount < 0)
-                GetDataValues();
+                (_, nonHiddenDataRowCount) = cellGetter.GetCellObjects(ColumnIndex, GridFirstDataRow, GridFirstDataRow + DataRows - 1);
         }
 
     }

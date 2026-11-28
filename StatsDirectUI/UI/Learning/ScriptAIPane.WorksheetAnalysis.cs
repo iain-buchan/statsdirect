@@ -300,6 +300,7 @@ internal sealed partial class ScriptAIPane
 
         var interval = new IntervalDecision(action.Interval.Paired);
         try { interval = interval.ReadSelection(current.Grid); }
+        catch (WorksheetNumberFormatException ex) { updated = updated with { Feedback = ex.Message }; }
         catch (InvalidOperationException) { /* The user can describe the layout if it cannot be read as two columns. */ }
         return updated with { Interval = interval };
     }

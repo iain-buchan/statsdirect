@@ -188,7 +188,7 @@ namespace StatsDirect.UI
                     for (int row = 0; row < usedRange.RowCount; row++)
                     {
                         object rawValue = usedRange.Cells[row, col].Value;
-                        double parsedValue = frmSpreadsheetGear.ToCellValue(rawValue);
+                        double parsedValue = WorksheetNumber.Read(rawValue, usedRange.Row + row, usedRange.Column + col, DoValidation);
                         v.Data[row] = parsedValue;
                     }
                 }
@@ -290,12 +290,13 @@ namespace StatsDirect.UI
                 TableLayoutPanel ssgContainer = (TableLayoutPanel)Control;
                 WorkbookView grid = (WorkbookView)ssgContainer.GetControlFromPosition(1, 1);
                 IWorksheet worksheet = grid.ActiveWorksheet;
-                object value = grid.WithLock(() =>
+                var (value, firstRow, firstColumn) = grid.WithLock(() =>
                 {
-                    object v = worksheet.UsedRange.Value;
+                    IRange range = worksheet.UsedRange;
+                    object v = range.Value;
                     if (null != v && !v.GetType().IsArray)
                         v = new[,] { { v } };
-                    return v;
+                    return (v, range.Row, range.Column);
                 });
 
                 if (null != value)
@@ -307,7 +308,7 @@ namespace StatsDirect.UI
                     {
                         DoubleVariable dv = new(ary.GetUpperBound(0) - ary.GetLowerBound(0) + 1, "Column " + (col + 1).ToString());
                         for (int row = ary.GetLowerBound(0); row <= ary.GetUpperBound(0); row++)
-                            dv.Data[row] = frmSpreadsheetGear.ToCellValue(ary[row, col]);
+                            dv.Data[row] = WorksheetNumber.Read(ary[row, col], firstRow + row, firstColumn + col, DoValidation);
                         frame.Variables.Add(dv);
                     }
                     OutputParameters[parameter.Name] = FilledParameterFactory.Input(frame);
@@ -319,12 +320,13 @@ namespace StatsDirect.UI
                 TableLayoutPanel ssgContainer = (TableLayoutPanel)Control;
                 WorkbookView grid = (WorkbookView)ssgContainer.GetControlFromPosition(1, 1);
                 IWorksheet worksheet = grid.ActiveWorksheet;
-                object value = grid.WithLock(() =>
+                var (value, firstRow, firstColumn) = grid.WithLock(() =>
                 {
-                    object v = worksheet.UsedRange.Value;
+                    IRange range = worksheet.UsedRange;
+                    object v = range.Value;
                     if (null != v && !v.GetType().IsArray)
                         v = new[,] { { v } };
-                    return v;
+                    return (v, range.Row, range.Column);
                 });
                 if (null != value)
                 {
@@ -335,7 +337,7 @@ namespace StatsDirect.UI
                     {
                         DoubleVariable dv = new(ary.GetUpperBound(0) - ary.GetLowerBound(0) + 1, "R2(" + col.ToString() + ")");
                         for (int row = ary.GetLowerBound(0); row <= ary.GetUpperBound(0); row++)
-                            dv.Data[row] = frmSpreadsheetGear.ToCellValue(ary[row, col]);
+                            dv.Data[row] = WorksheetNumber.Read(ary[row, col], firstRow + row, firstColumn + col, DoValidation);
                         frame.Variables.Add(dv);
                     }
                     OutputParameters[parameter.Name] = FilledParameterFactory.Input(frame);
