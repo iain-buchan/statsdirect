@@ -149,12 +149,15 @@ namespace StatsDirect.UI
                     }
                     if (string.IsNullOrWhiteSpace(textValues[row]))
                         continue;
-                    if (!read.HasMisplacedSeparator(row))
+                    var issue = read.IssueAt(row);
+                    if (issue == WorksheetNumberIssue.None)
                     {
                         isTextual = true;
                         break;
                     }
-                    hasSeparatorLabel |= WorksheetNumber.CanBeSeparatorLabel(textValues[row]);
+                    // A badly grouped number is still evidence this is a numeric column.
+                    hasNumber |= issue == WorksheetNumberIssue.InvalidGrouping;
+                    hasSeparatorLabel |= issue == WorksheetNumberIssue.SeparatorText;
                 }
                 if (isTextual || !hasNumber && hasSeparatorLabel)
                 {
@@ -706,7 +709,7 @@ namespace StatsDirect.UI
             // Matched columns have no count hint yet; only genuine text can be their selected header.
             bool hasTitle = isRefill ? titleWasInData : (rowLengthHint == 0 || selected.Length == rowLengthHint + 1)
                 && first.Length > 0 && selected[0] == Constant.MISSING
-                && (!read.HasMisplacedSeparator(0) || WorksheetNumber.IsDottedDate(first)) && !IsMissingRowText(first);
+                && read.IssueAt(0) != WorksheetNumberIssue.InvalidGrouping && !IsMissingRowText(first);
             int offset = hasTitle && selected.Length > 0 && column.FirstSelectedRowIsVisible() ? 1 : 0;
             double[] values = new double[selected.Length - offset];
             string[] dataTexts = includeTexts ? new string[values.Length] : null;
@@ -758,12 +761,14 @@ namespace StatsDirect.UI
                     }
                     if (string.IsNullOrWhiteSpace(texts[row]) || IsMissingRowText(texts[row].Trim()))
                         continue;
-                    if (!read.HasMisplacedSeparator(row + offset))
+                    var issue = read.IssueAt(row + offset);
+                    if (issue == WorksheetNumberIssue.None)
                     {
                         textual = true;
                         break;
                     }
-                    hasSeparatorLabel |= WorksheetNumber.CanBeSeparatorLabel(texts[row]);
+                    hasNumber |= issue == WorksheetNumberIssue.InvalidGrouping;
+                    hasSeparatorLabel |= issue == WorksheetNumberIssue.SeparatorText;
                 }
                 textual |= !hasNumber && hasSeparatorLabel;
                 if (!textual)

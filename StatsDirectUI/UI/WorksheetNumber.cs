@@ -6,22 +6,28 @@ using System.Globalization;
 
 namespace StatsDirect.UI;
 
+internal enum WorksheetNumberIssue
+{
+    None,
+    InvalidGrouping,
+    SeparatorText
+}
+
 internal static class WorksheetNumber
 {
     private const NumberStyles GroupedNumber = NumberStyles.Float | NumberStyles.AllowThousands;
-    private static readonly string[] DottedDateFormats = ["d.M.yyyy", "M.d.yyyy", "yyyy.M.d"];
 
     internal static double Read(object value, int row, int column, bool validate = true)
     {
-        double number = Parse(value, out bool misplacedSeparator);
-        if (misplacedSeparator && validate)
+        double number = Parse(value, out var issue);
+        if (issue != WorksheetNumberIssue.None && validate)
             throw new WorksheetNumberFormatException(row, column);
         return number;
     }
 
-    internal static double Parse(object value, out bool misplacedSeparator)
+    internal static double Parse(object value, out WorksheetNumberIssue issue)
     {
-        misplacedSeparator = false;
+        issue = WorksheetNumberIssue.None;
         if (value is double number)
             return number;
         if (value is int integer)
@@ -44,11 +50,14 @@ internal static class WorksheetNumber
             groupedText = text.Trim().Replace(' ', space).Replace('\u00a0', space).Replace('\u202f', space);
         }
 
-        if (double.TryParse(groupedText, GroupedNumber, format, out number))
+        // The old reader's permissive parse tells us whether heading and category
+        // inference previously saw a number or text here.
+        bool wasNumber = double.TryParse(text, GroupedNumber, format, out number);
+        if (wasNumber || (groupedText != text && double.TryParse(groupedText, GroupedNumber, format, out number)))
         {
             if (HasValidGrouping(groupedText, format))
                 return number;
-            misplacedSeparator = true;
+            issue = wasNumber ? WorksheetNumberIssue.InvalidGrouping : WorksheetNumberIssue.SeparatorText;
         }
         else
         {
@@ -59,19 +68,13 @@ internal static class WorksheetNumber
                 .Replace("\u00a0", "").Replace("\u202f", "").Replace(format.NumberDecimalSeparator, "");
             if (format.NumberGroupSeparator.Length > 0)
                 withoutSeparators = withoutSeparators.Replace(format.NumberGroupSeparator, "");
-            misplacedSeparator = withoutSeparators.Length < trimmed.Length
+            if (withoutSeparators.Length < trimmed.Length
                 && withoutSeparators.AsSpan().IndexOfAnyInRange('0', '9') >= 0
-                && double.TryParse(withoutSeparators, NumberStyles.Float, format, out _);
+                && double.TryParse(withoutSeparators, NumberStyles.Float, format, out _))
+                issue = WorksheetNumberIssue.SeparatorText;
         }
         return Constant.MISSING;
     }
-
-    internal static bool IsDottedDate(string text) => DateOnly.TryParseExact(text.AsSpan().Trim(),
-        DottedDateFormats, CultureInfo.InvariantCulture, DateTimeStyles.None, out _);
-
-    // A column without numeric observations can still contain literal dates or codes such as 1.2.3.
-    internal static bool CanBeSeparatorLabel(string text) =>
-        IsDottedDate(text) || !double.TryParse(text, GroupedNumber, NumberFormatInfo.CurrentInfo, out _);
 
     private static bool HasValidGrouping(string text, NumberFormatInfo format)
     {
@@ -118,19 +121,21 @@ internal static class WorksheetNumber
 }
 
 // Map each misplaced separator from its visible-row index to its physical worksheet row.
-internal readonly record struct WorksheetNumericValues(double[] Values, int VisibleRows, Dictionary<int, int> Misplaced = null)
+internal readonly record struct WorksheetNumericValues(double[] Values, int VisibleRows,
+    Dictionary<int, (int PhysicalRow, WorksheetNumberIssue Issue)> Misplaced = null)
 {
-    internal bool HasMisplacedSeparator(int index) => Misplaced?.ContainsKey(index) == true;
+    internal WorksheetNumberIssue IssueAt(int index) =>
+        Misplaced != null && Misplaced.TryGetValue(index, out var cell) ? cell.Issue : WorksheetNumberIssue.None;
 
     internal void RequireValidNumbers(int column, int titleRows = 0, IReadOnlyList<bool> includedRows = null)
     {
         if (Misplaced == null)
             return;
-        foreach (var (index, physicalRow) in Misplaced)
+        foreach (var (index, cell) in Misplaced)
         {
             int row = index - titleRows;
             if (row >= 0 && (includedRows == null || row < includedRows.Count && includedRows[row]))
-                throw new WorksheetNumberFormatException(physicalRow, column);
+                throw new WorksheetNumberFormatException(cell.PhysicalRow, column);
         }
     }
 }

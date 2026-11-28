@@ -863,8 +863,8 @@ namespace StatsDirect.UI
         bool IGetCells.CanBeColumnTitle(int row, int column) => workbookView.WithLock(() =>
         {
             object value = workbookView.ActiveWorksheet.Cells[row, column].Value;
-            return WorksheetNumber.Parse(value, out bool misplacedSeparator) == Constant.MISSING
-                && (!misplacedSeparator || value is string text && WorksheetNumber.IsDottedDate(text));
+            return WorksheetNumber.Parse(value, out var issue) == Constant.MISSING
+                && issue != WorksheetNumberIssue.InvalidGrouping;
         });
 
         string IGetCells.GetCellText(int row, int column)
@@ -971,16 +971,16 @@ namespace StatsDirect.UI
 
             (object[,] values, int nonHiddenRowCount) = GetCellObjects(column, firstRow, lastRow);
             double[] returnValues = new double[nonHiddenRowCount];
-            Dictionary<int, int> misplaced = null;
+            Dictionary<int, (int PhysicalRow, WorksheetNumberIssue Issue)> misplaced = null;
             int[] visibleRows = null;
             for (int r = 0; r < nonHiddenRowCount; r++)
             {
-                returnValues[r] = WorksheetNumber.Parse(values[r, 0], out bool misplacedSeparator);
-                if (misplacedSeparator)
+                returnValues[r] = WorksheetNumber.Parse(values[r, 0], out var issue);
+                if (issue != WorksheetNumberIssue.None)
                 {
                     // Compacted values have no gaps for hidden rows. Record the physical cell.
                     visibleRows ??= ((IGetCells)this).GetVisibleRowIndices(column, firstRow, lastRow);
-                    (misplaced ??= new()).Add(r, visibleRows[r]);
+                    (misplaced ??= new()).Add(r, (visibleRows[r], issue));
                 }
             }
             return new WorksheetNumericValues(returnValues, nonHiddenRowCount, misplaced);

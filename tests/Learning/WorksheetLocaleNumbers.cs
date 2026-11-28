@@ -114,37 +114,84 @@ internal static partial class Program
 
             WithWorksheet(workbook, sheet =>
             {
-                sheet.Cells["H30:H44"].NumberFormat = "@";
-                sheet.Cells["H30"].Value = "27.11.2026";
+                sheet.Cells["H30:H58"].NumberFormat = "@";
                 sheet.Cells["H31"].Value = 1;
                 sheet.Cells["H32"].Value = 2;
                 sheet.Cells["H33"].Value = 3;
                 sheet.Cells["H35"].Value = "Visit";
                 sheet.Cells["H36"].Value = "27.11.2026";
                 sheet.Cells["H37"].Value = "28.11.2026";
-                sheet.Cells["H38"].Value = "1.2.3";
-                sheet.Cells["H39"].Value = "27.11.2026";
+                sheet.Cells["H38"].Value = "27.11.2026";
                 sheet.Cells["H41"].Value = "Amount";
                 sheet.Cells["H42"].Value = 1;
                 sheet.Cells["H43"].Value = "1.5";
                 sheet.Cells["H44"].Value = "2,5";
+                sheet.Cells["H46"].Value = "Code";
+                sheet.Cells["H47"].Value = "1.2.3";
+                sheet.Cells["H48"].Value = "1.2.4";
+                sheet.Cells["H49"].Value = "1.2.3";
+                sheet.Cells["H51"].Value = "Amount";
+                sheet.Cells["H52"].Value = "1,5";
+                sheet.Cells["H53"].Value = "1.2.3";
+                sheet.Cells["H55"].Value = "Amount";
+                sheet.Cells["H56"].Value = 1;
+                sheet.Cells["H57"].Value = 2;
+                sheet.Cells["H58"].Value = "1.2.3";
                 return true;
             });
             CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("en-GB");
-            foreach (DataAcquisitionMode mode in new[] { DataAcquisitionMode.NumericSkipMissing, DataAcquisitionMode.NumericReplaceMissing, DataAcquisitionMode.NumericPreserveRows })
+            var numericModes = new[] { DataAcquisitionMode.NumericSkipMissing, DataAcquisitionMode.NumericReplaceMissing, DataAcquisitionMode.NumericPreserveRows };
+            foreach (string heading in new[] { "27.11.2026", "1.2.3" })
             {
-                var variable = (DoubleVariable)Acquire(cells, mode, 29, 4).Variables[0];
-                Check(variable.Title == "27.11.2026" && variable.Data.SequenceEqual(new[] { 1.0, 2.0, 3.0 }),
-                    $"en-GB {mode} preserves a dotted-date heading over numeric data");
+                WithWorksheet(workbook, sheet => { sheet.Cells["H30"].Value = heading; return true; });
+                foreach (DataAcquisitionMode mode in numericModes)
+                {
+                    var variable = (DoubleVariable)Acquire(cells, mode, 29, 4).Variables[0];
+                    Check(variable.Title == heading && variable.Data.SequenceEqual(new[] { 1.0, 2.0, 3.0 }),
+                        $"en-GB {mode} preserves the heading {heading} over numeric data");
+                }
             }
-            var visit = (ClassifierVariable)Acquire(cells, DataAcquisitionMode.NumericCodingTextToCategories, 34, 5).Variables[0];
-            Check(visit.Groups.Select(group => group.Label).ToHashSet().SetEquals(new[] { "27.11.2026", "28.11.2026", "1.2.3" }),
-                "en-GB preserves literal dotted dates and version labels in an automatically classified text column");
-            Check(InvalidWorksheetNumberAt(() => Acquire(cells, DataAcquisitionMode.NumericPreserveRows, 34, 5), "H36"),
+            WithWorksheet(workbook, sheet => { sheet.Cells["H30"].Value = "1,5"; return true; });
+            foreach (DataAcquisitionMode mode in numericModes)
+                Check(InvalidWorksheetNumberAt(() => Acquire(cells, mode, 29, 4), "H30"),
+                    $"en-GB {mode} names a badly grouped value at the first selected row");
+
+            CheckLabels(45, "Code", "1.2.3", "1.2.4");
+            CheckPredictorsRefuse(50, 3, "H52", "a badly grouped value alongside a dotted code");
+            CheckPredictorsRefuse(54, 4, "H58", "a dotted code among numeric values");
+            Check(InvalidWorksheetNumberAt(() => Acquire(cells, DataAcquisitionMode.NumericPreserveRows, 34, 4), "H36"),
                 "en-GB names a dotted-date value in a numeric-only read");
+            foreach (string culture in new[] { "en-GB", "ru-RU" })
+            {
+                CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(culture);
+                CheckLabels(34, "Visit", "27.11.2026", "28.11.2026");
+            }
             CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("de-DE");
-            Check(InvalidWorksheetNumberAt(() => Acquire(cells, DataAcquisitionMode.NumericPreserveRows, 34, 5), "H36"),
+            CheckPredictorsRefuse(34, 4, "H36", "dotted dates parsed as badly grouped numbers");
+            Check(InvalidWorksheetNumberAt(() => Acquire(cells, DataAcquisitionMode.NumericPreserveRows, 34, 4), "H36"),
                 "de-DE rejects dotted dates with invalid grouping in a numeric-only read");
+
+            DataFrame ReadAlignedPredictor(int firstRow, int count) => CellArrayProcessor.ProcessCellArrayNumericCodingPreserveRows(
+                Selection(cells, firstRow, count), 0, false, false, 0, new SavedRunHost(scratchGrid, new()));
+
+            void CheckLabels(int firstRow, string columnTitle, string first, string second)
+            {
+                var variable = (ClassifierVariable)Acquire(cells, DataAcquisitionMode.NumericCodingTextToCategories, firstRow, 4).Variables[0];
+                Check(variable.Groups.Select(group => group.Label).ToHashSet().SetEquals(new[] { first, second }),
+                    $"{CultureInfo.CurrentCulture.Name} preserves literal labels in {columnTitle}");
+                var aligned = ReadAlignedPredictor(firstRow, 4);
+                Check(aligned.VariableCount == 1 && aligned.Variables[0] is DoubleVariable dummy
+                    && dummy.Title == $"{columnTitle}({second})" && dummy.Data.SequenceEqual(new[] { 0.0, 1.0, 0.0 }),
+                    $"{CultureInfo.CurrentCulture.Name} creates an aligned dummy from literal labels in {columnTitle}");
+            }
+
+            void CheckPredictorsRefuse(int firstRow, int count, string address, string reason)
+            {
+                Check(InvalidWorksheetNumberAt(() => Acquire(cells, DataAcquisitionMode.NumericCodingTextToCategories, firstRow, count), address),
+                    $"{CultureInfo.CurrentCulture.Name} names {address} for {reason} in an automatically classified predictor");
+                Check(InvalidWorksheetNumberAt(() => ReadAlignedPredictor(firstRow, count), address),
+                    $"{CultureInfo.CurrentCulture.Name} names {address} for {reason} in an aligned predictor");
+            }
 
             CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("fr-FR");
             foreach (string grouped in new[] { "1 000,5", "1\u00a0000,5", "1\u202f000,5" })
@@ -154,8 +201,7 @@ internal static partial class Program
                 "fr-FR accepts correctly sized groups with both no-break space characters");
             Check(InvalidWorksheetNumberAt(() => WorksheetNumber.Read("1\u202f234\u00a056,5", 24, 27), "AB25"),
                 "fr-FR reports an incorrectly sized group with mixed no-break spaces");
-            Check(InvalidWorksheetNumberAt(() => Acquire(cells, DataAcquisitionMode.NumericCodingTextToCategories, 40, 4), "H43"),
-                "fr-FR reports a foreign decimal separator inside an otherwise numeric predictor");
+            CheckPredictorsRefuse(40, 4, "H43", "a foreign decimal among numeric values");
             Check(WorksheetNumber.Read(null, 0, 0) == Constant.MISSING
                 && WorksheetNumber.Read("MISSING", 0, 0) == Constant.MISSING * 10D
                 && WorksheetNumber.Read(".", 0, 0) == Constant.MISSING * 10D
