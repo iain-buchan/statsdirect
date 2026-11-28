@@ -863,7 +863,8 @@ namespace StatsDirect.UI
         bool IGetCells.CanBeColumnTitle(int row, int column) => workbookView.WithLock(() =>
         {
             object value = workbookView.ActiveWorksheet.Cells[row, column].Value;
-            return WorksheetNumber.Parse(value, out bool misplacedSeparator) == Constant.MISSING && !misplacedSeparator;
+            return WorksheetNumber.Parse(value, out bool misplacedSeparator) == Constant.MISSING
+                && (!misplacedSeparator || value is string text && WorksheetNumber.IsDottedDate(text));
         });
 
         string IGetCells.GetCellText(int row, int column)

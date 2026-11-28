@@ -139,18 +139,24 @@ namespace StatsDirect.UI
                     if (!string.IsNullOrWhiteSpace(textValues[lastTextRow]))
                         break;
                 int lastRow = Math.Max(lastNumericRow, lastTextRow);
-                // If there are any numeric missing values where the text is not missing, treat the column as textual and code as a category
-                bool isTextual = false;
+                bool isTextual = false, hasNumber = false, hasSeparatorLabel = false;
                 for (int row = 0; row <= lastRow; row++)
                 {
-                    if ((numericValues.Length <= row || numericValues[row] == Constant.MISSING) && !string.IsNullOrWhiteSpace(textValues[row])
-                        && !read.HasMisplacedSeparator(row))
+                    if (row < numericValues.Length && numericValues[row] != Constant.MISSING)
+                    {
+                        hasNumber |= numericValues[row] != Constant.MISSING * 10D && !RunRecord.Missing(numericValues[row]);
+                        continue;
+                    }
+                    if (string.IsNullOrWhiteSpace(textValues[row]))
+                        continue;
+                    if (!read.HasMisplacedSeparator(row))
                     {
                         isTextual = true;
                         break;
                     }
+                    hasSeparatorLabel |= WorksheetNumber.CanBeSeparatorLabel(textValues[row]);
                 }
-                if (isTextual)
+                if (isTextual || !hasNumber && hasSeparatorLabel)
                 {
                     ClassifierVariable variable = new();
                     variable.EnsureLength(lastRow + 1, Constant.MISSING);
@@ -700,7 +706,7 @@ namespace StatsDirect.UI
             // Matched columns have no count hint yet; only genuine text can be their selected header.
             bool hasTitle = isRefill ? titleWasInData : (rowLengthHint == 0 || selected.Length == rowLengthHint + 1)
                 && first.Length > 0 && selected[0] == Constant.MISSING
-                && !read.HasMisplacedSeparator(0) && !IsMissingRowText(first);
+                && (!read.HasMisplacedSeparator(0) || WorksheetNumber.IsDottedDate(first)) && !IsMissingRowText(first);
             int offset = hasTitle && selected.Length > 0 && column.FirstSelectedRowIsVisible() ? 1 : 0;
             double[] values = new double[selected.Length - offset];
             string[] dataTexts = includeTexts ? new string[values.Length] : null;
@@ -740,11 +746,26 @@ namespace StatsDirect.UI
                     texts = dataTexts;
                     offset += removedHeaderRows;
                 }
-                bool textual = false;
+                bool textual = false, hasNumber = false, hasSeparatorLabel = false;
                 for (int row = 0; row < numeric.Length; row++)
-                    if (CanCode(row) && numeric.Data[row] == Constant.MISSING && !string.IsNullOrWhiteSpace(texts[row])
-                        && !read.HasMisplacedSeparator(row + offset) && !IsMissingRowText(texts[row].Trim()))
+                {
+                    if (!CanCode(row))
+                        continue;
+                    if (numeric.Data[row] != Constant.MISSING)
+                    {
+                        hasNumber |= !RunRecord.Missing(numeric.Data[row]);
+                        continue;
+                    }
+                    if (string.IsNullOrWhiteSpace(texts[row]) || IsMissingRowText(texts[row].Trim()))
+                        continue;
+                    if (!read.HasMisplacedSeparator(row + offset))
+                    {
                         textual = true;
+                        break;
+                    }
+                    hasSeparatorLabel |= WorksheetNumber.CanBeSeparatorLabel(texts[row]);
+                }
+                textual |= !hasNumber && hasSeparatorLabel;
                 if (!textual)
                     read.RequireValidNumbers(column.ColumnIndex, offset, codingRows);
 

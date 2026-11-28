@@ -9,6 +9,7 @@ namespace StatsDirect.UI;
 internal static class WorksheetNumber
 {
     private const NumberStyles GroupedNumber = NumberStyles.Float | NumberStyles.AllowThousands;
+    private static readonly string[] DottedDateFormats = ["d.M.yyyy", "M.d.yyyy", "yyyy.M.d"];
 
     internal static double Read(object value, int row, int column, bool validate = true)
     {
@@ -34,9 +35,18 @@ internal static class WorksheetNumber
         if (text is "*" or "." || text.Equals("MISSING", StringComparison.OrdinalIgnoreCase))
             return Constant.MISSING * 10D;
 
-        if (double.TryParse(text, GroupedNumber, format, out number))
+        string groupedText = text;
+        string separator = format.NumberGroupSeparator;
+        if (separator is " " or "\u00a0" or "\u202f")
         {
-            if (HasValidGrouping(text, format))
+            // Excel and different versions of Windows use different spaces for the same group separator.
+            char space = separator[0];
+            groupedText = text.Trim().Replace(' ', space).Replace('\u00a0', space).Replace('\u202f', space);
+        }
+
+        if (double.TryParse(groupedText, GroupedNumber, format, out number))
+        {
+            if (HasValidGrouping(groupedText, format))
                 return number;
             misplacedSeparator = true;
         }
@@ -56,6 +66,13 @@ internal static class WorksheetNumber
         return Constant.MISSING;
     }
 
+    internal static bool IsDottedDate(string text) => DateOnly.TryParseExact(text.AsSpan().Trim(),
+        DottedDateFormats, CultureInfo.InvariantCulture, DateTimeStyles.None, out _);
+
+    // A column without numeric observations can still contain literal dates or codes such as 1.2.3.
+    internal static bool CanBeSeparatorLabel(string text) =>
+        IsDottedDate(text) || !double.TryParse(text, GroupedNumber, NumberFormatInfo.CurrentInfo, out _);
+
     private static bool HasValidGrouping(string text, NumberFormatInfo format)
     {
         string separator = format.NumberGroupSeparator;
@@ -67,6 +84,9 @@ internal static class WorksheetNumber
             integral = integral[format.NegativeSign.Length..];
         else if (integral.StartsWith(format.PositiveSign, StringComparison.Ordinal))
             integral = integral[format.PositiveSign.Length..];
+        else if (integral.StartsWith("-", StringComparison.Ordinal))
+            integral = integral[1..]; // The successful .NET parse has already accepted the hyphen as a minus.
+
         int exponent = integral.IndexOfAny('e', 'E');
         if (exponent >= 0)
             integral = integral[..exponent];
@@ -74,16 +94,14 @@ internal static class WorksheetNumber
         if (decimalPoint >= 0)
             integral = integral[..decimalPoint];
 
-        // .NET accepts an ordinary space for locales that group with a no-break space.
-        string digits = integral.ToString();
-        if (separator is "\u00a0" or "\u202f")
-            digits = digits.Replace(" ", separator);
-        string[] groups = digits.Split(separator, StringSplitOptions.None);
-        if (groups.Length < 2)
-            return false;
-
+        string[] groups = integral.ToString().Split(separator, StringSplitOptions.None);
         int[] sizes = format.NumberGroupSizes;
-        if (sizes.Length == 0)
+        return GroupsMatch(groups, sizes) || sizes is [3, 2] && GroupsMatch(groups, [3]);
+    }
+
+    private static bool GroupsMatch(string[] groups, ReadOnlySpan<int> sizes)
+    {
+        if (groups.Length < 2 || sizes.IsEmpty)
             return false;
         for (int offset = 0; offset < groups.Length; offset++)
         {

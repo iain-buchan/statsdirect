@@ -96,9 +96,67 @@ internal static partial class Program
                     example.Culture + " honours the stored heading when rereading a recorded selection");
             }
 
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("en-IN");
+            Check(WorksheetNumber.Read("10,00,000", 0, 0) == 1000000
+                && WorksheetNumber.Read("2,50,000", 0, 0) == 250000
+                && WorksheetNumber.Read("1,000,000", 0, 0) == 1000000
+                && WorksheetNumber.Read("100,000", 0, 0) == 100000,
+                "en-IN accepts both local grouping and plain three-digit grouping");
+            Check(InvalidWorksheetNumberAt(() => WorksheetNumber.Read("10,00", 24, 27), "AB25"),
+                "en-IN still reports incorrectly sized groups");
+
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("sv-SE");
+            Check(WorksheetNumber.Read("-100 000", 0, 0) == -100000,
+                "sv-SE accepts a leading hyphen in a grouped negative number");
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("hr-HR");
+            Check(WorksheetNumber.Read("-100.000", 0, 0) == -100000,
+                "hr-HR accepts a leading hyphen in a grouped negative number");
+
+            WithWorksheet(workbook, sheet =>
+            {
+                sheet.Cells["H30:H44"].NumberFormat = "@";
+                sheet.Cells["H30"].Value = "27.11.2026";
+                sheet.Cells["H31"].Value = 1;
+                sheet.Cells["H32"].Value = 2;
+                sheet.Cells["H33"].Value = 3;
+                sheet.Cells["H35"].Value = "Visit";
+                sheet.Cells["H36"].Value = "27.11.2026";
+                sheet.Cells["H37"].Value = "28.11.2026";
+                sheet.Cells["H38"].Value = "1.2.3";
+                sheet.Cells["H39"].Value = "27.11.2026";
+                sheet.Cells["H41"].Value = "Amount";
+                sheet.Cells["H42"].Value = 1;
+                sheet.Cells["H43"].Value = "1.5";
+                sheet.Cells["H44"].Value = "2,5";
+                return true;
+            });
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("en-GB");
+            foreach (DataAcquisitionMode mode in new[] { DataAcquisitionMode.NumericSkipMissing, DataAcquisitionMode.NumericReplaceMissing, DataAcquisitionMode.NumericPreserveRows })
+            {
+                var variable = (DoubleVariable)Acquire(cells, mode, 29, 4).Variables[0];
+                Check(variable.Title == "27.11.2026" && variable.Data.SequenceEqual(new[] { 1.0, 2.0, 3.0 }),
+                    $"en-GB {mode} preserves a dotted-date heading over numeric data");
+            }
+            var visit = (ClassifierVariable)Acquire(cells, DataAcquisitionMode.NumericCodingTextToCategories, 34, 5).Variables[0];
+            Check(visit.Groups.Select(group => group.Label).ToHashSet().SetEquals(new[] { "27.11.2026", "28.11.2026", "1.2.3" }),
+                "en-GB preserves literal dotted dates and version labels in an automatically classified text column");
+            Check(InvalidWorksheetNumberAt(() => Acquire(cells, DataAcquisitionMode.NumericPreserveRows, 34, 5), "H36"),
+                "en-GB names a dotted-date value in a numeric-only read");
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("de-DE");
+            Check(InvalidWorksheetNumberAt(() => Acquire(cells, DataAcquisitionMode.NumericPreserveRows, 34, 5), "H36"),
+                "de-DE rejects dotted dates with invalid grouping in a numeric-only read");
+
             CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("fr-FR");
-            Check(WorksheetNumber.Read("1 000,5", 0, 0) == 1000.5
-                && WorksheetNumber.Read(null, 0, 0) == Constant.MISSING
+            foreach (string grouped in new[] { "1 000,5", "1\u00a0000,5", "1\u202f000,5" })
+                Check(WorksheetNumber.Read(grouped, 0, 0) == 1000.5,
+                    $"fr-FR accepts valid grouping using U+{(int)grouped[1]:X4}");
+            Check(WorksheetNumber.Read("1\u00a0234\u202f567,5", 0, 0) == 1234567.5,
+                "fr-FR accepts correctly sized groups with both no-break space characters");
+            Check(InvalidWorksheetNumberAt(() => WorksheetNumber.Read("1\u202f234\u00a056,5", 24, 27), "AB25"),
+                "fr-FR reports an incorrectly sized group with mixed no-break spaces");
+            Check(InvalidWorksheetNumberAt(() => Acquire(cells, DataAcquisitionMode.NumericCodingTextToCategories, 40, 4), "H43"),
+                "fr-FR reports a foreign decimal separator inside an otherwise numeric predictor");
+            Check(WorksheetNumber.Read(null, 0, 0) == Constant.MISSING
                 && WorksheetNumber.Read("MISSING", 0, 0) == Constant.MISSING * 10D
                 && WorksheetNumber.Read(".", 0, 0) == Constant.MISSING * 10D
                 && WorksheetNumber.Read("Group 1, North", 0, 0) == Constant.MISSING,

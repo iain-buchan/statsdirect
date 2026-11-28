@@ -216,8 +216,8 @@ the options shown, and none of them starts an installer.
    to confirm that the live manifest offers the new version and that the updater
    can verify the installer from the mirror with GitHub blocked. If the check
    fails, tell the website maintainer immediately so they can correct the mirror
-   or withdraw the new manifest. Use the website team's results when they cover
-   the same live manifest and installers.
+   or withdraw the new manifest. Reuse the recorded results when the release
+   owner and website team have both verified the same live manifest and installers.
 
 Installed versions before 5.3.17 do not read the manifest, and the website keeps
 their addresses working as its own files:
